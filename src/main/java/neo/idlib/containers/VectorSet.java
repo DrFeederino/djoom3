@@ -21,15 +21,15 @@ public class VectorSet {
      */
     public static class idVectorSet<type> extends idList<type> {
 
-        private       idHashIndex hash;
-        private       idVec       mins;
-        private       idVec       maxs;
-        private       int         boxHashSize;
-        private       float[]     boxInvSize/*= new float[dimension]*/;
-        private       float[]     boxHalfSize /*= new float[dimension]*/;
-        //        
-        //  
-        private final int         dimension;
+        //
+        //
+        private final int dimension;
+        private float[] boxHalfSize /*= new float[dimension]*/;
+        private int boxHashSize;
+        private float[] boxInvSize/*= new float[dimension]*/;
+        private idHashIndex hash;
+        private idVec maxs;
+        private idVec mins;
         //
         //
 
@@ -48,7 +48,7 @@ public class VectorSet {
             Init(mins, maxs, boxHashSize, initialSize);
         }
 
-//
+        //
 //							// returns total size of allocated memory
 //public	size_t					Allocated( void ) const { return idList<type>::Allocated() + hash.Allocated(); }
 //							// returns total size of allocated memory including size of type
@@ -68,7 +68,7 @@ public class VectorSet {
             this.boxHashSize = boxHashSize;
 
             for (i = 0; i < dimension; i++) {
-                boxSize = ((float) maxs.oGet(i) - mins.oGet(i)) / (float) boxHashSize;
+                boxSize = (maxs.oGet(i) - mins.oGet(i)) / (float) boxHashSize;
                 boxInvSize[i] = 1.0f / boxSize;
                 boxHalfSize[i] = boxSize * 0.5f;
             }
@@ -123,10 +123,10 @@ public class VectorSet {
             }
 
             hash.Add(hashKey, super.Num());
-            this.Append((type)v);
+            this.Append((type) v);
             return super.Num() - 1;
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -139,14 +139,14 @@ public class VectorSet {
      */
     public static class idVectorSubset<type> {
 
-        private idHashIndex   hash = new idHashIndex();
-        private       idVec   mins;
-        private       idVec   maxs;
-        private       int     boxHashSize;
-        private       float[] boxInvSize /*= new float[dimension]*/;
-        private       float[] boxHalfSize/*= new float[dimension]*/;
-        //        
-        private final int     dimension;
+        //
+        private final int dimension;
+        private float[] boxHalfSize/*= new float[dimension]*/;
+        private int boxHashSize;
+        private float[] boxInvSize /*= new float[dimension]*/;
+        private final idHashIndex hash = new idHashIndex();
+        private idVec maxs;
+        private idVec mins;
         //
         //
 
@@ -241,5 +241,4 @@ public class VectorSet {
         }
     }
 
-    ;
 }

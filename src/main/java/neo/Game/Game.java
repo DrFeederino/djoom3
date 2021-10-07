@@ -1,73 +1,34 @@
 package neo.Game;
 
-import java.util.Scanner;
 import neo.CM.CollisionModel.idCollisionModelManager;
-import static neo.Game.AFEntity.GetArgString;
 import neo.Game.AFEntity.GetJointTransform;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.AFEntity.idAFEntity_Generic;
 import neo.Game.AFEntity.jointTransformData_t;
-import static neo.Game.Animation.Anim.FRAME2MS;
 import neo.Game.Animation.Anim.frameBlend_t;
 import neo.Game.Animation.Anim.idMD5Anim;
-import static neo.Game.Animation.Anim_Blend.ANIM_GetModelDefFromEntityDef;
 import neo.Game.Animation.Anim_Blend.idAnim;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import static neo.Game.Entity.AddRenderGui;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idEntity;
-import neo.Game.Game.idGame;
-import neo.Game.Game.idGameEdit;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.animationLib;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import neo.Game.Entity.*;
 import neo.Game.Player.idPlayer;
-import static neo.Game.Sound.SSF_GLOBAL;
-import static neo.Game.Sound.SSF_LOOPING;
-import static neo.Game.Sound.SSF_NO_OCCLUSION;
-import static neo.Game.Sound.SSF_OMNIDIRECTIONAL;
-import static neo.Game.Sound.SSF_UNCLAMPED;
 import neo.Renderer.Model.idMD5Joint;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.ModelManager.idRenderModelManager;
-import static neo.Renderer.ModelManager.renderModelManager;
 import neo.Renderer.RenderSystem.idRenderSystem;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_MODE;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMESCALE;
-import neo.Renderer.RenderWorld.idRenderWorld;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.snd_shader.soundShaderParms_t;
 import neo.Sound.sound.idSoundEmitter;
 import neo.Sound.sound.idSoundSystem;
 import neo.Sound.sound.idSoundWorld;
-import static neo.TempDump.NOT;
-import static neo.TempDump.dynamic_cast;
-import static neo.TempDump.etoi;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.Tools.Compilers.AAS.AASFileManager.idAASFileManager;
 import neo.framework.Async.NetworkSystem.idNetworkSystem;
 import neo.framework.CVarSystem.idCVarSystem;
 import neo.framework.CmdSystem.idCmdSystem;
 import neo.framework.Common.idCommon;
 import neo.framework.DeclAF.declAFJointMod_t;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_AXIS;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_BOTH;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN;
 import neo.framework.DeclAF.idDeclAF;
 import neo.framework.DeclAF.idDeclAF_Body;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_AF;
-import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
 import neo.framework.DeclManager.idDeclManager;
 import neo.framework.FileSystem_h.idFileSystem;
 import neo.framework.File_h.idFile;
@@ -75,25 +36,41 @@ import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.MAX_STRING_CHARS;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_BONE;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.MS2SEC;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
-import static neo.idlib.math.Simd.SIMDProcessor;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.sys.sys_public.idSys;
 import neo.ui.UserInterface.idUserInterface;
 import neo.ui.UserInterface.idUserInterface.idUserInterfaceManager;
+
+import java.util.Scanner;
+
+import static neo.Game.AFEntity.GetArgString;
+import static neo.Game.Animation.Anim.FRAME2MS;
+import static neo.Game.Animation.Anim_Blend.ANIM_GetModelDefFromEntityDef;
+import static neo.Game.Entity.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Game.Sound.*;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_AF;
+import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
+import static neo.idlib.Lib.MAX_STRING_CHARS;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_BONE;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Simd.SIMDProcessor;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -103,30 +80,38 @@ public class Game {
     /*
      ===============================================================================
 
+     Game API.
+
+     ===============================================================================
+     */
+    public static final int GAME_API_VERSION = 8;
+    public static final String SCRIPT_DEFAULT = "script/doom_main.script";
+    /*
+     ===============================================================================
+
      Public game interface with methods to run the game.
 
      ===============================================================================
      */
     // default scripts
     public static final String SCRIPT_DEFAULTDEFS = "script/doom_defs.script";
-    public static final String SCRIPT_DEFAULT     = "script/doom_main.script";
-    public static final String SCRIPT_DEFAULTFUNC = "doom_main";
 //
+    public static final String SCRIPT_DEFAULTFUNC = "doom_main";
 
-    public static class gameReturn_t {
+    //enum {
+    public static final int TEST_PARTICLE_MODEL = 0;
 
-        public char[] sessionCommand = new char[MAX_STRING_CHARS];    // "map", "disconnect", "victory", etc
-        public int     consistencyHash;                         // used to check for network game divergence
-        public int     health;
-        public int     heartRate;
-        public int     stamina;
-        public int     combat;
-        public boolean syncNextGameFrame;                       // used when cinematics are skipped to prevent session from simulating several game frames to
-                                                                // keep the game time in sync with real time
-    }
+    public static final int TEST_PARTICLE_IMPACT = 1 + TEST_PARTICLE_MODEL;
 
-    ;
+    public static final int TEST_PARTICLE_FLIGHT = 3 + TEST_PARTICLE_MODEL;
+    public static final int TEST_PARTICLE_MUZZLE = 2 + TEST_PARTICLE_MODEL;
+//
+    public static final int TEST_PARTICLE_SELECTED = 4 + TEST_PARTICLE_MODEL;
 
+    //
+    public static final int TIME_GROUP1 = 0;
+
+    public static final int TIME_GROUP2 = 1;
     public enum allowReply_t {
 
         ALLOW_YES,//= 0,
@@ -134,9 +119,6 @@ public class Game {
         ALLOW_NOTYET,       // core will wait with transmitted message
         ALLOW_NO            // core will abort with transmitted message
     }
-
-    ;
-
     public enum escReply_t {
 
         ESC_IGNORE,//= 0,	// do nothing
@@ -144,11 +126,17 @@ public class Game {
         ESC_GUI             // set an explicit GUI
     }
 
-    ;
-    //
-    public static final int TIME_GROUP1 = 0;
-    public static final int TIME_GROUP2 = 1;
-//
+    public static class gameReturn_t {
+
+        public int combat;
+        public int consistencyHash;                         // used to check for network game divergence
+        public int health;
+        public int heartRate;
+        public char[] sessionCommand = new char[MAX_STRING_CHARS];    // "map", "disconnect", "victory", etc
+        public int stamina;
+        public boolean syncNextGameFrame;                       // used when cinematics are skipped to prevent session from simulating several game frames to
+        // keep the game time in sync with real time
+    }
 
     public static abstract class idGame {
         // virtual						~idGame() {}
@@ -271,38 +259,40 @@ public class Game {
         public abstract boolean DownloadRequest(final String IP, final String guid, final String paks, char[] urls/*[ MAX_STRING_CHARS ]*/);
 
         public abstract void GetMapLoadingGUI(char[] gui/*[ MAX_STRING_CHARS ]*/);
-    };
+    }
+//};
 
     public static class refSound_t {
 
-        public idSoundEmitter     referenceSound;   // this is the interface to the sound system, created
-                                                    // with idSoundWorld::AllocSoundEmitter() when needed
-        public idVec3             origin;
-        public int                listenerId;       // SSF_PRIVATE_SOUND only plays if == listenerId from PlaceListener
-                                                    // no spatialization will be performed if == listenerID
-        public idSoundShader      shader;           // this really shouldn't be here, it is a holdover from single channel behavior
-        public float              diversity;        // 0.0 to 1.0 value used to select which
-                                                    // samples in a multi-sample list from the shader are used
-        public boolean            waitfortrigger;   // don't start it at spawn time
+        public float diversity;        // 0.0 to 1.0 value used to select which
+        public int listenerId;       // SSF_PRIVATE_SOUND only plays if == listenerId from PlaceListener
+        // with idSoundWorld::AllocSoundEmitter() when needed
+        public idVec3 origin;
         public soundShaderParms_t parms;            // override volume, flags, etc
+        public idSoundEmitter referenceSound;   // this is the interface to the sound system, created
+        // no spatialization will be performed if == listenerID
+        public idSoundShader shader;           // this really shouldn't be here, it is a holdover from single channel behavior
+        // samples in a multi-sample list from the shader are used
+        public boolean waitfortrigger;   // don't start it at spawn time
 
         public refSound_t() {
             this.referenceSound = null;
             this.origin = new idVec3();
             this.parms = new soundShaderParms_t();
         }
-    };
-
-    //enum {
-    public static final int TEST_PARTICLE_MODEL    = 0;
-    public static final int TEST_PARTICLE_IMPACT   = 1 + TEST_PARTICLE_MODEL;
-    public static final int TEST_PARTICLE_MUZZLE   = 2 + TEST_PARTICLE_MODEL;
-    public static final int TEST_PARTICLE_FLIGHT   = 3 + TEST_PARTICLE_MODEL;
-    public static final int TEST_PARTICLE_SELECTED = 4 + TEST_PARTICLE_MODEL;
-//};
+    }
 
     // FIXME: this interface needs to be reworked but it properly separates code for the time being
     public static class idGameEdit {
+
+        /*
+         =============
+         idGameEdit::GetUniqueEntityName
+
+         generates a unique name for a given classname
+         =============
+         */
+        static StringBuilder name = new StringBuilder(1024);
 
         // virtual						~idGameEdit() {}
         // These are the canonical idDict to parameter parsing routines used by both the game and tools.
@@ -695,7 +685,7 @@ public class Game {
             }
 
             if (numJoints != model.NumJoints()) {
-                gameLocal.Error("ANIM_CreateAnimFrame: different # of joints in renderEntity_t than in model (%s)", model.Name());
+                idGameLocal.Error("ANIM_CreateAnimFrame: different # of joints in renderEntity_t than in model (%s)", model.Name());
             }
 
             if (0 == model.NumJoints()) {
@@ -704,7 +694,7 @@ public class Game {
             }
 
             if (null == joints) {
-                gameLocal.Error("ANIM_CreateAnimFrame: NULL joint frame pointer on model (%s)", model.Name());
+                idGameLocal.Error("ANIM_CreateAnimFrame: NULL joint frame pointer on model (%s)", model.Name());
             }
 
             if (numJoints != anim.NumJoints()) {
@@ -910,7 +900,7 @@ public class Game {
             }
         }
 
-        public idRenderModel AF_CreateMesh(final idDict args, idVec3 meshOrigin, idMat3 meshAxis, boolean []poseIsSet) {
+        public idRenderModel AF_CreateMesh(final idDict args, idVec3 meshOrigin, idMat3 meshAxis, boolean[] poseIsSet) {
             int i, jointNum;
             idDeclAF af;
             idDeclAF_Body fb = new idDeclAF_Body();
@@ -1081,10 +1071,10 @@ public class Game {
                 }
 
                 if (jointNum >= 0 && jointNum < ent.numJoints) {
-                    jointMod[ jointNum] = fb.jointMod;
-                    modifiedAxis[ jointNum] = (bodyAxis[i].oMultiply(originalJoints[jointNum].ToMat3().Transpose())).Transpose().oMultiply((newBodyAxis[i].oMultiply(meshAxis.Transpose())));
+                    jointMod[jointNum] = fb.jointMod;
+                    modifiedAxis[jointNum] = (bodyAxis[i].oMultiply(originalJoints[jointNum].ToMat3().Transpose())).Transpose().oMultiply((newBodyAxis[i].oMultiply(meshAxis.Transpose())));
                     // FIXME: calculate correct modifiedOrigin
-                    modifiedOrigin[ jointNum] = originalJoints[ jointNum].ToVec3();
+                    modifiedOrigin[jointNum] = originalJoints[jointNum].ToVec3();
                 }
             }
 
@@ -1093,29 +1083,29 @@ public class Game {
                 MD5joint = MD5joints[i];
 
                 parentNum = indexOf(MD5joint.parent, MD5joints);
-                idMat3 parentAxis = originalJoints[ parentNum].ToMat3();
+                idMat3 parentAxis = originalJoints[parentNum].ToMat3();
                 idMat3 localm = originalJoints[i].ToMat3().oMultiply(parentAxis.Transpose());
-                idVec3 localt = (originalJoints[i].ToVec3().oMinus(originalJoints[ parentNum].ToVec3())).oMultiply(parentAxis.Transpose());
+                idVec3 localt = (originalJoints[i].ToVec3().oMinus(originalJoints[parentNum].ToVec3())).oMultiply(parentAxis.Transpose());
 
                 switch (jointMod[i]) {
                     case DECLAF_JOINTMOD_ORIGIN: {
-                        ent.joints[ i].SetRotation(localm.oMultiply(ent.joints[ parentNum].ToMat3()));
-                        ent.joints[ i].SetTranslation(modifiedOrigin[ i]);
+                        ent.joints[i].SetRotation(localm.oMultiply(ent.joints[parentNum].ToMat3()));
+                        ent.joints[i].SetTranslation(modifiedOrigin[i]);
                         break;
                     }
                     case DECLAF_JOINTMOD_AXIS: {
-                        ent.joints[ i].SetRotation(modifiedAxis[ i]);
-                        ent.joints[ i].SetTranslation(ent.joints[ parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[ parentNum].ToMat3())));
+                        ent.joints[i].SetRotation(modifiedAxis[i]);
+                        ent.joints[i].SetTranslation(ent.joints[parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[parentNum].ToMat3())));
                         break;
                     }
                     case DECLAF_JOINTMOD_BOTH: {
-                        ent.joints[ i].SetRotation(modifiedAxis[ i]);
-                        ent.joints[ i].SetTranslation(modifiedOrigin[ i]);
+                        ent.joints[i].SetRotation(modifiedAxis[i]);
+                        ent.joints[i].SetTranslation(modifiedOrigin[i]);
                         break;
                     }
                     default: {
-                        ent.joints[ i].SetRotation(localm.oMultiply(ent.joints[ parentNum].ToMat3()));
-                        ent.joints[ i].SetTranslation(ent.joints[ parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[ parentNum].ToMat3())));
+                        ent.joints[i].SetRotation(localm.oMultiply(ent.joints[parentNum].ToMat3()));
+                        ent.joints[i].SetTranslation(ent.joints[parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[parentNum].ToMat3())));
                         break;
                     }
                 }
@@ -1178,15 +1168,6 @@ public class Game {
         public idEntity FindEntity(final String name) {
             return gameLocal.FindEntity(name);
         }
-
-        /*
-         =============
-         idGameEdit::GetUniqueEntityName
-
-         generates a unique name for a given classname
-         =============
-         */
-        static StringBuilder name = new StringBuilder(1024);
 
         public String GetUniqueEntityName(final String classname) {
             int id;
@@ -1429,43 +1410,34 @@ public class Game {
             }
         }
 
-    };
-
-    /*
-     ===============================================================================
-
-     Game API.
-
-     ===============================================================================
-     */
-    public static final int GAME_API_VERSION = 8;
+    }
 
     public static class gameImport_t {
 
-        public int                     version;                 // API version
-        public idSys                   sys;                     // non-portable system services
-        public idCommon                common;                  // common
-        public idCmdSystem             cmdSystem;               // console command system
-        public idCVarSystem            cvarSystem;              // console variable system
-        public idFileSystem            fileSystem;              // file system
-        public idNetworkSystem         networkSystem;           // network system
-        public idRenderSystem          renderSystem;            // render system
-        public idSoundSystem           soundSystem;             // sound system
-        public idRenderModelManager    renderModelManager;      // render model manager
-        public idUserInterfaceManager  uiManager;               // user interface manager
-        public idDeclManager           declManager;             // declaration manager
-        public idAASFileManager        AASFileManager;          // AAS file manager
+        public idAASFileManager AASFileManager;          // AAS file manager
+        public idCmdSystem cmdSystem;               // console command system
         public idCollisionModelManager collisionModelManager;   // collision model manager
-    };
+        public idCommon common;                  // common
+        public idCVarSystem cvarSystem;              // console variable system
+        public idDeclManager declManager;             // declaration manager
+        public idFileSystem fileSystem;              // file system
+        public idNetworkSystem networkSystem;           // network system
+        public idRenderModelManager renderModelManager;      // render model manager
+        public idRenderSystem renderSystem;            // render system
+        public idSoundSystem soundSystem;             // sound system
+        public idSys sys;                     // non-portable system services
+        public idUserInterfaceManager uiManager;               // user interface manager
+        public int version;                 // API version
+    }
 
     public static class gameExport_t {
 
-        public int        version;                              // API version
-        public idGame     game;                                 // interface to run the game
+        public idGame game;                                 // interface to run the game
         public idGameEdit gameEdit;                             // interface for in-game editing
+        public int version;                              // API version
     }
-    ;
-//extern "C" {
+
+    //extern "C" {
 //typedef gameExport_t * (*GetGameAPI_t)( gameImport_t *import );
 //}
 }

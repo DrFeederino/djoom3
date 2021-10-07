@@ -2,38 +2,76 @@ package neo.Game.Physics;
 
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.Actor.idActor;
-import static neo.Game.Entity.TH_PHYSICS;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.ENTITYNUM_NONE;
-import static neo.Game.Game_local.ENTITYNUM_WORLD;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Physics.Physics.CONTACT_EPSILON;
-
-import neo.Game.Game_local.idEntityPtr;
+import neo.Game.Game_local.*;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Actor.idPhysics_Actor;
-import static neo.Game.Physics.Physics_Monster.monsterMoveResult_t.MM_BLOCKED;
-import static neo.Game.Physics.Physics_Monster.monsterMoveResult_t.MM_FALLING;
-import static neo.Game.Physics.Physics_Monster.monsterMoveResult_t.MM_OK;
-import static neo.Game.Physics.Physics_Monster.monsterMoveResult_t.MM_SLIDING;
-import static neo.Game.Physics.Physics_Monster.monsterMoveResult_t.MM_STEPPED;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
 import neo.idlib.BitMsg.idBitMsgDelta;
-import static neo.idlib.math.Math_h.MS2SEC;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
+import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.Entity.TH_PHYSICS;
+import static neo.Game.Game_local.*;
+import static neo.Game.Physics.Physics.CONTACT_EPSILON;
+import static neo.Game.Physics.Physics_Monster.monsterMoveResult_t.*;
+import static neo.TempDump.btoi;
+import static neo.TempDump.etoi;
+import static neo.idlib.math.Math_h.MS2SEC;
 import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
  */
 public class Physics_Monster {
+
+    //
+    static final float MONSTER_VELOCITY_MAX = 4000;
+
+    static final int MONSTER_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(MONSTER_VELOCITY_MAX)) + 1;
+
+    static final int MONSTER_VELOCITY_TOTAL_BITS = 16;
+    static final int MONSTER_VELOCITY_MANTISSA_BITS = MONSTER_VELOCITY_TOTAL_BITS - 1 - MONSTER_VELOCITY_EXPONENT_BITS;
+    static final float OVERCLIP = 1.001f;
+
+    /*
+     ================
+     idPhysics_Monster_SavePState
+     ================
+     */
+    static void idPhysics_Monster_SavePState(idSaveGame savefile, final monsterPState_s state) {
+        savefile.WriteVec3(state.origin);
+        savefile.WriteVec3(state.velocity);
+        savefile.WriteVec3(state.localOrigin);
+        savefile.WriteVec3(state.pushVelocity);
+        savefile.WriteBool(state.onGround);
+        savefile.WriteInt(state.atRest);
+    }
+
+    /*
+     ================
+     idPhysics_Monster_RestorePState
+     ================
+     */
+    static void idPhysics_Monster_RestorePState(idRestoreGame savefile, monsterPState_s state) {
+        boolean[] onGround = {false};
+        int[] atRest = {0};
+
+        savefile.ReadVec3(state.origin);
+        savefile.ReadVec3(state.velocity);
+        savefile.ReadVec3(state.localOrigin);
+        savefile.ReadVec3(state.pushVelocity);
+        savefile.ReadBool(onGround);
+        savefile.ReadInt(atRest);
+
+        state.onGround = onGround[0];
+        state.atRest = atRest[0];
+    }
+//
 
     /*
      ===================================================================================
@@ -52,54 +90,48 @@ public class Physics_Monster {
         MM_BLOCKED,
         MM_STEPPED,
         MM_FALLING
-    };
+    }
 
     private static class monsterPState_s {
 
-        int     atRest;
+        int atRest;
+        idVec3 localOrigin;
         boolean onGround;
-        idVec3  origin;
-        idVec3  velocity;
-        idVec3  localOrigin;
-        idVec3  pushVelocity;
+        idVec3 origin;
+        idVec3 pushVelocity;
+        idVec3 velocity;
 
-        public monsterPState_s(){
+        public monsterPState_s() {
             this.origin = new idVec3();
             this.velocity = new idVec3();
             this.localOrigin = new idVec3();
             this.pushVelocity = new idVec3();
         }
-    };
-    static final float OVERCLIP                       = 1.001f;
-    //
-    static final float MONSTER_VELOCITY_MAX           = 4000;
-    static final int   MONSTER_VELOCITY_TOTAL_BITS    = 16;
-    static final int   MONSTER_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(MONSTER_VELOCITY_MAX)) + 1;
-    static final int   MONSTER_VELOCITY_MANTISSA_BITS = MONSTER_VELOCITY_TOTAL_BITS - 1 - MONSTER_VELOCITY_EXPONENT_BITS;
-//
+    }
 
     public static class idPhysics_Monster extends idPhysics_Actor {
         // CLASS_PROTOTYPE( idPhysics_Monster );
 
+        private static int DBG_Evaluate = 0;
+        private idEntity blockingEntity;
         // monster physics state
-        private monsterPState_s     current;
-        private monsterPState_s     saved;
+        private monsterPState_s current;
+        private final idVec3 delta;            // delta for next move
+        private boolean fly;
+        //
+        private boolean forceDeltaMove;
         //
         // properties
-        private float               maxStepHeight;    // maximum step height
-        private float               minFloorCosine;   // minimum cosine of floor angle
-        private idVec3              delta;            // delta for next move
-        //
-        private boolean             forceDeltaMove;
-        private boolean             fly;
-        private boolean             useVelocityMove;
-        private boolean             noImpact;         // if true do not activate when another object collides
+        private float maxStepHeight;    // maximum step height
+        private float minFloorCosine;   // minimum cosine of floor angle
         //
         // results of last evaluate
         private monsterMoveResult_t moveResult;
-        private idEntity            blockingEntity;
+        private boolean noImpact;         // if true do not activate when another object collides
+        private monsterPState_s saved;
         //
         //
+        private boolean useVelocityMove;
 
         public idPhysics_Monster() {
 
@@ -161,14 +193,14 @@ public class Physics_Monster {
         public void SetMaxStepHeight(final float newMaxStepHeight) {
             maxStepHeight = newMaxStepHeight;
         }
-
-        public float GetMaxStepHeight() {
-            return maxStepHeight;
-        }
 //
 //        // minimum cosine of floor angle to be able to stand on the floor
 //        public void SetMinFloorCosine(final float newMinFloorCosine);
 //
+
+        public float GetMaxStepHeight() {
+            return maxStepHeight;
+        }
 
         // set delta for next move
         public void SetDelta(final idVec3 d) {
@@ -217,10 +249,10 @@ public class Physics_Monster {
             noImpact = true;
         }
 
-        private static int DBG_Evaluate = 0;
         // common physics interface
         @Override
-        public boolean Evaluate(int timeStepMSec, int endTimeMSec) {   DBG_Evaluate++;
+        public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
+            DBG_Evaluate++;
             idVec3 masterOrigin = new idVec3(), oldOrigin;
             idMat3 masterAxis = new idMat3();
             float timeStep;
@@ -575,7 +607,7 @@ public class Physics_Monster {
                 }
 
                 if (tr[0].c.entityNum != ENTITYNUM_NONE) {
-                    blockingEntity = gameLocal.entities[ tr[0].c.entityNum];
+                    blockingEntity = gameLocal.entities[tr[0].c.entityNum];
                 }
 
                 // clip the movement delta and velocity
@@ -685,39 +717,5 @@ public class Physics_Monster {
             current.velocity.Zero();
             self.BecomeInactive(TH_PHYSICS);
         }
-    };
-
-    /*
-     ================
-     idPhysics_Monster_SavePState
-     ================
-     */
-    static void idPhysics_Monster_SavePState(idSaveGame savefile, final monsterPState_s state) {
-        savefile.WriteVec3(state.origin);
-        savefile.WriteVec3(state.velocity);
-        savefile.WriteVec3(state.localOrigin);
-        savefile.WriteVec3(state.pushVelocity);
-        savefile.WriteBool(state.onGround);
-        savefile.WriteInt(state.atRest);
-    }
-
-    /*
-     ================
-     idPhysics_Monster_RestorePState
-     ================
-     */
-    static void idPhysics_Monster_RestorePState(idRestoreGame savefile, monsterPState_s state) {
-        boolean[] onGround = {false};
-        int[] atRest = {0};
-
-        savefile.ReadVec3(state.origin);
-        savefile.ReadVec3(state.velocity);
-        savefile.ReadVec3(state.localOrigin);
-        savefile.ReadVec3(state.pushVelocity);
-        savefile.ReadBool(onGround);
-        savefile.ReadInt(atRest);
-
-        state.onGround = onGround[0];
-        state.atRest = atRest[0];
     }
 }

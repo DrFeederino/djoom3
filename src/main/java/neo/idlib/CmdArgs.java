@@ -2,16 +2,11 @@ package neo.idlib;
 
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWIPADDRESSES;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import static neo.idlib.Text.Lexer.LEXFL_NOWARNINGS;
-import static neo.idlib.Text.Lexer.LEXFL_ONLYSTRINGS;
-import neo.idlib.Text.Lexer.idLexer;
-import static neo.idlib.Text.Token.TT_NUMBER;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Token.idToken;
+
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Token.TT_NUMBER;
 
 /**
  *
@@ -20,11 +15,11 @@ public class CmdArgs {
 
     public static class idCmdArgs {
 
-        private static final int MAX_COMMAND_ARGS   = 64;
+        private static final int MAX_COMMAND_ARGS = 64;
         private static final int MAX_COMMAND_STRING = 2 * Lib.MAX_STRING_CHARS;
+        private final String[] argv = new String[MAX_COMMAND_ARGS];         // points into tokenized
         private int argc;                            // number of arguments
-        private final String[]      argv      = new String[MAX_COMMAND_ARGS];         // points into tokenized
-        private       StringBuilder tokenized = new StringBuilder(MAX_COMMAND_STRING);// will have 0 bytes inserted
+        private StringBuilder tokenized = new StringBuilder(MAX_COMMAND_STRING);// will have 0 bytes inserted
         //
         //
 
@@ -168,7 +163,7 @@ public class CmdArgs {
 
             while (true) {
                 if (argc == MAX_COMMAND_ARGS) {
-                    return;			// this is usually something malicious
+                    return;            // this is usually something malicious
                 }
 
                 if (!lex.ReadToken(token)) {
@@ -178,7 +173,7 @@ public class CmdArgs {
                 // check for negative numbers
                 if (!keepAsStrings && (token.equals("-"))) {
                     if (lex.CheckTokenType(TT_NUMBER, 0, number) != 0) {
-                        token.oSet("-" + number.toString());
+                        token.oSet("-" + number);
                     }
                 }
 
@@ -197,7 +192,7 @@ public class CmdArgs {
                 len = token.Length();
 
                 if (totalLen + len + 1 > /*sizeof(*/ tokenized.capacity()) {
-                    return;			// this is usually something malicious
+                    return;            // this is usually something malicious
                 }
 
 //                tokenized.append(token);//damn pointers!

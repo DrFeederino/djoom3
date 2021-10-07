@@ -1,11 +1,13 @@
 package neo.idlib.math.Matrix;
 
-import java.util.Arrays;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Matrix.idMat0.MATRIX_EPSILON;
-import static neo.idlib.math.Matrix.idMat0.MATRIX_INVERSE_EPSILON;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.util.Arrays;
+
+import static neo.idlib.math.Matrix.idMat0.MATRIX_EPSILON;
+import static neo.idlib.math.Matrix.idMat0.MATRIX_INVERSE_EPSILON;
 
 //===============================================================
 //
@@ -13,23 +15,13 @@ import neo.idlib.math.Vector.idVec4;
 //
 //===============================================================
 public class idMat4 {
-    private static final idMat4 mat4_zero = new idMat4(new idVec4(0, 0, 0, 0), new idVec4(0, 0, 0, 0), new idVec4(0, 0, 0, 0), new idVec4(0, 0, 0, 0));
     private static final idMat4 mat4_identity = new idMat4(new idVec4(1, 0, 0, 0), new idVec4(0, 1, 0, 0), new idVec4(0, 0, 1, 0), new idVec4(0, 0, 0, 1));
-
-    public static idMat4 getMat4_zero() {
-        return new idMat4(mat4_zero);
-    }
-
-    public static idMat4 getMat4_identity() {
-        return new idMat4(mat4_identity);
-    }
-    
-    
-
+    private static final idMat4 mat4_zero = new idMat4(new idVec4(0, 0, 0, 0), new idVec4(0, 0, 0, 0), new idVec4(0, 0, 0, 0), new idVec4(0, 0, 0, 0));
     private final idVec4[] mat = {new idVec4(), new idVec4(), new idVec4(), new idVec4()};
 
     public idMat4() {
     }
+
 
     public idMat4(final idVec4 x, final idVec4 y, final idVec4 z, final idVec4 w) {
         mat[0].oSet(x);
@@ -39,9 +31,9 @@ public class idMat4 {
     }
 
     public idMat4(final float xx, final float xy, final float xz, final float xw,
-            final float yx, final float yy, final float yz, final float yw,
-            final float zx, final float zy, final float zz, final float zw,
-            final float wx, final float wy, final float wz, final float ww) {
+                  final float yx, final float yy, final float yz, final float yw,
+                  final float zx, final float zy, final float zz, final float zw,
+                  final float wx, final float wy, final float wz, final float ww) {
         mat[0].x = xx;
         mat[0].y = xy;
         mat[0].z = xz;
@@ -83,7 +75,7 @@ public class idMat4 {
         mat[3].w = 1.0f;
     }
 
-    public idMat4(final float src[][]) {
+    public idMat4(final float[][] src) {
 //	memcpy( mat, src, 4 * 4 * sizeof( float ) );
         mat[0].x = src[0][0];
         mat[0].y = src[0][1];
@@ -110,20 +102,57 @@ public class idMat4 {
         this.oSet(m);
     }
 
-//public	const idVec4 &	operator[]( int index ) const;
+    public static idMat4 getMat4_zero() {
+        return new idMat4(mat4_zero);
+    }
+
+    public static idMat4 getMat4_identity() {
+        return new idMat4(mat4_identity);
+    }
+
+    //public	friend idMat4	operator*( const float a, const idMat4 &mat );
+    public static idMat4 oMultiply(final float a, final idMat4 mat) {
+        return mat.oMultiply(a);
+    }
+
+    //public	friend idVec4	operator*( const idVec4 &vec, const idMat4 &mat );
+    public static idVec4 oMultiply(final idVec4 vec, final idMat4 mat) {
+        return mat.oMultiply(vec);
+    }
+
+    public static idVec3 oMultiply(final idVec3 vec, final idMat4 mat) {
+        return mat.oMultiply(vec);
+    }
+//public	idVec4 &		operator[]( int index );
+//public	idMat4			operator*( const float a ) const;
+
+    public static idVec4 oMulSet(idVec4 vec, final idMat4 mat) {
+        vec.oSet(mat.oMultiply(vec));
+        return vec;
+    }
+//public	idVec4			operator*( const idVec4 &vec ) const;
+
+    public static idVec3 oMulSet(idVec3 vec, final idMat4 mat) {
+        vec.oSet(mat.oMultiply(vec));
+        return vec;
+    }
+//public	idVec3			operator*( const idVec3 &vec ) const;
+
+    //public	const idVec4 &	operator[]( int index ) const;
     public idVec4 oGet(final int index) {
         return mat[index];
     }
+//public	idMat4			operator*( const idMat4 &a ) const;
 
     public idVec4 oSet(final int index, final idVec4 value) {
         return mat[index] = value;
     }
+//public	idMat4			operator+( const idMat4 &a ) const;
 
     public float oSet(final int index1, final int index2, final float value) {
         return mat[index1].oSet(index2, value);
     }
-//public	idVec4 &		operator[]( int index );
-//public	idMat4			operator*( const float a ) const;
+//public	idMat4			operator-( const idMat4 &a ) const;
 
     public idMat4 oMultiply(final float a) {
         return new idMat4(
@@ -132,7 +161,7 @@ public class idMat4 {
                 mat[2].x * a, mat[2].y * a, mat[2].z * a, mat[2].w * a,
                 mat[3].x * a, mat[3].y * a, mat[3].z * a, mat[3].w * a);
     }
-//public	idVec4			operator*( const idVec4 &vec ) const;
+//public	idMat4 &		operator*=( const float a );
 
     public idVec4 oMultiply(final idVec4 vec) {
         return new idVec4(
@@ -141,7 +170,7 @@ public class idMat4 {
                 mat[2].x * vec.x + mat[2].y * vec.y + mat[2].z * vec.z + mat[2].w * vec.w,
                 mat[3].x * vec.x + mat[3].y * vec.y + mat[3].z * vec.z + mat[3].w * vec.w);
     }
-//public	idVec3			operator*( const idVec3 &vec ) const;
+//public	idMat4 &		operator*=( const idMat4 &a );
 
     public idVec3 oMultiply(final idVec3 vec) {
         final float s = mat[3].x * vec.x + mat[3].y * vec.y + mat[3].z * vec.z + mat[3].w;
@@ -161,7 +190,7 @@ public class idMat4 {
                     (mat[2].x * vec.x + mat[2].y * vec.y + mat[2].z * vec.z + mat[2].w) * invS);
         }
     }
-//public	idMat4			operator*( const idMat4 &a ) const;
+//public	idMat4 &		operator+=( const idMat4 &a );
 
     public idMat4 oMultiply(final idMat4 a) {
         int i, j;
@@ -178,7 +207,6 @@ public class idMat4 {
         }
         return dst;
     }
-//public	idMat4			operator+( const idMat4 &a ) const;
 
     public idMat4 oPlus(final idMat4 a) {
         return new idMat4(
@@ -187,7 +215,6 @@ public class idMat4 {
                 mat[2].x + a.mat[2].x, mat[2].y + a.mat[2].y, mat[2].z + a.mat[2].z, mat[2].w + a.mat[2].w,
                 mat[3].x + a.mat[3].x, mat[3].y + a.mat[3].y, mat[3].z + a.mat[3].z, mat[3].w + a.mat[3].w);
     }
-//public	idMat4			operator-( const idMat4 &a ) const;
 
     public idMat4 oMinus(final idMat4 a) {
         return new idMat4(
@@ -196,7 +223,6 @@ public class idMat4 {
                 mat[2].x - a.mat[2].x, mat[2].y - a.mat[2].y, mat[2].z - a.mat[2].z, mat[2].w - a.mat[2].w,
                 mat[3].x - a.mat[3].x, mat[3].y - a.mat[3].y, mat[3].z - a.mat[3].z, mat[3].w - a.mat[3].w);
     }
-//public	idMat4 &		operator*=( const float a );
 
     public idMat4 oMulSet(final float a) {
         mat[0].x *= a;
@@ -220,7 +246,7 @@ public class idMat4 {
         mat[3].w *= a;
         return this;
     }
-//public	idMat4 &		operator*=( const idMat4 &a );
+//public	friend idVec3	operator*( const idVec3 &vec, const idMat4 &mat );
 
     public idMat4 oMultSet(final idMat4 a) {
         int i, j;
@@ -237,7 +263,7 @@ public class idMat4 {
         }
         return this;
     }
-//public	idMat4 &		operator+=( const idMat4 &a );
+//public	friend idVec4 &	operator*=( idVec4 &vec, const idMat4 &mat );
 
     public idMat4 oPluSet(final idMat4 a) {
         this.mat[0].x += a.mat[0].x;
@@ -261,8 +287,9 @@ public class idMat4 {
         this.mat[3].w += a.mat[3].w;
         return this;
     }
+//public	friend idVec3 &	operator*=( idVec3 &vec, const idMat4 &mat );
 
-//public	idMat4 &		operator-=( const idMat4 &a );
+    //public	idMat4 &		operator-=( const idMat4 &a );
     public idMat4 oMinSet(final idMat4 a) {
         this.mat[0].x -= a.mat[0].x;
         this.mat[0].y -= a.mat[0].y;
@@ -284,33 +311,6 @@ public class idMat4 {
         this.mat[3].z -= a.mat[3].z;
         this.mat[3].w -= a.mat[3].w;
         return this;
-    }
-
-//public	friend idMat4	operator*( const float a, const idMat4 &mat );
-    public static idMat4 oMultiply(final float a, final idMat4 mat) {
-        return mat.oMultiply(a);
-    }
-
-//public	friend idVec4	operator*( const idVec4 &vec, const idMat4 &mat );
-    public static idVec4 oMultiply(final idVec4 vec, final idMat4 mat) {
-        return mat.oMultiply(vec);
-    }
-//public	friend idVec3	operator*( const idVec3 &vec, const idMat4 &mat );
-
-    public static idVec3 oMultiply(final idVec3 vec, final idMat4 mat) {
-        return mat.oMultiply(vec);
-    }
-//public	friend idVec4 &	operator*=( idVec4 &vec, const idMat4 &mat );
-
-    public static idVec4 oMulSet(idVec4 vec, final idMat4 mat) {
-        vec.oSet(mat.oMultiply(vec));
-        return vec;
-    }
-//public	friend idVec3 &	operator*=( idVec3 &vec, const idMat4 &mat );
-
-    public static idVec3 oMulSet(idVec3 vec, final idMat4 mat) {
-        vec.oSet(mat.oMultiply(vec));
-        return vec;
     }
 
     public boolean Compare(final idMat4 a) {// exact compare, no epsilon
@@ -360,10 +360,7 @@ public class idMat4 {
             return false;
         }
         final idMat4 other = (idMat4) obj;
-        if (!Arrays.deepEquals(this.mat, other.mat)) {
-            return false;
-        }
-        return true;
+        return Arrays.deepEquals(this.mat, other.mat);
     }
 
     public void Zero() {
@@ -413,13 +410,9 @@ public class idMat4 {
     }
 
     public boolean IsRotated() {
-        if (0
-                == mat[0].oGet(1) + mat[0].oGet(2)
+        return 0 != mat[0].oGet(1) + mat[0].oGet(2)
                 + mat[1].oGet(0) + mat[1].oGet(2)
-                + mat[2].oGet(0) + mat[2].oGet(1)) {
-            return false;
-        }
-        return true;
+                + mat[2].oGet(0) + mat[2].oGet(1);
     }
 
     public void ProjectVector(final idVec4 src, idVec4 dst) {
@@ -717,4 +710,4 @@ public class idMat4 {
         }
         return temp;
     }
-};
+}

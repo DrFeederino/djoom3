@@ -1,10 +1,5 @@
 package neo.idlib.containers;
 
-import static neo.idlib.containers.BTree.*;
-
-/**
- *
- */
 public class BinSearch {
 
     /*
@@ -107,5 +102,24 @@ public class BinSearch {
             len -= mid;
         }
         return offset + res;
+    }
+
+    static boolean GT(Object object1, Object object2) {
+        return ((Number) object1).doubleValue() > ((Number) object2).doubleValue();
+    }
+
+    //Greater Than or Equal
+    static boolean GTE(Object object1, Object object2) {
+        return ((Number) object1).doubleValue() >= ((Number) object2).doubleValue();
+    }
+
+    //Less Than
+    static boolean LT(Object object1, Object object2) {
+        return ((Number) object1).doubleValue() < ((Number) object2).doubleValue();
+    }
+
+    //Less Than or Equal
+    static boolean LTE(Object object1, Object object2) {
+        return ((Number) object1).doubleValue() <= ((Number) object2).doubleValue();
     }
 }

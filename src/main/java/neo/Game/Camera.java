@@ -1,7 +1,5 @@
 package neo.Game;
 
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.TH_THINK;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Class;
 import neo.Game.GameSys.Class.eventCallback_t;
@@ -11,24 +9,11 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_debugCinematic;
-import static neo.Game.GameSys.SysCvar.g_showcamerainfo;
-import static neo.Game.Game_local.gameLocal;
 import neo.Game.Game_local.idEntityPtr;
 import neo.Game.Script.Script_Thread.idThread;
-
-import static neo.Game.Script.Script_Thread.EV_Thread_SetCallback;
-import static neo.Renderer.Model.MD5_CAMERA_EXT;
-import static neo.Renderer.Model.MD5_VERSION;
-import static neo.Renderer.Model.MD5_VERSION_STRING;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.framework.UsercmdGen.USERCMD_HZ;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
@@ -39,15 +24,26 @@ import neo.idlib.math.Vector.idVec3;
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.Entity.EV_Activate;
+import static neo.Game.Entity.TH_THINK;
+import static neo.Game.GameSys.SysCvar.g_debugCinematic;
+import static neo.Game.GameSys.SysCvar.g_showcamerainfo;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Script.Script_Thread.EV_Thread_SetCallback;
+import static neo.Renderer.Model.*;
+import static neo.framework.UsercmdGen.USERCMD_HZ;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+
 /**
  *
  */
 public class Camera {
 
-    static final idEventDef EV_Camera_SetAttachments = new idEventDef("<getattachments>", null);
     //
     public static final idEventDef EV_Camera_Start = new idEventDef("start", null);
     public static final idEventDef EV_Camera_Stop = new idEventDef("stop", null);
+    static final idEventDef EV_Camera_SetAttachments = new idEventDef("<getattachments>", null);
 
     /*
      ===============================================================================
@@ -70,7 +66,7 @@ public class Camera {
 
         public void Stop() {
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -80,17 +76,18 @@ public class Camera {
      ===============================================================================
      */
     public static class idCameraView extends idCamera {
-//    public	CLASS_PROTOTYPE( idCameraView );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        //    public	CLASS_PROTOTYPE( idCameraView );
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idCamera.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idCameraView>) idCameraView::Event_Activate);
             eventCallbacks.put(EV_Camera_SetAttachments, (eventCallback_t0<idCameraView>) idCameraView::Event_SetAttachments);
         }
 
-        protected float    fov;
         protected idEntity attachedTo;
         protected idEntity attachedView;
+        protected float fov;
         //
         //
 
@@ -100,16 +97,20 @@ public class Camera {
             attachedView = null;
         }
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         // save games
         @Override
-        public void Save(idSaveGame savefile) {				// archives object for save game file
+        public void Save(idSaveGame savefile) {                // archives object for save game file
             savefile.WriteFloat(fov);
             savefile.WriteObject(attachedTo);
             savefile.WriteObject(attachedView);
         }
 
         @Override
-        public void Restore(idRestoreGame savefile) {				// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             float[] fov = {this.fov};
 
             savefile.ReadFloat(fov);
@@ -122,7 +123,7 @@ public class Camera {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             // if no target specified use ourself
             final String cam = spawnArgs.GetString("cameraTarget");
             if (cam.isEmpty()) {
@@ -225,11 +226,7 @@ public class Camera {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -240,19 +237,20 @@ public class Camera {
      */
     public static class cameraFrame_t {
 
+        float fov;
         idCQuat q;
         idVec3 t;
-        float fov;
 
         public cameraFrame_t() {
             q = new idCQuat();
             t = new idVec3();
         }
-    };
+    }
 
     public static class idCameraAnim extends idCamera {
-//        public 	CLASS_PROTOTYPE( idCameraAnim );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        //        public 	CLASS_PROTOTYPE( idCameraAnim );
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idCamera.getEventCallBacks());
             eventCallbacks.put(EV_Thread_SetCallback, (eventCallback_t0<idCameraAnim>) idCameraAnim::Event_SetCallback);
@@ -261,15 +259,14 @@ public class Camera {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idCameraAnim>) idCameraAnim::Event_Activate);
         }
 
-
-        private int                   threadNum;
-        private idVec3                offset;
-        private int                   frameRate;
-        private int                   starttime;
-        private int                   cycle;
-        private idList<Integer>       cameraCuts;
-        private idList<cameraFrame_t> camera;
-        private idEntityPtr<idEntity> activator;
+        private final idEntityPtr<idEntity> activator;
+        private final idList<cameraFrame_t> camera;
+        private final idList<Integer> cameraCuts;
+        private int cycle;
+        private int frameRate;
+        private idVec3 offset;
+        private int starttime;
+        private int threadNum;
         //
         //
 
@@ -286,9 +283,13 @@ public class Camera {
         }
         //~idCameraAnim();
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         // save games
         @Override
-        public void Save(idSaveGame savefile) {				// archives object for save game file
+        public void Save(idSaveGame savefile) {                // archives object for save game file
             savefile.WriteInt(threadNum);
             savefile.WriteVec3(offset);
             savefile.WriteInt(frameRate);
@@ -298,7 +299,7 @@ public class Camera {
         }
 
         @Override
-        public void Restore(idRestoreGame savefile) {				// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             threadNum = savefile.ReadInt();
             savefile.ReadVec3(offset);
             frameRate = savefile.ReadInt();
@@ -312,7 +313,7 @@ public class Camera {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             if (spawnArgs.GetVector("old_origin", "0 0 0", offset)) {
                 offset = GetPhysics().GetOrigin().oMinus(offset);
             } else {
@@ -350,7 +351,7 @@ public class Camera {
 
             if (frameRate == USERCMD_HZ) {
                 frameTime = gameLocal.time - starttime;
-                frame = frameTime / gameLocal.msec;
+                frame = frameTime / Game_local.idGameLocal.msec;
                 lerp = 0.0f;
             } else {
                 frameTime = (gameLocal.time - starttime) * frameRate;
@@ -370,7 +371,7 @@ public class Camera {
             }
 
             if (g_debugCinematic.GetBool()) {
-                int prevFrameTime = (gameLocal.time - starttime - gameLocal.msec) * frameRate;
+                int prevFrameTime = (gameLocal.time - starttime - Game_local.idGameLocal.msec) * frameRate;
                 int prevFrame = prevFrameTime / 1000;
                 int prevCut;
 
@@ -518,7 +519,7 @@ public class Camera {
 
                 if (frameRate == USERCMD_HZ) {
                     frameTime = gameLocal.time - starttime;
-                    frame = frameTime / gameLocal.msec;
+                    frame = frameTime / Game_local.idGameLocal.msec;
                 } else {
                     frameTime = (gameLocal.time - starttime) * frameRate;
                     frame = frameTime / 1000;
@@ -551,17 +552,17 @@ public class Camera {
 
             key = spawnArgs.GetString("anim");
             if (null == key) {
-                gameLocal.Error("Missing 'anim' key on '%s'", name);
+                Game_local.idGameLocal.Error("Missing 'anim' key on '%s'", name);
             }
 
             filename = new idStr(spawnArgs.GetString(va("anim %s", key)));
             if (0 == filename.Length()) {
-                gameLocal.Error("Missing 'anim %s' key on '%s'", key, name);
+                Game_local.idGameLocal.Error("Missing 'anim %s' key on '%s'", key, name);
             }
 
             filename.SetFileExtension(MD5_CAMERA_EXT);
             if (!parser.LoadFile(filename)) {
-                gameLocal.Error("Unable to load '%s' on '%s'", filename, name);
+                Game_local.idGameLocal.Error("Unable to load '%s' on '%s'", filename, name);
             }
 
             cameraCuts.Clear();
@@ -711,9 +712,6 @@ public class Camera {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

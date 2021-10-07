@@ -1,58 +1,40 @@
 package neo.ui;
 
-import java.nio.ByteBuffer;
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.NOT;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itob;
-import static neo.framework.CVarSystem.cvarSystem;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.FileSystem_h.fileSystem;
-import static neo.framework.KeyInput.K_BACKSPACE;
-import static neo.framework.KeyInput.K_CTRL;
-import static neo.framework.KeyInput.K_DEL;
-import static neo.framework.KeyInput.K_DOWNARROW;
-import static neo.framework.KeyInput.K_END;
-import static neo.framework.KeyInput.K_ENTER;
-import static neo.framework.KeyInput.K_ESCAPE;
-import static neo.framework.KeyInput.K_HOME;
-import static neo.framework.KeyInput.K_INS;
-import static neo.framework.KeyInput.K_KP_ENTER;
-import static neo.framework.KeyInput.K_LEFTARROW;
-import static neo.framework.KeyInput.K_RIGHTARROW;
-import static neo.framework.KeyInput.K_UPARROW;
-import neo.framework.KeyInput.idKeyInput;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.idLib.common;
+import neo.framework.KeyInput.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
-import static neo.sys.win_input.Sys_GetConsoleKey;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.SliderWindow.idSliderWindow;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.WIN_CANFOCUS;
-import static neo.ui.Window.WIN_FOCUS;
 import neo.ui.Window.idWindow;
-import static neo.ui.Window.idWindow.ON.ON_ACTION;
-import static neo.ui.Window.idWindow.ON.ON_ACTIONRELEASE;
-import static neo.ui.Window.idWindow.ON.ON_ENTER;
-import static neo.ui.Window.idWindow.ON.ON_ENTERRELEASE;
-import static neo.ui.Window.idWindow.ON.ON_ESC;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinStr;
 import neo.ui.Winvar.idWinVar;
+
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.KeyInput.*;
+import static neo.idlib.Lib.colorWhite;
+import static neo.idlib.Lib.idLib.common;
+import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.sys.win_input.Sys_GetConsoleKey;
+import static neo.ui.Window.WIN_CANFOCUS;
+import static neo.ui.Window.WIN_FOCUS;
+import static neo.ui.Window.idWindow.ON.*;
 
 /**
  *
@@ -63,36 +45,39 @@ public class EditWindow {
 
     static class idEditWindow extends idWindow {
 
-        private int maxChars;
-        private int paintOffset;
-        private int cursorPos;
+        private static final char[] buffer = new char[MAX_EDITFIELD];
+        private final idList<Integer> breaks = new idList<>();
         private int cursorLine;
-        private int cvarMax;
-        private boolean wrap;
-        private boolean readonly;
-        private boolean numeric;
-        private idStr sourceFile = new idStr();
-        private idSliderWindow scroller;
-        private idList<Integer> breaks = new idList<>();
-        private float sizeBias;
-        private int textIndex;
-        private int lastTextLength;
-        private boolean forceScroll;
-        private idWinBool password = new idWinBool();
-        //
-        private idWinStr cvarStr = new idWinStr();
+        private int cursorPos;
         private idCVar cvar;
+        private final idWinStr cvarGroup = new idWinStr();
+        private int cvarMax;
         //
-        private idWinBool liveUpdate = new idWinBool();
-        private idWinStr cvarGroup = new idWinStr();
+        private final idWinStr cvarStr = new idWinStr();
+        private boolean forceScroll;
+        private int lastTextLength;
+        //
+        private final idWinBool liveUpdate = new idWinBool();
+        private int maxChars;
+        private boolean numeric;
+        private int paintOffset;
+        private final idWinBool password = new idWinBool();
+        private boolean readonly;
+        private idSliderWindow scroller;
+        private float sizeBias;
+        private final idStr sourceFile = new idStr();
+        private int textIndex;
         //
         //
+        private boolean wrap;
 
         public idEditWindow(idUserInterfaceLocal gui) {
             super(gui);
             this.gui = gui;
             CommonInit();
         }
+//	// virtual 			~idEditWindow();
+//
 
         public idEditWindow(idDeviceContext dc, idUserInterfaceLocal gui) {
             super(dc, gui);
@@ -100,8 +85,6 @@ public class EditWindow {
             this.gui = gui;
             CommonInit();
         }
-//	// virtual 			~idEditWindow();
-//
 
         @Override
         public void Draw(int time, float x, float y) {
@@ -156,7 +139,6 @@ public class EditWindow {
 
             dc.DrawText(buffer, scale, 0, color, rect, wrap, itob(flags & WIN_FOCUS) ? cursorPos : -1);
         }
-        private static char[] buffer = new char[MAX_EDITFIELD];
 
         @Override
         public String HandleEvent(final sysEvent_s event, boolean[] updateVisuals) {
@@ -206,7 +188,7 @@ public class EditWindow {
                     return "";
                 }
 
-                if (key == 'h' - 'a' + 1 || key == K_BACKSPACE) {	// ctrl-h is backspace
+                if (key == 'h' - 'a' + 1 || key == K_BACKSPACE) {    // ctrl-h is backspace
                     if (cursorPos > 0) {
                         if (cursorPos >= len) {
                             buffer[len - 1] = 0;
@@ -286,11 +268,11 @@ public class EditWindow {
                     if (cursorPos < len) {
                         if (idKeyInput.IsDown(K_CTRL)) {
                             // skip to next word
-                            while ((cursorPos < len) && (buffer[ cursorPos] != ' ')) {
+                            while ((cursorPos < len) && (buffer[cursorPos] != ' ')) {
                                 cursorPos++;
                             }
 
-                            while ((cursorPos < len) && (buffer[ cursorPos] == ' ')) {
+                            while ((cursorPos < len) && (buffer[cursorPos] == ' ')) {
                                 cursorPos++;
                             }
                         } else {
@@ -308,11 +290,11 @@ public class EditWindow {
                 if (key == K_LEFTARROW) {
                     if (idKeyInput.IsDown(K_CTRL)) {
                         // skip to previous word
-                        while ((cursorPos > 0) && (buffer[ cursorPos - 1] == ' ')) {
+                        while ((cursorPos > 0) && (buffer[cursorPos - 1] == ' ')) {
                             cursorPos--;
                         }
 
-                        while ((cursorPos > 0) && (buffer[ cursorPos - 1] != ' ')) {
+                        while ((cursorPos > 0) && (buffer[cursorPos - 1] != ' ')) {
                             cursorPos--;
                         }
                     } else {
@@ -699,5 +681,6 @@ public class EditWindow {
             InsertChild(scroller, null);
             scroller.SetBuddy(this);
         }
-    };
+    }
+
 }

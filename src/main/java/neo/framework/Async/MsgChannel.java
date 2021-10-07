@@ -1,17 +1,19 @@
 package neo.framework.Async;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.common;
 import neo.framework.Compressor.idCompressor;
 import neo.framework.File_h.idFile_BitMsg;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Lib.idException;
 import neo.sys.sys_public.idPort;
 import neo.sys.sys_public.netadr_t;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.framework.CVarSystem.CVAR_BOOL;
+import static neo.framework.CVarSystem.CVAR_SYSTEM;
+import static neo.framework.Common.common;
 import static neo.sys.sys_public.netadrtype_t.NA_BAD;
 import static neo.sys.win_net.Sys_NetAdrToString;
 
@@ -20,6 +22,29 @@ import static neo.sys.win_net.Sys_NetAdrToString;
  */
 public class MsgChannel {
 
+    //
+    public static final int CONNECTIONLESS_MESSAGE_ID = -1;        // id for connectionless messages
+    public static final int CONNECTIONLESS_MESSAGE_ID_MASK = 0x7FFF;    // value to mask away connectionless message id
+    public static final int FRAGMENT_BIT = (1 << 31);
+    //
+//
+    /*
+     ===============================================================================
+
+     Network channel.
+
+     Handles message fragmentation and out of order / duplicate suppression.
+     Unreliable messages are not garrenteed to arrive but when they do, they
+     arrive in order and without duplicates. Reliable messages always arrive,
+     and they also arrive in order without duplicates. Reliable messages piggy
+     back on unreliable messages. As such an unreliable message stream is
+     required for the reliable messages to be delivered.
+
+     ===============================================================================
+     */
+    public static final int MAX_MESSAGE_SIZE = 16384;                   // max length of a message, which may be fragmented into multiple packets
+    //
+    public static final int MAX_MSG_QUEUE_SIZE = 16384;                 // must be a power of 2
     /*
 
      packet header
@@ -35,210 +60,56 @@ public class MsgChannel {
      All fragments will have the same sequence numbers.
 
      */
-    public static final int    MAX_PACKETLEN                  = 1400;    // max size of a network packet
-    public static final int    FRAGMENT_SIZE                  = (MAX_PACKETLEN - 100);
-    public static final int    FRAGMENT_BIT                   = (1 << 31);
+    public static final int MAX_PACKETLEN = 1400;    // max size of a network packet
+    public static final int FRAGMENT_SIZE = (MAX_PACKETLEN - 100);
+    static final idCVar net_channelShowDrop = new idCVar("net_channelShowDrop", "0", CVAR_SYSTEM | CVAR_BOOL, "show dropped packets");
     //
-    static final        idCVar net_channelShowPackets         = new idCVar("net_channelShowPackets", "0", CVAR_SYSTEM | CVAR_BOOL, "show all packets");
-    static final        idCVar net_channelShowDrop            = new idCVar("net_channelShowDrop", "0", CVAR_SYSTEM | CVAR_BOOL, "show dropped packets");
-    //
-//    
-    /*
-     ===============================================================================
-
-     Network channel.
-
-     Handles message fragmentation and out of order / duplicate suppression.
-     Unreliable messages are not garrenteed to arrive but when they do, they
-     arrive in order and without duplicates. Reliable messages always arrive,
-     and they also arrive in order without duplicates. Reliable messages piggy
-     back on unreliable messages. As such an unreliable message stream is
-     required for the reliable messages to be delivered.
-
-     ===============================================================================
-     */
-    public static final int    MAX_MESSAGE_SIZE               = 16384;                   // max length of a message, which may be fragmented into multiple packets
-    //
-    public static final int    CONNECTIONLESS_MESSAGE_ID      = -1;        // id for connectionless messages
-    public static final int    CONNECTIONLESS_MESSAGE_ID_MASK = 0x7FFF;    // value to mask away connectionless message id
-    //
-    public static final int    MAX_MSG_QUEUE_SIZE             = 16384;                 // must be a power of 2
-
-    class idMsgQueue {
-
-        private byte[] buffer = new byte[MAX_MSG_QUEUE_SIZE];
-        private int first;      // sequence number of first message in queue
-        private int last;       // sequence number of last message in queue
-        private int startIndex; // index pointing to the first byte of the first message
-        private int endIndex;   // index pointing to the first byte after the last message
-        //
-        //
-
-        public idMsgQueue() {
-            Init(0);
-        }
-
-        public void Init(int sequence) {
-            first = last = sequence;
-            startIndex = endIndex = 0;
-        }
-
-        public boolean Add(final byte[] data, final int size) {
-            if (GetSpaceLeft() < size + 8) {
-                return false;
-            }
-            int sequence = last;
-            WriteShort(size);
-            WriteLong(sequence);
-            WriteData(data, size);
-            last++;
-            return true;
-        }
-
-        public boolean Get(byte[] data, int[] size) {
-            if (first == last) {
-                size[0] = 0;
-                return false;
-            }
-            int sequence;
-//	size = ReadShort();
-            sequence = ReadLong();
-            ReadData(data, size[0]);
-            assert (sequence == first);
-            first++;
-            return true;
-        }
-
-        public int GetTotalSize() {
-            if (startIndex <= endIndex) {
-                return (endIndex - startIndex);
-            } else {
-                return (buffer.length - startIndex + endIndex);
-            }
-        }
-
-        public int GetSpaceLeft() {
-            if (startIndex <= endIndex) {
-                return buffer.length - (endIndex - startIndex) - 1;
-            } else {
-                return (startIndex - endIndex) - 1;
-            }
-        }
-
-        public int GetFirst() {
-            return first;
-        }
-
-        public int GetLast() {
-            return last;
-        }
-
-        public void CopyToBuffer(byte[] buf) {
-            if (startIndex <= endIndex) {
-//		memcpy( buf, buffer + startIndex, endIndex - startIndex );
-                System.arraycopy(buffer, startIndex, buf, 0, endIndex - startIndex);
-            } else {
-//		memcpy( buf, buffer + startIndex, sizeof( buffer ) - startIndex );
-                System.arraycopy(buffer, startIndex, buf, 0, buffer.length - startIndex);
-//		memcpy( buf + sizeof( buffer ) - startIndex, buffer, endIndex );
-                System.arraycopy(buffer, 0, buf, buffer.length - startIndex, endIndex);
-            }
-        }
-
-        private void WriteByte(byte b) {
-            buffer[endIndex] = b;
-            endIndex = (endIndex + 1) & (MAX_MSG_QUEUE_SIZE - 1);
-        }
-
-        private byte ReadByte() {
-            byte b = buffer[startIndex];
-            startIndex = (startIndex + 1) & (MAX_MSG_QUEUE_SIZE - 1);
-            return b;
-        }
-
-        private void WriteShort(int s) {
-            WriteByte((byte) ((s >> 0) & 255));
-            WriteByte((byte) ((s >> 8) & 255));
-        }
-
-        private int ReadShort() {
-            return ReadByte() | (ReadByte() << 8);
-        }
-
-        private void WriteLong(int l) {
-            WriteByte((byte) ((l >> 0) & 255));
-            WriteByte((byte) ((l >> 8) & 255));
-            WriteByte((byte) ((l >> 16) & 255));
-            WriteByte((byte) ((l >> 24) & 255));
-        }
-
-        private int ReadLong() {
-            return ReadByte() | (ReadByte() << 8) | (ReadByte() << 16) | (ReadByte() << 24);
-        }
-
-        private void WriteData(final byte[] data, final int size) {
-            for (int i = 0; i < size; i++) {
-                WriteByte(data[i]);
-            }
-        }
-
-        private void ReadData(byte[] data, final int size) {
-            if (data != null) {
-                for (int i = 0; i < size; i++) {
-                    data[i] = ReadByte();
-                }
-            } else {
-                for (int i = 0; i < size; i++) {
-                    ReadByte();
-                }
-            }
-        }
-    };
+    static final idCVar net_channelShowPackets = new idCVar("net_channelShowPackets", "0", CVAR_SYSTEM | CVAR_BOOL, "show all packets");
 
     static class idMsgChannel {
 
-        private netadr_t     remoteAddress; // address of remote host
-        private int          id;            // our identification used instead of port number
-        private int          maxRate;       // maximum number of bytes that may go out per second
-        private idCompressor compressor;    // compressor used for data compression
-        //
-        // variables to control the outgoing rate
-        private int          lastSendTime;  // last time data was sent out
-        private int          lastDataBytes; // bytes left to send at last send time
-        //
-        // variables to keep track of the rate
-        private int          outgoingRateTime;
-        private int          outgoingRateBytes;
-        private int          incomingRateTime;
-        private int          incomingRateBytes;
-        //
-        // variables to keep track of the compression ratio
-        private float        outgoingCompression;
-        private float        incomingCompression;
-        //
-        // variables to keep track of the incoming packet loss
-        private float        incomingReceivedPackets;
-        private float        incomingDroppedPackets;
-        private int          incomingPacketLossTime;
-        //
-        // sequencing variables
-        private int          outgoingSequence;
-        private int          incomingSequence;
-        //
-        // outgoing fragment buffer
-        private boolean      unsentFragments;
-        private int          unsentFragmentStart;
+        private final ByteBuffer fragmentBuffer = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
         private final ByteBuffer unsentBuffer = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
-        private idBitMsg unsentMsg;
+        private idCompressor compressor;    // compressor used for data compression
+        private int fragmentLength;
         //
         // incoming fragment assembly buffer
-        private int      fragmentSequence;
-        private int      fragmentLength;
-        private final ByteBuffer fragmentBuffer = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
+        private int fragmentSequence;
+        private int id;            // our identification used instead of port number
+        private float incomingCompression;
+        private float incomingDroppedPackets;
+        private int incomingPacketLossTime;
+        private int incomingRateBytes;
+        private int incomingRateTime;
+        //
+        // variables to keep track of the incoming packet loss
+        private float incomingReceivedPackets;
+        private int incomingSequence;
+        private int lastDataBytes; // bytes left to send at last send time
+        //
+        // variables to control the outgoing rate
+        private int lastSendTime;  // last time data was sent out
+        private int maxRate;       // maximum number of bytes that may go out per second
+        //
+        // variables to keep track of the compression ratio
+        private float outgoingCompression;
+        private int outgoingRateBytes;
+        //
+        // variables to keep track of the rate
+        private int outgoingRateTime;
+        //
+        // sequencing variables
+        private int outgoingSequence;
+        private idMsgQueue reliableReceive;
         //
         // reliable messages
         private idMsgQueue reliableSend;
-        private idMsgQueue reliableReceive;
+        private netadr_t remoteAddress; // address of remote host
+        private int unsentFragmentStart;
+        //
+        // outgoing fragment buffer
+        private boolean unsentFragments;
+        private idBitMsg unsentMsg;
         //
         //
 
@@ -338,7 +209,7 @@ public class MsgChannel {
             return incomingDroppedPackets * 100.0f / (incomingReceivedPackets + incomingDroppedPackets);
         }
 
-//
+        //
         // Returns true if the channel is ready to send new data based on the maximum rate.
         public boolean ReadyToSend(final int time) {
             int deltaTime;
@@ -530,7 +401,7 @@ public class MsgChannel {
                 fragStart = msg.ReadShort();
                 fragLength = msg.ReadShort();
             } else {
-                fragStart = 0;		// stop warning message
+                fragStart = 0;        // stop warning message
                 fragLength = 0;
             }
 
@@ -621,11 +492,7 @@ public class MsgChannel {
             incomingSequence = sequence[0];
 
             // read the message data
-            if (!ReadMessageData(msg, fragMsg)) {
-                return false;
-            }
-
-            return true;
+            return ReadMessageData(msg, fragMsg);
         }
 //
         // Sends a reliable message, in order and without duplicates.
@@ -657,7 +524,7 @@ public class MsgChannel {
             return result;
         }
 
-//
+        //
         // Removes any pending outgoing or incoming reliable messages.
         public void ClearReliableMessages() {
             reliableSend.Init(1);
@@ -789,5 +656,137 @@ public class MsgChannel {
             incomingReceivedPackets += numReceived;
             incomingDroppedPackets += numDropped;
         }
-    };
+    }
+
+    class idMsgQueue {
+
+        private final byte[] buffer = new byte[MAX_MSG_QUEUE_SIZE];
+        private int endIndex;   // index pointing to the first byte after the last message
+        private int first;      // sequence number of first message in queue
+        private int last;       // sequence number of last message in queue
+        private int startIndex; // index pointing to the first byte of the first message
+        //
+        //
+
+        public idMsgQueue() {
+            Init(0);
+        }
+
+        public void Init(int sequence) {
+            first = last = sequence;
+            startIndex = endIndex = 0;
+        }
+
+        public boolean Add(final byte[] data, final int size) {
+            if (GetSpaceLeft() < size + 8) {
+                return false;
+            }
+            int sequence = last;
+            WriteShort(size);
+            WriteLong(sequence);
+            WriteData(data, size);
+            last++;
+            return true;
+        }
+
+        public boolean Get(byte[] data, int[] size) {
+            if (first == last) {
+                size[0] = 0;
+                return false;
+            }
+            int sequence;
+//	size = ReadShort();
+            sequence = ReadLong();
+            ReadData(data, size[0]);
+            assert (sequence == first);
+            first++;
+            return true;
+        }
+
+        public int GetTotalSize() {
+            if (startIndex <= endIndex) {
+                return (endIndex - startIndex);
+            } else {
+                return (buffer.length - startIndex + endIndex);
+            }
+        }
+
+        public int GetSpaceLeft() {
+            if (startIndex <= endIndex) {
+                return buffer.length - (endIndex - startIndex) - 1;
+            } else {
+                return (startIndex - endIndex) - 1;
+            }
+        }
+
+        public int GetFirst() {
+            return first;
+        }
+
+        public int GetLast() {
+            return last;
+        }
+
+        public void CopyToBuffer(byte[] buf) {
+            if (startIndex <= endIndex) {
+//		memcpy( buf, buffer + startIndex, endIndex - startIndex );
+                System.arraycopy(buffer, startIndex, buf, 0, endIndex - startIndex);
+            } else {
+//		memcpy( buf, buffer + startIndex, sizeof( buffer ) - startIndex );
+                System.arraycopy(buffer, startIndex, buf, 0, buffer.length - startIndex);
+//		memcpy( buf + sizeof( buffer ) - startIndex, buffer, endIndex );
+                System.arraycopy(buffer, 0, buf, buffer.length - startIndex, endIndex);
+            }
+        }
+
+        private void WriteByte(byte b) {
+            buffer[endIndex] = b;
+            endIndex = (endIndex + 1) & (MAX_MSG_QUEUE_SIZE - 1);
+        }
+
+        private byte ReadByte() {
+            byte b = buffer[startIndex];
+            startIndex = (startIndex + 1) & (MAX_MSG_QUEUE_SIZE - 1);
+            return b;
+        }
+
+        private void WriteShort(int s) {
+            WriteByte((byte) ((s >> 0) & 255));
+            WriteByte((byte) ((s >> 8) & 255));
+        }
+
+        private int ReadShort() {
+            return ReadByte() | (ReadByte() << 8);
+        }
+
+        private void WriteLong(int l) {
+            WriteByte((byte) ((l >> 0) & 255));
+            WriteByte((byte) ((l >> 8) & 255));
+            WriteByte((byte) ((l >> 16) & 255));
+            WriteByte((byte) ((l >> 24) & 255));
+        }
+
+        private int ReadLong() {
+            return ReadByte() | (ReadByte() << 8) | (ReadByte() << 16) | (ReadByte() << 24);
+        }
+
+        private void WriteData(final byte[] data, final int size) {
+            for (int i = 0; i < size; i++) {
+                WriteByte(data[i]);
+            }
+        }
+
+        private void ReadData(byte[] data, final int size) {
+            if (data != null) {
+                for (int i = 0; i < size; i++) {
+                    data[i] = ReadByte();
+                }
+            } else {
+                for (int i = 0; i < size; i++) {
+                    ReadByte();
+                }
+            }
+        }
+    }
+
 }

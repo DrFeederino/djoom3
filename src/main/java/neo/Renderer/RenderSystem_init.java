@@ -1,216 +1,107 @@
 package neo.Renderer;
 
-import static java.lang.Math.random;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.Arrays;
 import neo.Renderer.Cinematic.cinData_t;
 import neo.Renderer.Cinematic.idCinematic;
-import static neo.Renderer.Image.cubeFiles_t.CF_2D;
-import static neo.Renderer.Image.globalImages;
 import neo.Renderer.Image.idImage;
-import static neo.Renderer.Image.textureDepth_t.TD_DEFAULT;
-import static neo.Renderer.Image_files.R_LoadImage;
-import static neo.Renderer.Image_files.R_WriteTGA;
-import static neo.Renderer.Image_program.R_LoadImageProgram;
 import neo.Renderer.Interaction.R_ShowInteractionMemory_f;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
-import static neo.Renderer.Material.textureRepeat_t.TR_REPEAT;
 import neo.Renderer.MegaTexture.idMegaTexture;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderSystem.renderSystem;
 import neo.Renderer.RenderWorld.R_ListRenderEntityDefs_f;
 import neo.Renderer.RenderWorld.R_ListRenderLightDefs_f;
 import neo.Renderer.RenderWorld.modelTrace_s;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.draw_arb2.R_ARB2_Init;
 import neo.Renderer.draw_arb2.R_ReloadARBPrograms_f;
-//import static neo.Renderer.draw_nv10.R_NV10_Init;
-//import static neo.Renderer.draw_nv20.R_NV20_Init;
-//import static neo.Renderer.draw_r200.R_R200_Init;
-import static neo.Renderer.qgl.qglFinish;
-import static neo.Renderer.qgl.qglGetError;
-import static neo.Renderer.qgl.qglGetFloatv;
-import static neo.Renderer.qgl.qglGetInteger;
-import static neo.Renderer.qgl.qglGetIntegerv;
-import static neo.Renderer.qgl.qglGetString;
-import static neo.Renderer.qgl.qglGetStringi;
-import static neo.Renderer.qgl.qglReadBuffer;
-import static neo.Renderer.qgl.qglReadPixels;
 import neo.Renderer.tr_guisurf.R_ListGuis_f;
 import neo.Renderer.tr_guisurf.R_ReloadGuis_f;
-import static neo.Renderer.tr_lightrun.R_FreeDerivedData;
 import neo.Renderer.tr_lightrun.R_ModulateLights_f;
 import neo.Renderer.tr_lightrun.R_RegenerateWorld_f;
-import static neo.Renderer.tr_local.MAX_MULTITEXTURE_UNITS;
-import static neo.Renderer.tr_local.backEndName_t.BE_ARB;
-import static neo.Renderer.tr_local.backEndName_t.BE_ARB2;
-import static neo.Renderer.tr_local.backEndName_t.BE_NV10;
-import static neo.Renderer.tr_local.backEndName_t.BE_NV20;
-import static neo.Renderer.tr_local.backEndName_t.BE_R200;
-import static neo.Renderer.tr_local.glConfig;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_main.R_InitFrameData;
-import static neo.Renderer.tr_main.R_ToggleSmpFrame;
+import neo.Renderer.tr_local.*;
 import neo.Renderer.tr_trisurf.R_ShowTriSurfMemory_f;
 import neo.Sound.snd_system;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atof;
-import static neo.TempDump.btoi;
-import static neo.TempDump.ctos;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itob;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.*;
+import neo.framework.Common;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.cmp_t;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+import neo.sys.win_glimp.*;
+import org.lwjgl.BufferUtils;
+
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.Arrays;
+
+import static java.lang.Math.random;
+import static neo.Renderer.Image.cubeFiles_t.CF_2D;
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.Image.textureDepth_t.TD_DEFAULT;
+import static neo.Renderer.Image_files.R_LoadImage;
+import static neo.Renderer.Image_files.R_WriteTGA;
+import static neo.Renderer.Image_program.R_LoadImageProgram;
+import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
+import static neo.Renderer.Material.textureRepeat_t.TR_REPEAT;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderSystem.renderSystem;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.draw_arb2.R_ARB2_Init;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_lightrun.R_FreeDerivedData;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_local.backEndName_t.*;
+import static neo.Renderer.tr_main.R_InitFrameData;
+import static neo.Renderer.tr_main.R_ToggleSmpFrame;
+import static neo.TempDump.*;
 import static neo.framework.BuildDefines._WIN32;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_CHEAT;
-import static neo.framework.CVarSystem.CVAR_FLOAT;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_NOCHEAT;
-import static neo.framework.CVarSystem.CVAR_RENDERER;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_CHEAT;
-import static neo.framework.CmdSystem.CMD_FL_RENDERER;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.*;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
-import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import neo.framework.CmdSystem.idCmdSystem;
-import neo.framework.Common;
 import static neo.framework.Console.console;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.Session.session;
-import neo.idlib.CmdArgs.idCmdArgs;
 import static neo.idlib.Lib.idLib.common;
 import static neo.idlib.Lib.idLib.cvarSystem;
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.containers.List.cmp_t;
-import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Vector.idVec3;
-import static neo.sys.win_glimp.GLimp_Init;
-import static neo.sys.win_glimp.GLimp_SetScreenParms;
-import static neo.sys.win_glimp.GLimp_Shutdown;
-import neo.sys.win_glimp.glimpParms_t;
-import static neo.sys.win_input.Sys_GrabMouseCursor;
-import static neo.sys.win_input.Sys_InitInput;
-import static neo.sys.win_input.Sys_ShutdownInput;
+import static neo.sys.win_glimp.*;
+import static neo.sys.win_input.*;
 import static neo.sys.win_main.Sys_GetProcessorString;
 import static neo.sys.win_shared.Sys_Milliseconds;
 import static neo.ui.UserInterface.uiManager;
-import org.lwjgl.BufferUtils;
 import static org.lwjgl.opengl.ARBFragmentProgram.GL_MAX_TEXTURE_COORDS_ARB;
 import static org.lwjgl.opengl.ARBFragmentProgram.GL_MAX_TEXTURE_IMAGE_UNITS_ARB;
 import static org.lwjgl.opengl.ARBMultitexture.GL_MAX_TEXTURE_UNITS_ARB;
 import static org.lwjgl.opengl.EXTStencilWrap.GL_DECR_WRAP_EXT;
 import static org.lwjgl.opengl.EXTStencilWrap.GL_INCR_WRAP_EXT;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT;
-import static org.lwjgl.opengl.GL11.GL_DECR;
-import static org.lwjgl.opengl.GL11.GL_EXTENSIONS;
-import static org.lwjgl.opengl.GL11.GL_FRONT;
-import static org.lwjgl.opengl.GL11.GL_INCR;
-import static org.lwjgl.opengl.GL11.GL_INVALID_ENUM;
-import static org.lwjgl.opengl.GL11.GL_INVALID_OPERATION;
-import static org.lwjgl.opengl.GL11.GL_INVALID_VALUE;
-import static org.lwjgl.opengl.GL11.GL_MAX_TEXTURE_SIZE;
-import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
-import static org.lwjgl.opengl.GL11.GL_OUT_OF_MEMORY;
-import static org.lwjgl.opengl.GL11.GL_RENDERER;
-import static org.lwjgl.opengl.GL11.GL_RGB;
-import static org.lwjgl.opengl.GL11.GL_STACK_OVERFLOW;
-import static org.lwjgl.opengl.GL11.GL_STACK_UNDERFLOW;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_INDEX;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
-import static org.lwjgl.opengl.GL11.GL_VENDOR;
-import static org.lwjgl.opengl.GL11.GL_VERSION;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
  */
 public class RenderSystem_init {
 
-    static final String[] r_rendererArgs = {"best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", null};
-
-    public static final idCVar r_useEntityCallbacks;            // if 0, issue the callback immediately at update time, rather than defering
-    public static final idCVar r_skipFogLights;                 // skip all fog lights
-    public static final idCVar r_znear;                         // near Z clip plane
-    public static final idCVar r_showVertexColor;               // draws all triangles with the solid vertex color
-    public static final idCVar r_showNormals;                   // draws wireframe normals
-    public static final idCVar r_skipNewAmbient;                // bypasses all vertex/fragment program ambients
-    public static final idCVar r_showDepth;                     // display the contents of the depth buffer and the depth range
-    public static final idCVar r_showAlloc;                     // report alloc/free counts
-    public static final idCVar r_useShadowProjectedCull;        // 1 = discard triangles outside light volume before shadowing
-    public static final idCVar r_useEntityScissors;             // 1 = use custom scissor rectangle for each entity
-    //
-    public static final idCVar r_testGamma;                     // draw a grid pattern to test gamma levels
+    public static final idCVar r_brightness;                    // changes gamma tables
+    public static final idCVar r_cgFragmentProfile;             // arbfp1, fp30
     //
     public static final idCVar r_cgVertexProfile;               // arbvp1, vp20, vp30
-    public static final idCVar r_swapInterval;                  // changes wglSwapIntarval
-    public static final idCVar r_showPrimitives;                // report vertex/index/draw counts
-    public static final idCVar r_orderIndexes;                  // perform index reorganization to optimize vertex use
-    public static final idCVar r_lightAllBackFaces;             // light all the back faces, even when they would be shadowed
-    public static final idCVar r_useLightScissors;              // 1 = use custom scissor rectangle for each light
-    public static final idCVar r_useLightPortalFlow;            // 1 = do a more precise area reference determination
-    public static final idCVar r_useExternalShadows;            // 1 = skip drawing caps when outside the light volume
-    public static final idCVar r_useFrustumFarDistance;         // if != 0 force the view frustum far distance to this distance
     //
     public static final idCVar r_checkBounds;                   // compare all surface bounds with precalculated ones
-    public static final idCVar r_skipCopyTexture;               // do all rendering, but don't actually copyTexSubImage2D
-    public static final idCVar r_brightness;                    // changes gamma tables
-    public static final idCVar r_useCombinerDisplayLists;       // if 1, put all nvidia register combiner programming in display lists
-    public static final idCVar r_showSmp;                       // show which end (front or back) is blocking
-    public static final idCVar r_useStateCaching;               // avoid redundant state changes in GL_*() calls
-    public static final idCVar r_showMemory;                    // print frame memory utilization
-    public static final idCVar r_testGammaBias;                 // draw a grid pattern to test gamma levels
-    public static final idCVar r_showPortals;                   // draw portal outlines in color based on passed / not passed
+    public static final idCVar r_clear;                         // force screen clear every frame
+    public static final idCVar r_customHeight;
+    public static final idCVar r_customWidth;
+    public static final idCVar r_debugArrowStep;                // step size of arrow cone line rotation in degrees
     //
-    public static final idCVar r_inhibitFragmentProgram;
-    public static final idCVar r_useTwoSidedStencil;            // 1 = do stencil shadows in one pass with different ops on each side
-    public static final idCVar r_useTripleTextureARB;           // 1 = cards with 3+ texture units do a two pass instead of three pass
-    public static final idCVar r_shadowPolygonOffset;           // bias value added to depth test for stencil shadow drawing
-    public static final idCVar r_showTrace;                     // show the intersection of an eye trace with the world
-    public static final idCVar r_showInteractions;              // report interaction generation activity
-    public static final idCVar r_useShadowVertexProgram;        // 1 = do the shadow projection in the vertex program on capable cards
-    //
-    public static final idCVar r_testARBProgram;                // experiment with vertex/fragment programs
-    public static final idCVar r_showTextureVectors;            // draw each triangles texture (tangent) vectors
-    public static final idCVar r_jointNameOffset;               // offset of joint names when r_showskel is set to 1
-    public static final idCVar r_skipBackEnd;                   // don't draw anything
-    public static final idCVar r_shadowPolygonFactor;           // scale value for stencil shadow drawing
-    public static final idCVar r_skipFrontEnd;                  // bypasses all front end work, but 2D gui rendering still draws
-    public static final idCVar r_skipGuiShaders;                // 1 = don't render any gui elements on surfaces
-    public static final idCVar r_jointNameScale;                // size of joint names when r_showskel is set to 1
-    public static final idCVar r_showTexturePolarity;           // shade triangles by texture area polarity
-    public static final idCVar r_showDominantTri;               // draw lines from vertexes to center of dominant triangles
-    public static final idCVar r_skipRender;                    // skip 3D rendering, but pass 2D
-    public static final idCVar r_skipParticles;                 // 1 = don't render any particles
-    public static final idCVar r_usePortals;                    // 1 = use portals to perform area culling, otherwise draw everything
-    public static final idCVar r_useShadowSurfaceScissor;       // 1 = scissor shadows by the scissor rect of the interaction surfaces
-    public static final idCVar r_showLightCount;                // colors surfaces based on light count
-    //
-    public static final idCVar r_ignore;                        // used for random debugging without defining new vars
-    public static final idCVar r_lightScale;                    // all light intensities are multiplied by this, which is normally 2
+    public static final idCVar r_debugLineDepthTest;            // perform depth test on debug lines
+    public static final idCVar r_debugLineWidth;                // width of debug lines
+    public static final idCVar r_debugPolygonFilled;
     //
     public static final idCVar r_debugRenderToTexture;
-    //
-    public static final idCVar r_showInteractionScissors;       // show screen rectangle which contains the interaction frustum
-    //
-    public static final idCVar r_singleLight;                   // suppress all but one light
-    public static final idCVar r_showEdges;                     // draw the sil edges
-    public static final idCVar r_offsetUnits;                   // polygon offset parameter
-    public static final idCVar r_showUpdates;                   // report entity and light updates and ref counts
-    public static final idCVar r_useInteractionCulling;         // 1 = cull interactions
-    public static final idCVar r_showImages;                    // draw all images to screen instead of rendering
-    public static final idCVar r_skipAmbient;                   // bypasses all non-interaction drawing
-    public static final idCVar r_useDeferredTangents;           // 1 = don't always calc tangents after deform
-    public static final idCVar r_clear;                         // force screen clear every frame
-    public static final idCVar r_multiSamples;                  // number of antialiasing samples
-    public static final idCVar r_useConstantMaterials;          // 1 = use pre-calculated material registers if possible
+    public static final idCVar r_demonstrateBug;                // used during development to show IHV's their problems
+    public static final idCVar r_displayRefresh;                // optional display refresh rate option for vid mode
     //
     //
     //
@@ -219,105 +110,224 @@ public class RenderSystem_init {
     public static final idCVar r_ext_vertex_array_range;
     //
     public static final idCVar r_finish;                        // force a call to glFinish() every frame
-    public static final idCVar r_debugArrowStep;                // step size of arrow cone line rotation in degrees
-    //
-    public static final idCVar r_renderer;                      // arb, nv10, nv20, r200, gl2, etc
-    public static final idCVar r_showViewEntitys;               // displays the bounding boxes of all view models and optionally the index
-    public static final idCVar r_displayRefresh;                // optional display refresh rate option for vid mode
-    public static final idCVar r_showTris;                      // enables wireframe rendering of the world
-    public static final idCVar r_singleArea;                    // only draw the portal area the view is actually in
-    public static final idCVar r_showDynamic;                   // report stats on dynamic surface generation
-    public static final idCVar r_singleSurface;                 // suppress all but one surface on each entity
-    public static final idCVar r_skipDeforms;                   // leave all deform materials in their original state
-    public static final idCVar r_skipTranslucent;               // skip the translucent interaction rendering
-    public static final idCVar r_lightSourceRadius;             // for soft-shadow sampling
-    public static final idCVar r_useVertexBuffers;              // if 0, don't use ARB_vertex_buffer_object for vertexes
-    public static final idCVar r_skipBump;                      // uses a flat surface instead of the bump map
-    public static final idCVar r_showIntensity;                 // draw the screen colors based on intensity, red = 0, green = 128, blue = 255
-    public static final idCVar r_demonstrateBug;                // used during development to show IHV's their problems
-    public static final idCVar r_showEntityScissors;            // show entity scissor rectangles
-    public static final idCVar r_useSilRemap;                   // 1 = consider verts with the same XYZ, but different ST the same for shadows
-    public static final idCVar r_useIndexBuffers;               // if 0, don't use ARB_vertex_buffer_object for indexes
-    public static final idCVar r_skipDynamicTextures;           // don't dynamically create textures
-    public static final idCVar r_showShadowCount;               // colors screen based on shadow volume depth complexity
-    public static final idCVar r_useLightCulling;               // 0 = none, 1 = box, 2 = exact clip of polyhedron faces
-    public static final idCVar r_skipSubviews;                  // 1 = don't render any mirrors / cameras / etc
-    public static final idCVar r_showDefs;                      // report the number of modeDefs and lightDefs in view
-    public static final idCVar r_mode;                          // video mode number
-    public static final idCVar r_skipRenderContext;             // NULL the rendering context during backend 3D rendering
-    public static final idCVar r_ignore2;                       // used for random debugging without defining new vars
-    public static final idCVar r_useOptimizedShadows;           // 1 = use the dmap generated static shadow volumes
-    //
-    public static final idCVar r_debugLineDepthTest;            // perform depth test on debug lines
-    public static final idCVar r_showCull;                      // report sphere and box culling stats
-    public static final idCVar r_showDemo;                      // report reads and writes to the demo file
-    public static final idCVar r_skipUpdates;                   // 1 = don't accept any entity or light updates, making everything static
-    public static final idCVar r_screenFraction;                // for testing fill rate, the resolution of the entire screen can be changed
-    public static final idCVar r_skipBlendLights;               // skip all blend lights
-    //
-    public static final idCVar r_showUnsmoothedTangents;        // highlight geometry rendered with unsmoothed tangents
-    public static final idCVar r_cgFragmentProfile;             // arbfp1, fp30
-    public static final idCVar r_showLights;                    // 1 = print light info, 2 = also draw volumes
-    //
-    public static final idCVar r_skipPostProcess;               // skip all post-process renderings
-    public static final idCVar r_skipDiffuse;                   // use black for diffuse
-    public static final idCVar r_customWidth;
-    public static final idCVar r_skipOverlays;                  // skip overlay surfaces
-    public static final idCVar r_showLightScissors;             // show light scissor rectangles
-    public static final idCVar r_useTurboShadow;                // 1 = use the infinite projection with W technique for dynamic shadows
-    public static final idCVar r_showSilhouette;                // highlight edges that are casting shadow planes
-    public static final idCVar r_showSkel;                      // draw the skeleton when model animates
-    public static final idCVar r_debugPolygonFilled;
-    public static final idCVar r_showInteractionFrustums;       // show a frustum for each interaction
-    public static final idCVar r_showShadows;                   // visualize the stencil shadow volumes
-    public static final idCVar r_showTangentSpace;              // shade triangles by tangent space
-    public static final idCVar r_useDepthBoundsTest;            // use depth bounds test to reduce shadow fill
-    public static final idCVar r_useInteractionTable;           // create a full entityDefs * lightDefs table to make finding interactions faster
-    public static final idCVar r_customHeight;
-    public static final idCVar r_useNodeCommonChildren;         // stop pushing reference bounds early when possible
-    public static final idCVar r_useCulling;                    // 0 = none, 1 = sphere, 2 = sphere + box
-    public static final idCVar r_singleTriangle;                // only draw a single triangle per primitive
-    public static final idCVar r_fullscreen;                    // 0 = windowed, 1 = full screen
+    public static final idCVar r_flareSize;                     // scale the flare deforms from the material def
     //
     public static final idCVar r_forceLoadImages;               // draw all images to screen after registration
-    public static final idCVar r_offsetFactor;                  // polygon offset parameter
-    public static final idCVar r_skipSpecular;                  // use black for specular
-    public static final idCVar r_useShadowCulling;              // try to cull shadows from partially visible lights
-    public static final idCVar r_useCachedDynamicModels;        // 1 = cache snapshots of dynamic models
-    public static final idCVar r_useInteractionScissors;        // 1 = use a custom scissor rectangle for each interaction
-    public static final idCVar r_flareSize;                     // scale the flare deforms from the material def
-    public static final idCVar r_logFile;                       // number of frames to emit GL logs
-    //
-    public static final idCVar r_jitter;                        // randomly subpixel jitter the projection matrix
-    public static final idCVar r_showLightScale;                // report the scale factor applied to drawing for overbrights
-    public static final idCVar r_usePreciseTriangleInteractions;// 1 = do winding clipping to determine if each ambiguous tri should be lit
     public static final idCVar r_frontBuffer;                   // draw to front buffer for debugging
-    public static final idCVar r_skipSuppress;                  // ignore the per-view suppressions
-    //
-    public static final idCVar r_useNV20MonoLights;             // 1 = allow an interaction pass optimization
-    public static final idCVar r_useInfiniteFarZ;               // 1 = use the no-far-clip-plane trick
-    public static final idCVar r_skipLightScale;                // don't do any post-interaction light scaling, makes things dim on low-dynamic range cards
-    public static final idCVar r_skipInteractions;              // skip all light/surface interaction drawing
-    public static final idCVar r_subviewOnly;                   // 1 = don't render main view, allowing subviews to be debugged
-    public static final idCVar r_showSurfaces;                  // report surface/light/shadow counts
-    public static final idCVar r_debugLineWidth;                // width of debug lines
-    public static final idCVar r_showSurfaceInfo;               // show surface material name under crosshair
-    public static final idCVar r_useScissor;                    // 1 = scissor clip as portals and lights are processed
-    public static final idCVar r_glDriver;                      // "opengl32", etc
-    public static final idCVar r_skipROQ;
-    //
-    public static final idCVar r_materialOverride;              // override all materials
-    public static final idCVar r_useEntityCulling;              // 0 = none, 1 = box
-    public static final idCVar r_singleEntity;                  // suppress all but one entity
-    public static final idCVar r_shadows;                       // enable shadows
+    public static final idCVar r_fullscreen;                    // 0 = windowed, 1 = full screen
     //
     public static final idCVar r_gamma;                         // changes gamma tables
-    public static final idCVar r_showOverDraw;                  // show overdraw
-    public static final idCVar r_lockSurfaces;
-    public static final idCVar r_useClippedLightScissors;       // 0 = full screen when near clipped, 1 = exact when near clipped, 2 = exact always
+    public static final idCVar r_glDriver;                      // "opengl32", etc
+    //
+    public static final idCVar r_ignore;                        // used for random debugging without defining new vars
+    public static final idCVar r_ignore2;                       // used for random debugging without defining new vars
     //
     public static final idCVar r_ignoreGLErrors;
+    //
+    public static final idCVar r_inhibitFragmentProgram;
+    //
+    public static final idCVar r_jitter;                        // randomly subpixel jitter the projection matrix
+    public static final idCVar r_jointNameOffset;               // offset of joint names when r_showskel is set to 1
+    public static final idCVar r_jointNameScale;                // size of joint names when r_showskel is set to 1
+    public static final idCVar r_lightAllBackFaces;             // light all the back faces, even when they would be shadowed
+    public static final idCVar r_lightScale;                    // all light intensities are multiplied by this, which is normally 2
+    public static final idCVar r_lightSourceRadius;             // for soft-shadow sampling
+    public static final idCVar r_lockSurfaces;
+    public static final idCVar r_logFile;                       // number of frames to emit GL logs
+    //
+    public static final idCVar r_materialOverride;              // override all materials
+    public static final idCVar r_mode;                          // video mode number
+    public static final idCVar r_multiSamples;                  // number of antialiasing samples
+    public static final idCVar r_offsetFactor;                  // polygon offset parameter
+    public static final idCVar r_offsetUnits;                   // polygon offset parameter
+    public static final idCVar r_orderIndexes;                  // perform index reorganization to optimize vertex use
+    //
+    public static final idCVar r_renderer;                      // arb, nv10, nv20, r200, gl2, etc
+    public static final idCVar r_screenFraction;                // for testing fill rate, the resolution of the entire screen can be changed
+    public static final idCVar r_shadowPolygonFactor;           // scale value for stencil shadow drawing
+    public static final idCVar r_shadowPolygonOffset;           // bias value added to depth test for stencil shadow drawing
+    public static final idCVar r_shadows;                       // enable shadows
+    public static final idCVar r_showAlloc;                     // report alloc/free counts
+    public static final idCVar r_showCull;                      // report sphere and box culling stats
+    public static final idCVar r_showDefs;                      // report the number of modeDefs and lightDefs in view
+    public static final idCVar r_showDemo;                      // report reads and writes to the demo file
+    public static final idCVar r_showDepth;                     // display the contents of the depth buffer and the depth range
+    public static final idCVar r_showDominantTri;               // draw lines from vertexes to center of dominant triangles
+    public static final idCVar r_showDynamic;                   // report stats on dynamic surface generation
+    public static final idCVar r_showEdges;                     // draw the sil edges
+    public static final idCVar r_showEntityScissors;            // show entity scissor rectangles
+    public static final idCVar r_showImages;                    // draw all images to screen instead of rendering
+    public static final idCVar r_showIntensity;                 // draw the screen colors based on intensity, red = 0, green = 128, blue = 255
+    public static final idCVar r_showInteractionFrustums;       // show a frustum for each interaction
+    //
+    public static final idCVar r_showInteractionScissors;       // show screen rectangle which contains the interaction frustum
+    public static final idCVar r_showInteractions;              // report interaction generation activity
+    public static final idCVar r_showLightCount;                // colors surfaces based on light count
+    public static final idCVar r_showLightScale;                // report the scale factor applied to drawing for overbrights
+    public static final idCVar r_showLightScissors;             // show light scissor rectangles
+    public static final idCVar r_showLights;                    // 1 = print light info, 2 = also draw volumes
+    public static final idCVar r_showMemory;                    // print frame memory utilization
+    public static final idCVar r_showNormals;                   // draws wireframe normals
+    public static final idCVar r_showOverDraw;                  // show overdraw
+    public static final idCVar r_showPortals;                   // draw portal outlines in color based on passed / not passed
+    public static final idCVar r_showPrimitives;                // report vertex/index/draw counts
+    public static final idCVar r_showShadowCount;               // colors screen based on shadow volume depth complexity
+    public static final idCVar r_showShadows;                   // visualize the stencil shadow volumes
+    public static final idCVar r_showSilhouette;                // highlight edges that are casting shadow planes
+    public static final idCVar r_showSkel;                      // draw the skeleton when model animates
+    public static final idCVar r_showSmp;                       // show which end (front or back) is blocking
+    public static final idCVar r_showSurfaceInfo;               // show surface material name under crosshair
+    public static final idCVar r_showSurfaces;                  // report surface/light/shadow counts
+    public static final idCVar r_showTangentSpace;              // shade triangles by tangent space
+    public static final idCVar r_showTexturePolarity;           // shade triangles by texture area polarity
+    public static final idCVar r_showTextureVectors;            // draw each triangles texture (tangent) vectors
+    public static final idCVar r_showTrace;                     // show the intersection of an eye trace with the world
+    public static final idCVar r_showTris;                      // enables wireframe rendering of the world
+    //
+    public static final idCVar r_showUnsmoothedTangents;        // highlight geometry rendered with unsmoothed tangents
+    public static final idCVar r_showUpdates;                   // report entity and light updates and ref counts
+    public static final idCVar r_showVertexColor;               // draws all triangles with the solid vertex color
+    public static final idCVar r_showViewEntitys;               // displays the bounding boxes of all view models and optionally the index
+    public static final idCVar r_singleArea;                    // only draw the portal area the view is actually in
+    public static final idCVar r_singleEntity;                  // suppress all but one entity
+    //
+    public static final idCVar r_singleLight;                   // suppress all but one light
+    public static final idCVar r_singleSurface;                 // suppress all but one surface on each entity
+    public static final idCVar r_singleTriangle;                // only draw a single triangle per primitive
+    public static final idCVar r_skipAmbient;                   // bypasses all non-interaction drawing
+    public static final idCVar r_skipBackEnd;                   // don't draw anything
+    public static final idCVar r_skipBlendLights;               // skip all blend lights
+    public static final idCVar r_skipBump;                      // uses a flat surface instead of the bump map
+    public static final idCVar r_skipCopyTexture;               // do all rendering, but don't actually copyTexSubImage2D
+    public static final idCVar r_skipDeforms;                   // leave all deform materials in their original state
+    public static final idCVar r_skipDiffuse;                   // use black for diffuse
+    public static final idCVar r_skipDynamicTextures;           // don't dynamically create textures
+    public static final idCVar r_skipFogLights;                 // skip all fog lights
+    public static final idCVar r_skipFrontEnd;                  // bypasses all front end work, but 2D gui rendering still draws
+    public static final idCVar r_skipGuiShaders;                // 1 = don't render any gui elements on surfaces
+    public static final idCVar r_skipInteractions;              // skip all light/surface interaction drawing
+    public static final idCVar r_skipLightScale;                // don't do any post-interaction light scaling, makes things dim on low-dynamic range cards
+    public static final idCVar r_skipNewAmbient;                // bypasses all vertex/fragment program ambients
+    public static final idCVar r_skipOverlays;                  // skip overlay surfaces
+    public static final idCVar r_skipParticles;                 // 1 = don't render any particles
+    //
+    public static final idCVar r_skipPostProcess;               // skip all post-process renderings
+    public static final idCVar r_skipROQ;
+    public static final idCVar r_skipRender;                    // skip 3D rendering, but pass 2D
+    public static final idCVar r_skipRenderContext;             // NULL the rendering context during backend 3D rendering
+    public static final idCVar r_skipSpecular;                  // use black for specular
+    public static final idCVar r_skipSubviews;                  // 1 = don't render any mirrors / cameras / etc
+    public static final idCVar r_skipSuppress;                  // ignore the per-view suppressions
+    public static final idCVar r_skipTranslucent;               // skip the translucent interaction rendering
+    public static final idCVar r_skipUpdates;                   // 1 = don't accept any entity or light updates, making everything static
+    public static final idCVar r_subviewOnly;                   // 1 = don't render main view, allowing subviews to be debugged
+    public static final idCVar r_swapInterval;                  // changes wglSwapIntarval
+    //
+    public static final idCVar r_testARBProgram;                // experiment with vertex/fragment programs
+    //
+    public static final idCVar r_testGamma;                     // draw a grid pattern to test gamma levels
+    public static final idCVar r_testGammaBias;                 // draw a grid pattern to test gamma levels
     public static final idCVar r_testStepGamma;                 // draw a grid pattern to test gamma levels
+    public static final idCVar r_useCachedDynamicModels;        // 1 = cache snapshots of dynamic models
+    public static final idCVar r_useClippedLightScissors;       // 0 = full screen when near clipped, 1 = exact when near clipped, 2 = exact always
+    public static final idCVar r_useCombinerDisplayLists;       // if 1, put all nvidia register combiner programming in display lists
+    public static final idCVar r_useConstantMaterials;          // 1 = use pre-calculated material registers if possible
+    public static final idCVar r_useCulling;                    // 0 = none, 1 = sphere, 2 = sphere + box
+    public static final idCVar r_useDeferredTangents;           // 1 = don't always calc tangents after deform
+    public static final idCVar r_useDepthBoundsTest;            // use depth bounds test to reduce shadow fill
+    public static final idCVar r_useEntityCallbacks;            // if 0, issue the callback immediately at update time, rather than defering
+    public static final idCVar r_useEntityCulling;              // 0 = none, 1 = box
+    public static final idCVar r_useEntityScissors;             // 1 = use custom scissor rectangle for each entity
+    public static final idCVar r_useExternalShadows;            // 1 = skip drawing caps when outside the light volume
+    public static final idCVar r_useFrustumFarDistance;         // if != 0 force the view frustum far distance to this distance
+    public static final idCVar r_useIndexBuffers;               // if 0, don't use ARB_vertex_buffer_object for indexes
+    public static final idCVar r_useInfiniteFarZ;               // 1 = use the no-far-clip-plane trick
+    public static final idCVar r_useInteractionCulling;         // 1 = cull interactions
+    public static final idCVar r_useInteractionScissors;        // 1 = use a custom scissor rectangle for each interaction
+    public static final idCVar r_useInteractionTable;           // create a full entityDefs * lightDefs table to make finding interactions faster
+    public static final idCVar r_useLightCulling;               // 0 = none, 1 = box, 2 = exact clip of polyhedron faces
+    public static final idCVar r_useLightPortalFlow;            // 1 = do a more precise area reference determination
+    public static final idCVar r_useLightScissors;              // 1 = use custom scissor rectangle for each light
+    //
+    public static final idCVar r_useNV20MonoLights;             // 1 = allow an interaction pass optimization
+    public static final idCVar r_useNodeCommonChildren;         // stop pushing reference bounds early when possible
+    public static final idCVar r_useOptimizedShadows;           // 1 = use the dmap generated static shadow volumes
+    public static final idCVar r_usePortals;                    // 1 = use portals to perform area culling, otherwise draw everything
+    public static final idCVar r_usePreciseTriangleInteractions;// 1 = do winding clipping to determine if each ambiguous tri should be lit
+    public static final idCVar r_useScissor;                    // 1 = scissor clip as portals and lights are processed
+    public static final idCVar r_useShadowCulling;              // try to cull shadows from partially visible lights
+    public static final idCVar r_useShadowProjectedCull;        // 1 = discard triangles outside light volume before shadowing
+    public static final idCVar r_useShadowSurfaceScissor;       // 1 = scissor shadows by the scissor rect of the interaction surfaces
+    public static final idCVar r_useShadowVertexProgram;        // 1 = do the shadow projection in the vertex program on capable cards
+    public static final idCVar r_useSilRemap;                   // 1 = consider verts with the same XYZ, but different ST the same for shadows
+    public static final idCVar r_useStateCaching;               // avoid redundant state changes in GL_*() calls
+    public static final idCVar r_useTripleTextureARB;           // 1 = cards with 3+ texture units do a two pass instead of three pass
+    public static final idCVar r_useTurboShadow;                // 1 = use the infinite projection with W technique for dynamic shadows
+    public static final idCVar r_useTwoSidedStencil;            // 1 = do stencil shadows in one pass with different ops on each side
+    public static final idCVar r_useVertexBuffers;              // if 0, don't use ARB_vertex_buffer_object for vertexes
+    public static final idCVar r_znear;                         // near Z clip plane
+    /*
+     ==================
+     R_BlendedScreenShot
+
+     screenshot
+     screenshot [filename]
+     screenshot [width] [height]
+     screenshot [width] [height] [samples]
+     ==================
+     */
+    static final int MAX_BLENDS = 256;    // to keep the accumulation in shorts
+    //============================================================================
+    static final idMat3[] cubeAxis = new idMat3[6];
+    static final String[] r_rendererArgs = {"best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", null};
+    static final vidmode_s[] r_vidModes = {
+            new vidmode_s("Mode  0: 320x240", 320, 240),
+            new vidmode_s("Mode  1: 400x300", 400, 300),
+            new vidmode_s("Mode  2: 512x384", 512, 384),
+            new vidmode_s("Mode  3: 640x480", 640, 480),
+            new vidmode_s("Mode  4: 800x600", 800, 600),
+            new vidmode_s("Mode  5: 1024x768", 1024, 768),
+            new vidmode_s("Mode  6: 1152x864", 1152, 864),
+            new vidmode_s("Mode  7: 1280x1024", 1280, 1024),
+            new vidmode_s("Mode  8: 1600x1200", 1600, 1200)
+    };
+    /*
+     ==============================================================================
+
+     THROUGHPUT BENCHMARKING
+
+     ==============================================================================
+     */
+    private static final int SAMPLE_MSEC = 1000;
+    /*
+     ==================
+     R_BlendedScreenShot
+
+     screenshot
+     screenshot [filename]
+     screenshot [width] [height]
+     screenshot [width] [height] [samples]
+     ==================
+     */
+    private static final int[] lastNumber = {0};
+    static int s_numVidModes = r_vidModes.length;
+    /*
+     ==================
+     R_InitOpenGL
+
+     This function is responsible for initializing a valid OpenGL subsystem
+     for rendering.  This is done by calling the system specific GLimp_Init,
+     which gives us a working OGL subsystem, then setting all necessary openGL
+     state, including images, vertex programs, and display lists.
+
+     Changes to the vertex cache size or smp state require a vid_restart.
+
+     If glConfig.isInitialized is false, no rendering can take place, but
+     all renderSystem functions will still operate properly, notably the material
+     and model information functions.
+     ==================
+     */
+    private static boolean glCheck = false;
 
     static {
         r_ext_vertex_array_range = null;
@@ -548,15 +558,15 @@ public class RenderSystem_init {
         }
     }
 
-    /* 
-     ================== 
+    /*
+     ==================
      R_ScreenshotFilename
 
      Returns a filename with digits appended
      if we have saved a previous screenshot, don't scan
      from the beginning, because recording demo avis can involve
      thousands of shots
-     ================== 
+     ==================
      */
     public static void R_ScreenshotFilename(int[] lastNumber, final String base, idStr fileName) {
         int a, b, c, d, e;
@@ -652,43 +662,7 @@ public class RenderSystem_init {
         declManager.FindMaterial("lights/defaultProjectedLight");
     }
 
-    /*
-     ====================
-     R_GetModeInfo
-
-     r_mode is normally a small non-negative integer that
-     looks resolutions up in a table, but if it is set to -1,
-     the values from r_customWidth, amd r_customHeight
-     will be used instead.
-     ====================
-     */
-    static class vidmode_s {
-
-        String description;
-        int width, height;
-
-        public vidmode_s(String description, int width, int height) {
-            this.description = description;
-            this.width = width;
-            this.height = height;
-        }
-
-    };
-
-    static final vidmode_s[] r_vidModes = {
-        new vidmode_s("Mode  0: 320x240", 320, 240),
-        new vidmode_s("Mode  1: 400x300", 400, 300),
-        new vidmode_s("Mode  2: 512x384", 512, 384),
-        new vidmode_s("Mode  3: 640x480", 640, 480),
-        new vidmode_s("Mode  4: 800x600", 800, 600),
-        new vidmode_s("Mode  5: 1024x768", 1024, 768),
-        new vidmode_s("Mode  6: 1152x864", 1152, 864),
-        new vidmode_s("Mode  7: 1280x1024", 1280, 1024),
-        new vidmode_s("Mode  8: 1600x1200", 1600, 1200)
-    };
-    static int s_numVidModes = r_vidModes.length;
-
-//#if MACOS_X
+    //#if MACOS_X
 //bool R_GetModeInfo( int *width, int *height, int mode ) {
 //#else
     static boolean R_GetModeInfo(int[] width, int[] height, int mode) {
@@ -738,7 +712,7 @@ public class RenderSystem_init {
                 glConfig.maxTextureUnits = MAX_MULTITEXTURE_UNITS;
             }
             if (glConfig.maxTextureUnits < 2) {
-                glConfig.multitextureAvailable = false;	// shouldn't ever happen
+                glConfig.multitextureAvailable = false;    // shouldn't ever happen
             }
             glConfig.maxTextureCoords = qglGetInteger(GL_MAX_TEXTURE_COORDS_ARB);
             glConfig.maxTextureImageUnits = qglGetInteger(GL_MAX_TEXTURE_IMAGE_UNITS_ARB);
@@ -761,11 +735,7 @@ public class RenderSystem_init {
 //
         // GL_ARB_texture_compression + GL_S3_s3tc
         // DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
-        if (R_CheckExtension("GL_ARB_texture_compression") && R_CheckExtension("GL_EXT_texture_compression_s3tc")) {
-            glConfig.textureCompressionAvailable = true;
-        } else {
-            glConfig.textureCompressionAvailable = false;
-        }
+        glConfig.textureCompressionAvailable = R_CheckExtension("GL_ARB_texture_compression") && R_CheckExtension("GL_EXT_texture_compression_s3tc");
 //
         // GL_EXT_texture_filter_anisotropic
         glConfig.anisotropicAvailable = R_CheckExtension("GL_EXT_texture_filter_anisotropic");
@@ -841,6 +811,462 @@ public class RenderSystem_init {
     }
 
     /*
+     ==================
+     R_SampleCubeMap
+     ==================
+     */
+    private static void R_SampleCubeMap(final idVec3 dir, int size, ByteBuffer[] buffers/*[6]*/, byte[] result/*[4]*/) {
+        float[] adir = new float[3];
+        int axis, x, y;
+
+        adir[0] = Math.abs(dir.oGet(0));
+        adir[1] = Math.abs(dir.oGet(1));
+        adir[2] = Math.abs(dir.oGet(2));
+
+        if (dir.oGet(0) >= adir[1] && dir.oGet(0) >= adir[2]) {
+            axis = 0;
+        } else if (-dir.oGet(0) >= adir[1] && -dir.oGet(0) >= adir[2]) {
+            axis = 1;
+        } else if (dir.oGet(1) >= adir[0] && dir.oGet(1) >= adir[2]) {
+            axis = 2;
+        } else if (-dir.oGet(1) >= adir[0] && -dir.oGet(1) >= adir[2]) {
+            axis = 3;
+        } else if (dir.oGet(2) >= adir[1] && dir.oGet(2) >= adir[2]) {
+            axis = 4;
+        } else {
+            axis = 5;
+        }
+
+        float fx = (dir.oMultiply(cubeAxis[axis].oGet(1))) / (dir.oMultiply(cubeAxis[axis].oGet(0)));
+        float fy = (dir.oMultiply(cubeAxis[axis].oGet(2))) / (dir.oMultiply(cubeAxis[axis].oGet(0)));
+
+        fx = -fx;
+        fy = -fy;
+        x = (int) (size * 0.5 * (fx + 1));
+        y = (int) (size * 0.5 * (fy + 1));
+        if (x < 0) {
+            x = 0;
+        } else if (x >= size) {
+            x = size - 1;
+        }
+        if (y < 0) {
+            y = 0;
+        } else if (y >= size) {
+            y = size - 1;
+        }
+
+        result[0] = buffers[axis].get((y * size + x) * 4 + 0);
+        result[1] = buffers[axis].get((y * size + x) * 4 + 1);
+        result[2] = buffers[axis].get((y * size + x) * 4 + 2);
+        result[3] = buffers[axis].get((y * size + x) * 4 + 3);
+    }
+
+    /*
+     ================
+     R_RenderingFPS
+     ================
+     */
+    static float R_RenderingFPS(final renderView_s renderView) {
+        qglFinish();
+
+        int start = Sys_Milliseconds();
+        int end;
+        int count = 0;
+
+        while (true) {
+            // render
+            renderSystem.BeginFrame(glConfig.vidWidth, glConfig.vidHeight);
+            tr.primaryWorld.RenderScene(renderView);
+            renderSystem.EndFrame(null, null);
+            qglFinish();
+            count++;
+            end = Sys_Milliseconds();
+            if (end - start > SAMPLE_MSEC) {
+                break;
+            }
+        }
+
+        float fps = (float) (count * 1000.0 / (end - start));
+
+        return fps;
+    }
+
+    public static void R_InitOpenGL() {
+//	GLint			temp;
+        IntBuffer temp = BufferUtils.createIntBuffer(16);
+        glimpParms_t parms = new glimpParms_t();
+        int i;
+
+        common.Printf("----- R_InitOpenGL -----\n");
+
+        if (glConfig.isInitialized) {
+            common.FatalError("R_InitOpenGL called while active");
+        }
+
+        // in case we had an error while doing a tiled rendering
+        tr.viewportOffset[0] = 0;
+        tr.viewportOffset[1] = 0;
+
+        //
+        // initialize OS specific portions of the renderSystem
+        //
+        for (i = 0; i < 2; i++) {
+            // set the parameters we are trying
+            {
+                int[] vidWidth = {0}, vidHeight = {0};
+                R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger());
+                glConfig.vidWidth = 1024;//vidWidth[0];HACKME::0
+                glConfig.vidHeight = 768;//vidHeight[0];
+            }
+
+            parms.width = glConfig.vidWidth;
+            parms.height = glConfig.vidHeight;
+            parms.fullScreen = r_fullscreen.GetBool();
+            parms.displayHz = r_displayRefresh.GetInteger();
+            parms.multiSamples = r_multiSamples.GetInteger();
+            parms.stereo = false;
+
+            if (GLimp_Init(parms)) {
+                // it's ALIVE!
+                break;
+            }
+
+            if (i == 1) {
+                common.FatalError("Unable to initialize OpenGL");
+            }
+
+            // if we failed, set everything back to "safe mode"
+            // and try again
+            r_mode.SetInteger(3);
+            r_fullscreen.SetInteger(1);
+            r_displayRefresh.SetInteger(0);
+            r_multiSamples.SetInteger(0);
+        }
+
+        // input and sound systems need to be tied to the new window
+        Sys_InitInput();
+        snd_system.soundSystem.InitHW();
+
+        // get our config strings
+        glConfig.vendor_string = qglGetString(GL_VENDOR);
+        glConfig.renderer_string = qglGetString(GL_RENDERER);
+        glConfig.version_string = qglGetString(GL_VERSION);
+
+        StringBuilder bla = new StringBuilder();
+        String ext;
+        for (int j = 0; (ext = qglGetStringi(GL_EXTENSIONS, j)) != null; j++) {
+            bla.append(ext).append(' ');
+        }
+        glConfig.extensions_string = bla.toString();
+
+        // OpenGL driver constants
+        qglGetIntegerv(GL_MAX_TEXTURE_SIZE, temp);
+        glConfig.maxTextureSize = temp.get();
+
+        // stubbed or broken drivers may have reported 0...
+        if (glConfig.maxTextureSize <= 0) {
+            glConfig.maxTextureSize = 256;
+        }
+
+        glConfig.isInitialized = true;
+
+        // recheck all the extensions (FIXME: this might be dangerous)
+        R_CheckPortableExtensions();
+
+        // parse our vertex and fragment programs, possibly disable support for
+        // one of the paths if there was an error
+//        R_NV10_Init();
+//        R_NV20_Init();
+//        R_R200_Init();
+        R_ARB2_Init();
+
+        cmdSystem.AddCommand("reloadARBprograms", R_ReloadARBPrograms_f.getInstance(), CMD_FL_RENDERER, "reloads ARB programs");
+        R_ReloadARBPrograms_f.getInstance().run(null);
+
+        // allocate the vertex array range or vertex objects
+        vertexCache.Init();
+
+        // select which renderSystem we are going to use
+        r_renderer.SetModified();
+        tr.SetBackEndRenderer();
+
+        // allocate the frame data, which may be more if smp is enabled
+        R_InitFrameData();
+
+        // Reset our gamma
+        R_SetColorMappings();
+
+        if (_WIN32) {
+            if (!glCheck) {// && win32.osversion.dwMajorVersion == 6) {//TODO:should this be applicable?
+                glCheck = true;
+                if (0 == idStr.Icmp(glConfig.vendor_string, "Microsoft") && idStr.FindText(glConfig.renderer_string, "OpenGL-D3D") != -1) {
+                    if (cvarSystem.GetCVarBool("r_fullscreen")) {
+                        cmdSystem.BufferCommandText(CMD_EXEC_NOW, "vid_restart partial windowed\n");
+                        Sys_GrabMouseCursor(false);
+                    }
+                    //TODO: messageBox below.
+//                    int ret = MessageBox(null, "Please install OpenGL drivers from your graphics hardware vendor to run " + GAME_NAME + ".\nYour OpenGL functionality is limited.",
+//                            "Insufficient OpenGL capabilities", MB_OKCANCEL | MB_ICONWARNING | MB_TASKMODAL);
+//                    if (ret == IDCANCEL) {
+//                        cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "quit\n");
+//                        cmdSystem.ExecuteCommandBuffer();
+//                    }
+                    if (cvarSystem.GetCVarBool("r_fullscreen")) {
+                        cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "vid_restart\n");
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+     ===============
+     R_SetColorMappings
+     ===============
+     */
+    public static void R_SetColorMappings() {
+//        int i, j;
+        final float g, b;
+        double inf;
+
+        b = r_brightness.GetFloat();
+        g = r_gamma.GetFloat();
+
+//        for (i = 0; i < 256; i++) {
+//            j = (int) (i * b);
+//            if (j > 255) {
+//                j = 255;
+//            }
+        if (g == 1) {
+            inf = (1 << 8) | 1;
+        } else {
+            inf = 0xffff * Math.pow(b / 255.0f, 1.0f / g) + 0.5f;
+        }
+
+        if (inf < 0) {
+            inf = 0;
+        } else if (inf > 0xffff) {
+            inf = 0xffff;
+        }
+
+//            tr.gammaTable[i] = (short) inf;
+//        }
+//        GLimp_SetGamma(tr.gammaTable, tr.gammaTable, tr.gammaTable);
+//        GLimp_SetGamma((float) inf, 0, 0);//TODO:differentiate between gamma and brightness.//TODO: the original function was rgb.
+    }
+
+    public static void R_ScreenShot_f(final idCmdArgs args) {
+        idStr checkName = new idStr();
+
+        int width = glConfig.vidWidth;
+        int height = glConfig.vidHeight;
+        int x = 0;
+        int y = 0;
+        int blends = 0;
+
+        switch (args.Argc()) {
+            case 1:
+                width = glConfig.vidWidth;
+                height = glConfig.vidHeight;
+                blends = 1;
+                R_ScreenshotFilename(lastNumber, "screenshots/shot", checkName);
+                break;
+            case 2:
+                width = glConfig.vidWidth;
+                height = glConfig.vidHeight;
+                blends = 1;
+                checkName.oSet(args.Argv(1));
+                break;
+            case 3:
+                width = Integer.parseInt(args.Argv(1));
+                height = Integer.parseInt(args.Argv(2));
+                blends = 1;
+                R_ScreenshotFilename(lastNumber, "screenshots/shot", checkName);
+                break;
+            case 4:
+                width = Integer.parseInt(args.Argv(1));
+                height = Integer.parseInt(args.Argv(2));
+                blends = Integer.parseInt(args.Argv(3));
+                if (blends < 1) {
+                    blends = 1;
+                }
+                if (blends > MAX_BLENDS) {
+                    blends = MAX_BLENDS;
+                }
+                R_ScreenshotFilename(lastNumber, "screenshots/shot", checkName);
+                break;
+            default:
+                common.Printf("usage: screenshot\n       screenshot <filename>\n       screenshot <width> <height>\n       screenshot <width> <height> <blends>\n");
+                return;
+        }
+
+        // put the console away
+        console.Close();
+
+        tr.TakeScreenshot(width, height, checkName.toString(), blends, null);
+
+        common.Printf("Wrote %s\n", checkName.toString());
+    }
+
+    /*
+     ===============
+     R_StencilShot
+     Save out a screenshot showing the stencil buffer expanded by 16x range
+     ===============
+     */
+    public static void R_StencilShot() {
+        ByteBuffer buffer;
+        int i, c;
+
+        int width = tr.GetScreenWidth();
+        int height = tr.GetScreenHeight();
+
+        int pix = width * height;
+
+        c = pix * 3 + 18;
+        buffer = ByteBuffer.allocate(c);// Mem_Alloc(c);
+//        memset(buffer, 0, 18);
+//        buffer = new int[18];//TODO:use c?
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(pix);// Mem_Alloc(pix);
+
+        qglReadPixels(0, 0, width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, byteBuffer);
+
+        for (i = 0; i < pix; i++) {
+            buffer.put(18 + i * 3, byteBuffer.get(i));
+            buffer.put(18 + i * 3 + 1, byteBuffer.get(i));
+            //		buffer[18+i*3+2] = ( byteBuffer[i] & 15 ) * 16;
+            buffer.put(18 + i * 3 + 2, byteBuffer.get(i));
+        }
+
+        // fill in the header (this is vertically flipped, which qglReadPixels emits)
+        buffer.put(2, (byte) 2);        // uncompressed type
+        buffer.put(12, (byte) (width & 255));//TODO: mayhaps use int[] instead of byte[]?
+        buffer.put(13, (byte) (width >> 8));
+        buffer.put(14, (byte) (height & 255));
+        buffer.put(15, (byte) (height >> 8));
+        buffer.put(16, (byte) 24);    // pixel size
+
+        fileSystem.WriteFile("screenshots/stencilShot.tga", buffer, c, "fs_savepath");
+
+//        Mem_Free(buffer);
+//        Mem_Free(byteBuffer);
+        buffer = null;
+        byteBuffer = null;
+    }
+
+    /*
+     =================
+     R_CheckExtension
+     =================
+     */
+    public static boolean R_CheckExtension(final String name) {
+        if (null == glConfig.extensions_string
+                || !glConfig.extensions_string.contains(name)) {
+            common.Printf("X..%s not found\n", name);
+            return false;
+        }
+
+        common.Printf("...using %s\n", name);
+        return true;
+    }
+
+    /*
+     ====================
+     R_ReadTiledPixels
+
+     Allows the rendering of an image larger than the actual window by
+     tiling it into window-sized chunks and rendering each chunk separately
+
+     If ref isn't specified, the full session UpdateScreen will be done.
+     ====================
+     */
+    static void R_ReadTiledPixels(int width, int height, byte[] buffer, final int offset, renderView_s ref /*= NULL*/) {
+        // include extra space for OpenGL padding to word boundaries
+        byte[] temp = new byte[(glConfig.vidWidth + 3) * glConfig.vidHeight * 3];//R_StaticAlloc( (glConfig.vidWidth+3) * glConfig.vidHeight * 3 );
+
+        int oldWidth = glConfig.vidWidth;
+        int oldHeight = glConfig.vidHeight;
+
+        tr.tiledViewport[0] = width;
+        tr.tiledViewport[1] = height;
+
+        // disable scissor, so we don't need to adjust all those rects
+        r_useScissor.SetBool(false);
+
+        for (int xo = 0; xo < width; xo += oldWidth) {
+            for (int yo = 0; yo < height; yo += oldHeight) {
+                tr.viewportOffset[0] = -xo;
+                tr.viewportOffset[1] = -yo;
+
+                if (ref != null) {
+                    tr.BeginFrame(oldWidth, oldHeight);
+                    tr.primaryWorld.RenderScene(ref);
+                    tr.EndFrame(null, null);
+                } else {
+                    session.UpdateScreen();
+                }
+
+                int w = oldWidth;
+                if (xo + w > width) {
+                    w = width - xo;
+                }
+                int h = oldHeight;
+                if (yo + h > height) {
+                    h = height - yo;
+                }
+
+                qglReadBuffer(GL_FRONT);
+                qglReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, ByteBuffer.wrap(temp));
+
+                int row = (w * 3 + 3) & ~3;        // OpenGL pads to dword boundaries
+
+                for (int y = 0; y < h; y++) {
+//				memcpy( buffer + ( ( yo + y )* width + xo ) * 3,
+//					temp + y * row, w * 3 );
+                    System.arraycopy(temp, y * row, buffer, offset + (((yo + y) * width + xo) * 3), w * 3);
+                }
+            }
+        }
+
+        r_useScissor.SetBool(true);
+
+        tr.viewportOffset[0] = 0;
+        tr.viewportOffset[1] = 0;
+        tr.tiledViewport[0] = 0;
+        tr.tiledViewport[1] = 0;
+
+//	R_StaticFree( temp );
+        temp = null;
+
+        glConfig.vidWidth = oldWidth;
+        glConfig.vidHeight = oldHeight;
+    }
+
+    /*
+     ====================
+     R_GetModeInfo
+
+     r_mode is normally a small non-negative integer that
+     looks resolutions up in a table, but if it is set to -1,
+     the values from r_customWidth, amd r_customHeight
+     will be used instead.
+     ====================
+     */
+    static class vidmode_s {
+
+        String description;
+        int width, height;
+
+        public vidmode_s(String description, int width, int height) {
+            this.description = description;
+            this.width = width;
+            this.height = height;
+        }
+
+    }
+
+    /*
      =================
      R_SizeUp_f
 
@@ -866,8 +1292,7 @@ public class RenderSystem_init {
                 RenderSystem_init.r_screenFraction.SetInteger(RenderSystem_init.r_screenFraction.GetInteger() + 10);
             }
         }
-    };
-
+    }
 
     /*
      =================
@@ -895,8 +1320,7 @@ public class RenderSystem_init {
                 RenderSystem_init.r_screenFraction.SetInteger(RenderSystem_init.r_screenFraction.GetInteger() - 10);
             }
         }
-    };
-
+    }
 
     /*
      ===============
@@ -929,24 +1353,12 @@ public class RenderSystem_init {
             session.UpdateScreen();
             uiManager.Touch(gui);
         }
-    };
-
-    /*
-     ================== 
-     R_BlendedScreenShot
-
-     screenshot
-     screenshot [filename]
-     screenshot [width] [height]
-     screenshot [width] [height] [samples]
-     ================== 
-     */
-    static final int MAX_BLENDS = 256;	// to keep the accumulation in shorts
+    }
 
     static class R_ScreenShot_f extends cmdFunction_t {
 
         private static final cmdFunction_t instance = new R_ScreenShot_f();
-        private static int[] lastNumber = {0};
+        private static final int[] lastNumber = {0};
 
         private R_ScreenShot_f() {
         }
@@ -1008,16 +1420,16 @@ public class RenderSystem_init {
 
             common.Printf("Wrote %s\n", checkname);
         }
-    };
+    }
 
-    /* 
-     ================== 
+    /*
+     ==================
      R_EnvShot_f
 
      envshot <basename>
 
      Saves out env/<basename>_ft.tga, etc
-     ================== 
+     ==================
      */
     static class R_EnvShot_f extends cmdFunction_t {
 
@@ -1105,77 +1517,21 @@ public class RenderSystem_init {
 
             common.Printf("Wrote %s, etc\n", fullname);
         }
-    };
-
-    //============================================================================
-    static final idMat3[] cubeAxis = new idMat3[6];
-
+    }
 
     /*
      ==================
-     R_SampleCubeMap
-     ==================
-     */
-    private static void R_SampleCubeMap(final idVec3 dir, int size, ByteBuffer[] buffers/*[6]*/, byte[] result/*[4]*/) {
-        float[] adir = new float[3];
-        int axis, x, y;
-
-        adir[0] = Math.abs(dir.oGet(0));
-        adir[1] = Math.abs(dir.oGet(1));
-        adir[2] = Math.abs(dir.oGet(2));
-
-        if (dir.oGet(0) >= adir[1] && dir.oGet(0) >= adir[2]) {
-            axis = 0;
-        } else if (-dir.oGet(0) >= adir[1] && -dir.oGet(0) >= adir[2]) {
-            axis = 1;
-        } else if (dir.oGet(1) >= adir[0] && dir.oGet(1) >= adir[2]) {
-            axis = 2;
-        } else if (-dir.oGet(1) >= adir[0] && -dir.oGet(1) >= adir[2]) {
-            axis = 3;
-        } else if (dir.oGet(2) >= adir[1] && dir.oGet(2) >= adir[2]) {
-            axis = 4;
-        } else {
-            axis = 5;
-        }
-
-        float fx = (dir.oMultiply(cubeAxis[axis].oGet(1))) / (dir.oMultiply(cubeAxis[axis].oGet(0)));
-        float fy = (dir.oMultiply(cubeAxis[axis].oGet(2))) / (dir.oMultiply(cubeAxis[axis].oGet(0)));
-
-        fx = -fx;
-        fy = -fy;
-        x = (int) (size * 0.5 * (fx + 1));
-        y = (int) (size * 0.5 * (fy + 1));
-        if (x < 0) {
-            x = 0;
-        } else if (x >= size) {
-            x = size - 1;
-        }
-        if (y < 0) {
-            y = 0;
-        } else if (y >= size) {
-            y = size - 1;
-        }
-
-        result[0] = buffers[axis].get((y * size + x) * 4 + 0);
-        result[1] = buffers[axis].get((y * size + x) * 4 + 1);
-        result[2] = buffers[axis].get((y * size + x) * 4 + 2);
-        result[3] = buffers[axis].get((y * size + x) * 4 + 3);
-    }
-
-
-    /* 
-     ================== 
      R_MakeAmbientMap_f
 
      R_MakeAmbientMap_f <basename> [size]
 
      Saves out env/<basename>_amb_ft.tga, etc
-     ================== 
+     ==================
      */
     static class R_MakeAmbientMap_f extends cmdFunction_t {
 
-        private static final cmdFunction_t instance = new R_MakeAmbientMap_f();
         private static final idMat3[] cubeAxis = new idMat3[6];
+        private static final cmdFunction_t instance = new R_MakeAmbientMap_f();
 
         private R_MakeAmbientMap_f() {
         }
@@ -1193,7 +1549,7 @@ public class RenderSystem_init {
             viewDef_s primary;
             int downSample;
             String[] extensions/*[6]*/ = {"_px.tga", "_nx.tga", "_py.tga", "_ny.tga",
-                        "_pz.tga", "_nz.tga"};
+                    "_pz.tga", "_nz.tga"};
             int outSize;
             ByteBuffer[] buffers = new ByteBuffer[6];
             int[] width = {0}, height = {0};
@@ -1265,11 +1621,11 @@ public class RenderSystem_init {
 
                             dir = cubeAxis[i].oGet(0).oPlus(
                                     cubeAxis[i].oGet(1).oMultiply(-(-1 + 2.0f * x / (outSize - 1)))).oPlus(
-                                            cubeAxis[i].oGet(2).oMultiply(-(-1 + 2.0f * y / (outSize - 1))));
+                                    cubeAxis[i].oGet(2).oMultiply(-(-1 + 2.0f * y / (outSize - 1))));
                             dir.Normalize();
                             total[0] = total[1] = total[2] = 0;
                             //samples = 1;
-                            float limit = itob(map) ? 0.95f : 0.25f;		// small for specular, almost hemisphere for ambient
+                            float limit = itob(map) ? 0.95f : 0.25f;        // small for specular, almost hemisphere for ambient
 
                             for (int s = 0; s < samples; s++) {
                                 // pick a random direction vector that is inside the unit sphere but not behind dir,
@@ -1283,7 +1639,7 @@ public class RenderSystem_init {
                                         continue;
                                     }
                                     test.Normalize();
-                                    if (test.oMultiply(dir) > limit) {	// don't do a complete hemisphere
+                                    if (test.oMultiply(dir) > limit) {    // don't do a complete hemisphere
                                         break;
                                     }
                                 }
@@ -1318,45 +1674,6 @@ public class RenderSystem_init {
 //                }
 //            }
         }
-    };
-
-    /* 
-     ============================================================================== 
- 
-     THROUGHPUT BENCHMARKING
- 
-     ============================================================================== 
-     */
-    private static final int SAMPLE_MSEC = 1000;
-
-    /*
-     ================
-     R_RenderingFPS
-     ================
-     */
-    static float R_RenderingFPS(final renderView_s renderView) {
-        qglFinish();
-
-        int start = Sys_Milliseconds();
-        int end;
-        int count = 0;
-
-        while (true) {
-            // render
-            renderSystem.BeginFrame(glConfig.vidWidth, glConfig.vidHeight);
-            tr.primaryWorld.RenderScene(renderView);
-            renderSystem.EndFrame(null, null);
-            qglFinish();
-            count++;
-            end = Sys_Milliseconds();
-            if (end - start > SAMPLE_MSEC) {
-                break;
-            }
-        }
-
-        float fps = (float) (count * 1000.0 / (end - start));
-
-        return fps;
     }
 
     /*
@@ -1409,7 +1726,7 @@ public class RenderSystem_init {
             common.Printf("no context  msec:%5.1f fps:%5.1f\n", msec, fps);
             RenderSystem_init.r_skipRenderContext.SetBool(false);
         }
-    };
+    }
 
     /*
      ================
@@ -1418,12 +1735,12 @@ public class RenderSystem_init {
      */
     static class GfxInfo_f extends cmdFunction_t {
 
-        private static final cmdFunction_t instance = new GfxInfo_f();
         private static final String[] fsstrings
                 = {
-                    "windowed",
-                    "fullscreen"
-                };
+                "windowed",
+                "fullscreen"
+        };
+        private static final cmdFunction_t instance = new GfxInfo_f();
 
         private GfxInfo_f() {
         }
@@ -1519,7 +1836,7 @@ public class RenderSystem_init {
                 common.Printf("Vertex cache is SLOW\n");
             }
         }
-    };
+    }
 
     /*
      =============
@@ -1564,7 +1881,7 @@ public class RenderSystem_init {
                 tr.testImage = globalImages.ImageFromFile(args.Argv(1), TF_DEFAULT, false, TR_REPEAT, TD_DEFAULT);
             }
         }
-    };
+    }
 
     /*
      =============
@@ -1622,7 +1939,7 @@ public class RenderSystem_init {
             wavString.oPluSet(".wav");
             session.sw.PlayShaderDirectly(wavString.toString());
         }
-    };
+    }
 
     /*
      ===================
@@ -1670,7 +1987,7 @@ public class RenderSystem_init {
                 common.Printf("%7i %s\n", blocks, list[i].GetName());
             }
         }
-    };
+    }
 
     /*
      ===================
@@ -1853,7 +2170,7 @@ public class RenderSystem_init {
                 glimpParms_t parms = new glimpParms_t();
                 parms.width = glConfig.vidWidth;
                 parms.height = glConfig.vidHeight;
-                parms.fullScreen = (forceWindow) ? false : RenderSystem_init.r_fullscreen.GetBool();
+                parms.fullScreen = !forceWindow && RenderSystem_init.r_fullscreen.GetBool();
                 parms.displayHz = RenderSystem_init.r_displayRefresh.GetInteger();
                 parms.multiSamples = RenderSystem_init.r_multiSamples.GetInteger();
                 parms.stereo = false;
@@ -1877,7 +2194,7 @@ public class RenderSystem_init {
             // start sound playing again
             snd_system.soundSystem.SetMute(false);
         }
-    };
+    }
 
     /*
      ==============
@@ -1905,7 +2222,7 @@ public class RenderSystem_init {
             }
             common.Printf("\n");
         }
-    };
+    }
 
     /*
      =====================
@@ -1945,7 +2262,15 @@ public class RenderSystem_init {
             // reload any images used by the decl
             mt.material.ReloadImages(false);
         }
-    };
+    }
+
+    /* 
+     ============================================================================== 
+ 
+     SCREEN SHOTS 
+ 
+     ============================================================================== 
+     */
 
     static class R_QsortSurfaceAreas implements cmp_t<idMaterial> {
 
@@ -1974,395 +2299,6 @@ public class RenderSystem_init {
 
             return idStr.Icmp(a.GetName(), b.GetName());
         }
-    };
-
-    /*
-     ==================
-     R_InitOpenGL
-
-     This function is responsible for initializing a valid OpenGL subsystem
-     for rendering.  This is done by calling the system specific GLimp_Init,
-     which gives us a working OGL subsystem, then setting all necessary openGL
-     state, including images, vertex programs, and display lists.
-
-     Changes to the vertex cache size or smp state require a vid_restart.
-
-     If glConfig.isInitialized is false, no rendering can take place, but
-     all renderSystem functions will still operate properly, notably the material
-     and model information functions.
-     ==================
-     */
-    private static boolean glCheck = false;
-
-    public static void R_InitOpenGL() {
-//	GLint			temp;
-        IntBuffer temp = BufferUtils.createIntBuffer(16);
-        glimpParms_t parms = new glimpParms_t();
-        int i;
-
-        common.Printf("----- R_InitOpenGL -----\n");
-
-        if (glConfig.isInitialized) {
-            common.FatalError("R_InitOpenGL called while active");
-        }
-
-        // in case we had an error while doing a tiled rendering
-        tr.viewportOffset[0] = 0;
-        tr.viewportOffset[1] = 0;
-
-        //
-        // initialize OS specific portions of the renderSystem
-        //
-        for (i = 0; i < 2; i++) {
-            // set the parameters we are trying
-            {
-                int[] vidWidth = {0}, vidHeight = {0};
-                R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger());
-                glConfig.vidWidth = 1024;//vidWidth[0];HACKME::0
-                glConfig.vidHeight = 768;//vidHeight[0];
-            }
-
-            parms.width = glConfig.vidWidth;
-            parms.height = glConfig.vidHeight;
-            parms.fullScreen = r_fullscreen.GetBool();
-            parms.displayHz = r_displayRefresh.GetInteger();
-            parms.multiSamples = r_multiSamples.GetInteger();
-            parms.stereo = false;
-
-             if (GLimp_Init(parms)) {
-                // it's ALIVE!
-                break;
-            }
-
-            if (i == 1) {
-                common.FatalError("Unable to initialize OpenGL");
-            }
-
-            // if we failed, set everything back to "safe mode"
-            // and try again
-            r_mode.SetInteger(3);
-            r_fullscreen.SetInteger(1);
-            r_displayRefresh.SetInteger(0);
-            r_multiSamples.SetInteger(0);
-        }
-
-        // input and sound systems need to be tied to the new window
-        Sys_InitInput();
-        snd_system.soundSystem.InitHW();
-
-        // get our config strings
-        glConfig.vendor_string = qglGetString(GL_VENDOR);
-        glConfig.renderer_string = qglGetString(GL_RENDERER);
-        glConfig.version_string = qglGetString(GL_VERSION);
-
-        StringBuilder bla = new StringBuilder();
-        String ext;
-        for (int j = 0; (ext = qglGetStringi(GL_EXTENSIONS, j)) != null; j++) {
-            bla.append(ext).append(' ');
-        }
-        glConfig.extensions_string = bla.toString();
-
-        // OpenGL driver constants
-        qglGetIntegerv(GL_MAX_TEXTURE_SIZE, temp);
-        glConfig.maxTextureSize = temp.get();
-
-        // stubbed or broken drivers may have reported 0...
-        if (glConfig.maxTextureSize <= 0) {
-            glConfig.maxTextureSize = 256;
-        }
-
-        glConfig.isInitialized = true;
-
-        // recheck all the extensions (FIXME: this might be dangerous)
-        R_CheckPortableExtensions();
-
-        // parse our vertex and fragment programs, possibly disable support for
-        // one of the paths if there was an error
-//        R_NV10_Init();
-//        R_NV20_Init();
-//        R_R200_Init();
-        R_ARB2_Init();
-
-        cmdSystem.AddCommand("reloadARBprograms", R_ReloadARBPrograms_f.getInstance(), CMD_FL_RENDERER, "reloads ARB programs");
-        R_ReloadARBPrograms_f.getInstance().run(null);
-
-        // allocate the vertex array range or vertex objects
-        vertexCache.Init();
-
-        // select which renderSystem we are going to use
-        r_renderer.SetModified();
-        tr.SetBackEndRenderer();
-
-        // allocate the frame data, which may be more if smp is enabled
-        R_InitFrameData();
-
-        // Reset our gamma
-        R_SetColorMappings();
-
-        if (_WIN32) {
-            if (!glCheck) {// && win32.osversion.dwMajorVersion == 6) {//TODO:should this be applicable?
-                glCheck = true;
-                if (0 == idStr.Icmp(glConfig.vendor_string, "Microsoft") && idStr.FindText(glConfig.renderer_string, "OpenGL-D3D") != -1) {
-                    if (cvarSystem.GetCVarBool("r_fullscreen")) {
-                        cmdSystem.BufferCommandText(CMD_EXEC_NOW, "vid_restart partial windowed\n");
-                        Sys_GrabMouseCursor(false);
-                    }
-                    //TODO: messageBox below.
-//                    int ret = MessageBox(null, "Please install OpenGL drivers from your graphics hardware vendor to run " + GAME_NAME + ".\nYour OpenGL functionality is limited.",
-//                            "Insufficient OpenGL capabilities", MB_OKCANCEL | MB_ICONWARNING | MB_TASKMODAL);
-//                    if (ret == IDCANCEL) {
-//                        cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "quit\n");
-//                        cmdSystem.ExecuteCommandBuffer();
-//                    }
-                    if (cvarSystem.GetCVarBool("r_fullscreen")) {
-                        cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "vid_restart\n");
-                    }
-                }
-            }
-        }
-    }
-
-    /*
-     ===============
-     R_SetColorMappings
-     ===============
-     */
-    public static void R_SetColorMappings() {
-//        int i, j;
-        final float g, b;
-        double inf;
-
-        b = r_brightness.GetFloat();
-        g = r_gamma.GetFloat();
-
-//        for (i = 0; i < 256; i++) {
-//            j = (int) (i * b);
-//            if (j > 255) {
-//                j = 255;
-//            }
-        if (g == 1) {
-            inf = (1 << 8) | 1;
-        } else {
-            inf = 0xffff * Math.pow(b / 255.0f, 1.0f / g) + 0.5f;
-        }
-
-        if (inf < 0) {
-            inf = 0;
-        } else if (inf > 0xffff) {
-            inf = 0xffff;
-        }
-
-//            tr.gammaTable[i] = (short) inf;
-//        }
-//        GLimp_SetGamma(tr.gammaTable, tr.gammaTable, tr.gammaTable);
-//        GLimp_SetGamma((float) inf, 0, 0);//TODO:differentiate between gamma and brightness.//TODO: the original function was rgb.
-    }
-    /*
-     ================== 
-     R_BlendedScreenShot
-
-     screenshot
-     screenshot [filename]
-     screenshot [width] [height]
-     screenshot [width] [height] [samples]
-     ================== 
-     */
-    private static final int[] lastNumber = {0};
-
-    public static void R_ScreenShot_f(final idCmdArgs args) {
-        idStr checkName = new idStr();
-
-        int width = glConfig.vidWidth;
-        int height = glConfig.vidHeight;
-        int x = 0;
-        int y = 0;
-        int blends = 0;
-
-        switch (args.Argc()) {
-            case 1:
-                width = glConfig.vidWidth;
-                height = glConfig.vidHeight;
-                blends = 1;
-                R_ScreenshotFilename(lastNumber, "screenshots/shot", checkName);
-                break;
-            case 2:
-                width = glConfig.vidWidth;
-                height = glConfig.vidHeight;
-                blends = 1;
-                checkName.oSet(args.Argv(1));
-                break;
-            case 3:
-                width = Integer.parseInt(args.Argv(1));
-                height = Integer.parseInt(args.Argv(2));
-                blends = 1;
-                R_ScreenshotFilename(lastNumber, "screenshots/shot", checkName);
-                break;
-            case 4:
-                width = Integer.parseInt(args.Argv(1));
-                height = Integer.parseInt(args.Argv(2));
-                blends = Integer.parseInt(args.Argv(3));
-                if (blends < 1) {
-                    blends = 1;
-                }
-                if (blends > MAX_BLENDS) {
-                    blends = MAX_BLENDS;
-                }
-                R_ScreenshotFilename(lastNumber, "screenshots/shot", checkName);
-                break;
-            default:
-                common.Printf("usage: screenshot\n       screenshot <filename>\n       screenshot <width> <height>\n       screenshot <width> <height> <blends>\n");
-                return;
-        }
-
-        // put the console away
-        console.Close();
-
-        tr.TakeScreenshot(width, height, checkName.toString(), blends, null);
-
-        common.Printf("Wrote %s\n", checkName.toString());
-    }
-
-    /*
-     ===============
-     R_StencilShot
-     Save out a screenshot showing the stencil buffer expanded by 16x range
-     ===============
-     */
-    public static void R_StencilShot() {
-        ByteBuffer buffer;
-        int i, c;
-
-        int width = tr.GetScreenWidth();
-        int height = tr.GetScreenHeight();
-
-        int pix = width * height;
-
-        c = pix * 3 + 18;
-        buffer = ByteBuffer.allocate(c);// Mem_Alloc(c);
-//        memset(buffer, 0, 18);
-//        buffer = new int[18];//TODO:use c?
-
-        ByteBuffer byteBuffer = ByteBuffer.allocate(pix);// Mem_Alloc(pix);
-
-        qglReadPixels(0, 0, width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, byteBuffer);
-
-        for (i = 0; i < pix; i++) {
-            buffer.put(18 + i * 3, byteBuffer.get(i));
-            buffer.put(18 + i * 3 + 1, byteBuffer.get(i));
-            //		buffer[18+i*3+2] = ( byteBuffer[i] & 15 ) * 16;
-            buffer.put(18 + i * 3 + 2, byteBuffer.get(i));
-        }
-
-        // fill in the header (this is vertically flipped, which qglReadPixels emits)
-        buffer.put(2, (byte) 2);		// uncompressed type
-        buffer.put(12, (byte) (width & 255));//TODO: mayhaps use int[] instead of byte[]?
-        buffer.put(13, (byte) (width >> 8));
-        buffer.put(14, (byte) (height & 255));
-        buffer.put(15, (byte) (height >> 8));
-        buffer.put(16, (byte) 24);	// pixel size
-
-        fileSystem.WriteFile("screenshots/stencilShot.tga", buffer, c, "fs_savepath");
-
-//        Mem_Free(buffer);
-//        Mem_Free(byteBuffer);
-        buffer = null;
-        byteBuffer = null;
-    }
-
-    /*
-     =================
-     R_CheckExtension
-     =================
-     */
-    public static boolean R_CheckExtension(final String name) {
-        if (null == glConfig.extensions_string
-                || !glConfig.extensions_string.contains(name)) {
-            common.Printf("X..%s not found\n", name);
-            return false;
-        }
-
-        common.Printf("...using %s\n", name);
-        return true;
-    }
-
-    /* 
-     ============================================================================== 
- 
-     SCREEN SHOTS 
- 
-     ============================================================================== 
-     */
-
-    /*
-     ====================
-     R_ReadTiledPixels
-
-     Allows the rendering of an image larger than the actual window by
-     tiling it into window-sized chunks and rendering each chunk separately
-
-     If ref isn't specified, the full session UpdateScreen will be done.
-     ====================
-     */
-    static void R_ReadTiledPixels(int width, int height, byte[] buffer, final int offset, renderView_s ref /*= NULL*/) {
-        // include extra space for OpenGL padding to word boundaries
-        byte[] temp = new byte[(glConfig.vidWidth + 3) * glConfig.vidHeight * 3];//R_StaticAlloc( (glConfig.vidWidth+3) * glConfig.vidHeight * 3 );
-
-        int oldWidth = glConfig.vidWidth;
-        int oldHeight = glConfig.vidHeight;
-
-        tr.tiledViewport[0] = width;
-        tr.tiledViewport[1] = height;
-
-        // disable scissor, so we don't need to adjust all those rects
-        r_useScissor.SetBool(false);
-
-        for (int xo = 0; xo < width; xo += oldWidth) {
-            for (int yo = 0; yo < height; yo += oldHeight) {
-                tr.viewportOffset[0] = -xo;
-                tr.viewportOffset[1] = -yo;
-
-                if (ref != null) {
-                    tr.BeginFrame(oldWidth, oldHeight);
-                    tr.primaryWorld.RenderScene(ref);
-                    tr.EndFrame(null, null);
-                } else {
-                    session.UpdateScreen();
-                }
-
-                int w = oldWidth;
-                if (xo + w > width) {
-                    w = width - xo;
-                }
-                int h = oldHeight;
-                if (yo + h > height) {
-                    h = height - yo;
-                }
-
-                qglReadBuffer(GL_FRONT);
-                qglReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, ByteBuffer.wrap(temp));
-
-                int row = (w * 3 + 3) & ~3;		// OpenGL pads to dword boundaries
-
-                for (int y = 0; y < h; y++) {
-//				memcpy( buffer + ( ( yo + y )* width + xo ) * 3,
-//					temp + y * row, w * 3 );
-                    System.arraycopy(temp, y * row, buffer, offset + (((yo + y) * width + xo) * 3), w * 3);
-                }
-            }
-        }
-
-        r_useScissor.SetBool(true);
-
-        tr.viewportOffset[0] = 0;
-        tr.viewportOffset[1] = 0;
-        tr.tiledViewport[0] = 0;
-        tr.tiledViewport[1] = 0;
-
-//	R_StaticFree( temp );
-        temp = null;
-
-        glConfig.vidWidth = oldWidth;
-        glConfig.vidHeight = oldHeight;
     }
 
 }

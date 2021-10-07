@@ -16,10 +16,10 @@ public class Hierarchy {
      */
     public static class idHierarchy<type> {
 
-        private idHierarchy parent;
-        private idHierarchy sibling;
         private idHierarchy child;
         private type owner;
+        private idHierarchy parent;
+        private idHierarchy sibling;
         //
         //
 
@@ -195,7 +195,7 @@ public class Hierarchy {
          Goes through all nodes of the hierarchy.
          ================
          */
-        public type GetNext() {			// goes through all nodes of the hierarchy
+        public type GetNext() {            // goes through all nodes of the hierarchy
             idHierarchy<type> node;
 
             if (child != null) {
@@ -220,7 +220,7 @@ public class Hierarchy {
          Goes through all leaf nodes of the hierarchy.
          ================
          */
-        public type GetNextLeaf() {		// goes through all leaf nodes of the hierarchy
+        public type GetNextLeaf() {        // goes through all leaf nodes of the hierarchy
             idHierarchy<type> node;
 
             if (child != null) {
@@ -263,5 +263,6 @@ public class Hierarchy {
 
             return null;
         }
-    };
+    }
+
 }

@@ -1,36 +1,26 @@
 package neo.Renderer;
 
-import static neo.Renderer.Image.globalImages;
 import neo.Renderer.Model.srfTriangles_s;
+import neo.Renderer.tr_local.*;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.Timer.idTimer;
+import neo.idlib.math.Math_h;
+import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Vector.idVec3;
+
+import static neo.Renderer.Image.globalImages;
 import static neo.Renderer.RenderSystem_init.r_showTrace;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglColor4f;
-import static neo.Renderer.qgl.qglDisableClientState;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglLoadMatrixf;
-import static neo.Renderer.qgl.qglVertex3f;
+import static neo.Renderer.qgl.*;
 import static neo.Renderer.tr_backend.GL_State;
 import static neo.Renderer.tr_backend.GL_TexEnv;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_ALWAYS;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_SRC_ALPHA;
-import static neo.Renderer.tr_local.backEnd;
-import neo.Renderer.tr_local.drawSurf_s;
-import neo.Renderer.tr_local.localTrace_t;
+import static neo.Renderer.tr_local.*;
 import static neo.Renderer.tr_main.R_GlobalPointToLocal;
 import static neo.Renderer.tr_render.RB_DrawElementsImmediate;
 import static neo.Renderer.tr_rendertools.RB_DrawBounds;
 import static neo.Renderer.tr_trisurf.R_DeriveFacePlanes;
 import static neo.framework.Common.common;
-import neo.idlib.BV.Bounds.idBounds;
-import neo.idlib.Timer.idTimer;
-import neo.idlib.math.Math_h;
-import neo.idlib.math.Plane.idPlane;
 import static neo.idlib.math.Simd.SIMDProcessor;
-import neo.idlib.math.Vector.idVec3;
-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
-import static org.lwjgl.opengl.GL11.GL_MODULATE;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
@@ -98,7 +88,7 @@ public class tr_trace {
         c_testEdges = 0;
         c_intersect = 0;
 
-        radiusSqr = (float) Math_h.Square(radius);
+        radiusSqr = Math_h.Square(radius);
         startDir = end.oMinus(start);
 
         if (null == tri.facePlanes || !tri.facePlanesCalculated) {
@@ -137,25 +127,25 @@ public class tr_trace {
             d2 = plane.Distance(end);
 
             if (d1 <= d2) {
-                continue;		// comning at it from behind or parallel
+                continue;        // comning at it from behind or parallel
             }
 
             if (d1 < 0.0f) {
-                continue;		// starts past it
+                continue;        // starts past it
             }
 
             if (d2 > 0.0f) {
-                continue;		// finishes in front of it
+                continue;        // finishes in front of it
             }
 
             f = d1 / (d1 - d2);
 
             if (f < 0.0f) {
-                continue;		// shouldn't happen
+                continue;        // shouldn't happen
             }
 
             if (f >= hit.fraction) {
-                continue;		// have already hit something closer
+                continue;        // have already hit something closer
             }
 
             c_testEdges++;
@@ -296,9 +286,9 @@ public class tr_trace {
         for (i = 0; i < tri.numIndexes; i += 3) {
 
             idVec3[] p/*[3]*/ = {
-                        tri.verts[tri.indexes[i + 0]].xyz,
-                        tri.verts[tri.indexes[i + 1]].xyz,
-                        tri.verts[tri.indexes[i + 2]].xyz};
+                    tri.verts[tri.indexes[i + 0]].xyz,
+                    tri.verts[tri.indexes[i + 1]].xyz,
+                    tri.verts[tri.indexes[i + 2]].xyz};
 
             dir[0] = p[0].oMinus(p[1]);
             dir[1] = p[1].oMinus(p[2]);
@@ -394,7 +384,7 @@ public class tr_trace {
             tri = surf.geo;
 
             if (i > 211) continue;
-            
+
             if (tri == null || tri.verts == null) {
                 continue;
             }

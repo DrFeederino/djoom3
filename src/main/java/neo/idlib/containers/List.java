@@ -1,14 +1,7 @@
 package neo.idlib.containers;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import neo.TempDump;
 import neo.TempDump.CPP_class;
-import static neo.TempDump.NOT;
-import static neo.TempDump.reflects._Minus;
 import neo.framework.CVarSystem;
 import neo.framework.CVarSystem.idInternalCVar;
 import neo.framework.CmdSystem;
@@ -17,10 +10,76 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.StrList.idStrPtr;
 import neo.idlib.containers.StrPool.idPoolStr;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static neo.TempDump.NOT;
+import static neo.TempDump.reflects._Minus;
+
 /**
  *
  */
 public class List {
+
+    public static <T> void idSwap(final T[] a1, final T[] a2, final int p1, final int p2) {
+        final T c = a1[p1];
+        a1[p1] = a2[p2];
+        a2[p2] = c;
+    }
+
+    //    @Deprecated
+//    public static <T> void idSwap(T a, T b) {
+//        T c = a;
+//        a = b;
+//        b = c;
+//    }
+//
+
+    public static void idSwap(final int[] array, final int p1, final int p2) {
+        idSwap(array, array, p1, p2);
+    }
+
+    public static void idSwap(final int[] a1, final int[] a2, final int p1, final int p2) {
+        final int c = a1[p1];
+        a1[p1] = a2[p2];
+        a2[p2] = c;
+    }
+
+    public static void idSwap(final int[][] a1, final int p11, final int p12, final int[][] a2, final int p21, final int p22) {
+        final int c = a1[p11][p12];
+        a1[p11][12] = a2[p21][p22];
+        a2[p21][p22] = c;
+    }
+
+    public static void idSwap(final float[] a1, final float[] a2, final int p1, final int p2) {
+        final float c = a1[p1];
+        a1[p1] = a2[p2];
+        a2[p2] = c;
+    }
+
+    public static void idSwap(final float[] a, final float[] b) {
+        final int length = a.length;
+        final float[] c = new float[length];
+
+        System.arraycopy(a, 0, c, 0, length);
+        System.arraycopy(b, 0, a, 0, length);
+        System.arraycopy(c, 0, b, 0, length);
+    }
+
+    public static void idSwap(final Float[] a, final Float[] b) {
+        final int length = a.length;
+        final Float[] c = new Float[length];
+
+        System.arraycopy(a, 0, c, 0, length);
+        System.arraycopy(b, 0, a, 0, length);
+        System.arraycopy(c, 0, b, 0, length);
+    }
+
+    public interface cmp_t<type> extends Comparator<type> {
+    }
 
     /*
      ===============================================================================
@@ -36,18 +95,17 @@ public class List {
                 + Integer.SIZE
                 + Integer.SIZE
                 + CPP_class.Pointer.SIZE;//type
-
-        protected int num;
-        private   int size;
-        protected int granularity = 16;
-        private type[]      list;
-        private Class<type> type;
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        protected int granularity = 16;
+        protected int num;
+        private type[] list;
+        private int size;
+        private Class<type> type;
         //
 
-//public	typedef int		cmp_t( const type *, const type * );
+        //public	typedef int		cmp_t( const type *, const type * );
 //public	typedef type	new_t( );
 //
         public idList() {
@@ -86,7 +144,7 @@ public class List {
          Frees up the memory allocated by the list.  Assumes that type automatically handles freeing up memory.
          ================
          */
-        public void Clear() {										// clear the list
+        public void Clear() {                                        // clear the list
 //            if (list) {
 //                delete[] list;
 //            }
@@ -104,7 +162,7 @@ public class List {
          Note that this is NOT an indication of the memory allocated.
          ================
          */
-        public int Num() {									// returns number of elements in list
+        public int Num() {                                    // returns number of elements in list
             return num;
         }
 
@@ -115,7 +173,7 @@ public class List {
          Returns the number of elements currently allocated for.
          ================
          */
-        public int NumAllocated() {							// returns number of elements allocated for
+        public int NumAllocated() {                            // returns number of elements allocated for
             return size;
         }
 
@@ -126,7 +184,7 @@ public class List {
          Sets the base size of the array and resizes the array to match.
          ================
          */
-        public void SetGranularity(int newgranularity) {			// set new granularity
+        public void SetGranularity(int newgranularity) {            // set new granularity
             int newsize;
 
             assert (newgranularity > 0);
@@ -149,7 +207,7 @@ public class List {
          Get the current granularity.
          ================
          */
-        public int GetGranularity() {						// get the current granularity
+        public int GetGranularity() {                        // get the current granularity
             return granularity;
         }
 //
@@ -161,15 +219,15 @@ public class List {
          return total memory allocated for the list in bytes, but doesn't take into account additional memory allocated by type
          ================
          */
-        public int Allocated() {						// returns total size of allocated memory
+        public int Allocated() {                        // returns total size of allocated memory
             return size;
         }
 
-        public /*size_t*/ int Size() {						// returns total size of allocated memory including size of list type
+        public /*size_t*/ int Size() {                        // returns total size of allocated memory including size of list type
             return Allocated();
         }
 
-        public /*size_t*/ int MemoryUsed() {					// returns size of the used elements in the list
+        public /*size_t*/ int MemoryUsed() {                    // returns size of the used elements in the list
 
             return num /* sizeof( *list )*/;
         }
@@ -212,7 +270,7 @@ public class List {
         public type oGet(int index) {
             assert (index >= 0);
             assert (index < num);
-            
+
             return list[index];
         }
 //public	type &			operator[]( int index );
@@ -254,7 +312,7 @@ public class List {
          Resizes the array to exactly the number of elements it contains or frees up memory if empty.
          ================
          */
-        public void Condense() {									// resizes list to exactly the number of elements it contains
+        public void Condense() {                                    // resizes list to exactly the number of elements it contains
             if (list != null) {
                 if (num != 0) {
                     Resize(num);
@@ -272,7 +330,7 @@ public class List {
          Contents are copied using their = operator so that data is correnctly instantiated.
          ================
          */
-        public void Resize(int newsize) {								// resizes list to the given number of elements
+        public void Resize(int newsize) {                                // resizes list to the given number of elements
             type[] temp;
             int i;
 
@@ -315,7 +373,7 @@ public class List {
          Contents are copied using their = operator so that data is correnctly instantiated.
          ================
          */
-        public void Resize(int newsize, int newgranularity) {			// resizes list and sets new granularity
+        public void Resize(int newsize, int newgranularity) {            // resizes list and sets new granularity
             type[] temp;
             int i;
 
@@ -348,7 +406,7 @@ public class List {
 //	}
         }
 
-        public void SetNum(int newnum) {			// set number of elements in list and resize to exactly this number if necessary
+        public void SetNum(int newnum) {            // set number of elements in list and resize to exactly this number if necessary
             SetNum(newnum, true);
         }
 
@@ -359,7 +417,7 @@ public class List {
          Resize to the exact size specified irregardless of granularity
          ================
          */
-        public void SetNum(int newnum, boolean resize) {			// set number of elements in list and resize to exactly this number if necessary
+        public void SetNum(int newnum, boolean resize) {            // set number of elements in list and resize to exactly this number if necessary
             assert (newnum >= 0);
             if (resize || newnum > size) {
                 Resize(newnum);
@@ -374,12 +432,12 @@ public class List {
          Makes sure the list has at least the given number of elements.
          ================
          */
-        public void AssureSize(int newSize) {							// assure list has given number of elements, but leave them uninitialized
+        public void AssureSize(int newSize) {                            // assure list has given number of elements, but leave them uninitialized
             int newNum = newSize;
 
             if (newSize > size) {
 
-                if (granularity == 0) {	// this is a hack to fix our memset classes
+                if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16;
                 }
 
@@ -398,12 +456,12 @@ public class List {
          Makes sure the list has at least the given number of elements and initialize any elements not yet initialized.
          ================
          */
-        public void AssureSize(int newSize, final type initValue) {	// assure list has given number of elements and initialize any new elements
+        public void AssureSize(int newSize, final type initValue) {    // assure list has given number of elements and initialize any new elements
             int newNum = newSize;
 
             if (newSize > size) {
 
-                if (granularity == 0) {	// this is a hack to fix our memset classes
+                if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16;
                 }
 
@@ -430,12 +488,12 @@ public class List {
          on non-pointer lists will cause a compiler error.
          ================
          */
-        public void AssureSizeAlloc(int newSize, /*new_t*/ Class allocator) {	// assure the pointer list has the given number of elements and allocate any new elements
+        public void AssureSizeAlloc(int newSize, /*new_t*/ Class allocator) {    // assure the pointer list has the given number of elements and allocate any new elements
             int newNum = newSize;
 
             if (newSize > size) {
 
-                if (granularity == 0) {	// this is a hack to fix our memset classes
+                if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16;
                 }
 
@@ -469,14 +527,14 @@ public class List {
          ================
          */
         @Deprecated
-        public type[] Ptr() {										// returns a pointer to the list
+        public type[] getList() {                                        // returns a pointer to the list
             return list;
         }
 
-        public <T> T[] Ptr(final Class<? extends T[]> type) {
+        public <T> T[] getList(final Class<? extends T[]> type) {
             if (this.num == 0)
                 return null;
-            
+
             // returns a pointer to the list
             return Arrays.copyOf(this.list, this.num, type);
         }
@@ -489,7 +547,7 @@ public class List {
          Returns a reference to a new data element at the end of the list.
          ================
          */
-        public type Alloc() {									// returns reference to a new data element at the end of the list
+        public type Alloc() {                                    // returns reference to a new data element at the end of the list
             if (NOT(list)) {
                 Resize(granularity);
             }
@@ -523,7 +581,7 @@ public class List {
             if (num == size) {
                 int newsize;
 
-                if (granularity == 0) {	// this is a hack to fix our memset classes
+                if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16;
                 }
                 newsize = size + granularity;
@@ -538,9 +596,10 @@ public class List {
 
         /**
          * Appends a shallow copy of the object.
-         *
+         * <p>
          * Because we have a mix of const refs and member pointers that we don't
          * want to rewrite in java, we will copy the const refs where necessary.
+         *
          * @see #Append(type)
          */
         public int AppendClone(final type obj) {
@@ -556,9 +615,9 @@ public class List {
          Returns the size of the new combined list
          ================
          */
-        public int Append(final idList<type> other) {				// append list
+        public int Append(final idList<type> other) {                // append list
             if (NOT(list)) {
-                if (granularity == 0) {	// this is a hack to fix our memset classes
+                if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16;
                 }
                 Resize(granularity);
@@ -579,7 +638,7 @@ public class List {
          Adds the data to the list if it doesn't already exist.  Returns the index of the data in the list.
          ================
          */
-        public int AddUnique(final type obj) {			// add unique element
+        public int AddUnique(final type obj) {            // add unique element
             int index;
 
             index = FindIndex(obj);
@@ -590,7 +649,7 @@ public class List {
             return index;
         }
 
-        public int Insert(final type obj) {			// insert the element at the given index
+        public int Insert(final type obj) {            // insert the element at the given index
             return Insert(obj, 0);
         }
 
@@ -598,13 +657,13 @@ public class List {
          ================
          idList<type>::Insert
 
-         Increases the size of the list by at leat one element if necessary 
+         Increases the size of the list by at leat one element if necessary
          and inserts the supplied data into it.
 
          Returns the index of the new element.
          ================
          */
-        public int Insert(final type obj, int index) {			// insert the element at the given index
+        public int Insert(final type obj, int index) {            // insert the element at the given index
             if (NOT(list)) {
                 Resize(granularity);
             }
@@ -612,7 +671,7 @@ public class List {
             if (num == size) {
                 int newsize;
 
-                if (granularity == 0) {	// this is a hack to fix our memset classes
+                if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16;
                 }
                 newsize = size + granularity;
@@ -639,7 +698,7 @@ public class List {
          Searches for the specified data in the list and returns it's index.  Returns -1 if the data is not found.
          ================
          */
-        public int FindIndex(final type obj) {				// find the index for the given element
+        public int FindIndex(final type obj) {                // find the index for the given element
             int i;
 
             for (i = 0; i < num; i++) {
@@ -659,7 +718,7 @@ public class List {
          Searches for the specified data in the list and returns it's address. Returns NULL if the data is not found.
          ================
          */
-        public Integer Find(final type obj) {						// find pointer to the given element
+        public Integer Find(final type obj) {                        // find pointer to the given element
             int i;
 
             i = FindIndex(obj);
@@ -680,7 +739,7 @@ public class List {
          on non-pointer lists will cause a compiler error.
          ================
          */
-        public int FindNull() {								// find the index for the first NULL pointer in the list
+        public int FindNull() {                                // find the index for the first NULL pointer in the list
             int i;
 
             for (i = 0; i < num; i++) {
@@ -698,12 +757,12 @@ public class List {
          idList<type>::IndexOf
 
          Takes a pointer to an element in the list and returns the index of the element.
-         This is NOT a guarantee that the object is really in the list. 
+         This is NOT a guarantee that the object is really in the list.
          Function will assert in debug builds if pointer is outside the bounds of the list,
          but remains silent in release builds.
          ================
          */
-        public int IndexOf(final type objptr) {					// returns the index for the pointer to an element in the list
+        public int IndexOf(final type objptr) {                    // returns the index for the pointer to an element in the list
             int index;
 
 //            index = objptr - list;
@@ -724,7 +783,7 @@ public class List {
          Note that the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        public boolean RemoveIndex(int index) {							// remove the element at the given index
+        public boolean RemoveIndex(int index) {                            // remove the element at the given index
             int i;
 
             assert (list != null);
@@ -752,7 +811,7 @@ public class List {
          the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        public boolean Remove(final type obj) {							// remove the element
+        public boolean Remove(final type obj) {                            // remove the element
             int index;
 
             index = FindIndex(obj);
@@ -842,7 +901,7 @@ public class List {
          Swaps the contents of two lists
          ================
          */
-        public void Swap(idList<type> other) {						// swap the contents of the lists
+        public void Swap(idList<type> other) {                        // swap the contents of the lists
             final int swap_num, swap_size, swap_granularity;
             final type[] swap_list;
 
@@ -874,7 +933,7 @@ public class List {
          list to NULL.
          ================
          */
-        public void DeleteContents(boolean clear) {						// delete the contents of the list
+        public void DeleteContents(boolean clear) {                        // delete the contents of the list
             int i;
 
             for (i = 0; i < num; i++) {
@@ -889,60 +948,6 @@ public class List {
                 list = (type[]) new Object[list.length];
             }
         }
-    };
-
-//    @Deprecated
-//    public static <T> void idSwap(T a, T b) {
-//        T c = a;
-//        a = b;
-//        b = c;
-//    }
-//    
-
-    public static <T> void idSwap(final T[] a1, final T[] a2, final int p1, final int p2) {
-        final T c = a1[p1];
-        a1[p1] = a2[p2];
-        a2[p2] = c;
-    }
-
-    public static void idSwap(final int[] array, final int p1, final int p2) {
-        idSwap(array, array, p1, p2);
-    }
-
-    public static void idSwap(final int[] a1, final int[] a2, final int p1, final int p2) {
-        final int c = a1[p1];
-        a1[p1] = a2[p2];
-        a2[p2] = c;
-    }
-
-    public static void idSwap(final int[][] a1, final int p11, final int p12, final int[][] a2, final int p21, final int p22) {
-        final int c = a1[p11][p12];
-        a1[p11][12] = a2[p21][p22];
-        a2[p21][p22] = c;
-    }
-
-    public static void idSwap(final float[] a1, final float[] a2, final int p1, final int p2) {
-        final float c = a1[p1];
-        a1[p1] = a2[p2];
-        a2[p2] = c;
-    }
-
-    public static void idSwap(final float[] a, final float[] b) {
-        final int length = a.length;
-        final float[] c = new float[length];
-
-        System.arraycopy(a, 0, c, 0, length);
-        System.arraycopy(b, 0, a, 0, length);
-        System.arraycopy(c, 0, b, 0, length);
-    }
-
-    public static void idSwap(final Float[] a, final Float[] b) {
-        final int length = a.length;
-        final Float[] c = new Float[length];
-
-        System.arraycopy(a, 0, c, 0, length);
-        System.arraycopy(b, 0, a, 0, length);
-        System.arraycopy(c, 0, b, 0, length);
     }
 
     private static class idListSortCompare<type> implements cmp_t<type> {
@@ -951,8 +956,5 @@ public class List {
         public int compare(final type a, final type b) {
             return (int) _Minus(a, b);
         }
-    }
-
-    public static interface cmp_t<type> extends Comparator<type> {
     }
 }

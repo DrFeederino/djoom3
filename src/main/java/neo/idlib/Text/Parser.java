@@ -1,88 +1,45 @@
 package neo.idlib.Text;
 
-import java.nio.CharBuffer;
-import java.util.Arrays;
-import java.util.Date;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atocb;
-import static neo.TempDump.ctos;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.idlib.Lib;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import static neo.idlib.Text.Lexer.LEXFL_NOBASEINCLUDES;
-import static neo.idlib.Text.Lexer.LEXFL_NODOLLARPRECOMPILE;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.P_ADD;
-import static neo.idlib.Text.Lexer.P_BIN_AND;
-import static neo.idlib.Text.Lexer.P_BIN_NOT;
-import static neo.idlib.Text.Lexer.P_BIN_OR;
-import static neo.idlib.Text.Lexer.P_BIN_XOR;
-import static neo.idlib.Text.Lexer.P_COLON;
-import static neo.idlib.Text.Lexer.P_DEC;
-import static neo.idlib.Text.Lexer.P_DIV;
-import static neo.idlib.Text.Lexer.P_INC;
-import static neo.idlib.Text.Lexer.P_LOGIC_AND;
-import static neo.idlib.Text.Lexer.P_LOGIC_EQ;
-import static neo.idlib.Text.Lexer.P_LOGIC_GEQ;
-import static neo.idlib.Text.Lexer.P_LOGIC_GREATER;
-import static neo.idlib.Text.Lexer.P_LOGIC_LEQ;
-import static neo.idlib.Text.Lexer.P_LOGIC_LESS;
-import static neo.idlib.Text.Lexer.P_LOGIC_NOT;
-import static neo.idlib.Text.Lexer.P_LOGIC_OR;
-import static neo.idlib.Text.Lexer.P_LOGIC_UNEQ;
-import static neo.idlib.Text.Lexer.P_LSHIFT;
-import static neo.idlib.Text.Lexer.P_MOD;
-import static neo.idlib.Text.Lexer.P_MUL;
-import static neo.idlib.Text.Lexer.P_PARENTHESESCLOSE;
-import static neo.idlib.Text.Lexer.P_PARENTHESESOPEN;
-import static neo.idlib.Text.Lexer.P_QUESTIONMARK;
-import static neo.idlib.Text.Lexer.P_RSHIFT;
-import static neo.idlib.Text.Lexer.P_SUB;
-import neo.idlib.Text.Lexer.idLexer;
-import neo.idlib.Text.Lexer.punctuation_t;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Token.TT_BINARY;
-import static neo.idlib.Text.Token.TT_DECIMAL;
-import static neo.idlib.Text.Token.TT_FLOAT;
-import static neo.idlib.Text.Token.TT_HEX;
-import static neo.idlib.Text.Token.TT_INTEGER;
-import static neo.idlib.Text.Token.TT_LITERAL;
-import static neo.idlib.Text.Token.TT_LONG;
-import static neo.idlib.Text.Token.TT_NAME;
-import static neo.idlib.Text.Token.TT_NUMBER;
-import static neo.idlib.Text.Token.TT_OCTAL;
-import static neo.idlib.Text.Token.TT_PUNCTUATION;
-import static neo.idlib.Text.Token.TT_STRING;
-import static neo.idlib.Text.Token.TT_UNSIGNED;
-import static neo.idlib.Text.Token.TT_VALUESVALID;
-import neo.idlib.Text.Token.idToken;
+import neo.idlib.Text.Token.*;
 import neo.idlib.math.Math_h.idMath;
 import neo.sys.sys_public;
+
+import java.nio.CharBuffer;
+import java.util.Arrays;
+import java.util.Date;
+
+import static neo.TempDump.*;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Token.*;
 
 /**
  *
  */
 public class Parser {
 
-    static final int DEFINE_FIXED              = 0x0001;
+    static final int BUILTIN_DATE = 3;
+    static final int BUILTIN_FILE = 2;
     //
-    static final int BUILTIN_LINE              = 1;
-    static final int BUILTIN_FILE              = 2;
-    static final int BUILTIN_DATE              = 3;
-    static final int BUILTIN_TIME              = 4;
-    static final int BUILTIN_STDC              = 5;
+    static final int BUILTIN_LINE = 1;
+    static final int BUILTIN_STDC = 5;
+    static final int BUILTIN_TIME = 4;
+    static final int DEFINEHASHSIZE = 2048;
+    static final int DEFINE_FIXED = 0x0001;
+    static final int INDENT_ELIF = 0x0004;
+    static final int INDENT_ELSE = 0x0002;
     //
-    static final int INDENT_IF                 = 0x0001;
-    static final int INDENT_ELSE               = 0x0002;
-    static final int INDENT_ELIF               = 0x0004;
-    static final int INDENT_IFDEF              = 0x0008;
-    static final int INDENT_IFNDEF             = 0x0010;
+    static final int INDENT_IF = 0x0001;
+    static final int INDENT_IFDEF = 0x0008;
+    static final int INDENT_IFNDEF = 0x0010;
     //
-//    
-//    
-    static final int MAX_DEFINEPARMS           = 128;
-    static final int DEFINEHASHSIZE            = 2048;
+//
+//
+    static final int MAX_DEFINEPARMS = 128;
     //
     static final int TOKEN_FL_RECURSIVE_DEFINE = 1;
 //
@@ -90,52 +47,70 @@ public class Parser {
 //    
 //    
 
+    /*
+     ================
+     PC_NameHash
+     ================
+     */
+    static int PC_NameHash(final String name) {
+        return PC_NameHash(name.toCharArray());
+    }
+
+    static int PC_NameHash(final char[] name) {
+        int hash, i;
+
+        hash = 0;
+        for (i = 0; i < name.length && name[i] != '\0'; i++) {
+            hash += name[i] * (119 + i);
+        }
+        hash = (hash ^ (hash >> 10) ^ (hash >> 20)) & (DEFINEHASHSIZE - 1);
+        return hash;
+    }
+
     // macro definitions
     static class define_s {
 
-        String   name;                        // define name
-        int      flags;                       // define flags
-        int      builtin;                     // > 0 if builtin define
-        int      numparms;                    // number of define parameters
-        idToken  parms;                       // define parameters
-        idToken  tokens;                      // macro tokens (possibly containing parm tokens)
-        define_s next;                        // next defined macro in a list
+        int builtin;                     // > 0 if builtin define
+        int flags;                       // define flags
         define_s hashnext;                    // next define in the hash chain
+        String name;                        // define name
+        define_s next;                        // next defined macro in a list
+        int numparms;                    // number of define parameters
+        idToken parms;                       // define parameters
+        idToken tokens;                      // macro tokens (possibly containing parm tokens)
     }
-
-    ;
 
     // indents used for conditional compilation directives:
 // #if, #else, #elif, #ifdef, #ifndef
     static class indent_s {
 
-        int      type;                        // indent type
-        int      skip;                        // true if skipping current indent
-        idLexer  script;                      // script the indent was in
         indent_s next;                        // next indent on the indent stack
+        idLexer script;                      // script the indent was in
+        int skip;                        // true if skipping current indent
+        int type;                        // indent type
     }
-
-    ;
 
     public static class idParser {
 
-        private        boolean         loaded;                  // set when a source file is loaded from file or memory
-        private        idStr           filename;                // file name of the script
-        private        idStr           includepath;             // path to include files
-        private        boolean         OSPath;                  // true if the file was loaded from an OS path
-        private        punctuation_t[] punctuations;            // punctuations to use
-        private        int             flags;                   // flags used for script parsing
-        private        idLexer         scriptstack;             // stack with scripts of the source
-        private        idToken         tokens;                  // tokens to read first
-        private        define_s[]      defines;                 // list with macro definitions
-        private        define_s[]      definehash;              // hash chain with defines
-        private        indent_s        indentstack;             // stack with indents
-        private        int             skip;                    // > 0 if skipping conditional code
-        private        String          marker_p;
+        static final int MAX_OPERATORS = 64;
+        static final int MAX_VALUES = 64;
         //
-        private static define_s        globaldefines;           // list with global defines added to every source loaded
+        private static define_s globaldefines;           // list with global defines added to every source loaded
+        private boolean OSPath;                  // true if the file was loaded from an OS path
+        private define_s[] definehash;              // hash chain with defines
+        private define_s[] defines;                 // list with macro definitions
+        private idStr filename;                // file name of the script
+        private int flags;                   // flags used for script parsing
+        private idStr includepath;             // path to include files
+        private indent_s indentstack;             // stack with indents
+        private boolean loaded;                  // set when a source file is loaded from file or memory
+        private String marker_p;
+        private punctuation_t[] punctuations;            // punctuations to use
+        private idLexer scriptstack;             // stack with scripts of the source
         //
         //
+        private int skip;                    // > 0 if skipping conditional code
+        private idToken tokens;                  // tokens to read first
 
         // constructor
         public idParser() {
@@ -205,6 +180,8 @@ public class Parser {
             this.marker_p = null;
             LoadFile(filename, OSPath);
         }
+//					// destructor
+//public					~idParser();
 
         public idParser(final String ptr, int length, final String name) throws idException {
             this.loaded = false;
@@ -233,8 +210,98 @@ public class Parser {
             this.marker_p = null;
             LoadMemory(ptr, length, name);
         }
-//					// destructor
-//public					~idParser();
+
+        // add a global define that will be added to all opened sources
+        public static boolean AddGlobalDefine(final String string) throws idException {
+            define_s define;
+
+            define = idParser.DefineFromString(string);
+            if (null == define) {
+                return false;
+            }
+            define.next = globaldefines;//TODO:check if [0] is correcto.
+            globaldefines = define;
+            return true;
+        }
+
+        // remove the given global define
+        public static boolean RemoveGlobalDefine(final String name) {
+            define_s d, prev;
+
+            for (prev = null, d = globaldefines; d != null; prev = d, d = d.next) {
+                if (d.name.equals(name)) {
+                    break;
+                }
+            }
+            if (d != null) {
+                if (prev != null) {
+                    prev.next = d.next;
+                } else {
+                    globaldefines = d.next;
+                }
+                idParser.FreeDefine(d);
+                return true;
+            }
+            return false;
+        }
+
+        // remove all global defines
+        public static void RemoveAllGlobalDefines() {
+            define_s define;
+
+            for (define = globaldefines; define != null; define = globaldefines) {
+                globaldefines = globaldefines.next;//TODO:ptr
+                idParser.FreeDefine(define);
+            }
+        }
+
+        // set the base folder to load files from
+        public static void SetBaseFolder(final String path) {
+            idLexer.SetBaseFolder(path);
+        }
+
+        private static void PrintDefine(define_s define) throws idException {
+            idLib.common.Printf("define->name = %s\n", define.name);
+            idLib.common.Printf("define->flags = %d\n", define.flags);
+            idLib.common.Printf("define->builtin = %d\n", define.builtin);
+            idLib.common.Printf("define->numparms = %d\n", define.numparms);
+        }
+
+        private static void FreeDefine(define_s define) {
+            idToken t, next;
+
+            //free the define parameters
+//            for (t = define.parms; t; t = next) {
+//                next = t.next;
+//		delete t;
+//            }
+            //free the define tokens
+//            for (t = define.tokens; t; t = next) {
+//                next = t.next;
+//		delete t;
+//            }
+            define.parms = define.tokens = null;//TODO:check if nullifying doesn't break nothing.
+            //free the define
+//            Mem_Free(define);
+        }
+
+        private static define_s DefineFromString(final String string) throws idException {
+            idParser src = new idParser();
+            define_s def;
+
+            if (!src.LoadMemory(string, string.length(), "*defineString")) {
+                return null;
+            }
+            // create a define from the source
+            if (!src.Directive_define()) {
+                src.FreeSource();
+                return null;
+            }
+            def = src.CopyFirstDefine();
+            src.FreeSource();
+            //if the define was created succesfully
+            return def;
+        }
 
         public boolean LoadFile(final String filename) throws idException {
             return LoadFile(filename, false);
@@ -444,7 +511,7 @@ public class Parser {
             return true;
         }
 
-	    // expect a certain token type
+        // expect a certain token type
         public boolean ExpectTokenType(int type, int subtype, idToken token) throws idException {
             String str;
 
@@ -576,10 +643,7 @@ public class Parser {
             UnreadSourceToken(tok);
 
             // if the token is available
-            if (tok.equals(string)) {
-                return true;
-            }
-            return false;
+            return tok.equals(string);
         }
 
         // returns true if the next token equals the given type but does not remove the token from the source
@@ -671,10 +735,7 @@ public class Parser {
         public String ParseBracedSection(idStr out, int tabs/*= -1*/) throws idException {
             idToken token = new idToken();
             int i, depth;
-            boolean doTabs = false;
-            if (tabs >= 0) {
-                doTabs = true;
-            }
+            boolean doTabs = tabs >= 0;
 
             out.Empty();
             if (!this.ExpectTokenString("{")) {
@@ -717,7 +778,7 @@ public class Parser {
                 }
 
                 if (token.type == TT_STRING) {
-                    out.Append("\"" + token.toString() + "\"");
+                    out.Append("\"" + token + "\"");
                 } else {
                     out.Append(token);
                 }
@@ -840,10 +901,7 @@ public class Parser {
                 m[i] = this.ParseFloat();
             }
 
-            if (!this.ExpectTokenString(")")) {
-                return false;
-            }
-            return true;
+            return this.ExpectTokenString(")");
         }
 
         public boolean Parse2DMatrix(int y, int x, float[] m) throws idException {
@@ -863,10 +921,7 @@ public class Parser {
                 System.arraycopy(tempM, 0, m, i * x, tempM.length);
             }
 
-            if (!this.ExpectTokenString(")")) {
-                return false;
-            }
-            return true;
+            return this.ExpectTokenString(")");
         }
 
         public boolean Parse3DMatrix(int z, int y, int x, float[] m) throws idException {
@@ -886,10 +941,7 @@ public class Parser {
                 System.arraycopy(tempM, 0, m, i * x * y, tempM.length);
             }
 
-            if (!this.ExpectTokenString(")")) {
-                return false;
-            }
-            return true;
+            return this.ExpectTokenString(")");
         }
 
         // get the white space before the last read token
@@ -965,19 +1017,19 @@ public class Parser {
             define_s define;
             class builtin {
 
+                final int id;
+                final String string;
                 builtin(String string, int id) {
                     this.string = string;
                     this.id = id;
                 }
-                String string;
-                int id;
-            };
+            }
             builtin[] builtin = {
-                new builtin("__LINE__", BUILTIN_LINE),
-                new builtin("__FILE__", BUILTIN_DATE),
-                new builtin("__TIME__", BUILTIN_TIME),
-                new builtin("__STDC__", BUILTIN_STDC),
-                new builtin(null, 0)
+                    new builtin("__LINE__", BUILTIN_LINE),
+                    new builtin("__FILE__", BUILTIN_DATE),
+                    new builtin("__TIME__", BUILTIN_TIME),
+                    new builtin("__STDC__", BUILTIN_STDC),
+                    new builtin(null, 0)
             };
 
             for (i = 0; builtin[i].string != null; i++) {
@@ -1112,7 +1164,7 @@ public class Parser {
         }
 
         @Deprecated
-        public void Error(final String str, final char[] chr, final char[]   ... chrs) throws idException {
+        public void Error(final String str, final char[] chr, final char[]... chrs) throws idException {
             this.Error(str);
             this.Error(ctos(chr));
             for (char[] charoal : chrs) {
@@ -1135,61 +1187,12 @@ public class Parser {
         }
 
         @Deprecated
-        public void Warning(final String str, final char[] chr, final char[]   ... chrs) throws idException {
+        public void Warning(final String str, final char[] chr, final char[]... chrs) throws idException {
             this.Warning(str);
             this.Warning(ctos(chr));
             for (char[] charoal : chrs) {
                 this.Warning(ctos(charoal));
             }
-        }
-
-        // add a global define that will be added to all opened sources
-        public static boolean AddGlobalDefine(final String string) throws idException {
-            define_s define;
-
-            define = idParser.DefineFromString(string);
-            if (null == define) {
-                return false;
-            }
-            define.next = globaldefines;//TODO:check if [0] is correcto.
-            globaldefines = define;
-            return true;
-        }
-
-        // remove the given global define
-        public static boolean RemoveGlobalDefine(final String name) {
-            define_s d, prev;
-
-            for (prev = null, d = globaldefines; d != null; prev = d, d = d.next) {
-                if (d.name.equals(name)) {
-                    break;
-                }
-            }
-            if (d != null) {
-                if (prev != null) {
-                    prev.next = d.next;
-                } else {
-                    globaldefines = d.next;
-                }
-                idParser.FreeDefine(d);
-                return true;
-            }
-            return false;
-        }
-
-        // remove all global defines
-        public static void RemoveAllGlobalDefines() {
-            define_s define;
-
-            for (define = globaldefines; define != null; define = globaldefines) {
-                globaldefines = globaldefines.next;//TODO:ptr
-                idParser.FreeDefine(define);
-            }
-        }
-
-        // set the base folder to load files from
-        public static void SetBaseFolder(final String path) {
-            idLexer.SetBaseFolder(path);
         }
 
         private void PushIndent(int type, int skip) {
@@ -1353,7 +1356,7 @@ public class Parser {
                 return false;
             }
             // read the define parameters
-            for (done = 0, numparms = 0, indent = 1; 0 == done;) {
+            for (done = 0, numparms = 0, indent = 1; 0 == done; ) {
                 if (numparms >= maxparms) {
                     this.Error("define '%s' with too many parameters", define.name);
                     return false;
@@ -1458,7 +1461,8 @@ public class Parser {
 
         private boolean ExpandBuiltinDefine(idToken defToken, define_s define, idToken[] firstToken, idToken[] lastToken) throws idException {
             idToken token;
-            /*ID_TIME_T*/ long t;
+            /*ID_TIME_T*/
+            long t;
             String curtime;
             String buf;//[MAX_STRING_CHARS];
 
@@ -1620,7 +1624,7 @@ public class Parser {
                     // add the token to the list
                     t.next = null;
 // the token being read from the define list should use the line number of
-// the original file, not the header file			
+// the original file, not the header file
                     t.line = deftoken.line;
 
                     if (last != null) {
@@ -1632,7 +1636,7 @@ public class Parser {
                 }
             }
             // check for the merging operator
-            for (t = first; t != null;) {
+            for (t = first; t != null; ) {
                 if (t.next != null) {
                     // if the merging operator
                     if (t.next.equals("##")) {
@@ -1770,31 +1774,6 @@ public class Parser {
             definehash[hash] = define;
         }
 
-        private static void PrintDefine(define_s define) throws idException {
-            idLib.common.Printf("define->name = %s\n", define.name);
-            idLib.common.Printf("define->flags = %d\n", define.flags);
-            idLib.common.Printf("define->builtin = %d\n", define.builtin);
-            idLib.common.Printf("define->numparms = %d\n", define.numparms);
-        }
-
-        private static void FreeDefine(define_s define) {
-            idToken t, next;
-
-            //free the define parameters
-//            for (t = define.parms; t; t = next) {
-//                next = t.next;
-//		delete t;
-//            }
-            //free the define tokens
-//            for (t = define.tokens; t; t = next) {
-//                next = t.next;
-//		delete t;
-//            }
-            define.parms = define.tokens = null;//TODO:check if nullifying doesn't break nothing.
-            //free the define
-//            Mem_Free(define);
-        }
-
         private define_s FindDefine(define_s defines, final String name) {
             define_s d;
 
@@ -1804,24 +1783,6 @@ public class Parser {
                 }
             }
             return null;
-        }
-
-        private static define_s DefineFromString(final String string) throws idException {
-            idParser src = new idParser();
-            define_s def;
-
-            if (!src.LoadMemory(string, string.length(), "*defineString")) {
-                return null;
-            }
-            // create a define from the source
-            if (!src.Directive_define()) {
-                src.FreeSource();
-                return null;
-            }
-            def = src.CopyFirstDefine();
-            src.FreeSource();
-            //if the define was created succesfully
-            return def;
         }
 
         private define_s CopyFirstDefine() {
@@ -1999,27 +1960,6 @@ public class Parser {
             return true;
         }
 
-        /*
-         ================
-         idParser::EvaluateTokens
-         ================
-         */
-        class operator_s {
-
-            int op;
-            int priority;
-            int parentheses;
-            operator_s prev, next;
-        };
-
-        class value_s {
-
-            long intValue;
-            double floatValue;
-            int parentheses;
-            value_s prev, next;
-        };
-
         int PC_OperatorPriority(int op) {
             switch (op) {
                 case P_MUL:
@@ -2074,8 +2014,6 @@ public class Parser {
             }
             return 0;
         }
-        static final int MAX_VALUES = 64;
-        static final int MAX_OPERATORS = 64;
 
         boolean AllocValue(value_s val, value_s[] value_heap, int[] numvalues) throws idException {
             boolean error = false;
@@ -2637,9 +2575,7 @@ public class Parser {
                 }
             } while (this.ReadLine(token));
             //
-            if (!this.EvaluateTokens(firstToken, intvalue, floatvalue, integer)) {
-                return false;
-            }
+            return this.EvaluateTokens(firstToken, intvalue, floatvalue, integer);
 //            //
 //// #ifdef DEBUG_EVAL
 //            // Log_Write("eval:");
@@ -2656,7 +2592,6 @@ public class Parser {
 //            // else Log_Write("eval result: %f", *floatvalue);
 //// #endif //DEBUG_EVAL
 //            //
-            return true;
         }
 
         private boolean DollarEvaluate(long[] intValue, double[] floatValue, int integer) throws idException {
@@ -2743,9 +2678,7 @@ public class Parser {
                 }
             } while (this.ReadSourceToken(token));
             //
-            if (!this.EvaluateTokens(firstToken, intValue, floatValue, integer)) {
-                return false;
-            }
+            return this.EvaluateTokens(firstToken, intValue, floatValue, integer);
             // //
 // // #ifdef DEBUG_EVAL
             // // Log_Write("$eval:");
@@ -2762,7 +2695,6 @@ public class Parser {
             // // else Log_Write("$eval result: %f", *floatvalue);
 // // #endif //DEBUG_EVAL
             // //
-            return true;
         }
 
         private boolean Directive_define() throws idException {
@@ -3159,25 +3091,26 @@ public class Parser {
             this.UnreadSourceToken(token);
             return false;
         }
-    };
 
-    /*
-     ================
-     PC_NameHash
-     ================
-     */
-    static int PC_NameHash(final String name) {
-        return PC_NameHash(name.toCharArray());
-    }
+        /*
+         ================
+         idParser::EvaluateTokens
+         ================
+         */
+        class operator_s {
 
-    static int PC_NameHash(final char[] name) {
-        int hash, i;
-
-        hash = 0;
-        for (i = 0; i < name.length && name[i] != '\0'; i++) {
-            hash += name[i] * (119 + i);
+            int op;
+            int parentheses;
+            operator_s prev, next;
+            int priority;
         }
-        hash = (hash ^ (hash >> 10) ^ (hash >> 20)) & (DEFINEHASHSIZE - 1);
-        return hash;
+
+        class value_s {
+
+            double floatValue;
+            long intValue;
+            int parentheses;
+            value_s prev, next;
+        }
     }
 }

@@ -1,18 +1,31 @@
 package neo.idlib.geometry;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import neo.TempDump;
 import neo.TempDump.SERiAL;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import org.lwjgl.BufferUtils;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 /**
  *
  */
 public class DrawVert {
+
+    public static ByteBuffer toByteBuffer(idDrawVert[] verts) {
+        ByteBuffer data = BufferUtils.createByteBuffer(idDrawVert.BYTES * verts.length);
+
+        for (idDrawVert vert : verts) {
+            data.put(vert.Write().rewind());
+        }
+//        System.out.printf("%d %d %d %d\n", data.get(0) & 0xff, data.get(1) & 0xff, data.get(2) & 0xff, data.get(3) & 0xff);
+//        System.out.printf("%d %d %d %d\n", data.get(4) & 0xff, data.get(5) & 0xff, data.get(6) & 0xff, data.get(7) & 0xff);
+//        System.out.printf("%f %f %f %f\n", data.getFloat(0), data.getFloat(4), data.getFloat(8), data.getFloat(12));
+
+        return data.flip();
+    }
 
     /*
      ===============================================================================
@@ -30,21 +43,19 @@ public class DrawVert {
                 + (2 * idVec3.SIZE)
                 + (4 * Byte.SIZE);//color
         public static final transient int BYTES = SIZE / Byte.SIZE;
-
-        private transient int VBO_OFFSET;
-
-        public idVec3   xyz;
-        public idVec2   st;
-        public idVec3   normal;
-        public idVec3[] tangents;
-        public byte[] color = new byte[4];
-////#if 0 // was MACOS_X see comments concerning DRAWVERT_PADDED in Simd_Altivec.h 
+        ////#if 0 // was MACOS_X see comments concerning DRAWVERT_PADDED in Simd_Altivec.h
 ////	float			padding;
 ////#endif
 //public	float			operator[]( const int index ) const;
 //public	float &			operator[]( const int index );
         private static int DBG_counter = 0;
         private final int DBG_count = DBG_counter++;
+        public byte[] color = new byte[4];
+        public idVec3 normal;
+        public idVec2 st;
+        public idVec3[] tangents;
+        public idVec3 xyz;
+        private transient int VBO_OFFSET;
 
         public idDrawVert() {
             this.xyz = new idVec3();
@@ -73,14 +84,6 @@ public class DrawVert {
             this.tangents = new idVec3[]{new idVec3(dv.tangents[0]), new idVec3(dv.tangents[1])};
         }
 
-        public void oSet(final idDrawVert dv) {
-            this.xyz.oSet(dv.xyz);
-            this.st.oSet(dv.st);
-            this.normal.oSet(dv.normal);
-            this.tangents[0].oSet(dv.tangents[0]);
-            this.tangents[1].oSet(dv.tangents[1]);
-        }
-
         /**
          * cast constructor
          *
@@ -89,6 +92,14 @@ public class DrawVert {
         public idDrawVert(ByteBuffer buffer) {
             this();
             Read(buffer);
+        }
+
+        public void oSet(final idDrawVert dv) {
+            this.xyz.oSet(dv.xyz);
+            this.st.oSet(dv.st);
+            this.normal.oSet(dv.normal);
+            this.tangents[0].oSet(dv.tangents[0]);
+            this.tangents[1].oSet(dv.tangents[1]);
         }
 
         public float oGet(final int index) {
@@ -174,10 +185,10 @@ public class DrawVert {
 
         private short[] set_reinterpret_cast(long color) {
             return new short[]{
-                (short) (color & 0x0000_00FF),
-                (short) (color & 0x0000_FF00),
-                (short) (color & 0x00FF_0000),
-                (short) (color & 0xFF00_0000)};
+                    (short) (color & 0x0000_00FF),
+                    (short) (color & 0x0000_FF00),
+                    (short) (color & 0x00FF_0000),
+                    (short) (color & 0xFF00_0000)};
         }
 
         @Override
@@ -271,18 +282,5 @@ public class DrawVert {
         public int colorOffset() {
             return tangentsOffset_1() + idVec3.BYTES;//+xyz+st+normal+tangents
         }
-    };
-
-    public static ByteBuffer toByteBuffer(idDrawVert[] verts) {
-        ByteBuffer data = BufferUtils.createByteBuffer(idDrawVert.BYTES * verts.length);
-
-        for (idDrawVert vert : verts) {
-            data.put((ByteBuffer) vert.Write().rewind());
-        }
-//        System.out.printf("%d %d %d %d\n", data.get(0) & 0xff, data.get(1) & 0xff, data.get(2) & 0xff, data.get(3) & 0xff);
-//        System.out.printf("%d %d %d %d\n", data.get(4) & 0xff, data.get(5) & 0xff, data.get(6) & 0xff, data.get(7) & 0xff);
-//        System.out.printf("%f %f %f %f\n", data.getFloat(0), data.getFloat(4), data.getFloat(8), data.getFloat(12));
-
-        return (ByteBuffer) data.flip();
     }
 }

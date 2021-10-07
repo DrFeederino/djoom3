@@ -1,33 +1,27 @@
 package neo.idlib.geometry;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
-import neo.idlib.geometry.Surface.idSurface;
-import static neo.idlib.math.Math_h.FLOATSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.INTSIGNBITSET;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_CROSS;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Pluecker.idPluecker;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Plane.*;
 
 /**
  *
  */
 public class Surface {
 
-//    @Deprecated
-    private static int UpdateVertexIndex(int vertexIndexNum[], int[] vertexRemap, int[] vertexCopyIndex, int vertNum) {
+    //    @Deprecated
+    private static int UpdateVertexIndex(int[] vertexIndexNum, int[] vertexRemap, int[] vertexCopyIndex, int vertNum) {
         int s = INTSIGNBITSET(vertexRemap[vertNum]);
         vertexIndexNum[0] = vertexRemap[vertNum];
         vertexRemap[vertNum] = vertexIndexNum[s];
@@ -57,19 +51,19 @@ public class Surface {
      */
     static class surfaceEdge_t {
 
-        int[] verts = new int[2];	// edge vertices always with ( verts[0] < verts[1] )
-        int[] tris = new int[2];	// edge triangles
+        int[] tris = new int[2];    // edge triangles
+        int[] verts = new int[2];    // edge vertices always with ( verts[0] < verts[1] )
 
         private static surfaceEdge_t[] generateArray(final int length) {
             return Stream.generate(surfaceEdge_t::new).limit(length).toArray(surfaceEdge_t[]::new);
         }
-    };
+    }
 
     public static class idSurface {
-        protected idList<idDrawVert>    verts;          // vertices
-        protected idList<Integer>       indexes;        // 3 references to vertices for each triangle
+        protected idList<Integer> edgeIndexes;    // 3 references to edges for each triangle, may be negative for reversed edge
         protected idList<surfaceEdge_t> edges;          // edges
-        protected idList<Integer>       edgeIndexes;    // 3 references to edges for each triangle, may be negative for reversed edge
+        protected idList<Integer> indexes;        // 3 references to vertices for each triangle
+        protected idList<idDrawVert> verts;          // vertices
         //
         //
 
@@ -91,10 +85,10 @@ public class Surface {
             assert (verts != null && indexes != null && numVerts > 0 && numIndexes > 0);
             this.verts.SetNum(numVerts);
 //	memcpy( this.verts.Ptr(), verts, numVerts * sizeof( verts[0] ) );
-            System.arraycopy(verts, 0, this.verts.Ptr(), 0, numVerts);
+            System.arraycopy(verts, 0, this.verts.getList(), 0, numVerts);
             this.indexes.SetNum(numIndexes);
 //	memcpy( this.indexes.Ptr(), indexes, numIndexes * sizeof( indexes[0] ) );
-            System.arraycopy(indexes, 0, this.indexes.Ptr(), 0, numIndexes);
+            System.arraycopy(indexes, 0, this.indexes.getList(), 0, numIndexes);
             GenerateEdgeIndexes();
         }
 //public							~idSurface( void );
@@ -123,7 +117,7 @@ public class Surface {
         }
 
         public Integer[] GetIndexes() {
-            return indexes.Ptr();
+            return indexes.getList();
         }
 //public	int						GetNumVertices( void ) const { return verts.Num(); }
 //public	const idDrawVert *		GetVertices( void ) const { return verts.Ptr(); }
@@ -284,8 +278,8 @@ public class Surface {
             vertexIndexNum[0][0] = vertexIndexNum[1][0] = 0;
             vertexIndexNum[0][1] = vertexIndexNum[1][1] = numEdgeSplitVertexes;
 
-            indexPtr[0] = surface[0].indexes.Ptr();
-            indexPtr[1] = surface[1].indexes.Ptr();
+            indexPtr[0] = surface[0].indexes.getList();
+            indexPtr[1] = surface[1].indexes.getList();
             indexNum[0] = surface[0].indexes.Num();
             indexNum[1] = surface[1].indexes.Num();
 
@@ -308,7 +302,7 @@ public class Surface {
                 v2 = indexes.oGet(i + 2);
 
                 switch ((INTSIGNBITSET(edgeSplitVertex[e0]) | (INTSIGNBITSET(edgeSplitVertex[e1]) << 1) | (INTSIGNBITSET(edgeSplitVertex[e2]) << 2)) ^ 7) {
-                    case 0: {	// no edges split
+                    case 0: {    // no edges split
                         if (((sides[v0] & sides[v1] & sides[v2]) & SIDE_ON) != 0) {
                             // coplanar
                             f = verts.oGet(v1).xyz.oMinus(verts.oGet(v0).xyz).Cross(verts.oGet(v0).xyz.oMinus(verts.oGet(v2).xyz)).oMultiply(plane.Normal());
@@ -330,7 +324,7 @@ public class Surface {
                         indexNum[s] = n;
                         break;
                     }
-                    case 1: {	// first edge split
+                    case 1: {    // first edge split
                         s = sides[v0] & SIDE_BACK;
                         n = indexNum[s];
                         onPlaneEdges[s][numOnPlaneEdges[s]++] = n;
@@ -349,7 +343,7 @@ public class Surface {
                         indexNum[s] = n;
                         break;
                     }
-                    case 2: {	// second edge split
+                    case 2: {    // second edge split
                         s = sides[v1] & SIDE_BACK;
                         n = indexNum[s];
                         onPlaneEdges[s][numOnPlaneEdges[s]++] = n;
@@ -368,7 +362,7 @@ public class Surface {
                         indexNum[s] = n;
                         break;
                     }
-                    case 3: {	// first and second edge split
+                    case 3: {    // first and second edge split
                         s = sides[v1] & SIDE_BACK;
                         n = indexNum[s];
                         onPlaneEdges[s][numOnPlaneEdges[s]++] = n;
@@ -390,7 +384,7 @@ public class Surface {
                         indexNum[s] = n;
                         break;
                     }
-                    case 4: {	// third edge split
+                    case 4: {    // third edge split
                         s = sides[v2] & SIDE_BACK;
                         n = indexNum[s];
                         onPlaneEdges[s][numOnPlaneEdges[s]++] = n;
@@ -409,7 +403,7 @@ public class Surface {
                         indexNum[s] = n;
                         break;
                     }
-                    case 5: {	// first and third edge split
+                    case 5: {    // first and third edge split
                         s = sides[v0] & SIDE_BACK;
                         n = indexNum[s];
                         onPlaneEdges[s][numOnPlaneEdges[s]++] = n;
@@ -431,7 +425,7 @@ public class Surface {
                         indexNum[s] = n;
                         break;
                     }
-                    case 6: {	// second and third edge split
+                    case 6: {    // second and third edge split
                         s = sides[v2] & SIDE_BACK;
                         n = indexNum[s];
                         onPlaneEdges[s][numOnPlaneEdges[s]++] = n;
@@ -591,7 +585,7 @@ public class Surface {
             vertexIndexNum[0] = 0;
             vertexIndexNum[1] = numEdgeSplitVertexes;
 
-            indexPtr = newIndexes.Ptr();
+            indexPtr = newIndexes.getList();
             indexNum = newIndexes.Num();
 
             // split surface triangles
@@ -607,7 +601,7 @@ public class Surface {
                 v2 = indexes.oGet(i + 2);
 
                 switch ((INTSIGNBITSET(edgeSplitVertex[e0]) | (INTSIGNBITSET(edgeSplitVertex[e1]) << 1) | (INTSIGNBITSET(edgeSplitVertex[e2]) << 2)) ^ 7) {
-                    case 0: {	// no edges split
+                    case 0: {    // no edges split
                         if (((sides[v0] | sides[v1] | sides[v2]) & SIDE_BACK) != 0) {
                             break;
                         }
@@ -626,7 +620,7 @@ public class Surface {
                         indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v2);
                         break;
                     }
-                    case 1: {	// first edge split
+                    case 1: {    // first edge split
                         if ((sides[v0] & SIDE_BACK) == 0) {
                             indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v0);
                             indexPtr[indexNum++] = edgeSplitVertex[e0];
@@ -638,7 +632,7 @@ public class Surface {
                         }
                         break;
                     }
-                    case 2: {	// second edge split
+                    case 2: {    // second edge split
                         if ((sides[v1] & SIDE_BACK) == 0) {
                             indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v1);
                             indexPtr[indexNum++] = edgeSplitVertex[e1];
@@ -650,7 +644,7 @@ public class Surface {
                         }
                         break;
                     }
-                    case 3: {	// first and second edge split
+                    case 3: {    // first and second edge split
                         if ((sides[v1] & SIDE_BACK) == 0) {
                             indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v1);
                             indexPtr[indexNum++] = edgeSplitVertex[e1];
@@ -665,7 +659,7 @@ public class Surface {
                         }
                         break;
                     }
-                    case 4: {	// third edge split
+                    case 4: {    // third edge split
                         if ((sides[v2] & SIDE_BACK) == 0) {
                             indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v2);
                             indexPtr[indexNum++] = edgeSplitVertex[e2];
@@ -677,7 +671,7 @@ public class Surface {
                         }
                         break;
                     }
-                    case 5: {	// first and third edge split
+                    case 5: {    // first and third edge split
                         if ((sides[v0] & SIDE_BACK) == 0) {
                             indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v0);
                             indexPtr[indexNum++] = edgeSplitVertex[e0];
@@ -692,7 +686,7 @@ public class Surface {
                         }
                         break;
                     }
-                    case 6: {	// second and third edge split
+                    case 6: {    // second and third edge split
                         if ((sides[v2] & SIDE_BACK) == 0) {
                             indexPtr[indexNum++] = UpdateVertexIndex(vertexIndexNum, vertexRemap, vertexCopyIndex, v2);
                             indexPtr[indexNum++] = edgeSplitVertex[e2];
@@ -807,7 +801,7 @@ public class Surface {
 
             for (i = 0; i < indexes.Num(); i += 3) {
                 plane.FromPoints(verts.oGet(
-                        indexes.oGet(i + 0)).xyz,
+                                indexes.oGet(i + 0)).xyz,
                         verts.oGet(indexes.oGet(i + 1)).xyz,
                         verts.oGet(indexes.oGet(i + 2)).xyz);
 
@@ -888,7 +882,7 @@ public class Surface {
             return SIDE_ON;
         }
 
-//
+        //
         public boolean LineIntersection(final idVec3 start, final idVec3 end) {
             return LineIntersection(start, end, false);
         }
@@ -956,10 +950,7 @@ public class Surface {
                 }
             }
 
-            if (idMath.Fabs(scale[0]) < idMath.INFINITY) {
-                return true;
-            }
-            return false;
+            return idMath.Fabs(scale[0]) < idMath.INFINITY;
         }
 
         /*
@@ -971,7 +962,7 @@ public class Surface {
          */
         protected void GenerateEdgeIndexes() {
             int i, j, i0, i1, i2, s, v0, v1, edgeNum;
-            int[]  vertexEdges, edgeChain;
+            int[] vertexEdges, edgeChain;
             Integer[] index;
             surfaceEdge_t[] e = surfaceEdge_t.generateArray(3);
 
@@ -988,7 +979,7 @@ public class Surface {
             edges.Append(e[0]);
 
             for (i = 0; i < indexes.Num(); i += 3) {
-                index = indexes.Ptr();//index = indexes.Ptr() + i;
+                index = indexes.getList();//index = indexes.Ptr() + i;
                 // vertex numbers
                 i0 = index[i + 0];
                 i1 = index[i + 1];
@@ -1055,5 +1046,6 @@ public class Surface {
             }
             return 0;
         }
-    };
+    }
+
 }

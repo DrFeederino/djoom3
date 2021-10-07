@@ -1,32 +1,199 @@
 package neo.Renderer;
 
+import neo.TempDump.TODO_Exception;
+import neo.framework.File_h.idFile;
+import neo.idlib.Text.Str.idStr;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import static neo.Renderer.Cinematic.cinStatus_t.FMV_EOF;
-import static neo.Renderer.Cinematic.cinStatus_t.FMV_IDLE;
-import static neo.Renderer.Cinematic.cinStatus_t.FMV_LOOPED;
-import static neo.Renderer.Cinematic.cinStatus_t.FMV_PLAY;
+
+import static neo.Renderer.Cinematic.cinStatus_t.*;
 import static neo.Renderer.RenderSystem_init.r_skipROQ;
 import static neo.Renderer.tr_local.backEnd;
 import static neo.Sound.snd_system.soundSystem;
 import static neo.TempDump.NOT;
-import neo.TempDump.TODO_Exception;
 import static neo.TempDump.wrapToNativeBuffer;
 import static neo.framework.Common.common;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_SET;
-import neo.framework.File_h.idFile;
 import static neo.idlib.Lib.LittleLong;
-import neo.idlib.Text.Str.idStr;
 
 /**
  *
  */
 public class Cinematic {
 
-    static final int INPUT_BUF_SIZE = 32768;/* choose an efficiently fread'able size */
+    static final int CIN_hold = 4;
+    static final int CIN_loop = 2;
 
+    static final int CIN_shader = 16;
+
+    static final int CIN_silent = 8;
+    //
+    static final int CIN_system = 1;
+    static final int DEFAULT_CIN_HEIGHT = 512;
+    //
+    static final int DEFAULT_CIN_WIDTH = 512;
+    static final int INPUT_BUF_SIZE = 32768;/* choose an efficiently fread'able size */
+    static final int MAXSIZE = 8;
+    static final int MINSIZE = 4;
+    static final int ROQ_CODEBOOK = 0x1002;
+    //
+    static final int ROQ_FILE = 0x1084;
+    static final int ROQ_PACKET = 0x1030;
+    static final int ROQ_QUAD = 0x1000;
+    static final int ROQ_QUAD_HANG = 0x1013;
+    static final int ROQ_QUAD_INFO = 0x1001;
+    static final int ROQ_QUAD_JPEG = 0x1012;
+    static final int ROQ_QUAD_VQ = 0x1011;
+    static final long[] ROQ_UB_tab = new long[256];
+    static final long[] ROQ_UG_tab = new long[256];
+    static final long[] ROQ_VG_tab = new long[256];
+    static final long[] ROQ_VR_tab = new long[256];
+    //
+// temporary buffers used by all cinematics
+    static final long[] ROQ_YY_tab = new long[256];
+    static final int ZA_SOUND_MONO = 0x1020;
+    static final int ZA_SOUND_STEREO = 0x1021;
+    static int[] file = null;
+    static ByteBuffer vq2 = null;
+    static ByteBuffer vq4 = null;
+    static ByteBuffer vq8 = null;
+
+    private static void VQ2TO4(ByteBuffer a, ByteBuffer b, ByteBuffer c, ByteBuffer d) {
+        final int aPos = a.position();
+        final int bPos = b.position();
+
+        c.putShort(a.getShort(aPos + 0));
+        c.putShort(a.getShort(aPos + 2));
+        c.putShort(b.getShort(bPos + 0));
+        c.putShort(b.getShort(bPos + 2));
+        d.putShort(a.getShort(aPos + 0));
+        d.putShort(a.getShort(aPos + 0));
+        d.putShort(a.getShort(aPos + 2));
+        d.putShort(a.getShort(aPos + 2));
+        d.putShort(b.getShort(bPos + 0));
+        d.putShort(b.getShort(bPos + 0));
+        d.putShort(b.getShort(bPos + 2));
+        d.putShort(b.getShort(bPos + 2));
+        d.putShort(a.getShort(aPos + 0));
+        d.putShort(a.getShort(aPos + 0));
+        d.putShort(a.getShort(aPos + 2));
+        d.putShort(a.getShort(aPos + 2));
+        d.putShort(b.getShort(bPos + 0));
+        d.putShort(b.getShort(bPos + 0));
+        d.putShort(b.getShort(bPos + 2));
+        d.putShort(b.getShort(bPos + 2));
+        a.position(aPos + 4);// += 2;
+        b.position(bPos + 4);// += 2;
+    }
+
+    private static void VQ2TO4(IntBuffer a, IntBuffer b, IntBuffer c, IntBuffer d) {
+
+        final int aPos = a.position();
+        final int bPos = b.position();
+
+        c.put(a.get(aPos + 0));
+        c.put(a.get(aPos + 1));
+        c.put(b.get(bPos + 0));
+        c.put(b.get(bPos + 1));
+        d.put(a.get(aPos + 0));
+        d.put(a.get(aPos + 0));
+        d.put(a.get(aPos + 1));
+        d.put(a.get(aPos + 1));
+        d.put(b.get(bPos + 0));
+        d.put(b.get(bPos + 0));
+        d.put(b.get(bPos + 1));
+        d.put(b.get(bPos + 1));
+        d.put(a.get(aPos + 0));
+        d.put(a.get(aPos + 0));
+        d.put(a.get(aPos + 1));
+        d.put(a.get(aPos + 1));
+        d.put(b.get(bPos + 0));
+        d.put(b.get(bPos + 0));
+        d.put(b.get(bPos + 1));
+        d.put(b.get(bPos + 1));
+        a.position(aPos + 2);// += 2;
+        b.position(bPos + 2);// += 2;
+    }
+//
+
+    private static void VQ2TO2(ByteBuffer a, ByteBuffer b, ByteBuffer c, ByteBuffer d) {
+        final int aPos = a.position();
+        final int bPos = b.position();
+
+        c.putShort(a.getShort(aPos));//TODO:use shortBuffers instead?
+        c.putShort(b.getShort(bPos));
+        d.putShort(a.getShort(aPos));
+        d.putShort(a.getShort(aPos));
+        d.putShort(b.getShort(bPos));
+        d.putShort(b.getShort(bPos));
+        d.putShort(a.getShort(aPos));
+        d.putShort(a.getShort(aPos));
+        d.putShort(b.getShort(bPos));
+        d.putShort(b.getShort(bPos));
+        a.position(aPos + 2);//++;
+        b.position(bPos + 2);//++;
+    }
+
+    private static void VQ2TO2(IntBuffer a, IntBuffer b, IntBuffer c, IntBuffer d) {
+        final int aPos = a.position();
+        final int bPos = b.position();
+
+        c.put(a.get(aPos));
+        c.put(b.get(bPos));
+        d.put(a.get(aPos));
+        d.put(a.get(aPos));
+        d.put(b.get(bPos));
+        d.put(b.get(bPos));
+        d.put(a.get(aPos));
+        d.put(a.get(aPos));
+        d.put(b.get(bPos));
+        d.put(b.get(bPos));
+        a.get();//++;
+        b.get();//++;
+    }
+
+    private static int JPEGBlit(ByteBuffer wStatus, int[] data, int offset, int datasize) {
+        throw new TODO_Exception();
+    }
+
+    /**
+     * The original file[] was a byte array.
+     */
+    private static int[] expandBuffer(ByteBuffer tempFile) {
+        for (int f = 0; f < file.length; f++) {
+            file[f] = tempFile.get(f) & 0xFF;
+        }
+        return file;
+    }
+
+    /**
+     * @return A ByteBuffer duplicate of the {@code src} buffer with
+     * {@code offset} as start position.
+     */
+    private static ByteBuffer point(ByteBuffer src, long offset) {
+        final int pos = src.position();
+
+        try {
+            return src.duplicate().position((int) (pos + offset)).order(src.order());
+        } catch (Exception e) {
+            System.err.printf("point---> %d, %d, %d\n", src.capacity(), src.remaining(), offset);
+            throw e;
+        }
+    }
+
+    /**
+     * {@code offset} is doubled to account for the short->byte conversion.
+     *
+     * @see point(ByteBuffer, long)
+     */
+    private static ByteBuffer vqPoint(ByteBuffer src, long offset) {
+        offset = offset * 2;//because we use bytebuffers isntead of short arrays.
+
+        return point(src, offset);
+    }
 
     /*
      ===============================================================================
@@ -48,49 +215,15 @@ public class Cinematic {
         FMV_ID_IDLE,
         FMV_LOOPED,
         FMV_ID_WAIT
-    };
+    }
 
     // a cinematic stream generates an image buffer, which the caller will upload to a texture
     public static class cinData_t {
 
+        public ByteBuffer image;                // RGBA format, alpha will be 255
         public int imageWidth, imageHeight;    // will be a power of 2
-        public ByteBuffer  image;                // RGBA format, alpha will be 255
         public cinStatus_t status;
-    };
-    //
-    static final int        CIN_system         = 1;
-    static final int        CIN_loop           = 2;
-    static final int        CIN_hold           = 4;
-    static final int        CIN_silent         = 8;
-    static final int        CIN_shader         = 16;
-    //
-    static final int        DEFAULT_CIN_WIDTH  = 512;
-    static final int        DEFAULT_CIN_HEIGHT = 512;
-    static final int        MAXSIZE            = 8;
-    static final int        MINSIZE            = 4;
-    //
-    static final int        ROQ_FILE           = 0x1084;
-    static final int        ROQ_QUAD           = 0x1000;
-    static final int        ROQ_QUAD_INFO      = 0x1001;
-    static final int        ROQ_CODEBOOK       = 0x1002;
-    static final int        ROQ_QUAD_VQ        = 0x1011;
-    static final int        ROQ_QUAD_JPEG      = 0x1012;
-    static final int        ROQ_QUAD_HANG      = 0x1013;
-    static final int        ROQ_PACKET         = 0x1030;
-    static final int        ZA_SOUND_MONO      = 0x1020;
-    static final int        ZA_SOUND_STEREO    = 0x1021;
-    //
-// temporary buffers used by all cinematics
-    static final long[]     ROQ_YY_tab         = new long[256];
-    static final long[]     ROQ_UB_tab         = new long[256];
-    static final long[]     ROQ_UG_tab         = new long[256];
-    static final long[]     ROQ_VG_tab         = new long[256];
-    static final long[]     ROQ_VR_tab         = new long[256];
-    static       int[]      file               = null;
-    static       ByteBuffer vq2                = null;
-    static       ByteBuffer vq4                = null;
-    static       ByteBuffer vq8                = null;
-//
+    }
 
     public static abstract class idCinematic implements Cloneable {
 
@@ -146,7 +279,7 @@ public class Cinematic {
             return new idCinematicLocal();
         }
 
-//	// frees all allocated memory
+        //	// frees all allocated memory
 // public	abstract				~idCinematic();
         // returns false if it failed to load
         public boolean InitFromFile(final String qpath, boolean looping) {
@@ -177,7 +310,7 @@ public class Cinematic {
         @Deprecated//remove if not used.
         protected abstract idCinematic clone() throws CloneNotSupportedException;
 
-    };
+    }
 
     /*
      ===============================================
@@ -206,11 +339,7 @@ public class Cinematic {
             idStr fname = new idStr(qpath);
 
             fname.ToLower();
-            if (0 == fname.Icmp("waveform")) {
-                showWaveform = true;
-            } else {
-                showWaveform = false;
-            }
+            showWaveform = 0 == fname.Icmp("waveform");
             return true;
         }
 
@@ -229,50 +358,53 @@ public class Cinematic {
 
             return new idSndWindow(this);
         }
-    };
+    }
 
     static class idCinematicLocal extends idCinematic {
 
-        private final long[]         mComp   = new long[256];
-        //        private byte[][][] qStatus = new byte[2][][];
-        private       ByteBuffer[][] qStatus = new ByteBuffer[2][];
-        private idStr fileName;
-        private int   CIN_WIDTH, CIN_HEIGHT;
-        private idFile      iFile;
-        private cinStatus_t status;
-        private long        tfps;
-        private long        RoQPlayed;
-        private long        ROQSize;
-        private int         RoQFrameSize;
-        private long        onQuad;
-        private long        numQuads;
-        private long        samplesPerLine;
-        private int         roq_id;
-        private int         screenDelta;
-        private ByteBuffer  buf;
-        private long samplesPerPixel = 2;// defaults to 2
-        private int xSize, ySize, maxSize, minSize;
-        private long normalBuffer0;
-        private long roq_flags;
-        private long roqF0;
-        private long roqF1;
+        static int debugInitFromFile = 0;
+        static int debugRoQInterrupt = 0;
+        private static int debugImageForTime = 0;
+        private final long[] mComp = new long[256];
         private final long[] t = new long[2];
-        private long roqFPS;
-        private long drawX, drawY;
+        private int CIN_WIDTH, CIN_HEIGHT;
+        private long ROQSize;
+        private int RoQFrameSize;
+        private long RoQPlayed;
         //
-        private int        animationLength;
-        private int        startTime;
-        private float      frameRate;
+        private int animationLength;
+        private ByteBuffer buf;
+        private boolean dirty;
+        private long drawX, drawY;
+        private idStr fileName;
+        private float frameRate;
+        private boolean half;
+        private idFile iFile;
         //
         private ByteBuffer image;
+        private boolean inMemory;
         //
-        private boolean    looping;
-        private boolean    dirty;
-        private boolean    half;
-        private boolean    smoothedDouble;
-        private boolean    inMemory;
+        private boolean looping;
+        private long normalBuffer0;
+        private long numQuads;
+        private long onQuad;
+        //        private byte[][][] qStatus = new byte[2][][];
+        private ByteBuffer[][] qStatus = new ByteBuffer[2][];
+        private long roqF0;
+        private long roqF1;
+        private long roqFPS;
+        private long roq_flags;
+        private int roq_id;
+        private long samplesPerLine;
+        private long samplesPerPixel = 2;// defaults to 2
+        private int screenDelta;
+        private boolean smoothedDouble;
+        private int startTime;
         //
         //
+        private cinStatus_t status;
+        private long tfps;
+        private int xSize, ySize, maxSize, minSize;
 
         public idCinematicLocal() {
             image = null;
@@ -327,8 +459,6 @@ public class Cinematic {
             this.smoothedDouble = local.smoothedDouble;
             this.inMemory = local.inMemory;
         }
-
-        static int debugInitFromFile = 0;
 
         @Override
         public boolean InitFromFile(String qpath, boolean amilooping) {
@@ -385,8 +515,6 @@ public class Cinematic {
             RoQShutdown();
             return false;
         }
-
-        private static int debugImageForTime = 0;
 
         @Override
         public cinData_t ImageForTime(int thisTime) {
@@ -540,13 +668,13 @@ public class Cinematic {
                 celdata <<= 2;
 
                 switch (code) {
-                    case 0x8000:			// vq code
+                    case 0x8000:            // vq code
                         blit8_32(vqPoint(vq8, data[offset + d_index] * 128), status[index], samplesPerLine);
                         d_index++;
                         index += 5;
                         break;
-                    case 0xc000:			// drop
-                        index++;			// skip 8x8
+                    case 0xc000:            // drop
+                        index++;            // skip 8x8
                         for (i = 0; i < 4; i++) {
                             if (0 == newd) {
                                 newd = 7;
@@ -559,12 +687,12 @@ public class Cinematic {
                             code = (celdata & 0xc000);
                             celdata <<= 2;
 
-                            switch (code) {		// code in top two bits of code
-                                case 0x8000:		// 4x4 vq code
+                            switch (code) {        // code in top two bits of code
+                                case 0x8000:        // 4x4 vq code
                                     blit4_32(vqPoint(vq4, data[offset + d_index] * 32), status[index], samplesPerLine);
                                     d_index++;
                                     break;
-                                case 0xc000:		// 2x2 vq code
+                                case 0xc000:        // 2x2 vq code
                                     blit2_32(vqPoint(vq2, data[offset + d_index] * 8), status[index], samplesPerLine);
                                     d_index++;
                                     blit2_32(vqPoint(vq2, data[offset + d_index] * 8), point(status[index], 8), samplesPerLine);
@@ -574,7 +702,7 @@ public class Cinematic {
                                     blit2_32(vqPoint(vq2, data[offset + d_index] * 8), point(status[index], samplesPerLine * 2 + 8), samplesPerLine);
                                     d_index++;
                                     break;
-                                case 0x4000:		// motion compensation
+                                case 0x4000:        // motion compensation
                                     move4_32(point(status[index], mComp[data[offset + d_index]]), status[index], samplesPerLine);
                                     d_index++;
                                     break;
@@ -582,7 +710,7 @@ public class Cinematic {
                             index++;
                         }
                         break;
-                    case 0x4000:			// motion compensation
+                    case 0x4000:            // motion compensation
                         move8_32(point(status[index], mComp[data[offset + d_index]]), status[index], samplesPerLine);
                         d_index++;
                         index += 5;
@@ -607,8 +735,6 @@ public class Cinematic {
 
             fileName = new idStr("");
         }
-
-        static int debugRoQInterrupt = 0;
 
         private void RoQInterrupt() {
             int framedata;
@@ -646,9 +772,9 @@ public class Cinematic {
                             blitVQQuad32fs(qStatus[0], file, framedata);
                             buf = image;
                         }
-                        if (numQuads == 0) {		// first frame
+                        if (numQuads == 0) {        // first frame
 //				memcpy(image+screenDelta, image, samplesPerLine*ysize);
-                            System.arraycopy(image.array(), 0, image.array(), (int) screenDelta, (int) samplesPerLine * ySize);
+                            System.arraycopy(image.array(), 0, image.array(), screenDelta, (int) samplesPerLine * ySize);
                         }
                         numQuads++;
                         dirty = true;
@@ -682,7 +808,7 @@ public class Cinematic {
                             normalBuffer0 = t[0];
                             JPEGBlit(image, file, framedata, RoQFrameSize);
 //				memcpy(image+screenDelta, image, samplesPerLine*ysize);
-                            System.arraycopy(image, 0, image, (int) screenDelta, (int) samplesPerLine * ySize);
+                            System.arraycopy(image, 0, image, screenDelta, (int) samplesPerLine * ySize);
                             numQuads++;
                         }
                         break;
@@ -721,9 +847,9 @@ public class Cinematic {
                 if (inMemory && (status != FMV_EOF)) {
                     inMemory = false;
                     framedata += 8;
-                    redump = true;//goto redump; 
+                    redump = true;//goto redump;
                 }
-            } while (redump);//{ 
+            } while (redump);//{
 
 //
 // one more frame hits the dust
@@ -1092,7 +1218,7 @@ public class Cinematic {
         }
 
         private int yuv_to_rgb24(long y, long u, long v) {
-            long r, g, b, YY = (long) (ROQ_YY_tab[(int) y]);
+            long r, g, b, YY = ROQ_YY_tab[(int) y];
 
             r = (YY + ROQ_VR_tab[(int) v]) >> 6;
             g = (YY + ROQ_UG_tab[(int) u] + ROQ_VG_tab[(int) v]) >> 6;
@@ -1191,8 +1317,8 @@ public class Cinematic {
                         icptr = vq4.asIntBuffer();
                         idptr = vq8.asIntBuffer();
                         for (i = 0; i < four; i++) {
-                            iaptr = (IntBuffer) vq2.asIntBuffer().position(input[i_ptr++] * 4);
-                            ibptr = (IntBuffer) vq2.asIntBuffer().position(input[i_ptr++] * 4);
+                            iaptr = vq2.asIntBuffer().position(input[i_ptr++] * 4);
+                            ibptr = vq2.asIntBuffer().position(input[i_ptr++] * 4);
                             for (j = 0; j < 2; j++) {
                                 VQ2TO4(iaptr, ibptr, icptr, idptr);
                             }
@@ -1252,8 +1378,8 @@ public class Cinematic {
                         icptr = vq4.asIntBuffer();
                         idptr = vq8.asIntBuffer();
                         for (i = 0; i < four; i++) {
-                            iaptr = (IntBuffer) vq2.asIntBuffer().position(input[i_ptr++] * 8);
-                            ibptr = (IntBuffer) vq2.asIntBuffer().position(input[i_ptr++] * 8);
+                            iaptr = vq2.asIntBuffer().position(input[i_ptr++] * 8);
+                            ibptr = vq2.asIntBuffer().position(input[i_ptr++] * 8);
                             for (j = 0; j < 2; j++) {
                                 VQ2TO4(iaptr, ibptr, icptr, idptr);
                                 VQ2TO4(iaptr, ibptr, icptr, idptr);
@@ -1302,8 +1428,8 @@ public class Cinematic {
                     icptr = vq4.asIntBuffer();
                     idptr = vq8.asIntBuffer();
                     for (i = 0; i < four; i++) {
-                        iaptr = (IntBuffer) vq2.asIntBuffer().position(input[i_ptr++] * 2);
-                        ibptr = (IntBuffer) vq2.asIntBuffer().position(input[i_ptr++] * 2);
+                        iaptr = vq2.asIntBuffer().position(input[i_ptr++] * 2);
+                        ibptr = vq2.asIntBuffer().position(input[i_ptr++] * 2);
                         for (j = 0; j < 2; j++) {
                             VQ2TO2(iaptr, ibptr, icptr, idptr);
                         }
@@ -1355,11 +1481,11 @@ public class Cinematic {
 
             numQuadCels = (CIN_WIDTH * CIN_HEIGHT) / 16;
             numQuadCels += numQuadCels / 4 + numQuadCels / 16;
-            numQuadCels += 64;				// for overflow
+            numQuadCels += 64;                // for overflow
 
             numQuadCels = (xSize * ySize) / 16;
             numQuadCels += numQuadCels / 4;
-            numQuadCels += 64;				// for overflow
+            numQuadCels += 64;                // for overflow
 
             onQuad = 0;
 
@@ -1438,139 +1564,6 @@ public class Cinematic {
             return new idCinematicLocal(this);
         }
 
-    };
-
-    private static void VQ2TO4(ByteBuffer a, ByteBuffer b, ByteBuffer c, ByteBuffer d) {
-        final int aPos = a.position();
-        final int bPos = b.position();
-
-        c.putShort(a.getShort(aPos + 0));
-        c.putShort(a.getShort(aPos + 2));
-        c.putShort(b.getShort(bPos + 0));
-        c.putShort(b.getShort(bPos + 2));
-        d.putShort(a.getShort(aPos + 0));
-        d.putShort(a.getShort(aPos + 0));
-        d.putShort(a.getShort(aPos + 2));
-        d.putShort(a.getShort(aPos + 2));
-        d.putShort(b.getShort(bPos + 0));
-        d.putShort(b.getShort(bPos + 0));
-        d.putShort(b.getShort(bPos + 2));
-        d.putShort(b.getShort(bPos + 2));
-        d.putShort(a.getShort(aPos + 0));
-        d.putShort(a.getShort(aPos + 0));
-        d.putShort(a.getShort(aPos + 2));
-        d.putShort(a.getShort(aPos + 2));
-        d.putShort(b.getShort(bPos + 0));
-        d.putShort(b.getShort(bPos + 0));
-        d.putShort(b.getShort(bPos + 2));
-        d.putShort(b.getShort(bPos + 2));
-        a.position(aPos + 4);// += 2;
-        b.position(bPos + 4);// += 2;
-    }
-
-    private static void VQ2TO4(IntBuffer a, IntBuffer b, IntBuffer c, IntBuffer d) {
-
-        final int aPos = a.position();
-        final int bPos = b.position();
-
-        c.put(a.get(aPos + 0));
-        c.put(a.get(aPos + 1));
-        c.put(b.get(bPos + 0));
-        c.put(b.get(bPos + 1));
-        d.put(a.get(aPos + 0));
-        d.put(a.get(aPos + 0));
-        d.put(a.get(aPos + 1));
-        d.put(a.get(aPos + 1));
-        d.put(b.get(bPos + 0));
-        d.put(b.get(bPos + 0));
-        d.put(b.get(bPos + 1));
-        d.put(b.get(bPos + 1));
-        d.put(a.get(aPos + 0));
-        d.put(a.get(aPos + 0));
-        d.put(a.get(aPos + 1));
-        d.put(a.get(aPos + 1));
-        d.put(b.get(bPos + 0));
-        d.put(b.get(bPos + 0));
-        d.put(b.get(bPos + 1));
-        d.put(b.get(bPos + 1));
-        a.position(aPos + 2);// += 2;
-        b.position(bPos + 2);// += 2;
-    }
-
-    private static void VQ2TO2(ByteBuffer a, ByteBuffer b, ByteBuffer c, ByteBuffer d) {
-        final int aPos = a.position();
-        final int bPos = b.position();
-
-        c.putShort(a.getShort(aPos));//TODO:use shortBuffers instead?
-        c.putShort(b.getShort(bPos));
-        d.putShort(a.getShort(aPos));
-        d.putShort(a.getShort(aPos));
-        d.putShort(b.getShort(bPos));
-        d.putShort(b.getShort(bPos));
-        d.putShort(a.getShort(aPos));
-        d.putShort(a.getShort(aPos));
-        d.putShort(b.getShort(bPos));
-        d.putShort(b.getShort(bPos));
-        a.position(aPos + 2);//++;
-        b.position(bPos + 2);//++;
-    }
-
-    private static void VQ2TO2(IntBuffer a, IntBuffer b, IntBuffer c, IntBuffer d) {
-        final int aPos = a.position();
-        final int bPos = b.position();
-
-        c.put(a.get(aPos));
-        c.put(b.get(bPos));
-        d.put(a.get(aPos));
-        d.put(a.get(aPos));
-        d.put(b.get(bPos));
-        d.put(b.get(bPos));
-        d.put(a.get(aPos));
-        d.put(a.get(aPos));
-        d.put(b.get(bPos));
-        d.put(b.get(bPos));
-        a.get();//++;
-        b.get();//++;
-    }
-
-    private static int JPEGBlit(ByteBuffer wStatus, int[] data, int offset, int datasize) {
-        throw new TODO_Exception();
-    }
-
-    /**
-     * The original file[] was a byte array.
-     */
-    private static int[] expandBuffer(ByteBuffer tempFile) {
-        for (int f = 0; f < file.length; f++) {
-            file[f] = tempFile.get(f) & 0xFF;
-        }
-        return file;
-    }
-
-    /**
-     * @return A ByteBuffer duplicate of the {@code src} buffer with
-     * {@code offset} as start position.
-     */
-    private static ByteBuffer point(ByteBuffer src, long offset) {
-        final int pos = src.position();
-
-        try {
-            return ((ByteBuffer) src.duplicate().position((int) (pos + offset))).order(src.order());
-        } catch (Exception e) {
-            System.err.printf("point---> %d, %d, %d\n", src.capacity(), src.remaining(), offset);
-            throw e;
-        }
-    }
-
-    /**
-     * {@code offset} is doubled to account for the short->byte conversion.
-     *
-     * @see point(ByteBuffer, long)
-     */
-    private static ByteBuffer vqPoint(ByteBuffer src, long offset) {
-        offset = offset * 2;//because we use bytebuffers isntead of short arrays.
-
-        return point(src, offset);
     }
 
 //    private static void flushBufferToDisk(final ByteBuffer buffer) {

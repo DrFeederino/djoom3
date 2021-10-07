@@ -1,7 +1,6 @@
 package neo.sys;
 
-import neo.TempDump.TODO_Exception;
-import neo.framework.UsercmdGen;
+import neo.TempDump.*;
 import neo.idlib.Text.Str.idStr;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -18,40 +17,13 @@ import java.util.logging.Logger;
 import static neo.Renderer.RenderSystem_init.r_logFile;
 import static neo.Renderer.RenderSystem_init.r_swapInterval;
 import static neo.Renderer.tr_local.tr;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atobb;
-import static neo.TempDump.fopenOptions;
+import static neo.TempDump.*;
 import static neo.framework.FileSystem_h.MAX_OSPATH;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.UsercmdGen.usercmdGen;
 import static neo.idlib.Lib.idLib.common;
 import static neo.idlib.Lib.idLib.cvarSystem;
-import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
-import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
-import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_FORWARD_COMPAT;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
-import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
-import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
-import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
-import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
-import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
-import static org.lwjgl.glfw.GLFW.glfwInit;
-import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
-import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetScrollCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
-import static org.lwjgl.glfw.GLFW.glfwShowWindow;
-import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
-import static org.lwjgl.glfw.GLFW.glfwTerminate;
-import static org.lwjgl.glfw.GLFW.glfwWindowHint;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.glfw.GLFW.*;
 
 //import org.lwjgl.LWJGLException;
 //import org.lwjgl.opengl.Display;
@@ -62,27 +34,12 @@ import static org.lwjgl.opengl.GL11.GL_TRUE;
  */
 public class win_glimp {
 
-    static long window;
     static GLFWErrorCallback errorCallback;
+    static long window;
+    private static int initialFrames;
 
-    /*
-     ====================================================================
-
-     IMPLEMENTATION SPECIFIC FUNCTIONS
-
-     ====================================================================
-     */
-    public static class glimpParms_t {
-
-        public int     width;
-        public int     height;
-        public boolean fullScreen;
-        public boolean stereo;
-        public int     displayHz;
-        public int     multiSamples;
-    }
-
-    ;
+    private static boolean isEnabled;
+    private static final StringBuilder ospath = new StringBuilder(MAX_OSPATH);
 
     /*
      ===================
@@ -148,7 +105,7 @@ public class win_glimp {
 ////	}
 ////
 //        common.Printf("...calling CDS: ");
-//	
+//
         // try setting the exact mode requested, because some drivers don't report
         // the low res modes in EnumDisplaySettings, but still work
 //        if (dm != null) {
@@ -189,11 +146,11 @@ public class win_glimp {
 //	// the exact mode failed, so scan EnumDisplaySettings for the next largest mode
 //	//
 //	common.Printf( "^3failed^0, " );
-//	
+//
 //	PrintCDSError( cdsRet );
 //
 //	common.Printf( "...trying next higher resolution:" );
-//	
+//
 //	// we could do a better matching job here...
 //	for ( modeNum = 0 ; ; modeNum++ ) {
 //		if ( !EnumDisplaySettings( null, modeNum, &devmode ) ) {
@@ -504,10 +461,6 @@ public class win_glimp {
         throw new TODO_Exception();
     }
 
-    private static boolean       isEnabled;
-    private static int           initialFrames;
-    private static StringBuilder ospath = new StringBuilder(MAX_OSPATH);
-
     // These are used for managing SMP handoffs of the OpenGL context
     // between threads, and as a performance tunining aid.  Setting
     // 'r_skipRenderContext 1' will call GLimp_DeactivateContext() before
@@ -573,5 +526,22 @@ public class win_glimp {
             Logger.getLogger(win_glimp.class.getName()).log(Level.SEVERE, null, ex);
             common.Warning("---GLimp_EnableLogging---\n%s\n---", ex.getMessage());
         }
+    }
+
+    /*
+     ====================================================================
+
+     IMPLEMENTATION SPECIFIC FUNCTIONS
+
+     ====================================================================
+     */
+    public static class glimpParms_t {
+
+        public int displayHz;
+        public boolean fullScreen;
+        public int height;
+        public int multiSamples;
+        public boolean stereo;
+        public int width;
     }
 }

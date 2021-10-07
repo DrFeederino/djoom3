@@ -1,119 +1,44 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import static neo.Renderer.Image.globalImages;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem_init.r_skipTranslucent;
-import static neo.Renderer.RenderSystem_init.r_testARBProgram;
-import static neo.Renderer.RenderSystem_init.r_useScissor;
-import static neo.Renderer.RenderSystem_init.r_useShadowVertexProgram;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.draw_common.RB_StencilShadowPass;
-import static neo.Renderer.qgl.qglActiveTextureARB;
-import static neo.Renderer.qgl.qglBindProgramARB;
-import static neo.Renderer.qgl.qglClear;
-import static neo.Renderer.qgl.qglColorPointer;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglDisableClientState;
-import static neo.Renderer.qgl.qglDisableVertexAttribArrayARB;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnableClientState;
-import static neo.Renderer.qgl.qglEnableVertexAttribArrayARB;
-import static neo.Renderer.qgl.qglGetError;
-import static neo.Renderer.qgl.qglGetIntegerv;
-import static neo.Renderer.qgl.qglGetString;
-import static neo.Renderer.qgl.qglProgramEnvParameter4fvARB;
-import static neo.Renderer.qgl.qglProgramStringARB;
-import static neo.Renderer.qgl.qglScissor;
-import static neo.Renderer.qgl.qglStencilFunc;
-import static neo.Renderer.qgl.qglVertexAttribPointerARB;
-import static neo.Renderer.qgl.qglVertexPointer;
-import static neo.Renderer.tr_backend.GL_SelectTexture;
-import static neo.Renderer.tr_backend.GL_State;
-import static neo.Renderer.tr_backend.RB_LogComment;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_EQUAL;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_LESS;
-import static neo.Renderer.tr_local.GLS_DEPTHMASK;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE;
-import static neo.Renderer.tr_local.backEnd;
-import neo.Renderer.tr_local.drawSurf_s;
-import static neo.Renderer.tr_local.glConfig;
-import neo.Renderer.tr_local.idScreenRect;
-import static neo.Renderer.tr_local.programParameter_t.PP_BUMP_MATRIX_S;
-import static neo.Renderer.tr_local.programParameter_t.PP_BUMP_MATRIX_T;
-import static neo.Renderer.tr_local.programParameter_t.PP_COLOR_ADD;
-import static neo.Renderer.tr_local.programParameter_t.PP_COLOR_MODULATE;
-import static neo.Renderer.tr_local.programParameter_t.PP_DIFFUSE_MATRIX_S;
-import static neo.Renderer.tr_local.programParameter_t.PP_DIFFUSE_MATRIX_T;
-import static neo.Renderer.tr_local.programParameter_t.PP_LIGHT_FALLOFF_S;
-import static neo.Renderer.tr_local.programParameter_t.PP_LIGHT_ORIGIN;
-import static neo.Renderer.tr_local.programParameter_t.PP_LIGHT_PROJECT_Q;
-import static neo.Renderer.tr_local.programParameter_t.PP_LIGHT_PROJECT_S;
-import static neo.Renderer.tr_local.programParameter_t.PP_LIGHT_PROJECT_T;
-import static neo.Renderer.tr_local.programParameter_t.PP_SPECULAR_MATRIX_S;
-import static neo.Renderer.tr_local.programParameter_t.PP_SPECULAR_MATRIX_T;
-import static neo.Renderer.tr_local.programParameter_t.PP_VIEW_ORIGIN;
-import neo.Renderer.tr_local.program_t;
-import static neo.Renderer.tr_local.program_t.FPROG_AMBIENT;
-import static neo.Renderer.tr_local.program_t.FPROG_BUMPY_ENVIRONMENT;
-import static neo.Renderer.tr_local.program_t.FPROG_ENVIRONMENT;
-import static neo.Renderer.tr_local.program_t.FPROG_GLASSWARP;
-import static neo.Renderer.tr_local.program_t.FPROG_INTERACTION;
-import static neo.Renderer.tr_local.program_t.FPROG_TEST;
-import static neo.Renderer.tr_local.program_t.PROG_INVALID;
-import static neo.Renderer.tr_local.program_t.PROG_USER;
-import static neo.Renderer.tr_local.program_t.VPROG_AMBIENT;
-import static neo.Renderer.tr_local.program_t.VPROG_BUMPY_ENVIRONMENT;
-import static neo.Renderer.tr_local.program_t.VPROG_ENVIRONMENT;
-import static neo.Renderer.tr_local.program_t.VPROG_GLASSWARP;
-import static neo.Renderer.tr_local.program_t.VPROG_INTERACTION;
-import static neo.Renderer.tr_local.program_t.VPROG_NV20_BUMP_AND_LIGHT;
-import static neo.Renderer.tr_local.program_t.VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR;
-import static neo.Renderer.tr_local.program_t.VPROG_NV20_DIFFUSE_COLOR;
-import static neo.Renderer.tr_local.program_t.VPROG_NV20_SPECULAR_COLOR;
-import static neo.Renderer.tr_local.program_t.VPROG_R200_INTERACTION;
-import static neo.Renderer.tr_local.program_t.VPROG_STENCIL_SHADOW;
-import static neo.Renderer.tr_local.program_t.VPROG_TEST;
-import neo.Renderer.tr_local.viewLight_s;
+import neo.Renderer.tr_local.*;
 import neo.Renderer.tr_render.DrawInteraction;
-import static neo.Renderer.tr_render.RB_CreateSingleDrawInteractions;
-import static neo.Renderer.tr_render.RB_DrawElementsWithCounters;
-import static neo.TempDump.NOT;
 import neo.TempDump.TODO_Exception;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.idLib.fileSystem;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import org.lwjgl.BufferUtils;
+
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.draw_common.RB_StencilShadowPass;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_backend.*;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_local.programParameter_t.*;
+import static neo.Renderer.tr_local.program_t.*;
+import static neo.Renderer.tr_render.RB_CreateSingleDrawInteractions;
+import static neo.Renderer.tr_render.RB_DrawElementsWithCounters;
+import static neo.TempDump.NOT;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.Common.common;
+import static neo.idlib.Lib.idLib.fileSystem;
 import static org.lwjgl.opengl.ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB;
 import static org.lwjgl.opengl.ARBMultitexture.GL_TEXTURE0_ARB;
-import static org.lwjgl.opengl.ARBVertexProgram.GL_PROGRAM_ERROR_POSITION_ARB;
-import static org.lwjgl.opengl.ARBVertexProgram.GL_PROGRAM_ERROR_STRING_ARB;
-import static org.lwjgl.opengl.ARBVertexProgram.GL_PROGRAM_FORMAT_ASCII_ARB;
-import static org.lwjgl.opengl.ARBVertexProgram.GL_VERTEX_PROGRAM_ARB;
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
-import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_INVALID_OPERATION;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.ARBVertexProgram.*;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
  */
 public class draw_arb2 {
 
-    public static void cg_error_callback() {
-        throw new TODO_Exception();
-//        CGerror i = cgGetError();
-//        common.Printf("Cg error (%d): %s\n", i, cgGetErrorString(i));
-    }
+    static final int MAX_GLPROGS = 200;
 
     /*
      =========================================================================================
@@ -122,6 +47,43 @@ public class draw_arb2 {
 
      =========================================================================================
      */
+    private static final float[] NEG_ONE = {-1, -1, -1, -1};
+    private static final float[] ONE = {1, 1, 1, 1};
+    //
+    private static final float[] ZERO = {0, 0, 0, 0};
+    // a single file can have both a vertex program and a fragment program
+    static progDef_t[] progs = new progDef_t[MAX_GLPROGS];
+//        
+
+    static {
+        int a = 0;
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_TEST, "test.vfp");
+        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_TEST, "test.vfp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_INTERACTION, "interaction.vfp");
+        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_INTERACTION, "interaction.vfp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp");
+        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_AMBIENT, "ambientLight.vfp");
+        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_AMBIENT, "ambientLight.vfp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW, "shadow.vp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_R200_INTERACTION, "R200_interaction.vp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_BUMP_AND_LIGHT, "nv20_bumpAndLight.vp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_DIFFUSE_COLOR, "nv20_diffuseColor.vp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_SPECULAR_COLOR, "nv20_specularColor.vp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR, "nv20_diffuseAndSpecularColor.vp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_ENVIRONMENT, "environment.vfp");
+        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_ENVIRONMENT, "environment.vfp");
+        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_GLASSWARP, "arbVP_glasswarp.txt");
+        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_GLASSWARP, "arbFP_glasswarp.txt");
+
+        // additional programs can be dynamically specified in materials
+    }
+
+    public static void cg_error_callback() {
+        throw new TODO_Exception();
+//        CGerror i = cgGetError();
+//        common.Printf("Cg error (%d): %s\n", i, cgGetErrorString(i));
+    }
 
     /*
      ====================
@@ -133,93 +95,6 @@ public class draw_arb2 {
         qglActiveTextureARB(GL_TEXTURE0_ARB + unit);
         RB_LogComment("glActiveTextureARB( %d )\n", unit);
     }
-//
-    private static final float[] ZERO = {0, 0, 0, 0};
-    private static final float[] ONE = {1, 1, 1, 1};
-    private static final float[] NEG_ONE = {-1, -1, -1, -1};
-//        
-
-    /*
-     ==================
-     RB_ARB2_DrawInteraction
-     ==================
-     */
-    static class RB_ARB2_DrawInteraction extends DrawInteraction {
-
-        static final DrawInteraction INSTANCE = new RB_ARB2_DrawInteraction();
-        private static int DBG_RB_ARB2_DrawInteraction = 0;
-
-        private RB_ARB2_DrawInteraction() {
-        }
-
-        @Override
-        void run(tr_local.drawInteraction_t din) {
-            DBG_RB_ARB2_DrawInteraction++;
-            // load all the vertex program parameters
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, din.localLightOrigin.ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_VIEW_ORIGIN, din.localViewOrigin.ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_S, din.lightProjection[0].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_T, din.lightProjection[1].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_Q, din.lightProjection[2].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_FALLOFF_S, din.lightProjection[3].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_BUMP_MATRIX_S, din.bumpMatrix[0].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_BUMP_MATRIX_T, din.bumpMatrix[1].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_S, din.diffuseMatrix[0].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_T, din.diffuseMatrix[1].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_S, din.specularMatrix[0].ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_T, din.specularMatrix[1].ToFloatPtr());
-
-            // testing fragment based normal mapping
-            if (r_testARBProgram.GetBool()) {
-                qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 2, din.localLightOrigin.ToFloatPtr());
-                qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 3, din.localViewOrigin.ToFloatPtr());
-            }
-
-            switch (din.vertexColor) {
-                case SVC_IGNORE:
-                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, ZERO);
-                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, ONE);
-                    break;
-                case SVC_MODULATE:
-                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, ONE);
-                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, ZERO);
-                    break;
-                case SVC_INVERSE_MODULATE:
-                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, NEG_ONE);
-                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, ONE);
-                    break;
-            }
-
-            // set the constant colors
-            qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 0, din.diffuseColor.ToFloatPtr());
-            qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 1, din.specularColor.ToFloatPtr());
-
-            // set the textures
-            // texture 1 will be the per-surface bump map
-            GL_SelectTextureNoClient(1);
-            din.bumpImage.Bind();
-
-            // texture 2 will be the light falloff texture
-            GL_SelectTextureNoClient(2);
-            din.lightFalloffImage.Bind();
-
-            // texture 3 will be the light projection texture
-            GL_SelectTextureNoClient(3);
-            din.lightImage.Bind();
-
-            // texture 4 is the per-surface diffuse map
-            GL_SelectTextureNoClient(4);
-            din.diffuseImage.Bind();
-
-            // texture 5 is the per-surface specular map
-            GL_SelectTextureNoClient(5);
-            din.specularImage.Bind();
-
-            // draw it
-            RB_DrawElementsWithCounters(din.surf.geo);
-        }
-    };
-
 
     /*
      =============
@@ -265,7 +140,7 @@ public class draw_arb2 {
         // texture 6 is the specular lookup table
         GL_SelectTextureNoClient(6);
         if (RenderSystem_init.r_testARBProgram.GetBool()) {
-            globalImages.specular2DTableImage.Bind();	// variable specularity in alpha channel
+            globalImages.specular2DTableImage.Bind();    // variable specularity in alpha channel
         } else {
             globalImages.specularTableImage.Bind();
         }
@@ -326,7 +201,6 @@ public class draw_arb2 {
         qglDisable(GL_FRAGMENT_PROGRAM_ARB);
     }
 
-
     /*
      ==================
      RB_ARB2_DrawInteractions
@@ -386,7 +260,7 @@ public class draw_arb2 {
                 qglBindProgramARB(GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW);
                 RB_StencilShadowPass(vLight.localShadows[0]);
                 RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0]);
-                qglDisable(GL_VERTEX_PROGRAM_ARB);	// if there weren't any globalInteractions, it would have stayed on
+                qglDisable(GL_VERTEX_PROGRAM_ARB);    // if there weren't any globalInteractions, it would have stayed on
             } else {
                 RB_StencilShadowPass(vLight.globalShadows[0]);
                 RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0]);
@@ -412,51 +286,6 @@ public class draw_arb2 {
 
         GL_SelectTexture(0);
         qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    }
-
-//===================================================================================
-    static class progDef_t {
-
-    int    target;
-    int    ident;
-    String name;// char			name[64];
-
-        progDef_t(int target, program_t ident, String name) {
-            this(target, ident.ordinal(), name);
-        }
-
-        progDef_t(int target, int ident, String name) {
-            this.target = target;
-            this.ident = ident;
-            this.name = name;
-        }
-    };
-    static final int MAX_GLPROGS = 200;
-    // a single file can have both a vertex program and a fragment program
-    static progDef_t[] progs = new progDef_t[MAX_GLPROGS];
-
-    static {
-        int a = 0;
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_TEST, "test.vfp");
-        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_TEST, "test.vfp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_INTERACTION, "interaction.vfp");
-        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_INTERACTION, "interaction.vfp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp");
-        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_AMBIENT, "ambientLight.vfp");
-        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_AMBIENT, "ambientLight.vfp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW, "shadow.vp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_R200_INTERACTION, "R200_interaction.vp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_BUMP_AND_LIGHT, "nv20_bumpAndLight.vp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_DIFFUSE_COLOR, "nv20_diffuseColor.vp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_SPECULAR_COLOR, "nv20_specularColor.vp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR, "nv20_diffuseAndSpecularColor.vp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_ENVIRONMENT, "environment.vfp");
-        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_ENVIRONMENT, "environment.vfp");
-        progs[a++] = new progDef_t(GL_VERTEX_PROGRAM_ARB, VPROG_GLASSWARP, "arbVP_glasswarp.txt");
-        progs[a++] = new progDef_t(GL_FRAGMENT_PROGRAM_ARB, FPROG_GLASSWARP, "arbFP_glasswarp.txt");
-
-        // additional programs can be dynamically specified in materials
     }
 
     /*
@@ -598,6 +427,128 @@ public class draw_arb2 {
 
     /*
      ==================
+     R_ARB2_Init
+
+     ==================
+     */
+    public static void R_ARB2_Init() {
+        glConfig.allowARB2Path = false;
+
+        common.Printf("---------- R_ARB2_Init ----------\n");
+
+        if (!glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable) {
+            common.Printf("Not available.\n");
+            return;
+        }
+
+        common.Printf("Available.\n");
+
+        common.Printf("---------------------------------\n");
+
+        glConfig.allowARB2Path = true;
+    }
+
+    /*
+     ==================
+     RB_ARB2_DrawInteraction
+     ==================
+     */
+    static class RB_ARB2_DrawInteraction extends DrawInteraction {
+
+        static final DrawInteraction INSTANCE = new RB_ARB2_DrawInteraction();
+        private static int DBG_RB_ARB2_DrawInteraction = 0;
+
+        private RB_ARB2_DrawInteraction() {
+        }
+
+        @Override
+        void run(tr_local.drawInteraction_t din) {
+            DBG_RB_ARB2_DrawInteraction++;
+            // load all the vertex program parameters
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, din.localLightOrigin.ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_VIEW_ORIGIN, din.localViewOrigin.ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_S, din.lightProjection[0].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_T, din.lightProjection[1].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_Q, din.lightProjection[2].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_LIGHT_FALLOFF_S, din.lightProjection[3].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_BUMP_MATRIX_S, din.bumpMatrix[0].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_BUMP_MATRIX_T, din.bumpMatrix[1].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_S, din.diffuseMatrix[0].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_T, din.diffuseMatrix[1].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_S, din.specularMatrix[0].ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_T, din.specularMatrix[1].ToFloatPtr());
+
+            // testing fragment based normal mapping
+            if (r_testARBProgram.GetBool()) {
+                qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 2, din.localLightOrigin.ToFloatPtr());
+                qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 3, din.localViewOrigin.ToFloatPtr());
+            }
+
+            switch (din.vertexColor) {
+                case SVC_IGNORE:
+                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, ZERO);
+                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, ONE);
+                    break;
+                case SVC_MODULATE:
+                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, ONE);
+                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, ZERO);
+                    break;
+                case SVC_INVERSE_MODULATE:
+                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, NEG_ONE);
+                    qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, ONE);
+                    break;
+            }
+
+            // set the constant colors
+            qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 0, din.diffuseColor.ToFloatPtr());
+            qglProgramEnvParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 1, din.specularColor.ToFloatPtr());
+
+            // set the textures
+            // texture 1 will be the per-surface bump map
+            GL_SelectTextureNoClient(1);
+            din.bumpImage.Bind();
+
+            // texture 2 will be the light falloff texture
+            GL_SelectTextureNoClient(2);
+            din.lightFalloffImage.Bind();
+
+            // texture 3 will be the light projection texture
+            GL_SelectTextureNoClient(3);
+            din.lightImage.Bind();
+
+            // texture 4 is the per-surface diffuse map
+            GL_SelectTextureNoClient(4);
+            din.diffuseImage.Bind();
+
+            // texture 5 is the per-surface specular map
+            GL_SelectTextureNoClient(5);
+            din.specularImage.Bind();
+
+            // draw it
+            RB_DrawElementsWithCounters(din.surf.geo);
+        }
+    }
+
+    //===================================================================================
+    static class progDef_t {
+
+        int ident;
+        String name;// char			name[64];
+        int target;
+
+        progDef_t(int target, program_t ident, String name) {
+            this(target, ident.ordinal(), name);
+        }
+
+        progDef_t(int target, int ident, String name) {
+            this.target = target;
+            this.ident = ident;
+            this.name = name;
+        }
+    }
+
+    /*
+     ==================
      R_ReloadARBPrograms_f
      ==================
      */
@@ -622,28 +573,5 @@ public class draw_arb2 {
             }
             common.Printf("-------------------------------\n");
         }
-    }
-
-    /*
-     ==================
-     R_ARB2_Init
-
-     ==================
-     */
-    public static void R_ARB2_Init() {
-        glConfig.allowARB2Path = false;
-
-        common.Printf("---------- R_ARB2_Init ----------\n");
-
-        if (!glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable) {
-            common.Printf("Not available.\n");
-            return;
-        }
-
-        common.Printf("Available.\n");
-
-        common.Printf("---------------------------------\n");
-
-        glConfig.allowARB2Path = true;
     }
 }

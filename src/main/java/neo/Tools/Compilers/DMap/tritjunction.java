@@ -1,41 +1,36 @@
 package neo.Tools.Compilers.DMap;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.TempDump.NOT;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
 import neo.Tools.Compilers.DMap.dmap.mapTri_s;
 import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
 import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import neo.Tools.Compilers.DMap.tritjunction.hashVert_s;
-import static neo.Tools.Compilers.DMap.tritools.CopyMapTri;
-import static neo.Tools.Compilers.DMap.tritools.CountTriList;
-import static neo.Tools.Compilers.DMap.tritools.FreeTri;
-import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
-import static neo.Tools.Compilers.DMap.tritools.MergeTriLists;
-import static neo.framework.Common.common;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.DotProduct;
-import static neo.idlib.math.Vector.VectorCopy;
-import static neo.idlib.math.Vector.VectorMA;
-import static neo.idlib.math.Vector.VectorSubtract;
-import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.*;
+
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.TempDump.NOT;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
+import static neo.Tools.Compilers.DMap.tritools.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Vector.*;
 
 /**
  *
  */
 public class tritjunction {
 
+    //
+    static final int HASH_BINS = 16;
     /*
 
      T junction fixing never creates more xyz points, but
@@ -51,7 +46,7 @@ public class tritjunction {
 
      Snaping verts can drag some triangles backwards or collapse them to points,
      which will cause them to be removed.
-  
+
 
      When snapping to ints, a point can move a maximum of sqrt(3)/2 distance
      Two points that were an epsilon apart can then become sqrt(3) apart
@@ -81,37 +76,19 @@ public class tritjunction {
      recursiveFixTriAgainstHash(b)
 
      */
-    static final int    SNAP_FRACTIONS   = 32;
+    static final int SNAP_FRACTIONS = 32;
     //#define	SNAP_FRACTIONS	8
     //#define	SNAP_FRACTIONS	1
     //
-    static final double VERTEX_EPSILON   = (1.0 / SNAP_FRACTIONS);
+    static final double VERTEX_EPSILON = (1.0 / SNAP_FRACTIONS);
     //
     static final double COLINEAR_EPSILON = (1.8 * VERTEX_EPSILON);
-    //
-    static final int    HASH_BINS        = 16;
-
-    static class hashVert_s {
-
-        hashVert_s next;
-        idVec3     v;
-        int[] iv = new int[3];
-
-        public static void memset(final hashVert_s[][][] hashVerts) {
-            for (int a = 0; a < HASH_BINS; a++) {
-                for (int b = 0; b < HASH_BINS; b++) {
-                    for (int c = 0; c < HASH_BINS; c++) {
-                        hashVerts[a][b][c] = null;
-                    }
-                }
-            }
-        }
-    };
-    static idBounds hashBounds;
-    static idVec3   hashScale;
-    static final hashVert_s[][][] hashVerts = new hashVert_s[HASH_BINS][HASH_BINS][HASH_BINS];
-    static int numHashVerts, numTotalVerts;
     static final int[] hashIntMins = new int[3], hashIntScale = new int[3];
+
+    static final hashVert_s[][][] hashVerts = new hashVert_s[HASH_BINS][HASH_BINS][HASH_BINS];
+    static idBounds hashBounds;
+    static idVec3 hashScale;
+    static int numHashVerts, numTotalVerts;
 
     /*
      ===============
@@ -162,7 +139,7 @@ public class tritjunction {
 //#endif
         }
 
-        // create a new one 
+        // create a new one
         hv = new hashVert_s();// Mem_Alloc(sizeof(hv));
 
         hv.next = hashVerts[block[0]][block[1]][block[2]];
@@ -182,7 +159,6 @@ public class tritjunction {
 
         return hv;
     }
-
 
     /*
      ==================
@@ -218,7 +194,6 @@ public class tritjunction {
             }
         }
     }
-
 
     /*
      =================
@@ -302,7 +277,6 @@ public class tritjunction {
 //        memset(hashVerts, 0, sizeof(hashVerts));
         hashVert_s.memset(hashVerts);
     }
-
 
     /*
      ==================
@@ -454,7 +428,6 @@ public class tritjunction {
         return fixed;
     }
 
-
     /*
      ==================
      CountGroupListTris
@@ -520,7 +493,6 @@ public class tritjunction {
             common.Printf("%6d triangles out\n", endCount);
         }
     }
-
 
     /*
      ==================
@@ -670,5 +642,22 @@ public class tritjunction {
 
         // done
         FreeTJunctionHash();
+    }
+
+    static class hashVert_s {
+
+        int[] iv = new int[3];
+        hashVert_s next;
+        idVec3 v;
+
+        public static void memset(final hashVert_s[][][] hashVerts) {
+            for (int a = 0; a < HASH_BINS; a++) {
+                for (int b = 0; b < HASH_BINS; b++) {
+                    for (int c = 0; c < HASH_BINS; c++) {
+                        hashVerts[a][b][c] = null;
+                    }
+                }
+            }
+        }
     }
 }

@@ -267,7 +267,7 @@ public class win_shared {
      ==================
      */
     public static long/*address_t*/ GetFuncAddr(long/*address_t*/ midPtPtr) {
-                throw new TODO_Exception();
+        throw new TODO_Exception();
 //	long temp;
 //	do {
 //		temp = (long)(*(long*)midPtPtr);
@@ -278,15 +278,15 @@ public class win_shared {
 //	} while(true);
 //
 //	return midPtPtr;
-            }
+    }
 
-            /*
-             ==================
-             GetCallerAddr
-             ==================
-             */
-            public static long/*address_t*/ GetCallerAddr(long _ebp) {
-                throw new TODO_Exception();
+    /*
+     ==================
+     GetCallerAddr
+     ==================
+     */
+    public static long/*address_t*/ GetCallerAddr(long _ebp) {
+        throw new TODO_Exception();
 //	long midPtPtr;
 //	long res = 0;
 //
@@ -303,17 +303,17 @@ public class win_shared {
 //	res = GetFuncAddr( midPtPtr );
 //label:
 //	return res;
-            }
+    }
 
-            /*
-             ==================
-             Sys_GetCallStack
+    /*
+     ==================
+     Sys_GetCallStack
 
-             use /Oy option
-             ==================
-             */
-            public static void Sys_GetCallStack(long/*address_t*/ callStack, final int callStackSize) {
-                throw new TODO_Exception();
+     use /Oy option
+     ==================
+     */
+    public static void Sys_GetCallStack(long/*address_t*/ callStack, final int callStackSize) {
+        throw new TODO_Exception();
 //#if 1 //def _DEBUG
 //	int i;
 //	long m_ebp;
@@ -339,15 +339,15 @@ public class win_shared {
 //	while( i < callStackSize ) {
 //		callStack[i++] = 0;
 //	}
-            }
+    }
 
-            /*
-             ==================
-             Sys_GetCallStackStr
-             ==================
-             */
-            public static String Sys_GetCallStackStr(final long/*address_t*/ callStack, final int callStackSize) {
-                throw new TODO_Exception();
+    /*
+     ==================
+     Sys_GetCallStackStr
+     ==================
+     */
+    public static String Sys_GetCallStackStr(final long/*address_t*/ callStack, final int callStackSize) {
+        throw new TODO_Exception();
 //	static char string[MAX_STRING_CHARS*2];
 //	int index, i;
 //	idStr module, funcName;
@@ -358,29 +358,29 @@ public class win_shared {
 //		index += sprintf( string+index, " -> %s", funcName.c_str() );
 //	}
 //	return string;
-            }
+    }
 
-            /*
-             ==================
-             Sys_GetCallStackCurStr
-             ==================
-             */
-            public static String Sys_GetCallStackCurStr(int depth) {
-                throw new TODO_Exception();
+    /*
+     ==================
+     Sys_GetCallStackCurStr
+     ==================
+     */
+    public static String Sys_GetCallStackCurStr(int depth) {
+        throw new TODO_Exception();
 //	long/*address_t*/ *callStack;
 //
 //	callStack = (long/*address_t*/ *) _alloca( depth * sizeof( long/*address_t*/ ) );
 //	Sys_GetCallStack( callStack, depth );
 //	return Sys_GetCallStackStr( callStack, depth );
-            }
+    }
 
-            /*
-             ==================
-             Sys_GetCallStackCurAddressStr
-             ==================
-             */
-            public static String Sys_GetCallStackCurAddressStr(int depth) {
-                throw new TODO_Exception();
+    /*
+     ==================
+     Sys_GetCallStackCurAddressStr
+     ==================
+     */
+    public static String Sys_GetCallStackCurAddressStr(int depth) {
+        throw new TODO_Exception();
 //	static char string[MAX_STRING_CHARS*2];
 //	long/*address_t*/ *callStack;
 //	int index, i;
@@ -393,15 +393,15 @@ public class win_shared {
 //		index += sprintf( string+index, " -> 0x%08x", callStack[i] );
 //	}
 //	return string;
-            }
+    }
 
-            /*
-             ==================
-             Sys_ShutdownSymbols
-             ==================
-             */
-            public static void Sys_ShutdownSymbols() {
-                Sym_Shutdown();
-            }
+    /*
+     ==================
+     Sys_ShutdownSymbols
+     ==================
+     */
+    public static void Sys_ShutdownSymbols() {
+        Sym_Shutdown();
+    }
 
 }

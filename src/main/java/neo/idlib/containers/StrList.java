@@ -3,7 +3,6 @@ package neo.idlib.containers;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrPtr;
 
 /**
  *
@@ -29,6 +28,39 @@ public class StrList {
 
         /*
          ================
+         idStrListSortPaths
+
+         Sorts the list of path strings alphabetically and makes sure folders come first.
+         ================
+         */
+        public static void idStrListSortPaths(idStrList list) {
+            int i;
+
+            if (0 == list.Num()) {
+                return;
+            }
+
+            idList<idStr> other = new idList<>();
+            idList<idStrPtr> pointerList = new idList<>();
+
+            pointerList.SetNum(list.Num());
+            for (i = 0; i < list.Num(); i++) {
+                pointerList.oSet(i, list.oGet(i));
+            }
+
+            pointerList.Sort(new idListSortComparePaths());
+
+            other.SetNum(list.Num());
+            other.SetGranularity(list.GetGranularity());
+            for (i = 0; i < other.Num(); i++) {
+                other.oSet(i, pointerList.oGet(i));
+            }
+
+            list.Swap(other);
+        }
+
+        /*
+         ================
          idStrList::Sort
 
          Sorts the list of strings alphabetically. Creates a list of pointers to the actual strings and sorts the
@@ -39,22 +71,22 @@ public class StrList {
         public void Sort(cmp_t compare) {
             int i;
 
-            if (0 == num) {
+            if (0 == Num()) {
                 return;
             }
 
             idList<idStr> other = new idList<>();
             idList<idStrPtr> pointerList = new idList<>();
 
-            pointerList.SetNum(num);
-            for (i = 0; i < num; i++) {
+            pointerList.SetNum(Num());
+            for (i = 0; i < Num(); i++) {
                 pointerList.oSet(i, this.oGet(i));
             }
 
             pointerList.Sort();
 
-            other.SetNum(num);
-            other.SetGranularity(granularity);
+            other.SetNum(Num());
+            //other.SetGranularity(granularity);
             for (i = 0; i < other.Num(); i++) {
                 other.oSet(i, pointerList.oGet(i));
             }
@@ -73,14 +105,14 @@ public class StrList {
         public void SortSubSection(int startIndex, int endIndex, cmp_t compare) {
             int i, s;
 
-            if (0 == num) {
+            if (0 == Num()) {
                 return;
             }
             if (startIndex < 0) {
                 startIndex = 0;
             }
-            if (endIndex >= num) {
-                endIndex = num - 1;
+            if (endIndex >= Num()) {
+                endIndex = Num() - 1;
             }
             if (startIndex >= endIndex) {
                 return;
@@ -117,39 +149,6 @@ public class StrList {
             return s;
         }
 
-        /*
-         ================
-         idStrListSortPaths
-
-         Sorts the list of path strings alphabetically and makes sure folders come first.
-         ================
-         */
-        public static void idStrListSortPaths(idStrList list) {
-            int i;
-
-            if (0 == list.Num()) {
-                return;
-            }
-
-            idList<idStr> other = new idList<>();
-            idList<idStrPtr> pointerList = new idList<>();
-
-            pointerList.SetNum(list.Num());
-            for (i = 0; i < list.Num(); i++) {
-                pointerList.oSet(i, list.oGet(i));
-            }
-
-            pointerList.Sort(new idListSortComparePaths());
-
-            other.SetNum(list.Num());
-            other.SetGranularity(list.GetGranularity());
-            for (i = 0; i < other.Num(); i++) {
-                other.oSet(i, pointerList.oGet(i));
-            }
-
-            list.Swap(other);
-        }
-
         public int AddUnique(String obj) {
             return super.AddUnique(new idStr(obj));
         }
@@ -158,21 +157,7 @@ public class StrList {
             return super.Append(new idStr(obj));
         }
 
-    };
-
-    class idStrPtrList extends idList<idStr> {
     }
-
-    class idStrPtr extends idStr {
-    }
-
-    /*
-     ===============================================================================
-
-     idStrList path sorting
-
-     ===============================================================================
-     */
 
     /*
      ================
@@ -202,5 +187,19 @@ public class StrList {
         public int compare(idStr a, idStr b) {
             return a.Icmp(b);
         }
+    }
+
+    /*
+     ===============================================================================
+
+     idStrList path sorting
+
+     ===============================================================================
+     */
+
+    class idStrPtrList extends idList<idStr> {
+    }
+
+    class idStrPtr extends idStr {
     }
 }

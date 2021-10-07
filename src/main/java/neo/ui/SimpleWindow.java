@@ -1,36 +1,26 @@
 package neo.ui;
 
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.itob;
-import static neo.TempDump.sizeof;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.File_h.idFile;
-import static neo.idlib.Lib.colorBlack;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.WIN_BORDER;
-import static neo.ui.Window.WIN_INVERTRECT;
-import static neo.ui.Window.WIN_NATURALMAT;
-import static neo.ui.Window.WIN_NOCLIP;
-import static neo.ui.Window.WIN_NOWRAP;
-import neo.ui.Window.idWindow;
-import neo.ui.Winvar.idWinBackground;
-import neo.ui.Winvar.idWinBool;
-import neo.ui.Winvar.idWinFloat;
-import neo.ui.Winvar.idWinRectangle;
-import neo.ui.Winvar.idWinStr;
-import neo.ui.Winvar.idWinVar;
-import neo.ui.Winvar.idWinVec2;
-import neo.ui.Winvar.idWinVec4;
+import neo.ui.Window.*;
+import neo.ui.Winvar.*;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.itob;
+import static neo.TempDump.sizeof;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.colorBlack;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
+import static neo.ui.Window.*;
 
 /**
  *
@@ -39,67 +29,65 @@ public class SimpleWindow {
 
     static class drawWin_t {
 
-        idWindow win;
-        idSimpleWindow simp;
-        
-        final int DBG_index;
         private static int DBG_counter = 0;
+        final int DBG_index;
+        idSimpleWindow simp;
+        idWindow win;
 
         public drawWin_t() {
             this.DBG_index = DBG_counter++;
         }
-    };
+    }
 
     public static class idSimpleWindow {
 //	friend class idWindow;
 
-        protected idUserInterfaceLocal gui;
-        protected idDeviceContext      dc;
-        protected int                  flags;
-        protected idRectangle          drawRect;          // overall rect
-        protected idRectangle          clientRect;        // client area
-        protected idRectangle          textRect;
-        protected idVec2               origin;
-        protected int                  fontNum;
-        protected float                matScalex;
-        protected float                matScaley;
-        protected float                borderSize;
-        protected int                  textAlign;
-        protected float                textAlignx;
-        protected float                textAligny;
-        protected int                  textShadow;
-        // 
-        protected idWinStr             text           = new idWinStr();
-        protected idWinBool            visible        = new idWinBool();
-        protected idWinRectangle       rect           = new idWinRectangle();// overall rect
-        protected idWinVec4            backColor      = new idWinVec4();
-        protected idWinVec4            matColor       = new idWinVec4();
-        protected idWinVec4            foreColor      = new idWinVec4();
-        protected idWinVec4            borderColor    = new idWinVec4();
-        protected idWinFloat           textScale      = new idWinFloat();
-        protected idWinFloat           rotate         = new idWinFloat();
-        protected idWinVec2            shear          = new idWinVec2();
-        protected idWinBackground      backGroundName = new idWinBackground();
-        // 
-        protected idMaterial           background;
-        // 	
-        protected idWindow             mParent;
-        // 
-        protected idWinBool            hideCursor     = new idWinBool();
-        //
-        private static idMat3     trans = new idMat3();
-        private static idVec3     org   = new idVec3();
-        private static idRotation rot   = new idRotation();
-        private static idVec3     vec   = new idVec3(0, 0, 1);
-        private static idMat3     smat  = new idMat3();
-        //
-        public idStr name;
+        public static int DBG_idSimpleWindow = 0;
         //
         //
         private static int DBG_countersOfCreation = 0;
-        private final  int DBG_count              = DBG_countersOfCreation++;
-
-        public static int DBG_idSimpleWindow = 0;
+        private static final idVec3 org = new idVec3();
+        private static final idRotation rot = new idRotation();
+        private static final idMat3 smat = new idMat3();
+        //
+        private static idMat3 trans = new idMat3();
+        private static final idVec3 vec = new idVec3(0, 0, 1);
+        private final int DBG_count = DBG_countersOfCreation++;
+        //
+        public idStr name;
+        protected idWinVec4 backColor = new idWinVec4();
+        protected idWinBackground backGroundName = new idWinBackground();
+        //
+        protected idMaterial background;
+        protected idWinVec4 borderColor = new idWinVec4();
+        protected float borderSize;
+        protected idRectangle clientRect;        // client area
+        protected idDeviceContext dc;
+        protected idRectangle drawRect;          // overall rect
+        protected int flags;
+        protected int fontNum;
+        protected idWinVec4 foreColor = new idWinVec4();
+        protected idUserInterfaceLocal gui;
+        //
+        protected idWinBool hideCursor = new idWinBool();
+        //
+        protected idWindow mParent;
+        protected idWinVec4 matColor = new idWinVec4();
+        protected float matScalex;
+        protected float matScaley;
+        protected idVec2 origin;
+        protected idWinRectangle rect = new idWinRectangle();// overall rect
+        protected idWinFloat rotate = new idWinFloat();
+        protected idWinVec2 shear = new idWinVec2();
+        //
+        protected idWinStr text = new idWinStr();
+        protected int textAlign;
+        protected float textAlignx;
+        protected float textAligny;
+        protected idRectangle textRect;
+        protected idWinFloat textScale = new idWinFloat();
+        protected int textShadow;
+        protected idWinBool visible = new idWinBool();
 
         public idSimpleWindow(idWindow win) {
             gui = win.GetGui();
@@ -486,5 +474,6 @@ public class SimpleWindow {
                 }
             }
         }
-    };
+    }
+
 }

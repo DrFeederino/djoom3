@@ -1,54 +1,48 @@
 package neo.Game.AI;
 
-import static java.lang.Math.atan2;
-import static java.lang.Math.cos;
-import static neo.CM.CollisionModel.CM_BOX_EPSILON;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AI.AAS.idAAS;
-import static neo.Game.AI.AI.SE_ENTER_LEDGE_AREA;
-import static neo.Game.AI.AI.SE_ENTER_OBSTACLE;
 import neo.Game.AI.AI.obstaclePath_s;
 import neo.Game.AI.AI.predictedPath_s;
-import neo.Game.AI.AI_pathing.pathNode_s;
 import neo.Game.Actor.idActor;
 import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.SysCvar.ai_debugMove;
-import static neo.Game.GameSys.SysCvar.ai_showObstacleAvoidance;
-import static neo.Game.Game_local.MASK_MONSTERSOLID;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Moveable.idMoveable;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
-import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_LEDGE;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_INVALID;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WALK;
-import neo.Tools.Compilers.AAS.AASFile.aasTrace_s;
+import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
-import static neo.idlib.Lib.colorCyan;
 import neo.idlib.containers.Queue.idQueueTemplate;
 import neo.idlib.geometry.Winding2D.idWinding2D;
-import static neo.idlib.math.Math_h.FLOATSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import static neo.idlib.math.Math_h.Square;
-import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Vector.RAD2DEG;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
-import static neo.ui.DeviceContext.idDeviceContext.colorBlue;
-import static neo.ui.DeviceContext.idDeviceContext.colorGreen;
-import static neo.ui.DeviceContext.idDeviceContext.colorRed;
-import static neo.ui.DeviceContext.idDeviceContext.colorWhite;
-import static neo.ui.DeviceContext.idDeviceContext.colorYellow;
+
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static neo.CM.CollisionModel.CM_BOX_EPSILON;
+import static neo.Game.AI.AI.SE_ENTER_LEDGE_AREA;
+import static neo.Game.AI.AI.SE_ENTER_OBSTACLE;
+import static neo.Game.GameSys.SysCvar.ai_debugMove;
+import static neo.Game.GameSys.SysCvar.ai_showObstacleAvoidance;
+import static neo.Game.Game_local.*;
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.AAS.AASFile.*;
+import static neo.idlib.Lib.colorCyan;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Vector.RAD2DEG;
+import static neo.ui.DeviceContext.idDeviceContext.*;
 
 /**
  *
  */
 public class AI_pathing {
 
+    static final float CLIP_BOUNDS_EPSILON = 10.0f;
+    static final int MAX_AAS_WALL_EDGES = 256;
+    static final int MAX_FRAME_SLIDE = 5;
+    static final int MAX_OBSTACLES = 256;
+    static final int MAX_OBSTACLE_PATH = 64;
     /*
      ===============================================================================
 
@@ -66,95 +60,15 @@ public class AI_pathing {
 
      ===============================================================================
      */
-    static final float MAX_OBSTACLE_RADIUS    = 256.0f;
-    static final float PUSH_OUTSIDE_OBSTACLES = 0.5f;
-    static final float CLIP_BOUNDS_EPSILON    = 10.0f;
-    static final int   MAX_AAS_WALL_EDGES     = 256;
-    static final int   MAX_OBSTACLES          = 256;
-    static final int   MAX_PATH_NODES         = 256;
-    static final int   MAX_OBSTACLE_PATH      = 64;
+    static final float MAX_OBSTACLE_RADIUS = 256.0f;
+    static final int MAX_PATH_NODES = 256;
     //
-    static final float OVERCLIP               = 1.001f;
-    static final int   MAX_FRAME_SLIDE        = 5;
+    static final float OVERCLIP = 1.001f;
+    static final float PUSH_OUTSIDE_OBSTACLES = 0.5f;
     //
 //    static idBlockAlloc<pathNode_s> pathNodeAllocator = new Heap.idBlockAlloc<>(128);
-    static       int   pathNodeAllocator      = 0;
+    static int pathNodeAllocator = 0;
     //    
-
-    /*
-     ===============================================================================
-
-     Path Prediction
-
-     Uses the AAS to quickly and accurately predict a path for a certain
-     period of time based on an initial position and velocity.
-
-     ===============================================================================
-     */
-    static class pathTrace_s {
-
-        float    fraction;
-        idVec3   endPos = new idVec3();
-        idVec3   normal = new idVec3();
-        idEntity blockingEntity;
-    };
-
-    static class obstacle_s {
-        idVec2[]    bounds  = new idVec2[2];
-        idWinding2D winding = new idWinding2D();
-        idEntity    entity;
-    };
-
-    static class pathNode_s {
-
-        int          dir;
-        idVec2       pos;
-        idVec2       delta;
-        float        dist;
-        int          obstacle;
-        int          edgeNum;
-        int          numNodes;
-        pathNode_s   parent;
-        pathNode_s[] children = new pathNode_s[2];
-        pathNode_s   next;
-
-        public pathNode_s() {
-            pos = new idVec2();
-            delta = new idVec2();
-            pathNodeAllocator++;
-        }
-
-        void Init() {
-            dir = 0;
-            pos.Zero();
-            delta.Zero();
-            obstacle = -1;
-            edgeNum = -1;
-            numNodes = 0;
-            parent = children[0] = children[1] = next = null;
-        }
-
-        private void oSet(pathNode_s parent) {//TODO:how do we reference the non objects?
-            this.dir = parent.dir;
-            this.pos = parent.pos;
-            this.delta = parent.delta;
-            this.dist = parent.dist;
-            this.obstacle = parent.obstacle;
-            this.edgeNum = parent.edgeNum;
-            this.numNodes = parent.numNodes;
-            this.parent = parent.parent;
-            this.children = parent.children;
-            this.next = parent.next;
-        }
-    };
-
-    static class wallEdge_s {
-
-        int edgeNum;
-        int[] verts = new int[2];
-        wallEdge_s next;
-    };
-
 
     /*
      ============
@@ -491,7 +405,7 @@ public class AI_pathing {
 
         // create obstacles for AAS walls
         if (aas != null) {
-            float halfBoundsSize = (expBounds[ 1].x - expBounds[ 0].x) * 0.5f;
+            float halfBoundsSize = (expBounds[1].x - expBounds[0].x) * 0.5f;
 
             numWallEdges = aas.GetWallEdges(areaNum, clipBounds, TFL_WALK, wallEdges, MAX_AAS_WALL_EDGES);
             aas.SortWallEdges(wallEdges, numWallEdges);
@@ -655,9 +569,7 @@ public class AI_pathing {
 
                 break;
             }
-            if (n != null) {
-                return false;
-            }
+            return n == null;
         }
         return true;
     }
@@ -1082,7 +994,7 @@ public class AI_pathing {
                 trace.fraction = clipTrace[0].fraction;
                 trace.endPos = clipTrace[0].endpos;
                 trace.normal = clipTrace[0].c.normal;
-                trace.blockingEntity = gameLocal.entities[ clipTrace[0].c.entityNum];
+                trace.blockingEntity = gameLocal.entities[clipTrace[0].c.entityNum];
             }
         }
 
@@ -1092,31 +1004,6 @@ public class AI_pathing {
 
         return false;
     }
-
-    /*
-     ===============================================================================
-
-     Trajectory Prediction
-
-     Finds the best collision free trajectory for a clip model based on an
-     initial position, target position and speed.
-
-     ===============================================================================
-     */
-
-    /*
-     =====================
-     Ballistics
-
-     get the ideal aim pitch angle in order to hit the target
-     also get the time it takes for the projectile to arrive at the target
-     =====================
-     */
-    static class ballistics_s {
-
-        float angle;		// angle in degrees in the range [-180, 180]
-        float time;		// time it takes before the projectile arrives
-    };
 
     static int Ballistics(final idVec3 start, final idVec3 end, float speed, float gravity, ballistics_s[] bal/*[2]*/) {
         int n, i;
@@ -1168,5 +1055,104 @@ public class AI_pathing {
         maxHeight = start.z - 0.5f * gravity * (t * t);
 
         return maxHeight;
+    }
+
+    /*
+     ===============================================================================
+
+     Path Prediction
+
+     Uses the AAS to quickly and accurately predict a path for a certain
+     period of time based on an initial position and velocity.
+
+     ===============================================================================
+     */
+    static class pathTrace_s {
+
+        idEntity blockingEntity;
+        idVec3 endPos = new idVec3();
+        float fraction;
+        idVec3 normal = new idVec3();
+    }
+
+    static class obstacle_s {
+        idVec2[] bounds = new idVec2[2];
+        idEntity entity;
+        idWinding2D winding = new idWinding2D();
+    }
+
+    /*
+     ===============================================================================
+
+     Trajectory Prediction
+
+     Finds the best collision free trajectory for a clip model based on an
+     initial position, target position and speed.
+
+     ===============================================================================
+     */
+
+    static class pathNode_s {
+
+        pathNode_s[] children = new pathNode_s[2];
+        idVec2 delta;
+        int dir;
+        float dist;
+        int edgeNum;
+        pathNode_s next;
+        int numNodes;
+        int obstacle;
+        pathNode_s parent;
+        idVec2 pos;
+
+        public pathNode_s() {
+            pos = new idVec2();
+            delta = new idVec2();
+            pathNodeAllocator++;
+        }
+
+        void Init() {
+            dir = 0;
+            pos.Zero();
+            delta.Zero();
+            obstacle = -1;
+            edgeNum = -1;
+            numNodes = 0;
+            parent = children[0] = children[1] = next = null;
+        }
+
+        private void oSet(pathNode_s parent) {//TODO:how do we reference the non objects?
+            this.dir = parent.dir;
+            this.pos = parent.pos;
+            this.delta = parent.delta;
+            this.dist = parent.dist;
+            this.obstacle = parent.obstacle;
+            this.edgeNum = parent.edgeNum;
+            this.numNodes = parent.numNodes;
+            this.parent = parent.parent;
+            this.children = parent.children;
+            this.next = parent.next;
+        }
+    }
+
+    static class wallEdge_s {
+
+        int edgeNum;
+        wallEdge_s next;
+        int[] verts = new int[2];
+    }
+
+    /*
+     =====================
+     Ballistics
+
+     get the ideal aim pitch angle in order to hit the target
+     also get the time it takes for the projectile to arrive at the target
+     =====================
+     */
+    static class ballistics_s {
+
+        float angle;        // angle in degrees in the range [-180, 180]
+        float time;        // time it takes before the projectile arrives
     }
 }

@@ -1,178 +1,71 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import static neo.Renderer.Image.cubeFiles_t.CF_2D;
-import neo.Renderer.Image.ddsFileHeader_t;
-import neo.Renderer.Image.idImage;
-import static neo.Renderer.Image.idImage.DEFAULT_SIZE;
-import static neo.Renderer.Image.textureDepth_t.TD_BUMP;
-import static neo.Renderer.Image.textureDepth_t.TD_DEFAULT;
-import static neo.Renderer.Image.textureDepth_t.TD_DIFFUSE;
-import static neo.Renderer.Image.textureDepth_t.TD_HIGH_QUALITY;
-import static neo.Renderer.Image.textureDepth_t.TD_SPECULAR;
-import static neo.Renderer.Image.textureType_t.TT_2D;
-import static neo.Renderer.Image.textureType_t.TT_3D;
-import static neo.Renderer.Image.textureType_t.TT_CUBIC;
-import static neo.Renderer.Image.textureType_t.TT_DISABLED;
-import static neo.Renderer.Image.textureType_t.TT_RECT;
-import static neo.Renderer.Image_files.R_LoadCubeImages;
-import static neo.Renderer.Image_files.R_WritePalTGA;
-import static neo.Renderer.Image_files.R_WriteTGA;
-import neo.Renderer.Image_init.R_AlphaNotchImage;
-import neo.Renderer.Image_init.R_AmbientNormalImage;
-import neo.Renderer.Image_init.R_BlackImage;
-import neo.Renderer.Image_init.R_BorderClampImage;
-import neo.Renderer.Image_init.R_CombineCubeImages_f;
-import neo.Renderer.Image_init.R_CreateNoFalloffImage;
-import neo.Renderer.Image_init.R_DefaultImage;
-import neo.Renderer.Image_init.R_FlatNormalImage;
-import neo.Renderer.Image_init.R_FogEnterImage;
-import neo.Renderer.Image_init.R_FogImage;
-import neo.Renderer.Image_init.R_ListImages_f;
-import neo.Renderer.Image_init.R_QuadraticImage;
-import neo.Renderer.Image_init.R_RGBA8Image;
-import neo.Renderer.Image_init.R_RampImage;
-import neo.Renderer.Image_init.R_ReloadImages_f;
-import neo.Renderer.Image_init.R_Specular2DTableImage;
-import neo.Renderer.Image_init.R_SpecularTableImage;
-import neo.Renderer.Image_init.R_WhiteImage;
-import static neo.Renderer.Image_init.imageFilter;
-import neo.Renderer.Image_init.makeNormalizeVectorCubeMap;
-import static neo.Renderer.Image_load.FormatIsDXT;
-import static neo.Renderer.Image_load.MakePowerOfTwo;
-import static neo.Renderer.Image_process.R_BlendOverTexture;
-import static neo.Renderer.Image_process.R_MipMap;
-import static neo.Renderer.Image_process.R_MipMap3D;
-import static neo.Renderer.Image_process.R_SetBorderTexels;
-import static neo.Renderer.Image_program.R_LoadImageProgram;
+import neo.Renderer.Image_init.*;
 import neo.Renderer.Material.textureFilter_t;
-import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
-import static neo.Renderer.Material.textureFilter_t.TF_LINEAR;
-import static neo.Renderer.Material.textureFilter_t.TF_NEAREST;
 import neo.Renderer.Material.textureRepeat_t;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP_TO_BORDER;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP_TO_ZERO;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP_TO_ZERO_ALPHA;
-import static neo.Renderer.Material.textureRepeat_t.TR_REPEAT;
-import static neo.Renderer.RenderSystem_init.GL_CheckErrors;
-import static neo.Renderer.qgl.qglBindTexture;
-import static neo.Renderer.qgl.qglColorTableEXT;
-import static neo.Renderer.qgl.qglCompressedTexImage2DARB;
-import static neo.Renderer.qgl.qglCopyTexImage2D;
-import static neo.Renderer.qgl.qglCopyTexSubImage2D;
-import static neo.Renderer.qgl.qglDeleteTextures;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglGenTextures;
-import static neo.Renderer.qgl.qglGetCompressedTexImageARB;
-import static neo.Renderer.qgl.qglGetTexImage;
-import static neo.Renderer.qgl.qglPixelStorei;
-import static neo.Renderer.qgl.qglPrioritizeTextures;
-import static neo.Renderer.qgl.qglReadBuffer;
-import static neo.Renderer.qgl.qglTexImage2D;
-import static neo.Renderer.qgl.qglTexImage3D;
-import static neo.Renderer.qgl.qglTexParameterf;
-import static neo.Renderer.qgl.qglTexParameteri;
-import static neo.Renderer.qgl.qglTexSubImage2D;
-import static neo.Renderer.tr_backend.RB_LogComment;
-import static neo.Renderer.tr_local.MAX_MULTITEXTURE_UNITS;
-import static neo.Renderer.tr_local.backEnd;
-import static neo.Renderer.tr_local.glConfig;
-import neo.Renderer.tr_local.tmu_t;
-import static neo.Renderer.tr_local.tr;
-import neo.TempDump.CPP_class;
+import neo.Renderer.tr_local.*;
+import neo.TempDump.*;
 import neo.TempDump.CPP_class.Bool;
 import neo.TempDump.CPP_class.Pointer;
-import static neo.TempDump.NOT;
-import neo.TempDump.SERiAL;
-import static neo.TempDump.ctos;
-import static neo.TempDump.flatten;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_RENDERER;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_RENDERER;
-import static neo.framework.CmdSystem.cmdSystem;
+import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.idCmdSystem;
-import neo.framework.Common.MemInfo_t;
-import static neo.framework.Common.com_developer;
-import static neo.framework.Common.com_machineSpec;
-import static neo.framework.Common.com_makingBuild;
-import static neo.framework.Common.com_purgeAll;
-import static neo.framework.Common.com_videoRam;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP;
+import neo.framework.Common.*;
 import neo.framework.FileSystem_h.backgroundDownload_s;
-import static neo.framework.FileSystem_h.dlType_t.DLTYPE_FILE;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
-import static neo.framework.Session.session;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.LittleLong;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Str.FILE_HASH_SIZE;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
-import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
-import static neo.sys.win_shared.Sys_Milliseconds;
 import org.lwjgl.BufferUtils;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+import static neo.Renderer.Image.cubeFiles_t.CF_2D;
+import static neo.Renderer.Image.textureDepth_t.*;
+import static neo.Renderer.Image.textureType_t.*;
+import static neo.Renderer.Image_files.*;
+import static neo.Renderer.Image_init.*;
+import static neo.Renderer.Image_load.FormatIsDXT;
+import static neo.Renderer.Image_load.MakePowerOfTwo;
+import static neo.Renderer.Image_process.*;
+import static neo.Renderer.Image_program.R_LoadImageProgram;
+import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
+import static neo.Renderer.Material.textureRepeat_t.*;
+import static neo.Renderer.RenderSystem_init.GL_CheckErrors;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_backend.RB_LogComment;
+import static neo.Renderer.tr_local.*;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.CMD_FL_RENDERER;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP;
+import static neo.framework.FileSystem_h.dlType_t.DLTYPE_FILE;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.LittleLong;
+import static neo.idlib.Text.Str.FILE_HASH_SIZE;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
+import static neo.sys.win_shared.Sys_Milliseconds;
 import static org.lwjgl.opengl.ARBTextureCompression.GL_COMPRESSED_RGBA_ARB;
 import static org.lwjgl.opengl.ARBTextureCompression.GL_COMPRESSED_RGB_ARB;
 import static org.lwjgl.opengl.EXTBGRA.GL_BGRA_EXT;
 import static org.lwjgl.opengl.EXTBGRA.GL_BGR_EXT;
 import static org.lwjgl.opengl.EXTSharedTexturePalette.GL_SHARED_TEXTURE_PALETTE_EXT;
-import static org.lwjgl.opengl.EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-import static org.lwjgl.opengl.EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-import static org.lwjgl.opengl.EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-import static org.lwjgl.opengl.EXTTextureCompressionS3TC.GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
-import static org.lwjgl.opengl.GL11.GL_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_ALPHA8;
-import static org.lwjgl.opengl.GL11.GL_BACK;
-import static org.lwjgl.opengl.GL11.GL_COLOR_INDEX;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_COMPONENT;
-import static org.lwjgl.opengl.GL11.GL_INTENSITY8;
-import static org.lwjgl.opengl.GL11.GL_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_LINEAR_MIPMAP_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_LINEAR_MIPMAP_NEAREST;
-import static org.lwjgl.opengl.GL11.GL_LUMINANCE;
-import static org.lwjgl.opengl.GL11.GL_LUMINANCE8;
-import static org.lwjgl.opengl.GL11.GL_LUMINANCE8_ALPHA8;
-import static org.lwjgl.opengl.GL11.GL_LUMINANCE_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_NEAREST;
-import static org.lwjgl.opengl.GL11.GL_NEAREST_MIPMAP_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_NEAREST_MIPMAP_NEAREST;
-import static org.lwjgl.opengl.GL11.GL_PACK_ALIGNMENT;
-import static org.lwjgl.opengl.GL11.GL_REPEAT;
-import static org.lwjgl.opengl.GL11.GL_RGB;
-import static org.lwjgl.opengl.GL11.GL_RGB5;
-import static org.lwjgl.opengl.GL11.GL_RGB8;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
-import static org.lwjgl.opengl.GL11.GL_RGBA4;
-import static org.lwjgl.opengl.GL11.GL_RGBA8;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
-import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
-import static org.lwjgl.opengl.GL12.GL_TEXTURE_3D;
-import static org.lwjgl.opengl.GL12.GL_TEXTURE_WRAP_R;
-import static org.lwjgl.opengl.GL13.GL_CLAMP_TO_BORDER;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.GL_TEXTURE_LOD_BIAS;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
@@ -181,11 +74,58 @@ import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
  */
 public class Image {
 
+    //
+    public static final int MAX_IMAGE_NAME = 256;
+    //
+    // pixel format flags
+    static final int DDSF_ALPHAPIXELS = 0x00000001;
+    //
+    // surface description flags
+    static final int DDSF_CAPS = 0x00000001;
+
+    //
+    // dwCaps1 flags
+    static final int DDSF_COMPLEX = 0x00000008;
+    static final int DDSF_DEPTH = 0x00800000;
+    static final int DDSF_FOURCC = 0x00000004;
+    static final int DDSF_HEIGHT = 0x00000002;
+    //
+    // our extended flags
+    static final int DDSF_ID_INDEXCOLOR = 0x10000000;
+    static final int DDSF_ID_MONOCHROME = 0x20000000;
+    static final int DDSF_LINEARSIZE = 0x00080000;
+    static final int DDSF_MIPMAP = 0x00400000;
+    static final int DDSF_MIPMAPCOUNT = 0x00020000;
+    static final int DDSF_PITCH = 0x00000008;
+    static final int DDSF_PIXELFORMAT = 0x00001000;
+    static final int DDSF_RGB = 0x00000040;
+    static final int DDSF_RGBA = 0x00000041;
+    static final int DDSF_TEXTURE = 0x00001000;
+    static final int DDSF_WIDTH = 0x00000004;
+    //
+    static final int MAX_TEXTURE_LEVELS = 14;
+    private static final int DDS_MAKEFOURCC_DXT1 = (('D' << 0) | ('X' << 8) | ('T' << 16) | ('1' << 24));
+    private static final int DDS_MAKEFOURCC_DXT3 = (('D' << 0) | ('X' << 8) | ('T' << 16) | ('3' << 24));
+    //
+    private static final int DDS_MAKEFOURCC_DXT5 = (('D' << 0) | ('X' << 8) | ('T' << 16) | ('5' << 24));
+    private static final int DDS_MAKEFOURCC_RXGB = (('R' << 0) | ('X' << 8) | ('G' << 16) | ('B' << 24));
     // do this with a pointer, in case we want to make the actual manager
     // a private virtual subclass
     private static final idImageManager imageManager = new idImageManager();
     // pointer to global list for the rest of the system
     public static idImageManager globalImages = imageManager;
+
+    static int DDS_MAKEFOURCC(final int a, final int b, final int c, final int d) {
+        return ((a << 0) | (b << 8) | (c << 16) | (d << 24));
+    }
+//
+
+    enum cubeFiles_t {
+
+        CF_2D, // not a cube map
+        CF_NATIVE, // _px, _nx, _py, etc, directly sent to GL
+        CF_CAMERA        // _forward, _back, etc, rotated and flipped as needed before sending to GL
+    }
 
     /*
      ====================================================================
@@ -219,46 +159,27 @@ public class Image {
 
         IS_UNLOADED, // no gl texture number
         IS_PARTIAL, // has a texture number and the low mip levels loaded
-        IS_LOADED		// has a texture number and the full mip hierarchy
-    };
-    //
-    static final int MAX_TEXTURE_LEVELS = 14;
-    //
-    // surface description flags
-    static final int DDSF_CAPS          = 0x00000001;
-    static final int DDSF_HEIGHT        = 0x00000002;
-    static final int DDSF_WIDTH         = 0x00000004;
-    static final int DDSF_PITCH         = 0x00000008;
-    static final int DDSF_PIXELFORMAT   = 0x00001000;
-    static final int DDSF_MIPMAPCOUNT   = 0x00020000;
-    static final int DDSF_LINEARSIZE    = 0x00080000;
-    static final int DDSF_DEPTH         = 0x00800000;
-    //
-    // pixel format flags
-    static final int DDSF_ALPHAPIXELS   = 0x00000001;
-    static final int DDSF_FOURCC        = 0x00000004;
-    static final int DDSF_RGB           = 0x00000040;
-    static final int DDSF_RGBA          = 0x00000041;
-    //
-    // our extended flags
-    static final int DDSF_ID_INDEXCOLOR = 0x10000000;
-    static final int DDSF_ID_MONOCHROME = 0x20000000;
-    //
-    // dwCaps1 flags
-    static final int DDSF_COMPLEX       = 0x00000008;
-    static final int DDSF_TEXTURE       = 0x00001000;
-    static final int DDSF_MIPMAP        = 0x00400000;
-    //
-
-    static int DDS_MAKEFOURCC(final int a, final int b, final int c, final int d) {
-        return ((a << 0) | (b << 8) | (c << 16) | (d << 24));
+        IS_LOADED        // has a texture number and the full mip hierarchy
     }
 
-    private static final int DDS_MAKEFOURCC_DXT1 = (('D' << 0) | ('X' << 8) | ('T' << 16) | ('1' << 24));
-    private static final int DDS_MAKEFOURCC_DXT3 = (('D' << 0) | ('X' << 8) | ('T' << 16) | ('3' << 24));
-    private static final int DDS_MAKEFOURCC_DXT5 = (('D' << 0) | ('X' << 8) | ('T' << 16) | ('5' << 24));
-    private static final int DDS_MAKEFOURCC_RXGB = (('R' << 0) | ('X' << 8) | ('G' << 16) | ('B' << 24));
-//
+    // increasing numeric values imply more information is stored
+    enum textureDepth_t {
+
+        TD_SPECULAR, // may be compressed, and always zeros the alpha channel
+        TD_DIFFUSE, // may be compressed
+        TD_DEFAULT, // will use compressed formats when possible
+        TD_BUMP, // may be compressed with 8 bit lookup
+        TD_HIGH_QUALITY            // either 32 bit or a component format, no loss at all
+    }
+
+    enum textureType_t {
+
+        TT_DISABLED,
+        TT_2D,
+        TT_3D,
+        TT_CUBIC,
+        TT_RECT
+    }
 
     static class ddsFilePixelFormat_t {
 
@@ -271,15 +192,14 @@ public class Image {
                 + CPP_class.Long.SIZE
                 + CPP_class.Long.SIZE
                 + CPP_class.Long.SIZE;
-
-        int /*long*/ dwSize;
+        int /*long*/ dwABitMask;
+        int /*long*/ dwBBitMask;
         int /*long*/ dwFlags;
         int /*long*/ dwFourCC;
-        int /*long*/ dwRGBBitCount;
-        int /*long*/ dwRBitMask;
         int /*long*/ dwGBitMask;
-        int /*long*/ dwBBitMask;
-        int /*long*/ dwABitMask;
+        int /*long*/ dwRBitMask;
+        int /*long*/ dwRGBBitCount;
+        int /*long*/ dwSize;
 
         public ddsFilePixelFormat_t(int dwSize, int dwFlags, int dwFourCC, int dwRGBBitCount, int dwRBitMask, int dwGBitMask, int dwBBitMask, int dwABitMask) {
             this.dwSize = dwSize;
@@ -294,12 +214,10 @@ public class Image {
 
     }
 
-    ;
-
     static class ddsFileHeader_t implements SERiAL {
 
         private static final transient int SIZE
-                                                  = CPP_class.Long.SIZE
+                = CPP_class.Long.SIZE
                 + CPP_class.Long.SIZE
                 + CPP_class.Long.SIZE
                 + CPP_class.Long.SIZE
@@ -311,20 +229,19 @@ public class Image {
                 + CPP_class.Long.SIZE
                 + CPP_class.Long.SIZE
                 + (CPP_class.Long.SIZE * 3);
-        public static final transient  int BYTES = SIZE / 8;
-
-        int /*long*/ dwSize;
-        int /*long*/ dwFlags;
-        int /*long*/ dwHeight;
-        int /*long*/ dwWidth;
-        int /*long*/ dwPitchOrLinearSize;
-        int /*long*/ dwDepth;
-        int /*long*/ dwMipMapCount;
-        int /*long*/[] dwReserved1 = new int[11];
+        public static final transient int BYTES = SIZE / 8;
         ddsFilePixelFormat_t ddspf;
         int/*long*/ dwCaps1;
         int/*long*/ dwCaps2;
+        int /*long*/ dwDepth;
+        int /*long*/ dwFlags;
+        int /*long*/ dwHeight;
+        int /*long*/ dwMipMapCount;
+        int /*long*/ dwPitchOrLinearSize;
+        int /*long*/[] dwReserved1 = new int[11];
         int/*long*/[] dwReserved2 = new int[3];
+        int /*long*/ dwSize;
+        int /*long*/ dwWidth;
 
         public ddsFileHeader_t() {
         }
@@ -367,42 +284,6 @@ public class Image {
         }
     }
 
-    ;
-
-    // increasing numeric values imply more information is stored
-    enum textureDepth_t {
-
-        TD_SPECULAR, // may be compressed, and always zeros the alpha channel
-        TD_DIFFUSE, // may be compressed
-        TD_DEFAULT, // will use compressed formats when possible
-        TD_BUMP, // may be compressed with 8 bit lookup
-        TD_HIGH_QUALITY            // either 32 bit or a component format, no loss at all
-    }
-
-    ;
-
-    enum textureType_t {
-
-        TT_DISABLED,
-        TT_2D,
-        TT_3D,
-        TT_CUBIC,
-        TT_RECT
-    }
-
-    ;
-
-    enum cubeFiles_t {
-
-        CF_2D, // not a cube map
-        CF_NATIVE, // _px, _nx, _py, etc, directly sent to GL
-        CF_CAMERA        // _forward, _back, etc, rotated and flipped as needed before sending to GL
-    }
-
-    ;
-    //
-    public static final int MAX_IMAGE_NAME = 256;
-
     public static abstract class GeneratorFunction {
 
         public abstract void run(final idImage image);
@@ -410,6 +291,15 @@ public class Image {
 
     public static class idImage {
 
+        /*
+         ==================
+         R_CreateDefaultImage
+
+         the default image will be grey with a white box outline
+         to allow you to see the mapping coordinates on a surface
+         ==================
+         */
+        public static final int DEFAULT_SIZE = 16;
         public static final transient int SIZE
                 = Integer.SIZE
                 + CPP_class.Enum.SIZE
@@ -440,54 +330,96 @@ public class Image {
                 + (Pointer.SIZE * 2)//idImage
                 + Pointer.SIZE //idImage
                 + Integer.SIZE;
-
         // data commonly accessed is grouped here
         public static final int TEXTURE_NOT_LOADED = -1;
-        public /*GLuint*/ int                  texNum;            // gl texture binding, will be TEXTURE_NOT_LOADED if not loaded
-        public            textureType_t        type;
-        public            int                  frameUsed;         // for texture usage in frame statistics
-        public            int                  bindCount;         // incremented each bind
-        //
-        // background loading information
-        public            idImage              partialImage;      // shrunken, space-saving version
-        public            boolean              isPartialImage;    // true if this is pointed to by another image
-        public            boolean              backgroundLoadInProgress;    // true if another thread is reading the complete d3t file
-        public            backgroundDownload_s bgl;
-        public            idImage              bglNext;           // linked from tr.backgroundImageLoads
-        //
-        // parameters that define this image
-        public            idStr                imgName;           // game path, including extension (except for cube maps), may be an image program
-        public            GeneratorFunction    generatorFunction; // NULL for files           //public void (        *generatorFunction)( idImage *image );	// NULL for files
-        public            boolean              allowDownSize;     // this also doubles as a don't-partially-load flag
-        public            textureFilter_t      filter;
-        public            textureRepeat_t      repeat;
-        public            textureDepth_t       depth;
-        public            cubeFiles_t          cubeFiles;         // determines the naming and flipping conventions for the six images
-        //
-        public            boolean              referencedOutsideLevelLoad;
-        public            boolean              levelLoadReferenced;             // for determining if it needs to be purged
-        public            boolean              precompressedFile; // true when it was loaded from a .d3t file
-        public            boolean              defaulted;         // true if the default image was generated because a file couldn't be loaded
-        public boolean[] isMonochrome = {false};                  // so the NV20 path can use a reduced pass count
-        public/*ID_TIME_T*/ long[] timestamp = {0};               // the most recent of all images used in creation, for reloadImages command
-        //
-        public String imageHash;            // for identical-image checking
-        //
-        public int    classification;       // just for resource profiling
-        //
-        // data for listImages
-        public int    uploadWidth, uploadHeight, uploadDepth;     // after power of two, downsample, and MAX_TEXTURE_SIZE
-        public int     internalFormat;
-        //
-        public idImage cacheUsagePrev, cacheUsageNext;            // for dynamic cache purging of old images
-        //
-        public idImage hashNext;            // for hash chains to speed lookup
-        //
-        public int     refCount;            // overall ref count
+        static final int[][] mipBlendColors/*[16][4]*/ = {
+                {0, 0, 0, 0},
+                {255, 0, 0, 128},
+                {0, 255, 0, 128},
+                {0, 0, 255, 128},
+                {255, 0, 0, 128},
+                {0, 255, 0, 128},
+                {0, 0, 255, 128},
+                {255, 0, 0, 128},
+                {0, 255, 0, 128},
+                {0, 0, 255, 128},
+                {255, 0, 0, 128},
+                {0, 255, 0, 128},
+                {0, 0, 255, 128},
+                {255, 0, 0, 128},
+                {0, 255, 0, 128},
+                {0, 0, 255, 128},};
+        /*
+         ================
+         CheckPrecompressedImage
+
+         If fullLoad is false, only the small mip levels of the image will be loaded
+         ================
+         */        static int DEBUG_CheckPrecompressedImage = 0;
+        /*
+         ===============
+         ActuallyLoadImage
+
+         Absolutely every image goes through this path
+         On exit, the idImage will have a valid OpenGL texture number that can be bound
+         ===============
+         */private static final int DBG_ActuallyLoadImage = 0;
+        private static final int DBG_Bind = 0;
+        /*
+         ===================
+         UploadPrecompressedImage
+
+         This can be called by the front end during normal loading,
+         or by the backend after a background read of the file
+         has completed
+         ===================
+         */private static ByteBuffer DBG_UploadPrecompressedImage;
         //
         //
         private static int DEBUG_COUNTER = 0;
+        public boolean allowDownSize;     // this also doubles as a don't-partially-load flag
+        public boolean backgroundLoadInProgress;    // true if another thread is reading the complete d3t file
+        public backgroundDownload_s bgl;
+        public idImage bglNext;           // linked from tr.backgroundImageLoads
+        public int bindCount;         // incremented each bind
+        //
+        public idImage cacheUsagePrev, cacheUsageNext;            // for dynamic cache purging of old images
+        //
+        public int classification;       // just for resource profiling
+        public cubeFiles_t cubeFiles;         // determines the naming and flipping conventions for the six images
+        public boolean defaulted;         // true if the default image was generated because a file couldn't be loaded
+        public textureDepth_t depth;
+        public textureFilter_t filter;
+        public int frameUsed;         // for texture usage in frame statistics
+        public GeneratorFunction generatorFunction; // NULL for files           //public void (        *generatorFunction)( idImage *image );	// NULL for files
+        //
+        public idImage hashNext;            // for hash chains to speed lookup
+        //
+        public String imageHash;            // for identical-image checking
+        //
+        // parameters that define this image
+        public idStr imgName;           // game path, including extension (except for cube maps), may be an image program
+        public int internalFormat;
+        public boolean[] isMonochrome = {false};                  // so the NV20 path can use a reduced pass count
+        public boolean isPartialImage;    // true if this is pointed to by another image
+        public boolean levelLoadReferenced;             // for determining if it needs to be purged
+        //
+        // background loading information
+        public idImage partialImage;      // shrunken, space-saving version
+        public boolean precompressedFile; // true when it was loaded from a .d3t file
+        //
+        public int refCount;            // overall ref count
+        //
+        public boolean referencedOutsideLevelLoad;
+        public textureRepeat_t repeat;
+        public /*GLuint*/ int texNum;            // gl texture binding, will be TEXTURE_NOT_LOADED if not loaded
+        public/*ID_TIME_T*/ long[] timestamp = {0};               // the most recent of all images used in creation, for reloadImages command
+        public textureType_t type;
+        //
+        // data for listImages
+        public int uploadWidth, uploadHeight, uploadDepth;     // after power of two, downsample, and MAX_TEXTURE_SIZE
         private int _COUNTER;
+//
 
         public idImage() {
             _COUNTER = DEBUG_COUNTER++;
@@ -579,7 +511,7 @@ public class Image {
             if (tr.logFile != null) {
                 RB_LogComment("idImage::Bind( %s )\n", imgName.toString());
             }
-            
+
             // if this is an image that we are caching, move it to the front of the LRU chain
             if (partialImage != null) {
                 if (cacheUsageNext != null) {
@@ -609,7 +541,7 @@ public class Image {
                 }
 
                 // load the image on demand here, which isn't our normal game operating mode
-                ActuallyLoadImage(true, true);	// check for precompressed, load is from back end
+                ActuallyLoadImage(true, true);    // check for precompressed, load is from back end
             }
 
             // bump our statistic counters
@@ -643,15 +575,15 @@ public class Image {
                 if (tmu.current2DMap != texNum) {
                     tmu.current2DMap = texNum;
                     qglBindTexture(GL_TEXTURE_2D, texNum);
-                    if (texNum == 25){
+                    if (texNum == 25) {
                         System.out.println("Blaaaaaaasphemy!");
-            }
-        }
-    } else if (type == TT_CUBIC) {
-        if (tmu.currentCubeMap != texNum) {
-            tmu.currentCubeMap = texNum;
-            qglBindTexture(GL_TEXTURE_CUBE_MAP/*_EXT*/, texNum);
-        }
+                    }
+                }
+            } else if (type == TT_CUBIC) {
+                if (tmu.currentCubeMap != texNum) {
+                    tmu.currentCubeMap = texNum;
+                    qglBindTexture(GL_TEXTURE_CUBE_MAP/*_EXT*/, texNum);
+                }
             } else if (type == TT_3D) {
                 if (tmu.current3DMap != texNum) {
                     tmu.current3DMap = texNum;
@@ -664,8 +596,6 @@ public class Image {
                 qglPrioritizeTextures(1, texNum, priority);
             }
         }
-        private static int DBG_Bind = 0;
-
 
         /*
          ==============
@@ -710,7 +640,7 @@ public class Image {
                 }
 
                 // load the image on demand here, which isn't our normal game operating mode
-                ActuallyLoadImage(true, true);	// check for precompressed, load is from back end
+                ActuallyLoadImage(true, true);    // check for precompressed, load is from back end
             }
 
             // bump our statistic counters
@@ -729,7 +659,7 @@ public class Image {
             }
         }
 
-//
+        //
         // deletes the texture object, but leaves the structure so it can be reloaded
         public void PurgeImage() {
             if (texNum != TEXTURE_NOT_LOADED) {
@@ -751,7 +681,6 @@ public class Image {
                 backEnd.glState.tmu[i].currentCubeMap = -1;
             }
         }
-//
 
         /*
          ================
@@ -787,8 +716,8 @@ public class Image {
         // These perform an implicit Bind() on the current texture unit
         // FIXME: should we implement cinematics this way, instead of with explicit calls?
         public void GenerateImage(final ByteBuffer pic, int width, int height,
-                textureFilter_t filterParm, boolean allowDownSizeParm,
-                textureRepeat_t repeatParm, textureDepth_t depthParm) {
+                                  textureFilter_t filterParm, boolean allowDownSizeParm,
+                                  textureRepeat_t repeatParm, textureDepth_t depthParm) {
             boolean preserveBorder;
             ByteBuffer scaledBuffer;
             int[] scaled_width = {0}, scaled_height = {0};
@@ -810,11 +739,7 @@ public class Image {
             }
 
             // don't let mip mapping smear the texture into the clamped border
-            if (repeat == TR_CLAMP_TO_ZERO) {
-                preserveBorder = true;
-            } else {
-                preserveBorder = false;
-            }
+            preserveBorder = repeat == TR_CLAMP_TO_ZERO;
 
             // make sure it is a power of 2
             scaled_width[0] = MakePowerOfTwo(width);
@@ -899,7 +824,7 @@ public class Image {
                 R_SetBorderTexels(scaledBuffer, width, height, rgba);
             }
 
-            if (generatorFunction == null && (depth == TD_BUMP && globalImages.image_writeNormalTGA.GetBool() || depth != TD_BUMP && globalImages.image_writeTGA.GetBool())) {
+            if (generatorFunction == null && (depth == TD_BUMP && idImageManager.image_writeNormalTGA.GetBool() || depth != TD_BUMP && idImageManager.image_writeTGA.GetBool())) {
                 // Optionally write out the texture to a .tga
 //                String[] filename = {null};
                 String[] filename = new String[1];
@@ -936,7 +861,7 @@ public class Image {
             // one fragment program
             // if the image is precompressed ( either in palletized mode or true rxgb mode )
             // then it is loaded above and the swap never happens here
-            if (depth == TD_BUMP && globalImages.image_useNormalCompression.GetInteger() != 1) {
+            if (depth == TD_BUMP && idImageManager.image_useNormalCompression.GetInteger() != 1) {
                 for (int i = 0; i < scaled_width[0] * scaled_height[0] * 4; i += 4) {
                     scaledBuffer.put(i + 3, scaledBuffer.get(i));
                     scaledBuffer.put(i, (byte) 0);
@@ -984,7 +909,7 @@ public class Image {
                 // level with a different color so you can see the
                 // rasterizer's texture level selection algorithm
                 // Changing the color doesn't help with lumminance/alpha/intensity formats...
-                if (depth == TD_DIFFUSE && globalImages.image_colorMipLevels.GetBool()) {
+                if (depth == TD_DIFFUSE && idImageManager.image_colorMipLevels.GetBool()) {
                     R_BlendOverTexture(scaledBuffer, scaled_width[0] * scaled_height[0], mipBlendColors[miplevel]);
                 }
 
@@ -1006,27 +931,11 @@ public class Image {
             // see if we messed anything up
             GL_CheckErrors();
         }
-        static final int[][] mipBlendColors/*[16][4]*/ = {
-                    {0, 0, 0, 0},
-                    {255, 0, 0, 128},
-                    {0, 255, 0, 128},
-                    {0, 0, 255, 128},
-                    {255, 0, 0, 128},
-                    {0, 255, 0, 128},
-                    {0, 0, 255, 128},
-                    {255, 0, 0, 128},
-                    {0, 255, 0, 128},
-                    {0, 0, 255, 128},
-                    {255, 0, 0, 128},
-                    {0, 255, 0, 128},
-                    {0, 0, 255, 128},
-                    {255, 0, 0, 128},
-                    {0, 255, 0, 128},
-                    {0, 0, 255, 128},};
+//
 
         public void Generate3DImage(final ByteBuffer pic, int width, int height, int picDepth,
-                textureFilter_t filterParm, boolean allowDownSizeParm,
-                textureRepeat_t repeatParm, textureDepth_t minDepthParm) {
+                                    textureFilter_t filterParm, boolean allowDownSizeParm,
+                                    textureRepeat_t repeatParm, textureDepth_t minDepthParm) {
             int scaled_width, scaled_height, scaled_depth;
 
             PurgeImage();
@@ -1159,8 +1068,8 @@ public class Image {
          ====================
          */
         public void GenerateCubeImage(final ByteBuffer[] pics/*[6]*/, int size,
-                textureFilter_t filterParm, boolean allowDownSizeParm,
-                textureDepth_t depthParm) {
+                                      textureFilter_t filterParm, boolean allowDownSizeParm,
+                                      textureDepth_t depthParm) {
             int scaled_width, scaled_height;
             int width, height;
             int i;
@@ -1269,6 +1178,7 @@ public class Image {
             // see if we messed anything up
             GL_CheckErrors();
         }
+//
 
         public void CopyFramebuffer(int x, int y, int[] imageWidth, int[] imageHeight, boolean useOversizedBuffer) {
             Bind();
@@ -1337,7 +1247,7 @@ public class Image {
 
             backEnd.c_copyFrameBuffer++;
         }
-
+//
 
         /*
          ====================
@@ -1377,7 +1287,6 @@ public class Image {
             qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
-//
 
         /*
          =============
@@ -1394,7 +1303,7 @@ public class Image {
             if (rows == cols * 6) {
                 if (type != TT_CUBIC) {
                     type = TT_CUBIC;
-                    uploadWidth = -1;	// for a non-sub upload
+                    uploadWidth = -1;    // for a non-sub upload
                 }
 
                 Bind();
@@ -1409,7 +1318,7 @@ public class Image {
                     for (i = 0; i < 6; i++) {
                         final int offset = cols * rows * 4 * i;
                         qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X/*_EXT*/ + i, 0, GL_RGB8, cols, rows, 0,
-                                GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) pic.position(pos + offset));
+                                GL_RGBA, GL_UNSIGNED_BYTE, pic.position(pos + offset));
                     }
                 } else {
                     // otherwise, just subimage upload it so that drivers can tell we are going to be changing
@@ -1417,7 +1326,7 @@ public class Image {
                     for (i = 0; i < 6; i++) {
                         final int offset = cols * rows * 4 * i;
                         qglTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X/*_EXT*/ + i, 0, 0, 0, cols, rows,
-                                GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) pic.position(pos + offset));
+                                GL_RGBA, GL_UNSIGNED_BYTE, pic.position(pos + offset));
                     }
                 }
                 pic.position(pos);//reset position.
@@ -1430,7 +1339,7 @@ public class Image {
                 // otherwise, it is a 2D image
                 if (type != TT_2D) {
                     type = TT_2D;
-                    uploadWidth = -1;	// for a non-sub upload
+                    uploadWidth = -1;    // for a non-sub upload
                 }
 
                 Bind();
@@ -1465,6 +1374,8 @@ public class Image {
             classification = tag;
         }
 //
+////==========================================================
+//
 
         // estimates size of the GL image based on dimensions and storage type
         public int StorageSize() {
@@ -1496,7 +1407,6 @@ public class Image {
 
             return baseSize;
         }
-//
 
         // print a one line summary of the image
         public void Print() {
@@ -1631,7 +1541,7 @@ public class Image {
             common.Printf(" %s\n", imgName.toString());
         }
 
-//
+        //
         // check for changed timestamp on disk and reload if necessary
         public void Reload(boolean checkPrecompressed, boolean force) {
             // always regenerate functional images
@@ -1669,9 +1579,6 @@ public class Image {
         public void AddReference() {
             refCount++;
         }
-//
-////==========================================================
-//
 
         /*
          ================
@@ -1683,18 +1590,18 @@ public class Image {
             int size = 0;
 
             // perform optional picmip operation to save texture memory
-            if (depth == TD_SPECULAR && globalImages.image_downSizeSpecular.GetInteger() != 0) {
-                size = globalImages.image_downSizeSpecularLimit.GetInteger();
+            if (depth == TD_SPECULAR && idImageManager.image_downSizeSpecular.GetInteger() != 0) {
+                size = idImageManager.image_downSizeSpecularLimit.GetInteger();
                 if (size == 0) {
                     size = 64;
                 }
-            } else if (depth == TD_BUMP && globalImages.image_downSizeBump.GetInteger() != 0) {
-                size = globalImages.image_downSizeBumpLimit.GetInteger();
+            } else if (depth == TD_BUMP && idImageManager.image_downSizeBump.GetInteger() != 0) {
+                size = idImageManager.image_downSizeBumpLimit.GetInteger();
                 if (size == 0) {
                     size = 64;
                 }
-            } else if ((allowDownSize || globalImages.image_forceDownSize.GetBool()) && globalImages.image_downSize.GetInteger() != 0) {
-                size = globalImages.image_downSizeLimit.GetInteger();
+            } else if ((allowDownSize || idImageManager.image_forceDownSize.GetBool()) && idImageManager.image_downSize.GetInteger() != 0) {
+                size = idImageManager.image_downSizeLimit.GetInteger();
                 if (size == 0) {
                     size = 256;
                 }
@@ -1730,17 +1637,8 @@ public class Image {
                 scaled_height[0] >>= 1;
             }
         }
-        /*
-         ==================
-         R_CreateDefaultImage
 
-         the default image will be grey with a white box outline
-         to allow you to see the mapping coordinates on a surface
-         ==================
-         */
-        public static final int DEFAULT_SIZE = 16;
-
-        public void MakeDefault() {	// fill with a grid pattern
+        public void MakeDefault() {    // fill with a grid pattern
             int x, y;
             byte[][][] data = new byte[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
@@ -1860,7 +1758,7 @@ public class Image {
                 return false;
             }
 
-            if (!globalImages.image_useCache.GetBool()) {
+            if (!idImageManager.image_useCache.GetBool()) {
                 return false;
             }
 
@@ -1869,7 +1767,7 @@ public class Image {
                 return false;
             }
 
-            if (globalImages.image_cacheMinK.GetInteger() <= 0) {
+            if (idImageManager.image_cacheMinK.GetInteger() <= 0) {
                 return false;
             }
 
@@ -1901,12 +1799,9 @@ public class Image {
             int len = f.Length();
             fileSystem.CloseFile(f);
 
-            if (len <= globalImages.image_cacheMinK.GetInteger() * 1024) {
-                return false;
-            }
+            return len > idImageManager.image_cacheMinK.GetInteger() * 1024;
 
             // we do want to do a partial load
-            return true;
         }
 
         /*
@@ -1921,7 +1816,7 @@ public class Image {
 
             // Always write the precompressed image if we're making a build
             if (!com_makingBuild.GetBool()) {
-                if (!globalImages.image_writePrecompressedTextures.GetBool() || !globalImages.image_usePrecompressedTextures.GetBool()) {
+                if (!idImageManager.image_writePrecompressedTextures.GetBool() || !idImageManager.image_usePrecompressedTextures.GetBool()) {
                     return;
                 }
             }
@@ -1948,7 +1843,7 @@ public class Image {
                 case 0x80E5:
                 case GL_COLOR_INDEX:
                     // this will not work with dds viewers but we need it in this format to save disk
-                    // load speed ( i.e. size ) 
+                    // load speed ( i.e. size )
                     altInternalFormat = GL_COLOR_INDEX;
                     bitSize = 24;
                     break;
@@ -1979,7 +1874,7 @@ public class Image {
                     }
             }
 
-            if (globalImages.image_useOffLineCompression.GetBool() && FormatIsDXT(altInternalFormat)) {
+            if (idImageManager.image_useOffLineCompression.GetBool() && FormatIsDXT(altInternalFormat)) {
                 String outFile = fileSystem.RelativePathToOSPath(filename, "fs_basepath");
                 idStr inFile = new idStr(outFile);
                 inFile.StripFileExtension();
@@ -2065,7 +1960,7 @@ public class Image {
                     case GL_LUMINANCE_ALPHA:
                         header.ddspf.dwFlags |= DDSF_ALPHAPIXELS;
                         header.ddspf.dwABitMask = 0xFF000000;
-                    // Fall through
+                        // Fall through
                     case GL_BGR_EXT:
                     case GL_LUMINANCE:
                     case GL_COLOR_INDEX:
@@ -2096,7 +1991,7 @@ public class Image {
             // bind to the image so we can read back the contents
             Bind();
 
-            qglPixelStorei(GL_PACK_ALIGNMENT, 1);	// otherwise small rows get padded to 32 bits
+            qglPixelStorei(GL_PACK_ALIGNMENT, 1);    // otherwise small rows get padded to 32 bits
 
             int uw = uploadWidth;
             int uh = uploadHeight;
@@ -2139,17 +2034,9 @@ public class Image {
 //            if (data != null) {
 //                R_StaticFree(data);
 //            }
-//            
+//
             fileSystem.CloseFile(f);
         }
-
-        /*
-         ================
-         CheckPrecompressedImage
-
-         If fullLoad is false, only the small mip levels of the image will be loaded
-         ================
-         */        static int DEBUG_CheckPrecompressedImage = 0;
 
         public boolean CheckPrecompressedImage(boolean fullLoad) {
             if (!glConfig.isInitialized || !glConfig.textureCompressionAvailable) {
@@ -2163,7 +2050,7 @@ public class Image {
                 }
             }
 
-            if (depth == TD_BUMP && globalImages.image_useNormalCompression.GetInteger() != 2) {
+            if (depth == TD_BUMP && idImageManager.image_useNormalCompression.GetInteger() != 2) {
                 return false;
             }
 
@@ -2216,8 +2103,8 @@ public class Image {
                 return false;
             }
 
-            if (!fullLoad && len > globalImages.image_cacheMinK.GetInteger() * 1024) {
-                len = globalImages.image_cacheMinK.GetInteger() * 1024;
+            if (!fullLoad && len > idImageManager.image_cacheMinK.GetInteger() * 1024) {
+                len = idImageManager.image_cacheMinK.GetInteger() * 1024;
             }
 
             ByteBuffer data = ByteBuffer.allocate(len);// R_StaticAlloc(len);
@@ -2252,15 +2139,6 @@ public class Image {
             return true;
         }
 
-        /*
-         ===================
-         UploadPrecompressedImage
-
-         This can be called by the front end during normal loading,
-         or by the backend after a background read of the file
-         has completed
-         ===================
-         */private static ByteBuffer DBG_UploadPrecompressedImage;
         public void UploadPrecompressedImage(ByteBuffer data, int len) {
             data.position(4);//, 4)
             ddsFileHeader_t header = new ddsFileHeader_t(data);
@@ -2292,7 +2170,7 @@ public class Image {
 //            if (texNum == 58) {
 //                DBG_UploadPrecompressedImage = data.duplicate();
 //                DBG_UploadPrecompressedImage.order(data.order());
-//            } else 
+//            } else
 //            if (texNum == 59) {
 //                texNum = null;
 //                final int pos = data.position();
@@ -2305,12 +2183,12 @@ public class Image {
 
             precompressedFile = true;
 
-            uploadWidth = (int) header.dwWidth;
-            uploadHeight = (int) header.dwHeight;
+            uploadWidth = header.dwWidth;
+            uploadHeight = header.dwHeight;
             if ((header.ddspf.dwFlags & DDSF_FOURCC) != 0) {
 //                System.out.printf("%d\n", header.ddspf.dwFourCC);
 //                switch (bla[DEBUG_dwFourCC++]) {
-                switch ((int) header.ddspf.dwFourCC) {
+                switch (header.ddspf.dwFourCC) {
                     case DDS_MAKEFOURCC_DXT1:
                         if ((header.ddspf.dwFlags & DDSF_ALPHAPIXELS) != 0) {
                             internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
@@ -2369,7 +2247,7 @@ public class Image {
 
             int numMipmaps = 1;
             if ((header.dwFlags & DDSF_MIPMAPCOUNT) != 0) {
-                numMipmaps = (int) header.dwMipMapCount;
+                numMipmaps = header.dwMipMapCount;
             }
 
             int uw = uploadWidth;
@@ -2389,7 +2267,7 @@ public class Image {
                     size = ((uw + 3) / 4) * ((uh + 3) / 4)
                             * (internalFormat <= GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ? 8 : 16);
                 } else {
-                    size = (int) (uw * uh * (header.ddspf.dwRGBBitCount / 8));
+                    size = uw * uh * (header.ddspf.dwRGBBitCount / 8);
                 }
 
                 if (uw > uploadWidth || uh > uploadHeight) {
@@ -2421,14 +2299,6 @@ public class Image {
             SetImageFilterAndRepeat();
         }
 
-        /*
-         ===============
-         ActuallyLoadImage
-
-         Absolutely every image goes through this path
-         On exit, the idImage will have a valid OpenGL texture number that can be bound
-         ===============
-         */private static int DBG_ActuallyLoadImage = 0;
         public void ActuallyLoadImage(boolean checkForPrecompressed, boolean fromBackEnd) {
             final int[] width = {0}, height = {0};
             ByteBuffer pic = null;
@@ -2480,7 +2350,7 @@ public class Image {
             } else {
                 // see if we have a pre-generated image file that is
                 // already image processed and compressed
-                if (checkForPrecompressed && globalImages.image_usePrecompressedTextures.GetBool()) {
+                if (checkForPrecompressed && idImageManager.image_usePrecompressedTextures.GetBool()) {
                     if (CheckPrecompressedImage(true)) {
                         // we got the precompressed image
                         return;
@@ -2531,7 +2401,7 @@ public class Image {
             if (imageManager.numActiveBackgroundImageLoads >= idImageManager.MAX_BACKGROUND_IMAGE_LOADS) {
                 return;
             }
-            if (globalImages.image_showBackgroundLoads.GetBool()) {
+            if (idImageManager.image_showBackgroundLoads.GetBool()) {
                 common.Printf("idImage::StartBackgroundImageLoad: %s\n", imgName.toString());
             }
             backgroundLoadInProgress = true;
@@ -2573,12 +2443,12 @@ public class Image {
             }
             int needed = this.StorageSize();
 
-            while ((totalSize + needed) > globalImages.image_cacheMegs.GetFloat() * 1024 * 1024) {
+            while ((totalSize + needed) > idImageManager.image_cacheMegs.GetFloat() * 1024 * 1024) {
                 // purge the least recently used
                 idImage check = globalImages.cacheLRU.cacheUsagePrev;
                 if (check.texNum != TEXTURE_NOT_LOADED) {
                     totalSize -= check.StorageSize();
-                    if (globalImages.image_showBackgroundLoads.GetBool()) {
+                    if (idImageManager.image_showBackgroundLoads.GetBool()) {
                         common.Printf("purging %s\n", check.imgName.toString());
                     }
                     check.PurgeImage();
@@ -2607,7 +2477,7 @@ public class Image {
                 case GL_LUMINANCE8_ALPHA8:
                     return 16;
                 case 3:
-                    return 32;		// on some future hardware, this may actually be 24, but be conservative
+                    return 32;        // on some future hardware, this may actually be 24, but be conservative
                 case 4:
                     return 32;
                 case GL_LUMINANCE8:
@@ -2617,7 +2487,7 @@ public class Image {
                 case GL_RGBA8:
                     return 32;
                 case GL_RGB8:
-                    return 32;		// on some future hardware, this may actually be 24, but be conservative
+                    return 32;        // on some future hardware, this may actually be 24, but be conservative
                 case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
                     return 4;
                 case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
@@ -2635,9 +2505,9 @@ public class Image {
                 case GL_COLOR_INDEX:
                     return 8;
                 case GL_COMPRESSED_RGB_ARB:
-                    return 4;			// not sure
+                    return 4;            // not sure
                 case GL_COMPRESSED_RGBA_ARB:
-                    return 8;			// not sure
+                    return 8;            // not sure
                 default:
                     common.Error("R_BitsForInternalFormat: BAD FORMAT:%d", internalFormat);
             }
@@ -2682,7 +2552,7 @@ public class Image {
                     } else {
                         c = (globalImages.originalToCompressed[x] << 4) | globalImages.originalToCompressed[y];
                         if (c == 255) {
-                            c = 254;	// don't use the nullnormal color
+                            c = 254;    // don't use the nullnormal color
                         }
                     }
                     normals[out + j] = (byte) c;
@@ -2691,7 +2561,7 @@ public class Image {
 
             if (mipLevel == 0) {
                 // Optionally write out the paletized normal map to a .tga
-                if (globalImages.image_writeNormalTGAPalletized.GetBool()) {
+                if (idImageManager.image_writeNormalTGAPalletized.GetBool()) {
                     String[] filename = {null};
                     ImageProgramStringToCompressedFileName(imgName, filename);
                     int ext = filename[0].lastIndexOf('.');
@@ -2716,7 +2586,7 @@ public class Image {
         }
 
         public int/*GLenum*/ SelectInternalFormat(final ByteBuffer dataPtrs, int numDataPtrs, int width, int height,
-                        textureDepth_t minimumDepth, boolean[] monochromeResult) {
+                                                  textureDepth_t minimumDepth, boolean[] monochromeResult) {
             return SelectInternalFormat(new ByteBuffer[]{dataPtrs}, numDataPtrs, width, height, minimumDepth, monochromeResult);
         }
 
@@ -2728,7 +2598,7 @@ public class Image {
          ===============
          */
         public int/*GLenum*/ SelectInternalFormat(final ByteBuffer[] dataPtrs, int numDataPtrs, int width, int height,
-                        textureDepth_t minimumDepth, boolean[] monochromeResult) {
+                                                  textureDepth_t minimumDepth, boolean[] monochromeResult) {
             int i, c, pos;
             ByteBuffer scan;
             int rgbOr, rgbAnd, aOr, aAnd;
@@ -2744,7 +2614,7 @@ public class Image {
             aOr = 0;
             aAnd = -1;
 
-            monochromeResult[0] = true;	// until shown otherwise
+            monochromeResult[0] = true;    // until shown otherwise
 
             for (int side = 0; side < numDataPtrs; side++) {
                 scan = dataPtrs[side];
@@ -2785,18 +2655,14 @@ public class Image {
             // of 255 alpha, but if the alpha actually is referenced, there will be
             // different behavior in the compressed vs uncompressed states.
             final boolean needAlpha;
-            if (aAnd == 255 || aOr == 0) {
-                needAlpha = false;
-            } else {
-                needAlpha = true;
-            }
+            needAlpha = aAnd != 255 && aOr != 0;
 
             // catch normal maps first
             if (minimumDepth == TD_BUMP) {
-                if (globalImages.image_useCompression.GetBool() && globalImages.image_useNormalCompression.GetInteger() == 1 && glConfig.sharedTexturePaletteAvailable) {
+                if (idImageManager.image_useCompression.GetBool() && idImageManager.image_useNormalCompression.GetInteger() == 1 && glConfig.sharedTexturePaletteAvailable) {
                     // image_useNormalCompression should only be set to 1 on nv_10 and nv_20 paths
                     return 0x80E5;
-                } else if (globalImages.image_useCompression.GetBool() && (globalImages.image_useNormalCompression.GetInteger() != 0) && glConfig.textureCompressionAvailable) {
+                } else if (idImageManager.image_useCompression.GetBool() && (idImageManager.image_useNormalCompression.GetInteger() != 0) && glConfig.textureCompressionAvailable) {
                     // image_useNormalCompression == 2 uses rxgb format which produces really good quality for medium settings
                     return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
                 } else {
@@ -2806,7 +2672,7 @@ public class Image {
             }
 
             // allow a complete override of image compression with a cvar
-            if (!globalImages.image_useCompression.GetBool()) {
+            if (!idImageManager.image_useCompression.GetBool()) {
                 minimumDepth = TD_HIGH_QUALITY;
             }
 
@@ -2836,7 +2702,7 @@ public class Image {
             // there will probably be some drivers that don't
             // correctly handle the intensity/alpha/luminance/luminance+alpha
             // formats, so provide a fallback that only uses the rgb/rgba formats
-            if (!globalImages.image_useAllFormats.GetBool()) {
+            if (!idImageManager.image_useAllFormats.GetBool()) {
                 // pretend rgb is varying and inconsistant, which
                 // prevents any of the more compact forms
                 rgbDiffer = 1;
@@ -2847,20 +2713,20 @@ public class Image {
             // cases without alpha
             if (!needAlpha) {
                 if (minimumDepth == TD_HIGH_QUALITY) {
-                    return GL_RGB8;			// four bytes
+                    return GL_RGB8;            // four bytes
                 }
                 if (glConfig.textureCompressionAvailable) {
-                    return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;	// half byte
+                    return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;    // half byte
                 }
-                return GL_RGB5;			// two bytes
+                return GL_RGB5;            // two bytes
             }
 
             // cases with alpha
             if (NOT(rgbaDiffer)) {
                 if (minimumDepth != TD_HIGH_QUALITY && glConfig.textureCompressionAvailable) {
-                    return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;	// one byte
+                    return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;    // one byte
                 }
-                return GL_INTENSITY8;	// single byte for all channels
+                return GL_INTENSITY8;    // single byte for all channels
             }
 
             if (false) {
@@ -2869,20 +2735,20 @@ public class Image {
                 // causes them to be treated as 0 0 0 A, instead of 1 1 1 A as
                 // normal texture modulation treats them
                 if (rgbAnd == 255) {
-                    return GL_ALPHA8;		// single byte, only alpha
+                    return GL_ALPHA8;        // single byte, only alpha
                 }
             }
 
             if (minimumDepth == TD_HIGH_QUALITY) {
-                return GL_RGBA8;	// four bytes
+                return GL_RGBA8;    // four bytes
             }
             if (glConfig.textureCompressionAvailable) {
-                return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;	// one byte
+                return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;    // one byte
             }
             if (NOT(rgbDiffer)) {
-                return GL_LUMINANCE8_ALPHA8;	// two bytes, max quality
+                return GL_LUMINANCE8_ALPHA8;    // two bytes, max quality
             }
-            return GL_RGBA4;	// two bytes
+            return GL_RGBA4;    // two bytes
         }
 
         public void ImageProgramStringToCompressedFileName(final String imageProg, String[] fileName) {
@@ -2915,8 +2781,8 @@ public class Image {
                 } else if (s == '<' || s == '>' || s == ':' || s == '|' || s == '"' || s == '.') {
                     ff[f] = '_';
                     f++;
-                } else if (s == ' ' && ff[f - 1] == '/') {	// ignore a space right after a slash
-                } else if (s == ')' || s == ',') {		// always ignore these
+                } else if (s == ' ' && ff[f - 1] == '/') {    // ignore a space right after a slash
+                } else if (s == ')' || s == ',') {        // always ignore these
                 } else {
                     ff[f] = s;
                     f++;
@@ -2942,36 +2808,99 @@ public class Image {
 
             return numLevels;
         }
-    };
+    }
 
     public static class idImageManager {
 
-        public idList<idImage> images = new idList<>();
-        public idStrList   ddsList;
-        public idHashIndex ddsHash;
+        public final static int MAX_BACKGROUND_IMAGE_LOADS = 8;
+        private static final filterName_t[] textureFilters = {
+                new filterName_t("GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR),
+                new filterName_t("GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR),
+                new filterName_t("GL_NEAREST", GL_NEAREST, GL_NEAREST),
+                new filterName_t("GL_LINEAR", GL_LINEAR, GL_LINEAR),
+                new filterName_t("GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST),
+                new filterName_t("GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST)
+        };
+        public static idCVar image_anisotropy = new idCVar("image_anisotropy", "1", CVAR_RENDERER | CVAR_ARCHIVE, "set the maximum texture anisotropy if available");
         //
-        public boolean     insideLevelLoad;                 // don't actually load images now
+        public static idCVar image_cacheMegs = new idCVar("image_cacheMegs", "20", CVAR_RENDERER | CVAR_ARCHIVE, "maximum MB set aside for temporary loading of full-sized precompressed images");
+        public static idCVar image_cacheMinK = new idCVar("image_cacheMinK", "200", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "maximum KB of precompressed files to read at specification time");
+        public static idCVar image_colorMipLevels = new idCVar("image_colorMipLevels", "0", CVAR_RENDERER | CVAR_BOOL, "development aid to see texture mip usage");
+        public static idCVar image_downSize = new idCVar("image_downSize", "0", CVAR_RENDERER | CVAR_ARCHIVE, "controls texture downsampling");
+        public static idCVar image_downSizeBump = new idCVar("image_downSizeBump", "0", CVAR_RENDERER | CVAR_ARCHIVE, "controls normal map downsampling");
+        public static idCVar image_downSizeBumpLimit = new idCVar("image_downSizeBumpLimit", "128", CVAR_RENDERER | CVAR_ARCHIVE, "controls normal map downsample limit");
+        public static idCVar image_downSizeLimit = new idCVar("image_downSizeLimit", "256", CVAR_RENDERER | CVAR_ARCHIVE, "controls diffuse map downsample limit");
+        public static idCVar image_downSizeSpecular = new idCVar("image_downSizeSpecular", "0", CVAR_RENDERER | CVAR_ARCHIVE, "controls specular downsampling");
+        public static idCVar image_downSizeSpecularLimit = new idCVar("image_downSizeSpecularLimit", "64", CVAR_RENDERER | CVAR_ARCHIVE, "controls specular downsampled limit");
+        public static idCVar image_filter = new idCVar("image_filter", imageFilter[1], CVAR_RENDERER | CVAR_ARCHIVE, "changes texture filtering on mipmapped images", imageFilter, new idCmdSystem.ArgCompletion_String(imageFilter));
+        public static idCVar image_forceDownSize = new idCVar("image_forceDownSize", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "");
+        public static idCVar image_ignoreHighQuality = new idCVar("image_ignoreHighQuality", "0", CVAR_RENDERER | CVAR_ARCHIVE, "ignore high quality setting on materials");
+        public static idCVar image_lodbias = new idCVar("image_lodbias", "0", CVAR_RENDERER | CVAR_ARCHIVE, "change lod bias on mipmapped images");
         //
-        public byte[] originalToCompressed = new byte[256]; // maps normal maps to 8 bit textures
-        public byte[] compressedPalette    = new byte[768]; // the palette that normal maps use
         //
-        // default filter modes for images
-        public /*GLenum*/ int   textureMinFilter;
-        public /*GLenum*/ int   textureMaxFilter;
-        public            float textureAnisotropy;
-        public            float textureLODBias;
+        public static idCVar image_preload = new idCVar("image_preload", "1", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "if 0, dynamically load all images");
         //
-        public idImage[] imageHashTable = new idImage[FILE_HASH_SIZE];
+        // cvars
+        public static idCVar image_roundDown = new idCVar("image_roundDown", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "round bad sizes down to nearest power of two");
+        public static idCVar image_showBackgroundLoads = new idCVar("image_showBackgroundLoads", "0", CVAR_RENDERER | CVAR_BOOL, "1 = print number of outstanding background loads");
+//		
+        public static idCVar image_useAllFormats = new idCVar("image_useAllFormats", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "allow alpha/intensity/luminance/luminance+alpha");
+        public static idCVar image_useCache = new idCVar("image_useCache", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "1 = do background load image caching");
+        public static idCVar image_useCompression = new idCVar("image_useCompression", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0 = force everything to high quality");
+//
+        public static idCVar image_useNormalCompression = new idCVar("image_useNormalCompression", "2", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "2 = use rxgb compression for normal maps, 1 = use 256 color compression for normal maps if available");
+        public static idCVar image_useOffLineCompression = new idCVar("image_useOfflineCompression", "0", CVAR_RENDERER | CVAR_BOOL, "write a batch file for offline compression of DDS files");
+        public static idCVar image_usePrecompressedTextures = new idCVar("image_usePrecompressedTextures", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "use .dds files if present");
+        public static idCVar image_writeNormalTGA = new idCVar("image_writeNormalTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final normal maps for debugging");
+        public static idCVar image_writeNormalTGAPalletized = new idCVar("image_writeNormalTGAPalletized", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final palletized normal maps for debugging");
+        public static idCVar image_writePrecompressedTextures = new idCVar("image_writePrecompressedTextures", "0", CVAR_RENDERER | CVAR_BOOL, "write .dds files if necessary");
+        public static idCVar image_writeTGA = new idCVar("image_writeTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the non normal maps for debugging");
+        private static int prev;
+        public idImage accumImage;
+        public idImage alphaNotchImage;                         // 2x1 texture with just 1110 and 1111 with point sampling
+        public idImage alphaRampImage;                // 0-255 in alpha, 255 in RGB
+        public idImage ambientNormalMap;            // tr.ambientLightVector encoded in all pixels
         //
         public idImage backgroundImageLoads;                // chain of images that have background file loads active
+        public idImage blackImage;                // full of 0x00
+        public idImage borderClampImage;            // white inside, black outside
         public idImage cacheLRU;                            // head/tail of doubly linked list
-        public int     totalCachedImageSize;                // for determining when something should be purged
+        public idImage cinematicImage;
+        public byte[] compressedPalette = new byte[768]; // the palette that normal maps use
+        public idImage currentRenderImage;            // for SS_POST_PROCESS shaders
+        public idHashIndex ddsHash;
+        public idStrList ddsList;
         //
-        public int     numActiveBackgroundImageLoads;
-        public final static int MAX_BACKGROUND_IMAGE_LOADS = 8;
+        // built-in images
+        public idImage defaultImage;
+        public idImage flatNormalMap;                // 128 128 255 in all pixels
+        public idImage fogEnterImage;                // adjust fogImage alpha based on terminator plane
+        public idImage fogImage;                // increasing alpha is denser fog
         //
+        public idImage[] imageHashTable = new idImage[FILE_HASH_SIZE];
+        public idList<idImage> images = new idList<>();
         //
-
+        public boolean insideLevelLoad;                 // don't actually load images now
+        public idImage noFalloffImage;                // all 255, but zero clamped
+        public idImage normalCubeMapImage;            // cube map to normalize STR into RGB
+        //
+        public int numActiveBackgroundImageLoads;
+        //
+        public byte[] originalToCompressed = new byte[256]; // maps normal maps to 8 bit textures
+        public idImage rampImage;                // 0-255 in RGBA in S
+        public idImage scratchCubeMapImage;
+        public idImage scratchImage;
+        public idImage scratchImage2;
+        public idImage specular2DTableImage;                    // 2D intensity texture with our specular function with variable specularity
+        public idImage specularTableImage;            // 1D intensity texture with our specular function
+        public float textureAnisotropy;
+        public float textureLODBias;
+        public /*GLenum*/ int textureMaxFilter;
+        //
+        // default filter modes for images
+        public /*GLenum*/ int textureMinFilter;
+        public int totalCachedImageSize;                // for determining when something should be purged
+        public idImage whiteImage;                // full of 0xff
         public idImageManager() {
             this.cacheLRU = new idImage();
         }
@@ -3026,7 +2955,6 @@ public class Image {
         public void Shutdown() {
             images.DeleteContents(true);
         }
-//		
 
         // If the exact combination of parameters has been asked for already, an existing
         // image will be returned, otherwise a new image will be created.
@@ -3193,7 +3121,6 @@ public class Image {
             return ImageFromFile(name, filter, allowDownSize, repeat, depth, CF_2D);
         }
 
-
         // look for a loaded image, whatever the parameters
         public idImage GetImage(final String _name) {
             idStr name;
@@ -3222,7 +3149,6 @@ public class Image {
 
             return null;
         }
-//
 
         /*
          ==================
@@ -3274,7 +3200,6 @@ public class Image {
             return image;
         }
 
-
         /*
          ==================
          R_CompleteBackgroundImageLoads
@@ -3313,8 +3238,6 @@ public class Image {
 
             backgroundImageLoads = remainingList;
         }
-
-        private static int prev;
 
         // returns the number of bytes of image data bound in the previous frame
         public int SumOfUsedImages() {
@@ -3416,7 +3339,6 @@ public class Image {
                 image.levelLoadReferenced = false;
             }
         }
-
 
         /*
          ====================
@@ -3558,6 +3480,8 @@ public class Image {
                 ddsList.Append(new idStr(cmd));
             }
         }
+//
+        //--------------------------------------------------------
 
         public void PrintMemInfo(MemInfo_t mi) {
             int i, j, total = 0;
@@ -3603,62 +3527,6 @@ public class Image {
             f.Printf("\nTotal image bytes allocated: %s\n", idStr.FormatNumber(total));
             fileSystem.CloseFile(f);
         }
-
-        //
-        // cvars
-        public static idCVar image_roundDown                  = new idCVar("image_roundDown", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "round bad sizes down to nearest power of two");
-        public static idCVar image_colorMipLevels             = new idCVar("image_colorMipLevels", "0", CVAR_RENDERER | CVAR_BOOL, "development aid to see texture mip usage");
-        public static idCVar image_downSize                   = new idCVar("image_downSize", "0", CVAR_RENDERER | CVAR_ARCHIVE, "controls texture downsampling");
-        public static idCVar image_useCompression             = new idCVar("image_useCompression", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0 = force everything to high quality");
-        public static idCVar image_filter                     = new idCVar("image_filter", imageFilter[1], CVAR_RENDERER | CVAR_ARCHIVE, "changes texture filtering on mipmapped images", imageFilter, new idCmdSystem.ArgCompletion_String(imageFilter));
-        public static idCVar image_anisotropy                 = new idCVar("image_anisotropy", "1", CVAR_RENDERER | CVAR_ARCHIVE, "set the maximum texture anisotropy if available");
-        public static idCVar image_lodbias                    = new idCVar("image_lodbias", "0", CVAR_RENDERER | CVAR_ARCHIVE, "change lod bias on mipmapped images");
-        public static idCVar image_useAllFormats              = new idCVar("image_useAllFormats", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "allow alpha/intensity/luminance/luminance+alpha");
-        public static idCVar image_usePrecompressedTextures   = new idCVar("image_usePrecompressedTextures", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "use .dds files if present");
-        public static idCVar image_writePrecompressedTextures = new idCVar("image_writePrecompressedTextures", "0", CVAR_RENDERER | CVAR_BOOL, "write .dds files if necessary");
-        public static idCVar image_writeNormalTGA             = new idCVar("image_writeNormalTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final normal maps for debugging");
-        public static idCVar image_writeNormalTGAPalletized   = new idCVar("image_writeNormalTGAPalletized", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final palletized normal maps for debugging");
-        public static idCVar image_writeTGA                   = new idCVar("image_writeTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the non normal maps for debugging");
-        public static idCVar image_useNormalCompression       = new idCVar("image_useNormalCompression", "2", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "2 = use rxgb compression for normal maps, 1 = use 256 color compression for normal maps if available");
-        public static idCVar image_useOffLineCompression      = new idCVar("image_useOfflineCompression", "0", CVAR_RENDERER | CVAR_BOOL, "write a batch file for offline compression of DDS files");
-        public static idCVar image_preload                    = new idCVar("image_preload", "1", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "if 0, dynamically load all images");
-        public static idCVar image_cacheMinK                  = new idCVar("image_cacheMinK", "200", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "maximum KB of precompressed files to read at specification time");
-        //
-        public static idCVar image_cacheMegs                  = new idCVar("image_cacheMegs", "20", CVAR_RENDERER | CVAR_ARCHIVE, "maximum MB set aside for temporary loading of full-sized precompressed images");
-        public static idCVar image_useCache                   = new idCVar("image_useCache", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "1 = do background load image caching");
-        public static idCVar image_showBackgroundLoads        = new idCVar("image_showBackgroundLoads", "0", CVAR_RENDERER | CVAR_BOOL, "1 = print number of outstanding background loads");
-        public static idCVar image_forceDownSize              = new idCVar("image_forceDownSize", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "");
-        public static idCVar image_downSizeSpecular           = new idCVar("image_downSizeSpecular", "0", CVAR_RENDERER | CVAR_ARCHIVE, "controls specular downsampling");
-        public static idCVar image_downSizeSpecularLimit      = new idCVar("image_downSizeSpecularLimit", "64", CVAR_RENDERER | CVAR_ARCHIVE, "controls specular downsampled limit");
-        public static idCVar image_downSizeBump               = new idCVar("image_downSizeBump", "0", CVAR_RENDERER | CVAR_ARCHIVE, "controls normal map downsampling");
-        public static idCVar image_downSizeBumpLimit          = new idCVar("image_downSizeBumpLimit", "128", CVAR_RENDERER | CVAR_ARCHIVE, "controls normal map downsample limit");
-        public static idCVar image_ignoreHighQuality          = new idCVar("image_ignoreHighQuality", "0", CVAR_RENDERER | CVAR_ARCHIVE, "ignore high quality setting on materials");
-        public static idCVar image_downSizeLimit              = new idCVar("image_downSizeLimit", "256", CVAR_RENDERER | CVAR_ARCHIVE, "controls diffuse map downsample limit");
-        //
-        // built-in images
-        public idImage defaultImage;
-        public idImage flatNormalMap;                // 128 128 255 in all pixels
-        public idImage ambientNormalMap;            // tr.ambientLightVector encoded in all pixels
-        public idImage rampImage;                // 0-255 in RGBA in S
-        public idImage alphaRampImage;                // 0-255 in alpha, 255 in RGB
-        public idImage alphaNotchImage;                         // 2x1 texture with just 1110 and 1111 with point sampling
-        public idImage whiteImage;                // full of 0xff
-        public idImage blackImage;                // full of 0x00
-        public idImage normalCubeMapImage;            // cube map to normalize STR into RGB
-        public idImage noFalloffImage;                // all 255, but zero clamped
-        public idImage fogImage;                // increasing alpha is denser fog
-        public idImage fogEnterImage;                // adjust fogImage alpha based on terminator plane
-        public idImage cinematicImage;
-        public idImage scratchImage;
-        public idImage scratchImage2;
-        public idImage accumImage;
-        public idImage currentRenderImage;            // for SS_POST_PROCESS shaders
-        public idImage scratchCubeMapImage;
-        public idImage specularTableImage;            // 1D intensity texture with our specular function
-        public idImage specular2DTableImage;                    // 2D intensity texture with our specular function with variable specularity
-        public idImage borderClampImage;            // white inside, black outside
-//
-        //--------------------------------------------------------
 
         /*
          ==============
@@ -3794,28 +3662,6 @@ public class Image {
             qglEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
         }
 
-        static class filterName_t {
-
-            public filterName_t(String name, int minimize, int maximize) {
-                this.name = name;
-                this.minimize = minimize;
-                this.maximize = maximize;
-            }
-
-            String name;
-            int    minimize, maximize;
-        }
-
-        ;
-        private static final filterName_t textureFilters[] = {
-                new filterName_t("GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR),
-                new filterName_t("GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR),
-                new filterName_t("GL_NEAREST", GL_NEAREST, GL_NEAREST),
-                new filterName_t("GL_LINEAR", GL_LINEAR, GL_LINEAR),
-                new filterName_t("GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST),
-                new filterName_t("GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST)
-        };
-
         /*
          ===============
          ChangeTextureFilter
@@ -3893,7 +3739,17 @@ public class Image {
                 }
             }
         }
+
+        static class filterName_t {
+
+            int minimize, maximize;
+            String name;
+            public filterName_t(String name, int minimize, int maximize) {
+                this.name = name;
+                this.minimize = minimize;
+                this.maximize = maximize;
+            }
+        }
     }
 
-    ;
 }

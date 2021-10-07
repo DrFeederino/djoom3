@@ -1,23 +1,15 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Objects;
 import neo.Renderer.Interaction.idInteraction;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
-import static neo.Renderer.RenderSystem_init.r_materialOverride;
 import neo.Renderer.tr_local.areaReference_s;
 import neo.Renderer.tr_local.idRenderEntityLocal;
 import neo.Renderer.tr_local.idRenderLightLocal;
-import static neo.Renderer.tr_local.tr;
 import neo.Sound.sound.idSoundEmitter;
 import neo.TempDump.Atomics;
 import neo.TempDump.SERiAL;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.framework.DemoFile.idDemoFile;
 import neo.idlib.BV.Bounds.idBounds;
@@ -26,22 +18,38 @@ import neo.idlib.BV.Frustum.idFrustum;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.ui.UserInterface.idUserInterface;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Objects;
+
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.RenderSystem_init.r_materialOverride;
+import static neo.Renderer.tr_local.tr;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class RenderWorld {
 
+    //
+    // shader parms
+    public static final int MAX_GLOBAL_SHADER_PARMS = 12;
+    //
+    // guis
+    public static final int MAX_RENDERENTITY_GUI = 3;
     /*
      ===============================================================================
 
@@ -51,40 +59,114 @@ public class RenderWorld {
      */
     public static final String PROC_FILE_EXT = "proc";
     public static final String PROC_FILE_ID = "mapProcFile003";
-    //
-    // shader parms
-    public static final int MAX_GLOBAL_SHADER_PARMS = 12;
-    //
-    public static final int SHADERPARM_RED = 0;
-    public static final int SHADERPARM_GREEN = 1;
-    public static final int SHADERPARM_BLUE = 2;
     public static final int SHADERPARM_ALPHA = 3;
-    public static final int SHADERPARM_TIMESCALE = 3;
-    public static final int SHADERPARM_TIMEOFFSET = 4;
-    public static final int SHADERPARM_DIVERSITY = 5;          // random between 0.0 and 1.0 for some effects (muzzle flashes, etc)
-    public static final int SHADERPARM_MODE = 7;               // for selecting which shader passes to enable
-    public static final int SHADERPARM_TIME_OF_DEATH = 7;	// for the monster skin-burn-away effect enable and time offset
-    //
-    // model parms
-    public static final int SHADERPARM_MD5_SKINSCALE = 8;	// for scaling vertex offsets on md5 models (jack skellington effect)
-    //
-    public static final int SHADERPARM_MD3_FRAME = 8;
-    public static final int SHADERPARM_MD3_LASTFRAME = 9;
-    public static final int SHADERPARM_MD3_BACKLERP = 10;
     //
     public static final int SHADERPARM_BEAM_END_X = 8;         // for _beam models
     public static final int SHADERPARM_BEAM_END_Y = 9;
     public static final int SHADERPARM_BEAM_END_Z = 10;
     public static final int SHADERPARM_BEAM_WIDTH = 11;
+    public static final int SHADERPARM_BLUE = 2;
+    public static final int SHADERPARM_DIVERSITY = 5;          // random between 0.0 and 1.0 for some effects (muzzle flashes, etc)
+    public static final int SHADERPARM_GREEN = 1;
+    public static final int SHADERPARM_MD3_BACKLERP = 10;
     //
-    public static final int SHADERPARM_SPRITE_WIDTH = 8;
+    public static final int SHADERPARM_MD3_FRAME = 8;
+    public static final int SHADERPARM_MD3_LASTFRAME = 9;
+    //
+    // model parms
+    public static final int SHADERPARM_MD5_SKINSCALE = 8;    // for scaling vertex offsets on md5 models (jack skellington effect)
+    public static final int SHADERPARM_MODE = 7;               // for selecting which shader passes to enable
+    //
+    public static final int SHADERPARM_PARTICLE_STOPTIME = 8;    // don't spawn any more particles after this time
+    //
+    public static final int SHADERPARM_RED = 0;
     public static final int SHADERPARM_SPRITE_HEIGHT = 9;
     //
-    public static final int SHADERPARM_PARTICLE_STOPTIME = 8;	// don't spawn any more particles after this time
-    //
-    // guis
-    public static final int MAX_RENDERENTITY_GUI = 3;
+    public static final int SHADERPARM_SPRITE_WIDTH = 8;
+    public static final int SHADERPARM_TIMEOFFSET = 4;
+    public static final int SHADERPARM_TIMESCALE = 3;
+    public static final int SHADERPARM_TIME_OF_DEATH = 7;    // for the monster skin-burn-away effect enable and time offset
     //    
+    static final int NUM_PORTAL_ATTRIBUTES = 3;//PS_BLOCK_ALL needs to be changed manually if this value is changed.
+
+    /*
+     ===============
+     R_GlobalShaderOverride
+     ===============
+     */
+    public static boolean R_GlobalShaderOverride(final idMaterial[] shader) throws idException {
+
+        if (!shader[0].IsDrawn()) {
+            return false;
+        }
+
+        if (tr.primaryRenderView.globalMaterial != null) {
+            shader[0] = tr.primaryRenderView.globalMaterial;
+            return true;
+        }
+
+        if (isNotNullOrEmpty(r_materialOverride.GetString())) {
+            shader[0] = declManager.FindMaterial(r_materialOverride.GetString());
+            return true;
+        }
+
+        return false;
+    }
+
+    /*
+     ===============
+     R_RemapShaderBySkin
+     ===============
+     */
+    public static idMaterial R_RemapShaderBySkin(final idMaterial shader, final idDeclSkin skin, final idMaterial customShader) {
+
+        if (null == shader) {
+            return null;
+        }
+
+        // never remap surfaces that were originally nodraw, like collision hulls
+        if (!shader.IsDrawn()) {
+            return shader;
+        }
+
+        if (customShader != null) {
+            // this is sort of a hack, but cause deformed surfaces to map to empty surfaces,
+            // so the item highlight overlay doesn't highlight the autosprite surface
+            if (shader.Deform() != null) {
+                return null;
+            }
+            return customShader;
+        }
+
+        if (null == skin /*|| null == shader*/) {
+            return shader;
+        }
+
+        return skin.RemapShaderBySkin(shader);
+    }
+
+    public enum portalConnection_t {
+
+        PS_BLOCK_NONE,// = 0,
+        //
+        PS_BLOCK_VIEW,// = 1,
+        PS_BLOCK_LOCATION,// = 2,  // game map location strings often stop in hallways
+        /**
+         * padding
+         */
+        __3,
+        PS_BLOCK_AIR,// = 4,       // windows between pressurized and unpresurized areas
+        //
+        /**
+         * padding
+         */
+        __5,
+        /**
+         * padding
+         */
+        __6,
+        PS_BLOCK_ALL//= (1 << NUM_PORTAL_ATTRIBUTES) - 1
+    }
 
     public static abstract class deferredEntityCallback_t implements SERiAL {
 
@@ -93,10 +175,15 @@ public class RenderWorld {
 
     public static class renderEntity_s {
 
-        public idRenderModel            hModel;            // this can only be null if callback is set
+        private static int DBG_counter = 0;
+        public final float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];    // can be used in any way by shader or model generation
+        private final int DBG_count = DBG_counter++;
         //
-        public int                      entityNum;
-        public int                      bodyId;
+        // if non-zero, the surface and shadow (if it casts one)
+        // will only show up in the specific view, ie: player weapons
+        public int allowSurfaceInViewID;
+        public idMat3 axis;
+        public int bodyId;
         //
         // Entities that are expensive to generate, like skeletal models, can be
         // deferred until their bounds are found to be in view, in the frustum
@@ -107,68 +194,61 @@ public class RenderWorld {
         // The callback function should clear renderEntity->callback if it doesn't
         // want to be called again next time the entity is referenced (ie, if the
         // callback has now made the entity valid until the next updateEntity)
-        public idBounds                 bounds;            // only needs to be set for deferred models and md5s
+        public idBounds bounds;            // only needs to be set for deferred models and md5s
         public deferredEntityCallback_t callback;
         //
-        public ByteBuffer               callbackData;      // used for whatever the callback wants
+        public ByteBuffer callbackData;      // used for whatever the callback wants
         //
-        // player bodies and possibly player shadows should be suppressed in views from
-        // that player's eyes, but will show up in mirrors and other subviews
-        // security cameras could suppress their model in their subviews if we add a way
-        // of specifying a view number for a remoteRenderMap view
-        public int                      suppressSurfaceInViewID;
-        public int                      suppressShadowInViewID;
+        // texturing
+        public idMaterial customShader;      // if non-0, all surfaces will use this
+        public idDeclSkin customSkin;        // 0 for no remappings
         //
-        // world models for the player and weapons will not cast shadows from view weapon
-        // muzzle flashes
-        public int                      suppressShadowInLightID;
+        public int entityNum;
+        // this automatically implies noShadow
+        public int forceUpdate;                   // force an update (NOTE: not a bool to keep this struct a multiple of 4 bytes)//TODO:
+        // networking: see WriteGUIToSnapshot / ReadGUIFromSnapshot
+        public idUserInterface[] gui = new idUserInterface[MAX_RENDERENTITY_GUI];
+        public idRenderModel hModel;            // this can only be null if callback is set
+        public idJointMat[] joints;                        // array of joints that will modify vertices.
+        // NULL if non-deformable model.  NOT freed by renderer
         //
-        // if non-zero, the surface and shadow (if it casts one)
-        // will only show up in the specific view, ie: player weapons
-        public int                      allowSurfaceInViewID;
+        public float modelDepthHack;                // squash depth range so particle effects don't clip into walls
+        //
+        public boolean noDynamicInteractions;         // don't create any light / shadow interactions after
+        //
+        // options to override surface shader flags (replace with material parameters?)
+        public boolean noSelfShadow;                  // cast shadows onto other objects,but not self
+        public boolean noShadow;                      // no shadow at all
+        //
+        public int numJoints;
         //
         // positioning
         // axis rotation vectors must be unit length for many
         // R_LocalToGlobal functions to work, so don't scale models!
         // axis vectors are [0] = forward, [1] = left, [2] = up
-        public idVec3                   origin;
-        public idMat3                   axis;
-        //
-        // texturing
-        public idMaterial               customShader;      // if non-0, all surfaces will use this
-        public idMaterial               referenceShader;   // used so flares can reference the proper light shader
-        public idDeclSkin               customSkin;        // 0 for no remappings
-        public idSoundEmitter           referenceSound;    // for shader sound tables, allowing effects to vary with sounds
-        public final float[]           shaderParms = new float[MAX_ENTITY_SHADER_PARMS];    // can be used in any way by shader or model generation
-
-        // networking: see WriteGUIToSnapshot / ReadGUIFromSnapshot
-        public       idUserInterface[] gui         = new idUserInterface[MAX_RENDERENTITY_GUI];
+        public idVec3 origin;
+        public idMaterial referenceShader;   // used so flares can reference the proper light shader
+        public idSoundEmitter referenceSound;    // for shader sound tables, allowing effects to vary with sounds
         //
         public renderView_s remoteRenderView;              // any remote camera surfaces will use this
         //
-        public int          numJoints;
-        public idJointMat[] joints;                        // array of joints that will modify vertices.
-                                                           // NULL if non-deformable model.  NOT freed by renderer
+        // world models for the player and weapons will not cast shadows from view weapon
+        // muzzle flashes
+        public int suppressShadowInLightID;
+        public int suppressShadowInViewID;
         //
-        public float        modelDepthHack;                // squash depth range so particle effects don't clip into walls
+        // player bodies and possibly player shadows should be suppressed in views from
+        // that player's eyes, but will show up in mirrors and other subviews
+        // security cameras could suppress their model in their subviews if we add a way
+        // of specifying a view number for a remoteRenderMap view
+        public int suppressSurfaceInViewID;
+        public int timeGroup;
+        // the level load is completed.  This is a performance hack
+        // for the gigantic outdoor meshes in the monorail map, so
+        // all the lights in the moving monorail don't touch the meshes
         //
-        // options to override surface shader flags (replace with material parameters?)
-        public boolean      noSelfShadow;                  // cast shadows onto other objects,but not self
-        public boolean      noShadow;                      // no shadow at all
-        //
-        public boolean      noDynamicInteractions;         // don't create any light / shadow interactions after
-                                                           // the level load is completed.  This is a performance hack
-                                                           // for the gigantic outdoor meshes in the monorail map, so
-                                                           // all the lights in the moving monorail don't touch the meshes
-        //
-        public boolean      weaponDepthHack;               // squash depth range so view weapons don't poke into walls
-                                                           // this automatically implies noShadow
-        public int          forceUpdate;                   // force an update (NOTE: not a bool to keep this struct a multiple of 4 bytes)//TODO:
-        public int          timeGroup;
-        public int          xrayIndex;
-
-        private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        public boolean weaponDepthHack;               // squash depth range so view weapons don't poke into walls
+        public int xrayIndex;
 
         public renderEntity_s() {
             this.origin = new idVec3();
@@ -399,60 +479,57 @@ public class RenderWorld {
             if (this.timeGroup != other.timeGroup) {
                 return false;
             }
-            if (this.xrayIndex != other.xrayIndex) {
-                return false;
-            }
-            return true;
+            return this.xrayIndex == other.xrayIndex;
         }
-    };
+    }
 
     public static class renderLight_s {
 
-        public idMat3 axis   = new idMat3();				// rotation vectors, must be unit length
+        public final float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];        // can be used in any way by shader
+        //
+        // if non-zero, the light will only show up in the specific view
+        // which can allow player gun gui lights and such to not effect everyone
+        public int allowLightInViewID;
+        public idMat3 axis = new idMat3();                // rotation vectors, must be unit length
+        public idVec3 end = new idVec3();
+        public idVec3 lightCenter = new idVec3();       // offset the lighting direction for shading and
+        //
+        // muzzle flash lights will not cast shadows from player and weapon world models
+        public int lightId;
+        public idVec3 lightRadius = new idVec3();       // xyz radius for point lights
+        //
+        // I am sticking the four bools together so there are no unused gaps in
+        // the padded structure, which could confuse the memcmp that checks for redundant
+        // updates
+        public boolean noShadows;            // (should we replace this with material parameters on the shader?)
+        public boolean noSpecular;            // (should we replace this with material parameters on the shader?)
         public idVec3 origin = new idVec3();
+        public boolean parallel;            // lightCenter gives the direction to the light at infinity
+        //
+        public boolean pointLight;            // otherwise a projection light (should probably invert the sense of this, because points are way more common)
+        //
+        // Dmap will generate an optimized shadow volume named _prelight_<lightName>
+        // for the light against all the _area* models in the map.  The renderer will
+        // ignore this value if the light has been moved after initial creation
+        public idRenderModel prelightModel;
+        public idSoundEmitter referenceSound;        // for shader sound tables, allowing effects to vary with sounds
+        public idVec3 right = new idVec3();
+        //
+        //
+        public idMaterial shader;            // NULL = either lights/defaultPointLight or lights/defaultProjectedLight
+        public idVec3 start = new idVec3();
         //
         // if non-zero, the light will not show up in the specific view,
         // which may be used if we want to have slightly different muzzle
         // flash lights for the player and other views
         public int suppressLightInViewID;
-        //
-        // if non-zero, the light will only show up in the specific view
-        // which can allow player gun gui lights and such to not effect everyone
-        public int allowLightInViewID;
-        //
-        // I am sticking the four bools together so there are no unused gaps in
-        // the padded structure, which could confuse the memcmp that checks for redundant
-        // updates
-        public boolean noShadows;			// (should we replace this with material parameters on the shader?)
-        public boolean noSpecular;			// (should we replace this with material parameters on the shader?)
-        //
-        public boolean pointLight;			// otherwise a projection light (should probably invert the sense of this, because points are way more common)
-        public boolean parallel;			// lightCenter gives the direction to the light at infinity
-        public idVec3 lightRadius = new idVec3();       // xyz radius for point lights
-        public idVec3 lightCenter = new idVec3();       // offset the lighting direction for shading and
         // shadows, relative to origin
         //
         // frustum definition for projected lights, all reletive to origin
         // FIXME: we should probably have real plane equations here, and offer
         // a helper function for conversion from this format
         public idVec3 target = new idVec3();
-        public idVec3 right  = new idVec3();
-        public idVec3 up     = new idVec3();
-        public idVec3 start  = new idVec3();
-        public idVec3 end    = new idVec3();
-        //
-        // Dmap will generate an optimized shadow volume named _prelight_<lightName>
-        // for the light against all the _area* models in the map.  The renderer will
-        // ignore this value if the light has been moved after initial creation
-        public idRenderModel prelightModel;
-        //
-        // muzzle flash lights will not cast shadows from player and weapon world models
-        public int lightId;
-        //
-        //
-        public idMaterial shader;			// NULL = either lights/defaultPointLight or lights/defaultProjectedLight
-        public final float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];		// can be used in any way by shader
-        public idSoundEmitter referenceSound;		// for shader sound tables, allowing effects to vary with sounds
+        public idVec3 up = new idVec3();
 
         public renderLight_s() {
         }
@@ -541,31 +618,30 @@ public class RenderWorld {
             this.shader = shadow.shader;
             this.referenceSound = shadow.referenceSound;
         }
-    };
+    }
 
     public static class renderView_s implements SERiAL {
         // player views will set this to a non-zero integer for model suppress / allow
         // subviews (mirrors, cameras, etc) will always clear it to zero
 
-        public int viewID;
+        private static int DBG_counter = 0;
+        private final int DBG_count = DBG_counter++;
         //
-        // sized from 0 to SCREEN_WIDTH / SCREEN_HEIGHT (640/480), not actual resolution
-        public int x, y, width, height;
+        public boolean cramZNear;        // for cinematics, we want to set ZNear much lower
+        public boolean forceUpdate;        // for an update
         //
         public float fov_x, fov_y;
-        public idVec3 vieworg = new idVec3();
-        public idMat3 viewaxis = new idMat3();		// transformation matrix, view looks down the positive X axis
-        //
-        public boolean cramZNear;		// for cinematics, we want to set ZNear much lower
-        public boolean forceUpdate;		// for an update 
+        public idMaterial globalMaterial;                 // used to override everything draw
+        public float[] shaderParms = new float[MAX_GLOBAL_SHADER_PARMS];// can be used in any way by shader
         //
         // time in milliseconds for shader effects and other time dependent rendering issues
         public int time;
-        public float[] shaderParms = new float[MAX_GLOBAL_SHADER_PARMS];// can be used in any way by shader
-        public idMaterial globalMaterial;				 // used to override everything draw
-
-        private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        public int viewID;
+        public idMat3 viewaxis = new idMat3();        // transformation matrix, view looks down the positive X axis
+        public idVec3 vieworg = new idVec3();
+        //
+        // sized from 0 to SCREEN_WIDTH / SCREEN_HEIGHT (640/480), not actual resolution
+        public int x, y, width, height;
 
         public renderView_s() {
         }
@@ -623,33 +699,33 @@ public class RenderWorld {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     // exitPortal_t is returned by idRenderWorld::GetPortal()
     public static class exitPortal_t {
 
-        public int[] areas = new int[2];	// areas connected by this portal
-        public idWinding w;			// winding points have counter clockwise ordering seen from areas[0]
+        public int[] areas = new int[2];    // areas connected by this portal
         public int blockingBits;               // PS_BLOCK_VIEW, PS_BLOCK_AIR, etc
         public int/*qhandle_t */ portalHandle;
-    };
+        public idWinding w;            // winding points have counter clockwise ordering seen from areas[0]
+    }
 
     // guiPoint_t is returned by idRenderWorld::GuiTrace()
     public static class guiPoint_t {
 
-        public float x, y;			// 0.0 to 1.0 range if trace hit a gui, otherwise -1
-        public int guiId;			// id of gui ( 0, 1, or 2 ) that the trace happened against
-    };
+        public int guiId;            // id of gui ( 0, 1, or 2 ) that the trace happened against
+        public float x, y;            // 0.0 to 1.0 range if trace hit a gui, otherwise -1
+    }
 
     // modelTrace_t is for tracing vs. visual geometry
     public static class modelTrace_s {
 
-        public float          fraction;      // fraction of trace completed
-        public idVec3         point;         // end point of trace in global space
-        public idVec3         normal;        // hit triangle normal vector in global space
-        public idMaterial     material;      // material of hit surface
         public renderEntity_s entity;        // render entity that was hit
-        public int            jointNumber;   // md5 joint nearest to the hit triangle
+        public float fraction;      // fraction of trace completed
+        public int jointNumber;   // md5 joint nearest to the hit triangle
+        public idMaterial material;      // material of hit surface
+        public idVec3 normal;        // hit triangle normal vector in global space
+        public idVec3 point;         // end point of trace in global space
 
         public void clear() {
             this.point = new idVec3();
@@ -659,22 +735,7 @@ public class RenderWorld {
             this.fraction = this.jointNumber = 0;
         }
 
-    };
-    static final int NUM_PORTAL_ATTRIBUTES = 3;//PS_BLOCK_ALL needs to be changed manually if this value is changed.
-
-    public enum portalConnection_t {
-
-        PS_BLOCK_NONE,// = 0,
-        //
-        PS_BLOCK_VIEW,// = 1,
-        PS_BLOCK_LOCATION,// = 2,  // game map location strings often stop in hallways
-        /** padding */ __3,
-        PS_BLOCK_AIR,// = 4,       // windows between pressurized and unpresurized areas
-        //
-        /** padding */ __5,
-        /** padding */ __6,
-        PS_BLOCK_ALL;//= (1 << NUM_PORTAL_ATTRIBUTES) - 1
-    };
+    }
 
     public static abstract class idRenderWorld {
 
@@ -814,13 +875,13 @@ public class RenderWorld {
         // the next renderScene
         public abstract boolean ProcessDemoCommand(idDemoFile readDemo, renderView_s demoRenderView, int[] demoTimeOffset);
 
-        // this is used to regenerate all interactions ( which is currently only done during influences ), there may be a less 
+        // this is used to regenerate all interactions ( which is currently only done during influences ), there may be a less
         // expensive way to do it
         public abstract void RegenerateWorld();
 
         //-------------- Debug Visualization  -----------------
         // Line drawing for debug visualization
-        public abstract void DebugClearLines(int time);		// a time of 0 will clear all lines and text
+        public abstract void DebugClearLines(int time);        // a time of 0 will clear all lines and text
 
         public abstract void DebugLine(final idVec4 color, final idVec3 start, final idVec3 end, final int lifetime /*= 0*/, final boolean depthTest/* = false*/);
 
@@ -903,7 +964,7 @@ public class RenderWorld {
         public abstract void DebugAxis(final idVec3 origin, final idMat3 axis);
 
         // Polygon drawing for debug visualization.
-        public abstract void DebugClearPolygons(int time);		// a time of 0 will clear all polygons
+        public abstract void DebugClearPolygons(int time);        // a time of 0 will clear all polygons
 
         public abstract void DebugPolygon(final idVec4 color, final idWinding winding, final int lifeTime/* = 0*/, final boolean depthTest /*= false*/);
 
@@ -929,7 +990,7 @@ public class RenderWorld {
         public void DrawText(final String text, final idVec3 origin, float scale, final idVec4 color, final idMat3 viewAxis) {
             DrawText(text, origin, scale, color, viewAxis, 1);
         }
-    };
+    }
 
     /*
      ===================
@@ -986,7 +1047,7 @@ public class RenderWorld {
 
             common.Printf("%d lightDefs, %d interactions, %d areaRefs\n", active, totalIntr, totalRef);
         }
-    };
+    }
 
     /*
      ===================
@@ -1043,62 +1104,6 @@ public class RenderWorld {
 
             common.Printf("total active: %d\n", active);
         }
-    };
-
-    /*
-     ===============
-     R_GlobalShaderOverride
-     ===============
-     */
-    public static boolean R_GlobalShaderOverride(final idMaterial[] shader) throws idException {
-
-        if (!shader[0].IsDrawn()) {
-            return false;
-        }
-
-        if (tr.primaryRenderView.globalMaterial != null) {
-            shader[0] = tr.primaryRenderView.globalMaterial;
-            return true;
-        }
-
-        if (isNotNullOrEmpty(r_materialOverride.GetString())) {
-            shader[0] = declManager.FindMaterial(r_materialOverride.GetString());
-            return true;
-        }
-
-        return false;
-    }
-
-    /*
-     ===============
-     R_RemapShaderBySkin
-     ===============
-     */
-    public static idMaterial R_RemapShaderBySkin(final idMaterial shader, final idDeclSkin skin, final idMaterial customShader) {
-
-        if (null == shader) {
-            return null;
-        }
-
-        // never remap surfaces that were originally nodraw, like collision hulls
-        if (!shader.IsDrawn()) {
-            return shader;
-        }
-
-        if (customShader != null) {
-            // this is sort of a hack, but cause deformed surfaces to map to empty surfaces,
-            // so the item highlight overlay doesn't highlight the autosprite surface
-            if (shader.Deform() != null) {
-                return null;
-            }
-            return customShader;
-        }
-
-        if (null == skin /*|| null == shader*/) {
-            return shader;
-        }
-
-        return skin.RemapShaderBySkin(shader);
     }
 
 }

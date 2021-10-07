@@ -1,224 +1,116 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
 import neo.Renderer.Cinematic.cinData_t;
-import static neo.Renderer.Image.globalImages;
 import neo.Renderer.Image.idImage;
-import static neo.Renderer.Material.cullType_t.CT_FRONT_SIDED;
-import static neo.Renderer.Material.cullType_t.CT_TWO_SIDED;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderSystem_init.r_debugLineDepthTest;
-import static neo.Renderer.RenderSystem_init.r_debugLineWidth;
-import static neo.Renderer.RenderSystem_init.r_debugPolygonFilled;
-import static neo.Renderer.RenderSystem_init.r_showDepth;
-import static neo.Renderer.RenderSystem_init.r_showDominantTri;
-import static neo.Renderer.RenderSystem_init.r_showEdges;
-import static neo.Renderer.RenderSystem_init.r_showIntensity;
-import static neo.Renderer.RenderSystem_init.r_showLightCount;
-import static neo.Renderer.RenderSystem_init.r_showLights;
-import static neo.Renderer.RenderSystem_init.r_showNormals;
-import static neo.Renderer.RenderSystem_init.r_showOverDraw;
-import static neo.Renderer.RenderSystem_init.r_showPortals;
-import static neo.Renderer.RenderSystem_init.r_showShadowCount;
-import static neo.Renderer.RenderSystem_init.r_showSilhouette;
-import static neo.Renderer.RenderSystem_init.r_showSurfaceInfo;
-import static neo.Renderer.RenderSystem_init.r_showTangentSpace;
-import static neo.Renderer.RenderSystem_init.r_showTexturePolarity;
-import static neo.Renderer.RenderSystem_init.r_showTextureVectors;
-import static neo.Renderer.RenderSystem_init.r_showTris;
-import static neo.Renderer.RenderSystem_init.r_showUnsmoothedTangents;
-import static neo.Renderer.RenderSystem_init.r_showVertexColor;
-import static neo.Renderer.RenderSystem_init.r_showViewEntitys;
-import static neo.Renderer.RenderSystem_init.r_testGamma;
-import static neo.Renderer.RenderSystem_init.r_testGammaBias;
-import static neo.Renderer.RenderSystem_init.r_useScissor;
 import neo.Renderer.RenderWorld.modelTrace_s;
 import neo.Renderer.VertexCache.vertCache_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.qgl.qglArrayElement;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglClear;
-import static neo.Renderer.qgl.qglClearColor;
-import static neo.Renderer.qgl.qglClearStencil;
-import static neo.Renderer.qgl.qglColor3f;
-import static neo.Renderer.qgl.qglColor3fv;
-import static neo.Renderer.qgl.qglColor4f;
-import static neo.Renderer.qgl.qglColor4fv;
-import static neo.Renderer.qgl.qglColor4ubv;
-import static neo.Renderer.qgl.qglColor4usv;
-import static neo.Renderer.qgl.qglDepthRange;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglDisableClientState;
-import static neo.Renderer.qgl.qglDrawPixels;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglLineWidth;
-import static neo.Renderer.qgl.qglLoadIdentity;
-import static neo.Renderer.qgl.qglLoadMatrixf;
-import static neo.Renderer.qgl.qglMatrixMode;
-import static neo.Renderer.qgl.qglOrtho;
-import static neo.Renderer.qgl.qglPolygonOffset;
-import static neo.Renderer.qgl.qglPopAttrib;
-import static neo.Renderer.qgl.qglPopMatrix;
-import static neo.Renderer.qgl.qglPushAttrib;
-import static neo.Renderer.qgl.qglPushMatrix;
-import static neo.Renderer.qgl.qglRasterPos2f;
-import static neo.Renderer.qgl.qglReadPixels;
-import static neo.Renderer.qgl.qglScissor;
-import static neo.Renderer.qgl.qglStencilFunc;
-import static neo.Renderer.qgl.qglStencilOp;
-import static neo.Renderer.qgl.qglTexCoord2f;
-import static neo.Renderer.qgl.qglVertex2f;
-import static neo.Renderer.qgl.qglVertex3f;
-import static neo.Renderer.qgl.qglVertex3fv;
-import static neo.Renderer.qgl.qglVertexPointer;
-import static neo.Renderer.simplex.NUM_SIMPLEX_CHARS;
-import static neo.Renderer.simplex.simplex;
-import static neo.Renderer.tr_backend.GL_Cull;
-import static neo.Renderer.tr_backend.GL_State;
-import static neo.Renderer.tr_backend.RB_LogComment;
-import static neo.Renderer.tr_light.R_EntityDefDynamicModel;
-import static neo.Renderer.tr_local.GLS_DEFAULT;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_ALWAYS;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_EQUAL;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_LESS;
-import static neo.Renderer.tr_local.GLS_DEPTHMASK;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ZERO;
-import static neo.Renderer.tr_local.GLS_POLYMODE_LINE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_SRC_ALPHA;
-import static neo.Renderer.tr_local.backEnd;
-import neo.Renderer.tr_local.drawSurf_s;
-import static neo.Renderer.tr_local.glConfig;
-import neo.Renderer.tr_local.idRenderLightLocal;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewEntity_s;
-import neo.Renderer.tr_local.viewLight_s;
-import static neo.Renderer.tr_main.R_AxisToModelMatrix;
-import static neo.Renderer.tr_main.R_LocalPointToGlobal;
-import static neo.Renderer.tr_render.RB_DrawElementsWithCounters;
-import static neo.Renderer.tr_render.RB_RenderDrawSurfListWithFunction;
-import static neo.Renderer.tr_render.RB_RenderTriangleSurface;
-import neo.Renderer.tr_render.RB_T_RenderTriangleSurface;
-import static neo.Renderer.tr_trace.RB_ShowTrace;
+import neo.Renderer.tr_local.*;
+import neo.Renderer.tr_render.*;
 import neo.TempDump;
-import static neo.TempDump.NOT;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.colorCyan;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Vector.VectorMA;
-import static neo.idlib.math.Vector.VectorSubtract;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
-import static neo.ui.DeviceContext.idDeviceContext.colorBlue;
-import static neo.ui.DeviceContext.idDeviceContext.colorRed;
-import static neo.ui.DeviceContext.idDeviceContext.colorWhite;
 import org.lwjgl.BufferUtils;
-import static org.lwjgl.opengl.GL11.GL_ALL_ATTRIB_BITS;
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_COMPONENT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_EQUAL;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_INCR;
-import static org.lwjgl.opengl.GL11.GL_KEEP;
-import static org.lwjgl.opengl.GL11.GL_LINES;
-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_POLYGON;
-import static org.lwjgl.opengl.GL11.GL_POLYGON_OFFSET_FILL;
-import static org.lwjgl.opengl.GL11.GL_POLYGON_OFFSET_LINE;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
-import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_INDEX;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.Material.cullType_t.CT_FRONT_SIDED;
+import static neo.Renderer.Material.cullType_t.CT_TWO_SIDED;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.simplex.NUM_SIMPLEX_CHARS;
+import static neo.Renderer.simplex.simplex;
+import static neo.Renderer.tr_backend.*;
+import static neo.Renderer.tr_light.R_EntityDefDynamicModel;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_main.R_AxisToModelMatrix;
+import static neo.Renderer.tr_main.R_LocalPointToGlobal;
+import static neo.Renderer.tr_render.*;
+import static neo.Renderer.tr_trace.RB_ShowTrace;
+import static neo.TempDump.NOT;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.colorCyan;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Vector.VectorMA;
+import static neo.idlib.math.Vector.VectorSubtract;
+import static neo.ui.DeviceContext.idDeviceContext.*;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
  */
 public class tr_rendertools {
 
+    static final int BAR_HEIGHT = 64;
+//
+    static final int G_HEIGHT = 512;
+
+    /*
+     ================
+     RB_TestGamma
+     ================
+     */
+    static final int G_WIDTH = 512;
     static final int MAX_DEBUG_LINES = 16384;
-//
-
-    static class debugLine_s {
-
-        idVec4 rgb;
-        idVec3 start;
-        idVec3 end;
-        boolean depthTest;
-        int lifeTime;
-    };
-//
-    static final debugLine_s[] rb_debugLines = new debugLine_s[MAX_DEBUG_LINES];
-    static int rb_numDebugLines = 0;
-    static int rb_debugLineTime = 0;
-//
+    //
+    static final int MAX_DEBUG_POLYGONS = 8192;
+    //
     static final int MAX_DEBUG_TEXT = 512;
 //
+    //
+    static final debugLine_s[] rb_debugLines = new debugLine_s[MAX_DEBUG_LINES];
 
-    public static class debugText_s {
-
-        idStr text;
-        idVec3 origin;
-        float scale;
-        idVec4 color;
-        idMat3 viewAxis;
-        int align;
-        int lifeTime;
-        boolean depthTest;
-
-        public debugText_s() {
-            text = new idStr();
-            origin = new idVec3();
-            color = new idVec4();
-            viewAxis = new idMat3();
-            scale = align = lifeTime = 0;
-            depthTest = false;
-        }
-    };
-//
-    static debugText_s[] rb_debugText = TempDump.allocArray(debugText_s.class, MAX_DEBUG_TEXT);
-    static int rb_numDebugText = 0;
-    static int rb_debugTextTime = 0;
-//
-    static final int MAX_DEBUG_POLYGONS = 8192;
-//
-
-    static class debugPolygon_s {
-
-        idVec4 rgb;
-        idWinding winding = new idWinding();
-        boolean depthTest;
-        int lifeTime;
-    };
-//
+    //
     static final debugPolygon_s[] rb_debugPolygons;
-    static int rb_numDebugPolygons = 0;
+    /*
+     ===================
+     R_ColorByStencilBuffer
+
+     Sets the screen colors based on the contents of the
+     stencil buffer.  Stencil of 0 = black, 1 = red, 2 = green,
+     3 = blue, ..., 7+ = white
+     ===================
+     */
+    private static final float[][] colors/*[8][3]*/ = {
+            {0, 0, 0},
+            {1, 0, 0},
+            {0, 1, 0},
+            {0, 0, 1},
+            {0, 1, 1},
+            {1, 0, 1},
+            {1, 1, 0},
+            {1, 1, 1}
+    };
+    static int rb_debugLineTime = 0;
     static int rb_debugPolygonTime = 0;
+//
+    //
+    static debugText_s[] rb_debugText = TempDump.allocArray(debugText_s.class, MAX_DEBUG_TEXT);
+
+    static int rb_debugTextTime = 0;
+    static int rb_numDebugLines = 0;
+    static int rb_numDebugPolygons = 0;
+    static int rb_numDebugText = 0;
+//    
+//    
+    /*
+     ================
+     RB_DrawBounds
+     ================
+     */
 
     static {
         rb_debugPolygons = new debugPolygon_s[MAX_DEBUG_POLYGONS];
@@ -227,13 +119,6 @@ public class tr_rendertools {
             rb_debugPolygons[a] = new debugPolygon_s();
         }
     }
-//    
-//    
-    /*
-     ================
-     RB_DrawBounds
-     ================
-     */
 
     public static void RB_DrawBounds(final idBounds bounds) {
         if (bounds.IsCleared()) {
@@ -267,7 +152,6 @@ public class tr_rendertools {
         qglVertex3f(bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(1, 2));
         qglEnd();
     }
-
 
     /*
      ================
@@ -377,7 +261,6 @@ public class tr_rendertools {
         }
     }
 
-
     /*
      ===================
      RB_CountStencilBuffer
@@ -403,26 +286,6 @@ public class tr_rendertools {
         // print some stats (not supposed to do from back end in SMP...)
         common.Printf("overdraw: %5.1f\n", (float) count / (glConfig.vidWidth * glConfig.vidHeight));
     }
-
-    /*
-     ===================
-     R_ColorByStencilBuffer
-
-     Sets the screen colors based on the contents of the
-     stencil buffer.  Stencil of 0 = black, 1 = red, 2 = green,
-     3 = blue, ..., 7+ = white
-     ===================
-     */
-    private static final float[][] colors/*[8][3]*/ = {
-                {0, 0, 0},
-                {1, 0, 0},
-                {0, 1, 0},
-                {0, 0, 1},
-                {0, 1, 1},
-                {1, 0, 1},
-                {1, 1, 0},
-                {1, 1, 1}
-            };
 
     public static void R_ColorByStencilBuffer() {
         int i;
@@ -664,7 +527,8 @@ public class tr_rendertools {
         for (vLight = backEnd.viewDef.viewLights; vLight != null; vLight = vLight.next) {
             for (i = 0; i < 2; i++) {
                 for (surf = (i != 0 ? vLight.localInteractions[0] : vLight.globalInteractions[0]); surf != null; surf = surf.nextOnLight) {
-                    RB_SimpleSurfaceSetup(surf);counter++;
+                    RB_SimpleSurfaceSetup(surf);
+                    counter++;
                     if (NOT(surf.geo.ambientCache)) {
                         continue;
                     }
@@ -865,8 +729,8 @@ public class tr_rendertools {
         for (int i = 0; i < tri.numIndexes; i += 3) {
             for (int j = 0; j < 3; j++) {
                 int k = (j + 1) % 3;
-                qglVertex3fv(tri.verts[ tri.silIndexes[i + j]].xyz.ToFloatPtr());
-                qglVertex3fv(tri.verts[ tri.silIndexes[i + k]].xyz.ToFloatPtr());
+                qglVertex3fv(tri.verts[tri.silIndexes[i + j]].xyz.ToFloatPtr());
+                qglVertex3fv(tri.verts[tri.silIndexes[i + k]].xyz.ToFloatPtr());
             }
         }
         qglEnd();
@@ -898,12 +762,12 @@ public class tr_rendertools {
         GL_State(GLS_POLYMODE_LINE);
 
         switch (r_showTris.GetInteger()) {
-            case 1:	// only draw visible ones
+            case 1:    // only draw visible ones
                 qglPolygonOffset(-1, -2);
                 qglEnable(GL_POLYGON_OFFSET_LINE);
                 break;
             default:
-            case 2:	// draw all front facing
+            case 2:    // draw all front facing
                 GL_Cull(CT_FRONT_SIDED);
                 qglDisable(GL_DEPTH_TEST);
                 break;
@@ -1031,7 +895,7 @@ public class tr_rendertools {
 
             idRenderModel model = R_EntityDefDynamicModel(vModels.entityDef);
             if (null == model) {
-                continue;	// particles won't instantiate without a current view
+                continue;    // particles won't instantiate without a current view
             }
             b = model.Bounds(vModels.entityDef.parms);
             RB_DrawBounds(b);
@@ -1359,7 +1223,7 @@ public class tr_rendertools {
 
                 for (j = 0; j < tri.numIndexes; j += 3) {
                     pos = R_LocalPointToGlobal(drawSurf.space.modelMatrix,
-                            (tri.verts[ tri.indexes[ j + 0]].xyz.oPlus(tri.verts[ tri.indexes[ j + 1]].xyz.oPlus(tri.verts[ tri.indexes[ j + 2]].xyz))).oMultiply(1.0f / 3.0f).oPlus(tri.verts[ tri.indexes[ j + 0]].normal.oMultiply(0.2f)));
+                            (tri.verts[tri.indexes[j + 0]].xyz.oPlus(tri.verts[tri.indexes[j + 1]].xyz.oPlus(tri.verts[tri.indexes[j + 2]].xyz))).oMultiply(1.0f / 3.0f).oPlus(tri.verts[tri.indexes[j + 0]].normal.oMultiply(0.2f)));
                     RB_DrawText(va("%d", j / 3), pos, 0.01f, colorCyan, backEnd.viewDef.renderView.viewaxis, 1);
                 }
             }
@@ -1410,7 +1274,7 @@ public class tr_rendertools {
 
                 // make the midpoint slightly above the triangle
                 mid = (v[0].xyz.oPlus(v[1].xyz).oPlus(v[2].xyz)).oMultiply(1.0f / 3.0f);
-                mid.oPluSet(tri.facePlanes[ j / 3].Normal().oMultiply(0.1f));
+                mid.oPluSet(tri.facePlanes[j / 3].Normal().oMultiply(0.1f));
 
                 for (k = 0; k < 3; k++) {
                     idVec3 pos;
@@ -1497,7 +1361,7 @@ public class tr_rendertools {
 
                 // make the midpoint slightly above the triangle
                 mid = (a.xyz.oPlus(b.xyz).oPlus(c.xyz)).oMultiply(1.0f / 3.0f);
-                mid.oPluSet(tri.facePlanes[ j / 3].Normal().oMultiply(0.1f));
+                mid.oPluSet(tri.facePlanes[j / 3].Normal().oMultiply(0.1f));
 
                 // calculate the texture vectors
                 VectorSubtract(b.xyz, a.xyz, d0);
@@ -1664,8 +1528,8 @@ public class tr_rendertools {
 
                     // if we didn't find a backwards listing, draw it in yellow
                     if (m == tri.numIndexes) {
-                        qglVertex3fv(ac[ i1].xyz.ToFloatPtr());
-                        qglVertex3fv(ac[ i2].xyz.ToFloatPtr());
+                        qglVertex3fv(ac[i1].xyz.ToFloatPtr());
+                        qglVertex3fv(ac[i2].xyz.ToFloatPtr());
                     }
 
                 }
@@ -1692,8 +1556,8 @@ public class tr_rendertools {
                     continue;
                 }
 
-                qglVertex3fv(ac[ edge.v1].xyz.ToFloatPtr());
-                qglVertex3fv(ac[ edge.v2].xyz.ToFloatPtr());
+                qglVertex3fv(ac[edge.v1].xyz.ToFloatPtr());
+                qglVertex3fv(ac[edge.v2].xyz.ToFloatPtr());
             }
             qglEnd();
         }
@@ -1731,7 +1595,7 @@ public class tr_rendertools {
         GL_Cull(CT_TWO_SIDED);
         qglDisable(GL_DEPTH_TEST);
 
-        common.Printf("volumes: ");	// FIXME: not in back end!
+        common.Printf("volumes: ");    // FIXME: not in back end!
 
         count = 0;
         for (vLight = backEnd.viewDef.viewLights; vLight != null; vLight = vLight.next) {
@@ -2191,7 +2055,7 @@ public class tr_rendertools {
         debugPolygon_s poly;
 
         if (rb_numDebugPolygons < MAX_DEBUG_POLYGONS) {
-            poly = rb_debugPolygons[ rb_numDebugPolygons++];
+            poly = rb_debugPolygons[rb_numDebugPolygons++];
             poly.rgb = color;
             poly.winding = winding;
             poly.depthTest = depthTest;
@@ -2260,15 +2124,6 @@ public class tr_rendertools {
         qglDepthRange(0, 1);
         GL_State(GLS_DEFAULT);
     }
-
-    /*
-     ================
-     RB_TestGamma
-     ================
-     */
-    static final int G_WIDTH = 512;
-    static final int G_HEIGHT = 512;
-    static final int BAR_HEIGHT = 64;
 
     public static void RB_TestGamma() {
         final byte[][][] image = new byte[G_HEIGHT][G_WIDTH][4];
@@ -2352,7 +2207,6 @@ public class tr_rendertools {
         qglEnable(GL_TEXTURE_2D);
         qglMatrixMode(GL_MODELVIEW);
     }
-
 
     /*
      ==================
@@ -2504,7 +2358,7 @@ public class tr_rendertools {
         RB_ShowLights();
         RB_ShowTextureVectors(drawSurfs, numDrawSurfs);
         RB_ShowDominantTris(drawSurfs, numDrawSurfs);
-        if (r_testGamma.GetInteger() > 0) {	// test here so stack check isn't so damn slow on debug builds
+        if (r_testGamma.GetInteger() > 0) {    // test here so stack check isn't so damn slow on debug builds
             RB_TestGamma();
         }
         if (r_testGammaBias.GetInteger() > 0) {
@@ -2530,5 +2384,43 @@ public class tr_rendertools {
         for (int i = 0; i < MAX_DEBUG_POLYGONS; i++) {
             rb_debugPolygons[i].winding.Clear();
         }
+    }
+
+    static class debugLine_s {
+
+        boolean depthTest;
+        idVec3 end;
+        int lifeTime;
+        idVec4 rgb;
+        idVec3 start;
+    }
+
+    public static class debugText_s {
+
+        int align;
+        idVec4 color;
+        boolean depthTest;
+        int lifeTime;
+        idVec3 origin;
+        float scale;
+        idStr text;
+        idMat3 viewAxis;
+
+        public debugText_s() {
+            text = new idStr();
+            origin = new idVec3();
+            color = new idVec4();
+            viewAxis = new idMat3();
+            scale = align = lifeTime = 0;
+            depthTest = false;
+        }
+    }
+
+    static class debugPolygon_s {
+
+        boolean depthTest;
+        int lifeTime;
+        idVec4 rgb;
+        idWinding winding = new idWinding();
     }
 }

@@ -1,6 +1,5 @@
 package neo.CM;
 
-import java.nio.ByteBuffer;
 import neo.CM.CollisionModel_local.cm_polygon_s;
 import neo.Renderer.Material.idMaterial;
 import neo.TempDump.SERiAL;
@@ -8,7 +7,6 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.idStr.parseStr;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.math.Matrix.idMat3;
@@ -16,10 +14,22 @@ import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec6;
 
+import java.nio.ByteBuffer;
+
+import static neo.idlib.Text.Str.idStr.parseStr;
+
 /**
  *
  */
 public class CollisionModel {
+
+    public static final float CM_BOX_EPSILON = 1.0f;         // should always be larger than clip epsilon
+
+    //
+//typedef int cmHandle_t;
+    public static final float CM_CLIP_EPSILON = 0.25f;        // always stay this distance away from any model
+
+    public static final float CM_MAX_TRACE_DIST = 4096.0f;      // maximum distance a trace model may be traced, point traces are unlimited
 
     /*
      ===============================================================================
@@ -45,25 +55,24 @@ public class CollisionModel {
         CONTACT_NONE, // no contact
         CONTACT_EDGE, // trace model edge hits model edge
         CONTACT_MODELVERTEX, // model vertex hits trace model polygon
-        CONTACT_TRMVERTEX	// trace model vertex hits model polygon
-    };
+        CONTACT_TRMVERTEX    // trace model vertex hits model polygon
+    }
 
     // contact info
     public static class contactInfo_t {
 
-        public contactType_t type;        // contact type
-        public idVec3        point;       // point of contact
-        public idVec3        normal;      // contact plane normal
-        public float         dist;        // contact plane distance
-        public int           contents;    // contents at other side of surface
-        public idMaterial    material;    // surface material
-        public int           modelFeature;// contact feature on model
-        public int           trmFeature;  // contact feature on trace model
-        public int           entityNum;   // entity the contact surface is a part of
-        public int           id;          // id of clip model the contact surface is part of
-
         private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        public int contents;    // contents at other side of surface
+        public float dist;        // contact plane distance
+        public int entityNum;   // entity the contact surface is a part of
+        public int id;          // id of clip model the contact surface is part of
+        public idMaterial material;    // surface material
+        public int modelFeature;// contact feature on model
+        public idVec3 normal;      // contact plane normal
+        public idVec3 point;       // point of contact
+        public int trmFeature;  // contact feature on trace model
+        public contactType_t type;        // contact type
 
         public contactInfo_t() {
             point = new idVec3();
@@ -84,15 +93,15 @@ public class CollisionModel {
             this.entityNum = c.entityNum;
             this.id = c.id;
         }
-    };
+    }
 
     // trace result
     public static class trace_s implements SERiAL {
 
-        public float         fraction;     // fraction of movement completed, 1.0 = didn't hit anything
-        public idVec3        endpos;       // final position of trace model
-        public idMat3        endAxis;      // final axis of trace model
         public contactInfo_t c;            // contact information, only valid if fraction < 1.0
+        public idMat3 endAxis;      // final axis of trace model
+        public idVec3 endpos;       // final position of trace model
+        public float fraction;     // fraction of movement completed, 1.0 = didn't hit anything
 
         public trace_s() {
             endpos = new idVec3();
@@ -127,12 +136,7 @@ public class CollisionModel {
             this.endAxis.oSet(s.endAxis);
             this.c = new contactInfo_t(s.c);
         }
-    };
-//
-//typedef int cmHandle_t;
-    public static final float CM_CLIP_EPSILON   = 0.25f;        // always stay this distance away from any model
-    public static final float CM_BOX_EPSILON    = 1.0f;         // should always be larger than clip epsilon
-    public static final float CM_MAX_TRACE_DIST = 4096.0f;      // maximum distance a trace model may be traced, point traces are unlimited
+    }
 
     public static abstract class idCollisionModelManager {
 
@@ -176,23 +180,23 @@ public class CollisionModel {
 
         // Translates a trace model and reports the first collision if any.
         public abstract void Translation(trace_s[] results, final idVec3 start, final idVec3 end,
-                final idTraceModel trm, final idMat3 trmAxis, int contentMask,
-                int model, final idVec3 modelOrigin, final idMat3 modelAxis);
+                                         final idTraceModel trm, final idMat3 trmAxis, int contentMask,
+                                         int model, final idVec3 modelOrigin, final idMat3 modelAxis);
 
         // Rotates a trace model and reports the first collision if any.
         public abstract void Rotation(trace_s[] results, final idVec3 start, final idRotation rotation,
-                final idTraceModel trm, final idMat3 trmAxis, int contentMask,
-                int model, final idVec3 modelOrigin, final idMat3 modelAxis);
+                                      final idTraceModel trm, final idMat3 trmAxis, int contentMask,
+                                      int model, final idVec3 modelOrigin, final idMat3 modelAxis);
 
         // Returns the contents touched by the trace model or 0 if the trace model is in free space.
         public abstract int Contents(final idVec3 start,
-                final idTraceModel trm, final idMat3 trmAxis, int contentMask,
-                int model, final idVec3 modelOrigin, final idMat3 modelAxis);
+                                     final idTraceModel trm, final idMat3 trmAxis, int contentMask,
+                                     int model, final idVec3 modelOrigin, final idMat3 modelAxis);
 
         // Stores all contact points of the trace model with the model, returns the number of contacts.
         public abstract int Contacts(contactInfo_t[] contacts, final int maxContacts, final idVec3 start, final idVec6 dir, final float depth,
-                final idTraceModel trm, final idMat3 trmAxis, int contentMask,
-                int model, final idVec3 modelOrigin, final idMat3 modelAxis);
+                                     final idTraceModel trm, final idMat3 trmAxis, int contentMask,
+                                     int model, final idVec3 modelOrigin, final idMat3 modelAxis);
 
         // Tests collision detection.
         public abstract void DebugOutput(final idVec3 origin);
@@ -210,5 +214,6 @@ public class CollisionModel {
         public abstract boolean WriteCollisionModelForMapEntity(final idMapEntity mapEnt, final String filename, final boolean testTraceModel/* = true*/);
 
         public abstract boolean WriteCollisionModelForMapEntity(final idMapEntity mapEnt, final String filename);
-    };
+    }
+
 }

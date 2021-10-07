@@ -1,49 +1,22 @@
 package neo.Game;
 
-import java.util.Scanner;
-import java.util.stream.Stream;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.Animation.Anim.AFJointModType_t;
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_AXIS;
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_BOTH;
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_ORIGIN;
 import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-
-import static neo.Game.GameEdit.*;
-import static neo.Game.GameSys.SysCvar.af_testSolid;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.impactInfo_s;
-import neo.Game.Physics.Physics_AF.idAFBody;
-import neo.Game.Physics.Physics_AF.idAFConstraint;
-import neo.Game.Physics.Physics_AF.idAFConstraint_BallAndSocketJoint;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Fixed;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Hinge;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Slider;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Spring;
-import neo.Game.Physics.Physics_AF.idAFConstraint_UniversalJoint;
-import neo.Game.Physics.Physics_AF.idPhysics_AF;
-import static neo.Renderer.Model.INVALID_JOINT;
+import neo.Game.Physics.Physics_AF.*;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.RenderWorld.renderEntity_s;
-import static neo.TempDump.NOT;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_AXIS;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_BOTH;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN;
 import neo.framework.DeclAF.getJointTransform_t;
 import neo.framework.DeclAF.idDeclAF;
 import neo.framework.DeclAF.idDeclAF_Body;
 import neo.framework.DeclAF.idDeclAF_Constraint;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
-import static neo.framework.DeclManager.declType_t.DECL_AF;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
@@ -54,18 +27,39 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.MS2SEC;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Scanner;
+import java.util.stream.Stream;
+
+import static neo.Game.Animation.Anim.AFJointModType_t.*;
+import static neo.Game.GameEdit.gameEdit;
+import static neo.Game.GameSys.SysCvar.af_testSolid;
+import static neo.Game.Game_local.MAX_GENTITIES;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.TempDump.NOT;
+import static neo.framework.DeclAF.declAFJointMod_t.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
+import static neo.framework.DeclManager.declType_t.DECL_AF;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class AF {
+
+    //
+    public static final String ARTICULATED_FIGURE_ANIM = "af_pose";
+
+    public static final float POSE_BOUNDS_EXPANSION = 5.0f;
 
     /*
      ===============================================================================
@@ -77,41 +71,40 @@ public class AF {
     public static class jointConversion_s {
 
         int bodyId;                       // id of the body
+        idMat3 jointBodyAxis;   // axis of body relative to joint
+        idVec3 jointBodyOrigin; // origin of body relative to joint
         int/*jointHandle_t*/ jointHandle; // handle of joint this body modifies
         AFJointModType_t jointMod;        // modify joint axis, origin or both
-        idVec3           jointBodyOrigin; // origin of body relative to joint
-        idMat3           jointBodyAxis;   // axis of body relative to joint
-    };
+    }
 
     public static class afTouch_s {
 
-        public idEntity    touchedEnt;
+        public idAFBody touchedByBody;
         public idClipModel touchedClipModel;
-        public idAFBody    touchedByBody;
-    };
-//    
-    public static final String ARTICULATED_FIGURE_ANIM = "af_pose";
-    public static final float  POSE_BOUNDS_EXPANSION   = 5.0f;
+        public idEntity touchedEnt;
+    }
 //
 
     public static class idAF {
 
-        protected idStr                     name;                // name of the loaded .af file
-        protected idPhysics_AF              physicsObj;          // articulated figure physics
-        protected idEntity                  self;                // entity using the animated model
-        protected idAnimator                animator;            // animator on entity
-        protected int                       modifiedAnim;        // anim to modify
-        protected idVec3                    baseOrigin;          // offset of base body relative to skeletal model origin
-        protected idMat3                    baseAxis;            // axis of base body relative to skeletal model origin
+        private static int DBG_LoadBody = 0;
+        protected idAnimator animator;            // animator on entity
+        protected idMat3 baseAxis;            // axis of base body relative to skeletal model origin
+        protected idVec3 baseOrigin;          // offset of base body relative to skeletal model origin
+        protected boolean hasBindConstraints;  // true if the bind constraints have been added
+        protected boolean isActive;            // true if the articulated figure physics is active
+        protected boolean isLoaded;            // true when the articulated figure is properly loaded
+        protected idList<Integer> jointBody;           // table to find the nearest articulated figure body for a joint of the skeletal model
         protected idList<jointConversion_s> jointMods;           // list with transforms from skeletal model joints to articulated figure bodies
-        protected idList<Integer>           jointBody;           // table to find the nearest articulated figure body for a joint of the skeletal model
-        protected int                       poseTime;            // last time the articulated figure was transformed to reflect the current animation pose
-        protected int                       restStartTime;       // time the articulated figure came to rest
-        protected boolean                   isLoaded;            // true when the articulated figure is properly loaded
-        protected boolean                   isActive;            // true if the articulated figure physics is active
-        protected boolean                   hasBindConstraints;  // true if the bind constraints have been added
+        protected int modifiedAnim;        // anim to modify
+        protected idStr name;                // name of the loaded .af file
+        protected idPhysics_AF physicsObj;          // articulated figure physics
+        protected int poseTime;            // last time the articulated figure was transformed to reflect the current animation pose
+        protected int restStartTime;       // time the articulated figure came to rest
         //
         //
+        protected idEntity self;                // entity using the animated model
+        // ~idAF( void );
 
         public idAF() {
             name = new idStr();
@@ -129,7 +122,6 @@ public class AF {
             isActive = false;
             hasBindConstraints = false;
         }
-        // ~idAF( void );
 
         public void Save(idSaveGame savefile) {
             savefile.WriteObject(self);
@@ -145,7 +137,7 @@ public class AF {
         }
 
         public void Restore(idRestoreGame savefile) {
-            savefile.ReadObject((idClass) self);
+            savefile.ReadObject(self);
             savefile.ReadString(name);
             hasBindConstraints = savefile.ReadBool();
             savefile.ReadVec3(baseOrigin);
@@ -311,8 +303,9 @@ public class AF {
             // check if each joint is contained by a body
             for (i = 0; i < animator.NumJoints(); i++) {
                 if (jointBody.oGet(i) == -1) {
+                    /*jointHandle_t*/
                     gameLocal.Warning("idAF::Load: articulated figure '%s' for entity '%s' at (%s) joint '%s' is not contained by a body",
-                            name, self.name, self.GetPhysics().GetOrigin().ToString(0), animator.GetJointName((int/*jointHandle_t*/) i));
+                            name, self.name, self.GetPhysics().GetOrigin().ToString(0), animator.GetJointName(i));
                 }
             }
 
@@ -338,7 +331,6 @@ public class AF {
         public String GetName() {
             return name.toString();
         }
-
 
         /*
          ================
@@ -391,7 +383,6 @@ public class AF {
                 physicsObj.UpdateClipModels();
             }
         }
-
 
         /*
          ================
@@ -481,9 +472,9 @@ public class AF {
                     }
 
                     if (gameLocal.clip.ContentsModel(body.GetWorldOrigin(), body.GetClipModel(), body.GetWorldAxis(), -1, cm.Handle(), cm.GetOrigin(), cm.GetAxis()) != 0) {
-                        touchList[ numTouching].touchedByBody = body;
-                        touchList[ numTouching].touchedClipModel = cm;
-                        touchList[ numTouching].touchedEnt = cm.GetEntity();
+                        touchList[numTouching].touchedByBody = body;
+                        touchList[numTouching].touchedClipModel = cm;
+                        touchList[numTouching].touchedEnt = cm.GetEntity();
                         numTouching++;
                         clipModels[j] = null;
                     }
@@ -913,7 +904,7 @@ public class AF {
 
             handle = animator.GetJointHandle(jointName);
             if (handle == INVALID_JOINT) {
-                gameLocal.Error("idAF for entity '%s' at (%s) modifies unknown joint '%s'", self.name, self.GetPhysics().GetOrigin().ToString(0), jointName);
+                Game_local.idGameLocal.Error("idAF for entity '%s' at (%s) modifies unknown joint '%s'", self.name, self.GetPhysics().GetOrigin().ToString(0), jointName);
             }
 
             assert (handle < animator.NumJoints());
@@ -926,14 +917,14 @@ public class AF {
             jointMods.oGet(index).bodyId = physicsObj.GetBodyId(body);
             jointMods.oGet(index).jointHandle = handle;
             jointMods.oGet(index).jointMod = mod;
-            
+
             jointMods.oGet(index).jointBodyOrigin = (body.GetWorldOrigin().oMinus(origin)).oMultiply(axis.Transpose());
             jointMods.oGet(index).jointBodyAxis = body.GetWorldAxis().oMultiply(axis.Transpose());
         }
 
-        private static int DBG_LoadBody = 0;
         protected boolean LoadBody(final idDeclAF_Body fb, final idJointMat[] joints) {
-            int id, i;DBG_LoadBody++;
+            int id, i;
+            DBG_LoadBody++;
             float length;
             float[] candleMass = {0};
             idTraceModel trm = new idTraceModel();
@@ -1049,8 +1040,9 @@ public class AF {
             animator.GetJointList(fb.containedJoints.toString(), jointList);
             for (i = 0; i < jointList.Num(); i++) {
                 if (jointBody.oGet(jointList.oGet(i)) != -1) {
+                    /*jointHandle_t*/
                     gameLocal.Warning("%s: joint '%s' is already contained by body '%s'",
-                            name, animator.GetJointName((int/*jointHandle_t*/) jointList.oGet(i)),
+                            name, animator.GetJointName(jointList.oGet(i)),
                             physicsObj.GetBody(jointBody.oGet(jointList.oGet(i))).GetName());
                 }
                 jointBody.oSet(jointList.oGet(i), id);
@@ -1237,7 +1229,7 @@ public class AF {
             }
             return solid;
         }
-    };
+    }
 
     /*
      ================
@@ -1271,5 +1263,6 @@ public class AF {
         public boolean run(Object model, idJointMat[] frame, idStr jointName, idVec3 origin, idMat3 axis) {
             return run(model, frame, jointName.toString(), origin, axis);
         }
-    };
+    }
+
 }

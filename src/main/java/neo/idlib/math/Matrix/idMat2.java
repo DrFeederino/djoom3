@@ -1,11 +1,13 @@
 package neo.idlib.math.Matrix;
 
-import java.util.Arrays;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Vector.idVec2;
+
+import java.util.Arrays;
+
 import static neo.idlib.math.Matrix.idMat0.MATRIX_EPSILON;
 import static neo.idlib.math.Matrix.idMat0.MATRIX_INVERSE_EPSILON;
-import neo.idlib.math.Vector.idVec2;
 
 /**
  * 1x1 is too complex, so we'll skip to 2x2.
@@ -17,22 +19,13 @@ import neo.idlib.math.Vector.idVec2;
 //===============================================================
 public class idMat2 {
 
-    private static final idMat2 mat2_zero = new idMat2(new idVec2(0, 0), new idVec2(0, 0));
     private static final idMat2 mat2_identity = new idMat2(new idVec2(1, 0), new idVec2(0, 1));
-
-    public static idMat2 getMat2_zero() {
-        return new idMat2(mat2_zero);
-    }
-
-    public static idMat2 getMat2_identity() {
-        return new idMat2(mat2_identity);
-    }   
-    
-
+    private static final idMat2 mat2_zero = new idMat2(new idVec2(0, 0), new idVec2(0, 0));
     private final idVec2[] mat = {new idVec2(), new idVec2()};
 
     public idMat2() {
     }
+
 
     public idMat2(final idVec2 x, final idVec2 y) {
         mat[0].x = x.x;
@@ -48,29 +41,37 @@ public class idMat2 {
         mat[1].y = yy;
     }
 
-    public idMat2(final float src[][]) {
+    public idMat2(final float[][] src) {
 //	memcpy( mat, src, 2 * 2 * sizeof( float ) );
         mat[0] = new idVec2(src[0][0], src[0][1]);
         mat[1] = new idVec2(src[1][0], src[1][1]);
     }
 
-    public idMat2(final idMat2 m){
+    public idMat2(final idMat2 m) {
         this(m.mat[0], m.mat[1]);
     }
 
-//public	const idVec2 &	operator[]( int index ) const;
+    public static idMat2 getMat2_zero() {
+        return new idMat2(mat2_zero);
+    }
+
+    public static idMat2 getMat2_identity() {
+        return new idMat2(mat2_identity);
+    }
+
+    //public	const idVec2 &	operator[]( int index ) const;
 //public	idVec2 &		operator[]( int index );
     public idVec2 oGet(int index) {
         return mat[index];
     }
 
-//public	idMat2			operator-() const;
+    //public	idMat2			operator-() const;
     public idMat2 oNegative() {
         return new idMat2(-mat[0].x, -mat[0].y,
                 -mat[1].x, -mat[1].y);
     }
 
-//public	idMat2			operator*( const float a ) const;
+    //public	idMat2			operator*( const float a ) const;
     public idMat2 oMultiply(final float a) {
         return new idMat2(
                 mat[0].x * a, mat[0].y * a,
@@ -150,25 +151,19 @@ public class idMat2 {
         return this;
     }
 
-//public	friend idMat2	operator*( const float a, const idMat2 &mat );
+    //public	friend idMat2	operator*( const float a, const idMat2 &mat );
 //public	friend idVec2	operator*( const idVec2 &vec, const idMat2 &mat );
 //public	friend idVec2 &	operator*=( idVec2 &vec, const idMat2 &mat );
 //public	bool			Compare( const idMat2 &a ) const;						// exact compare, no epsilon
     public boolean Compare(final idMat2 a) {// exact compare, no epsilon
-        if (mat[0].Compare(a.mat[0])
-                && mat[1].Compare(a.mat[1])) {
-            return true;
-        }
-        return false;
+        return mat[0].Compare(a.mat[0])
+                && mat[1].Compare(a.mat[1]);
     }
 //public	bool			Compare( const idMat2 &a, const float epsilon ) const;	// compare with epsilon
 
     public boolean Compare(final idMat2 a, final float epsilon) {// compare with epsilon
-        if (mat[0].Compare(a.mat[0], epsilon)
-                && mat[1].Compare(a.mat[1], epsilon)) {
-            return true;
-        }
-        return false;
+        return mat[0].Compare(a.mat[0], epsilon)
+                && mat[1].Compare(a.mat[1], epsilon);
     }
 //public	bool			operator==( const idMat2 &a ) const;					// exact compare, no epsilon
 //public	bool			operator!=( const idMat2 &a ) const;					// exact compare, no epsilon
@@ -189,10 +184,7 @@ public class idMat2 {
             return false;
         }
         final idMat2 other = (idMat2) obj;
-        if (!Arrays.deepEquals(this.mat, other.mat)) {
-            return false;
-        }
-        return true;
+        return Arrays.deepEquals(this.mat, other.mat);
     }
 
     public void Zero() {
@@ -226,11 +218,8 @@ public class idMat2 {
     }
 
     public boolean IsDiagonal(final float epsilon) {
-        if (idMath.Fabs(mat[0].y) > epsilon
-                || idMath.Fabs(mat[1].x) > epsilon) {
-            return false;
-        }
-        return true;
+        return !(idMath.Fabs(mat[0].y) > epsilon)
+                && !(idMath.Fabs(mat[1].x) > epsilon);
     }
 
     public float Trace() {
@@ -349,4 +338,4 @@ public class idMat2 {
         }
         return temp;
     }
-};
+}

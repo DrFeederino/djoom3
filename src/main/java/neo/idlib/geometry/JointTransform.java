@@ -1,11 +1,12 @@
 package neo.idlib.geometry;
 
-import java.util.Arrays;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.util.Arrays;
 
 /**
  *
@@ -33,7 +34,7 @@ public class JointTransform {
             this.q = new idQuat(quat.q);
             this.t = new idVec3(quat.t);
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -52,12 +53,11 @@ public class JointTransform {
     public static class idJointMat {
         public static final int SIZE = 12 * Float.BYTES;
         public static final int BYTES = SIZE / Byte.SIZE;
-
-        private final float[] mat = new float[3 * 4];
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        private final float[] mat = new float[3 * 4];
 
         public idJointMat() {
             int a = 0;
@@ -226,10 +226,7 @@ public class JointTransform {
                 return false;
             }
             final idJointMat other = (idJointMat) obj;
-            if (!Arrays.equals(this.mat, other.mat)) {
-                return false;
-            }
-            return true;
+            return Arrays.equals(this.mat, other.mat);
         }
 
         public idMat3 ToMat3() {
@@ -301,5 +298,6 @@ public class JointTransform {
         public float[] ToFloatPtr() {
             return mat;
         }
-    };
+    }
+
 }

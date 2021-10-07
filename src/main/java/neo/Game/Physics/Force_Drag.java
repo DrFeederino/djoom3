@@ -3,14 +3,15 @@ package neo.Game.Physics;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force.idForce;
 import neo.Game.Physics.Physics.idPhysics;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
-import static neo.idlib.math.Math_h.MS2SEC;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
+import neo.idlib.math.Vector.idVec3;
+
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.idlib.math.Math_h.MS2SEC;
 import static neo.idlib.math.Vector.RAD2DEG;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -29,12 +30,12 @@ public class Force_Drag {
 
         // properties
         private float damping;
+        private idVec3 dragPosition;    // drag towards this position
+        private int id;            // clip model id of physics object
+        private idVec3 p;        // position on clip model
         //
         // positioning
-        private idPhysics physics;	// physics object
-        private int id;			// clip model id of physics object
-        private idVec3 p;		// position on clip model
-        private idVec3 dragPosition;	// drag towards this position
+        private idPhysics physics;    // physics object
         //
         //
 
@@ -119,5 +120,6 @@ public class Force_Drag {
                 physics = null;
             }
         }
-    };
+    }
+
 }

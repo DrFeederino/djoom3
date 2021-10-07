@@ -1,55 +1,35 @@
 package neo.Renderer;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
-import static neo.Renderer.RenderSystem.R_AddDrawViewCmd;
-import static neo.Renderer.RenderSystem.R_ClearCommandChain;
-import static neo.Renderer.RenderSystem_init.r_jitter;
-import static neo.Renderer.RenderSystem_init.r_subviewOnly;
-import static neo.Renderer.RenderSystem_init.r_useCulling;
-import static neo.Renderer.RenderSystem_init.r_useDepthBoundsTest;
-import static neo.Renderer.RenderSystem_init.r_useFrustumFarDistance;
-import static neo.Renderer.RenderSystem_init.r_znear;
 import neo.Renderer.RenderWorld_local.idRenderWorldLocal;
-import static neo.Renderer.tr_light.R_AddLightSurfaces;
-import static neo.Renderer.tr_light.R_AddModelSurfaces;
-import static neo.Renderer.tr_light.R_RemoveUnecessaryViewLights;
-import neo.Renderer.tr_local.drawSurf_s;
-import static neo.Renderer.tr_local.frameData;
-import neo.Renderer.tr_local.frameData_t;
-import neo.Renderer.tr_local.frameMemoryBlock_s;
-import neo.Renderer.tr_local.idScreenRect;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewDef_s;
-import neo.Renderer.tr_local.viewEntity_s;
-import neo.Renderer.tr_local.viewLight_s;
-import static neo.Renderer.tr_trisurf.R_FreeDeferredTriSurfs;
+import neo.Renderer.tr_local.*;
 import neo.TempDump.TODO_Exception;
-import static neo.framework.Common.common;
-import static neo.framework.Session.session;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.MAX_WORLD_SIZE;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorMagenta;
-import static neo.idlib.Lib.colorPurple;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.colorYellow;
 import neo.idlib.containers.List.cmp_t;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Random.idRandom;
-import static neo.idlib.math.Vector.DotProduct;
-import static neo.idlib.math.Vector.VectorSubtract;
 import neo.idlib.math.Vector.idVec;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.FloatBuffer;
+import java.util.Arrays;
+
+import static neo.Renderer.RenderSystem.R_AddDrawViewCmd;
+import static neo.Renderer.RenderSystem.R_ClearCommandChain;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.tr_light.*;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_trisurf.R_FreeDeferredTriSurfs;
+import static neo.framework.Common.common;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.*;
+import static neo.idlib.math.Math_h.DEG2RAD;
+import static neo.idlib.math.Vector.DotProduct;
+import static neo.idlib.math.Vector.VectorSubtract;
 
 /**
  *
@@ -57,6 +37,57 @@ import neo.idlib.math.Vector.idVec4;
 public class tr_main {
 
     //====================================================================
+
+    //=====================================================
+    static final int MEMORY_BLOCK_SIZE = 0x100000;
+    /*
+     ======================
+     R_ShowColoredScreenRect
+     ======================
+     */
+    final static idVec4[] colors/*[]*/ = {colorRed, colorGreen, colorBlue, colorYellow, colorMagenta, colorCyan, colorWhite, colorPurple};
+    /*
+     =================
+     R_SetViewMatrix
+
+     Sets up the world to view matrix for a given viewParm
+     =================
+     */
+    private static final float[] s_flipMatrix/*[16]*/ = {
+            // convert from our coordinate system (looking down X)
+            // to OpenGL's coordinate system (looking down -Z)
+            -0, 0, -1, 0,
+            -1, 0, -0, 0,
+            -0, 1, -0, 0,
+            -0, 0, -0, 1
+    };
+    /*
+     ================
+     R_RenderView
+
+     A view may be either the actual camera view,
+     a mirror / remote location, or a 3D view on a gui surface.
+
+     Parms will typically be allocated with R_FrameAlloc
+     ================
+     */ static int DEBUG_R_RenderView = 0;
+    /*
+     =================
+     R_CornerCullLocalBox
+
+     Tests all corners against the frustum.
+     Can still generate a few false positives when the box is outside a corner.
+     Returns true if the box is outside the given global frustum, (positive sides are out)
+     =================
+     */    private static int DBG_R_CornerCullLocalBox = 0;
+    /*
+     ===============
+     R_SetupProjection
+
+     This uses the "infinite far z" trick
+     ===============
+     */
+    private static idRandom random;
 
     /*
      ======================
@@ -81,13 +112,6 @@ public class tr_main {
 
         return screenRect;
     }
-
-    /*
-     ======================
-     R_ShowColoredScreenRect
-     ======================
-     */
-    final static idVec4[] colors/*[]*/ = {colorRed, colorGreen, colorBlue, colorYellow, colorMagenta, colorCyan, colorWhite, colorPurple};
 
     public static void R_ShowColoredScreenRect(final idScreenRect rect, int colorIndex) {
         if (!rect.IsEmpty()) {
@@ -125,8 +149,6 @@ public class tr_main {
 
         R_ClearCommandChain();
     }
-//=====================================================
-    static final int MEMORY_BLOCK_SIZE = 0x100000;
 
     /*
      =====================
@@ -244,7 +266,7 @@ public class tr_main {
 
         for (int a = 0; a < length; a++) {
             try {
-                array[a] = (T) clazz.getConstructor().newInstance();
+                array[a] = clazz.getConstructor().newInstance();
             } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new TODO_Exception();
 //                Logger.getLogger(tr_main.class.getName()).log(Level.SEVERE, null, ex);
@@ -355,7 +377,6 @@ public class tr_main {
         throw new UnsupportedOperationException();
     }
 
-
     /*
      ==================
      R_FrameFree
@@ -371,25 +392,25 @@ public class tr_main {
     public static void R_FrameFree(Object data) {
     }
 
-//==========================================================================
+    //==========================================================================
     public static void R_AxisToModelMatrix(final idMat3 axis, final idVec3 origin, float[] modelMatrix/*[16]*/) {
-        modelMatrix[ 0] = axis.oGet(0, 0);
-        modelMatrix[ 4] = axis.oGet(1, 0);
-        modelMatrix[ 8] = axis.oGet(2, 0);
+        modelMatrix[0] = axis.oGet(0, 0);
+        modelMatrix[4] = axis.oGet(1, 0);
+        modelMatrix[8] = axis.oGet(2, 0);
         modelMatrix[12] = origin.oGet(0);
 
-        modelMatrix[ 1] = axis.oGet(0, 1);
-        modelMatrix[ 5] = axis.oGet(1, 1);
-        modelMatrix[ 9] = axis.oGet(2, 1);
+        modelMatrix[1] = axis.oGet(0, 1);
+        modelMatrix[5] = axis.oGet(1, 1);
+        modelMatrix[9] = axis.oGet(2, 1);
         modelMatrix[13] = origin.oGet(1);
 
-        modelMatrix[ 2] = axis.oGet(0, 2);
-        modelMatrix[ 6] = axis.oGet(1, 2);
+        modelMatrix[2] = axis.oGet(0, 2);
+        modelMatrix[6] = axis.oGet(1, 2);
         modelMatrix[10] = axis.oGet(2, 2);
         modelMatrix[14] = origin.oGet(2);
 
-        modelMatrix[ 3] = 0;
-        modelMatrix[ 7] = 0;
+        modelMatrix[3] = 0;
+        modelMatrix[7] = 0;
         modelMatrix[11] = 0;
         modelMatrix[15] = 1;
     }
@@ -426,8 +447,8 @@ public class tr_main {
 // }else
         {
             out = new idVec3(
-                    (in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[ 8] + modelMatrix[12]),
-                    (in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[ 9] + modelMatrix[13]),
+                    (in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[8] + modelMatrix[12]),
+                    (in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[9] + modelMatrix[13]),
                     (in.oGet(0) * modelMatrix[2] + in.oGet(1) * modelMatrix[6] + in.oGet(2) * modelMatrix[10] + modelMatrix[14])
             );
         }
@@ -435,8 +456,8 @@ public class tr_main {
     }
 
     public static void R_PointTimesMatrix(final float[] modelMatrix/*[16]*/, final idVec4 in, idVec4 out) {
-        out.oSet(0, in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[ 8] + modelMatrix[12]);
-        out.oSet(1, in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[ 9] + modelMatrix[13]);
+        out.oSet(0, in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[8] + modelMatrix[12]);
+        out.oSet(1, in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[9] + modelMatrix[13]);
         out.oSet(2, in.oGet(0) * modelMatrix[2] + in.oGet(1) * modelMatrix[6] + in.oGet(2) * modelMatrix[10] + modelMatrix[14]);
         out.oSet(3, in.oGet(0) * modelMatrix[3] + in.oGet(1) * modelMatrix[7] + in.oGet(2) * modelMatrix[11] + modelMatrix[15]);
     }
@@ -472,8 +493,8 @@ public class tr_main {
     }
 
     public static void R_LocalVectorToGlobal(final float[] modelMatrix/*[16]*/, final idVec3 in, idVec3 out) {
-        out.oSet(0, in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[ 8]);
-        out.oSet(1, in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[ 9]);
+        out.oSet(0, in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[8]);
+        out.oSet(1, in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[9]);
         out.oSet(2, in.oGet(0) * modelMatrix[2] + in.oGet(1) * modelMatrix[6] + in.oGet(2) * modelMatrix[10]);
     }
 
@@ -508,10 +529,10 @@ public class tr_main {
         clip_w = src_z * projectionMatrix[3 + 2 * 4] + projectionMatrix[3 + 3 * 4];
 
         if (clip_w <= 0.0f) {
-            dst_z[0] = 0.0f;					// clamp to near plane
+            dst_z[0] = 0.0f;                    // clamp to near plane
         } else {
             dst_z[0] = clip_z / clip_w;
-            dst_z[0] = dst_z[0] * 0.5f + 0.5f;	// convert to window coords
+            dst_z[0] = dst_z[0] * 0.5f + 0.5f;    // convert to window coords
         }
     }
 
@@ -539,35 +560,26 @@ public class tr_main {
 
         worldOrigin = R_LocalPointToGlobal(modelMatrix, localOrigin);
 
-        worldRadius = (bounds.oGet(0).oMinus(localOrigin)).Length();	// FIXME: won't be correct for scaled objects
+        worldRadius = (bounds.oGet(0).oMinus(localOrigin)).Length();    // FIXME: won't be correct for scaled objects
 
         for (i = 0; i < numPlanes; i++) {
             frust = planes[i];
             d = frust.Distance(worldOrigin);
-            if (d > worldRadius) {                
-                return true;	// culled
+            if (d > worldRadius) {
+                return true;    // culled
             }
         }
 
-        return false;		// not culled
+        return false;        // not culled
     }
 
-    /*
-     =================
-     R_CornerCullLocalBox
-
-     Tests all corners against the frustum.
-     Can still generate a few false positives when the box is outside a corner.
-     Returns true if the box is outside the given global frustum, (positive sides are out)
-     =================
-     */    private static int DBG_R_CornerCullLocalBox = 0;
     public static boolean R_CornerCullLocalBox(final idBounds bounds, final float[] modelMatrix/*[16]*/, int numPlanes, final idPlane[] planes) {
         int i, j;
         idVec3[] transformed = idVec3.generateArray(8);
         float[] dists = new float[8];
         idVec3 v = new idVec3();
         idPlane frust;
-        
+
         DBG_R_CornerCullLocalBox++;
 
         // we can disable box culling for experimental timing purposes
@@ -610,7 +622,7 @@ public class tr_main {
 
         tr.pc.c_box_cull_in++;
 
-        return false;		// not culled
+        return false;        // not culled
     }
 
     /*
@@ -639,17 +651,17 @@ public class tr_main {
         for (i = 0; i < 4; i++) {
             eye.oSet(i,
                     src.oGet(0) * modelMatrix[i + 0 * 4]
-                    + src.oGet(1) * modelMatrix[i + 1 * 4]
-                    + src.oGet(2) * modelMatrix[i + 2 * 4]
-                    + 1 * modelMatrix[i + 3 * 4]);
+                            + src.oGet(1) * modelMatrix[i + 1 * 4]
+                            + src.oGet(2) * modelMatrix[i + 2 * 4]
+                            + 1 * modelMatrix[i + 3 * 4]);
         }
 
         for (i = 0; i < 4; i++) {
             dst.oSet(i,
                     eye.oGet(0) * projectionMatrix[i + 0 * 4]
-                    + eye.oGet(1) * projectionMatrix[i + 1 * 4]
-                    + eye.oGet(2) * projectionMatrix[i + 2 * 4]
-                    + eye.oGet(3) * projectionMatrix[i + 3 * 4]);
+                            + eye.oGet(1) * projectionMatrix[i + 1 * 4]
+                            + eye.oGet(2) * projectionMatrix[i + 2 * 4]
+                            + eye.oGet(3) * projectionMatrix[i + 3 * 4]);
         }
     }
 
@@ -671,17 +683,17 @@ public class tr_main {
             for (i = 0; i < 4; i++) {
                 view.oSet(i,
                         global.oGet(0) * tr.primaryView.worldSpace.modelViewMatrix[i + 0 * 4]
-                        + global.oGet(1) * tr.primaryView.worldSpace.modelViewMatrix[i + 1 * 4]
-                        + global.oGet(2) * tr.primaryView.worldSpace.modelViewMatrix[i + 2 * 4]
-                        + tr.primaryView.worldSpace.modelViewMatrix[i + 3 * 4]);
+                                + global.oGet(1) * tr.primaryView.worldSpace.modelViewMatrix[i + 1 * 4]
+                                + global.oGet(2) * tr.primaryView.worldSpace.modelViewMatrix[i + 2 * 4]
+                                + tr.primaryView.worldSpace.modelViewMatrix[i + 3 * 4]);
             }
 
             for (i = 0; i < 4; i++) {
                 clip.oSet(i,
                         view.oGet(0) * tr.primaryView.projectionMatrix[i + 0 * 4]
-                        + view.oGet(1) * tr.primaryView.projectionMatrix[i + 1 * 4]
-                        + view.oGet(2) * tr.primaryView.projectionMatrix[i + 2 * 4]
-                        + view.oGet(3) * tr.primaryView.projectionMatrix[i + 3 * 4]);
+                                + view.oGet(1) * tr.primaryView.projectionMatrix[i + 1 * 4]
+                                + view.oGet(2) * tr.primaryView.projectionMatrix[i + 2 * 4]
+                                + view.oGet(3) * tr.primaryView.projectionMatrix[i + 3 * 4]);
             }
 
         } else {
@@ -689,17 +701,17 @@ public class tr_main {
             for (i = 0; i < 4; i++) {
                 view.oSet(i,
                         global.oGet(0) * tr.viewDef.worldSpace.modelViewMatrix[i + 0 * 4]
-                        + global.oGet(1) * tr.viewDef.worldSpace.modelViewMatrix[i + 1 * 4]
-                        + global.oGet(2) * tr.viewDef.worldSpace.modelViewMatrix[i + 2 * 4]
-                        + tr.viewDef.worldSpace.modelViewMatrix[i + 3 * 4]);
+                                + global.oGet(1) * tr.viewDef.worldSpace.modelViewMatrix[i + 1 * 4]
+                                + global.oGet(2) * tr.viewDef.worldSpace.modelViewMatrix[i + 2 * 4]
+                                + tr.viewDef.worldSpace.modelViewMatrix[i + 3 * 4]);
             }
 
             for (i = 0; i < 4; i++) {
                 clip.oSet(i,
                         view.oGet(0) * tr.viewDef.projectionMatrix[i + 0 * 4]
-                        + view.oGet(1) * tr.viewDef.projectionMatrix[i + 1 * 4]
-                        + view.oGet(2) * tr.viewDef.projectionMatrix[i + 2 * 4]
-                        + view.oGet(3) * tr.viewDef.projectionMatrix[i + 3 * 4]);
+                                + view.oGet(1) * tr.viewDef.projectionMatrix[i + 1 * 4]
+                                + view.oGet(2) * tr.viewDef.projectionMatrix[i + 2 * 4]
+                                + view.oGet(3) * tr.viewDef.projectionMatrix[i + 3 * 4]);
             }
 
         }
@@ -775,22 +787,6 @@ public class tr_main {
         }
     }
 
-    /*
-     =================
-     R_SetViewMatrix
-
-     Sets up the world to view matrix for a given viewParm
-     =================
-     */
-    private static final float[] s_flipMatrix/*[16]*/ = {
-                // convert from our coordinate system (looking down X)
-                // to OpenGL's coordinate system (looking down -Z)
-                -0, 0, -1, 0,
-                -1, 0, -0, 0,
-                -0, 1, -0, 0,
-                -0, 0, -0, 1
-            };
-
     public static void R_SetViewMatrix(viewDef_s viewDef) {
         idVec3 origin;
         viewEntity_s world;
@@ -806,23 +802,23 @@ public class tr_main {
         // transform by the camera placement
         origin = viewDef.renderView.vieworg;
 
-        viewerMatrix[ 0] = viewDef.renderView.viewaxis.oGet(0, 0);
-        viewerMatrix[ 4] = viewDef.renderView.viewaxis.oGet(0, 1);
-        viewerMatrix[ 8] = viewDef.renderView.viewaxis.oGet(0, 2);
+        viewerMatrix[0] = viewDef.renderView.viewaxis.oGet(0, 0);
+        viewerMatrix[4] = viewDef.renderView.viewaxis.oGet(0, 1);
+        viewerMatrix[8] = viewDef.renderView.viewaxis.oGet(0, 2);
         viewerMatrix[12] = -origin.oGet(0) * viewerMatrix[0] + -origin.oGet(1) * viewerMatrix[4] + -origin.oGet(2) * viewerMatrix[8];
 
-        viewerMatrix[ 1] = viewDef.renderView.viewaxis.oGet(1, 0);
-        viewerMatrix[ 5] = viewDef.renderView.viewaxis.oGet(1, 1);
-        viewerMatrix[ 9] = viewDef.renderView.viewaxis.oGet(1, 2);
+        viewerMatrix[1] = viewDef.renderView.viewaxis.oGet(1, 0);
+        viewerMatrix[5] = viewDef.renderView.viewaxis.oGet(1, 1);
+        viewerMatrix[9] = viewDef.renderView.viewaxis.oGet(1, 2);
         viewerMatrix[13] = -origin.oGet(0) * viewerMatrix[1] + -origin.oGet(1) * viewerMatrix[5] + -origin.oGet(2) * viewerMatrix[9];
 
-        viewerMatrix[ 2] = viewDef.renderView.viewaxis.oGet(2, 0);
-        viewerMatrix[ 6] = viewDef.renderView.viewaxis.oGet(2, 1);
+        viewerMatrix[2] = viewDef.renderView.viewaxis.oGet(2, 0);
+        viewerMatrix[6] = viewDef.renderView.viewaxis.oGet(2, 1);
         viewerMatrix[10] = viewDef.renderView.viewaxis.oGet(2, 2);
         viewerMatrix[14] = -origin.oGet(0) * viewerMatrix[2] + -origin.oGet(1) * viewerMatrix[6] + -origin.oGet(2) * viewerMatrix[10];
 
-        viewerMatrix[ 3] = 0;
-        viewerMatrix[ 7] = 0;
+        viewerMatrix[3] = 0;
+        viewerMatrix[7] = 0;
         viewerMatrix[11] = 0;
         viewerMatrix[15] = 1;
 
@@ -830,14 +826,6 @@ public class tr_main {
         // to OpenGL's coordinate system (looking down -Z)
         myGlMultMatrix(viewerMatrix, s_flipMatrix, world.modelViewMatrix);
     }
-    /*
-     ===============
-     R_SetupProjection
-
-     This uses the "infinite far z" trick
-     ===============
-     */
-    private static idRandom random;
 
     public static void R_SetupProjection() {
         float xmin, xmax, ymin, ymax;
@@ -879,26 +867,26 @@ public class tr_main {
         ymin += jittery;
         ymax += jittery;
 
-        tr.viewDef.projectionMatrix[ 0] = 2 * zNear / width;
-        tr.viewDef.projectionMatrix[ 4] = 0;
-        tr.viewDef.projectionMatrix[ 8] = (xmax + xmin) / width;	// normally 0
+        tr.viewDef.projectionMatrix[0] = 2 * zNear / width;
+        tr.viewDef.projectionMatrix[4] = 0;
+        tr.viewDef.projectionMatrix[8] = (xmax + xmin) / width;    // normally 0
         tr.viewDef.projectionMatrix[12] = 0;
 
-        tr.viewDef.projectionMatrix[ 1] = 0;
-        tr.viewDef.projectionMatrix[ 5] = 2 * zNear / height;
-        tr.viewDef.projectionMatrix[ 9] = (ymax + ymin) / height;	// normally 0
+        tr.viewDef.projectionMatrix[1] = 0;
+        tr.viewDef.projectionMatrix[5] = 2 * zNear / height;
+        tr.viewDef.projectionMatrix[9] = (ymax + ymin) / height;    // normally 0
         tr.viewDef.projectionMatrix[13] = 0;
 
         // this is the far-plane-at-infinity formulation, and
         // crunches the Z range slightly so w=0 vertexes do not
         // rasterize right at the wraparound point
-        tr.viewDef.projectionMatrix[ 2] = 0;
-        tr.viewDef.projectionMatrix[ 6] = 0;
+        tr.viewDef.projectionMatrix[2] = 0;
+        tr.viewDef.projectionMatrix[6] = 0;
         tr.viewDef.projectionMatrix[10] = -0.999f;
         tr.viewDef.projectionMatrix[14] = -2.0f * zNear;
 
-        tr.viewDef.projectionMatrix[ 3] = 0;
-        tr.viewDef.projectionMatrix[ 7] = 0;
+        tr.viewDef.projectionMatrix[3] = 0;
+        tr.viewDef.projectionMatrix[7] = 0;
         tr.viewDef.projectionMatrix[11] = -1;
         tr.viewDef.projectionMatrix[15] = 0;
     }
@@ -916,13 +904,13 @@ public class tr_main {
         float[] xs = {0.0f}, xc = {0.00f};
         float ang;
 
-        ang = (float) (DEG2RAD(tr.viewDef.renderView.fov_x) * 0.5f);
+        ang = DEG2RAD(tr.viewDef.renderView.fov_x) * 0.5f;
         idMath.SinCos(ang, xs, xc);
 
         tr.viewDef.frustum[0].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oPlus(tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc[0])));
         tr.viewDef.frustum[1].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oMinus(tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc[0])));
 
-        ang = (float) (DEG2RAD(tr.viewDef.renderView.fov_y) * 0.5f);
+        ang = DEG2RAD(tr.viewDef.renderView.fov_y) * 0.5f;
         idMath.SinCos(ang, xs, xc);
 
         tr.viewDef.frustum[2].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oPlus(tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc[0])));
@@ -953,7 +941,6 @@ public class tr_main {
         tr.viewDef.viewFrustum.SetSize(dNear, dFar, dLeft, dUp);
     }
 
-
     /*
      ===================
      R_ConstrainViewFrustum
@@ -976,39 +963,6 @@ public class tr_main {
             tr.viewDef.viewFrustum.MoveFarDistance(r_useFrustumFarDistance.GetFloat());
         }
     }
-
-    /*
-     ==========================================================================================
-
-     DRAWSURF SORTING
-
-     ==========================================================================================
-     */
-    /*
-     =======================
-     R_QsortSurfaces
-
-     =======================
-     */
-    public static class R_QsortSurfaces implements cmp_t<drawSurf_s> {
-
-        @Override
-        public int compare(drawSurf_s a, drawSurf_s b) {
-
-            //this check assumes that the array contains nothing but nulls from this point.
-            if (null == a && null == b) {
-                return 0;
-            }
-
-            if (null == b || (null != a && a.sort < b.sort)) {
-                return -1;
-            }
-            if (null == a || (null != b && a.sort > b.sort)) {
-                return 1;
-            }
-            return 0;
-        }
-    };
 
     /*
      =================
@@ -1044,17 +998,6 @@ public class tr_main {
 //    
 //==============================================================================
 
-    /*
-     ================
-     R_RenderView
-
-     A view may be either the actual camera view,
-     a mirror / remote location, or a 3D view on a gui surface.
-
-     Parms will typically be allocated with R_FrameAlloc
-     ================
-     */ static int DEBUG_R_RenderView = 0;
-
     static void R_RenderView(viewDef_s parms) {
         viewDef_s oldView;
         DEBUG_R_RenderView++;
@@ -1087,7 +1030,7 @@ public class tr_main {
         // identify all the visible portalAreas, and the entityDefs and
         // lightDefs that are in them and pass culling.
 //	static_cast<idRenderWorldLocal *>(parms.renderWorld).FindViewLightsAndEntities();
-        ((idRenderWorldLocal) parms.renderWorld).FindViewLightsAndEntities();
+        parms.renderWorld.FindViewLightsAndEntities();
 
         // constrain the view frustum to the view lights and entities
         R_ConstrainViewFrustum();
@@ -1119,7 +1062,7 @@ public class tr_main {
         // write everything needed to the demo file
         if (session.writeDemo != null) {
 //		static_cast<idRenderWorldLocal *>(parms.renderWorld)->WriteVisibleDefs( tr.viewDef );
-            ((idRenderWorldLocal) parms.renderWorld).WriteVisibleDefs(tr.viewDef);
+            parms.renderWorld.WriteVisibleDefs(tr.viewDef);
         }
 
         // add the rendering commands for this viewDef
@@ -1127,5 +1070,38 @@ public class tr_main {
 
         // restore view in case we are a subview
         tr.viewDef = oldView;
+    }
+
+    /*
+     ==========================================================================================
+
+     DRAWSURF SORTING
+
+     ==========================================================================================
+     */
+    /*
+     =======================
+     R_QsortSurfaces
+
+     =======================
+     */
+    public static class R_QsortSurfaces implements cmp_t<drawSurf_s> {
+
+        @Override
+        public int compare(drawSurf_s a, drawSurf_s b) {
+
+            //this check assumes that the array contains nothing but nulls from this point.
+            if (null == a && null == b) {
+                return 0;
+            }
+
+            if (null == b || (null != a && a.sort < b.sort)) {
+                return -1;
+            }
+            if (null == a || (null != b && a.sort > b.sort)) {
+                return 1;
+            }
+            return 0;
+        }
     }
 }

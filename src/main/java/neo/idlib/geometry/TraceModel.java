@@ -1,35 +1,31 @@
 package neo.idlib.geometry;
 
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.Lib.idLib;
+import neo.idlib.geometry.Winding.idWinding;
+import neo.idlib.math.Math_h.*;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
-import neo.idlib.BV.Bounds.idBounds;
-import neo.idlib.Lib.idLib;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_BONE;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_BOX;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_CONE;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_CUSTOM;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_CYLINDER;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_DODECAHEDRON;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_INVALID;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_OCTAHEDRON;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_POLYGON;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_POLYGONVOLUME;
-import neo.idlib.geometry.Winding.idWinding;
-import static neo.idlib.math.Math_h.Cube;
-import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.INTSIGNBITSET;
-import static neo.idlib.math.Math_h.Square;
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Matrix.idMat3;
+
+import static neo.idlib.geometry.TraceModel.traceModel_t.*;
+import static neo.idlib.math.Math_h.*;
 import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
  */
 public class TraceModel {
 
+    public static final int MAX_TRACEMODEL_EDGES = 32;
+
+    public static final int MAX_TRACEMODEL_POLYEDGES = 16;
+    public static final int MAX_TRACEMODEL_POLYS = 16;
+    // these are bit cache limits
+    public static final int MAX_TRACEMODEL_VERTS = 32;
     /*
      ===============================================================================
 
@@ -53,41 +49,36 @@ public class TraceModel {
         TRM_BONE, // two tetrahedrons attached to each other
         TRM_POLYGON, // arbitrary convex polygon
         TRM_POLYGONVOLUME, // volume for arbitrary convex polygon
-        TRM_CUSTOM			// loaded from map model or ASE/LWO
-    };
-// these are bit cache limits
-    public static final int MAX_TRACEMODEL_VERTS = 32;
-    public static final int MAX_TRACEMODEL_EDGES = 32;
-    public static final int MAX_TRACEMODEL_POLYS = 16;
-    public static final int MAX_TRACEMODEL_POLYEDGES = 16;
+        TRM_CUSTOM            // loaded from map model or ASE/LWO
+    }
 
     public static class traceModelVert_t extends idVec3 {
     }
 
     public static class traceModelEdge_t {
 
-        public int[] v;
         public idVec3 normal;
+        public int[] v;
 
         public traceModelEdge_t() {
             this.v = new int[2];
             normal = new idVec3();
         }
 
-        public void oSet(final traceModelEdge_t t){
+        public void oSet(final traceModelEdge_t t) {
             this.v[0] = t.v[0];
             this.v[1] = t.v[1];
             this.normal.oSet(t.normal);
         }
-    };
+    }
 
     public static class traceModelPoly_t {
 
-        public idVec3   normal;
-        public float    dist;
         public idBounds bounds;
-        public int      numEdges;
-        public int[]    edges;
+        public float dist;
+        public int[] edges;
+        public idVec3 normal;
+        public int numEdges;
 
         public traceModelPoly_t() {
             normal = new idVec3();
@@ -102,20 +93,22 @@ public class TraceModel {
             this.numEdges = t.numEdges;
             System.arraycopy(t.edges, 0, this.edges, 0, MAX_TRACEMODEL_POLYEDGES);
         }
-    };
+    }
 
     public static class idTraceModel {
-        public traceModel_t       type;
-        public int                numVerts;
-        public traceModelVert_t[] verts = Stream.generate(traceModelVert_t::new).limit(MAX_TRACEMODEL_VERTS).toArray(traceModelVert_t[]::new);
-        public int                numEdges;
+        static final float SHARP_EDGE_DOT = -0.7f;
+        private static int DBG_GetMassProperties = 0;
+        public idBounds bounds;            // bounds of model
         public traceModelEdge_t[] edges = Stream.generate(traceModelEdge_t::new).limit(MAX_TRACEMODEL_EDGES + 1).toArray(traceModelEdge_t[]::new);
-        public int                numPolys;
+        public boolean isConvex;          // true when model is convex
+        public int numEdges;
+        public int numPolys;
+        public int numVerts;
+        public idVec3 offset;            // offset to center of model
         public traceModelPoly_t[] polys = Stream.generate(traceModelPoly_t::new).limit(MAX_TRACEMODEL_POLYS).toArray(traceModelPoly_t[]::new);
-        public idVec3             offset;            // offset to center of model
-        public idBounds           bounds;            // bounds of model
-        public boolean            isConvex;          // true when model is convex
 //
+        public traceModel_t type;
+        public traceModelVert_t[] verts = Stream.generate(traceModelVert_t::new).limit(MAX_TRACEMODEL_VERTS).toArray(traceModelVert_t[]::new);
 
         public idTraceModel() {
             type = TRM_INVALID;
@@ -289,16 +282,16 @@ public class TraceModel {
             offset = dodBounds.oGet(0).oPlus(dodBounds.oGet(1)).oMultiply(0.5f);
 
             // set vertices
-            verts[ 0].Set(offset.x + a.oGet(0), offset.y + a.oGet(1), offset.z + a.oGet(2));
-            verts[ 1].Set(offset.x + a.oGet(0), offset.y + a.oGet(1), offset.z - a.oGet(2));
-            verts[ 2].Set(offset.x + a.oGet(0), offset.y - a.oGet(1), offset.z + a.oGet(2));
-            verts[ 3].Set(offset.x + a.oGet(0), offset.y - a.oGet(1), offset.z - a.oGet(2));
-            verts[ 4].Set(offset.x - a.oGet(0), offset.y + a.oGet(1), offset.z + a.oGet(2));
-            verts[ 5].Set(offset.x - a.oGet(0), offset.y + a.oGet(1), offset.z - a.oGet(2));
-            verts[ 6].Set(offset.x - a.oGet(0), offset.y - a.oGet(1), offset.z + a.oGet(2));
-            verts[ 7].Set(offset.x - a.oGet(0), offset.y - a.oGet(1), offset.z - a.oGet(2));
-            verts[ 8].Set(offset.x + b.oGet(0), offset.y + c.oGet(1), offset.z/*        */);
-            verts[ 9].Set(offset.x - b.oGet(0), offset.y + c.oGet(1), offset.z/*        */);
+            verts[0].Set(offset.x + a.oGet(0), offset.y + a.oGet(1), offset.z + a.oGet(2));
+            verts[1].Set(offset.x + a.oGet(0), offset.y + a.oGet(1), offset.z - a.oGet(2));
+            verts[2].Set(offset.x + a.oGet(0), offset.y - a.oGet(1), offset.z + a.oGet(2));
+            verts[3].Set(offset.x + a.oGet(0), offset.y - a.oGet(1), offset.z - a.oGet(2));
+            verts[4].Set(offset.x - a.oGet(0), offset.y + a.oGet(1), offset.z + a.oGet(2));
+            verts[5].Set(offset.x - a.oGet(0), offset.y + a.oGet(1), offset.z - a.oGet(2));
+            verts[6].Set(offset.x - a.oGet(0), offset.y - a.oGet(1), offset.z + a.oGet(2));
+            verts[7].Set(offset.x - a.oGet(0), offset.y - a.oGet(1), offset.z - a.oGet(2));
+            verts[8].Set(offset.x + b.oGet(0), offset.y + c.oGet(1), offset.z/*        */);
+            verts[9].Set(offset.x - b.oGet(0), offset.y + c.oGet(1), offset.z/*        */);
             verts[10].Set(offset.x + b.oGet(0), offset.y - c.oGet(1), offset.z/*        */);
             verts[11].Set(offset.x - b.oGet(0), offset.y - c.oGet(1), offset.z/*        */);
             verts[12].Set(offset.x + c.oGet(0), offset.y/*        */, offset.z + b.oGet(2));
@@ -597,11 +590,11 @@ public class TraceModel {
             polys[4].normal.Set(polys[1].normal.oGet(0), polys[1].normal.oGet(1), -polys[1].normal.oGet(2));
             // poly plane distances
             for (i = 0; i < 6; i++) {
-                polys[i].dist = polys[i].normal.oMultiply(verts[ edges[ Math.abs(polys[i].edges[0])].v[0]]);
+                polys[i].dist = polys[i].normal.oMultiply(verts[edges[Math.abs(polys[i].edges[0])].v[0]]);
                 polys[i].bounds.Clear();
                 for (j = 0; j < 3; j++) {
-                    edgeNum = polys[i].edges[ j];
-                    polys[i].bounds.AddPoint(verts[ edges[Math.abs(edgeNum)].v[edgeNum < 0 ? 1 : 0]]);
+                    edgeNum = polys[i].edges[j];
+                    polys[i].bounds.AddPoint(verts[edges[Math.abs(edgeNum)].v[edgeNum < 0 ? 1 : 0]]);
                 }
             }
 
@@ -667,7 +660,6 @@ public class TraceModel {
             }
             SetupPolygon(verts, w.GetNumPoints());
         }
-        static final float SHARP_EDGE_DOT = -0.7f;
 
         // generate edge normals
         public int GenerateEdgeNormals() {
@@ -694,7 +686,7 @@ public class TraceModel {
                         // if the two planes make a very sharp edge
                         if (dot < SHARP_EDGE_DOT) {
                             // max length normal pointing outside both polygons
-                            dir = verts[ edge.v[edgeNum > 0 ? 1 : 0]].oMinus(verts[ edge.v[edgeNum < 0 ? 1 : 0]]);
+                            dir = verts[edge.v[edgeNum > 0 ? 1 : 0]].oMinus(verts[edge.v[edgeNum < 0 ? 1 : 0]]);
                             edge.normal = edge.normal.Cross(dir).oPlus(poly.normal.Cross(dir.oNegative()));
                             edge.normal.oMulSet((0.5f / (0.5f + 0.5f * SHARP_EDGE_DOT)) / edge.normal.Length());
                             numSharpEdges++;
@@ -756,13 +748,13 @@ public class TraceModel {
                 for (i = 0; i < numEdges; i++) {
                     edgeNum = polys[0].edges[i];
                     edge = edges[Math.abs(edgeNum)];
-                    dir = verts[ edge.v[ INTSIGNBITSET(edgeNum)]].oMinus(verts[ edge.v[ INTSIGNBITNOTSET(edgeNum)]]);
+                    dir = verts[edge.v[INTSIGNBITSET(edgeNum)]].oMinus(verts[edge.v[INTSIGNBITNOTSET(edgeNum)]]);
                     if (dir.Normalize() < 2.0f * m) {
                         continue;
                     }
                     dir.oMulSet(m);
-                    verts[ edge.v[ 0]].oMinSet(dir);
-                    verts[ edge.v[ 1]].oPluSet(dir);
+                    verts[edge.v[0]].oMinSet(dir);
+                    verts[edge.v[1]].oPluSet(dir);
                 }
                 return;
             }
@@ -773,7 +765,7 @@ public class TraceModel {
                 for (j = 0; j < polys[i].numEdges; j++) {
                     edgeNum = polys[i].edges[j];
                     edge = edges[Math.abs(edgeNum)];
-                    verts[ edge.v[ INTSIGNBITSET(edgeNum)]].oMinSet(polys[i].normal.oMultiply(m));
+                    verts[edge.v[INTSIGNBITSET(edgeNum)]].oMinSet(polys[i].normal.oMultiply(m));
                 }
             }
         }
@@ -852,10 +844,7 @@ public class TraceModel {
             if (!Objects.equals(this.offset, other.offset)) {
                 return false;
             }
-            if (!Objects.equals(this.bounds, other.bounds)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(this.bounds, other.bounds);
         }
 
         //public	bool				operator==(	const idTraceModel &trm ) const;
@@ -873,10 +862,10 @@ public class TraceModel {
             }
             poly = polys[polyNum];
             total = 0.0f;
-            base = verts[ edges[ Math.abs(poly.edges[0])].v[ INTSIGNBITSET(poly.edges[0])]];
+            base = verts[edges[Math.abs(poly.edges[0])].v[INTSIGNBITSET(poly.edges[0])]];
             for (i = 0; i < poly.numEdges; i++) {
-                v1 = verts[ edges[ Math.abs(poly.edges[i])].v[ INTSIGNBITSET(poly.edges[i])]].oMinus(base);
-                v2 = verts[ edges[ Math.abs(poly.edges[i])].v[ INTSIGNBITNOTSET(poly.edges[i])]].oMinus(base);
+                v1 = verts[edges[Math.abs(poly.edges[i])].v[INTSIGNBITSET(poly.edges[i])]].oMinus(base);
+                v2 = verts[edges[Math.abs(poly.edges[i])].v[INTSIGNBITNOTSET(poly.edges[i])]].oMinus(base);
                 cross = v1.Cross(v2);
                 total += cross.Length();
             }
@@ -884,7 +873,7 @@ public class TraceModel {
         }
 
         // get the silhouette edges
-        public int GetProjectionSilhouetteEdges(final idVec3 projectionOrigin, int silEdges[]) {
+        public int GetProjectionSilhouetteEdges(final idVec3 projectionOrigin, int[] silEdges) {
             int i, j, edgeNum;
             int[] edgeIsSilEdge = new int[MAX_TRACEMODEL_EDGES + 1];
             traceModelPoly_t poly;
@@ -895,7 +884,7 @@ public class TraceModel {
             for (i = 0; i < numPolys; i++) {
                 poly = polys[i];
                 edgeNum = poly.edges[0];
-                dir = verts[ edges[Math.abs(edgeNum)].v[ INTSIGNBITSET(edgeNum)]].oMinus(projectionOrigin);
+                dir = verts[edges[Math.abs(edgeNum)].v[INTSIGNBITSET(edgeNum)]].oMinus(projectionOrigin);
                 if (dir.oMultiply(poly.normal) < 0.0f) {
                     for (j = 0; j < poly.numEdges; j++) {
                         edgeNum = poly.edges[j];
@@ -907,7 +896,7 @@ public class TraceModel {
             return GetOrderedSilhouetteEdges(edgeIsSilEdge, silEdges);
         }
 
-        public int GetParallelProjectionSilhouetteEdges(final idVec3 projectionDir, int silEdges[]) {
+        public int GetParallelProjectionSilhouetteEdges(final idVec3 projectionDir, int[] silEdges) {
             int i, j, edgeNum;
             int[] edgeIsSilEdge = new int[MAX_TRACEMODEL_EDGES + 1];
             traceModelPoly_t poly;
@@ -927,10 +916,10 @@ public class TraceModel {
             return GetOrderedSilhouetteEdges(edgeIsSilEdge, silEdges);
         }
 
-        private static int DBG_GetMassProperties = 0;
         // calculate mass properties assuming an uniform density
         public void GetMassProperties(final float density, float[] mass, idVec3 centerOfMass, idMat3 inertiaTensor) {
-            volumeIntegrals_t integrals = new volumeIntegrals_t();DBG_GetMassProperties++;
+            volumeIntegrals_t integrals = new volumeIntegrals_t();
+            DBG_GetMassProperties++;
 
             // if polygon trace model
             if (type == TRM_POLYGON) {
@@ -1067,24 +1056,24 @@ public class TraceModel {
             numPolys = 8;
 
             // set edges
-            edges[ 1].v[0] = 4;
-            edges[ 1].v[1] = 0;
-            edges[ 2].v[0] = 0;
-            edges[ 2].v[1] = 2;
-            edges[ 3].v[0] = 2;
-            edges[ 3].v[1] = 4;
-            edges[ 4].v[0] = 2;
-            edges[ 4].v[1] = 1;
-            edges[ 5].v[0] = 1;
-            edges[ 5].v[1] = 4;
-            edges[ 6].v[0] = 1;
-            edges[ 6].v[1] = 3;
-            edges[ 7].v[0] = 3;
-            edges[ 7].v[1] = 4;
-            edges[ 8].v[0] = 3;
-            edges[ 8].v[1] = 0;
-            edges[ 9].v[0] = 5;
-            edges[ 9].v[1] = 2;
+            edges[1].v[0] = 4;
+            edges[1].v[1] = 0;
+            edges[2].v[0] = 0;
+            edges[2].v[1] = 2;
+            edges[3].v[0] = 2;
+            edges[3].v[1] = 4;
+            edges[4].v[0] = 2;
+            edges[4].v[1] = 1;
+            edges[5].v[0] = 1;
+            edges[5].v[1] = 4;
+            edges[6].v[0] = 1;
+            edges[6].v[1] = 3;
+            edges[7].v[0] = 3;
+            edges[7].v[1] = 4;
+            edges[8].v[0] = 3;
+            edges[8].v[1] = 0;
+            edges[9].v[0] = 5;
+            edges[9].v[1] = 2;
             edges[10].v[0] = 0;
             edges[10].v[1] = 5;
             edges[11].v[0] = 5;
@@ -1152,24 +1141,24 @@ public class TraceModel {
             numPolys = 12;
 
             // set edges
-            edges[ 1].v[0] = 0;
-            edges[ 1].v[1] = 8;
-            edges[ 2].v[0] = 8;
-            edges[ 2].v[1] = 9;
-            edges[ 3].v[0] = 9;
-            edges[ 3].v[1] = 4;
-            edges[ 4].v[0] = 4;
-            edges[ 4].v[1] = 16;
-            edges[ 5].v[0] = 16;
-            edges[ 5].v[1] = 0;
-            edges[ 6].v[0] = 16;
-            edges[ 6].v[1] = 17;
-            edges[ 7].v[0] = 17;
-            edges[ 7].v[1] = 2;
-            edges[ 8].v[0] = 2;
-            edges[ 8].v[1] = 12;
-            edges[ 9].v[0] = 12;
-            edges[ 9].v[1] = 0;
+            edges[1].v[0] = 0;
+            edges[1].v[1] = 8;
+            edges[2].v[0] = 8;
+            edges[2].v[1] = 9;
+            edges[3].v[0] = 9;
+            edges[3].v[1] = 4;
+            edges[4].v[0] = 4;
+            edges[4].v[1] = 16;
+            edges[5].v[0] = 16;
+            edges[5].v[1] = 0;
+            edges[6].v[0] = 16;
+            edges[6].v[1] = 17;
+            edges[7].v[0] = 17;
+            edges[7].v[1] = 2;
+            edges[8].v[0] = 2;
+            edges[8].v[1] = 12;
+            edges[9].v[0] = 12;
+            edges[9].v[1] = 0;
             edges[10].v[0] = 2;
             edges[10].v[1] = 10;
             edges[11].v[0] = 10;
@@ -1319,12 +1308,12 @@ public class TraceModel {
 
             // set bone edges
             for (i = 0; i < 3; i++) {
-                edges[ i + 1].v[0] = 0;
-                edges[ i + 1].v[1] = i + 1;
-                edges[ i + 4].v[0] = 1 + i;
-                edges[ i + 4].v[1] = 1 + ((i + 1) % 3);
-                edges[ i + 7].v[0] = i + 1;
-                edges[ i + 7].v[1] = 4;
+                edges[i + 1].v[0] = 0;
+                edges[i + 1].v[1] = i + 1;
+                edges[i + 4].v[0] = 1 + i;
+                edges[i + 4].v[1] = 1 + ((i + 1) % 3);
+                edges[i + 7].v[0] = i + 1;
+                edges[i + 7].v[1] = 4;
             }
 
             // all edges of a polygon go counter clockwise
@@ -1381,14 +1370,6 @@ public class TraceModel {
             this.isConvex = trm.isConvex;
         }
 
-        class projectionIntegrals_t {
-
-            float P1;
-            float Pa, Pb;
-            float Paa, Pab, Pbb;
-            float Paaa, Paab, Pabb, Pbbb;
-        };
-
         private void ProjectionIntegrals(int polyNum, int a, int b, projectionIntegrals_t integrals) {
             traceModelPoly_t poly;
             int i, edgeNum;
@@ -1404,8 +1385,8 @@ public class TraceModel {
             poly = polys[polyNum];
             for (i = 0; i < poly.numEdges; i++) {
                 edgeNum = poly.edges[i];
-                v1 = verts[ edges[ Math.abs(edgeNum)].v[ edgeNum < 0 ? 1 : 0]];
-                v2 = verts[ edges[ Math.abs(edgeNum)].v[ edgeNum > 0 ? 1 : 0]];
+                v1 = verts[edges[Math.abs(edgeNum)].v[edgeNum < 0 ? 1 : 0]];
+                v2 = verts[edges[Math.abs(edgeNum)].v[edgeNum > 0 ? 1 : 0]];
                 a0 = v1.oGet(a);
                 b0 = v1.oGet(b);
                 a1 = v2.oGet(a);
@@ -1461,14 +1442,6 @@ public class TraceModel {
             integrals.Pabb *= (1.0f / -60.0f);
         }
 
-        class polygonIntegrals_t {
-
-            float Fa,   Fb,   Fc;
-            float Faa,  Fbb,  Fcc;
-            float Faaa, Fbbb, Fccc;
-            float Faab, Fbbc, Fcca;
-        };
-
         private void PolygonIntegrals(int polyNum, int a, int b, int c, polygonIntegrals_t integrals) {
             projectionIntegrals_t pi = new projectionIntegrals_t();
             idVec3 n;
@@ -1505,20 +1478,6 @@ public class TraceModel {
             integrals.Fcca = k3 * (Square(n.oGet(a)) * pi.Paaa + 2 * n.oGet(a) * n.oGet(b) * pi.Paab + Square(n.oGet(b)) * pi.Pabb
                     + w * (2 * (n.oGet(a) * pi.Paa + n.oGet(b) * pi.Pab) + w * pi.Pa));
         }
-
-        class volumeIntegrals_t {
-
-            float T0;
-            idVec3 T1;
-            idVec3 T2;
-            idVec3 TP;
-
-            volumeIntegrals_t() {
-                T1 = new idVec3();
-                T2 = new idVec3();
-                TP = new idVec3();
-            }
-        };
 
         private void VolumeIntegrals(volumeIntegrals_t integrals) {
             traceModelPoly_t poly;
@@ -1582,10 +1541,10 @@ public class TraceModel {
             trm.numPolys = numEdges + 2;
             for (i = 0; i < numEdges; i++) {
                 trm.verts[numVerts + i].oSet(verts[i].oMinus(polys[0].normal.oMultiply(thickness)));
-                trm.edges[ numEdges + i + 1].v[0] = numVerts + i;
-                trm.edges[ numEdges + i + 1].v[1] = numVerts + (i + 1) % numVerts;
-                trm.edges[ numEdges * 2 + i + 1].v[0] = i;
-                trm.edges[ numEdges * 2 + i + 1].v[1] = numVerts + i;
+                trm.edges[numEdges + i + 1].v[0] = numVerts + i;
+                trm.edges[numEdges + i + 1].v[1] = numVerts + (i + 1) % numVerts;
+                trm.edges[numEdges * 2 + i + 1].v[0] = i;
+                trm.edges[numEdges * 2 + i + 1].v[1] = numVerts + i;
                 trm.polys[1].edges[i] = -(numEdges + i + 1);
                 trm.polys[2 + i].numEdges = 4;
                 trm.polys[2 + i].edges[0] = -(i + 1);
@@ -1596,12 +1555,12 @@ public class TraceModel {
                 trm.polys[2 + i].normal.Normalize();
                 trm.polys[2 + i].dist = trm.polys[2 + i].normal.oMultiply(verts[i]);
             }
-            trm.polys[1].dist = trm.polys[1].normal.oMultiply(trm.verts[ numEdges]);
+            trm.polys[1].dist = trm.polys[1].normal.oMultiply(trm.verts[numEdges]);
 
             trm.GenerateEdgeNormals();
         }
 
-        private int GetOrderedSilhouetteEdges(final int edgeIsSilEdge[], int silEdges[]) {
+        private int GetOrderedSilhouetteEdges(final int[] edgeIsSilEdge, int[] silEdges) {
             int i, j, edgeNum, numSilEdges, nextSilVert;
             int[] unsortedSilEdges = new int[MAX_TRACEMODEL_EDGES];
 
@@ -1632,11 +1591,42 @@ public class TraceModel {
                     }
                 }
                 if (j >= numSilEdges) {
-                    silEdges[i] = 1;	// shouldn't happen
+                    silEdges[i] = 1;    // shouldn't happen
                 }
                 unsortedSilEdges[j] = -1;
             }
             return numSilEdges;
         }
-    };
+
+        class projectionIntegrals_t {
+
+            float P1;
+            float Pa, Pb;
+            float Paa, Pab, Pbb;
+            float Paaa, Paab, Pabb, Pbbb;
+        }
+
+        class polygonIntegrals_t {
+
+            float Fa, Fb, Fc;
+            float Faa, Fbb, Fcc;
+            float Faaa, Fbbb, Fccc;
+            float Faab, Fbbc, Fcca;
+        }
+
+        class volumeIntegrals_t {
+
+            float T0;
+            idVec3 T1;
+            idVec3 T2;
+            idVec3 TP;
+
+            volumeIntegrals_t() {
+                T1 = new idVec3();
+                T2 = new idVec3();
+                TP = new idVec3();
+            }
+        }
+    }
+
 }

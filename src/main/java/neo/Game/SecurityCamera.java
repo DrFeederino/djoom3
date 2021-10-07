@@ -2,8 +2,6 @@ package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
 import neo.Game.Entity.idEntity;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Class.eventCallback_t;
@@ -11,33 +9,16 @@ import neo.Game.GameSys.Class.eventCallback_t0;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_showEntityInfo;
-import static neo.Game.Game_local.MASK_OPAQUE;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
 import neo.Game.Light.idLight;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
 import neo.Game.Pvs.pvsHandle_t;
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_CORPSE;
-import static neo.Renderer.Material.CONTENTS_MOVEABLECLIP;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.RenderWorld.SHADERPARM_MODE;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
@@ -45,11 +26,27 @@ import neo.idlib.math.Vector.idVec4;
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.Entity.TH_THINK;
+import static neo.Game.Entity.TH_UPDATEVISUALS;
+import static neo.Game.GameSys.SysCvar.g_showEntityInfo;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.RenderWorld.SHADERPARM_MODE;
+import static neo.TempDump.*;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Math_h.SEC2MS;
+
 /**
  *
  */
 public class SecurityCamera {
 
+    public static final idEventDef EV_SecurityCam_AddLight = new idEventDef("<addLight>");
+    public static final idEventDef EV_SecurityCam_Alert = new idEventDef("<alert>");
+    public static final idEventDef EV_SecurityCam_ContinueSweep = new idEventDef("<continueSweep>");
+    public static final idEventDef EV_SecurityCam_Pause = new idEventDef("<pause>");
     /*
      ===================================================================================
 
@@ -57,14 +54,15 @@ public class SecurityCamera {
 
      ===================================================================================
      */
-    public static final idEventDef EV_SecurityCam_ReverseSweep  = new idEventDef("<reverseSweep>");
-    public static final idEventDef EV_SecurityCam_ContinueSweep = new idEventDef("<continueSweep>");
-    public static final idEventDef EV_SecurityCam_Pause         = new idEventDef("<pause>");
-    public static final idEventDef EV_SecurityCam_Alert         = new idEventDef("<alert>");
-    public static final idEventDef EV_SecurityCam_AddLight      = new idEventDef("<addLight>");
+    public static final idEventDef EV_SecurityCam_ReverseSweep = new idEventDef("<reverseSweep>");
 
     public static class idSecurityCamera extends idEntity {
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final int ACTIVATED = 3;
+        private static final int ALERT = 2;
+        private static final int LOSINGINTEREST = 1;
+        private static final int SCANNING = 0;
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_SecurityCam_ReverseSweep, (eventCallback_t0<idSecurityCamera>) idSecurityCamera::Event_ReverseSweep);
@@ -74,33 +72,33 @@ public class SecurityCamera {
             eventCallbacks.put(EV_SecurityCam_AddLight, (eventCallback_t0<idSecurityCamera>) idSecurityCamera::Event_AddLight);
         }
 
-        private static final int SCANNING       = 0;
-        private static final int LOSINGINTEREST = 1;
-        private static final int ALERT          = 2;
-        private static final int ACTIVATED      = 3;
+        private int alertMode;
         // enum { SCANNING, LOSINGINTEREST, ALERT, ACTIVATED };
-        private float               angle;
-        private float               sweepAngle;
-        private int                 modelAxis;
-        private boolean             flipAxis;
-        private float               scanDist;
-        private float               scanFov;
-        //							
-        private float               sweepStart;
-        private float               sweepEnd;
-        private boolean             negativeSweep;
-        private boolean             sweeping;
-        private int                 alertMode;
-        private float               stopSweeping;
-        private float               scanFovCos;
-        //
-        private idVec3              viewOffset;
-        //							
-        private int                 pvsArea;
+        private float angle;
+        private boolean flipAxis;
+        private int modelAxis;
+        private boolean negativeSweep;
         private idPhysics_RigidBody physicsObj;
-        private idTraceModel        trm;
+        //
+        private int pvsArea;
+        private float scanDist;
+        private float scanFov;
+        private float scanFovCos;
+        private float stopSweeping;
+        private float sweepAngle;
+        private float sweepEnd;
+        //
+        private float sweepStart;
+        private boolean sweeping;
+        private idTraceModel trm;
+        //
+        private idVec3 viewOffset;
         //
         //
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         // CLASS_PROTOTYPE( idSecurityCamera );
         @Override
@@ -148,11 +146,11 @@ public class SecurityCamera {
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", str);
             if (!isNotNullOrEmpty(str)) {
-                str.oSet(spawnArgs.GetString("model"));		// use the visual model
+                str.oSet(spawnArgs.GetString("model"));        // use the visual model
             }
 
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(str, trm)) {
-                gameLocal.Error("idSecurityCamera '%s': cannot load collision model %s", name, str);
+                idGameLocal.Error("idSecurityCamera '%s': cannot load collision model %s", name, str);
                 return;
             }
 
@@ -553,9 +551,6 @@ public class SecurityCamera {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

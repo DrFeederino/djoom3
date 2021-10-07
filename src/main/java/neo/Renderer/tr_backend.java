@@ -1,5 +1,8 @@
 package neo.Renderer;
 
+import neo.Renderer.Image.idImage;
+import neo.Renderer.tr_local.*;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -7,157 +10,21 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import static neo.Renderer.Image.globalImages;
-import neo.Renderer.Image.idImage;
 import static neo.Renderer.Material.cullType_t.CT_BACK_SIDED;
 import static neo.Renderer.Material.cullType_t.CT_TWO_SIDED;
-import static neo.Renderer.RenderSystem_init.r_clear;
-import static neo.Renderer.RenderSystem_init.r_debugRenderToTexture;
-import static neo.Renderer.RenderSystem_init.r_finish;
-import static neo.Renderer.RenderSystem_init.r_frontBuffer;
-import static neo.Renderer.RenderSystem_init.r_lockSurfaces;
-import static neo.Renderer.RenderSystem_init.r_showImages;
-import static neo.Renderer.RenderSystem_init.r_showOverDraw;
-import static neo.Renderer.RenderSystem_init.r_singleArea;
-import static neo.Renderer.RenderSystem_init.r_skipCopyTexture;
-import static neo.Renderer.RenderSystem_init.r_useScissor;
-import static neo.Renderer.RenderSystem_init.r_useStateCaching;
-import static neo.Renderer.qgl.qGL_FALSE;
-import static neo.Renderer.qgl.qGL_TRUE;
-import static neo.Renderer.qgl.qglActiveTextureARB;
-import static neo.Renderer.qgl.qglAlphaFunc;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglBindTexture;
-import static neo.Renderer.qgl.qglBlendFunc;
-import static neo.Renderer.qgl.qglClear;
-import static neo.Renderer.qgl.qglClearColor;
-import static neo.Renderer.qgl.qglClearDepth;
-import static neo.Renderer.qgl.qglClientActiveTextureARB;
-import static neo.Renderer.qgl.qglColor4f;
-import static neo.Renderer.qgl.qglColorMask;
-import static neo.Renderer.qgl.qglCullFace;
-import static neo.Renderer.qgl.qglDepthFunc;
-import static neo.Renderer.qgl.qglDepthMask;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglDisableClientState;
-import static neo.Renderer.qgl.qglDrawBuffer;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnableClientState;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglFinish;
-import static neo.Renderer.qgl.qglLoadIdentity;
-import static neo.Renderer.qgl.qglMatrixMode;
-import static neo.Renderer.qgl.qglOrtho;
-import static neo.Renderer.qgl.qglPolygonMode;
-import static neo.Renderer.qgl.qglScissor;
-import static neo.Renderer.qgl.qglShadeModel;
-import static neo.Renderer.qgl.qglTexCoord2f;
-import static neo.Renderer.qgl.qglTexEnvi;
-import static neo.Renderer.qgl.qglTexGenf;
-import static neo.Renderer.qgl.qglVertex2f;
-import static neo.Renderer.qgl.qglViewport;
-import static neo.Renderer.tr_local.GLS_ALPHAMASK;
-import static neo.Renderer.tr_local.GLS_ATEST_BITS;
-import static neo.Renderer.tr_local.GLS_ATEST_EQ_255;
-import static neo.Renderer.tr_local.GLS_ATEST_GE_128;
-import static neo.Renderer.tr_local.GLS_ATEST_LT_128;
-import static neo.Renderer.tr_local.GLS_BLUEMASK;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_ALWAYS;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_EQUAL;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_LESS;
-import static neo.Renderer.tr_local.GLS_DEPTHMASK;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_BITS;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_SRC_COLOR;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ZERO;
-import static neo.Renderer.tr_local.GLS_GREENMASK;
-import static neo.Renderer.tr_local.GLS_POLYMODE_LINE;
-import static neo.Renderer.tr_local.GLS_REDMASK;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ALPHA_SATURATE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_BITS;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_DST_COLOR;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE_MINUS_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE_MINUS_DST_COLOR;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ZERO;
-import static neo.Renderer.tr_local.backEnd;
-import neo.Renderer.tr_local.copyRenderCommand_t;
-import neo.Renderer.tr_local.drawSurfsCommand_t;
-import neo.Renderer.tr_local.emptyCommand_t;
-import static neo.Renderer.tr_local.glConfig;
-import neo.Renderer.tr_local.glstate_t;
-import static neo.Renderer.tr_local.renderCommand_t.RC_COPY_RENDER;
-import static neo.Renderer.tr_local.renderCommand_t.RC_DRAW_VIEW;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_local.*;
 import static neo.Renderer.tr_local.renderCommand_t.RC_NOP;
-import static neo.Renderer.tr_local.renderCommand_t.RC_SET_BUFFER;
-import static neo.Renderer.tr_local.renderCommand_t.RC_SWAP_BUFFERS;
-import neo.Renderer.tr_local.setBufferCommand_t;
-import neo.Renderer.tr_local.tmu_t;
-import static neo.Renderer.tr_local.tr;
 import static neo.Renderer.tr_render.RB_DrawView;
 import static neo.TempDump.NOT;
 import static neo.framework.Common.common;
 import static neo.sys.win_glimp.GLimp_SwapBuffers;
 import static neo.sys.win_shared.Sys_Milliseconds;
 import static org.lwjgl.opengl.ARBMultitexture.GL_TEXTURE0_ARB;
-import static org.lwjgl.opengl.GL11.GL_ADD;
-import static org.lwjgl.opengl.GL11.GL_ALPHA_TEST;
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
-import static org.lwjgl.opengl.GL11.GL_BACK;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DECAL;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_DST_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_DST_COLOR;
-import static org.lwjgl.opengl.GL11.GL_EQUAL;
-import static org.lwjgl.opengl.GL11.GL_FILL;
-import static org.lwjgl.opengl.GL11.GL_FRONT;
-import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
-import static org.lwjgl.opengl.GL11.GL_GEQUAL;
-import static org.lwjgl.opengl.GL11.GL_LEQUAL;
-import static org.lwjgl.opengl.GL11.GL_LESS;
-import static org.lwjgl.opengl.GL11.GL_LIGHTING;
-import static org.lwjgl.opengl.GL11.GL_LINE;
-import static org.lwjgl.opengl.GL11.GL_LINE_STIPPLE;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_MODULATE;
-import static org.lwjgl.opengl.GL11.GL_OBJECT_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_ONE;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_DST_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_DST_COLOR;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_COLOR;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_Q;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_R;
-import static org.lwjgl.opengl.GL11.GL_REPLACE;
-import static org.lwjgl.opengl.GL11.GL_S;
-import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
-import static org.lwjgl.opengl.GL11.GL_SMOOTH;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA_SATURATE;
-import static org.lwjgl.opengl.GL11.GL_SRC_COLOR;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
-import static org.lwjgl.opengl.GL11.GL_T;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_ENV;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_ENV_MODE;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_MODE;
-import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_ZERO;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_3D;
 import static org.lwjgl.opengl.GL13.GL_COMBINE;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP;
@@ -166,6 +33,22 @@ import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP;
  *
  */
 public class tr_backend {
+
+    /*
+     ====================
+     RB_ExecuteBackEndCommands
+
+     This function will be called syncronously if running without
+     smp extensions, or asyncronously by another thread.
+     ====================
+     */
+    static int backEndStartTime, backEndFinishTime;
+    /*
+     ====================
+     GL_State
+     This routine is responsible for setting the most commonly changed state
+     ====================
+     */private static int DBG_GL_State = 0;
 
     /*
      ======================
@@ -234,7 +117,6 @@ public class tr_backend {
             }
         }
     }
-
 
     /*
      ====================
@@ -350,11 +232,13 @@ public class tr_backend {
     }
 
     /*
-     ====================
-     GL_State
-     This routine is responsible for setting the most commonly changed state
-     ====================
-     */private static int DBG_GL_State=0;
+     ============================================================================
+
+     RENDER BACK END THREAD FUNCTIONS
+
+     ============================================================================
+     */
+
     public static void GL_State(int stateBits) {
         int diff;
         DBG_GL_State++;
@@ -455,11 +339,11 @@ public class tr_backend {
 //            qglEnable(34336);
 //            qglEnable(34820);
 //            if (srcFactor == 770) {
-                qglBlendFunc(srcFactor, dstFactor);
+            qglBlendFunc(srcFactor, dstFactor);
 //            }
 //            System.out.printf("GL_State(%d, %d)--%d;\n", srcFactor, dstFactor, DBG_GL_State);
         }
-        
+
         //
         // check depthmask
         //
@@ -475,10 +359,10 @@ public class tr_backend {
         // check colormask
         //
         if ((diff & (GLS_REDMASK | GLS_GREENMASK | GLS_BLUEMASK | GLS_ALPHAMASK)) != 0) {
-           boolean r = (stateBits & GLS_REDMASK) == 0;
-           boolean g = (stateBits & GLS_GREENMASK) == 0;
-           boolean b = (stateBits & GLS_BLUEMASK) == 0;
-           boolean a = (stateBits & GLS_ALPHAMASK) == 0;
+            boolean r = (stateBits & GLS_REDMASK) == 0;
+            boolean g = (stateBits & GLS_GREENMASK) == 0;
+            boolean b = (stateBits & GLS_BLUEMASK) == 0;
+            boolean a = (stateBits & GLS_ALPHAMASK) == 0;
             qglColorMask(r, g, b, a);//solid backgroundus
         }
 
@@ -497,7 +381,7 @@ public class tr_backend {
         // alpha test
         //
         if ((diff & GLS_ATEST_BITS) != 0) {
-            if(backEnd.viewDef.numDrawSurfs==5){
+            if (backEnd.viewDef.numDrawSurfs == 5) {
                 tr_local.drawSurf_s temp = backEnd.viewDef.drawSurfs[3];
 //                backEnd.viewDef.drawSurfs[0] =
 //                backEnd.viewDef.drawSurfs[1] =
@@ -558,14 +442,6 @@ public class tr_backend {
     }
 
     /*
-     ============================================================================
-
-     RENDER BACK END THREAD FUNCTIONS
-
-     ============================================================================
-     */
-
-    /*
      =============
      RB_SetGL2D
 
@@ -580,7 +456,7 @@ public class tr_backend {
         }
         qglMatrixMode(GL_PROJECTION);
         qglLoadIdentity();
-        qglOrtho(0, 640, 480, 0, 0, 1);		// always assume 640x480 virtual coordinates
+        qglOrtho(0, 640, 480, 0, 0, 1);        // always assume 640x480 virtual coordinates
         qglMatrixMode(GL_MODELVIEW);
         qglLoadIdentity();
 
@@ -656,7 +532,7 @@ public class tr_backend {
 
         for (i = 0; i < globalImages.images.Num(); i++) {
             image = globalImages.images.oGet(i);
-            
+
             if (image.texNum == idImage.TEXTURE_NOT_LOADED && image.partialImage == null) {
                 continue;
             }
@@ -690,7 +566,6 @@ public class tr_backend {
         end = Sys_Milliseconds();
         common.Printf("%d msec to draw all images\n", end - start);
     }
-
 
     /*
      =============
@@ -742,16 +617,6 @@ public class tr_backend {
             cmd.imageHeight = imageHeight[0];
         }
     }
-
-    /*
-     ====================
-     RB_ExecuteBackEndCommands
-
-     This function will be called syncronously if running without
-     smp extensions, or asyncronously by another thread.
-     ====================
-     */
-    static int backEndStartTime, backEndFinishTime;
 
     public static void RB_ExecuteBackEndCommands(emptyCommand_t cmds) {
         // r_debugRenderToTexture

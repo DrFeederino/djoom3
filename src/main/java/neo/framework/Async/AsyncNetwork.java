@@ -1,46 +1,36 @@
 package neo.framework.Async;
 
-import static neo.Game.Game_local.game;
-import static neo.Renderer.RenderSystem.renderSystem;
-import static neo.Sound.snd_system.soundSystem;
-import static neo.TempDump.ctos;
 import neo.framework.Async.AsyncClient.idAsyncClient;
 import neo.framework.Async.AsyncServer.idAsyncServer;
-import static neo.framework.BuildDefines.ID_DEDICATED;
-import static neo.framework.BuildDefines.ID_DEMO_BUILD;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_INIT;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_NETWORKSYNC;
-import static neo.framework.CVarSystem.CVAR_NOCHEAT;
-import static neo.framework.CVarSystem.CVAR_ROM;
-import static neo.framework.CVarSystem.CVAR_SERVERINFO;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
 import neo.framework.CmdSystem.idCmdSystem;
-import static neo.framework.Common.com_asyncInput;
-import static neo.framework.Common.common;
-import static neo.framework.Console.console;
-import static neo.framework.FileSystem_h.fileSystem;
-import static neo.framework.Licensee.ASYNC_PROTOCOL_MAJOR;
-import static neo.framework.Licensee.IDNET_HOST;
-import static neo.framework.Licensee.IDNET_MASTER_PORT;
-import static neo.framework.Session.session;
-import static neo.framework.UsercmdGen.BUTTON_ATTACK;
-import static neo.framework.UsercmdGen.inhibit_t.INHIBIT_ASYNC;
-import static neo.framework.UsercmdGen.usercmdGen;
 import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.sys.sys_public.netadr_t;
+
+import static neo.Game.Game_local.game;
+import static neo.Renderer.RenderSystem.renderSystem;
+import static neo.Sound.snd_system.soundSystem;
+import static neo.TempDump.ctos;
+import static neo.framework.BuildDefines.ID_DEDICATED;
+import static neo.framework.BuildDefines.ID_DEMO_BUILD;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.com_asyncInput;
+import static neo.framework.Common.common;
+import static neo.framework.Console.console;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Licensee.*;
+import static neo.framework.Session.session;
+import static neo.framework.UsercmdGen.BUTTON_ATTACK;
+import static neo.framework.UsercmdGen.inhibit_t.INHIBIT_ASYNC;
+import static neo.framework.UsercmdGen.usercmdGen;
 import static neo.sys.win_input.Sys_GrabMouseCursor;
 import static neo.sys.win_net.Sys_StringToNetAdr;
 import static neo.sys.win_syscon.Sys_ShowConsole;
@@ -58,33 +48,89 @@ public class AsyncNetwork {
      1.3.1:			41
      */
 
-    public static final int ASYNC_PROTOCOL_MINOR   = 41;
+    public static final int ASYNC_PROTOCOL_MINOR = 41;
     public static final int ASYNC_PROTOCOL_VERSION = (ASYNC_PROTOCOL_MAJOR << 16) + ASYNC_PROTOCOL_MINOR;
+    //
+    // special game init ids
+    public static final int GAME_INIT_ID_INVALID = -1;
+    public static final int GAME_INIT_ID_MAP_LOAD = -2;
+    //
+    public static final int MAX_ASYNC_CLIENTS = 32;
+    //
+    // index 0 is hardcoded to be the idnet master
+    // which leaves 4 to user customization
+    public static final int MAX_MASTER_SERVERS = 5;
+    //
+    public static final int MAX_NICKLEN = 32;
+    //
+    // max number of servers that will be scanned for at a single IP address
+    public static final int MAX_SERVER_PORTS = 8;
+    //
+    public static final int MAX_USERCMD_BACKUP = 256;
+    public static final int MAX_USERCMD_DUPLICATION = 25;
+    public static final int MAX_USERCMD_RELAY = 10;
 
     public static int MAJOR_VERSION(final int v) {
         return (v >> 16);
     }
-
-    //
-    public static final int MAX_ASYNC_CLIENTS       = 32;
-    //
-    public static final int MAX_USERCMD_BACKUP      = 256;
-    public static final int MAX_USERCMD_DUPLICATION = 25;
-    public static final int MAX_USERCMD_RELAY       = 10;
-    //
-    // index 0 is hardcoded to be the idnet master
-    // which leaves 4 to user customization
-    public static final int MAX_MASTER_SERVERS      = 5;
-    //
-    public static final int MAX_NICKLEN             = 32;
-    //
-    // max number of servers that will be scanned for at a single IP address
-    public static final int MAX_SERVER_PORTS        = 8;
-    //
-    // special game init ids
-    public static final int GAME_INIT_ID_INVALID    = -1;
-    public static final int GAME_INIT_ID_MAP_LOAD   = -2;
 //
+
+    // reliable client -> server messages
+    public enum CLIENT_RELIABLE {
+
+        CLIENT_RELIABLE_MESSAGE_PURE,
+        CLIENT_RELIABLE_MESSAGE_CLIENTINFO,
+        CLIENT_RELIABLE_MESSAGE_PRINT,
+        CLIENT_RELIABLE_MESSAGE_DISCONNECT,
+        CLIENT_RELIABLE_MESSAGE_GAME
+    }
+
+    // unreliable client -> server messages
+    public enum CLIENT_UNRELIABLE {
+
+        CLIENT_UNRELIABLE_MESSAGE_EMPTY,
+        CLIENT_UNRELIABLE_MESSAGE_PINGRESPONSE,
+        CLIENT_UNRELIABLE_MESSAGE_USERCMD
+    }
+
+    public enum SERVER_DL {
+
+        _0_,
+        SERVER_DL_REDIRECT,
+        SERVER_DL_LIST,
+        SERVER_DL_NONE
+    }
+
+    public enum SERVER_PAK {
+
+        SERVER_PAK_NO,
+        SERVER_PAK_YES,
+        SERVER_PAK_END
+    }
+
+    // server print messages
+    public enum SERVER_PRINT {
+
+        SERVER_PRINT_MISC,
+        SERVER_PRINT_BADPROTOCOL,
+        SERVER_PRINT_RCON,
+        SERVER_PRINT_GAMEDENY,
+        SERVER_PRINT_BADCHALLENGE
+    }
+
+    // reliable server -> client messages
+    public enum SERVER_RELIABLE {
+
+        SERVER_RELIABLE_MESSAGE_PURE,
+        SERVER_RELIABLE_MESSAGE_RELOAD,
+        SERVER_RELIABLE_MESSAGE_CLIENTINFO,
+        SERVER_RELIABLE_MESSAGE_SYNCEDCVARS,
+        SERVER_RELIABLE_MESSAGE_PRINT,
+        SERVER_RELIABLE_MESSAGE_DISCONNECT,
+        SERVER_RELIABLE_MESSAGE_APPLYSNAPSHOT,
+        SERVER_RELIABLE_MESSAGE_GAME,
+        SERVER_RELIABLE_MESSAGE_ENTERGAME
+    }
 
     /*
      ===============================================================================
@@ -100,107 +146,50 @@ public class AsyncNetwork {
         SERVER_UNRELIABLE_MESSAGE_PING,
         SERVER_UNRELIABLE_MESSAGE_GAMEINIT,
         SERVER_UNRELIABLE_MESSAGE_SNAPSHOT
-    };
-
-    // reliable server -> client messages
-    public enum SERVER_RELIABLE {
-
-        SERVER_RELIABLE_MESSAGE_PURE,
-        SERVER_RELIABLE_MESSAGE_RELOAD,
-        SERVER_RELIABLE_MESSAGE_CLIENTINFO,
-        SERVER_RELIABLE_MESSAGE_SYNCEDCVARS,
-        SERVER_RELIABLE_MESSAGE_PRINT,
-        SERVER_RELIABLE_MESSAGE_DISCONNECT,
-        SERVER_RELIABLE_MESSAGE_APPLYSNAPSHOT,
-        SERVER_RELIABLE_MESSAGE_GAME,
-        SERVER_RELIABLE_MESSAGE_ENTERGAME
-    };
-
-    // unreliable client -> server messages
-    public enum CLIENT_UNRELIABLE {
-
-        CLIENT_UNRELIABLE_MESSAGE_EMPTY,
-        CLIENT_UNRELIABLE_MESSAGE_PINGRESPONSE,
-        CLIENT_UNRELIABLE_MESSAGE_USERCMD
-    };
-
-    // reliable client -> server messages
-    public enum CLIENT_RELIABLE {
-
-        CLIENT_RELIABLE_MESSAGE_PURE,
-        CLIENT_RELIABLE_MESSAGE_CLIENTINFO,
-        CLIENT_RELIABLE_MESSAGE_PRINT,
-        CLIENT_RELIABLE_MESSAGE_DISCONNECT,
-        CLIENT_RELIABLE_MESSAGE_GAME
-    };
-
-    // server print messages
-    public enum SERVER_PRINT {
-
-        SERVER_PRINT_MISC,
-        SERVER_PRINT_BADPROTOCOL,
-        SERVER_PRINT_RCON,
-        SERVER_PRINT_GAMEDENY,
-        SERVER_PRINT_BADCHALLENGE
-    };
-
-    public enum SERVER_DL {
-
-        _0_,
-        SERVER_DL_REDIRECT,
-        SERVER_DL_LIST,
-        SERVER_DL_NONE
-    };
-
-    public enum SERVER_PAK {
-
-        SERVER_PAK_NO,
-        SERVER_PAK_YES,
-        SERVER_PAK_END
-    };
+    }
 
     static class master_s {
 
-        idCVar   var;
         netadr_t address;
-        boolean  resolved;
-    }/*master_t*/;
+        boolean resolved;
+        idCVar var;
+    }/*master_t*/
 
     public static class idAsyncNetwork {
 
-        public static final idAsyncServer server      = new idAsyncServer();
-        public static final idAsyncClient client      = new idAsyncClient();
-        //
-        public static final idCVar verbose                     = new idCVar("net_verbose", "0", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "1 = verbose output, 2 = even more verbose output", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
-        public static final idCVar allowCheats                 = new idCVar("net_allowCheats", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NETWORKSYNC, "Allow cheats in network game");
-        public static final idCVar serverDedicated;// if set run a dedicated server
-        public static final idCVar serverSnapshotDelay         = new idCVar("net_serverSnapshotDelay", "50", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "delay between snapshots in milliseconds");
-        public static final idCVar serverMaxClientRate         = new idCVar("net_serverMaxClientRate", "16000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE | CVAR_NOCHEAT, "maximum rate to a client in bytes/sec");
-        public static final idCVar clientMaxRate               = new idCVar("net_clientMaxRate", "16000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE | CVAR_NOCHEAT, "maximum rate requested by client from server in bytes/sec");
-        public static final idCVar serverMaxUsercmdRelay       = new idCVar("net_serverMaxUsercmdRelay", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "maximum number of usercmds from other clients the server relays to a client", 1, MAX_USERCMD_RELAY, new idCmdSystem.ArgCompletion_Integer(1, MAX_USERCMD_RELAY));
-        public static final idCVar serverZombieTimeout         = new idCVar("net_serverZombieTimeout", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "disconnected client timeout in seconds");
-        public static final idCVar serverClientTimeout         = new idCVar("net_serverClientTimeout", "40", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "client time out in seconds");
-        public static final idCVar clientServerTimeout         = new idCVar("net_clientServerTimeout", "40", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "server time out in seconds");
-        public static final idCVar serverDrawClient            = new idCVar("net_serverDrawClient", "-1", CVAR_SYSTEM | CVAR_INTEGER, "number of client for which to draw view on server");
-        public static final idCVar serverRemoteConsolePassword = new idCVar("net_serverRemoteConsolePassword", "", CVAR_SYSTEM | CVAR_NOCHEAT, "remote console password");
-        public static final idCVar clientPrediction            = new idCVar("net_clientPrediction", "16", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "additional client side prediction in milliseconds");
-        public static final idCVar clientMaxPrediction         = new idCVar("net_clientMaxPrediction", "1000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "maximum number of milliseconds a client can predict ahead of server.");
-        public static final idCVar clientUsercmdBackup         = new idCVar("net_clientUsercmdBackup", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "number of usercmds to resend");
-        public static final idCVar clientRemoteConsoleAddress  = new idCVar("net_clientRemoteConsoleAddress", "localhost", CVAR_SYSTEM | CVAR_NOCHEAT, "remote console address");
+        public static final idCVar LANServer = new idCVar("net_LANServer", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NOCHEAT, "config LAN games only - affects clients and servers");
+        public static final idCVar allowCheats = new idCVar("net_allowCheats", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NETWORKSYNC, "Allow cheats in network game");
+        public static final idAsyncClient client = new idAsyncClient();
+        public static final idCVar clientDownload = new idCVar("net_clientDownload", "1", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE, "client pk4 downloads policy: 0 - never, 1 - ask, 2 - always  = new idCVar(will still prompt for binary code)");
+        public static final idCVar clientMaxPrediction = new idCVar("net_clientMaxPrediction", "1000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "maximum number of milliseconds a client can predict ahead of server.");
+        public static final idCVar clientMaxRate = new idCVar("net_clientMaxRate", "16000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE | CVAR_NOCHEAT, "maximum rate requested by client from server in bytes/sec");
+        public static final idCVar clientPrediction = new idCVar("net_clientPrediction", "16", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "additional client side prediction in milliseconds");
+        public static final idCVar clientRemoteConsoleAddress = new idCVar("net_clientRemoteConsoleAddress", "localhost", CVAR_SYSTEM | CVAR_NOCHEAT, "remote console address");
         public static final idCVar clientRemoteConsolePassword = new idCVar("net_clientRemoteConsolePassword", "", CVAR_SYSTEM | CVAR_NOCHEAT, "remote console password");
-        public static final idCVar master0                     = new idCVar("net_master0", IDNET_HOST + ":" + IDNET_MASTER_PORT, CVAR_SYSTEM | CVAR_ROM, "idnet master server address");
-        public static final idCVar master1                     = new idCVar("net_master1", "", CVAR_SYSTEM | CVAR_ARCHIVE, "1st master server address");
-        public static final idCVar master2                     = new idCVar("net_master2", "", CVAR_SYSTEM | CVAR_ARCHIVE, "2nd master server address");
-        public static final idCVar master3                     = new idCVar("net_master3", "", CVAR_SYSTEM | CVAR_ARCHIVE, "3rd master server address");
-        public static final idCVar master4                     = new idCVar("net_master4", "", CVAR_SYSTEM | CVAR_ARCHIVE, "4th master server address");
-        public static final idCVar LANServer                   = new idCVar("net_LANServer", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NOCHEAT, "config LAN games only - affects clients and servers");
-        public static final idCVar serverReloadEngine          = new idCVar("net_serverReloadEngine", "0", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "perform a full reload on next map restart  = new idCVar(including flushing referenced pak files) - decreased if > 0");
-        public static final idCVar serverAllowServerMod        = new idCVar("net_serverAllowServerMod", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NOCHEAT, "allow server-side mods");
-        public static final idCVar idleServer                  = new idCVar("si_idleServer", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_INIT | CVAR_SERVERINFO, "game clients are idle");
-        public static final idCVar clientDownload              = new idCVar("net_clientDownload", "1", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE, "client pk4 downloads policy: 0 - never, 1 - ask, 2 - always  = new idCVar(will still prompt for binary code)");
+        public static final idCVar clientServerTimeout = new idCVar("net_clientServerTimeout", "40", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "server time out in seconds");
+        public static final idCVar clientUsercmdBackup = new idCVar("net_clientUsercmdBackup", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "number of usercmds to resend");
+        public static final idCVar idleServer = new idCVar("si_idleServer", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_INIT | CVAR_SERVERINFO, "game clients are idle");
+        public static final idCVar master0 = new idCVar("net_master0", IDNET_HOST + ":" + IDNET_MASTER_PORT, CVAR_SYSTEM | CVAR_ROM, "idnet master server address");
+        public static final idCVar master1 = new idCVar("net_master1", "", CVAR_SYSTEM | CVAR_ARCHIVE, "1st master server address");
+        public static final idCVar master2 = new idCVar("net_master2", "", CVAR_SYSTEM | CVAR_ARCHIVE, "2nd master server address");
+        public static final idCVar master3 = new idCVar("net_master3", "", CVAR_SYSTEM | CVAR_ARCHIVE, "3rd master server address");
+        public static final idCVar master4 = new idCVar("net_master4", "", CVAR_SYSTEM | CVAR_ARCHIVE, "4th master server address");
+        public static final idAsyncServer server = new idAsyncServer();
+        public static final idCVar serverAllowServerMod = new idCVar("net_serverAllowServerMod", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NOCHEAT, "allow server-side mods");
+        public static final idCVar serverClientTimeout = new idCVar("net_serverClientTimeout", "40", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "client time out in seconds");
+        public static final idCVar serverDedicated;// if set run a dedicated server
+        public static final idCVar serverDrawClient = new idCVar("net_serverDrawClient", "-1", CVAR_SYSTEM | CVAR_INTEGER, "number of client for which to draw view on server");
+        public static final idCVar serverMaxClientRate = new idCVar("net_serverMaxClientRate", "16000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE | CVAR_NOCHEAT, "maximum rate to a client in bytes/sec");
+        public static final idCVar serverMaxUsercmdRelay = new idCVar("net_serverMaxUsercmdRelay", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "maximum number of usercmds from other clients the server relays to a client", 1, MAX_USERCMD_RELAY, new idCmdSystem.ArgCompletion_Integer(1, MAX_USERCMD_RELAY));
+        public static final idCVar serverReloadEngine = new idCVar("net_serverReloadEngine", "0", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "perform a full reload on next map restart  = new idCVar(including flushing referenced pak files) - decreased if > 0");
+        public static final idCVar serverRemoteConsolePassword = new idCVar("net_serverRemoteConsolePassword", "", CVAR_SYSTEM | CVAR_NOCHEAT, "remote console password");
+        public static final idCVar serverSnapshotDelay = new idCVar("net_serverSnapshotDelay", "50", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "delay between snapshots in milliseconds");
+        public static final idCVar serverZombieTimeout = new idCVar("net_serverZombieTimeout", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "disconnected client timeout in seconds");
+        //
+        public static final idCVar verbose = new idCVar("net_verbose", "0", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "1 = verbose output, 2 = even more verbose output", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
+        private static final master_s[] masters = new master_s[MAX_MASTER_SERVERS];    // master1 etc.
         //
         private static int realTime;
-        private static final master_s[] masters = new master_s[MAX_MASTER_SERVERS];    // master1 etc.
         //    
         //
 
@@ -366,7 +355,7 @@ public class AsyncNetwork {
                     || previousUserCmd.angles[2] != currentUserCmd.angles[2];
         }
 
-//
+        //
         // returns true if the corresponding master is set to something (and could be resolved)
         public static boolean GetMasterAddress(int index, netadr_t adr) {
             if (null == masters[index].var) {
@@ -482,7 +471,7 @@ public class AsyncNetwork {
                     server.Spawn();
                 }
             }
-        };
+        }
 
         /*
          ==================
@@ -504,7 +493,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 server.ExecuteMapChange();
             }
-        };
+        }
 
         /*
          ==================
@@ -535,7 +524,7 @@ public class AsyncNetwork {
                 com_asyncInput.SetBool(false);
                 client.ConnectToServer(args.Argv(1));
             }
-        };
+        }
 
         /*
          ==================
@@ -557,7 +546,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 client.Reconnect();
             }
-        };
+        }
 
         /*
          ==================
@@ -579,7 +568,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 client.GetServerInfo(args.Argv(1));
             }
-        };
+        }
 
         /*
          ==================
@@ -601,7 +590,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 client.GetLANServers();
             }
-        };
+        }
 
         /*
          ==================
@@ -623,7 +612,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 client.ListServers();
             }
-        };
+        }
 
         /*
          ==================
@@ -645,7 +634,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 client.RemoteConsole(args.Args());
             }
-        };
+        }
 
         /*
          ==================
@@ -671,7 +660,7 @@ public class AsyncNetwork {
                 }
                 server.MasterHeartbeat(true);
             }
-        };
+        }
 
         /*
          ==================
@@ -713,7 +702,7 @@ public class AsyncNetwork {
 
                 server.DropClient(iclient, "#str_07134");
             }
-        };
+        }
 
 
         /*
@@ -736,7 +725,7 @@ public class AsyncNetwork {
             public void run(idCmdArgs args) {
                 client.SendVersionCheck();
             }
-        };
+        }
 
         /*
          =================
@@ -767,6 +756,8 @@ public class AsyncNetwork {
                 int clientNum = Integer.parseInt(args.Args(1));
                 server.UpdateUI(clientNum);
             }
-        };
-    };
+        }
+
+    }
+
 }

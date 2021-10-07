@@ -1,74 +1,27 @@
 package neo.ui;
 
-import static neo.Renderer.Material.MF_DEFAULTED;
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atof;
-import static neo.TempDump.atoi;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itob;
-import static neo.TempDump.sizeof;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_GUI;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.EDITOR_GUI;
-import static neo.framework.Common.com_editors;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_TABLE;
 import neo.framework.DeclTable.idDeclTable;
 import neo.framework.DemoFile.idDemoFile;
 import neo.framework.File_h.idFile;
-import static neo.framework.KeyInput.K_ENTER;
-import static neo.framework.KeyInput.K_ESCAPE;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.KeyInput.K_MOUSE2;
-import static neo.framework.KeyInput.K_MOUSE3;
-import static neo.framework.KeyInput.K_SHIFT;
-import static neo.framework.KeyInput.K_TAB;
-import neo.framework.KeyInput.idKeyInput;
-import static neo.framework.Session.session;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import neo.framework.KeyInput.*;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.colorBlack;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_FLOAT;
-import static neo.idlib.Text.Token.TT_INTEGER;
-import static neo.idlib.Text.Token.TT_NAME;
-import static neo.idlib.Text.Token.TT_NUMBER;
-import neo.idlib.Text.Token.idToken;
+import neo.idlib.Text.Token.*;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Interpolate.idInterpolateAccelDecelLinear;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
-import static neo.idlib.precompiled.MAX_EXPRESSION_OPS;
-import static neo.idlib.precompiled.MAX_EXPRESSION_REGISTERS;
-import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
-import static neo.sys.sys_public.sysEventType_t.SE_MOUSE;
-import static neo.sys.sys_public.sysEventType_t.SE_NONE;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.BindWindow.idBindWindow;
 import neo.ui.ChoiceWindow.idChoiceWindow;
 import neo.ui.DeviceContext.idDeviceContext;
-import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_ARROW;
-import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_HAND;
 import neo.ui.EditWindow.idEditWindow;
 import neo.ui.FieldWindow.idFieldWindow;
 import neo.ui.GameBearShootWindow.idGameBearShootWindow;
@@ -80,108 +33,92 @@ import neo.ui.ListWindow.idListWindow;
 import neo.ui.MarkerWindow.idMarkerWindow;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.RegExp.idRegister;
-import static neo.ui.RegExp.idRegister.REGTYPE.BOOL;
-import static neo.ui.RegExp.idRegister.REGTYPE.FLOAT;
-import static neo.ui.RegExp.idRegister.REGTYPE.RECTANGLE;
-import static neo.ui.RegExp.idRegister.REGTYPE.STRING;
-import static neo.ui.RegExp.idRegister.REGTYPE.VEC2;
-import static neo.ui.RegExp.idRegister.REGTYPE.VEC4;
 import neo.ui.RegExp.idRegisterList;
 import neo.ui.RenderWindow.idRenderWindow;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.SimpleWindow.idSimpleWindow;
 import neo.ui.SliderWindow.idSliderWindow;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.idWindow.ON.ON_ACTION;
-import static neo.ui.Window.idWindow.ON.ON_ACTIONRELEASE;
-import static neo.ui.Window.idWindow.ON.ON_ACTIVATE;
-import static neo.ui.Window.idWindow.ON.ON_DEACTIVATE;
-import static neo.ui.Window.idWindow.ON.ON_ESC;
-import static neo.ui.Window.idWindow.ON.ON_FRAME;
-import static neo.ui.Window.idWindow.ON.ON_MOUSEENTER;
-import static neo.ui.Window.idWindow.ON.ON_MOUSEEXIT;
-import static neo.ui.Window.idWindow.ON.ON_TRIGGER;
-import static neo.ui.Window.idWindow.ON.SCRIPT_COUNT;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_ADD;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_AND;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_COND;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_DIVIDE;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_EQ;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_GE;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_GT;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_LE;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_LT;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_MOD;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_MULTIPLY;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_NE;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_OR;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_SUBTRACT;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_TABLE;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_VAR;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_VARB;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_VARF;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_VARI;
-import static neo.ui.Window.wexpOpType_t.WOP_TYPE_VARS;
+import neo.ui.Winvar.*;
+
+import static neo.Renderer.Material.MF_DEFAULTED;
+import static neo.Renderer.Material.SS_GUI;
+import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.CVAR_BOOL;
+import static neo.framework.CVarSystem.CVAR_GUI;
+import static neo.framework.Common.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_TABLE;
+import static neo.framework.KeyInput.*;
+import static neo.framework.Session.session;
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.idlib.Lib.colorBlack;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.*;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
+import static neo.idlib.precompiled.MAX_EXPRESSION_OPS;
+import static neo.idlib.precompiled.MAX_EXPRESSION_REGISTERS;
+import static neo.sys.sys_public.sysEventType_t.*;
+import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_ARROW;
+import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_HAND;
+import static neo.ui.RegExp.idRegister.REGTYPE.*;
+import static neo.ui.Window.idWindow.ON.*;
+import static neo.ui.Window.wexpOpType_t.*;
 import static neo.ui.Window.wexpRegister_t.WEXP_REG_NUM_PREDEFINED;
 import static neo.ui.Window.wexpRegister_t.WEXP_REG_TIME;
-import static neo.ui.Winvar.VAR_GUIPREFIX;
-import neo.ui.Winvar.idWinBackground;
-import neo.ui.Winvar.idWinBool;
-import neo.ui.Winvar.idWinFloat;
-import neo.ui.Winvar.idWinInt;
-import neo.ui.Winvar.idWinRectangle;
-import neo.ui.Winvar.idWinStr;
-import neo.ui.Winvar.idWinVar;
-import neo.ui.Winvar.idWinVec4;
+import static neo.ui.Winvar.*;
 
 /**
  *
  */
 public class Window {
 
-    static final int     WIN_CHILD           = 0x00000001;
-    static final int     WIN_CAPTION         = 0x00000002;
-    static final int     WIN_BORDER          = 0x00000004;
-    static final int     WIN_SIZABLE         = 0x00000008;
-    static final int     WIN_MOVABLE         = 0x00000010;
-    static final int     WIN_FOCUS           = 0x00000020;
-    static final int     WIN_CAPTURE         = 0x00000040;
-    static final int     WIN_HCENTER         = 0x00000080;
-    static final int     WIN_VCENTER         = 0x00000100;
-    static final int     WIN_MODAL           = 0x00000200;
-    static final int     WIN_INTRANSITION    = 0x00000400;
-    static final int     WIN_CANFOCUS        = 0x00000800;
-    static final int     WIN_SELECTED        = 0x00001000;
-    static final int     WIN_TRANSFORM       = 0x00002000;
-    static final int     WIN_HOLDCAPTURE     = 0x00004000;
-    static final int     WIN_NOWRAP          = 0x00008000;
-    static final int     WIN_NOCLIP          = 0x00010000;
-    static final int     WIN_INVERTRECT      = 0x00020000;
-    static final int     WIN_NATURALMAT      = 0x00040000;
-    static final int     WIN_NOCURSOR        = 0x00080000;
-    static final int     WIN_MENUGUI         = 0x00100000;
-    static final int     WIN_ACTIVE          = 0x00200000;
-    static final int     WIN_SHOWCOORDS      = 0x00400000;
-    static final int     WIN_SHOWTIME        = 0x00800000;
-    static final int     WIN_WANTENTER       = 0x01000000;
     //
-    static final int     WIN_DESKTOP         = 0x10000000;
+    static final String CAPTION_HEIGHT = "16.0";
     //
-    static final String  CAPTION_HEIGHT      = "16.0";
-    static final String  SCROLLER_SIZE       = "16.0";
-    static final int     SCROLLBAR_SIZE      = 16;
+    static final String DEFAULT_BACKCOLOR = "1 1 1 1";
+    static final String DEFAULT_BORDERCOLOR = "0 0 0 1";
+    static final String DEFAULT_FORECOLOR = "0 0 0 1";
+    static final String DEFAULT_TEXTSCALE = "0.4";
+    static final int MAX_LIST_ITEMS = 1024;
     //
-    static final int     MAX_WINDOW_NAME     = 32;
-    static final int     MAX_LIST_ITEMS      = 1024;
+    static final int MAX_WINDOW_NAME = 32;
+    static final int SCROLLBAR_SIZE = 16;
+    static final String SCROLLER_SIZE = "16.0";
     //
-    static final String  DEFAULT_BACKCOLOR   = "1 1 1 1";
-    static final String  DEFAULT_FORECOLOR   = "0 0 0 1";
-    static final String  DEFAULT_BORDERCOLOR = "0 0 0 1";
-    static final String  DEFAULT_TEXTSCALE   = "0.4";
+    static final int TOP_PRIORITY = 4;
+    static final int WIN_ACTIVE = 0x00200000;
+    static final int WIN_BORDER = 0x00000004;
+    static final int WIN_CANFOCUS = 0x00000800;
+    static final int WIN_CAPTION = 0x00000002;
+    static final int WIN_CAPTURE = 0x00000040;
+    static final int WIN_CHILD = 0x00000001;
     //
-    static final int     TOP_PRIORITY        = 4;
+    static final int WIN_DESKTOP = 0x10000000;
+    static final int WIN_FOCUS = 0x00000020;
+    static final int WIN_HCENTER = 0x00000080;
+    static final int WIN_HOLDCAPTURE = 0x00004000;
+    static final int WIN_INTRANSITION = 0x00000400;
+    static final int WIN_INVERTRECT = 0x00020000;
+    static final int WIN_MENUGUI = 0x00100000;
+    static final int WIN_MODAL = 0x00000200;
+    static final int WIN_MOVABLE = 0x00000010;
+    static final int WIN_NATURALMAT = 0x00040000;
+    static final int WIN_NOCLIP = 0x00010000;
+    static final int WIN_NOCURSOR = 0x00080000;
+    static final int WIN_NOWRAP = 0x00008000;
+    static final int WIN_SELECTED = 0x00001000;
+    static final int WIN_SHOWCOORDS = 0x00400000;
+    static final int WIN_SHOWTIME = 0x00800000;
+    static final int WIN_SIZABLE = 0x00000008;
+    static final int WIN_TRANSFORM = 0x00002000;
+    static final int WIN_VCENTER = 0x00000100;
+    static final int WIN_WANTENTER = 0x01000000;
     //
-    static final boolean WRITE_GUIS          = false;
+    static final boolean WRITE_GUIS = false;
 
     enum wexpOpType_t {
 
@@ -205,22 +142,21 @@ public class Window {
         WOP_TYPE_VARI,
         WOP_TYPE_VARB,
         WOP_TYPE_COND
-    };
+    }
 
     enum wexpRegister_t {
 
         WEXP_REG_TIME,
         WEXP_REG_NUM_PREDEFINED
-    };
+    }
 
     static class wexpOp_t {
 
-        wexpOpType_t opType;
-        idWinVar     a, d;
+        idWinVar a, d;
         int b, c;
+        wexpOpType_t opType;
 
         /**
-         *
          * @return
          */
         public int getA() {
@@ -242,25 +178,25 @@ public class Window {
 
             return -1;
         }
-    };
+    }
 
     static class idRegEntry {
 
-        String             name;
+        int index;
+        String name;
         idRegister.REGTYPE type;
-        int                index;
 
         public idRegEntry(String name, idRegister.REGTYPE type) {
             this.name = name;
             this.type = type;
         }
-    };
+    }
 
     static class idTimeLineEvent {
 
-        int             time;
         idGuiScriptList event;
-        boolean         pending;
+        boolean pending;
+        int time;
 
         idTimeLineEvent() {
             event = new idGuiScriptList();
@@ -272,127 +208,201 @@ public class Window {
         int/*size_t*/ Size() {
             return sizeof(this) + event.Size();
         }
-    };
+    }
 
     static class rvNamedEvent {
+
+        idGuiScriptList mEvent;
+        // ~rvNamedEvent(void)
+        // {
+        // delete mEvent;
+        // }
+        idStr mName;
 
         public rvNamedEvent(final String name) {
             mEvent = new idGuiScriptList();
             mName = new idStr(name);
         }
-        // ~rvNamedEvent(void)
-        // {
-        // delete mEvent;
-        // }
 
         public int /*size_t */ Size() {
             return sizeof(this) + mEvent.Size();
         }
-
-        idStr           mName;
-        idGuiScriptList mEvent;
-    };
+    }
 
     static class idTransitionData {
 
         idWinVar data;
-        int      offset;
         idInterpolateAccelDecelLinear<idVec4> interp = new idInterpolateAccelDecelLinear<>();
-    };
+        int offset;
+    }
 
     public static class idWindow {
 
-        protected              float       actualX;            // physical coords
-        protected              float       actualY;            // ''
-        protected              int         childID;            // this childs id
-        protected /*unsigned*/ int         flags;              // visible, focus, mouseover, cursor, border, etc..
-        protected              int         lastTimeRun;        //
-        protected              idRectangle drawRect     = new idRectangle();// overall rect
-        protected              idRectangle clientRect   = new idRectangle();// client area
-        protected              idVec2      origin       = new idVec2();
-        //
-        protected int    timeLine; // time stamp used for various fx
-        protected float  xOffset;
-        protected float  yOffset;
-        protected float  forceAspectWidth;
-        protected float  forceAspectHeight;
-        protected float  matScalex;
-        protected float  matScaley;
-        protected float  borderSize;
-        protected float  textAlignx;
-        protected float  textAligny;
-        protected idStr  name;
-        protected idStr  comment = new idStr();
-        protected idVec2 shear = new idVec2();
-        //
-        protected /*signed*/   char textShadow;
-        protected /*unsigned*/ char fontNum;
-        protected /*unsigned*/ char cursor;
-        protected /*signed*/   char textAlign;
-        //
-        protected idWinBool       noTime            = new idWinBool();
-        protected idWinBool       visible           = new idWinBool();
-        protected idWinBool       noEvents          = new idWinBool();
-        protected idWinRectangle  rect              = new idWinRectangle();// overall rect
-        protected idWinVec4       backColor         = new idWinVec4();
-        protected idWinVec4       matColor          = new idWinVec4();
-        protected idWinVec4       foreColor         = new idWinVec4();
-        protected idWinVec4       hoverColor        = new idWinVec4();
-        protected idWinVec4       borderColor       = new idWinVec4();
-        protected idWinFloat      textScale         = new idWinFloat();
-        protected idWinFloat      rotate            = new idWinFloat();
-        protected idWinStr        text              = new idWinStr();
-        protected idWinBackground backGroundName    = new idWinBackground();
-        //
-        protected idList<idWinVar>  definedVars = new idList<>();
-        protected idList<idWinVar>  updateVars  = new idList<>();
-        //
-        protected idRectangle       textRect  = new idRectangle();// text extented rect
-        protected idMaterial        background;                   // background asset
-        //
-        protected idWindow          parent;                       // parent window
-        protected idList<idWindow>  children = new idList<>();    // child windows
-        protected idList<drawWin_t> drawWindows = new idList<>();
-        //
-        protected idWindow          focusedChild;        // if a child window has the focus
-        protected idWindow          captureChild;        // if a child window has mouse capture
-        protected idWindow          overChild;           // if a child window has mouse capture
-        protected boolean           hover;
-        //
-        protected idDeviceContext      dc;
-        //
-        protected idUserInterfaceLocal gui;
+        public static final idRegEntry[] RegisterVars = {
+                new idRegEntry("forecolor", VEC4),
+                new idRegEntry("hovercolor", VEC4),
+                new idRegEntry("backcolor", VEC4),
+                new idRegEntry("bordercolor", VEC4),
+                new idRegEntry("rect", RECTANGLE),
+                new idRegEntry("matcolor", VEC4),
+                new idRegEntry("scale", VEC2),
+                new idRegEntry("translate", VEC2),
+                new idRegEntry("rotate", FLOAT),
+                new idRegEntry("textscale", FLOAT),
+                new idRegEntry("visible", BOOL),
+                new idRegEntry("noevents", BOOL),
+                new idRegEntry("text", STRING),
+                new idRegEntry("background", STRING),
+                new idRegEntry("runscript", STRING),
+                new idRegEntry("varbackground", STRING),
+                new idRegEntry("cvar", STRING),
+                new idRegEntry("choices", STRING),
+                new idRegEntry("choiceVar", STRING),
+                new idRegEntry("bind", STRING),
+                new idRegEntry("modelRotate", VEC4),
+                new idRegEntry("modelOrigin", VEC4),
+                new idRegEntry("lightOrigin", VEC4),
+                new idRegEntry("lightColor", VEC4),
+                new idRegEntry("viewOffset", VEC4),
+                new idRegEntry("hideCursor", BOOL)
+        };
+        public static final int NumRegisterVars = RegisterVars.length;
+        //        public static final String[] ScriptNames = new String[SCRIPT_COUNT.ordinal()];
+        public static final String[] ScriptNames = {
+                "onMouseEnter",
+                "onMouseExit",
+                "onAction",
+                "onActivate",
+                "onDeactivate",
+                "onESC",
+                "onEvent",
+                "onTrigger",
+                "onActionRelease",
+                "onEnter",
+                "onEnterRelease"
+        };
         //
         protected static final idCVar gui_debug = new idCVar("gui_debug", "0", CVAR_GUI | CVAR_BOOL, "");
-        protected static final idCVar gui_edit  = new idCVar("gui_edit", "0", CVAR_GUI | CVAR_BOOL, "");
-        //
-        protected idGuiScriptList[] scripts = new idGuiScriptList[etoi(SCRIPT_COUNT)];
-        protected boolean[]         saveTemps;
-        //
-        protected idList<idTimeLineEvent>  timeLineEvents = new idList<>();
-        protected idList<idTransitionData> transitions = new idList<>();
+        protected static final idCVar gui_edit = new idCVar("gui_edit", "0", CVAR_GUI | CVAR_BOOL, "");
+        private static final drawWin_t dw = new drawWin_t();
+        private static final idVec3 vec = new idVec3(0, 0, 1);
+        public static int bla1 = 0, bla2 = 0, drawCursorTotal = 0;
         //
         protected static boolean[] registerIsTemporary = new boolean[MAX_EXPRESSION_REGISTERS]; // statics to assist during parsing
-        //
-        protected idList<wexpOp_t>     ops                 = new idList<>();// evaluate to make expressionRegisters
-        protected idList<Float>        expressionRegisters = new idList<>();
-        protected idList<wexpOp_t>[]   saveOps;                             // evaluate to make expressionRegisters
-        protected idList<rvNamedEvent> namedEvents         = new idList<>();//  added named events
-        protected idList<Float>[]      saveRegs;
-        //
-        protected idRegisterList regList = new idRegisterList();
-        //
-        protected idWinBool hideCursor = new idWinBool();
-        //
-        private static       idMat3     trans   = new idMat3();
-        private static       idVec3     org     = new idVec3();
-        private static       idRotation rot     = new idRotation();
-        private static final idVec3     vec     = new idVec3(0, 0, 1);
-        private static       idMat3     smat    = new idMat3();
+        static int DEBUG_Activate = 0;
+        static int DEBUG_updateVars = 0;
+        static int simpleCount = 0, plainCount = 0;
         //
         //
         private static int DBG_COUNTER = 0;
-        private final  int DBG_COUNT= DBG_COUNTER++;
+        /*
+         ===============
+         idWindow::EvaluateRegisters
+
+         Parameters are taken from the localSpace and the renderView,
+         then all expressions are evaluated, leaving the shader registers
+         set to their apropriate values.
+         ===============
+         */private static int DBG_EvaluateRegisters = 0;
+        /*
+         ================
+         idWindow::GetChild
+
+         Returns the child window at the given index
+         ================
+         */private static int DBG_GetChild = 0;
+        private static int DBG_ParseRegEntry = 0;
+        private static int DBG_SetupBackground = 0;
+        private static boolean actionDownRun;
+        private static boolean actionUpRun;
+        private static String buff = "";//[16384];
+        private static idWindow lastEval;
+        private static final idVec3 org = new idVec3();
+        private static final float[] regs = new float[MAX_EXPRESSION_REGISTERS];
+        private static final idRotation rot = new idRotation();
+        private static final idMat3 smat = new idMat3();
+        //
+        private static idMat3 trans = new idMat3();
+        private final int DBG_COUNT = DBG_COUNTER++;
+        public idStr cmd = new idStr();
+        protected float actualX;            // physical coords
+        protected float actualY;            // ''
+        protected idWinVec4 backColor = new idWinVec4();
+        protected idWinBackground backGroundName = new idWinBackground();
+        protected idMaterial background;                   // background asset
+        protected idWinVec4 borderColor = new idWinVec4();
+        protected float borderSize;
+        protected idWindow captureChild;        // if a child window has mouse capture
+        protected int childID;            // this childs id
+        protected idList<idWindow> children = new idList<>();    // child windows
+        protected idRectangle clientRect = new idRectangle();// client area
+        protected idStr comment = new idStr();
+        protected /*unsigned*/ char cursor;
+        //
+        protected idDeviceContext dc;
+        //
+        protected idList<idWinVar> definedVars = new idList<>();
+        protected idRectangle drawRect = new idRectangle();// overall rect
+        protected idList<drawWin_t> drawWindows = new idList<>();
+        protected idList<Float> expressionRegisters = new idList<>();
+        protected /*unsigned*/ int flags;              // visible, focus, mouseover, cursor, border, etc..
+        //
+        protected idWindow focusedChild;        // if a child window has the focus
+        protected /*unsigned*/ char fontNum;
+        protected float forceAspectHeight;
+        protected float forceAspectWidth;
+        protected idWinVec4 foreColor = new idWinVec4();
+        //
+        protected idUserInterfaceLocal gui;
+        //
+        protected idWinBool hideCursor = new idWinBool();
+        protected boolean hover;
+        protected idWinVec4 hoverColor = new idWinVec4();
+        protected int lastTimeRun;        //
+        protected idWinVec4 matColor = new idWinVec4();
+        protected float matScalex;
+        protected float matScaley;
+        protected idStr name;
+        protected idList<rvNamedEvent> namedEvents = new idList<>();//  added named events
+        protected idWinBool noEvents = new idWinBool();
+        //
+        protected idWinBool noTime = new idWinBool();
+        //
+        protected idList<wexpOp_t> ops = new idList<>();// evaluate to make expressionRegisters
+        protected idVec2 origin = new idVec2();
+        protected idWindow overChild;           // if a child window has mouse capture
+        //
+        protected idWindow parent;                       // parent window
+        protected idWinRectangle rect = new idWinRectangle();// overall rect
+        //
+        protected idRegisterList regList = new idRegisterList();
+        protected idWinFloat rotate = new idWinFloat();
+        protected idList<wexpOp_t>[] saveOps;                             // evaluate to make expressionRegisters
+        protected idList<Float>[] saveRegs;
+        protected boolean[] saveTemps;
+        //
+        protected idGuiScriptList[] scripts = new idGuiScriptList[etoi(SCRIPT_COUNT)];
+        protected idVec2 shear = new idVec2();
+
+        protected idWinStr text = new idWinStr();
+
+        protected /*signed*/ char textAlign;
+        protected float textAlignx;
+        protected float textAligny;
+        //
+        protected idRectangle textRect = new idRectangle();// text extented rect
+        protected idWinFloat textScale = new idWinFloat();
+        //
+        protected /*signed*/ char textShadow;
+        //
+        protected int timeLine; // time stamp used for various fx
+        //
+        protected idList<idTimeLineEvent> timeLineEvents = new idList<>();
+        protected idList<idTransitionData> transitions = new idList<>();
+        protected idList<idWinVar> updateVars = new idList<>();
+        protected idWinBool visible = new idWinBool();
+        protected float xOffset;
+        protected float yOffset;
 
         public idWindow(idUserInterfaceLocal gui) {
             dc = null;
@@ -406,82 +416,12 @@ public class Window {
             CommonInit();
         }
 
-        /** ~idWindow() */
+        /**
+         * ~idWindow()
+         */
         public void close() {
             CleanUp();
         }
-
-        public enum ON {
-
-            ON_MOUSEENTER,//= 0,
-            ON_MOUSEEXIT,
-            ON_ACTION,
-            ON_ACTIVATE,
-            ON_DEACTIVATE,
-            ON_ESC,
-            ON_FRAME,
-            ON_TRIGGER,
-            ON_ACTIONRELEASE,
-            ON_ENTER,
-            ON_ENTERRELEASE,
-            SCRIPT_COUNT
-        };
-
-        public enum ADJUST {
-
-            ADJUST_MOVE,//= 0,
-            ADJUST_TOP,
-            ADJUST_RIGHT,
-            ADJUST_BOTTOM,
-            ADJUST_LEFT,
-            ADJUST_TOPLEFT,
-            ADJUST_BOTTOMRIGHT,
-            ADJUST_TOPRIGHT,
-            ADJUST_BOTTOMLEFT
-        };
-//        public static final String[] ScriptNames = new String[SCRIPT_COUNT.ordinal()];
-        public static final String[] ScriptNames = {
-            "onMouseEnter",
-            "onMouseExit",
-            "onAction",
-            "onActivate",
-            "onDeactivate",
-            "onESC",
-            "onEvent",
-            "onTrigger",
-            "onActionRelease",
-            "onEnter",
-            "onEnterRelease"
-        };
-        public static final idRegEntry[] RegisterVars = {
-            new idRegEntry("forecolor", VEC4),
-            new idRegEntry("hovercolor", VEC4),
-            new idRegEntry("backcolor", VEC4),
-            new idRegEntry("bordercolor", VEC4),
-            new idRegEntry("rect", RECTANGLE),
-            new idRegEntry("matcolor", VEC4),
-            new idRegEntry("scale", VEC2),
-            new idRegEntry("translate", VEC2),
-            new idRegEntry("rotate", FLOAT),
-            new idRegEntry("textscale", FLOAT),
-            new idRegEntry("visible", BOOL),
-            new idRegEntry("noevents", BOOL),
-            new idRegEntry("text", STRING),
-            new idRegEntry("background", STRING),
-            new idRegEntry("runscript", STRING),
-            new idRegEntry("varbackground", STRING),
-            new idRegEntry("cvar", STRING),
-            new idRegEntry("choices", STRING),
-            new idRegEntry("choiceVar", STRING),
-            new idRegEntry("bind", STRING),
-            new idRegEntry("modelRotate", VEC4),
-            new idRegEntry("modelOrigin", VEC4),
-            new idRegEntry("lightOrigin", VEC4),
-            new idRegEntry("lightColor", VEC4),
-            new idRegEntry("viewOffset", VEC4),
-            new idRegEntry("hideCursor", BOOL)
-        };
-        public static final int NumRegisterVars = RegisterVars.length;
 
         public void SetDC(idDeviceContext d) {
             dc = d;
@@ -634,8 +574,8 @@ public class Window {
             }
         }
 
-        private static int DBG_SetupBackground = 0;
-        public void SetupBackground() {    DBG_SetupBackground++;
+        public void SetupBackground() {
+            DBG_SetupBackground++;
             if (backGroundName.Length() != 0) {
                 background = declManager.FindMaterial(backGroundName.data);
                 background.SetImageClassifications(1);    // just for resource tracking
@@ -645,8 +585,6 @@ public class Window {
             }
             backGroundName.SetMaterialPtr(background);
         }
-
-        private static final drawWin_t dw = new drawWin_t();
 
         public drawWin_t FindChildByName(final String _name) {
             if (idStr.Icmp(name.toString(), _name) == 0) {
@@ -934,7 +872,6 @@ public class Window {
         public void AddChild(idWindow win) {
             win.childID = children.Append(win);
         }
-        private static String buff = "";//[16384];
 
         public void DebugDraw(int time, float x, float y) {
             if (dc != null) {
@@ -1131,8 +1068,6 @@ public class Window {
             return name.toString();//TODO:return idStr???
         }
 
-        static int simpleCount = 0, plainCount = 0;
-
         public boolean Parse(idParser src, boolean rebuild /*= true*/) {
             idToken token = new idToken(), token2, token3, token4, token5, token6, token7;
             idStr work;
@@ -1194,7 +1129,7 @@ public class Window {
                             idSimpleWindow simple = new idSimpleWindow(win);
                             dwt.simp = simple;
                             drawWindows.Append(dwt);
-			    win.close();//delete win;
+                            win.close();//delete win;
                             simpleCount++;
                         } else {
                             AddChild(win);
@@ -1315,7 +1250,7 @@ public class Window {
                     dwt.simp = null;
                     dwt.win = win;
                     drawWindows.Append(dwt);
-                } // 
+                } //
                 //  added new onEvent
                 else if (token.equals("onNamedEvent")) {
                     // Read the event name
@@ -1333,7 +1268,7 @@ public class Window {
                         break;
                     }
 
-                    // If we are in the gui editor then add the internal var to the 
+                    // If we are in the gui editor then add the internal var to the
                     // the wrapper
 //                    if (ID_ALLOW_TOOLS) {
 //                        if ((com_editors & EDITOR_GUI) != 0) {
@@ -1347,7 +1282,7 @@ public class Window {
 //                            idLexer src2 = new idLexer(str.toString(), str.Length(), "", src.GetFlags());
 //                            src2.ParseBracedSectionExact(out, 1);
 //
-//                            // Save the script		
+//                            // Save the script
 //                            rvGEWindowWrapper.GetWrapper(this).GetScriptDict().Set(va("onEvent %s", token.c_str()), out);
 //                        }
 //                    }
@@ -1370,7 +1305,7 @@ public class Window {
                     }
 
                     // add the script to the wrappers script list
-                    // If we are in the gui editor then add the internal var to the 
+                    // If we are in the gui editor then add the internal var to the
                     // the wrapper
 //                    if (ID_ALLOW_TOOLS) {
 //                        if ((com_editors & EDITOR_GUI) != 0) {
@@ -1384,7 +1319,7 @@ public class Window {
 //                            idLexer src2 = new idLexer(str.toString(), str.Length(), "", src.GetFlags());
 //                            src2.ParseBracedSectionExact(out, 1);
 //
-//                            // Save the script		
+//                            // Save the script
 //                            rvGEWindowWrapper.GetWrapper(this).GetScriptDict().Set(va("onTime %d", ev.time), out);
 //                        }
 //                    }
@@ -1404,7 +1339,7 @@ public class Window {
                     // Set the marker after the float name
                     src.SetMarker();
 
-                    // Read in the float 
+                    // Read in the float
                     regList.AddReg(work.toString(), etoi(FLOAT), src, this, varf);
 
                     // If we are in the gui editor then add the float to the defines
@@ -1472,7 +1407,7 @@ public class Window {
 //                    }
                 } else if (ParseScriptEntry(token.toString(), src)) {
                     // add the script to the wrappers script list
-                    // If we are in the gui editor then add the internal var to the 
+                    // If we are in the gui editor then add the internal var to the
                     // the wrapper
 //                    if (ID_ALLOW_TOOLS) {
 //                        if ((com_editors & EDITOR_GUI) != 0) {
@@ -1486,13 +1421,13 @@ public class Window {
 //                            idLexer src2 = new idLexer(str.toString(), str.Length(), "", src.GetFlags());
 //                            src2.ParseBracedSectionExact(out, 1);
 //
-//                            // Save the script		
+//                            // Save the script
 //                            rvGEWindowWrapper.GetWrapper(this).GetScriptDict().Set(token, out);
 //                        }
 //                    }
                 } else if (ParseInternalVar(token.toString(), src)) {
-                    // gui editor support		
-                    // If we are in the gui editor then add the internal var to the 
+                    // gui editor support
+                    // If we are in the gui editor then add the internal var to the
                     // the wrapper
 //                    if (ID_ALLOW_TOOLS) {
 //                        if ((com_editors & EDITOR_GUI) != 0) {
@@ -1504,7 +1439,7 @@ public class Window {
                 } else {
                     ParseRegEntry(token.toString(), src);
                     // hook into the main window parsing for the gui editor
-                    // If we are in the gui editor then add the internal var to the 
+                    // If we are in the gui editor then add the internal var to the
                     // the wrapper
 //                    if (ID_ALLOW_TOOLS) {
 //                        if ((com_editors & EDITOR_GUI) != 0) {
@@ -1529,7 +1464,7 @@ public class Window {
             PostParse();
 
             // hook into the main window parsing for the gui editor
-            // If we are in the gui editor then add the internal var to the 
+            // If we are in the gui editor then add the internal var to the
             // the wrapper
 //            if (ID_ALLOW_TOOLS) {
 //                if ((com_editors & EDITOR_GUI) != 0) {
@@ -1543,8 +1478,6 @@ public class Window {
         public boolean Parse(idParser src) {
             return Parse(src, true);
         }
-        private static boolean actionDownRun;
-        private static boolean actionUpRun;
 
         public String HandleEvent(final sysEvent_s event, boolean[] updateVisuals) {
 
@@ -1807,7 +1740,6 @@ public class Window {
             drawRect.Offset(-x, -y);
             clientRect.Offset(-x, -y);
         }
-        public static int bla1 = 0, bla2 = 0, drawCursorTotal = 0;
 
         public void Redraw(float x, float y) {
             idStr str;
@@ -1827,13 +1759,13 @@ public class Window {
             }
 
             if ((flags & WIN_SHOWTIME) != 0) {
-                dc.DrawText(va(" %0.1f seconds\n%s", (float) (time - timeLine) / 1000, gui.State().GetString("name")), 0.35f, 0, dc.colorWhite, new idRectangle(100, 0, 80, 80), false);
+                dc.DrawText(va(" %0.1f seconds\n%s", (float) (time - timeLine) / 1000, gui.State().GetString("name")), 0.35f, 0, idDeviceContext.colorWhite, new idRectangle(100, 0, 80, 80), false);
             }
 
             if ((flags & WIN_SHOWCOORDS) != 0) {
                 dc.EnableClipping(false);
                 str = new idStr(String.format("x: %d y: %d  cursorx: %d cursory: %d", (int) rect.x(), (int) rect.y(), (int) gui.CursorX(), (int) gui.CursorY()));
-                dc.DrawText(str.toString(), 0.25f, 0, dc.colorWhite, new idRectangle(0, 0, 100, 20), false);
+                dc.DrawText(str.toString(), 0.25f, 0, idDeviceContext.colorWhite, new idRectangle(0, 0, 100, 20), false);
                 dc.EnableClipping(true);
             }
 
@@ -1909,8 +1841,8 @@ public class Window {
             if (gui_debug.GetInteger() != 0 && (flags & WIN_DESKTOP) != 0) {
                 dc.EnableClipping(false);
                 str = new idStr(String.format("x: %.1f y: %.1f", gui.CursorX(), gui.CursorY()));
-                dc.DrawText(str.toString(), 0.25f, 0, dc.colorWhite, new idRectangle(0, 0, 100, 20), false);
-                dc.DrawText(gui.GetSourceFile(), 0.25f, 0, dc.colorWhite, new idRectangle(0, 20, 300, 20), false);
+                dc.DrawText(str.toString(), 0.25f, 0, idDeviceContext.colorWhite, new idRectangle(0, 0, 100, 20), false);
+                dc.DrawText(gui.GetSourceFile(), 0.25f, 0, idDeviceContext.colorWhite, new idRectangle(0, 20, 300, 20), false);
                 dc.EnableClipping(true);
             }
 
@@ -1945,8 +1877,6 @@ public class Window {
 
         public void PostParse() {
         }
-
-        static int DEBUG_Activate = 0;
 
         public void Activate(boolean activate, idStr act) {
             DEBUG_Activate++;
@@ -2013,8 +1943,8 @@ public class Window {
 
             if (gui_edit.GetBool()) {
                 dc.EnableClipping(false);
-                dc.DrawText(va("x: %d  y: %d", (int) rect.x(), (int) rect.y()), 0.25f, 0, dc.colorWhite, new idRectangle(rect.x(), rect.y() - 15, 100, 20), false);
-                dc.DrawText(va("w: %d  h: %d", (int) rect.w(), (int) rect.h()), 0.25f, 0, dc.colorWhite, new idRectangle(rect.x() + rect.w(), rect.w() + rect.h() + 5, 100, 20), false);
+                dc.DrawText(va("x: %d  y: %d", (int) rect.x(), (int) rect.y()), 0.25f, 0, idDeviceContext.colorWhite, new idRectangle(rect.x(), rect.y() - 15, 100, 20), false);
+                dc.DrawText(va("w: %d  h: %d", (int) rect.w(), (int) rect.h()), 0.25f, 0, idDeviceContext.colorWhite, new idRectangle(rect.x() + rect.w(), rect.w() + rect.h() + 5, 100, 20), false);
                 dc.EnableClipping(true);
             }
 
@@ -2147,155 +2077,7 @@ public class Window {
         public void ReadFromDemoFile(idDemoFile f, boolean rebuild /*= true*/) {
 
             // should never hit unless we re-enable WRITE_GUIS
-            if (!WRITE_GUIS) {
-                assert (false);
-//}else{
-//
-//	if (rebuild) {
-//		CommonInit();
-//	}
-//	
-//	f.SetLog(true, "window1");
-//	backGroundName = f.ReadHashString();
-//	f.SetLog(true, backGroundName);
-//	if ( backGroundName[0] ) {
-//		background = declManager.FindMaterial(backGroundName);
-//	} else {
-//		background = null;
-//	}
-//	f.ReadUnsignedChar( cursor );
-//	f.ReadUnsignedInt( flags );
-//	f.ReadInt( timeLine );
-//	f.ReadInt( lastTimeRun );
-//	idRectangle rct = rect;
-//	f.ReadFloat( rct.x );
-//	f.ReadFloat( rct.y );
-//	f.ReadFloat( rct.w );
-//	f.ReadFloat( rct.h );
-//	f.ReadFloat( drawRect.x );
-//	f.ReadFloat( drawRect.y );
-//	f.ReadFloat( drawRect.w );
-//	f.ReadFloat( drawRect.h );
-//	f.ReadFloat( clientRect.x );
-//	f.ReadFloat( clientRect.y );
-//	f.ReadFloat( clientRect.w );
-//	f.ReadFloat( clientRect.h );
-//	f.ReadFloat( textRect.x );
-//	f.ReadFloat( textRect.y );
-//	f.ReadFloat( textRect.w );
-//	f.ReadFloat( textRect.h );
-//	f.ReadFloat( xOffset);
-//	f.ReadFloat( yOffset);
-//	int i, c;
-//
-//	idStr work;
-//	if (rebuild) {
-//		f.SetLog(true, (work + "-scripts"));
-//		for (i = 0; i < SCRIPT_COUNT; i++) {
-//			bool b;
-//			f.ReadBool( b );
-//			if (b) {
-////				delete scripts[i];
-//				scripts[i] = new idGuiScriptList;
-//				scripts[i].ReadFromDemoFile(f);
-//			}
-//		}
-//
-//		f.SetLog(true, (work + "-timelines"));
-//		f.ReadInt( c );
-//		for (i = 0; i < c; i++) {
-//			idTimeLineEvent *tl = new idTimeLineEvent;
-//			f.ReadInt( tl.time );
-//			f.ReadBool( tl.pending );
-//			tl.event.ReadFromDemoFile(f);
-//			if (rebuild) {
-//				timeLineEvents.Append(tl);
-//			} else {
-//				assert(i < timeLineEvents.Num());
-//				timeLineEvents[i].time = tl.time;
-//				timeLineEvents[i].pending = tl.pending;
-//			}
-//		}
-//	}
-//
-//	f.SetLog(true, (work + "-transitions"));
-//	f.ReadInt( c );
-//	for (i = 0; i < c; i++) {
-//		idTransitionData td;
-//		td.data = NULL;
-//		f.ReadInt ( td.offset );
-//
-//		float startTime, accelTime, linearTime, decelTime;
-//		idVec4 startValue, endValue;	   
-//		f.ReadFloat( startTime );
-//		f.ReadFloat( accelTime );
-//		f.ReadFloat( linearTime );
-//		f.ReadFloat( decelTime );
-//		f.ReadVec4( startValue );
-//		f.ReadVec4( endValue );
-//		td.interp.Init( startTime, accelTime, decelTime, accelTime + linearTime + decelTime, startValue, endValue );
-//		
-//		// read this for correct data padding with the win32 savegames
-//		// the extrapolate is correctly initialized through the above Init call
-//		int extrapolationType;
-//		float duration;
-//		idVec4 baseSpeed, speed;
-//		float currentTime;
-//		idVec4 currentValue;
-//		f.ReadInt( extrapolationType );
-//		f.ReadFloat( startTime );
-//		f.ReadFloat( duration );
-//		f.ReadVec4( startValue );
-//		f.ReadVec4( baseSpeed );
-//		f.ReadVec4( speed );
-//		f.ReadFloat( currentTime );
-//		f.ReadVec4( currentValue );
-//
-//		transitions.Append(td);
-//	}
-//
-//	f.SetLog(true, (work + "-regstuff"));
-//	if (rebuild) {
-//		f.ReadInt( c );
-//		for (i = 0; i < c; i++) {
-//			wexpOp_t w;
-//			f.ReadInt( (int&)w.opType );
-//			f.ReadInt( w.a );
-//			f.ReadInt( w.b );
-//			f.ReadInt( w.c );
-//			f.ReadInt( w.d );
-//			ops.Append(w);
-//		}
-//
-//		f.ReadInt( c );
-//		for (i = 0; i < c; i++) {
-//			float ff;
-//			f.ReadFloat( ff );
-//			expressionRegisters.Append(ff);
-//		}
-//	
-//		regList.ReadFromDemoFile(f);
-//
-//	}
-//	f.SetLog(true, (work + "-children"));
-//	f.ReadInt( c );
-//	for (i = 0; i < c; i++) {
-//		if (rebuild) {
-//			idWindow *win = new idWindow(dc, gui);
-//			win.ReadFromDemoFile(f);
-//			AddChild(win);
-//		} else {
-//			for (int j = 0; j < c; j++) {
-//				if (children[j].childID == i) {
-//					children[j].ReadFromDemoFile(f,rebuild);
-//					break;
-//				} else {
-//					continue;
-//				}
-//			}
-//		}
-//	}
-            } /* WRITE_GUIS */
+            assert WRITE_GUIS;
 
         }
 
@@ -2305,82 +2087,7 @@ public class Window {
 
         public void WriteToDemoFile(idDemoFile f) {
             // should never hit unless we re-enable WRITE_GUIS
-            if (WRITE_GUIS) {
-                assert (false);
-//}else{
-//
-//	f->SetLog(true, "window");
-//	f->WriteHashString(backGroundName);
-//	f->SetLog(true, backGroundName);
-//	f->WriteUnsignedChar( cursor );
-//	f->WriteUnsignedInt( flags );
-//	f->WriteInt( timeLine );
-//	f->WriteInt( lastTimeRun );
-//	idRectangle rct = rect;
-//	f->WriteFloat( rct.x );
-//	f->WriteFloat( rct.y );
-//	f->WriteFloat( rct.w );
-//	f->WriteFloat( rct.h );
-//	f->WriteFloat( drawRect.x );
-//	f->WriteFloat( drawRect.y );
-//	f->WriteFloat( drawRect.w );
-//	f->WriteFloat( drawRect.h );
-//	f->WriteFloat( clientRect.x );
-//	f->WriteFloat( clientRect.y );
-//	f->WriteFloat( clientRect.w );
-//	f->WriteFloat( clientRect.h );
-//	f->WriteFloat( textRect.x );
-//	f->WriteFloat( textRect.y );
-//	f->WriteFloat( textRect.w );
-//	f->WriteFloat( textRect.h );
-//	f->WriteFloat( xOffset );
-//	f->WriteFloat( yOffset );
-//	idStr work;
-//	f->SetLog(true, work);
-//
-// 	int i, c;
-//
-//	f->SetLog(true, (work + "-transitions"));
-//	c = transitions.Num();
-//	f->WriteInt( c );
-//	for (i = 0; i < c; i++) {
-//		f->WriteInt( 0 );
-//		f->WriteInt( transitions[i].offset );
-//		
-//		f->WriteFloat( transitions[i].interp.GetStartTime() );
-//		f->WriteFloat( transitions[i].interp.GetAccelTime() );
-//		f->WriteFloat( transitions[i].interp.GetLinearTime() );
-//		f->WriteFloat( transitions[i].interp.GetDecelTime() );
-//		f->WriteVec4( transitions[i].interp.GetStartValue() );
-//		f->WriteVec4( transitions[i].interp.GetEndValue() );
-//
-//		// write to keep win32 render demo format compatiblity - we don't actually read them back anymore
-//		f->WriteInt( transitions[i].interp.GetExtrapolate()->GetExtrapolationType() );
-//		f->WriteFloat( transitions[i].interp.GetExtrapolate()->GetStartTime() );
-//		f->WriteFloat( transitions[i].interp.GetExtrapolate()->GetDuration() );
-//		f->WriteVec4( transitions[i].interp.GetExtrapolate()->GetStartValue() );
-//		f->WriteVec4( transitions[i].interp.GetExtrapolate()->GetBaseSpeed() );
-//		f->WriteVec4( transitions[i].interp.GetExtrapolate()->GetSpeed() );
-//		f->WriteFloat( transitions[i].interp.GetExtrapolate()->GetCurrentTime() );
-//		f->WriteVec4( transitions[i].interp.GetExtrapolate()->GetCurrentValue() );
-//	}
-//
-//	f->SetLog(true, (work + "-regstuff"));
-//
-//	f->SetLog(true, (work + "-children"));
-//	c = children.Num();
-//	f->WriteInt( c );
-//	for (i = 0; i < c; i++) {
-//		for (int j = 0; j < c; j++) {
-//			if (children[j]->childID == i) {
-//				children[j]->WriteToDemoFile(f);
-//				break;
-//			} else {
-//				continue;
-//			}
-//		}
-//	}
-            } /* WRITE_GUIS */
+            assert !WRITE_GUIS;
 
         }
 
@@ -2710,7 +2417,7 @@ public class Window {
         public void FixupTransitions() {
             int i, c = transitions.Num();
             for (i = 0; i < c; i++) {
-                drawWin_t dw = gui.GetDesktop().FindChildByName(((idWinStr) transitions.oGet(i).data).c_str());
+                drawWin_t dw = gui.GetDesktop().FindChildByName(transitions.oGet(i).data.c_str());
 //		delete transitions[i].data;
                 transitions.oGet(i).data = null;
                 if (dw != null && (dw.win != null || dw.simp != null)) {//TODO:
@@ -2815,8 +2522,6 @@ public class Window {
         public boolean HasOps() {
             return (ops.Num() > 0);
         }
-        private static float[] regs = new float[MAX_EXPRESSION_REGISTERS];
-        private static idWindow lastEval;
 
         public float EvalRegs(int test /*= -1*/, boolean force /*= false*/) {
 
@@ -2957,7 +2662,7 @@ public class Window {
 
                     list.Append(gs);
 
-                    // if we are parsing an else if then return out so 
+                    // if we are parsing an else if then return out so
                     // the initial "if" parser can handle the rest of the tokens
                     if (ifElseBlock) {
                         return true;
@@ -3070,8 +2775,6 @@ public class Window {
             cmd.oSet(str);
         }
 
-        static int DEBUG_updateVars = 0;
-
         public void AddUpdateVar(idWinVar var) {
             var.DEBUG_COUNTER = DEBUG_updateVars++;
             updateVars.AddUnique(var);
@@ -3141,13 +2844,12 @@ public class Window {
         public void SetComment(final String p) {
             comment.oSet(p);
         }
-        public idStr cmd = new idStr();
 
         public void RunNamedEvent(final String eventName) {
             int i;
             int c;
 
-            // Find and run the event	
+            // Find and run the event
             c = namedEvents.Num();
             for (i = 0; i < c; i++) {
                 if (namedEvents.oGet(i).mName.Icmp(eventName) != 0) {
@@ -3202,13 +2904,6 @@ public class Window {
             return drawWindows.Num();
         }
 
-        /*
-         ================
-         idWindow::GetChild
-
-         Returns the child window at the given index
-         ================
-         */private static int DBG_GetChild = 0;
         public idWindow GetChild(int index) {
             DBG_GetChild++;
             final drawWin_t win_t = drawWindows.oGet(index);
@@ -3435,11 +3130,7 @@ public class Window {
                 return false;
             }
 
-            if (namedEvents.Num() != 0) {
-                return false;
-            }
-
-            return true;
+            return namedEvents.Num() == 0;
         }
 
         protected void UpdateWinVars() {
@@ -3801,7 +3492,7 @@ public class Window {
             if (priority == 1 && token.equals("/")) {
                 return ParseEmitOp(src, a, WOP_TYPE_DIVIDE, priority);
             }
-            if (priority == 1 && token.equals("%")) {	// implied truncate both to integer
+            if (priority == 1 && token.equals("%")) {    // implied truncate both to integer
                 return ParseEmitOp(src, a, WOP_TYPE_MOD, priority);
             }
             if (priority == 2 && token.equals("+")) {
@@ -3861,16 +3552,8 @@ public class Window {
             return this.ParseExpressionPriority(src, priority, null);
         }
 
-        /*
-         ===============
-         idWindow::EvaluateRegisters
-
-         Parameters are taken from the localSpace and the renderView,
-         then all expressions are evaluated, leaving the shader registers
-         set to their apropriate values.
-         ===============
-         */private static int DBG_EvaluateRegisters = 0;
-        protected void EvaluateRegisters(float[] registers) {DBG_EvaluateRegisters++;
+        protected void EvaluateRegisters(float[] registers) {
+            DBG_EvaluateRegisters++;
 
             int i, b;
             wexpOp_t op;
@@ -3956,7 +3639,7 @@ public class Window {
                             idWinVec4 var = (idWinVec4) (op.a);
                             registers[op.c] = (var.data).oGet((int) registers[op.b]);
                         } else {
-                            registers[op.c] = ((idWinVar) (op.a)).x();
+                            registers[op.c] = op.a.x();
                         }
                         break;
                     case WOP_TYPE_VARS:
@@ -4029,7 +3712,6 @@ public class Window {
             return false;
         }
 
-        private static int DBG_ParseRegEntry = 0;
         protected boolean ParseRegEntry(final String name, idParser src) {
             idStr work;
             work = new idStr(name);
@@ -4244,5 +3926,35 @@ public class Window {
 
         protected void ConvertRegEntry(final String name, idParser src, idStr out, int tabs) {
         }
-    };
+
+        public enum ADJUST {
+
+            ADJUST_MOVE,//= 0,
+            ADJUST_TOP,
+            ADJUST_RIGHT,
+            ADJUST_BOTTOM,
+            ADJUST_LEFT,
+            ADJUST_TOPLEFT,
+            ADJUST_BOTTOMRIGHT,
+            ADJUST_TOPRIGHT,
+            ADJUST_BOTTOMLEFT
+        }
+
+        public enum ON {
+
+            ON_MOUSEENTER,//= 0,
+            ON_MOUSEEXIT,
+            ON_ACTION,
+            ON_ACTIVATE,
+            ON_DEACTIVATE,
+            ON_ESC,
+            ON_FRAME,
+            ON_TRIGGER,
+            ON_ACTIONRELEASE,
+            ON_ENTER,
+            ON_ENTERRELEASE,
+            SCRIPT_COUNT
+        }
+    }
+
 }

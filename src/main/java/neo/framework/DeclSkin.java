@@ -1,12 +1,7 @@
 package neo.framework;
 
-import java.nio.ByteBuffer;
 import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.NOT;
 import neo.TempDump.SERiAL;
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
 import neo.framework.DeclManager.idDecl;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer.idLexer;
@@ -14,6 +9,13 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
+
+import java.nio.ByteBuffer;
+
+import static neo.TempDump.NOT;
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
 
 /**
  *
@@ -29,14 +31,14 @@ public class DeclSkin {
      */
     static class skinMapping_t {
 
-        idMaterial from;			// 0 == any unmatched shader
+        idMaterial from;            // 0 == any unmatched shader
         idMaterial to;
-    };
+    }
 
     public static class idDeclSkin extends idDecl implements SERiAL {
 
-        private idList<skinMapping_t> mappings = new idList<>();
-        private idStrList associatedModels = new idStrList();
+        private final idStrList associatedModels = new idStrList();
+        private final idList<skinMapping_t> mappings = new idList<>();
         //
         //
 
@@ -54,9 +56,9 @@ public class DeclSkin {
 
                 idStr.snPrintf(generated, generated.capacity(),
                         "skin %s // IMPLICITLY GENERATED\n"
-                        + "{\n"
-                        + "_default %s\n"
-                        + "}\n", GetName(), GetName());
+                                + "{\n"
+                                + "_default %s\n"
+                                + "}\n", GetName(), GetName());
                 SetText(generated.toString());
                 return true;
             } else {
@@ -179,5 +181,6 @@ public class DeclSkin {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
+
 }

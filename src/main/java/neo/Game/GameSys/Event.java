@@ -2,31 +2,15 @@ package neo.Game.GameSys;
 
 import neo.CM.CollisionModel.contactType_t;
 import neo.CM.CollisionModel.trace_s;
-import neo.Game.AFEntity;
+import neo.Game.*;
 import neo.Game.AI.AI;
 import neo.Game.AI.AI_Events;
 import neo.Game.AI.AI_Vagary;
-import neo.Game.Actor;
-import neo.Game.Camera;
-import neo.Game.Entity;
-import neo.Game.FX;
 import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Item;
-import neo.Game.Light;
-import neo.Game.Misc;
-import neo.Game.Moveable;
-import neo.Game.Mover;
-import neo.Game.Player;
-import neo.Game.Projectile;
 import neo.Game.Script.Script_Thread;
-import neo.Game.SecurityCamera;
-import neo.Game.Sound;
-import neo.Game.Target;
-import neo.Game.Trigger;
-import neo.Game.Weapon;
 import neo.TempDump.CPP_class;
 import neo.TempDump.TODO_Exception;
 import neo.idlib.Text.Str.idStr;
@@ -44,28 +28,28 @@ import static neo.TempDump.etoi;
  */
 public class Event {
 
-    public static final int     D_EVENT_MAXARGS     = 8;        // if changed, enable the CREATE_EVENT_CODE define in Event.cpp to generate switch statement for idClass::ProcessEventArgPtr.
+    public static final char D_EVENT_ENTITY = 'e';
+    public static final char D_EVENT_ENTITY_NULL = 'E';        // event can handle NULL entity pointers
+    public static final char D_EVENT_FLOAT = 'f';
+    public static final char D_EVENT_INTEGER = 'd';
+    public static final int D_EVENT_MAXARGS = 8;        // if changed, enable the CREATE_EVENT_CODE define in Event.cpp to generate switch statement for idClass::ProcessEventArgPtr.
+    public static final char D_EVENT_STRING = 's';
+    public static final char D_EVENT_TRACE = 't';
+    public static final char D_EVENT_VECTOR = 'v';
     //                                                          // running the game will then generate c:\doom\base\events.txt, the contents of which should be copied into the switch statement.
 //
-    public static final char    D_EVENT_VOID        = (char) 0;
-    public static final char    D_EVENT_INTEGER     = 'd';
-    public static final char    D_EVENT_FLOAT       = 'f';
-    public static final char    D_EVENT_VECTOR      = 'v';
-    public static final char    D_EVENT_STRING      = 's';
-    public static final char    D_EVENT_ENTITY      = 'e';
-    public static final char    D_EVENT_ENTITY_NULL = 'E';        // event can handle NULL entity pointers
-    public static final char    D_EVENT_TRACE       = 't';
+    public static final char D_EVENT_VOID = (char) 0;
     //
-    public static final int     MAX_EVENTS          = 4096;
+    public static final int MAX_EVENTS = 4096;
     //
-    public static final int     MAX_EVENTSPERFRAME  = 4096;
-    //
-    static              boolean eventError          = false;
-    static String eventErrorMsg;
+    public static final int MAX_EVENTSPERFRAME = 4096;
+    static idEvent[] EventPool = new idEvent[MAX_EVENTS];
+    static idLinkList<idEvent> EventQueue = new idLinkList<>();
     //
     static idLinkList<idEvent> FreeEvents = new idLinkList<>();
-    static idLinkList<idEvent> EventQueue = new idLinkList<>();
-    static idEvent[]           EventPool  = new idEvent[MAX_EVENTS];
+    //
+    static boolean eventError = false;
+    static String eventErrorMsg;
 //
 
     static {
@@ -105,18 +89,18 @@ public class Event {
      ***********************************************************************/
     public static class idEventDef {
 
-        private String               name;
-        private String               formatspec;
-        private long/*unsigned int*/ formatspecIndex;
-        private int                  returnType;
-        private int                  numargs;
-        private int/*size_t*/        argsize;
-        private int[] argOffset = new int[D_EVENT_MAXARGS];
-        private int        eventnum;
-        private idEventDef next;
         //
-        private static idEventDef[] eventDefList = new idEventDef[MAX_EVENTS];
-        private static int          numEventDefs = 0;
+        private static final idEventDef[] eventDefList = new idEventDef[MAX_EVENTS];
+        private static int numEventDefs = 0;
+        private int[] argOffset = new int[D_EVENT_MAXARGS];
+        private int/*size_t*/        argsize;
+        private int eventnum;
+        private final String formatspec;
+        private long/*unsigned int*/ formatspecIndex;
+        private final String name;
+        private idEventDef next;
+        private final int numargs;
+        private final int returnType;
 //
 //
 
@@ -159,7 +143,7 @@ public class Event {
             argsize = 0;
             argOffset = new int[D_EVENT_MAXARGS];//memset( argOffset, 0, sizeof( argOffset ) );
             for (i = 0; i < numargs; i++) {
-                argOffset[ i] = argsize;
+                argOffset[i] = argsize;
                 switch (formatSpec.charAt(i)) {
                     case D_EVENT_FLOAT:
                         bits |= 1 << i;
@@ -205,7 +189,7 @@ public class Event {
             // and mismatched format strings
             eventnum = numEventDefs;
             for (i = 0; i < eventnum; i++) {
-                ev = eventDefList[ i];
+                ev = eventDefList[i];
                 if (command.equals(ev.name)) {
                     if (!formatSpec.equals(ev.formatspec)) {
                         eventError = true;
@@ -235,6 +219,32 @@ public class Event {
             }
             eventDefList[numEventDefs] = ev;
             numEventDefs++;
+        }
+
+        public static int NumEventCommands() {
+            return numEventDefs;
+        }
+
+        public static idEventDef GetEventCommand(int eventnum) {
+            return eventDefList[eventnum];
+        }
+
+        public static idEventDef FindEvent(final String name) {
+            idEventDef ev;
+            int num;
+            int i;
+
+            assert (name != null);
+
+            num = numEventDefs;
+            for (i = 0; i < num; i++) {
+                ev = eventDefList[i];
+                if (name.equals(ev.name)) {
+                    return ev;
+                }
+            }
+
+            return null;
         }
 
         public String GetName() {
@@ -270,32 +280,6 @@ public class Event {
             return argOffset[arg];
         }
 
-        public static int NumEventCommands() {
-            return numEventDefs;
-        }
-
-        public static idEventDef GetEventCommand(int eventnum) {
-            return eventDefList[ eventnum];
-        }
-
-        public static idEventDef FindEvent(final String name) {
-            idEventDef ev;
-            int num;
-            int i;
-
-            assert (name != null);
-
-            num = numEventDefs;
-            for (i = 0; i < num; i++) {
-                ev = eventDefList[ i];
-                if (name.equals(ev.name)) {
-                    return ev;
-                }
-            }
-
-            return null;
-        }
-
         @Override
         public int hashCode() {
             return eventnum;
@@ -311,7 +295,7 @@ public class Event {
             return eventnum == that.eventnum;
 
         }
-    };
+    }
 
     /* **********************************************************************
 
@@ -320,17 +304,17 @@ public class Event {
      ***********************************************************************/
     public static class idEvent {
 
-        private idEventDef      eventdef;
-        private idEventArg[]    data;
-        private int             time;
-        private idClass         object;
-        private java.lang.Class typeinfo;
-        //
-        private       idLinkList<idEvent> eventNode   = new idLinkList<>();
         //
 //        private static idDynamicBlockAlloc<Byte> eventDataAllocator = new idDynamicBlockAlloc(16 * 1024, 256);
 //
-        public static boolean             initialized = false;
+        public static boolean initialized = false;
+        private idEventArg[] data;
+        //
+        private final idLinkList<idEvent> eventNode = new idLinkList<>();
+        private idEventDef eventdef;
+        private idClass object;
+        private int time;
+        private java.lang.Class typeinfo;
 //
 //
 
@@ -344,7 +328,7 @@ public class Event {
             String materialName;
 
             if (FreeEvents.IsListEmpty()) {
-                gameLocal.Error("idEvent::Alloc : No more free events");
+                Game_local.idGameLocal.Error("idEvent::Alloc : No more free events");
             }
 
             ev = FreeEvents.Next();
@@ -353,7 +337,7 @@ public class Event {
             ev.eventdef = evdef;
 
             if (numargs != evdef.GetNumArgs()) {
-                gameLocal.Error("idEvent::Alloc : Wrong number of args for '%s' event.", evdef.GetName());
+                Game_local.idGameLocal.Error("idEvent::Alloc : Wrong number of args for '%s' event.", evdef.GetName());
             }
 
             size = evdef.GetArgSize();
@@ -428,7 +412,7 @@ public class Event {
 
             format = evdef.GetArgFormat().toCharArray();
             if (numargs != evdef.GetNumArgs()) {
-                gameLocal.Error("idEvent::CopyArgs : Wrong number of args for '%s' event.", evdef.GetName());
+                Game_local.idGameLocal.Error("idEvent::CopyArgs : Wrong number of args for '%s' event.", evdef.GetName());
             }
 
             for (i = 0; i < numargs; i++) {
@@ -436,7 +420,7 @@ public class Event {
                 if (format[i] != arg.type) {
                     // when NULL is passed in for an entity, it gets cast as an integer 0, so don't give an error when it happens
                     if (!(((format[i] == D_EVENT_TRACE) || (format[i] == D_EVENT_ENTITY)) && (arg.type == 'd') && (arg.value == Integer.valueOf(0)))) {
-                        gameLocal.Error("idEvent::CopyArgs : Wrong type passed in for arg # %d on '%s' event.", i, evdef.GetName());
+                        Game_local.idGameLocal.Error("idEvent::CopyArgs : Wrong type passed in for arg # %d on '%s' event.", i, evdef.GetName());
                     }
                 }
 
@@ -444,57 +428,10 @@ public class Event {
             }
         }
 
-        public void Free() {
-//            if (data != null) {
-//                eventDataAllocator.Free(data);
-            data = null;
-//            }
-
-            eventdef = null;
-            time = 0;
-            object = null;
-            typeinfo = null;
-
-            eventNode.SetOwner(this);
-            eventNode.AddToEnd(FreeEvents);
-        }
-
-        public void Schedule(idClass obj, final java.lang.Class type, int time) {
-            idEvent event;
-
-            assert (initialized);
-            if (!initialized) {
-                return;
-            }
-
-            object = obj;
-            typeinfo = type;
-
-            // wraps after 24 days...like I care. ;)
-            this.time = gameLocal.time + time;
-
-            eventNode.Remove();
-
-            event = EventQueue.Next();
-            while ((event != null) && (this.time >= event.time)) {
-                event = event.eventNode.Next();
-            }
-
-            if (event != null) {
-                eventNode.InsertBefore(event.eventNode);
-            } else {
-                eventNode.AddToEnd(EventQueue);
-            }
-        }
-
-        public Object[] GetData() {
-            return data;
-        }
-
         public static void CancelEvents(final idClass obj) {
             CancelEvents(obj, null);
         }
-        
+
         public static void CancelEvents(final idClass obj, final idEventDef evdef /*= NULL*/) {
             idEvent event;
             idEvent next;
@@ -522,7 +459,7 @@ public class Event {
             FreeEvents.Clear();
             EventQueue.Clear();
 
-            // 
+            //
             // add the events to the free list
             //
             for (i = 0; i < MAX_EVENTS; i++) {
@@ -568,7 +505,7 @@ public class Event {
                             args[i] = event.data[i];
                             break;
                         default:
-                            gameLocal.Error("idEvent::ServiceEvents : Invalid arg format '%s' string for '%s' event.", formatspec, ev.GetName());
+                            Game_local.idGameLocal.Error("idEvent::ServiceEvents : Invalid arg format '%s' string for '%s' event.", formatspec, ev.GetName());
                     }//TODO:S ^^^^^^^^^^^^^^^^^^^^^
                 }
 
@@ -593,7 +530,7 @@ public class Event {
                 // of events being processed is evidence of an infinite loop of events.
                 num++;
                 if (num > MAX_EVENTSPERFRAME) {
-                    gameLocal.Error("Event overflow.  Possible infinite loop in script.");
+                    Game_local.idGameLocal.Error("Event overflow.  Possible infinite loop in script.");
                 }
             }
         }
@@ -602,7 +539,7 @@ public class Event {
             gameLocal.Printf("Initializing event system\n");
 
             if (eventError) {
-                gameLocal.Error("%s", eventErrorMsg);
+                Game_local.idGameLocal.Error("%s", eventErrorMsg);
             }
 
 // #ifdef CREATE_EVENT_CODE
@@ -643,7 +580,7 @@ public class Event {
         }
 
         // save games
-        public static void Save(idSaveGame savefile) {					// archives object for save game file
+        public static void Save(idSaveGame savefile) {                    // archives object for save game file
             String str;
             int i, size;
             idEvent event;
@@ -702,7 +639,7 @@ public class Event {
             }
         }
 
-        public static void Restore(idRestoreGame savefile) {				// unarchives object from save game file
+        public static void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             ByteBuffer str = ByteBuffer.allocate(MAX_STRING_LEN);
             int[] num = {0}, argsize = {0};
             int i, j, size;
@@ -714,7 +651,7 @@ public class Event {
 
             for (i = 0; i < num[0]; i++) {
                 if (FreeEvents.IsListEmpty()) {
-                    gameLocal.Error("idEvent::Restore : No more free events");
+                    Game_local.idGameLocal.Error("idEvent::Restore : No more free events");
                 }
 
                 event = FreeEvents.Next();
@@ -828,7 +765,7 @@ public class Event {
         /*
          ================
          idEvent::ReadTrace
- 
+
          idRestoreGame has a ReadTrace procedure, but unfortunately idEvent wants the material
          string name at the of the data structure rather than in the middle
          ================
@@ -849,5 +786,53 @@ public class Event {
             trace.c.trmFeature = savefile.ReadInt();
             trace.c.id = savefile.ReadInt();
         }
-    };
+
+        public void Free() {
+//            if (data != null) {
+//                eventDataAllocator.Free(data);
+            data = null;
+//            }
+
+            eventdef = null;
+            time = 0;
+            object = null;
+            typeinfo = null;
+
+            eventNode.SetOwner(this);
+            eventNode.AddToEnd(FreeEvents);
+        }
+
+        public void Schedule(idClass obj, final java.lang.Class type, int time) {
+            idEvent event;
+
+            assert (initialized);
+            if (!initialized) {
+                return;
+            }
+
+            object = obj;
+            typeinfo = type;
+
+            // wraps after 24 days...like I care. ;)
+            this.time = gameLocal.time + time;
+
+            eventNode.Remove();
+
+            event = EventQueue.Next();
+            while ((event != null) && (this.time >= event.time)) {
+                event = event.eventNode.Next();
+            }
+
+            if (event != null) {
+                eventNode.InsertBefore(event.eventNode);
+            } else {
+                eventNode.AddToEnd(EventQueue);
+            }
+        }
+
+        public Object[] GetData() {
+            return data;
+        }
+    }
+
 }

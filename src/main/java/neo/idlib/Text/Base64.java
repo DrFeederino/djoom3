@@ -1,10 +1,12 @@
 package neo.idlib.Text;
 
-import java.nio.ByteBuffer;
 import neo.framework.File_h.idFile;
+import neo.idlib.Text.Str.idStr;
+
+import java.nio.ByteBuffer;
+
 import static neo.idlib.Lib.IntForSixtets;
 import static neo.idlib.Lib.SixtetsForInt;
-import neo.idlib.Text.Str.idStr;
 
 /**
  *
@@ -20,6 +22,14 @@ public class Base64 {
      */
     public static class idBase64 {
 
+        //public				~idBase64( void );
+//
+        static final char[] sixtet_to_base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+        private int alloced;
+        //
+        private byte[] data;
+        private int len;
+
         public idBase64() {
             Init();
         }
@@ -30,9 +40,6 @@ public class Base64 {
             this.len = s.len;
             this.alloced = s.alloced;
         }
-//public				~idBase64( void );
-//
-        static final char[] sixtet_to_base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 
         public void Encode(final byte[] from, int size) {
             final int[] from2 = new int[size];
@@ -72,7 +79,7 @@ public class Base64 {
                     byte[] out = new byte[4];
                     SixtetsForInt(out, (int) w);
                     for (j = 0; j * 6 < i * 8; ++j) {
-                        to[t_ptr++] = (byte) sixtet_to_base64[ out[j]];
+                        to[t_ptr++] = (byte) sixtet_to_base64[out[j]];
                     }
                     if (size == 0) {
                         for (j = i; j < 3; ++j) {
@@ -145,8 +152,9 @@ public class Base64 {
             }
             return n;
         }
+//
 
-        public void Decode(idStr[] dest) {// decodes the binary content to an idStr (a bit dodgy, \0 and other non-ascii are possible in the decoded content) 
+        public void Decode(idStr[] dest) {// decodes the binary content to an idStr (a bit dodgy, \0 and other non-ascii are possible in the decoded content)
             byte[] buf = new byte[DecodeLength() + 1]; // +1 for trailing \0
             int out = Decode(buf);
 //            buf[out] = '\0';
@@ -161,11 +169,10 @@ public class Base64 {
 //	delete[] buf;
         }
 
-//
+        //
         public char[] c_str() {
             return new String(data).toCharArray();
         }
-//
 
         public void oSet(final idStr s) {
             EnsureAlloced(s.Length() + 1); // trailing \0 - beware, this does a Release
@@ -173,10 +180,6 @@ public class Base64 {
             this.data = s.data.getBytes();
             len = s.Length();
         }
-//
-        private byte[] data;
-        private int len;
-        private int alloced;
 //
 
         private void Init() {
@@ -199,5 +202,6 @@ public class Base64 {
             data = new byte[size];
             alloced = size;
         }
-    };
+    }
+
 }

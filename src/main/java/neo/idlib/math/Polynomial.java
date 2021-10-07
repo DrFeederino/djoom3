@@ -1,11 +1,11 @@
 package neo.idlib.math;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
-
 import neo.idlib.Lib;
 import neo.idlib.math.Complex.idComplex;
 import neo.idlib.math.Math_h.idMath;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
  *
@@ -23,9 +23,9 @@ public class Polynomial {
      */
     public static class idPolynomial {
 
-        private int degree;
         private int allocated;
         private float[] coefficient;
+        private int degree;
         //
         //
 
@@ -92,9 +92,211 @@ public class Polynomial {
 //
 //public	float			operator[]( int index ) const;
 
+        public static int GetRoots1(float a, float b, float[] roots) {
+            assert (a != 0.0f);
+            roots[0] = -b / a;
+            return 1;
+        }
+
+        public static int GetRoots2(float a, float b, float c, float[] roots) {
+            float inva, ds;
+
+            if (a != 1.0f) {
+                assert (a != 0.0f);
+                inva = 1.0f / a;
+                c *= inva;
+                b *= inva;
+            }
+            ds = b * b - 4.0f * c;
+            if (ds < 0.0f) {
+                return 0;
+            } else if (ds > 0.0f) {
+                ds = idMath.Sqrt(ds);
+                roots[0] = 0.5f * (-b - ds);
+                roots[1] = 0.5f * (-b + ds);
+                return 2;
+            } else {
+                roots[0] = 0.5f * -b;
+                return 1;
+            }
+        }
+
+        public static int GetRoots3(float a, float b, float c, float d, float[] roots) {
+            float inva, f, g, halfg, ofs, ds, dist, angle, cs, ss, t;
+
+            if (a != 1.0f) {
+                assert (a != 0.0f);
+                inva = 1.0f / a;
+                d *= inva;
+                c *= inva;
+                b *= inva;
+            }
+
+            f = (1.0f / 3.0f) * (3.0f * c - b * b);
+            g = (1.0f / 27.0f) * (2.0f * b * b * b - 9.0f * c * b + 27.0f * d);
+            halfg = 0.5f * g;
+            ofs = (1.0f / 3.0f) * b;
+            ds = 0.25f * g * g + (1.0f / 27.0f) * f * f * f;
+
+            if (ds < 0.0f) {
+                dist = idMath.Sqrt((-1.0f / 3.0f) * f);
+                angle = (1.0f / 3.0f) * idMath.ATan(idMath.Sqrt(-ds), -halfg);
+                cs = idMath.Cos(angle);
+                ss = idMath.Sin(angle);
+                roots[0] = 2.0f * dist * cs - ofs;
+                roots[1] = -dist * (cs + idMath.SQRT_THREE * ss) - ofs;
+                roots[2] = -dist * (cs - idMath.SQRT_THREE * ss) - ofs;
+                return 3;
+            } else if (ds > 0.0f) {
+                ds = idMath.Sqrt(ds);
+                t = -halfg + ds;
+                if (t >= 0.0f) {
+                    roots[0] = idMath.Pow(t, (1.0f / 3.0f));
+                } else {
+                    roots[0] = -idMath.Pow(-t, (1.0f / 3.0f));
+                }
+                t = -halfg - ds;
+                if (t >= 0.0f) {
+                    roots[0] += idMath.Pow(t, (1.0f / 3.0f));
+                } else {
+                    roots[0] -= idMath.Pow(-t, (1.0f / 3.0f));
+                }
+                roots[0] -= ofs;
+                return 1;
+            } else {
+                if (halfg >= 0.0f) {
+                    t = -idMath.Pow(halfg, (1.0f / 3.0f));
+                } else {
+                    t = idMath.Pow(-halfg, (1.0f / 3.0f));
+                }
+                roots[0] = 2.0f * t - ofs;
+                roots[1] = -t - ofs;
+                roots[2] = roots[1];
+                return 3;
+            }
+        }
+
+        public static int GetRoots4(float a, float b, float c, float d, float e, float[] roots) {
+            int count;
+            float inva, y, ds, r, s1, s2, t1, t2, tp, tm;
+            float[] roots3 = new float[3];
+
+            if (a != 1.0f) {
+                assert (a != 0.0f);
+                inva = 1.0f / a;
+                e *= inva;
+                d *= inva;
+                c *= inva;
+                b *= inva;
+            }
+
+            count = 0;
+
+            GetRoots3(1.0f, -c, b * d - 4.0f * e, -b * b * e + 4.0f * c * e - d * d, roots3);
+            y = roots3[0];
+            ds = 0.25f * b * b - c + y;
+
+            if (ds < 0.0f) {
+                return 0;
+            } else if (ds > 0.0f) {
+                r = idMath.Sqrt(ds);
+                t1 = 0.75f * b * b - r * r - 2.0f * c;
+                t2 = (4.0f * b * c - 8.0f * d - b * b * b) / (4.0f * r);
+                tp = t1 + t2;
+                tm = t1 - t2;
+
+                if (tp >= 0.0f) {
+                    s1 = idMath.Sqrt(tp);
+                    roots[count++] = -0.25f * b + 0.5f * (r + s1);
+                    roots[count++] = -0.25f * b + 0.5f * (r - s1);
+                }
+                if (tm >= 0.0f) {
+                    s2 = idMath.Sqrt(tm);
+                    roots[count++] = -0.25f * b + 0.5f * (s2 - r);
+                    roots[count++] = -0.25f * b - 0.5f * (s2 + r);
+                }
+                return count;
+            } else {
+                t2 = y * y - 4.0f * e;
+                if (t2 >= 0.0f) {
+                    t2 = 2.0f * idMath.Sqrt(t2);
+                    t1 = 0.75f * b * b - 2.0f * c;
+                    if (t1 + t2 >= 0.0f) {
+                        s1 = idMath.Sqrt(t1 + t2);
+                        roots[count++] = -0.25f * b + 0.5f * s1;
+                        roots[count++] = -0.25f * b - 0.5f * s1;
+                    }
+                    if (t1 - t2 >= 0.0f) {
+                        s2 = idMath.Sqrt(t1 - t2);
+                        roots[count++] = -0.25f * b + 0.5f * s2;
+                        roots[count++] = -0.25f * b - 0.5f * s2;
+                    }
+                }
+                return count;
+            }
+        }
+
+        public static void Test() {
+            int i, num;
+            float[] roots = new float[4];
+            float value;
+            idComplex[] complexRoots = Stream.generate(idComplex::new).limit(4).toArray(idComplex[]::new);
+            idComplex complexValue;
+            idPolynomial p;
+
+            p = new idPolynomial(-5.0f, 4.0f);
+            num = p.GetRoots(roots);
+            for (i = 0; i < num; i++) {
+                value = p.GetValue(roots[i]);
+                assert (idMath.Fabs(value) < 1e-4f);
+            }
+
+            p = new idPolynomial(-5.0f, 4.0f, 3.0f);
+            num = p.GetRoots(roots);
+            for (i = 0; i < num; i++) {
+                value = p.GetValue(roots[i]);
+                assert (idMath.Fabs(value) < 1e-4f);
+            }
+
+            p = new idPolynomial(1.0f, 4.0f, 3.0f, -2.0f);
+            num = p.GetRoots(roots);
+            for (i = 0; i < num; i++) {
+                value = p.GetValue(roots[i]);
+                assert (idMath.Fabs(value) < 1e-4f);
+            }
+
+            p = new idPolynomial(5.0f, 4.0f, 3.0f, -2.0f);
+            num = p.GetRoots(roots);
+            for (i = 0; i < num; i++) {
+                value = p.GetValue(roots[i]);
+                assert (idMath.Fabs(value) < 1e-4f);
+            }
+
+            p = new idPolynomial(-5.0f, 4.0f, 3.0f, 2.0f, 1.0f);
+            num = p.GetRoots(roots);
+            for (i = 0; i < num; i++) {
+                value = p.GetValue(roots[i]);
+                assert (idMath.Fabs(value) < 1e-4f);
+            }
+
+            p = new idPolynomial(1.0f, 4.0f, 3.0f, -2.0f);
+            num = p.GetRoots(complexRoots);
+            for (i = 0; i < num; i++) {
+                complexValue = p.GetValue(complexRoots[i]);
+                assert (idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
+            }
+
+            p = new idPolynomial(5.0f, 4.0f, 3.0f, -2.0f);
+            num = p.GetRoots(complexRoots);
+            for (i = 0; i < num; i++) {
+                complexValue = p.GetValue(complexRoots[i]);
+                assert (idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
+            }
+        }
+
         public float oGet(int index) {
             assert (index >= 0 && index <= degree);
-            return coefficient[ index];
+            return coefficient[index];
         }
 
         public idPolynomial oNegative() {
@@ -237,6 +439,8 @@ public class Polynomial {
             }
             return this;
         }
+//public	boolean			operator==(	const idPolynomial &p ) const;					// exact compare, no epsilon
+//public	boolean			operator!=(	const idPolynomial &p ) const;					// exact compare, no epsilon
 
         public idPolynomial oMinSet(final idPolynomial p) {
             int i;
@@ -309,8 +513,6 @@ public class Polynomial {
             }
             return true;
         }
-//public	boolean			operator==(	const idPolynomial &p ) const;					// exact compare, no epsilon
-//public	boolean			operator!=(	const idPolynomial &p ) const;					// exact compare, no epsilon
 
         @Override
         public int hashCode() {
@@ -332,10 +534,7 @@ public class Polynomial {
             if (this.degree != other.degree) {
                 return false;
             }
-            if (!Arrays.equals(this.coefficient, other.coefficient)) {
-                return false;
-            }
-            return true;
+            return Arrays.equals(this.coefficient, other.coefficient);
         }
 
         public void Zero() {
@@ -451,6 +650,13 @@ public class Polynomial {
 
             return degree;
         }
+//
+//public	const float *	ToFloatPtr( void ) const;
+//public	float *			ToFloatPtr( void );
+//public	const char *	ToString( int precision = 2 ) const;
+//
+//public	static void		Test( void );
+//
 
         public int GetRoots(float[] roots) {// get the real roots
             int i, num;
@@ -487,157 +693,6 @@ public class Polynomial {
             return num;
         }
 
-        public static int GetRoots1(float a, float b, float[] roots) {
-            assert (a != 0.0f);
-            roots[0] = -b / a;
-            return 1;
-        }
-
-        public static int GetRoots2(float a, float b, float c, float[] roots) {
-            float inva, ds;
-
-            if (a != 1.0f) {
-                assert (a != 0.0f);
-                inva = 1.0f / a;
-                c *= inva;
-                b *= inva;
-            }
-            ds = b * b - 4.0f * c;
-            if (ds < 0.0f) {
-                return 0;
-            } else if (ds > 0.0f) {
-                ds = idMath.Sqrt(ds);
-                roots[0] = 0.5f * (-b - ds);
-                roots[1] = 0.5f * (-b + ds);
-                return 2;
-            } else {
-                roots[0] = 0.5f * -b;
-                return 1;
-            }
-        }
-
-        public static int GetRoots3(float a, float b, float c, float d, float[] roots) {
-            float inva, f, g, halfg, ofs, ds, dist, angle, cs, ss, t;
-
-            if (a != 1.0f) {
-                assert (a != 0.0f);
-                inva = 1.0f / a;
-                d *= inva;
-                c *= inva;
-                b *= inva;
-            }
-
-            f = (1.0f / 3.0f) * (3.0f * c - b * b);
-            g = (1.0f / 27.0f) * (2.0f * b * b * b - 9.0f * c * b + 27.0f * d);
-            halfg = 0.5f * g;
-            ofs = (1.0f / 3.0f) * b;
-            ds = 0.25f * g * g + (1.0f / 27.0f) * f * f * f;
-
-            if (ds < 0.0f) {
-                dist = idMath.Sqrt((-1.0f / 3.0f) * f);
-                angle = (1.0f / 3.0f) * idMath.ATan(idMath.Sqrt(-ds), -halfg);
-                cs = idMath.Cos(angle);
-                ss = idMath.Sin(angle);
-                roots[0] = 2.0f * dist * cs - ofs;
-                roots[1] = -dist * (cs + idMath.SQRT_THREE * ss) - ofs;
-                roots[2] = -dist * (cs - idMath.SQRT_THREE * ss) - ofs;
-                return 3;
-            } else if (ds > 0.0f) {
-                ds = idMath.Sqrt(ds);
-                t = -halfg + ds;
-                if (t >= 0.0f) {
-                    roots[0] = idMath.Pow(t, (1.0f / 3.0f));
-                } else {
-                    roots[0] = -idMath.Pow(-t, (1.0f / 3.0f));
-                }
-                t = -halfg - ds;
-                if (t >= 0.0f) {
-                    roots[0] += idMath.Pow(t, (1.0f / 3.0f));
-                } else {
-                    roots[0] -= idMath.Pow(-t, (1.0f / 3.0f));
-                }
-                roots[0] -= ofs;
-                return 1;
-            } else {
-                if (halfg >= 0.0f) {
-                    t = -idMath.Pow(halfg, (1.0f / 3.0f));
-                } else {
-                    t = idMath.Pow(-halfg, (1.0f / 3.0f));
-                }
-                roots[0] = 2.0f * t - ofs;
-                roots[1] = -t - ofs;
-                roots[2] = roots[1];
-                return 3;
-            }
-        }
-
-        public static int GetRoots4(float a, float b, float c, float d, float e, float[] roots) {
-            int count;
-            float inva, y, ds, r, s1, s2, t1, t2, tp, tm;
-            float roots3[] = new float[3];
-
-            if (a != 1.0f) {
-                assert (a != 0.0f);
-                inva = 1.0f / a;
-                e *= inva;
-                d *= inva;
-                c *= inva;
-                b *= inva;
-            }
-
-            count = 0;
-
-            GetRoots3(1.0f, -c, b * d - 4.0f * e, -b * b * e + 4.0f * c * e - d * d, roots3);
-            y = roots3[0];
-            ds = 0.25f * b * b - c + y;
-
-            if (ds < 0.0f) {
-                return 0;
-            } else if (ds > 0.0f) {
-                r = idMath.Sqrt(ds);
-                t1 = 0.75f * b * b - r * r - 2.0f * c;
-                t2 = (4.0f * b * c - 8.0f * d - b * b * b) / (4.0f * r);
-                tp = t1 + t2;
-                tm = t1 - t2;
-
-                if (tp >= 0.0f) {
-                    s1 = idMath.Sqrt(tp);
-                    roots[count++] = -0.25f * b + 0.5f * (r + s1);
-                    roots[count++] = -0.25f * b + 0.5f * (r - s1);
-                }
-                if (tm >= 0.0f) {
-                    s2 = idMath.Sqrt(tm);
-                    roots[count++] = -0.25f * b + 0.5f * (s2 - r);
-                    roots[count++] = -0.25f * b - 0.5f * (s2 + r);
-                }
-                return count;
-            } else {
-                t2 = y * y - 4.0f * e;
-                if (t2 >= 0.0f) {
-                    t2 = 2.0f * idMath.Sqrt(t2);
-                    t1 = 0.75f * b * b - 2.0f * c;
-                    if (t1 + t2 >= 0.0f) {
-                        s1 = idMath.Sqrt(t1 + t2);
-                        roots[count++] = -0.25f * b + 0.5f * s1;
-                        roots[count++] = -0.25f * b - 0.5f * s1;
-                    }
-                    if (t1 - t2 >= 0.0f) {
-                        s2 = idMath.Sqrt(t1 - t2);
-                        roots[count++] = -0.25f * b + 0.5f * s2;
-                        roots[count++] = -0.25f * b - 0.5f * s2;
-                    }
-                }
-                return count;
-            }
-        }
-//
-//public	const float *	ToFloatPtr( void ) const;
-//public	float *			ToFloatPtr( void );
-//public	const char *	ToString( int precision = 2 ) const;
-//
-//public	static void		Test( void );
-//
-
         private void Resize(int d, boolean keep) {
             int alloc = (d + 1 + 3) & ~3;
             if (alloc > allocated) {
@@ -656,7 +711,7 @@ public class Polynomial {
 
         private int Laguer(final idComplex[] coef, final int degree, idComplex x) {
             final int MT = 10, MAX_ITERATIONS = MT * 8;
-            final float frac[] = {0.0f, 0.5f, 0.25f, 0.75f, 0.13f, 0.38f, 0.62f, 0.88f, 1.0f};
+            final float[] frac = {0.0f, 0.5f, 0.25f, 0.75f, 0.13f, 0.38f, 0.62f, 0.88f, 1.0f};
             int i, j;
             float abx, abp, abm, err;
             idComplex dx, cx, b, d = new idComplex(), f = new idComplex(), g, s, gps, gms, g2;
@@ -703,63 +758,6 @@ public class Polynomial {
             }
             return i;
         }
+    }
 
-        public static void Test() {
-            int i, num;
-            float roots[] = new float[4];
-            float value;
-            idComplex[] complexRoots = Stream.generate(idComplex::new).limit(4).toArray(idComplex[]::new);
-            idComplex complexValue;
-            idPolynomial p;
-
-            p = new idPolynomial(-5.0f, 4.0f);
-            num = p.GetRoots(roots);
-            for (i = 0; i < num; i++) {
-                value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
-            }
-
-            p = new idPolynomial(-5.0f, 4.0f, 3.0f);
-            num = p.GetRoots(roots);
-            for (i = 0; i < num; i++) {
-                value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
-            }
-
-            p = new idPolynomial(1.0f, 4.0f, 3.0f, -2.0f);
-            num = p.GetRoots(roots);
-            for (i = 0; i < num; i++) {
-                value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
-            }
-
-            p = new idPolynomial(5.0f, 4.0f, 3.0f, -2.0f);
-            num = p.GetRoots(roots);
-            for (i = 0; i < num; i++) {
-                value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
-            }
-
-            p = new idPolynomial(-5.0f, 4.0f, 3.0f, 2.0f, 1.0f);
-            num = p.GetRoots(roots);
-            for (i = 0; i < num; i++) {
-                value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
-            }
-
-            p = new idPolynomial(1.0f, 4.0f, 3.0f, -2.0f);
-            num = p.GetRoots(complexRoots);
-            for (i = 0; i < num; i++) {
-                complexValue = p.GetValue(complexRoots[i]);
-                assert (idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
-            }
-
-            p = new idPolynomial(5.0f, 4.0f, 3.0f, -2.0f);
-            num = p.GetRoots(complexRoots);
-            for (i = 0; i < num; i++) {
-                complexValue = p.GetValue(complexRoots[i]);
-                assert (idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
-            }
-        }
-    };
 }

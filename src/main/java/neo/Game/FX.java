@@ -1,12 +1,6 @@
 package neo.Game;
 
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.TH_THINK;
 import neo.Game.Entity.idEntity;
-import neo.Game.FX.idEntityFx;
-import neo.Game.FX.idFXLocalAction;
-import static neo.Game.GameSys.Class.EV_Remove;
-
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t0;
 import neo.Game.GameSys.Class.eventCallback_t1;
@@ -14,48 +8,54 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_skipFX;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
 import neo.Game.Player.idPlayer;
 import neo.Game.Projectile.idProjectile;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMESCALE;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.TempDump.NOT;
-import static neo.framework.DeclFX.fx_enum.FX_ATTACHENTITY;
-import static neo.framework.DeclFX.fx_enum.FX_ATTACHLIGHT;
-import static neo.framework.DeclFX.fx_enum.FX_LIGHT;
 import neo.framework.DeclFX.idDeclFX;
 import neo.framework.DeclFX.idFXSingleAction;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_FX;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
-import static neo.idlib.math.Math_h.Square;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.Entity.EV_Activate;
+import static neo.Game.Entity.TH_THINK;
+import static neo.Game.GameSys.Class.EV_Remove;
+import static neo.Game.GameSys.SysCvar.g_skipFX;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.NOT;
+import static neo.framework.DeclFX.fx_enum.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_FX;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Vector.getVec3_origin;
+
 /**
  *
  */
 public class FX {
+
+    public static final idEventDef EV_Fx_Action = new idEventDef("_fxAction", "e");    // implemented by subclasses
+
+    /*
+     ===============================================================================
+
+     idEntityFx
+
+     ===============================================================================
+     */
+    public static final idEventDef EV_Fx_KillFx = new idEventDef("_killfx");
 
     /*
      ===============================================================================
@@ -66,47 +66,38 @@ public class FX {
      */
     public static class idFXLocalAction {
 
-        renderLight_s renderLight;          // light presented to the renderer
+        boolean decalDropped;
+        float delay;
+        boolean launched;
         int/*qhandle_t*/ lightDefHandle;    // handle to renderer light def
+        int modelDefHandle;      // handle to static renderer model
+        int particleSystem;
         renderEntity_s renderEntity;        // used to present a model to the renderer
-        int            modelDefHandle;      // handle to static renderer model
-        float          delay;
-        int            particleSystem;
-        int            start;
-        boolean        soundStarted;
-        boolean        shakeStarted;
-        boolean        decalDropped;
-        boolean        launched;
-    };
-    /*
-     ===============================================================================
-
-     idEntityFx
-
-     ===============================================================================
-     */
-    public static final idEventDef EV_Fx_KillFx = new idEventDef("_killfx");
-    public static final idEventDef EV_Fx_Action = new idEventDef("_fxAction", "e");	// implemented by subclasses
+        renderLight_s renderLight;          // light presented to the renderer
+        boolean shakeStarted;
+        boolean soundStarted;
+        int start;
+    }
 
     public static class idEntityFx extends idEntity {
 
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idEntityFx>) idEntityFx::Event_Trigger);
             eventCallbacks.put(EV_Fx_KillFx, (eventCallback_t0<idEntityFx>) idEntityFx::Event_ClearFx);
         }
 
-
-        protected int                     started;
-        protected int                     nextTriggerTime;
-        protected idDeclFX                fxEffect;                // GetFX() should be called before using fxEffect as a pointer
         protected idList<idFXLocalAction> actions;
-        protected idStr                   systemName;
+        protected idDeclFX fxEffect;                // GetFX() should be called before using fxEffect as a pointer
+        protected int nextTriggerTime;
+        protected int started;
+        protected idStr systemName;
         //
         //
 
-//        public 	CLASS_PROTOTYPE( idEntityFx );
+        //        public 	CLASS_PROTOTYPE( idEntityFx );
         public idEntityFx() {
             fxEffect = null;
             started = -1;
@@ -116,6 +107,42 @@ public class FX {
             systemName = new idStr();
         }
 //	virtual					~idEntityFx();
+
+        public static idEntityFx StartFx(final String fx, final idVec3 useOrigin, final idMat3 useAxis, idEntity ent, boolean bind) {
+
+            if (g_skipFX.GetBool() || null == fx || fx.isEmpty()) {
+                return null;
+            }
+
+            idDict args = new idDict();
+            args.SetBool("start", true);
+            args.Set("fx", fx);
+            idEntityFx nfx = (idEntityFx) gameLocal.SpawnEntityType(idEntityFx.class, args);
+            if (nfx.Joint() != null && !nfx.Joint().isEmpty()) {
+                nfx.BindToJoint(ent, nfx.Joint(), true);
+                nfx.SetOrigin(getVec3_origin());
+            } else {
+                nfx.SetOrigin((useOrigin != null) ? useOrigin : ent.GetPhysics().GetOrigin());
+                nfx.SetAxis((useAxis != null) ? useAxis : ent.GetPhysics().GetAxis());
+            }
+
+            if (bind) {
+                // never bind to world spawn
+                if (ent != gameLocal.world) {
+                    nfx.Bind(ent, true);
+                }
+            }
+            nfx.Show();
+            return nfx;
+        }
+
+        public static idEntityFx StartFx(final idStr fx, final idVec3 useOrigin, final idMat3 useAxis, idEntity ent, boolean bind) {
+            return StartFx(fx.toString(), useOrigin, useAxis, ent, bind);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         @Override
         public void Spawn() {
@@ -248,7 +275,7 @@ public class FX {
         public void Setup(final String fx) {
 
             if (started >= 0) {
-                return;					// already started
+                return;                    // already started
             }
 
             // early during MP Spawn() with no information. wait till we ReadFromSnapshot for more
@@ -449,10 +476,10 @@ public class FX {
                             useAction.renderEntity.origin.oSet(GetPhysics().GetOrigin().oPlus(fxaction.offset));
                             useAction.renderEntity.axis.oSet((fxaction.explicitAxis) ? fxaction.axis : GetPhysics().GetAxis());
                             useAction.renderEntity.hModel = renderModelManager.FindModel(fxaction.data.toString());
-                            useAction.renderEntity.shaderParms[ SHADERPARM_RED] = 1.0f;
-                            useAction.renderEntity.shaderParms[ SHADERPARM_GREEN] = 1.0f;
-                            useAction.renderEntity.shaderParms[ SHADERPARM_BLUE] = 1.0f;
-                            useAction.renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(time);
+                            useAction.renderEntity.shaderParms[SHADERPARM_RED] = 1.0f;
+                            useAction.renderEntity.shaderParms[SHADERPARM_GREEN] = 1.0f;
+                            useAction.renderEntity.shaderParms[SHADERPARM_BLUE] = 1.0f;
+                            useAction.renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(time);
                             useAction.renderEntity.shaderParms[3] = 1.0f;
                             useAction.renderEntity.shaderParms[5] = 0.0f;
                             if (useAction.renderEntity.hModel != null) {
@@ -478,7 +505,7 @@ public class FX {
                             // FIXME: may need to cache this if it is slow
                             projectileDef = gameLocal.FindEntityDefDict(fxaction.data.toString(), false);
                             if (null == projectileDef) {
-                                gameLocal.Warning("projectile \'%s\' not found", fxaction.data);
+                                gameLocal.Warning("projectile '%s' not found", fxaction.data);
                             } else {
                                 gameLocal.SpawnEntityDef(projectileDef, ent, false);
                                 if (ent[0] != null && ent[0].IsType(idProjectile.class)) {
@@ -541,10 +568,7 @@ public class FX {
         }
 
         public boolean Done() {
-            if (started > 0 && gameLocal.time > started + Duration()) {
-                return true;
-            }
-            return false;
+            return started > 0 && gameLocal.time > started + Duration();
         }
 
         @Override
@@ -574,7 +598,7 @@ public class FX {
                 }
                 final idDeclFX fx = (idDeclFX) declManager.DeclByIndex(DECL_FX, fx_index);
                 if (null == fx) {
-                    gameLocal.Error("FX at index %d not found", fx_index);
+                    Game_local.idGameLocal.Error("FX at index %d not found", fx_index);
                 }
                 fxEffect = fx;
                 Setup(fx.GetName());
@@ -589,38 +613,6 @@ public class FX {
             }
             RunPhysics();
             Present();
-        }
-
-        public static idEntityFx StartFx(final String fx, final idVec3 useOrigin, final idMat3 useAxis, idEntity ent, boolean bind) {
-
-            if (g_skipFX.GetBool() || null == fx || fx.isEmpty()) {
-                return null;
-            }
-
-            idDict args = new idDict();
-            args.SetBool("start", true);
-            args.Set("fx", fx);
-            idEntityFx nfx = (idEntityFx) gameLocal.SpawnEntityType(idEntityFx.class, args);
-            if (nfx.Joint() != null && !nfx.Joint().isEmpty()) {
-                nfx.BindToJoint(ent, nfx.Joint(), true);
-                nfx.SetOrigin(getVec3_origin());
-            } else {
-                nfx.SetOrigin((useOrigin != null) ? useOrigin : ent.GetPhysics().GetOrigin());
-                nfx.SetAxis((useAxis != null) ? useAxis : ent.GetPhysics().GetAxis());
-            }
-
-            if (bind) {
-                // never bind to world spawn
-                if (ent != gameLocal.world) {
-                    nfx.Bind(ent, true);
-                }
-            }
-            nfx.Show();
-            return nfx;
-        }
-
-        public static idEntityFx StartFx(final idStr fx, final idVec3 useOrigin, final idMat3 useAxis, idEntity ent, boolean bind) {
-            return StartFx(fx.toString(), useOrigin, useAxis, ent, bind);
         }
 
         protected void Event_Trigger(idEventArg<idEntity> activator) {
@@ -736,11 +728,7 @@ public class FX {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -752,10 +740,15 @@ public class FX {
     public static class idTeleporter extends idEntityFx {
 //        public 	CLASS_PROTOTYPE( idTeleporter );
 
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idTeleporter>) idTeleporter::Event_DoAction);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         // teleporters to this location
@@ -772,9 +765,6 @@ public class FX {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

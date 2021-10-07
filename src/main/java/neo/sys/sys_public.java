@@ -1,8 +1,5 @@
 package neo.sys;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.TimerTask;
 import neo.TempDump.CPP_class;
 import neo.TempDump.SERiAL;
 import neo.TempDump.TODO_Exception;
@@ -10,20 +7,82 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
 import neo.sys.sys_local.idSysLocal;
-import static neo.sys.win_net.NET_IPSocket;
-import static neo.sys.win_net.NET_OpenSocks;
-import static neo.sys.win_net.Net_WaitForUDPPacket;
-import neo.sys.win_net.idUDPLag;
-import static neo.sys.win_net.net_ip;
-import static neo.sys.win_net.net_socksEnabled;
+import neo.sys.win_net.*;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.TimerTask;
+
+import static neo.sys.win_net.*;
 
 /**
  *
  */
 public class sys_public {
 
-    static final boolean WIN32 = true;
+    public static final int BUILD_OS_ID;
+    public static final String BUILD_STRING;
+    public static final int CPUID_3DNOW = 0x00020;// 3DNow!
+    public static final int CPUID_ALTIVEC = 0x00200;// AltiVec
+    public static final int CPUID_AMD = 0x00008;// AMD
+    public static final int CPUID_CMOV = 0x02000;// Conditional Move (CMOV) and fast floating point comparison (FCOMI) instructions
+    public static final int CPUID_DAZ = 0x08000;// Denormals-Are-Zero mode (denormal source operands are set to zero)
+    public static final int CPUID_FTZ = 0x04000;// Flush-To-Zero mode (denormal results are flushed to zero)
+    public static final int CPUID_GENERIC = 0x00002;// unrecognized processor
+    public static final int CPUID_HTT = 0x01000;// Hyper-Threading Technology
+    public static final int CPUID_INTEL = 0x00004;// Intel
+    public static final int CPUID_MMX = 0x00010;// Multi Media Extensions
+    //
+    //
+    public static final int CPUID_NONE = 0x00000;
+    public static final int CPUID_SSE = 0x00040;// Streaming SIMD Extensions
+    public static final int CPUID_SSE2 = 0x00080;// Streaming SIMD Extensions 2
+    public static final int CPUID_SSE3 = 0x00100;// Streaming SIMD Extentions 3 aka Prescott's New Instructions
+    public static final int CPUID_UNSUPPORTED = 0x00001;// unsupported (386/486)
+    public static final int CRITICAL_SECTION_ONE = 1;
+    public static final int CRITICAL_SECTION_THREE = 3;
+    public static final int CRITICAL_SECTION_TWO = 2;
+    //
+// enum {
+    public static final int CRITICAL_SECTION_ZERO = 0;
+    public static final char PATHSEPERATOR_CHAR;
+    //
+    public static final String PATHSEPERATOR_STR;
+    public static final int PORT_ANY = -1;
+    public static final int TRIGGER_EVENT_ONE = 1;
+    public static final int[] g_thread_count = {0};
+    static final String CPUSTRING;
+    static final int CPU_EASYARGS;
+    static final int FPU_EXCEPTION_DENORMALIZED_OPERAND = 2;
+    static final int FPU_EXCEPTION_DIVIDE_BY_ZERO = 4;
+//                
+    static final int FPU_EXCEPTION_INEXACT_RESULT = 32;
 
+    //
+//
+    static final int FPU_EXCEPTION_INVALID_OPERATION = 1;
+
+    static final int FPU_EXCEPTION_NUMERIC_OVERFLOW = 8;
+
+    static final int FPU_EXCEPTION_NUMERIC_UNDERFLOW = 16;
+
+    //
+    static final int MAX_CRITICAL_SECTIONS = 4;
+
+    static final int MAX_THREADS = 10;
+    //
+    public static final xthreadInfo[] g_threads = new xthreadInfo[MAX_THREADS];
+    // };
+    static final int MAX_TRIGGER_EVENTS = 4;
+
+    static final int TRIGGER_EVENT_THREE = 3;
+    static final int TRIGGER_EVENT_TWO = 2;
+
+    // enum {
+    static final int TRIGGER_EVENT_ZERO = 0;
+
+    static final boolean WIN32 = true;
+    static final idUDPLag[] udpPorts = new idUDPLag[65536];
     public static idSys sys = sys_local.sysLocal;
 
     static {
@@ -44,49 +103,26 @@ public class sys_public {
         }
     }
 
-    public static final String BUILD_STRING;
-    public static final int    BUILD_OS_ID;
-    static final        String CPUSTRING;
-    static final        int    CPU_EASYARGS;
-    //
-    public static final String PATHSEPERATOR_STR;
-    public static final char   PATHSEPERATOR_CHAR;
-    //
-    //
-    public static final int CPUID_NONE                         = 0x00000;
-    public static final int CPUID_UNSUPPORTED                  = 0x00001;// unsupported (386/486)
-    public static final int CPUID_GENERIC                      = 0x00002;// unrecognized processor
-    public static final int CPUID_INTEL                        = 0x00004;// Intel
-    public static final int CPUID_AMD                          = 0x00008;// AMD
-    public static final int CPUID_MMX                          = 0x00010;// Multi Media Extensions
-    public static final int CPUID_3DNOW                        = 0x00020;// 3DNow!
-    public static final int CPUID_SSE                          = 0x00040;// Streaming SIMD Extensions
-    public static final int CPUID_SSE2                         = 0x00080;// Streaming SIMD Extensions 2
-    public static final int CPUID_SSE3                         = 0x00100;// Streaming SIMD Extentions 3 aka Prescott's New Instructions
-    public static final int CPUID_ALTIVEC                      = 0x00200;// AltiVec
-    public static final int CPUID_HTT                          = 0x01000;// Hyper-Threading Technology
-    public static final int CPUID_CMOV                         = 0x02000;// Conditional Move (CMOV) and fast floating point comparison (FCOMI) instructions
-    public static final int CPUID_FTZ                          = 0x04000;// Flush-To-Zero mode (denormal results are flushed to zero)
-    public static final int CPUID_DAZ                          = 0x08000;// Denormals-Are-Zero mode (denormal source operands are set to zero)
-    //
-//    
-    static final        int FPU_EXCEPTION_INVALID_OPERATION    = 1;
-    static final        int FPU_EXCEPTION_DENORMALIZED_OPERAND = 2;
-    static final        int FPU_EXCEPTION_DIVIDE_BY_ZERO       = 4;
-    static final        int FPU_EXCEPTION_NUMERIC_OVERFLOW     = 8;
-    static final        int FPU_EXCEPTION_NUMERIC_UNDERFLOW    = 16;
-    static final        int FPU_EXCEPTION_INEXACT_RESULT       = 32;
-//                
+    public static <T> T __id_attribute__(T input) {
+//        DebugPrintf( final String...fmt)id_attribute((format(printf,2,3)));
+        return input;
+    }
 
+    // use fs_debug to verbose Sys_ListFiles
+    // returns -1 if directory was not found (the list is cleared)
+    public static int Sys_ListFiles(final String directory, final String extension, idList<idStr> list) {
+        return win_main.Sys_ListFiles(directory, extension, (idStrList) list);
+    }
+
+    public static void setSys(idSys sys) {
+        sys_local.sysLocal = (idSysLocal) (sys_public.sys = sys);
+    }
     enum fpuPrecision_t {
 
         FPU_PRECISION_SINGLE,
         FPU_PRECISION_DOUBLE,
         FPU_PRECISION_DOUBLE_EXTENDED
     }
-
-    ;
-
     enum fpuRounding_t {
 
         FPU_ROUNDING_TO_NEAREST,
@@ -94,9 +130,6 @@ public class sys_public {
         FPU_ROUNDING_UP,
         FPU_ROUNDING_TO_ZERO
     }
-
-    ;
-
     public enum joystickAxis_t {
 
         AXIS_SIDE,
@@ -106,8 +139,21 @@ public class sys_public {
         AXIS_YAW,
         AXIS_PITCH,
         MAX_JOYSTICK_AXIS
-    };
+    }
+    /*
+     ==============================================================
 
+     Networking
+
+     ==============================================================
+     */
+    public enum netadrtype_t {
+
+        NA_BAD, // an address lookup failed
+        NA_LOOPBACK,
+        NA_BROADCAST,
+        NA_IP
+    }
     public enum sysEventType_t {
 
         SE_NONE, // evTime is still valid
@@ -116,8 +162,7 @@ public class sys_public {
         SE_MOUSE, // evValue and evValue2 are reletive signed x / y moves
         SE_JOYSTICK_AXIS, // evValue is an axis number and evValue2 is the current state (-127 to 127)
         SE_CONSOLE        // evPtr is a char*, from typing something at a non-game console
-    };
-
+    }
     public enum sys_mEvents {
 
         M_ACTION1,
@@ -131,11 +176,12 @@ public class sys_public {
         M_DELTAX,
         M_DELTAY,
         M_DELTAZ
-    };
+    }
+    public enum xthreadPriority {
 
-    public static <T> T __id_attribute__(T input) {
-//        DebugPrintf( final String...fmt)id_attribute((format(printf,2,3)));
-        return input;
+        THREAD_NORMAL,
+        THREAD_ABOVE_NORMAL,
+        THREAD_HIGHEST
     }
 
     public static class sysEvent_s implements SERiAL {
@@ -147,12 +193,11 @@ public class sys_public {
                 + Integer.SIZE
                 + CPP_class.Pointer.SIZE;
         public static final transient int BYTES = SIZE / 8;
-
+        public ByteBuffer evPtr;    // this must be manually freed if not NULL
+        public int evPtrLength;        // bytes of data pointed to by evPtr, for journaling
         public sysEventType_t evType = sysEventType_t.values()[0];
         public int evValue;
         public int evValue2;
-        public int evPtrLength;		// bytes of data pointed to by evPtr, for journaling
-        public ByteBuffer evPtr;	// this must be manually freed if not NULL
         //TODO:is a byteBuffer necessary? we seem to always be converting it to a string.
 
         public sysEvent_s() {
@@ -195,42 +240,21 @@ public class sys_public {
 
     static class sysMemoryStats_s {
 
-        int memoryLoad;
-        int totalPhysical;
-        int availPhysical;
-        int totalPageFile;
-        int availPageFile;
-        int totalVirtual;
-        int availVirtual;
         int availExtendedVirtual;
-    };
-
-    // use fs_debug to verbose Sys_ListFiles
-    // returns -1 if directory was not found (the list is cleared)
-    public static int Sys_ListFiles(final String directory, final String extension, idList<idStr> list) {
-        return win_main.Sys_ListFiles(directory, extension, (idStrList) list);
+        int availPageFile;
+        int availPhysical;
+        int availVirtual;
+        int memoryLoad;
+        int totalPageFile;
+        int totalPhysical;
+        int totalVirtual;
     }
-
-    /*
-     ==============================================================
-
-     Networking
-
-     ==============================================================
-     */
-    public static enum netadrtype_t {
-
-        NA_BAD, // an address lookup failed
-        NA_LOOPBACK,
-        NA_BROADCAST,
-        NA_IP
-    };
 
     public static class netadr_t {
 
-        public netadrtype_t type;
         public final char[] ip = new char[4];
         public short port;
+        public netadrtype_t type;
 
         public void oSet(netadr_t address) {
             this.type = address.type;
@@ -240,22 +264,19 @@ public class sys_public {
             this.ip[3] = address.ip[3];
             this.port = port;
         }
-    };
-    public static final int PORT_ANY = -1;
-
-    static final idUDPLag[] udpPorts = new idUDPLag[65536];
+    }
 
     public static class idPort {
 
-        public int packetsRead;
         public int bytesRead;
+        public int bytesWritten;
+        public int packetsRead;
         //
         public int packetsWritten;
-        public int bytesWritten;
         //
         //
-        private netadr_t bound_to;	// interface and port
-        private int netSocket;		// OS specific socket
+        private netadr_t bound_to;    // interface and port
+        private int netSocket;        // OS specific socket
         //
         //
 
@@ -373,11 +394,7 @@ public class sys_public {
 
             Net_WaitForUDPPacket(netSocket, timeout);
 
-            if (GetPacket(from, data, size, maxSize)) {
-                return true;
-            }
-
-            return false;
+            return GetPacket(from, data, size, maxSize);
         }
 
         public void SendPacket(final netadr_t to, final Object data, int size) {
@@ -427,8 +444,7 @@ public class sys_public {
 //                Net_SendUDPPacket(netSocket, size, data, to);
 //            }
         }
-    };
-
+    }
 
     /*
      ==============================================================
@@ -444,40 +460,14 @@ public class sys_public {
 
 //        public abstract int run(Object... parms);
     }
-
-    public enum xthreadPriority {
-
-        THREAD_NORMAL,
-        THREAD_ABOVE_NORMAL,
-        THREAD_HIGHEST
-    };
+// };
 
     public static class xthreadInfo {
 
         public String name;
         public Thread/*int*/ threadHandle;
         public /*unsigned*/ long threadId;
-    };
-    static final        int           MAX_THREADS            = 10;
-    //
-    public static final xthreadInfo[] g_threads              = new xthreadInfo[MAX_THREADS];
-    public static final int[]         g_thread_count         = {0};
-    //
-    static final        int           MAX_CRITICAL_SECTIONS  = 4;
-    //
-// enum {
-    public static final int           CRITICAL_SECTION_ZERO  = 0;
-    public static final int           CRITICAL_SECTION_ONE   = 1;
-    public static final int           CRITICAL_SECTION_TWO   = 2;
-    public static final int           CRITICAL_SECTION_THREE = 3;
-    // };
-    static final        int           MAX_TRIGGER_EVENTS     = 4;
-    // enum {
-    static final        int           TRIGGER_EVENT_ZERO     = 0;
-    public static final int           TRIGGER_EVENT_ONE      = 1;
-    static final        int           TRIGGER_EVENT_TWO      = 2;
-    static final        int           TRIGGER_EVENT_THREE    = 3;
-// };
+    }
 
     /*
      ==============================================================
@@ -537,9 +527,5 @@ public class sys_public {
         public abstract void OpenURL(final String url, boolean quit);
 
         public abstract void StartProcess(final String exePath, boolean quit);
-    }
-
-    public static void setSys(idSys sys) {
-        sys_local.sysLocal = (idSysLocal) (sys_public.sys = sys);
     }
 }

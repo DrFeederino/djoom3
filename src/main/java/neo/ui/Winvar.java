@@ -1,16 +1,9 @@
 package neo.ui;
 
-import java.util.Objects;
-import java.util.Scanner;
 import neo.Renderer.Material.idMaterial;
-
-import static neo.TempDump.atoi;
-import static neo.framework.DeclManager.declManager;
-
 import neo.framework.File_h.idFile;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
@@ -18,34 +11,81 @@ import neo.idlib.math.Vector.idVec4;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.Window.idWindow;
 
+import java.util.Objects;
+import java.util.Scanner;
+
+import static neo.TempDump.atoi;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Text.Str.va;
+
 /**
  *
  */
 public class Winvar {
 
-    public static final String VAR_GUIPREFIX     = "gui::";
-    public static final int    VAR_GUIPREFIX_LEN = VAR_GUIPREFIX.length();
-
     public static final idWinVar MIN_ONE = new idWinInt(-1);
     public static final idWinVar MIN_TWO = new idWinInt(-2);
+    public static final String VAR_GUIPREFIX = "gui::";
+    public static final int VAR_GUIPREFIX_LEN = VAR_GUIPREFIX.length();
 
     static abstract class idWinVar {
 
-        public    int     DEBUG_COUNTER;
-        protected idDict  guiDict;
-        protected String  name;
-        protected boolean eval;
+        public static int DBG_Init = 0;
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        public int DEBUG_COUNTER;
+        protected boolean eval;
+        protected idDict guiDict;
+        protected String name;
+        // public   ~idWinVar();
 
         public idWinVar() {
             guiDict = null;
             name = null;
             eval = true;
         }
-        // public   ~idWinVar();
+
+        /**
+         * @deprecated calling this function in idWindow::EmitOp hides the loading bar progress.
+         */
+        @Deprecated
+        public static idWinVar clone(final idWinVar var) {
+            if (var == null) return null;
+
+            if (var.name != null && var.name.isEmpty()) {
+                final int a = 1;
+            }
+            if (var instanceof idWinBool) {
+                return new idWinBool((idWinBool) var);
+            }
+            if (var instanceof idWinBackground) {
+                return new idWinBackground((idWinBackground) var);
+            }
+            if (var instanceof idWinFloat) {
+                return new idWinFloat((idWinFloat) var);
+            }
+            if (var instanceof idWinInt) {
+                return new idWinInt(((idWinInt) var).data);
+            }
+            if (var instanceof idWinRectangle) {
+                return new idWinRectangle((idWinRectangle) var);
+            }
+            if (var instanceof idWinStr) {
+                return new idWinStr((idWinStr) var);
+            }
+            if (var instanceof idWinVec2) {
+                return new idWinVec2(((idWinVec2) var).data);
+            }
+            if (var instanceof idWinVec3) {
+                return new idWinVec3((idWinVec3) var);
+            }
+            if (var instanceof idWinVec4) {
+                return new idWinVec4((idWinVec4) var);
+            }
+            throw new UnsupportedOperationException();
+        }
 
         public void SetGuiInfo(idDict gd, final String _name) {
             guiDict = gd;
@@ -63,11 +103,11 @@ public class Winvar {
         }
 
         public void SetName(final String _name) {
-            // delete []name; 
+            // delete []name;
             name = _name;
 //            if (_name != null) {
-//                // name = new char[strlen(_name)+1]; 
-//                // strcpy(name, _name); 
+//                // name = new char[strlen(_name)+1];
+//                // strcpy(name, _name);
 //                name = _name;
 //            }
         }
@@ -87,7 +127,6 @@ public class Winvar {
             return (guiDict != null);
         }
 
-        public static int DBG_Init = 0;
         public void Init(final String _name, idWindow win) {
             idStr key = new idStr(_name);
             guiDict = null;
@@ -131,49 +170,11 @@ public class Winvar {
             return eval;
         }
 
-        /** @deprecated calling this function in idWindow::EmitOp hides the loading bar progress. */
-        @Deprecated
-        public static idWinVar clone(final idWinVar var) {
-            if (var == null) return null;
-
-            if (var.name != null && var.name.isEmpty()) {
-                final int a = 1;
-            }
-            if (var instanceof idWinBool) {
-                return new idWinBool((idWinBool) var);
-            }
-            if (var instanceof idWinBackground) {
-                return new idWinBackground((idWinBackground) var);
-            }
-            if (var instanceof idWinFloat) {
-                return new idWinFloat((idWinFloat) var);
-            }
-            if (var instanceof idWinInt) {
-                return new idWinInt(((idWinInt) var).data);
-            }
-            if (var instanceof idWinRectangle) {
-                return new idWinRectangle((idWinRectangle) var);
-            }
-            if (var instanceof idWinStr) {
-                return new idWinStr((idWinStr) var);
-            }
-            if (var instanceof idWinVec2) {
-                return new idWinVec2(((idWinVec2) var).data);
-            }
-            if (var instanceof idWinVec3) {
-                return new idWinVec3((idWinVec3) var);
-            }
-            if (var instanceof idWinVec4) {
-                return new idWinVec4((idWinVec4) var);
-            }
-            throw new UnsupportedOperationException();
-        }
-
         @Override
         public String toString() {
             return "idWinVar{" + "guiDict=" + guiDict + ", name=" + name + '}';
         }
-    };
+    }
 
     static class idWinBool extends idWinVar {
 
@@ -222,7 +223,7 @@ public class Winvar {
                 return false;
             }
             final boolean other = (boolean) obj;
-            
+
             return (this.data == other);
         }
 
@@ -282,7 +283,7 @@ public class Winvar {
         public float x() {
             return data ? 1.0f : 0.0f;
         }
-    };
+    }
 
     public static class idWinStr extends idWinVar {
 
@@ -314,7 +315,7 @@ public class Winvar {
             }
         }
 
-//	int	operator==(	const idStr other ) {
+        //	int	operator==(	const idStr other ) {
 //		return (other == data);
 //	}
 //	int	operator==(	const char *other ) {
@@ -447,7 +448,7 @@ public class Winvar {
         public float x() {
             return data.IsEmpty() ? 0.0f : 1.0f;
         }
-    };
+    }
 
     static class idWinInt extends idWinVar {
 
@@ -464,7 +465,7 @@ public class Winvar {
             data = a;
         }
 
-//	~idWinInt() {};
+        //	~idWinInt() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -531,7 +532,7 @@ public class Winvar {
             assert (false);
             return 0.0f;
         }
-    };
+    }
 
     static class idWinFloat extends idWinVar {
 
@@ -554,7 +555,7 @@ public class Winvar {
             this.data = winFloat.data;
         }
 
-//	~idWinFloat() {};
+        //	~idWinFloat() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -623,13 +624,14 @@ public class Winvar {
             return data;
         }
 
-    };
+    }
 
     static class idWinRectangle extends idWinVar {
 
+        private static idVec4 ret;
+        //
+        //
         protected idRectangle data;
-        //
-        //
 
         public idWinRectangle() {
             super();
@@ -642,7 +644,7 @@ public class Winvar {
             this.data = new idRectangle(rect.data);
         }
 
-//	~idWinRectangle() {};
+        //	~idWinRectangle() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -655,7 +657,7 @@ public class Winvar {
             }
         }
 
-//	int	operator==(	final idRectangle other ) {
+        //	int	operator==(	final idRectangle other ) {
 //		return (other == data);
 //	}//TODO:overrid equals
         public idWinRectangle oSet(final idWinRectangle other) {
@@ -709,7 +711,6 @@ public class Winvar {
         public float Bottom() {
             return data.Bottom();
         }
-        private static idVec4 ret;
 
         public idVec4 ToVec4() {
             ret = data.ToVec4();
@@ -801,10 +802,10 @@ public class Winvar {
                 return false;
             }
             final idRectangle other = (idRectangle) obj;
-            
+
             return Objects.equals(this.data, other);
         }
-    };
+    }
 
     static class idWinVec2 extends idWinVar {
 
@@ -824,7 +825,7 @@ public class Winvar {
             }
         }
 
-//	~idWinVec2() {};
+        //	~idWinVec2() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -852,7 +853,7 @@ public class Winvar {
                 return false;
             }
             final idVec2 other = (idVec2) obj;
-            
+
             return Objects.equals(this.data, other);
         }
 
@@ -938,7 +939,7 @@ public class Winvar {
             eval = savefile.ReadBool();
             savefile.Read(data);
         }
-    };
+    }
 
     static class idWinVec4 extends idWinVar {
 
@@ -962,7 +963,7 @@ public class Winvar {
             this.data = new idVec4(winVec4.data);
         }
 
-//	~idWinVec4() {};
+        //	~idWinVec4() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -990,7 +991,7 @@ public class Winvar {
                 return false;
             }
             final idVec4 other = (idVec4) obj;
-            
+
             return Objects.equals(this.data, other);
         }
 
@@ -1108,7 +1109,7 @@ public class Winvar {
             eval = savefile.ReadBool();
             savefile.Read(data);
         }
-    };
+    }
 
     static class idWinVec3 extends idWinVar {
 
@@ -1126,7 +1127,7 @@ public class Winvar {
             this.data = new idVec3(winVec3.data);
         }
 
-//	~idWinVec3() {};
+        //	~idWinVec3() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -1154,7 +1155,7 @@ public class Winvar {
                 return false;
             }
             final idVec3 other = (idVec3) obj;
-            
+
             return Objects.equals(this.data, other);
         }
 
@@ -1239,7 +1240,7 @@ public class Winvar {
             eval = savefile.ReadBool();
             savefile.Read(data);
         }
-    };
+    }
 
     static class idWinBackground extends idWinStr {
 
@@ -1267,7 +1268,7 @@ public class Winvar {
             }
         }
 
-//	~idWinBackground() {};
+        //	~idWinBackground() {};
         @Override
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
@@ -1308,7 +1309,7 @@ public class Winvar {
             return data;
         }
 
-//        public idWinBackground oSet(final idWinBackground other) {
+        //        public idWinBackground oSet(final idWinBackground other) {
 //            super.oSet(other);
 //            data = other.data;
 //            mat[0] = other.mat[0];
@@ -1408,7 +1409,7 @@ public class Winvar {
                 }
             }
         }
-    };
+    }
 
     /*
      ================
@@ -1435,5 +1436,6 @@ public class Winvar {
                 this.oGet(i).SetGuiInfo(dict, this.oGet(i).c_str());
             }
         }
-    };
+    }
+
 }

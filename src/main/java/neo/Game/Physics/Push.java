@@ -2,34 +2,40 @@ package neo.Game.Physics;
 
 import neo.CM.CollisionModel.contactInfo_t;
 import neo.CM.CollisionModel.trace_s;
-import static neo.Game.AFEntity.EV_Gib;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.Actor.idActor;
 import neo.Game.Entity.idEntity;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
+import neo.Game.Game_local;
 import neo.Game.Item.idMoveableItem;
 import neo.Game.Moveable.idMoveable;
-import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_Actor.idPhysics_Actor;
 import neo.Game.Player.idPlayer;
-import static neo.Game.Projectile.EV_Explode;
 import neo.Game.Projectile.idProjectile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.AFEntity.EV_Gib;
+import static neo.Game.Game_local.MAX_GENTITIES;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
+import static neo.Game.Projectile.EV_Explode;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class Push {
 
+    public static final int PUSHFL_APPLYIMPULSE = 16;   // apply impulse to pushed entities
+    public static final int PUSHFL_CLIP = 4;    // also clip against all non-moveable entities
+    public static final int PUSHFL_CRUSH = 8;    // kill blocking entities
+    public static final int PUSHFL_NOGROUNDENTITIES = 2;    // don't push entities the clip model rests upon
     /*
      ===============================================================================
 
@@ -37,21 +43,22 @@ public class Push {
 
      ===============================================================================
      */
-    public static final int PUSHFL_ONLYMOVEABLE     = 1;    // only push moveable entities
-    public static final int PUSHFL_NOGROUNDENTITIES = 2;    // don't push entities the clip model rests upon
-    public static final int PUSHFL_CLIP             = 4;    // also clip against all non-moveable entities
-    public static final int PUSHFL_CRUSH            = 8;    // kill blocking entities
-    public static final int PUSHFL_APPLYIMPULSE     = 16;   // apply impulse to pushed entities
+    public static final int PUSHFL_ONLYMOVEABLE = 1;    // only push moveable entities
+    public static final int PUSH_BLOCKED = 2;    // blocked
     //
     //
 //enum {
-    public static final int PUSH_NO                 = 0;    // not pushed
-    public static final int PUSH_OK                 = 1;    // pushed ok
-    public static final int PUSH_BLOCKED            = 2;    // blocked
+    public static final int PUSH_NO = 0;    // not pushed
+    public static final int PUSH_OK = 1;    // pushed ok
 //};
 
     //#define NEW_PUSH
     public static class idPush {
+
+        private final pushed_s[] pushed = new pushed_s[MAX_GENTITIES];    // pushed entities
+        int pushedGroupSize;
+        private int numPushed;                // number of pushed entities
+        private final pushedGroup_s[] pushedGroup = new pushedGroup_s[MAX_GENTITIES];
 
         /*
          ============
@@ -150,7 +157,7 @@ public class Push {
             // try to push the entities
             for (i = 0; i < listedEntities; i++) {
 
-                check = entityList[ i];
+                check = entityList[i];
 
                 idPhysics physics = check.GetPhysics();
 
@@ -324,7 +331,7 @@ public class Push {
             // try to push all the entities
             for (i = 0; i < listedEntities; i++) {
 
-                check = entityList[ i];
+                check = entityList[i];
 
                 idPhysics physics = check.GetPhysics();
 
@@ -437,7 +444,7 @@ public class Push {
             rotation = (oldAxis.Transpose().oMultiply(newAxis)).ToRotation();
             rotation.SetOrigin(newOrigin);
             rotation.Normalize180();
-            rotation.ReCalculateMatrix();		// recalculate the rotation matrix to avoid accumulating rounding errors
+            rotation.ReCalculateMatrix();        // recalculate the rotation matrix to avoid accumulating rounding errors
 
             // if the pusher rotates
             if (rotation.GetAngle() != 0.0f) {
@@ -489,35 +496,13 @@ public class Push {
         public int GetNumPushedEntities() {
             return numPushed;
         }
+//
 
         // get the ith pushed entity
         public idEntity GetPushedEntity(int i) {
             assert (i >= 0 && i < numPushed);
             return pushed[i].ent;
         }
-
-//
-//
-        private static class pushed_s {
-
-            idEntity ent;					// pushed entity
-            idAngles deltaViewAngles;		// actor delta view angles
-        };
-        private final pushed_s[] pushed = new pushed_s[MAX_GENTITIES];	// pushed entities
-        private int numPushed;				// number of pushed entities
-//
-
-        private static class pushedGroup_s {
-
-            idEntity ent;
-            float fraction;
-            boolean groundContact;
-            boolean test;
-        };
-        private pushedGroup_s[] pushedGroup = new pushedGroup_s[MAX_GENTITIES];
-        int pushedGroupSize;
-//
-//
 
         private void SaveEntityPosition(idEntity ent) {
             int i;
@@ -531,7 +516,7 @@ public class Push {
 
             // don't overflow
             if (numPushed >= MAX_GENTITIES) {
-                gameLocal.Error("more than MAX_GENTITIES pushed entities");
+                Game_local.idGameLocal.Error("more than MAX_GENTITIES pushed entities");
                 return;
             }
 
@@ -592,17 +577,8 @@ public class Push {
             }
             return false;
         }
-// #ifdef NEW_PUSH//TODO:check if alternative methods are better suited for JAVA!@#
-        // boolean			CanPushEntity( idEntity *ent, idEntity *pusher, idEntity *initialPusher, final int flags );
-        // void			AddEntityToPushedGroup( idEntity *ent, float fraction, boolean groundContact );
-        // boolean			IsFullyPushed( idEntity *ent );
-        // boolean			ClipTranslationAgainstPusher( trace_s &results, idEntity *ent, idEntity *pusher, final idVec3 &translation );
-        // int				GetPushableEntitiesForTranslation( idEntity *pusher, idEntity *initialPusher, final int flags,
-        // final idVec3 &translation, idEntity *entityList[], int maxEntities );
-        // boolean			ClipRotationAgainstPusher( trace_s &results, idEntity *ent, idEntity *pusher, final idRotation &rotation );
-        // int				GetPushableEntitiesForRotation( idEntity *pusher, idEntity *initialPusher, final int flags,
-        // final idRotation &rotation, idEntity *entityList[], int maxEntities );
-// #else
+//
+//
 
         private void ClipEntityRotation(trace_s[] trace, final idEntity ent, final idClipModel clipModel, idClipModel skip, final idRotation rotation) {
 
@@ -629,6 +605,17 @@ public class Push {
                 skip.Enable();
             }
         }
+// #ifdef NEW_PUSH//TODO:check if alternative methods are better suited for JAVA!@#
+        // boolean			CanPushEntity( idEntity *ent, idEntity *pusher, idEntity *initialPusher, final int flags );
+        // void			AddEntityToPushedGroup( idEntity *ent, float fraction, boolean groundContact );
+        // boolean			IsFullyPushed( idEntity *ent );
+        // boolean			ClipTranslationAgainstPusher( trace_s &results, idEntity *ent, idEntity *pusher, final idVec3 &translation );
+        // int				GetPushableEntitiesForTranslation( idEntity *pusher, idEntity *initialPusher, final int flags,
+        // final idVec3 &translation, idEntity *entityList[], int maxEntities );
+        // boolean			ClipRotationAgainstPusher( trace_s &results, idEntity *ent, idEntity *pusher, final idRotation &rotation );
+        // int				GetPushableEntitiesForRotation( idEntity *pusher, idEntity *initialPusher, final int flags,
+        // final idRotation &rotation, idEntity *entityList[], int maxEntities );
+// #else
 
         private int TryTranslatePushEntity(trace_s[] results, idEntity check, idClipModel clipModel, final int flags, final idVec3 newOrigin, final idVec3 move) {
             trace_s[] trace = {null};
@@ -893,7 +880,7 @@ public class Push {
 
             // remove all entities we cannot or should not push from the list
             for (num = i = 0; i < numEntities; i++) {
-                check = entityList[ i];
+                check = entityList[i];
 
                 // if the physics object is not pushable
                 if (!check.GetPhysics().IsPushable()) {
@@ -923,11 +910,28 @@ public class Push {
                 }
 
                 // keep entity in list
-                entityList[ num++] = entityList[i];
+                entityList[num++] = entityList[i];
             }
 
             return num;
         }
+
+        //
+//
+        private static class pushed_s {
+
+            idAngles deltaViewAngles;        // actor delta view angles
+            idEntity ent;                    // pushed entity
+        }
+
+        private static class pushedGroup_s {
+
+            idEntity ent;
+            float fraction;
+            boolean groundContact;
+            boolean test;
+        }
 // #endif
-    };
+    }
+
 }

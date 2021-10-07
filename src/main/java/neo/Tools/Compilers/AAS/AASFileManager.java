@@ -10,7 +10,13 @@ import neo.idlib.Text.Str.idStr;
 public class AASFileManager {
 
     private static idAASFileManagerLocal AASFileManagerLocal = new idAASFileManagerLocal();
-    public static  idAASFileManager      AASFileManager      = AASFileManagerLocal;
+    public static idAASFileManager AASFileManager = AASFileManagerLocal;
+
+    public static void setAASFileManager(idAASFileManager AASFileManager) {
+        neo.Tools.Compilers.AAS.AASFileManager.AASFileManager
+                = neo.Tools.Compilers.AAS.AASFileManager.AASFileManagerLocal
+                = (idAASFileManagerLocal) AASFileManager;
+    }
 
     /*
      ===============================================================================
@@ -21,11 +27,11 @@ public class AASFileManager {
      */
     public static abstract class idAASFileManager {
 
-//	virtual						~idAASFileManager( void ) {}
+        //	virtual						~idAASFileManager( void ) {}
         public abstract idAASFile LoadAAS(final String fileName, long/*unsigned int*/ mapFileCRC);
 
         public abstract void FreeAAS(idAASFile file);
-    };
+    }
 
     /*
      ===============================================================================
@@ -36,7 +42,7 @@ public class AASFileManager {
      */
     static class idAASFileManagerLocal extends idAASFileManager {
 
-//        virtual						~idAASFileManagerLocal( void ) {}
+        //        virtual						~idAASFileManagerLocal( void ) {}
         @Override
         public idAASFile LoadAAS(String fileName, long mapFileCRC) {
             idAASFileLocal file = new idAASFileLocal();
@@ -51,11 +57,5 @@ public class AASFileManager {
         public void FreeAAS(idAASFile file) {
 //            delete file
         }
-    };
-
-    public static void setAASFileManager(idAASFileManager AASFileManager) {
-        neo.Tools.Compilers.AAS.AASFileManager.AASFileManager
-                = neo.Tools.Compilers.AAS.AASFileManager.AASFileManagerLocal
-                = (idAASFileManagerLocal) AASFileManager;
     }
 }

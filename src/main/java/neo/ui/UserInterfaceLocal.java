@@ -1,31 +1,16 @@
 package neo.ui;
 
-import java.nio.ByteBuffer;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
-import static neo.TempDump.sizeof;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
-
 import neo.framework.DemoFile.idDemoFile;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.framework.KeyInput.idKeyInput;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
-import static neo.sys.sys_public.sysEventType_t.SE_MOUSE;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.ListGUI.idListGUI;
@@ -33,12 +18,25 @@ import neo.ui.ListGUILocal.idListGUILocal;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.UserInterface.idUserInterface;
 import neo.ui.UserInterface.idUserInterface.idUserInterfaceManager;
-import static neo.ui.UserInterface.uiManagerLocal;
-import static neo.ui.Window.WIN_DESKTOP;
-import static neo.ui.Window.WIN_MENUGUI;
 import neo.ui.Window.idWindow;
 import neo.ui.Winvar.idWinStr;
 import neo.ui.Winvar.idWinVar;
+
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
+import static neo.TempDump.sizeof;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.sys.sys_public.sysEventType_t.SE_MOUSE;
+import static neo.ui.UserInterface.uiManagerLocal;
+import static neo.ui.Window.WIN_DESKTOP;
+import static neo.ui.Window.WIN_MENUGUI;
 
 /**
  *
@@ -55,27 +53,27 @@ public class UserInterfaceLocal {
     public static class idUserInterfaceLocal extends idUserInterface {
         // friend class idUserInterfaceManagerLocal;
 
-        private boolean  active;
-        private boolean  loading;
-        private boolean  interactive;
-        private boolean  uniqued;
-        //
-        private idDict   state;
-        private idWindow desktop;
+        private final idStr activateStr = new idStr();
+        private boolean active;
         private idWindow bindHandler;
-        //
-        private idStr  source;
-        private idStr  activateStr = new idStr();
-        private idStr  pendingCmd  = new idStr();
-        private idStr  returnCmd   = new idStr();
-        private long[] timeStamp   = {0};
         //
         private float cursorX;
         private float cursorY;
+        private idWindow desktop;
+        private boolean interactive;
+        private boolean loading;
+        private final idStr pendingCmd = new idStr();
         //
-        private int   time;
+        private int refs;
+        private final idStr returnCmd = new idStr();
         //
-        private int   refs;
+        private final idStr source;
+        //
+        private final idDict state;
+        //
+        private int time;
+        private final long[] timeStamp = {0};
+        private boolean uniqued;
         //
         //
 
@@ -594,7 +592,7 @@ public class UserInterfaceLocal {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -606,10 +604,10 @@ public class UserInterfaceLocal {
     public static class idUserInterfaceManagerLocal extends idUserInterfaceManager {
         // friend class idUserInterfaceLocal;
 
+        private final idDeviceContext dc = new idDeviceContext();
+        private final idList<idUserInterfaceLocal> demoGuis = new idList<>();
+        private final idList<idUserInterfaceLocal> guis = new idList<>();
         private idRectangle screenRect = new idRectangle();
-        private idDeviceContext dc = new idDeviceContext();
-        private idList<idUserInterfaceLocal> guis = new idList<>();
-        private idList<idUserInterfaceLocal> demoGuis = new idList<>();
         //
         //
 
@@ -777,7 +775,7 @@ public class UserInterfaceLocal {
             if (autoLoad) {
                 idUserInterface gui = Alloc();
                 if (gui.InitFromFile(qpath)) {
-                    gui.SetUniqued(forceUnique ? false : needInteractive);
+                    gui.SetUniqued(!forceUnique && needInteractive);
                     return gui;
 //                } else {
 //			delete gui;
@@ -808,5 +806,6 @@ public class UserInterfaceLocal {
             listgui.Clear();
         }
 
-    };
+    }
+
 }

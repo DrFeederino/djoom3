@@ -1,27 +1,9 @@
 package neo.ui;
 
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem.GLYPH_END;
-import static neo.Renderer.RenderSystem.GLYPH_START;
-import neo.Renderer.RenderSystem.fontInfoEx_t;
-import neo.Renderer.RenderSystem.fontInfo_t;
-import neo.Renderer.RenderSystem.glyphInfo_t;
-import static neo.Renderer.RenderSystem.renderSystem;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_GUI;
+import neo.Renderer.RenderSystem.*;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.com_ticNumber;
-import static neo.framework.DeclManager.declManager;
-import static neo.idlib.Lib.idLib.common;
-import static neo.idlib.Lib.idLib.cvarSystem;
-import static neo.idlib.Text.Str.C_COLOR_DEFAULT;
-import static neo.idlib.Text.Str.C_COLOR_ESCAPE;
-import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
+import neo.idlib.Text.Str.*;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Math_h.idMath;
@@ -29,66 +11,85 @@ import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMat4;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
-import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_CENTER;
-import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_RIGHT;
-import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_ARROW;
-import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_COUNT;
-import static neo.ui.DeviceContext.idDeviceContext.CURSOR.CURSOR_HAND;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_COUNT;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_DOWN;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_HBACK;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_LEFT;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_RIGHT;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_THUMB;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_UP;
-import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.SCROLLBAR_VBACK;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.Rectangle.idRegion;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.Renderer.RenderSystem.*;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.CVAR_ARCHIVE;
+import static neo.framework.CVarSystem.CVAR_GUI;
+import static neo.framework.Common.com_ticNumber;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Lib.idLib.cvarSystem;
+import static neo.idlib.Text.Str.*;
+import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_CENTER;
+import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_RIGHT;
+import static neo.ui.DeviceContext.idDeviceContext.CURSOR.*;
+import static neo.ui.DeviceContext.idDeviceContext.SCROLLBAR.*;
 
 /**
  *
  */
 public class DeviceContext {
 
-    public static final int VIRTUAL_WIDTH = 640;
-    public static final int VIRTUAL_HEIGHT = 480;
     public static final int BLINK_DIVISOR = 200;
-
-    static final idCVar gui_smallFontLimit = new idCVar("gui_smallFontLimit", "0.30", CVAR_GUI | CVAR_ARCHIVE, "");
+    public static final int VIRTUAL_HEIGHT = 480;
+    public static final int VIRTUAL_WIDTH = 640;
     static final idCVar gui_mediumFontLimit = new idCVar("gui_mediumFontLimit", "0.60", CVAR_GUI | CVAR_ARCHIVE, "");
+    static final idCVar gui_smallFontLimit = new idCVar("gui_smallFontLimit", "0.30", CVAR_GUI | CVAR_ARCHIVE, "");
 
     public static class idDeviceContext {
 
+        public static idVec4 colorBlack;
+        public static idVec4 colorBlue;
+        public static idVec4 colorGreen;
+        public static idVec4 colorNone;
+        public static idVec4 colorOrange;
+        public static idVec4 colorPurple;
+        public static idVec4 colorRed;
+        public static idVec4 colorWhite;
+        public static idVec4 colorYellow;
+        static int aaaa = 0;
+        static int asdasdasd = 0;
+        static int bla = 0;
+        static int bla99 = 0;
+        static int d1 = 0, d2 = 0;
+        //
+        private static final idList<fontInfoEx_t> fonts = new idList<>();
         private final idMaterial[] cursorImages = new idMaterial[CURSOR_COUNT.ordinal()];
         private final idMaterial[] scrollBarImages = new idMaterial[SCROLLBAR_COUNT.ordinal()];
-        private idMaterial whiteImage;
         private fontInfoEx_t activeFont;
-        private fontInfo_t useFont;
-        private idStr fontName = new idStr();
-        private float xScale;
-        private float yScale;
         //
-        private float vidHeight;
-        private float vidWidth;
+        private final idList<idRectangle> clipRects = new idList<>();
         //
         private CURSOR cursor;
         //
-        private idList<idRectangle> clipRects = new idList<>();
-        //	
-        private static idList<fontInfoEx_t> fonts = new idList<>();
-        private idStr fontLang;
+        //
         //
         private boolean enableClipping;
-        //
-        private boolean overStrikeMode;
+        // ~idDeviceContext() { }
+        private final idStr fontLang;
+        private final idStr fontName = new idStr();
+        private boolean initialized;
+//
+//        public void EnableLocalization();
+//
         //
         private idMat3 mat;
-        private idVec3 origin;
-        private boolean initialized;
         //
         private boolean mbcs;
+        private idVec3 origin;
         //
+        private boolean overStrikeMode;
+        private fontInfo_t useFont;
         //
+        private float vidHeight;
+        private float vidWidth;
+        private idMaterial whiteImage;
+        private float xScale;
+        private float yScale;
 
         public idDeviceContext() {
             this.fontLang = new idStr();
@@ -96,7 +97,6 @@ public class DeviceContext {
             this.origin = new idVec3();
             Clear();
         }
-        // ~idDeviceContext() { }
 
         public void Init() {
             xScale = 0;
@@ -151,9 +151,6 @@ public class DeviceContext {
         public boolean Initialized() {
             return initialized;
         }
-//
-//        public void EnableLocalization();
-//
 
         public void GetTransformInfo(idVec3 origin, idMat3 mat) {
             mat.oSet(this.mat);
@@ -180,8 +177,8 @@ public class DeviceContext {
 
             float[] s0 = {0}, s1 = {0}, t0 = {0}, t1 = {0};
             float[] x1 = {x}, y1 = {y}, w1 = {w}, h1 = {h};
-// 
-//  handle negative scales as well	
+//
+//  handle negative scales as well
             if (scaleX < 0) {
                 w1[0] *= -1;
                 scaleX *= -1;
@@ -190,8 +187,8 @@ public class DeviceContext {
                 h1[0] *= -1;
                 scaleY *= -1;
             }
-// 
-            if (w1[0] < 0) {	// flip about vertical
+//
+            if (w1[0] < 0) {    // flip about vertical
                 w1[0] = -w1[0];
                 s0[0] = 1 * scaleX;
                 s1[0] = 0;
@@ -200,7 +197,7 @@ public class DeviceContext {
                 s1[0] = 1 * scaleX;
             }
 
-            if (h1[0] < 0) {	// flip about horizontal
+            if (h1[0] < 0) {    // flip about horizontal
                 h1[0] = -h1[0];
                 t0[0] = 1 * scaleY;
                 t1[0] = 0;
@@ -214,11 +211,10 @@ public class DeviceContext {
             }
 
             AdjustCoords(x1, y1, w1, h1);
-            
+
             DrawStretchPic(x1[0], y1[0], w1[0], h1[0], s0[0], t0[0], s1[0], t1[0], mat);
             bla99++;
         }
-        static int bla99 = 0;
 
         public void DrawRect(float x, float y, float width, float height, float size, final idVec4 color) {
 
@@ -259,7 +255,6 @@ public class DeviceContext {
             DrawStretchPic(x1[0], y1[0], w1[0], h1[0], 0, 0, 0, 0, whiteImage);
             aaaa++;
         }
-        static int aaaa = 0;
 
         public int DrawText(String text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, idList<Integer> breaks /*= NULL*/, int limit /*= 0*/) {
             char p, textPtr;
@@ -403,14 +398,13 @@ public class DeviceContext {
                 // update the width
                 bla++;
                 if (buff[len - 1] != C_COLOR_ESCAPE && (len <= 1 || buff[len - 2] != C_COLOR_ESCAPE)) {
-                    textWidth += textScale * useFont.glyphScale * useFont.glyphs[ buff[len - 1]].xSkip;
+                    textWidth += textScale * useFont.glyphScale * useFont.glyphs[buff[len - 1]].xSkip;
                     // Jim Dosé, I don't know who you are..but I hate you.
                 }
             }
 
             return idMath.FtoiFast(rectDraw.w / charSkip);
         }
-        static int bla = 0;
 
         public int DrawText(final idStr text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, idList<Integer> breaks /*= NULL*/) {
             return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, calcOnly, breaks, 0);
@@ -532,8 +526,8 @@ public class DeviceContext {
 
             float[] s0 = new float[1], s1 = new float[1], t0 = new float[1], t1 = new float[1];
             float[] x1 = {x}, y1 = {y}, w1 = {w}, h1 = {h};
-            // 
-            //  handle negative scales as well	
+            //
+            //  handle negative scales as well
             if (scalex < 0) {
                 w1[0] *= -1;
                 scalex *= -1;
@@ -542,8 +536,8 @@ public class DeviceContext {
                 h1[0] *= -1;
                 scaley *= -1;
             }
-            // 
-            if (w1[0] < 0) {	// flip about vertical
+            //
+            if (w1[0] < 0) {    // flip about vertical
                 w1[0] = -w1[0];
                 s0[0] = 1 * scalex;
                 s1[0] = 0;
@@ -552,7 +546,7 @@ public class DeviceContext {
                 s1[0] = 1 * scalex;
             }
 
-            if (h1[0] < 0) {	// flip about horizontal
+            if (h1[0] < 0) {    // flip about horizontal
                 h1[0] = -h1[0];
                 t0[0] = 1 * scaley;
                 t1[0] = 0;
@@ -836,7 +830,7 @@ public class DeviceContext {
              return;
              }
 
-             y = lineSkip + rectDraw.y + yStart; 
+             y = lineSkip + rectDraw.y + yStart;
              len = 0;
              buff[0] = '\0';
              newLine = 0;
@@ -855,7 +849,7 @@ public class DeviceContext {
              if (len) {
 
              float x = rectDraw.x ;
-				
+
              buff[newLine] = '\0';
              DrawText(x, y, textScale, color, buff, 0, 0, 0);
              if (!wrap) {
@@ -916,7 +910,7 @@ public class DeviceContext {
              return;
              }
 
-             y = lineSkip + rectDraw.y + yStart; 
+             y = lineSkip + rectDraw.y + yStart;
              len = 0;
              buff[0] = '\0';
              newLine = 0;
@@ -935,7 +929,7 @@ public class DeviceContext {
              if (len) {
 
              float x = rectDraw.x ;
-				
+
              buff[newLine] = '\0';
              DrawText(x, y, textScale, color, buff, 0, 0, 0);
              if (!wrap) {
@@ -1125,43 +1119,6 @@ public class DeviceContext {
             PaintChar(x, y - yadj, glyph2.imageWidth, glyph2.imageHeight, useScale, glyph2.s, glyph2.t, glyph2.s2, glyph2.t2, glyph2.glyph);
         }
 
-        public enum CURSOR {
-
-            CURSOR_ARROW,
-            CURSOR_HAND,
-            CURSOR_COUNT
-        };
-
-        public enum ALIGN {
-
-            ALIGN_LEFT,
-            ALIGN_CENTER,
-            ALIGN_RIGHT
-        };
-
-        public enum SCROLLBAR {
-
-            SCROLLBAR_HBACK,
-            SCROLLBAR_VBACK,
-            SCROLLBAR_THUMB,
-            SCROLLBAR_RIGHT,
-            SCROLLBAR_LEFT,
-            SCROLLBAR_UP,
-            SCROLLBAR_DOWN,
-            SCROLLBAR_COUNT
-        };
-        public static idVec4 colorPurple;
-        public static idVec4 colorOrange;
-        public static idVec4 colorYellow;
-        public static idVec4 colorGreen;
-        public static idVec4 colorBlue;
-        public static idVec4 colorRed;
-        public static idVec4 colorWhite;
-        public static idVec4 colorBlack;
-        public static idVec4 colorNone;
-
-        static int d1 = 0, d2 = 0;
-
         private int DrawText(float x, float y, float scale, idVec4 color, final String text, float adjust, int limit, int style, int cursor /*= -1*/) {
             int len, count;
             idVec4 newColor;
@@ -1249,7 +1206,6 @@ public class DeviceContext {
             DrawStretchPic(x1[0], y1[0], w[0], h[0], s1[0], t1[0], s3[0], t3[0], hShader);
             asdasdasd++;
         }
-        static int asdasdasd = 0;
 
         private void SetFontByScale(float scale) {
             if (scale <= gui_smallFontLimit.GetFloat()) {
@@ -1273,5 +1229,32 @@ public class DeviceContext {
             activeFont = null;
             mbcs = false;
         }
-    };
+
+        public enum ALIGN {
+
+            ALIGN_LEFT,
+            ALIGN_CENTER,
+            ALIGN_RIGHT
+        }
+
+        public enum CURSOR {
+
+            CURSOR_ARROW,
+            CURSOR_HAND,
+            CURSOR_COUNT
+        }
+
+        public enum SCROLLBAR {
+
+            SCROLLBAR_HBACK,
+            SCROLLBAR_VBACK,
+            SCROLLBAR_THUMB,
+            SCROLLBAR_RIGHT,
+            SCROLLBAR_LEFT,
+            SCROLLBAR_UP,
+            SCROLLBAR_DOWN,
+            SCROLLBAR_COUNT
+        }
+    }
+
 }

@@ -4,23 +4,19 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.Lib;
+import neo.idlib.geometry.Winding.idWinding;
+import neo.idlib.math.Math_h.*;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Plane.*;
+import neo.idlib.math.Vector.idVec3;
+
 import static neo.idlib.Lib.Max;
 import static neo.idlib.Lib.Min;
 import static neo.idlib.containers.List.idSwap;
-import neo.idlib.geometry.Winding.idWinding;
-import static neo.idlib.math.Math_h.FLOATNOTZERO;
-import static neo.idlib.math.Math_h.FLOATSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Matrix.idMat3;
+import static neo.idlib.math.Math_h.*;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import neo.idlib.math.Plane.idPlane;
+import static neo.idlib.math.Plane.*;
 import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -36,14 +32,14 @@ public class Frustum {
      bit 5 = max z
      */
     private static final int[] boxVertPlanes = {
-        ((1 << 0) | (1 << 2) | (1 << 4)),
-        ((1 << 1) | (1 << 2) | (1 << 4)),
-        ((1 << 1) | (1 << 3) | (1 << 4)),
-        ((1 << 0) | (1 << 3) | (1 << 4)),
-        ((1 << 0) | (1 << 2) | (1 << 5)),
-        ((1 << 1) | (1 << 2) | (1 << 5)),
-        ((1 << 1) | (1 << 3) | (1 << 5)),
-        ((1 << 0) | (1 << 3) | (1 << 5)),};
+            ((1 << 0) | (1 << 2) | (1 << 4)),
+            ((1 << 1) | (1 << 2) | (1 << 4)),
+            ((1 << 1) | (1 << 3) | (1 << 4)),
+            ((1 << 0) | (1 << 3) | (1 << 4)),
+            ((1 << 0) | (1 << 2) | (1 << 5)),
+            ((1 << 1) | (1 << 2) | (1 << 5)),
+            ((1 << 1) | (1 << 3) | (1 << 5)),
+            ((1 << 0) | (1 << 3) | (1 << 5)),};
 
     /*
      ============
@@ -80,15 +76,29 @@ public class Frustum {
      */
     public static class idFrustum {
 
-        private idVec3 origin;      // frustum origin
+        static final int[][] capPointIndex = {
+                {0, 3},
+                {1, 2},
+                {0, 1},
+                {2, 3}};
+        private static final int VORONOI_INDEX_0_0_0 = (0 + 0 * 3 + 0 * 9), VORONOI_INDEX_1_0_0 = (1 + 0 * 3 + 0 * 9), VORONOI_INDEX_2_0_0 = (2 + 0 * 3 + 0 * 9),
+                VORONOI_INDEX_0_1_0 = (0 + 1 * 3 + 0 * 9), VORONOI_INDEX_0_2_0 = (0 + 2 * 3 + 0 * 9), VORONOI_INDEX_0_0_1 = (0 + 0 * 3 + 1 * 9),
+                VORONOI_INDEX_0_0_2 = (0 + 0 * 3 + 2 * 9), VORONOI_INDEX_1_1_1 = (1 + 1 * 3 + 1 * 9), VORONOI_INDEX_2_1_1 = (2 + 1 * 3 + 1 * 9),
+                VORONOI_INDEX_1_2_1 = (1 + 2 * 3 + 1 * 9), VORONOI_INDEX_2_2_1 = (2 + 2 * 3 + 1 * 9), VORONOI_INDEX_1_1_2 = (1 + 1 * 3 + 2 * 9),
+                VORONOI_INDEX_2_1_2 = (2 + 1 * 3 + 2 * 9), VORONOI_INDEX_1_2_2 = (1 + 2 * 3 + 2 * 9), VORONOI_INDEX_2_2_2 = (2 + 2 * 3 + 2 * 9),
+                VORONOI_INDEX_1_1_0 = (1 + 1 * 3 + 0 * 9), VORONOI_INDEX_2_1_0 = (2 + 1 * 3 + 0 * 9), VORONOI_INDEX_1_2_0 = (1 + 2 * 3 + 0 * 9),
+                VORONOI_INDEX_2_2_0 = (2 + 2 * 3 + 0 * 9), VORONOI_INDEX_1_0_1 = (1 + 0 * 3 + 1 * 9), VORONOI_INDEX_2_0_1 = (2 + 0 * 3 + 1 * 9),
+                VORONOI_INDEX_0_1_1 = (0 + 1 * 3 + 1 * 9), VORONOI_INDEX_0_2_1 = (0 + 2 * 3 + 1 * 9), VORONOI_INDEX_1_0_2 = (1 + 0 * 3 + 2 * 9),
+                VORONOI_INDEX_2_0_2 = (2 + 0 * 3 + 2 * 9), VORONOI_INDEX_0_1_2 = (0 + 1 * 3 + 2 * 9), VORONOI_INDEX_0_2_2 = (0 + 2 * 3 + 2 * 9);
         private idMat3 axis;        // frustum orientation
-        private float  dNear;       // distance of near plane, dNear >= 0.0f
-        private float  dFar;        // distance of far plane, dFar > dNear
-        private float  dLeft;       // half the width at the far plane
-        private float  dUp;         // half the height at the far plane
-        private float  invFar;      // 1.0f / dFar
+        private float dFar;        // distance of far plane, dFar > dNear
+        private float dLeft;       // half the width at the far plane
+        private float dNear;       // distance of near plane, dNear >= 0.0f
+        private float dUp;         // half the height at the far plane
         //
         //
+        private float invFar;      // 1.0f / dFar
+        private idVec3 origin;      // frustum origin
 
         public idFrustum() {
             origin = new idVec3();
@@ -156,32 +166,32 @@ public class Frustum {
             return new idMat3(axis);
         }
 
-        public idVec3 GetCenter() {						// returns center of frustum
+        public idVec3 GetCenter() {                        // returns center of frustum
             return origin.oPlus(axis.oGet(0).oMultiply((dFar - dNear) * 0.5f));
         }
 
-        public boolean IsValid() {							// returns true if the frustum is valid
+        public boolean IsValid() {                            // returns true if the frustum is valid
             return (dFar > dNear);
         }
 
-        public float GetNearDistance() {					// returns distance to near plane
+        public float GetNearDistance() {                    // returns distance to near plane
             return dNear;
         }
 
-        public float GetFarDistance() {					// returns distance to far plane
+        public float GetFarDistance() {                    // returns distance to far plane
             return dFar;
-        }
-
-        public float GetLeft() {							// returns left vector length
-            return dLeft;
-        }
-
-        public float GetUp() {							// returns up vector length
-            return dUp;
         }
 //
 
-        public idFrustum Expand(final float d) {					// returns frustum expanded in all directions with the given value
+        public float GetLeft() {                            // returns left vector length
+            return dLeft;
+        }
+
+        public float GetUp() {                            // returns up vector length
+            return dUp;
+        }
+
+        public idFrustum Expand(final float d) {                    // returns frustum expanded in all directions with the given value
             idFrustum f = new idFrustum(this);//TODO:oSET
             f.origin.oMinSet(f.axis.oGet(0).oMultiply(d));
             f.dFar += 2.0f * d;
@@ -191,7 +201,7 @@ public class Frustum {
             return f;
         }
 
-        public idFrustum ExpandSelf(final float d) {					// expands frustum in all directions with the given value
+        public idFrustum ExpandSelf(final float d) {                    // expands frustum in all directions with the given value
             origin.oMinSet(axis.oGet(0).oMultiply(d));
             dFar += 2.0f * d;
             dLeft = dFar * dLeft * invFar;
@@ -200,28 +210,28 @@ public class Frustum {
             return this;
         }
 
-        public idFrustum Translate(final idVec3 translation) {	// returns translated frustum
+        public idFrustum Translate(final idVec3 translation) {    // returns translated frustum
             idFrustum f = new idFrustum(this);
             f.origin.oPluSet(translation);
             return f;
         }
 
-        public idFrustum TranslateSelf(final idVec3 translation) {		// translates frustum
+        public idFrustum TranslateSelf(final idVec3 translation) {        // translates frustum
             origin.oPluSet(translation);
             return this;
         }
+//
 
-        public idFrustum Rotate(final idMat3 rotation) {			// returns rotated frustum
+        public idFrustum Rotate(final idMat3 rotation) {            // returns rotated frustum
             idFrustum f = new idFrustum(this);
             f.axis.oMulSet(rotation);
             return f;
         }
 
-        public idFrustum RotateSelf(final idMat3 rotation) {			// rotates frustum
+        public idFrustum RotateSelf(final idMat3 rotation) {            // rotates frustum
             axis.oMulSet(rotation);
             return this;
         }
-//
 
         public float PlaneDistance(final idPlane plane) {
             float[] min = new float[1], max = new float[1];
@@ -235,6 +245,7 @@ public class Frustum {
             }
             return 0.0f;
         }
+//
 
         public int PlaneSide(final idPlane plane) {
             return PlaneSide(plane, ON_EPSILON);
@@ -252,7 +263,6 @@ public class Frustum {
             }
             return PLANESIDE_CROSS;
         }
-//
 
         // fast culling but might not cull everything outside the frustum
         public boolean CullPoint(final idVec3 point) {
@@ -269,10 +279,7 @@ public class Frustum {
             if (idMath.Fabs(p.y) > dLeft * scale) {
                 return true;
             }
-            if (idMath.Fabs(p.z) > dUp * scale) {
-                return true;
-            }
-            return false;
+            return idMath.Fabs(p.z) > dUp * scale;
         }
 
         /*
@@ -358,12 +365,9 @@ public class Frustum {
 
             // test up/down planes
             d = dFar * idMath.Fabs(center.z) - dUp * center.x;
-            if ((d * d) > rs * (sFar + dUp * dUp)) {
-                return true;
-            }
-
-            return false;
+            return (d * d) > rs * (sFar + dUp * dUp);
         }
+//
 
         /*
          ============
@@ -405,7 +409,6 @@ public class Frustum {
 
             return CullLocalWinding(localPoints, winding.GetNumPoints(), pointCull);
         }
-//
 
         // exact intersection tests
         public boolean ContainsPoint(final idVec3 point) {
@@ -443,11 +446,7 @@ public class Frustum {
 
             BoxToPoints(localOrigin, extents, localAxis, indexPoints);
 
-            if (LocalFrustumIntersectsFrustum(indexPoints, true)) {
-                return true;
-            }
-
-            return false;
+            return LocalFrustumIntersectsFrustum(indexPoints, true);
         }
 
         public boolean IntersectsBox(final idBox box) {
@@ -483,25 +482,12 @@ public class Frustum {
 
             BoxToPoints(localOrigin, box.GetExtents(), localAxis, indexPoints);
 
-            if (LocalFrustumIntersectsFrustum(indexPoints, true)) {
-                return true;
-            }
-
-            return false;
+            return LocalFrustumIntersectsFrustum(indexPoints, true);
         }
 
         private int VORONOI_INDEX(int x, int y, int z) {
             return (x + y * 3 + z * 9);
         }
-        private static final int VORONOI_INDEX_0_0_0 = (0 + 0 * 3 + 0 * 9), VORONOI_INDEX_1_0_0 = (1 + 0 * 3 + 0 * 9), VORONOI_INDEX_2_0_0 = (2 + 0 * 3 + 0 * 9),
-                VORONOI_INDEX_0_1_0 = (0 + 1 * 3 + 0 * 9), VORONOI_INDEX_0_2_0 = (0 + 2 * 3 + 0 * 9), VORONOI_INDEX_0_0_1 = (0 + 0 * 3 + 1 * 9),
-                VORONOI_INDEX_0_0_2 = (0 + 0 * 3 + 2 * 9), VORONOI_INDEX_1_1_1 = (1 + 1 * 3 + 1 * 9), VORONOI_INDEX_2_1_1 = (2 + 1 * 3 + 1 * 9),
-                VORONOI_INDEX_1_2_1 = (1 + 2 * 3 + 1 * 9), VORONOI_INDEX_2_2_1 = (2 + 2 * 3 + 1 * 9), VORONOI_INDEX_1_1_2 = (1 + 1 * 3 + 2 * 9),
-                VORONOI_INDEX_2_1_2 = (2 + 1 * 3 + 2 * 9), VORONOI_INDEX_1_2_2 = (1 + 2 * 3 + 2 * 9), VORONOI_INDEX_2_2_2 = (2 + 2 * 3 + 2 * 9),
-                VORONOI_INDEX_1_1_0 = (1 + 1 * 3 + 0 * 9), VORONOI_INDEX_2_1_0 = (2 + 1 * 3 + 0 * 9), VORONOI_INDEX_1_2_0 = (1 + 2 * 3 + 0 * 9),
-                VORONOI_INDEX_2_2_0 = (2 + 2 * 3 + 0 * 9), VORONOI_INDEX_1_0_1 = (1 + 0 * 3 + 1 * 9), VORONOI_INDEX_2_0_1 = (2 + 0 * 3 + 1 * 9),
-                VORONOI_INDEX_0_1_1 = (0 + 1 * 3 + 1 * 9), VORONOI_INDEX_0_2_1 = (0 + 2 * 3 + 1 * 9), VORONOI_INDEX_1_0_2 = (1 + 0 * 3 + 2 * 9),
-                VORONOI_INDEX_2_0_2 = (2 + 0 * 3 + 2 * 9), VORONOI_INDEX_0_1_2 = (0 + 1 * 3 + 2 * 9), VORONOI_INDEX_0_2_2 = (0 + 2 * 3 + 2 * 9);
 
         public boolean IntersectsSphere(final idSphere sphere) {
             int index, x, y, z;
@@ -660,11 +646,7 @@ public class Frustum {
             idSwap(indexPoints1, indexPoints1, 2, 3);
             idSwap(indexPoints1, indexPoints1, 6, 7);
 
-            if (frustum.LocalFrustumIntersectsFrustum(indexPoints1, (localFrustum1.dNear > 0.0f))) {
-                return true;
-            }
-
-            return false;
+            return frustum.LocalFrustumIntersectsFrustum(indexPoints1, (localFrustum1.dNear > 0.0f));
         }
 
         public boolean IntersectsWinding(final idWinding winding) {
@@ -757,10 +739,7 @@ public class Frustum {
             if (LocalRayIntersection((start.oMinus(origin)).oMultiply(axis.Transpose()), dir.oMultiply(axis.Transpose()), scale1, scale2)) {//TODO:scale back ref??
                 return true;
             }
-            if (scale1[0] <= scale2[0]) {
-                return true;
-            }
-            return false;
+            return scale1[0] <= scale2[0];
         }
 
         /*
@@ -859,8 +838,8 @@ public class Frustum {
             this.origin = new idVec3(projectionOrigin);
             this.dNear = points[minX].x;
             this.dFar = dFar;
-            this.dLeft = (float) (Lib.Max(idMath.Fabs(points[minY].y / points[minY].x), idMath.Fabs(points[maxY].y / points[maxY].x)) * dFar);
-            this.dUp = (float) (Lib.Max(idMath.Fabs(points[minZ].z / points[minZ].x), idMath.Fabs(points[maxZ].z / points[maxZ].x)) * dFar);
+            this.dLeft = Lib.Max(idMath.Fabs(points[minY].y / points[minY].x), idMath.Fabs(points[maxY].y / points[maxY].x)) * dFar;
+            this.dUp = Lib.Max(idMath.Fabs(points[minZ].z / points[minZ].x), idMath.Fabs(points[maxZ].z / points[maxZ].x)) * dFar;
             this.invFar = 1.0f / dFar;
 
 //#elif 1
@@ -937,6 +916,7 @@ public class Frustum {
 //#endif
             return true;
         }
+        //
 
         /*
          ============
@@ -975,7 +955,6 @@ public class Frustum {
 
             return true;
         }
-        //
 
         /*
          ============
@@ -1040,6 +1019,7 @@ public class Frustum {
             MoveFarDistance(newdFar);
             return true;
         }
+//
 
         /*
          ============
@@ -1061,7 +1041,6 @@ public class Frustum {
             MoveFarDistance(newdFar);
             return true;
         }
-//
 
         /*
          ============
@@ -1070,7 +1049,7 @@ public class Frustum {
          planes point outwards
          ============
          */
-        public void ToPlanes(idPlane planes[]) {			// planes point outwards
+        public void ToPlanes(idPlane[] planes) {            // planes point outwards
             int i;
             idVec3[] scaled = new idVec3[2];
             idVec3[] points = new idVec3[4];
@@ -1093,8 +1072,9 @@ public class Frustum {
                 planes[i + 2].FitThroughPoint(points[i]);
             }
         }
+//
 
-        public void ToPoints(idVec3 points[]) {				// 8 corners of the frustum
+        public void ToPoints(idVec3[] points) {                // 8 corners of the frustum
             idMat3 scaled = new idMat3();
 
             scaled.oSet(0, origin.oPlus(axis.oGet(0).oMultiply(dNear)));
@@ -1119,7 +1099,6 @@ public class Frustum {
             points[4].oPluSet(scaled.oGet(2));
             points[5].oPluSet(scaled.oGet(2));
         }
-//
 
         /*
          ============
@@ -1135,6 +1114,7 @@ public class Frustum {
             ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
             AxisProjection(indexPoints, cornerVecs, dir, min, max);
         }
+//
 
         /*
          ============
@@ -1161,7 +1141,6 @@ public class Frustum {
             bounds.oSet(1, 2, b12[0]);
 
         }
-//
 
         // calculates the bounds for the projection in this frustum
         public boolean ProjectionBounds(final idBounds bounds, idBounds projectionBounds) {
@@ -1527,8 +1506,8 @@ public class Frustum {
                 clipBox.AxisProjection(axis.oGet(0), clipBoxMin, clipBoxMax);
                 frustum.AxisProjection(axis.oGet(0), frustumMin, frustumMax);
 
-                projectionBounds.oGet(0).x = (float) (Max(clipBoxMin[0], frustumMin[0]) - base[0]);
-                projectionBounds.oGet(1).x = (float) (Min(clipBoxMax[0], frustumMax[0]) - base[0]);
+                projectionBounds.oGet(0).x = Max(clipBoxMin[0], frustumMin[0]) - base[0];
+                projectionBounds.oGet(1).x = Min(clipBoxMax[0], frustumMax[0]) - base[0];
                 projectionBounds.oGet(0).y = projectionBounds.oGet(0).z = -1.0f;
                 projectionBounds.oGet(1).y = projectionBounds.oGet(1).z = 1.0f;
                 return true;
@@ -1794,11 +1773,7 @@ public class Frustum {
             d2 = idMath.Fabs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(2) - dUp * testAxis.oGet(0).oGet(0)))
                     + idMath.Fabs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(2) - dUp * testAxis.oGet(1).oGet(0)))
                     + idMath.Fabs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(2) - dUp * testAxis.oGet(2).oGet(0)));
-            if (d1 - d2 > 0.0f) {
-                return true;
-            }
-
-            return false;
+            return d1 - d2 > 0.0f;
         }
 
         /*
@@ -1881,11 +1856,7 @@ public class Frustum {
             dx = -dFar * cornerVecs[index].z - dUp * cornerVecs[index].x;
             index |= (FLOATSIGNBITSET(dx) << 2);
 
-            if (indexPoints[index].z < -indexPoints[index].x * upScale) {
-                return true;
-            }
-
-            return false;
+            return indexPoints[index].z < -indexPoints[index].x * upScale;
         }
 
         private boolean CullLocalWinding(final idVec3[] points, final int numPoints, int[] pointCull) {
@@ -1984,11 +1955,7 @@ public class Frustum {
             dx = cornerVecs[index].z;
             index |= (FLOATSIGNBITSET(dx) << 2);
 
-            if (indexPoints[index].z > bounds.oGet(1).z) {
-                return true;
-            }
-
-            return false;
+            return indexPoints[index].z > bounds.oGet(1).z;
         }
 
         /*
@@ -2418,7 +2385,7 @@ public class Frustum {
          18 muls
          ============
          */
-        private void AxisProjection(final idVec3 indexPoints[], final idVec3 cornerVecs[], final idVec3 dir, float[] min, float[] max) {
+        private void AxisProjection(final idVec3[] indexPoints, final idVec3[] cornerVecs, final idVec3 dir, float[] min, float[] max) {
             float dx, dy, dz;
             int index;
 
@@ -2690,11 +2657,6 @@ public class Frustum {
                 }
             }
         }
-        static final int[][] capPointIndex = {
-            {0, 3},
-            {1, 2},
-            {0, 1},
-            {2, 3}};
 
         private boolean AddLocalCapsToProjectionBounds(final idVec3[] endPoints, final int endPointsOffset, final int[] endPointCull, final int endPointCullOffset, final idVec3 point, int pointCull, int pointClip, idBounds projectionBounds) {
             int[] p;
@@ -3019,5 +2981,6 @@ public class Frustum {
             this.dUp = f.dUp;
             this.invFar = f.invFar;
         }
-    };
+    }
+
 }

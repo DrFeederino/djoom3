@@ -21,12 +21,56 @@ import static neo.idlib.math.Vector.idVecX.VECX_ALLOCA;
  */
 public class Lcp {
 
-    static final idCVar lcp_showFailures = new idCVar("lcp_showFailures", "0", CVAR_SYSTEM | CVAR_BOOL, "show LCP solver failures");
-
-    static final float LCP_BOUND_EPSILON       = 1e-5f;
-    static final float LCP_ACCEL_EPSILON       = 1e-5f;
+    static final float LCP_ACCEL_EPSILON = 1e-5f;
+    static final float LCP_BOUND_EPSILON = 1e-5f;
     static final float LCP_DELTA_ACCEL_EPSILON = 1e-9f;
     static final float LCP_DELTA_FORCE_EPSILON = 1e-9f;
+    static final idCVar lcp_showFailures = new idCVar("lcp_showFailures", "0", CVAR_SYSTEM | CVAR_BOOL, "show LCP solver failures");
+
+    /**
+     *
+     */
+    public static float[] clam(final idMatX src, final int numClamped) {
+        return clam(src.ToFloatPtr(), numClamped * src.GetNumColumns());
+    }
+
+    public static float[] clam(final idVecX src, final int numClamped) {
+        return clam(src.ToFloatPtr(), numClamped);
+    }
+
+    public static float[] clam(final float[] src, final int numClamped) {
+        float[] clamped = new float[src.length - numClamped];
+
+        System.arraycopy(src, numClamped, clamped, 0, clamped.length);
+
+        return clamped;
+    }
+
+    public static float[] unClam(idMatX dst, final float[] clamArray) {
+        return unClam(dst.ToFloatPtr(), clamArray);
+    }
+
+    public static float[] unClam(idVecX dst, final float[] clamArray) {
+        return unClam(dst.ToFloatPtr(), clamArray);
+    }
+
+    public static float[] unClam(float[] dst, final float[] clamArray) {
+        System.arraycopy(clamArray, 0, dst, dst.length - clamArray.length, clamArray.length);
+        return dst;
+    }
+
+    public static char[] clam(final char[] src, int numClamped) {
+        char[] clamped = new char[src.length - numClamped];
+
+        System.arraycopy(src, numClamped, clamped, 0, clamped.length);
+
+        return clamped;
+    }
+
+    public static char[] unClam(char[] dst, char[] clamArray) {
+        System.arraycopy(clamArray, 0, dst, dst.length - clamArray.length, clamArray.length);
+        return dst;
+    }
 
     /*
      ===============================================================================
@@ -51,7 +95,7 @@ public class Lcp {
      lo[i] = - fabs( lo[i] * x[boxIndex[i]] )
      hi[i] = fabs( hi[i] * x[boxIndex[i]] )
      boxIndex[boxIndex[i]] must be -1
-  
+
      Before calculating any of the bounded x[i] with boxIndex[i] != -1 the
      solver calculates all unbounded x[i] and all x[i] with boxIndex[i] == -1.
 
@@ -61,13 +105,6 @@ public class Lcp {
 
         protected int maxIterations;
 
-        // A must be a square matrix
-        public idLCP AllocSquare() {
-            idLCP lcp = new idLCP_Square();
-            lcp.SetMaxIterations(32);
-            return lcp;
-        }
-
         // A must be a symmetric matrix
         public static idLCP AllocSymmetric() {
             idLCP lcp = new idLCP_Symmetric();
@@ -75,7 +112,14 @@ public class Lcp {
             return lcp;
         }
 
-//public	virtual			~idLCP( void );
+        // A must be a square matrix
+        public idLCP AllocSquare() {
+            idLCP lcp = new idLCP_Square();
+            lcp.SetMaxIterations(32);
+            return lcp;
+        }
+
+        //public	virtual			~idLCP( void );
         public boolean Solve(final idMatX A, idVecX x, final idVecX b, final idVecX lo, final idVecX hi) {
             return Solve(A, x, b, lo, hi, null);
         }
@@ -89,7 +133,7 @@ public class Lcp {
         public int GetMaxIterations() {
             return maxIterations;
         }
-    };
+    }
 
     //===============================================================
     //                                                        M
@@ -98,20 +142,20 @@ public class Lcp {
     //===============================================================
     static class idLCP_Square extends idLCP {
 
-        private idMatX m;		// original matrix
-        idVecX b;			    // right hand side
-        idVecX lo, hi;			// low and high bounds
-        idVecX f, a;			// force and acceleration
+        idVecX b;                // right hand side
+        idMatX clamped;            // LU factored sub matrix for clamped variables
         idVecX delta_f, delta_a;// delta force and delta acceleration
-        idMatX clamped;			// LU factored sub matrix for clamped variables
-        idVecX diagonal;		// reciprocal of diagonal of U of the LU factored sub matrix for clamped variables
-        int numUnbounded;		// number of unbounded variables
-        int numClamped;			// number of clamped variables
-        private FloatBuffer[] rowPtrs;	// pointers to the rows of m
-        private int[] boxIndex;		// box index
-        private int[] side;		    // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
-        private int[] permuted;		// index to keep track of the permutation
-        private boolean padded;		// set to true if the rows of the initial matrix are 16 byte padded
+        idVecX diagonal;        // reciprocal of diagonal of U of the LU factored sub matrix for clamped variables
+        idVecX f, a;            // force and acceleration
+        idVecX lo, hi;            // low and high bounds
+        int numClamped;            // number of clamped variables
+        int numUnbounded;        // number of unbounded variables
+        private int[] boxIndex;        // box index
+        private idMatX m;        // original matrix
+        private boolean padded;        // set to true if the rows of the initial matrix are 16 byte padded
+        private int[] permuted;        // index to keep track of the permutation
+        private FloatBuffer[] rowPtrs;    // pointers to the rows of m
+        private int[] side;            // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
         //
         //
 
@@ -200,7 +244,7 @@ public class Lcp {
                 }
             }
 
-            // sub matrix for factorization 
+            // sub matrix for factorization
             clamped.SetData(m.GetNumRows(), m.GetNumColumns(), MATX_ALLOCA(m.GetNumRows() * m.GetNumColumns()));
             diagonal.SetData(m.GetNumRows(), VECX_ALLOCA(m.GetNumRows()));
 
@@ -212,14 +256,14 @@ public class Lcp {
 
                 // factor and solve for unbounded variables
                 if (!FactorClamped()) {
-			        idLib.common.Printf( "idLCP_Square::Solve: unbounded factorization failed\n" );
+                    idLib.common.Printf("idLCP_Square::Solve: unbounded factorization failed\n");
                     return false;
                 }
                 SolveClamped(f, b.ToFloatPtr());
 
                 // if there are no bounded variables we are done
                 if (numUnbounded == m.GetNumRows()) {
-                    o_x.oSet(f);	// the vector is not permuted
+                    o_x.oSet(f);    // the vector is not permuted
                     return true;
                 }
             }
@@ -356,7 +400,7 @@ public class Lcp {
 //#ifdef IGNORE_UNSATISFIABLE_VARIABLES
             if (numIgnored != 0) {
                 if (lcp_showFailures.GetBool()) {
-			        idLib.common.Printf( "idLCP_Symmetric::Solve: %d of %d bounded variables ignored\n", numIgnored, m.GetNumRows() - numUnbounded );
+                    idLib.common.Printf("idLCP_Symmetric::Solve: %d of %d bounded variables ignored\n", numIgnored, m.GetNumRows() - numUnbounded);
                 }
             }
 //#endif
@@ -364,7 +408,7 @@ public class Lcp {
             // if failed clear remaining forces
             if (failed != null) {
                 if (lcp_showFailures.GetBool()) {
-			        idLib.common.Printf( "idLCP_Square::Solve: %s (%d of %d bounded variables ignored)\n", failed, m.GetNumRows() - i, m.GetNumRows() - numUnbounded );
+                    idLib.common.Printf("idLCP_Square::Solve: %s (%d of %d bounded variables ignored)\n", failed, m.GetNumRows() - i, m.GetNumRows() - numUnbounded);
                 }
                 for (j = i; j < m.GetNumRows(); j++) {
                     f.p[j] = 0.0f;
@@ -600,7 +644,7 @@ public class Lcp {
                 diag += p0 * p1;
 
                 if (diag == 0.0f) {
-			        idLib.common.Printf( "idLCP_Square::RemoveClamped: updating factorization failed\n" );
+                    idLib.common.Printf("idLCP_Square::RemoveClamped: updating factorization failed\n");
                     return;
                 }
 
@@ -611,7 +655,7 @@ public class Lcp {
                 diag += q0 * q1;
 
                 if (diag == 0.0f) {
-			        idLib.common.Printf( "idLCP_Square::RemoveClamped: updating factorization failed\n" );
+                    idLib.common.Printf("idLCP_Square::RemoveClamped: updating factorization failed\n");
                     return;
                 }
 
@@ -818,7 +862,7 @@ public class Lcp {
                 }
             }
         }
-    };
+    }
 
     //===============================================================
     //                                                        M
@@ -827,23 +871,26 @@ public class Lcp {
     //===============================================================
     static class idLCP_Symmetric extends idLCP {
 
-        private idMatX        m;                    // original matrix
-        private idVecX        b;                    // right hand side
-        private idVecX        lo, hi;               // low and high bounds
-        private idVecX        f, a;                 // force and acceleration
-        private idVecX        delta_f, delta_a;     // delta force and delta acceleration
-        private idMatX        clamped;              // LDLt factored sub matrix for clamped variables
-        private idVecX        diagonal;             // reciprocal of diagonal of LDLt factored sub matrix for clamped variables
-        private idVecX        solveCache1;          // intermediate result cached in SolveClamped
-        private idVecX        solveCache2;          // "
-        private int           numUnbounded;         // number of unbounded variables
-        private int           numClamped;           // number of clamped variables
-        private int           clampedChangeStart;   // lowest row/column changed in the clamped matrix during an iteration
+        private final idVecX b;                    // right hand side
+        private int[] boxIndex;             // box index
+        private final idMatX clamped;              // LDLt factored sub matrix for clamped variables
+        private int clampedChangeStart;   // lowest row/column changed in the clamped matrix during an iteration
+        private final idVecX delta_f;
+        private final idVecX delta_a;     // delta force and delta acceleration
+        private final idVecX diagonal;             // reciprocal of diagonal of LDLt factored sub matrix for clamped variables
+        private final idVecX f;
+        private final idVecX a;                 // force and acceleration
+        private final idVecX lo;
+        private final idVecX hi;               // low and high bounds
+        private final idMatX m;                    // original matrix
+        private int numClamped;           // number of clamped variables
+        private int numUnbounded;         // number of unbounded variables
+        private boolean padded;               // set to true if the rows of the initial matrix are 16 byte padded
+        private int[] permuted;             // index to keep track of the permutation
         private FloatBuffer[] rowPtrs;              // pointers to the rows of m
-        private int[]         boxIndex;             // box index
-        private int[]         side;                 // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
-        private int[]         permuted;             // index to keep track of the permutation
-        private boolean       padded;               // set to true if the rows of the initial matrix are 16 byte padded
+        private int[] side;                 // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
+        private final idVecX solveCache1;          // intermediate result cached in SolveClamped
+        private final idVecX solveCache2;          // "
         //
         //
 
@@ -944,7 +991,7 @@ public class Lcp {
                 }
             }
 
-            // sub matrix for factorization 
+            // sub matrix for factorization
             clamped.SetData(m.GetNumRows(), m.GetNumColumns(), MATX_ALLOCA(m.GetNumRows() * m.GetNumColumns()));
             diagonal.SetData(m.GetNumRows(), VECX_ALLOCA(m.GetNumRows()));
             solveCache1.SetData(m.GetNumRows(), VECX_ALLOCA(m.GetNumRows()));
@@ -958,14 +1005,14 @@ public class Lcp {
 
                 // factor and solve for unbounded variables
                 if (!FactorClamped()) {
-			        idLib.common.Printf( "idLCP_Symmetric::Solve: unbounded factorization failed\n" );
+                    idLib.common.Printf("idLCP_Symmetric::Solve: unbounded factorization failed\n");
                     return false;
                 }
                 SolveClamped(f, b.ToFloatPtr());
 
                 // if there are no bounded variables we are done
                 if (numUnbounded == m.GetNumRows()) {
-                    o_x.oSet(f);	// the vector is not permuted
+                    o_x.oSet(f);    // the vector is not permuted
                     return true;
                 }
             }
@@ -1104,7 +1151,7 @@ public class Lcp {
 //#ifdef IGNORE_UNSATISFIABLE_VARIABLES
             if (0 != numIgnored) {
                 if (lcp_showFailures.GetBool()) {
-			        idLib.common.Printf( "idLCP_Symmetric::Solve: %d of %d bounded variables ignored\n", numIgnored, m.GetNumRows() - numUnbounded );
+                    idLib.common.Printf("idLCP_Symmetric::Solve: %d of %d bounded variables ignored\n", numIgnored, m.GetNumRows() - numUnbounded);
                 }
             }
 //#endif
@@ -1112,7 +1159,7 @@ public class Lcp {
             // if failed clear remaining forces
             if (null != failed) {
                 if (lcp_showFailures.GetBool()) {
-			        idLib.common.Printf( "idLCP_Symmetric::Solve: %s (%d of %d bounded variables ignored)\n", failed, m.GetNumRows() - i, m.GetNumRows() - numUnbounded );
+                    idLib.common.Printf("idLCP_Symmetric::Solve: %s (%d of %d bounded variables ignored)\n", failed, m.GetNumRows() - i, m.GetNumRows() - numUnbounded);
                 }
                 for (j = i; j < m.GetNumRows(); j++) {
                     f.p[j] = 0.0f;
@@ -1330,7 +1377,7 @@ public class Lcp {
                     unClam(clamped, clampedArray);
                     diag = rowPtrs[r].get(r) - dot[0];
                     if (diag == 0.0f) {
-				        idLib.common.Printf( "idLCP_Symmetric::RemoveClamped: updating factorization failed\n" );
+                        idLib.common.Printf("idLCP_Symmetric::RemoveClamped: updating factorization failed\n");
                         return;
                     }
                     clamped.oSet(r, r, (float) diag);
@@ -1380,7 +1427,7 @@ public class Lcp {
                 newDiag = diag + alpha1 * p1 * p1;
 
                 if (newDiag == 0.0f) {
-			        idLib.common.Printf( "idLCP_Symmetric::RemoveClamped: updating factorization failed\n" );
+                    idLib.common.Printf("idLCP_Symmetric::RemoveClamped: updating factorization failed\n");
                     return;
                 }
 
@@ -1393,7 +1440,7 @@ public class Lcp {
                 newDiag = diag + alpha2 * p2 * p2;
 
                 if (newDiag == 0.0f) {
-			        idLib.common.Printf( "idLCP_Symmetric::RemoveClamped: updating factorization failed\n" );
+                    idLib.common.Printf("idLCP_Symmetric::RemoveClamped: updating factorization failed\n");
                     return;
                 }
 
@@ -1609,62 +1656,5 @@ public class Lcp {
                 }
             }
         }
-    };
-
-    /**
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     */
-    public static float[] clam(final idMatX src, final int numClamped) {
-       return clam(src.ToFloatPtr(), numClamped * src.GetNumColumns());
-    }
-
-    public static float[] clam(final idVecX src, final int numClamped) {
-       return clam(src.ToFloatPtr(), numClamped);
-    }
-
-    public static float[] clam(final float[] src, final int numClamped) {
-        float[] clamped = new float[src.length - numClamped];
-
-        System.arraycopy(src, numClamped, clamped, 0, clamped.length);
-
-        return clamped;
-    }
-
-    public static float[] unClam(idMatX dst, final float[] clamArray) {
-        return unClam(dst.ToFloatPtr(), clamArray);
-    }
-
-    public static float[] unClam(idVecX dst, final float[] clamArray) {
-        return unClam(dst.ToFloatPtr(), clamArray);
-    }
-
-    public static float[] unClam(float[] dst, final float[] clamArray) {
-        System.arraycopy(clamArray, 0, dst, dst.length - clamArray.length, clamArray.length);
-        return dst;
-    }
-
-    public static char[] clam(final char[] src, int numClamped) {
-        char[] clamped = new char[src.length - numClamped];
-
-        System.arraycopy(src, numClamped, clamped, 0, clamped.length);
-
-        return clamped;
-    }
-
-    public static char[] unClam(char[] dst, char[] clamArray) {
-        System.arraycopy(clamArray, 0, dst, dst.length - clamArray.length, clamArray.length);
-        return dst;
     }
 }

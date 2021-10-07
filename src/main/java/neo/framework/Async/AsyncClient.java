@@ -1,127 +1,84 @@
 package neo.framework.Async;
 
+import neo.Game.Game.gameReturn_t;
+import neo.framework.Async.AsyncNetwork.*;
+import neo.framework.Async.MsgChannel.*;
+import neo.framework.Async.ServerScan.idServerScan;
+import neo.framework.Async.ServerScan.networkServer_t;
+import neo.framework.FileSystem_h.backgroundDownload_s;
+import neo.framework.FileSystem_h.dlMime_t;
+import neo.framework.FileSystem_h.fsPureReply_t;
+import neo.framework.File_h.idFile;
+import neo.framework.File_h.idFile_Permanent;
+import neo.framework.Session.HandleGuiCommand_t;
+import neo.framework.UsercmdGen.usercmd_t;
+import neo.idlib.BitMsg.idBitMsg;
+import neo.idlib.Dict_h.idDict;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.idList;
+import neo.idlib.containers.StrPool;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Random.idRandom;
+import neo.sys.sys_public.idPort;
+import neo.sys.sys_public.netadr_t;
+import neo.ui.UserInterface.idUserInterface;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import static neo.Game.Game.allowReply_t.ALLOW_BADPASS;
-import static neo.Game.Game.allowReply_t.ALLOW_NO;
-import static neo.Game.Game.allowReply_t.ALLOW_YES;
-import neo.Game.Game.gameReturn_t;
+
+import static neo.Game.Game.allowReply_t.*;
 import static neo.Game.Game_local.game;
 import static neo.Sound.snd_system.soundSystem;
-import static neo.TempDump.NOT;
-import static neo.TempDump.ctos;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.memcmp;
+import static neo.TempDump.*;
 import static neo.framework.Async.AsyncClient.authKeyMsg_t.AUTHKEY_BADKEY;
-import static neo.framework.Async.AsyncClient.clientState_t.CS_CHALLENGING;
-import static neo.framework.Async.AsyncClient.clientState_t.CS_CONNECTED;
-import static neo.framework.Async.AsyncClient.clientState_t.CS_CONNECTING;
-import static neo.framework.Async.AsyncClient.clientState_t.CS_DISCONNECTED;
-import static neo.framework.Async.AsyncClient.clientState_t.CS_INGAME;
-import static neo.framework.Async.AsyncClient.clientState_t.CS_PURERESTART;
-import static neo.framework.Async.AsyncClient.clientUpdateState_t.UPDATE_DLING;
-import static neo.framework.Async.AsyncClient.clientUpdateState_t.UPDATE_DONE;
-import static neo.framework.Async.AsyncClient.clientUpdateState_t.UPDATE_NONE;
-import static neo.framework.Async.AsyncClient.clientUpdateState_t.UPDATE_READY;
-import static neo.framework.Async.AsyncClient.clientUpdateState_t.UPDATE_SENT;
-import static neo.framework.Async.AsyncNetwork.ASYNC_PROTOCOL_MINOR;
-import static neo.framework.Async.AsyncNetwork.ASYNC_PROTOCOL_VERSION;
-import static neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_CLIENTINFO;
-import static neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_DISCONNECT;
-import static neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_GAME;
-import static neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_PURE;
-import static neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE.CLIENT_UNRELIABLE_MESSAGE_EMPTY;
-import static neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE.CLIENT_UNRELIABLE_MESSAGE_PINGRESPONSE;
-import static neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE.CLIENT_UNRELIABLE_MESSAGE_USERCMD;
-import static neo.framework.Async.AsyncNetwork.GAME_INIT_ID_INVALID;
-import static neo.framework.Async.AsyncNetwork.GAME_INIT_ID_MAP_LOAD;
-import static neo.framework.Async.AsyncNetwork.MAX_ASYNC_CLIENTS;
-import static neo.framework.Async.AsyncNetwork.MAX_NICKLEN;
-import static neo.framework.Async.AsyncNetwork.MAX_SERVER_PORTS;
-import static neo.framework.Async.AsyncNetwork.MAX_USERCMD_BACKUP;
-import static neo.framework.Async.AsyncNetwork.MAX_USERCMD_RELAY;
+import static neo.framework.Async.AsyncClient.clientState_t.*;
+import static neo.framework.Async.AsyncClient.clientUpdateState_t.*;
+import static neo.framework.Async.AsyncNetwork.*;
+import static neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE.*;
+import static neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE.*;
 import static neo.framework.Async.AsyncNetwork.SERVER_DL.SERVER_DL_LIST;
 import static neo.framework.Async.AsyncNetwork.SERVER_DL.SERVER_DL_REDIRECT;
-import static neo.framework.Async.AsyncNetwork.SERVER_PAK.SERVER_PAK_END;
-import static neo.framework.Async.AsyncNetwork.SERVER_PAK.SERVER_PAK_NO;
-import static neo.framework.Async.AsyncNetwork.SERVER_PAK.SERVER_PAK_YES;
+import static neo.framework.Async.AsyncNetwork.SERVER_PAK.*;
 import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_BADCHALLENGE;
 import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_GAMEDENY;
-import neo.framework.Async.AsyncNetwork.SERVER_RELIABLE;
-import neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_EMPTY;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_GAMEINIT;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_PING;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_SNAPSHOT;
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import static neo.framework.Async.MsgChannel.CONNECTIONLESS_MESSAGE_ID;
-import static neo.framework.Async.MsgChannel.CONNECTIONLESS_MESSAGE_ID_MASK;
-import static neo.framework.Async.MsgChannel.MAX_MESSAGE_SIZE;
-import neo.framework.Async.MsgChannel.idMsgChannel;
-import neo.framework.Async.ServerScan.idServerScan;
-import neo.framework.Async.ServerScan.networkServer_t;
+import static neo.framework.Async.MsgChannel.*;
 import static neo.framework.BuildDefines.ID_CLIENTINFO_TAGS;
 import static neo.framework.BuildDefines.ID_FAKE_PURE;
-import static neo.framework.CVarSystem.CVAR_CHEAT;
-import static neo.framework.CVarSystem.CVAR_USERINFO;
-import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
 import static neo.framework.CmdSystem.cmdSystem;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.FileSystem_h.MAX_PURE_PAKS;
-import neo.framework.FileSystem_h.backgroundDownload_s;
-import neo.framework.FileSystem_h.dlMime_t;
 import static neo.framework.FileSystem_h.dlMime_t.FILE_EXEC;
 import static neo.framework.FileSystem_h.dlStatus_t.DL_DONE;
 import static neo.framework.FileSystem_h.dlStatus_t.DL_WAIT;
 import static neo.framework.FileSystem_h.dlType_t.DLTYPE_URL;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.FileSystem_h.fsPureReply_t;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_END;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_SET;
-import neo.framework.File_h.idFile;
-import neo.framework.File_h.idFile_Permanent;
 import static neo.framework.Licensee.ASYNC_PROTOCOL_MAJOR;
 import static neo.framework.Licensee.PORT_SERVER;
-import neo.framework.Session.HandleGuiCommand_t;
-import static neo.framework.Session.msgBoxType_t.MSG_ABORT;
-import static neo.framework.Session.msgBoxType_t.MSG_CDKEY;
-import static neo.framework.Session.msgBoxType_t.MSG_OK;
-import static neo.framework.Session.msgBoxType_t.MSG_PROMPT;
-import static neo.framework.Session.msgBoxType_t.MSG_YESNO;
+import static neo.framework.Session.msgBoxType_t.*;
 import static neo.framework.Session.sessLocal;
 import static neo.framework.Session.session;
 import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import static neo.framework.UsercmdGen.usercmdGen;
-import neo.framework.UsercmdGen.usercmd_t;
-import neo.idlib.BitMsg.idBitMsg;
-import neo.idlib.Dict_h.idDict;
 import static neo.idlib.Lib.MAX_STRING_CHARS;
 import static neo.idlib.Lib.Min;
-import neo.idlib.Lib.idException;
 import static neo.idlib.Lib.idLib.sys;
 import static neo.idlib.Text.Str.Measure_t.MEASURE_SIZE;
-import neo.idlib.Text.Str.idStr;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrPool;
 import static neo.idlib.math.Math_h.INTSIGNBITSET;
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Random.idRandom;
 import static neo.sys.sys_public.BUILD_OS_ID;
 import static neo.sys.sys_public.PORT_ANY;
-import neo.sys.sys_public.idPort;
-import neo.sys.sys_public.netadr_t;
 import static neo.sys.sys_public.netadrtype_t.NA_BROADCAST;
 import static neo.sys.sys_public.netadrtype_t.NA_LOOPBACK;
-import static neo.sys.win_net.Sys_CompareNetAdrBase;
-import static neo.sys.win_net.Sys_NetAdrToString;
-import static neo.sys.win_net.Sys_StringToNetAdr;
+import static neo.sys.win_net.*;
 import static neo.sys.win_shared.Sys_Milliseconds;
-import neo.ui.UserInterface.idUserInterface;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -129,10 +86,24 @@ import static neo.ui.UserInterface.uiManager;
  */
 public class AsyncClient {
 
+    static final int EMPTY_RESEND_TIME = 500;
+    static final int PREDICTION_FAST_ADJUST = 4;
     static final int SETUP_CONNECTION_RESEND_TIME = 1000;
-    static final int EMPTY_RESEND_TIME            = 500;
-    static final int PREDICTION_FAST_ADJUST       = 4;
 //
+
+    enum authBadKeyStatus_t {
+
+        AUTHKEY_BAD_INVALID,
+        AUTHKEY_BAD_BANNED,
+        AUTHKEY_BAD_INUSE,
+        AUTHKEY_BAD_MSG
+    }
+
+    enum authKeyMsg_t {
+
+        AUTHKEY_BADKEY,
+        AUTHKEY_GUID
+    }
 
     /*
      ===============================================================================
@@ -149,21 +120,7 @@ public class AsyncClient {
         CS_CONNECTING,
         CS_CONNECTED,
         CS_INGAME
-    };
-
-    enum authKeyMsg_t {
-
-        AUTHKEY_BADKEY,
-        AUTHKEY_GUID
-    };
-
-    enum authBadKeyStatus_t {
-
-        AUTHKEY_BAD_INVALID,
-        AUTHKEY_BAD_BANNED,
-        AUTHKEY_BAD_INUSE,
-        AUTHKEY_BAD_MSG
-    };
+    }
 
     enum clientUpdateState_t {
 
@@ -172,82 +129,82 @@ public class AsyncClient {
         UPDATE_READY,
         UPDATE_DLING,
         UPDATE_DONE
-    };
+    }
 
     static class pakDlEntry_t {
 
-        idStr url;
+        int checksum;
         idStr filename;
         int size;
-        int checksum;
-    };
+        idStr url;
+    }
 
     public static class idAsyncClient {
 
         public idServerScan serverList = new idServerScan();
         //
         //
-        private boolean       active;                // true if client is active
-        private int           realTime;              // absolute time
+        private boolean active;                // true if client is active
         //
-        private int           clientTime;            // client local time
-        private idPort        clientPort;            // UDP port
-        private int           clientId;              // client identification
-        private BigInteger    clientDataChecksum;    // checksum of the data used by the client
-        private int           clientNum;             // client number on server
+        private final backgroundDownload_s backgroundDownload = new backgroundDownload_s();
+        //
+        private final idMsgChannel channel;               // message channel to server
+        private BigInteger clientDataChecksum;    // checksum of the data used by the client
+        private int clientId;              // client identification
+        private int clientNum;             // client number on server
+        private final idPort clientPort;            // UDP port
+        private int clientPredictTime;     // prediction time used to send user commands
+        private int clientPrediction;      // how far the client predicts ahead
         private clientState_t clientState;           // client state
-        private int           clientPrediction;      // how far the client predicts ahead
-        private int           clientPredictTime;     // prediction time used to send user commands
         //
-        private netadr_t      serverAddress;         // IP address of server
-        private int           serverId;              // server identification
-        private int           serverChallenge;       // challenge from server
-        private int           serverMessageSequence; // sequence number of last server message
-        //
-        private netadr_t      lastRconAddress;       // last rcon address we emitted to
-        private int           lastRconTime;          // when last rcon emitted
-        //
-        private idMsgChannel  channel;               // message channel to server
-        private int           lastConnectTime;       // last time a connect message was sent
-        private int           lastEmptyTime;         // last time an empty message was sent
-        private int           lastPacketTime;        // last time a packet was received from the server
-        private int           lastSnapshotTime;      // last time a snapshot was received
-        //
-        private int           snapshotSequence;      // sequence number of the last received snapshot
-        private int           snapshotGameFrame;     // game frame number of the last received snapshot
-        private int           snapshotGameTime;      // game time of the last received snapshot
-        //
-        private int           gameInitId;            // game initialization identification
-        private int           gameFrame;             // local game frame
-        private int           gameTime;              // local game time
-        private int           gameTimeResidual;      // left over time from previous frame
-        //
-        private usercmd_t[][] userCmds = new usercmd_t[MAX_USERCMD_BACKUP][MAX_ASYNC_CLIENTS];
-        //
-        private idUserInterface     guiNetMenu;
-        //
-        private clientUpdateState_t updateState;
-        private int                 updateSentTime;
-        private idStr updateMSG = new idStr();
-        private idStr updateURL = new idStr();
-        private boolean updateDirectDownload;
-        private idStr updateFile = new idStr();
-        private dlMime_t updateMime;
-        private idStr updateFallback = new idStr();
-        private boolean showUpdateMessage;
-        //
-        private backgroundDownload_s backgroundDownload = new backgroundDownload_s();
-        private int dltotal;
-        private int dlnow;
-        //
-        private int lastFrameDelta;
+        private int clientTime;            // client local time
+        private int currentDlSize;
+        private final int[] dlChecksums = new int[MAX_PURE_PAKS]; // 0-terminated, first element is the game pak checksum or 0
+        private int dlCount;                                // total number of paks we request download for ( including the game pak )
+        private final idList<pakDlEntry_t> dlList = new idList<>();// list of paks to download, with url and name
         //
         private int dlRequest;                              // randomized number to keep track of the requests
-        private int[] dlChecksums = new int[MAX_PURE_PAKS]; // 0-terminated, first element is the game pak checksum or 0
-        private int dlCount;                                // total number of paks we request download for ( including the game pak )
-        private idList<pakDlEntry_t> dlList = new idList<>();// list of paks to download, with url and name
-        private int currentDlSize;
+        private int dlnow;
+        private int dltotal;
+        private int gameFrame;             // local game frame
+        //
+        private int gameInitId;            // game initialization identification
+        private int gameTime;              // local game time
+        private int gameTimeResidual;      // left over time from previous frame
+        //
+        private idUserInterface guiNetMenu;
+        private int lastConnectTime;       // last time a connect message was sent
+        private int lastEmptyTime;         // last time an empty message was sent
+        //
+        private int lastFrameDelta;
+        private int lastPacketTime;        // last time a packet was received from the server
+        //
+        private netadr_t lastRconAddress;       // last rcon address we emitted to
+        private int lastRconTime;          // when last rcon emitted
+        private int lastSnapshotTime;      // last time a snapshot was received
+        private int realTime;              // absolute time
+        //
+        private netadr_t serverAddress;         // IP address of server
+        private int serverChallenge;       // challenge from server
+        private int serverId;              // server identification
+        private int serverMessageSequence; // sequence number of last server message
+        private boolean showUpdateMessage;
+        private int snapshotGameFrame;     // game frame number of the last received snapshot
+        private int snapshotGameTime;      // game time of the last received snapshot
+        //
+        private int snapshotSequence;      // sequence number of the last received snapshot
         private int totalDlSize;                            // for partial progress stuff
+        private boolean updateDirectDownload;
+        private idStr updateFallback = new idStr();
+        private final idStr updateFile = new idStr();
+        private idStr updateMSG = new idStr();
+        private dlMime_t updateMime;
+        private int updateSentTime;
+        //
+        private clientUpdateState_t updateState;
+        private idStr updateURL = new idStr();
+        //
+        private final usercmd_t[][] userCmds = new usercmd_t[MAX_USERCMD_BACKUP][MAX_ASYNC_CLIENTS];
         //
         //
 
@@ -845,7 +802,7 @@ public class AsyncClient {
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             netadr_t[] from = new netadr_t[1];
 
-            while (clientPort.GetPacket(from, msgBuf, size, msgBuf.capacity()));
+            while (clientPort.GetPacket(from, msgBuf, size, msgBuf.capacity())) ;
         }
 
         private void DuplicateUsercmds(int frame, int time) {
@@ -1354,15 +1311,11 @@ public class AsyncClient {
         private void ProcessInfoResponseMessage(final netadr_t from, final idBitMsg msg) throws idException {
             int i, protocol, index;
             networkServer_t serverInfo = new networkServer_t();
-            boolean verbose = false;
-
-            if (from.type == NA_LOOPBACK || cvarSystem.GetCVarBool("developer")) {
-                verbose = true;
-            }
+            boolean verbose = from.type == NA_LOOPBACK || cvarSystem.GetCVarBool("developer");
 
             serverInfo.clients = 0;
             serverInfo.adr = from;
-            serverInfo.challenge = msg.ReadLong();			// challenge
+            serverInfo.challenge = msg.ReadLong();            // challenge
             protocol = msg.ReadLong();
             if (protocol != ASYNC_PROTOCOL_VERSION) {
                 common.Printf("server %s ignored - protocol %d.%d, expected %d.%d\n", Sys_NetAdrToString(serverInfo.adr), protocol >> 16, protocol & 0xffff, ASYNC_PROTOCOL_MAJOR, ASYNC_PROTOCOL_MINOR);
@@ -1642,7 +1595,7 @@ public class AsyncClient {
             }
 
             if (clientState.ordinal() < CS_CONNECTED.ordinal()) {
-                return;		// can't be a valid sequenced packet
+                return;        // can't be a valid sequenced packet
             }
 
             if (msg.GetRemaingData() < 4) {
@@ -1659,7 +1612,7 @@ public class AsyncClient {
             int[] serverMessageSequence = {0};
             if (!channel.Process(from, clientTime, msg, serverMessageSequence)) {
                 this.serverMessageSequence = serverMessageSequence[0];
-                return;		// out of order, duplicated, fragment, etc.
+                return;        // out of order, duplicated, fragment, etc.
             }
             this.serverMessageSequence = serverMessageSequence[0];
 
@@ -1756,8 +1709,8 @@ public class AsyncClient {
             outMsg.WriteLong(serverChallenge);
             outMsg.WriteShort(clientId);
             i = 0;
-            while (inChecksums[ i] != 0) {
-                outMsg.WriteLong(inChecksums[ i++]);
+            while (inChecksums[i] != 0) {
+                outMsg.WriteLong(inChecksums[i++]);
             }
             outMsg.WriteLong(0);
             outMsg.WriteLong(gamePakChecksum[0]);
@@ -1778,14 +1731,14 @@ public class AsyncClient {
             numChecksums = 0;
             do {
                 i = msg.ReadLong();
-                inChecksums[ numChecksums++] = i;
+                inChecksums[numChecksums++] = i;
                 // just to make sure a broken message doesn't crash us
                 if (numChecksums >= MAX_PURE_PAKS) {
                     common.Warning("MAX_PURE_PAKS ( %d ) exceeded in idAsyncClient.ProcessPureMessage\n", MAX_PURE_PAKS);
                     return false;
                 }
             } while (i != 0);
-            inChecksums[ numChecksums] = 0;
+            inChecksums[numChecksums] = 0;
             inGamePakChecksum = msg.ReadLong();
 
             fsPureReply_t reply = fileSystem.SetPureServerChecksums(inChecksums, inGamePakChecksum, missingChecksums, missingGamePakChecksum);
@@ -1803,7 +1756,7 @@ public class AsyncClient {
                     String checkSums = "";
 
                     i = 0;
-                    while (missingChecksums[ i] != 0) {
+                    while (missingChecksums[i] != 0) {
                         checkSums += va("0x%x ", missingChecksums[i++]);
                     }
                     numMissingChecksums = i;
@@ -1848,8 +1801,8 @@ public class AsyncClient {
                         dlmsg.WriteLong(missingGamePakChecksum[0]);
                         // 0-terminated list of missing paks
                         i = 0;
-                        while (missingChecksums[ i] != 0) {
-                            dlmsg.WriteLong(missingChecksums[ i++]);
+                        while (missingChecksums[i] != 0) {
+                            dlmsg.WriteLong(missingChecksums[i++]);
                         }
                         dlmsg.WriteLong(0);
                         clientPort.SendPacket(from, dlmsg.GetData(), dlmsg.GetSize());
@@ -1904,31 +1857,14 @@ public class AsyncClient {
             outMsg.WriteLong(gameInitId);
 
             i = 0;
-            while (inChecksums[ i] != 0) {
-                outMsg.WriteLong(inChecksums[ i++]);
+            while (inChecksums[i] != 0) {
+                outMsg.WriteLong(inChecksums[i++]);
             }
             outMsg.WriteLong(0);
             outMsg.WriteLong(gamePakChecksum[0]);
 
             if (!channel.SendReliableMessage(outMsg)) {
                 common.Error("client.server reliable messages overflow\n");
-            }
-        }
-
-        private static class HandleGuiCommand extends HandleGuiCommand_t {
-
-            private static final HandleGuiCommand_t instance = new HandleGuiCommand();
-
-            private HandleGuiCommand() {
-            }
-
-            public static HandleGuiCommand_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public String run(final String input) {
-                return idAsyncNetwork.client.HandleGuiCommandInternal(input);
             }
         }
 
@@ -2235,7 +2171,7 @@ public class AsyncClient {
                         entry.url = new idStr(buf);
                         entry.size = msg.ReadLong();
                         // checksums are not transmitted, we read them from the dl request we sent
-                        entry.checksum = dlChecksums[ pakIndex];
+                        entry.checksum = dlChecksums[pakIndex];
                         totalDlSize += entry.size;
                         dlList.Append(entry);
                         common.Printf("download %s from %s ( 0x%x )\n", entry.filename, entry.url, entry.checksum);
@@ -2247,8 +2183,8 @@ public class AsyncClient {
                         entry.checksum = 0;
                         dlList.Append(entry);
                         // first pak is game pak, only fail it if we actually requested it
-                        if (pakIndex != 0 || dlChecksums[ 0] != 0) {
-                            common.Printf("no download offered for %s ( 0x%x )\n", entry.filename, dlChecksums[ pakIndex]);
+                        if (pakIndex != 0 || dlChecksums[0] != 0) {
+                            common.Printf("no download offered for %s ( 0x%x )\n", entry.filename, dlChecksums[pakIndex]);
                             gotAllFiles = false;
                         }
                     } else {
@@ -2307,12 +2243,12 @@ public class AsyncClient {
         }
 
         private int GetDownloadRequest(final int[] checksums/*[MAX_PURE_PAKS]*/, int count, int gamePakChecksum) {
-            assert (0 == checksums[ count]); // 0-terminated
+            assert (0 == checksums[count]); // 0-terminated
 //            if (memcmp(dlChecksums + 1, checksums, sizeof(int) * count) || gamePakChecksum != dlChecksums[ 0]) {
-            if (memcmp(dlChecksums, 1, checksums, 0, count) || gamePakChecksum != dlChecksums[ 0]) {
+            if (memcmp(dlChecksums, 1, checksums, 0, count) || gamePakChecksum != dlChecksums[0]) {
                 idRandom newreq = new idRandom();
 
-                dlChecksums[ 0] = gamePakChecksum;
+                dlChecksums[0] = gamePakChecksum;
 //                memcpy(dlChecksums + 1, checksums, sizeof(int) * MAX_PURE_PAKS);
                 memcmp(dlChecksums, 1, checksums, 0, MAX_PURE_PAKS);
 
@@ -2324,5 +2260,23 @@ public class AsyncClient {
             // this is the same dlRequest, we haven't heard from the server. keep the same id
             return dlRequest;
         }
-    };
+
+        private static class HandleGuiCommand extends HandleGuiCommand_t {
+
+            private static final HandleGuiCommand_t instance = new HandleGuiCommand();
+
+            private HandleGuiCommand() {
+            }
+
+            public static HandleGuiCommand_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public String run(final String input) {
+                return idAsyncNetwork.client.HandleGuiCommandInternal(input);
+            }
+        }
+    }
+
 }

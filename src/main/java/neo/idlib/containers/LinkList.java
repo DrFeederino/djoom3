@@ -16,14 +16,14 @@ public class LinkList {
 
     public static class idLinkList<type> {
 
-        private idLinkList head;
-        private idLinkList next;
-        private idLinkList prev;
-        private type owner;
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        private idLinkList head;
+        private idLinkList next;
+        private type owner;
+        private idLinkList prev;
 
         /*
          ================
@@ -38,7 +38,7 @@ public class LinkList {
             next = this;
             prev = this;
         }
-        
+
         public idLinkList(final type owner) {
             this();
             this.owner = owner;
@@ -269,5 +269,6 @@ public class LinkList {
             }
             return prev;
         }
-    };
+    }
+
 }

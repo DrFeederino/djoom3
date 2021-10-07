@@ -1,28 +1,21 @@
 package neo.Tools.Compilers.DMap;
 
+import neo.Tools.Compilers.DMap.dmap.*;
+import neo.framework.File_h.idFile;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.geometry.Winding.idWinding;
+import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Vector.idVec3;
+
 import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.node_s;
-import neo.Tools.Compilers.DMap.dmap.primitive_s;
-import neo.Tools.Compilers.DMap.dmap.side_s;
-import neo.Tools.Compilers.DMap.dmap.tree_s;
-import neo.Tools.Compilers.DMap.dmap.uBrush_t;
-import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import static neo.Tools.Compilers.DMap.gldraw.GLS_BeginScene;
-import static neo.Tools.Compilers.DMap.gldraw.GLS_EndScene;
-import static neo.Tools.Compilers.DMap.gldraw.GLS_Winding;
+import static neo.Tools.Compilers.DMap.dmap.*;
+import static neo.Tools.Compilers.DMap.gldraw.*;
 import static neo.Tools.Compilers.DMap.map.FindFloatPlane;
 import static neo.framework.Common.common;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.File_h.idFile;
-import neo.idlib.BV.Bounds.idBounds;
 import static neo.idlib.Lib.MAX_WORLD_COORD;
 import static neo.idlib.Lib.MIN_WORLD_COORD;
-import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Plane.idPlane;
 import static neo.idlib.math.Vector.VectorCopy;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -31,18 +24,18 @@ public class ubrush {
 
     static final float CLIP_EPSILON = 0.1f;
     //
-    static final int   PSIDE_FRONT  = 1;
-    static final int   PSIDE_BACK   = 2;
-    static final int   PSIDE_BOTH   = (PSIDE_FRONT | PSIDE_BACK);
-    static final int   PSIDE_FACING = 4;
+    // if a brush just barely pokes onto the other side,
+    // let it slide by without chopping
+    static final double PLANESIDE_EPSILON = 0.001;
+    static final int PSIDE_BACK = 2;
+    static final int PSIDE_FACING = 4;
+    //
+    static final int PSIDE_FRONT = 1;
+    static final int PSIDE_BOTH = (PSIDE_FRONT | PSIDE_BACK);
     //
     static int c_active_brushes;
     //
     static int c_nodes;
-    //
-    // if a brush just barely pokes onto the other side,
-    // let it slide by without chopping
-    static final double PLANESIDE_EPSILON = 0.001;
     //0.1
 
     /*
@@ -254,7 +247,7 @@ public class ubrush {
                     continue;
                 }
                 if (brush.sides[j].planenum == (brush.sides[i].planenum ^ 1)) {
-                    continue;		// back side clipaway
+                    continue;        // back side clipaway
                 }
                 plane = dmapGlobals.mapPlanes.oGet(brush.sides[j].planenum ^ 1);
                 w = w.Clip(plane, 0);//CLIP_EPSILON);
@@ -567,12 +560,12 @@ public class ubrush {
             }
         }
         if (d_front < 0.1) // PLANESIDE_EPSILON)
-        {	// only on back
+        {    // only on back
             back.oSet(CopyBrush(brush));
             return;
         }
         if (d_back > -0.1) // PLANESIDE_EPSILON)
-        {	// only on front
+        {    // only on front
             front.oSet(CopyBrush(brush));
             return;
         }

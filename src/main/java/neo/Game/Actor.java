@@ -1,48 +1,19 @@
 package neo.Game;
 
-import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.AFEntity.idAFEntity_Gibbable;
 import neo.Game.AI.AAS.idAAS;
-import neo.Game.Actor.idActor;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_ALL;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_EYELIDS;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_HEAD;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_LEGS;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_TORSO;
-import static neo.Game.Animation.Anim.FRAME2MS;
-import neo.Game.Animation.Anim.animFlags_t;
-import neo.Game.Animation.Anim.jointModTransform_t;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
+import neo.Game.Animation.Anim.*;
 import neo.Game.Animation.Anim_Blend.idAnimBlend;
 import neo.Game.Animation.Anim_Blend.idAnimator;
-
-import static neo.Game.Entity.EV_StopSound;
-import static neo.Game.Entity.TH_PHYSICS;
 import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.eventCallback_t3;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.ai_debugScript;
-import static neo.Game.GameSys.SysCvar.g_debugDamage;
-import static neo.Game.Game_local.MASK_OPAQUE;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_VOICE;
 import neo.Game.Game_local.idEntityPtr;
-import static neo.Game.IK.IK_ANIM;
 import neo.Game.IK.idIK_Walk;
 import neo.Game.Item.idMoveableItem;
 import neo.Game.Light.idLight;
@@ -51,81 +22,90 @@ import neo.Game.Projectile.idSoulCubeMissile;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_FLESH;
-import static neo.Renderer.Model.INVALID_JOINT;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atof;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
-import static neo.framework.DeclManager.declManager;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
+import static neo.Game.Animation.Anim.*;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
+import static neo.Game.Entity.EV_StopSound;
+import static neo.Game.Entity.TH_PHYSICS;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.ai_debugScript;
+import static neo.Game.GameSys.SysCvar.g_debugDamage;
+import static neo.Game.Game_local.MASK_OPAQUE;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameSoundChannel_t.*;
+import static neo.Game.IK.IK_ANIM;
+import static neo.Renderer.Material.surfTypes_t.SURFTYPE_FLESH;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.TempDump.*;
+import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Vector.getVec3_origin;
+
 /**
  *
  */
 public class Actor {
-    public static final idEventDef AI_EnableEyeFocus      = new idEventDef("enableEyeFocus");
-    public static final idEventDef AI_DisableEyeFocus     = new idEventDef("disableEyeFocus");
-    public static final idEventDef EV_Footstep            = new idEventDef("footstep");
-    public static final idEventDef EV_FootstepLeft        = new idEventDef("leftFoot");
-    public static final idEventDef EV_FootstepRight       = new idEventDef("rightFoot");
-    public static final idEventDef EV_EnableWalkIK        = new idEventDef("EnableWalkIK");
-    public static final idEventDef EV_DisableWalkIK       = new idEventDef("DisableWalkIK");
-    public static final idEventDef EV_EnableLegIK         = new idEventDef("EnableLegIK", "d");
-    public static final idEventDef EV_DisableLegIK        = new idEventDef("DisableLegIK", "d");
-    public static final idEventDef AI_StopAnim            = new idEventDef("stopAnim", "dd");
-    public static final idEventDef AI_PlayAnim            = new idEventDef("playAnim", "ds", 'd');
-    public static final idEventDef AI_PlayCycle           = new idEventDef("playCycle", "ds", 'd');
-    public static final idEventDef AI_IdleAnim            = new idEventDef("idleAnim", "ds", 'd');
-    public static final idEventDef AI_SetSyncedAnimWeight = new idEventDef("setSyncedAnimWeight", "ddf");
-    public static final idEventDef AI_SetBlendFrames      = new idEventDef("setBlendFrames", "dd");
-    public static final idEventDef AI_GetBlendFrames      = new idEventDef("getBlendFrames", "d", 'd');
-    public static final idEventDef AI_AnimState           = new idEventDef("animState", "dsd");
-    public static final idEventDef AI_GetAnimState        = new idEventDef("getAnimState", "d", 's');
-    public static final idEventDef AI_InAnimState         = new idEventDef("inAnimState", "ds", 'd');
-    public static final idEventDef AI_FinishAction        = new idEventDef("finishAction", "s");
-    public static final idEventDef AI_AnimDone            = new idEventDef("animDone", "dd", 'd');
-    public static final idEventDef AI_OverrideAnim        = new idEventDef("overrideAnim", "d");
-    public static final idEventDef AI_EnableAnim          = new idEventDef("enableAnim", "dd");
-    public static final idEventDef AI_PreventPain         = new idEventDef("preventPain", "f");
-    public static final idEventDef AI_DisablePain         = new idEventDef("disablePain");
-    public static final idEventDef AI_EnablePain          = new idEventDef("enablePain");
-    public static final idEventDef AI_GetPainAnim         = new idEventDef("getPainAnim", null, 's');
-    public static final idEventDef AI_SetAnimPrefix       = new idEventDef("setAnimPrefix", "s");
-    public static final idEventDef AI_HasAnim             = new idEventDef("hasAnim", "ds", 'f');
-    public static final idEventDef AI_CheckAnim           = new idEventDef("checkAnim", "ds");
-    public static final idEventDef AI_ChooseAnim          = new idEventDef("chooseAnim", "ds", 's');
-    public static final idEventDef AI_AnimLength          = new idEventDef("animLength", "ds", 'f');
-    public static final idEventDef AI_AnimDistance        = new idEventDef("animDistance", "ds", 'f');
-    public static final idEventDef AI_HasEnemies          = new idEventDef("hasEnemies", null, 'd');
-    public static final idEventDef AI_NextEnemy           = new idEventDef("nextEnemy", "E", 'e');
+    public static final idEventDef AI_AnimDistance = new idEventDef("animDistance", "ds", 'f');
+    public static final idEventDef AI_AnimDone = new idEventDef("animDone", "dd", 'd');
+    public static final idEventDef AI_AnimLength = new idEventDef("animLength", "ds", 'f');
+    public static final idEventDef AI_AnimState = new idEventDef("animState", "dsd");
+    public static final idEventDef AI_CheckAnim = new idEventDef("checkAnim", "ds");
+    public static final idEventDef AI_ChooseAnim = new idEventDef("chooseAnim", "ds", 's');
     public static final idEventDef AI_ClosestEnemyToPoint = new idEventDef("closestEnemyToPoint", "v", 'e');
-    public static final idEventDef AI_SetNextState        = new idEventDef("setNextState", "s");
-    public static final idEventDef AI_SetState            = new idEventDef("setState", "s");
-    public static final idEventDef AI_GetState            = new idEventDef("getState", null, 's');
-    public static final idEventDef AI_GetHead             = new idEventDef("getHead", null, 'e');
+    public static final idEventDef AI_DisableEyeFocus = new idEventDef("disableEyeFocus");
+    public static final idEventDef AI_DisablePain = new idEventDef("disablePain");
+    public static final idEventDef AI_EnableAnim = new idEventDef("enableAnim", "dd");
+    public static final idEventDef AI_EnableEyeFocus = new idEventDef("enableEyeFocus");
+    public static final idEventDef AI_EnablePain = new idEventDef("enablePain");
+    public static final idEventDef AI_FinishAction = new idEventDef("finishAction", "s");
+    public static final idEventDef AI_GetAnimState = new idEventDef("getAnimState", "d", 's');
+    public static final idEventDef AI_GetBlendFrames = new idEventDef("getBlendFrames", "d", 'd');
+    public static final idEventDef AI_GetHead = new idEventDef("getHead", null, 'e');
+    public static final idEventDef AI_GetPainAnim = new idEventDef("getPainAnim", null, 's');
+    public static final idEventDef AI_GetState = new idEventDef("getState", null, 's');
+    public static final idEventDef AI_HasAnim = new idEventDef("hasAnim", "ds", 'f');
+    public static final idEventDef AI_HasEnemies = new idEventDef("hasEnemies", null, 'd');
+    public static final idEventDef AI_IdleAnim = new idEventDef("idleAnim", "ds", 'd');
+    public static final idEventDef AI_InAnimState = new idEventDef("inAnimState", "ds", 'd');
+    public static final idEventDef AI_NextEnemy = new idEventDef("nextEnemy", "E", 'e');
+    public static final idEventDef AI_OverrideAnim = new idEventDef("overrideAnim", "d");
+    public static final idEventDef AI_PlayAnim = new idEventDef("playAnim", "ds", 'd');
+    public static final idEventDef AI_PlayCycle = new idEventDef("playCycle", "ds", 'd');
+    public static final idEventDef AI_PreventPain = new idEventDef("preventPain", "f");
+    public static final idEventDef AI_SetAnimPrefix = new idEventDef("setAnimPrefix", "s");
+    public static final idEventDef AI_SetBlendFrames = new idEventDef("setBlendFrames", "dd");
+    public static final idEventDef AI_SetNextState = new idEventDef("setNextState", "s");
+    public static final idEventDef AI_SetState = new idEventDef("setState", "s");
+    public static final idEventDef AI_SetSyncedAnimWeight = new idEventDef("setSyncedAnimWeight", "ddf");
+    public static final idEventDef AI_StopAnim = new idEventDef("stopAnim", "dd");
+    public static final idEventDef EV_DisableLegIK = new idEventDef("DisableLegIK", "d");
+    public static final idEventDef EV_DisableWalkIK = new idEventDef("DisableWalkIK");
+    public static final idEventDef EV_EnableLegIK = new idEventDef("EnableLegIK", "d");
+    public static final idEventDef EV_EnableWalkIK = new idEventDef("EnableWalkIK");
+    public static final idEventDef EV_Footstep = new idEventDef("footstep");
+    public static final idEventDef EV_FootstepLeft = new idEventDef("leftFoot");
+    public static final idEventDef EV_FootstepRight = new idEventDef("rightFoot");
     //    
     //    
 
@@ -136,15 +116,15 @@ public class Actor {
      ***********************************************************************/
     public static class idAnimState {
 
-        public  boolean    idleAnim;
-        public  idStr      state;
-        public  int        animBlendFrames;
-        public  int        lastAnimBlendFrames;        // allows override anims to blend based on the last transition time
-        private idActor    self;
+        public int animBlendFrames;
+        public boolean idleAnim;
+        public int lastAnimBlendFrames;        // allows override anims to blend based on the last transition time
+        public idStr state;
         private idAnimator animator;
-        private idThread   thread;
-        private int        channel;
-        private boolean    disabled;
+        private int channel;
+        private boolean disabled;
+        private idActor self;
+        private idThread thread;
         //
         //
 
@@ -225,7 +205,7 @@ public class Actor {
             func = self.scriptObject.GetFunction(statename);
             if (null == func) {
                 assert (false);
-                gameLocal.Error("Can't find function '%s' in object '%s'", statename, self.scriptObject.GetTypeName());
+                Game_local.idGameLocal.Error("Can't find function '%s' in object '%s'", statename, self.scriptObject.GetTypeName());
             }
 
             state.oSet(statename);
@@ -310,11 +290,7 @@ public class Actor {
             if (animDoneTime < 0) {
                 // playing a cycle
                 return false;
-            } else if (animDoneTime - FRAME2MS(blendFrames) <= gameLocal.time) {
-                return true;
-            } else {
-                return false;
-            }
+            } else return animDoneTime - FRAME2MS(blendFrames) <= gameLocal.time;
         }
 
         public boolean IsIdle() {
@@ -331,24 +307,24 @@ public class Actor {
 
             return flags;
         }
-    };
+    }
 
     public static class idAttachInfo {
 
-        public idEntityPtr<idEntity> ent;
         public int channel;
+        public idEntityPtr<idEntity> ent;
 
         public idAttachInfo() {
             this.ent = new idEntityPtr<>();
         }
-    };
+    }
 
     public static class copyJoints_t {
 
-        public jointModTransform_t    mod;
         public int[]/*jointHandle_t*/ from = {0};
+        public jointModTransform_t mod;
         public int[]/*jointHandle_t*/ to = {0};
-    };
+    }
 
     /* **********************************************************************
 
@@ -362,7 +338,7 @@ public class Actor {
 //
 //        public static idClass CreateInstance();
         //        public idTypeInfo GetType();
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks());
@@ -409,75 +385,75 @@ public class Actor {
             eventCallbacks.put(AI_GetHead, (eventCallback_t0<idActor>) idActor::Event_GetHead);
         }
 
+        public idLinkList<idActor> enemyList;            // list of characters that have targeted the player as their enemy
         //
-        public        int                         team;
-        public        int                         rank;                 // monsters don't fight back if the attacker's rank is higher
-        public        idMat3                      viewAxis;             // view axis of the actor
+        public idLinkList<idActor> enemyNode;            // node linked into an entity's enemy list for quick lookups of who is attacking him
+        public int rank;                 // monsters don't fight back if the attacker's rank is higher
         //
-        public        idLinkList<idActor>         enemyNode;            // node linked into an entity's enemy list for quick lookups of who is attacking him
-        public        idLinkList<idActor>         enemyList;            // list of characters that have targeted the player as their enemy
+        public int team;
+        public idMat3 viewAxis;             // view axis of the actor
+        protected boolean allowEyeFocus;
+        //
+        protected boolean allowPain;
+        //
+        protected idStr animPrefix;
+        //
+        protected idList<idAttachInfo> attachments = new idList<>(idAttachInfo.class);
+        //
+        // blinking
+        protected int blink_anim;
+        protected int blink_max;
+        protected int blink_min;
+        protected int blink_time;
+        protected idList<copyJoints_t> copyJoints;           // copied from the body animation to the head model
+        //
+        protected idStrList damageGroups;         // body damage groups
+        protected idList<Float> damageScale;          // damage scale per damage gruop
+        //
+        protected idAngles deltaViewAngles;      // delta angles relative to view input angles
+        protected idVec3 eyeOffset;            // offset of eye relative to physics origin
+        protected boolean finalBoss;
         //
         // friend class			idAnimState;
         //
         //
-        protected     float                       fovDot;               // cos( fovDegrees )
-        protected     idVec3                      eyeOffset;            // offset of eye relative to physics origin
-        protected     idVec3                      modelOffset;          // offset of visual model relative to the physics origin
-        //
-        protected     idAngles                    deltaViewAngles;      // delta angles relative to view input angles
-        //
-        protected     int                         pain_debounce_time;   // next time the actor can show pain
-        protected     int                         pain_delay;           // time between playing pain sound
-        protected     int                         pain_threshold;       // how much damage monster can take at any one time before playing pain animation
-        //
-        protected     idStrList                   damageGroups;         // body damage groups
-        protected     idList<Float>               damageScale;          // damage scale per damage gruop
-        //
-        protected     boolean                     use_combat_bbox;      // whether to use the bounding box for combat collision
-        protected     idEntityPtr<idAFAttachment> head;
-        protected     idList<copyJoints_t>        copyJoints;           // copied from the body animation to the head model
-        //
-        // state variables
-        protected     function_t                  state;
-        protected     function_t                  idealState;
+        protected float fovDot;               // cos( fovDegrees )
+        protected idEntityPtr<idAFAttachment> head;
+        protected idAnimState headAnim;
+        protected function_t idealState;
         //
         // joint handles
-        protected     int/*jointHandle_t*/        leftEyeJoint;
-        protected     int/*jointHandle_t*/        rightEyeJoint;
-        protected     int/*jointHandle_t*/        soundJoint;
+        protected int/*jointHandle_t*/        leftEyeJoint;
+        protected idAnimState legsAnim;
+        protected idVec3 modelOffset;          // offset of visual model relative to the physics origin
+        protected idStr painAnim;
         //
-        protected     idIK_Walk                   walkIK;
+        protected int painTime;
         //
-        protected     idStr                       animPrefix;
-        protected     idStr                       painAnim;
-        //
-        // blinking
-        protected     int                         blink_anim;
-        protected     int                         blink_time;
-        protected     int                         blink_min;
-        protected     int                         blink_max;
+        protected int pain_debounce_time;   // next time the actor can show pain
+        protected int pain_delay;           // time between playing pain sound
+        protected int pain_threshold;       // how much damage monster can take at any one time before playing pain animation
+        protected int/*jointHandle_t*/        rightEyeJoint;
         //
         // script variables
-        protected     idThread                    scriptThread;
-        protected     idStr                       waitState;
-        protected     idAnimState                 headAnim;
-        protected     idAnimState                 torsoAnim;
-        protected     idAnimState                 legsAnim;
+        protected idThread scriptThread;
+        protected int/*jointHandle_t*/        soundJoint;
         //
-        protected     boolean                     allowPain;
-        protected     boolean                     allowEyeFocus;
-        protected     boolean                     finalBoss;
+        // state variables
+        protected function_t state;
+        protected idAnimState torsoAnim;
         //
-        protected     int                         painTime;
+        protected boolean use_combat_bbox;      // whether to use the bounding box for combat collision
+        protected idStr waitState;
         //
-        protected idList<idAttachInfo> attachments = new idList<>(idAttachInfo.class);
+        protected idIK_Walk walkIK;
         //
         //
 
         public idActor() {
             viewAxis = idMat3.getMat3_identity();
 
-            scriptThread = null;		// initialized by ConstructScriptObject, which is called by idEntity::Spawn
+            scriptThread = null;        // initialized by ConstructScriptObject, which is called by idEntity::Spawn
 
             use_combat_bbox = false;
             head = new idEntityPtr<>();
@@ -489,7 +465,7 @@ public class Actor {
             pain_debounce_time = 0;
             pain_delay = 0;
             pain_threshold = 0;
-            
+
             copyJoints = new idList<>();
 
             state = null;
@@ -505,7 +481,7 @@ public class Actor {
             painTime = 0;
             allowPain = false;
             allowEyeFocus = false;
-            
+
             damageGroups = new idStrList();
             damageScale = new idList<>();
 
@@ -513,9 +489,9 @@ public class Actor {
             headAnim = new idAnimState();
             torsoAnim = new idAnimState();
             legsAnim = new idAnimState();
-            
+
             walkIK = new idIK_Walk();
-            
+
             animPrefix = new idStr();
             painAnim = new idStr();
 
@@ -533,10 +509,14 @@ public class Actor {
         }
         // virtual					~idActor( void );
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             idEntity[] ent = {null};
             idStr jointName = new idStr();
             float[] fovDegrees = {0};
@@ -591,7 +571,7 @@ public class Actor {
 
                 gameLocal.SpawnEntityDef(args, ent);
                 if (NOT(ent[0])) {
-                    gameLocal.Error("Couldn't spawn '%s' to attach to entity '%s'", kv.GetValue(), name);
+                    Game_local.idGameLocal.Error("Couldn't spawn '%s' to attach to entity '%s'", kv.GetValue(), name);
                 } else {
                     Attach(ent[0]);
                 }
@@ -648,7 +628,7 @@ public class Actor {
 
             // set up blinking
             blink_anim = headAnimator.GetAnim("blink");
-            blink_time = 0;	// it's ok to blink right away
+            blink_time = 0;    // it's ok to blink right away
             blink_min = (int) SEC2MS(spawnArgs.GetFloat("blink_min", "0.5"));
             blink_max = (int) SEC2MS(spawnArgs.GetFloat("blink_max", "8"));
 
@@ -1135,7 +1115,7 @@ public class Actor {
 
             // make sure we have a scriptObject
             if (!scriptObject.HasObject()) {
-                gameLocal.Error("No scriptobject set on '%s'.  Check the '%s' entityDef.", name, GetEntityDefName());
+                Game_local.idGameLocal.Error("No scriptobject set on '%s'.  Check the '%s' entityDef.", name, GetEntityDefName());
             }
 
             if (NOT(scriptThread)) {
@@ -1151,7 +1131,7 @@ public class Actor {
             // call script object's constructor
             constructor = scriptObject.GetConstructor();
             if (NOT(constructor)) {
-                gameLocal.Error("Missing constructor on '%s' for entity '%s'", scriptObject.GetTypeName(), name);
+                Game_local.idGameLocal.Error("Missing constructor on '%s' for entity '%s'", scriptObject.GetTypeName(), name);
             }
 
             // init the script object's data
@@ -1208,7 +1188,7 @@ public class Actor {
 
         public void SetState(final function_t newState) {
             if (NOT(newState)) {
-                gameLocal.Error("idActor::SetState: Null state");
+                Game_local.idGameLocal.Error("idActor::SetState: Null state");
             }
 
             if (ai_debugScript.GetInteger() == entityNumber) {
@@ -1302,11 +1282,7 @@ public class Actor {
             eye = GetEyePosition();
 
             gameLocal.clip.TracePoint(tr, eye, toPos, MASK_OPAQUE, this);
-            if (tr[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(tr[0]) == ent)) {
-                return true;
-            }
-
-            return false;
+            return tr[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(tr[0]) == ent);
         }
 
         public boolean PointVisible(final idVec3 point) {
@@ -1428,7 +1404,7 @@ public class Actor {
 
             final idDict damageDef = gameLocal.FindEntityDefDict(damageDefName);
             if (null == damageDef) {
-                gameLocal.Error("Unknown damageDef '%s'", damageDefName);
+                Game_local.idGameLocal.Error("Unknown damageDef '%s'", damageDefName);
             }
 
             int[] damage = {(int) (damageDef.GetInt("damage") * damageScale)};
@@ -1553,13 +1529,13 @@ public class Actor {
             }
 
             if (g_debugDamage.GetBool()) {
-                gameLocal.Printf("Damage: joint: '%s', zone '%s', anim '%s'\n", animator.GetJointName((int/*jointHandle_t*/) location),
+                /*jointHandle_t*/
+                gameLocal.Printf("Damage: joint: '%s', zone '%s', anim '%s'\n", animator.GetJointName(location),
                         damageGroup, painAnim);
             }
 
             return true;
         }
-
 
         /* **********************************************************************
 
@@ -1793,7 +1769,7 @@ public class Actor {
             jointName = ent.spawnArgs.GetString("joint");
             joint = animator.GetJointHandle(jointName);
             if (joint == INVALID_JOINT) {
-                gameLocal.Error("Joint '%s' not found for attaching '%s' on '%s'", jointName, ent.GetClassname(), name);
+                Game_local.idGameLocal.Error("Joint '%s' not found for attaching '%s' on '%s'", jointName, ent.GetClassname(), name);
             }
 
             angleOffset = ent.spawnArgs.GetAngles("angles");
@@ -1879,7 +1855,7 @@ public class Actor {
             func = scriptObject.GetFunction(statename);
             if (null == func) {
                 assert (false);
-                gameLocal.Error("Can't find function '%s' in object '%s'", statename, scriptObject.GetTypeName());
+                Game_local.idGameLocal.Error("Can't find function '%s' in object '%s'", statename, scriptObject.GetTypeName());
             }
 
             switch (channel) {
@@ -1903,7 +1879,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("idActor::SetAnimState: Unknown anim group");
+                    Game_local.idGameLocal.Error("idActor::SetAnimState: Unknown anim group");
                     break;
             }
         }
@@ -1917,7 +1893,7 @@ public class Actor {
                 case ANIMCHANNEL_LEGS:
                     return legsAnim.state;
                 default:
-                    gameLocal.Error("idActor::GetAnimState: Unknown anim group");
+                    Game_local.idGameLocal.Error("idActor::GetAnimState: Unknown anim group");
                     return null;
             }
         }
@@ -1943,7 +1919,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("idActor::InAnimState: Unknown anim group");
+                    Game_local.idGameLocal.Error("idActor::InAnimState: Unknown anim group");
                     break;
             }
 
@@ -1969,11 +1945,7 @@ public class Actor {
             if (animDoneTime < 0) {
                 // playing a cycle
                 return false;
-            } else if (animDoneTime - FRAME2MS(blendFrames) <= gameLocal.time) {
-                return true;
-            } else {
-                return false;
-            }
+            } else return animDoneTime - FRAME2MS(blendFrames) <= gameLocal.time;
         }
 
         @Override
@@ -2105,7 +2077,7 @@ public class Actor {
             // setup script object
             if (spawnArgs.GetString("scriptobject", null, scriptObjectName)) {
                 if (!scriptObject.SetType(scriptObjectName[0])) {
-                    gameLocal.Error("Script object '%s' not found on entity '%s'.", scriptObjectName, name);
+                    Game_local.idGameLocal.Error("Script object '%s' not found on entity '%s'.", scriptObjectName, name);
                 }
 
                 ConstructScriptObject();
@@ -2132,7 +2104,7 @@ public class Actor {
                 jointName = spawnArgs.GetString("head_joint");
                 joint = animator.GetJointHandle(jointName);
                 if (joint == INVALID_JOINT) {
-                    gameLocal.Error("Joint '%s' not found for 'head_joint' on '%s'", jointName, name);
+                    Game_local.idGameLocal.Error("Joint '%s' not found for 'head_joint' on '%s'", jointName, name);
                 }
 
                 // set the damage joint to be part of the head damage group
@@ -2249,7 +2221,7 @@ public class Actor {
             animPrefix.oSet(prefix.value);
         }
 
-//        private void Event_LookAtEntity(idEntity ent, float duration);
+        //        private void Event_LookAtEntity(idEntity ent, float duration);
         private void Event_PreventPain(idEventArg<Float> duration) {
             painTime = (int) (gameLocal.time + SEC2MS(duration.value));
         }
@@ -2285,7 +2257,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
                     break;
             }
         }
@@ -2361,7 +2333,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
                     break;
             }
             idThread.ReturnInt(1);
@@ -2432,7 +2404,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
             }
 
             idThread.ReturnInt(true);
@@ -2465,7 +2437,7 @@ public class Actor {
                         break;
 
                     default:
-                        gameLocal.Error("Unknown anim group");
+                        Game_local.idGameLocal.Error("Unknown anim group");
                 }
 
                 idThread.ReturnInt(false);
@@ -2536,7 +2508,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
             }
 
             idThread.ReturnInt(true);
@@ -2585,7 +2557,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
             }
         }
 
@@ -2614,7 +2586,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
                     break;
             }
         }
@@ -2635,7 +2607,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
                     break;
             }
         }
@@ -2660,7 +2632,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
                     break;
             }
         }
@@ -2681,7 +2653,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
                     break;
             }
         }
@@ -2731,7 +2703,7 @@ public class Actor {
                     break;
 
                 default:
-                    gameLocal.Error("Unknown anim group");
+                    Game_local.idGameLocal.Error("Unknown anim group");
             }
         }
 
@@ -2746,9 +2718,9 @@ public class Actor {
         private void Event_CheckAnim(idEventArg<Integer> channel, final idEventArg<String> animname) {
             if (0 == GetAnim(channel.value, animname.value)) {
                 if (animPrefix.Length() != 0) {
-                    gameLocal.Error("Can't find anim '%s_%s' for '%s'", animPrefix, animname, name);
+                    Game_local.idGameLocal.Error("Can't find anim '%s_%s' for '%s'", animPrefix, animname, name);
                 } else {
-                    gameLocal.Error("Can't find anim '%s' for '%s'", animname, name);
+                    Game_local.idGameLocal.Error("Can't find anim '%s' for '%s'", animname, name);
                 }
             }
         }
@@ -2825,12 +2797,12 @@ public class Actor {
                 actor = enemyList.Next();
             } else {
                 if (!ent.IsType(idActor.class)) {
-                    gameLocal.Error("'%s' cannot be an enemy", ent.name);
+                    Game_local.idGameLocal.Error("'%s' cannot be an enemy", ent.name);
                 }
 
                 actor = (idActor) ent;
                 if (actor.enemyNode.ListHead() != enemyList) {
-                    gameLocal.Error("'%s' is not in '%s' enemy list", actor.name, name);
+                    Game_local.idGameLocal.Error("'%s' is not in '%s' enemy list", actor.name, name);
                 }
             }
 
@@ -2891,10 +2863,6 @@ public class Actor {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
         @Override
         protected void _deconstructor() {
             int i;
@@ -2925,5 +2893,6 @@ public class Actor {
 
             super._deconstructor();
         }
-    };
+    }
+
 }

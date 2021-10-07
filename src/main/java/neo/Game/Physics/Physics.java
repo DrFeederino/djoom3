@@ -9,13 +9,14 @@ import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Physics.Clip.idClipModel;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
 
 /**
  *
@@ -53,12 +54,12 @@ public class Physics {
      ===============================================================================
      */
 
-    public static final float CONTACT_EPSILON = 0.25f;				// maximum contact seperation distance
+    public static final float CONTACT_EPSILON = 0.25f;                // maximum contact seperation distance
 
     public static class impactInfo_s {
 
-        float  invMass;         // inverse mass
         idMat3 invInertiaTensor;// inverse inertia tensor
+        float invMass;         // inverse mass
         idVec3 position;        // impact position relative to center of mass
         idVec3 velocity;        // velocity at the impact position
 
@@ -67,23 +68,23 @@ public class Physics {
             position = new idVec3();
             velocity = new idVec3();
         }
-    };
+    }
 
     public static abstract class idPhysics extends idClass {
         // ABSTRACT_PROTOTYPE( idPhysics );
-        private static  int DBG_counter = 0;
-        protected final int DBG_count   = DBG_counter++;
-
-        // virtual						~idPhysics();
-        @Override
-        protected void _deconstructor() {
-            super._deconstructor();
-        }
+        private static int DBG_counter = 0;
+        protected final int DBG_count = DBG_counter++;
 
         public static int SnapTimeToPhysicsFrame(int t) {
             int s;
             s = t + USERCMD_MSEC - 1;
             return (s - s % USERCMD_MSEC);
+        }
+
+        // virtual						~idPhysics();
+        @Override
+        protected void _deconstructor() {
+            super._deconstructor();
         }
 
         // Must not be virtual
@@ -343,5 +344,6 @@ public class Physics {
         public eventCallback_t getEventCallBack(idEventDef event) {
             return null;
         }
-    };
+    }
+
 }

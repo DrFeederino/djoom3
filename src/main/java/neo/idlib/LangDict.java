@@ -1,22 +1,21 @@
 package neo.idlib;
 
-import java.nio.ByteBuffer;
-import static neo.TempDump.bbtocb;
-import static neo.framework.Common.STRTABLE_ID;
-import static neo.framework.Common.STRTABLE_ID_LENGTH;
 import neo.framework.File_h.idFile;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
+
+import java.nio.ByteBuffer;
+
+import static neo.TempDump.bbtocb;
+import static neo.framework.Common.STRTABLE_ID;
+import static neo.framework.Common.STRTABLE_ID_LENGTH;
+import static neo.idlib.Text.Lexer.*;
 
 /**
  *
@@ -34,16 +33,19 @@ public class LangDict {
 
         public idStr key;
         public idStr value;
-    };
+    }
 
     public static class idLangDict {
 
+        private static final int DBG_GetString = 1;
         public idList<idLangKeyValue> args = new idList<>();
-        private idHashIndex hash = new idHashIndex();
         //
         private int baseID;
         //
         //
+        private final idHashIndex hash = new idHashIndex();
+//public							~idLangDict( void );
+//
 
         public idLangDict() {
             args.SetGranularity(256);
@@ -51,8 +53,6 @@ public class LangDict {
             hash.Clear(4096, 8192);
             baseID = 0;
         }
-//public							~idLangDict( void );
-//
 
         public void Clear() {
             args.Clear();
@@ -160,7 +160,6 @@ public class LangDict {
             return args.oGet(c).key.toString();
         }
 
-        private static int DBG_GetString = 1;
         public String GetString(final String str) throws idException {
             if ("#str_07184".equals(str)) {
 //                System.out.printf("GetString#%d\n", DBG_GetString);
@@ -169,7 +168,7 @@ public class LangDict {
 
             if (str == null || str.isEmpty()) {
                 return "";
-            }            
+            }
 
             if (idStr.Cmpn(str, STRTABLE_ID, STRTABLE_ID_LENGTH) != 0) {
                 return str;
@@ -283,5 +282,6 @@ public class LangDict {
             return hashKey;
         }
 
-    };
+    }
+
 }

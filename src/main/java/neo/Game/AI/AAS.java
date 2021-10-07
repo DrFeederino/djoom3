@@ -14,6 +14,8 @@ import neo.idlib.math.Vector.idVec3;
  */
 public class AAS {
 
+    static final int PATHTYPE_BARRIERJUMP = 2;
+    static final int PATHTYPE_JUMP = 3;
     /*
      ===============================================================================
 
@@ -22,38 +24,36 @@ public class AAS {
      ===============================================================================
      */
 // enum {
-    static final int PATHTYPE_WALK         = 0;
+    static final int PATHTYPE_WALK = 0;
     static final int PATHTYPE_WALKOFFLEDGE = 1;
-    static final int PATHTYPE_BARRIERJUMP  = 2;
-    static final int PATHTYPE_JUMP         = 3;
 // };
 
     static class aasPath_s {
 
-        int            type;            // path type
-        idVec3         moveGoal;        // point the AI should move towards
-        int            moveAreaNum;     // number of the area the AI should move towards
-        idVec3         secondaryGoal;   // secondary move goal for complex navigation
+        int moveAreaNum;     // number of the area the AI should move towards
+        idVec3 moveGoal;        // point the AI should move towards
         idReachability reachability;    // reachability used for navigation
-    };
+        idVec3 secondaryGoal;   // secondary move goal for complex navigation
+        int type;            // path type
+    }
 
     static class aasGoal_s {
 
-        int    areaNum;                 // area the goal is in
-        idVec3 origin;			        // position of goal
-    };
+        int areaNum;                 // area the goal is in
+        idVec3 origin;                    // position of goal
+    }
 
     static class aasObstacle_s {
 
-        idBounds absBounds;		        // absolute bounds of obstacle
+        idBounds absBounds;                // absolute bounds of obstacle
         idBounds expAbsBounds;          // expanded absolute bounds of obstacle
-    };
+    }
 
     public static abstract class idAASCallback {
 
         // virtual						~idAASCallback() {};
         public abstract boolean TestArea(final idAAS aas, int areaNum);
-    };
+    }
 
     public abstract static class idAAS {
 
@@ -151,5 +151,6 @@ public class AAS {
 
         // Find the nearest goal which satisfies the callback.
         public abstract boolean FindNearestGoal(aasGoal_s goal, int areaNum, final idVec3 origin, final idVec3 target, int travelFlags, aasObstacle_s[] obstacles, int numObstacles, idAASCallback callback);
-    };
+    }
+
 }

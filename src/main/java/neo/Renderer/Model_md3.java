@@ -1,40 +1,34 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.dynamicModel_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import neo.Renderer.Model_md3.md3Shader_t;
-import static neo.Renderer.RenderWorld.SHADERPARM_MD3_BACKLERP;
-import static neo.Renderer.RenderWorld.SHADERPARM_MD3_FRAME;
-import static neo.Renderer.RenderWorld.SHADERPARM_MD3_LASTFRAME;
-import neo.Renderer.RenderWorld.renderEntity_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_BoundTriSurf;
-
 import neo.TempDump.SERiAL;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.geometry.DrawVert.idDrawVert;
+import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
+import static neo.Renderer.RenderWorld.*;
+import static neo.Renderer.tr_trisurf.*;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.LittleFloat;
-import static neo.idlib.Lib.LittleLong;
-import static neo.idlib.Lib.LittleShort;
-import neo.idlib.geometry.DrawVert.idDrawVert;
-import neo.idlib.math.Vector.idVec3;
+import static neo.idlib.Lib.*;
 
 /**
  *
  */
 public class Model_md3 {
 
+    static final int MAX_MD3PATH = 64;        // from quake3
     /*
      ========================================================================
 
@@ -45,41 +39,44 @@ public class Model_md3 {
      ========================================================================
      */
     static final int MD3_IDENT = (('3' << 24) + ('P' << 16) + ('D' << 8) + 'I');
+    static final int MD3_MAX_FRAMES = 1024;    // per model
+    //
+// limits
+    static final int MD3_MAX_LODS = 4;
+    static final int MD3_MAX_SHADERS = 256;    // per surface
+    static final int MD3_MAX_SURFACES = 32;    // per model
+    static final int MD3_MAX_TAGS = 16;    // per frame
+    static final int MD3_MAX_TRIANGLES = 8192;// per surface
+    static final int MD3_MAX_VERTS = 4096;    // per surface
     static final int MD3_VERSION = 15;
-//
+    //
+// vertex scales
+    static final double MD3_XYZ_SCALE = (1.0 / 64);
+    //
 // surface geometry should not exceed these limits
     static final int SHADER_MAX_VERTEXES = 1000;
     static final int SHADER_MAX_INDEXES = (6 * SHADER_MAX_VERTEXES);
-//
-// limits
-    static final int MD3_MAX_LODS = 4;
-    static final int MD3_MAX_TRIANGLES = 8192;// per surface
-    static final int MD3_MAX_VERTS = 4096;	// per surface
-    static final int MD3_MAX_SHADERS = 256;	// per surface
-    static final int MD3_MAX_FRAMES = 1024;	// per model
-    static final int MD3_MAX_SURFACES = 32;	// per model
-    static final int MD3_MAX_TAGS = 16;	// per frame
-    static final int MAX_MD3PATH = 64;		// from quake3
-//
-// vertex scales
-    static final double MD3_XYZ_SCALE = (1.0 / 64);
+
+    static int LL(int x) {
+        return LittleLong(x);
+    }
 
     static class md3Frame_s {
 
         idVec3[] bounds = new idVec3[2];
         idVec3 localOrigin;
-        float radius;
-//	char		name[16];
+        //	char		name[16];
         String name;
-    };
+        float radius;
+    }
 
     static class md3Tag_s {
 //	char		name[MAX_MD3PATH];	// tag name
 
-        String name;	// tag name
-        idVec3 origin;
         idVec3[] axis = new idVec3[3];
-    };
+        String name;    // tag name
+        idVec3 origin;
+    }
 
     /*
      ** md3Surface_t
@@ -93,84 +90,83 @@ public class Model_md3 {
      */
     static class md3Surface_s {
 
-        int ident;				// 
-//
+        //
+        int flags;
+        int ident;                //
+        //
 //	char		name[MAX_MD3PATH];	// polyset name
         String name;                            // polyset name
-//
-        int flags;
+        md3XyzNormal_t[] normals;
         int numFrames;                          // all surfaces in a model should have the same
-//
+        //
         int numShaders;                         // all surfaces in a model should have the same
-        int numVerts;
-//
+        //
         int numTriangles;
-        int ofsTriangles;
-//
+        int numVerts;
+        int ofsEnd;                // next surface follows
+        //
         int ofsShaders;                         // offset from start of md3Surface_t
-        int ofsSt;				// texture coords are common for all frames
+        int ofsSt;                // texture coords are common for all frames
+        int ofsTriangles;
         int ofsXyzNormals;                      // numVerts * numFrames
-//
+        //
+        md3Shader_t[] shaders;
+        //
         //
         md3Triangle_t[] triangles;
         //
-        md3Shader_t[] shaders;
         md3St_t[] verts;
-        md3XyzNormal_t[] normals;
-        //
-
-        int ofsEnd;				// next surface follows
-    };
+    }
 
     static class md3Shader_t {
 //	char				name[MAX_MD3PATH];
 
         String name;
-        idMaterial shader;			// for in-game use
-    };
+        idMaterial shader;            // for in-game use
+    }
 
     static class md3Triangle_t {
 
         int[] indexes = new int[3];
-    };
+    }
 
     static class md3St_t {
 
         float[] st = new float[2];
-    };
+    }
 
     static class md3XyzNormal_t {
 
-        short[] xyz = new short[3];
         short normal;
-    };
+        short[] xyz = new short[3];
+    }
 
     static class md3Header_s implements SERiAL {
 
+        //
+        int flags;
+        //
+        //
+        md3Frame_s[] frames;
         int ident;
-        int version;
-//
+        //
 //	char		name[MAX_MD3PATH];	// model name
         String name;                            // model name
-//
-        int flags;
-//
-        int numFrames;
-        int numTags;
-        int numSurfaces;
-//
-        int numSkins;
-//
-        int ofsFrames;                          // offset for first frame
-        int ofsTags;                            // numFrames * numTags
-        int ofsSurfaces;                        // first surface, others follow
-//
-        // 
-        md3Frame_s[] frames;
-        md3Tag_s[] tags;
-        md3Surface_s[] surfaces;
         //
-        int ofsEnd;				// end of file
+        int numFrames;
+        //
+        int numSkins;
+        int numSurfaces;
+        int numTags;
+        //
+        int ofsEnd;                // end of file
+        //
+        int ofsFrames;                          // offset for first frame
+        int ofsSurfaces;                        // first surface, others follow
+        int ofsTags;                            // numFrames * numTags
+        md3Surface_s[] surfaces;
+        md3Tag_s[] tags;
+        int version;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -186,10 +182,6 @@ public class Model_md3 {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
-
-    static int LL(int x) {
-        return LittleLong(x);
     }
 
     /*
@@ -201,9 +193,9 @@ public class Model_md3 {
      */
     static class idRenderModelMD3 extends idRenderModelStatic {
 
-        private int index;		// model = tr.models[model->index]
-        private int dataSize;		// just for listing purposes
-        private md3Header_s md3;	// only if type == MOD_MESH
+        private int dataSize;        // just for listing purposes
+        private int index;        // model = tr.models[model->index]
+        private md3Header_s md3;    // only if type == MOD_MESH
         private int numLods;
         //
         //
@@ -323,7 +315,7 @@ public class Model_md3 {
                 }
 
                 // change to surface identifier
-                surf.ident = 0;	//SF_MD3;
+                surf.ident = 0;    //SF_MD3;
 
                 // lowercase the surface name so skin compares are faster
 //		int slen = (int)strlen( surf.name );
@@ -429,7 +421,7 @@ public class Model_md3 {
             surface = md3.surfaces[0];
 
             // TODO: these need set by an entity
-            frame = (int) ent.shaderParms[SHADERPARM_MD3_FRAME];			// probably want to keep frames < 1000 or so
+            frame = (int) ent.shaderParms[SHADERPARM_MD3_FRAME];            // probably want to keep frames < 1000 or so
             oldframe = (int) ent.shaderParms[SHADERPARM_MD3_LASTFRAME];
             backlerp = ent.shaderParms[SHADERPARM_MD3_BACKLERP];
 
@@ -555,5 +547,6 @@ public class Model_md3 {
                 }
             }
         }
-    };
+    }
+
 }

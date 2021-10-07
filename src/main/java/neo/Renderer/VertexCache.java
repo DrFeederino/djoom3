@@ -1,43 +1,35 @@
 package neo.Renderer;
 
+import neo.Renderer.Model.lightingCache_s;
+import neo.Renderer.Model.shadowCache_s;
+import neo.TempDump.Deprecation_Exception;
+import neo.framework.CVarSystem.idCVar;
+import neo.framework.CmdSystem.cmdFunction_t;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.geometry.DrawVert;
+import neo.idlib.geometry.DrawVert.idDrawVert;
+import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.idVec4;
+import org.lwjgl.BufferUtils;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import neo.Renderer.Model.lightingCache_s;
-import neo.Renderer.Model.shadowCache_s;
+
 import static neo.Renderer.RenderSystem_init.r_useIndexBuffers;
 import static neo.Renderer.RenderSystem_init.r_useVertexBuffers;
-import static neo.Renderer.VertexCache.vertBlockTag_t.TAG_FIXED;
-import static neo.Renderer.VertexCache.vertBlockTag_t.TAG_FREE;
-import static neo.Renderer.VertexCache.vertBlockTag_t.TAG_TEMP;
-import static neo.Renderer.VertexCache.vertBlockTag_t.TAG_USED;
-import static neo.Renderer.qgl.qglBindBufferARB;
-import static neo.Renderer.qgl.qglBufferDataARB;
-import static neo.Renderer.qgl.qglBufferSubDataARB;
-import static neo.Renderer.qgl.qglGenBuffersARB;
+import static neo.Renderer.VertexCache.vertBlockTag_t.*;
+import static neo.Renderer.qgl.*;
 import static neo.Renderer.tr_local.glConfig;
 import static neo.Renderer.tr_local.tr;
-
-import neo.TempDump.Deprecation_Exception;
 import static neo.framework.CVarSystem.CVAR_INTEGER;
 import static neo.framework.CVarSystem.CVAR_RENDERER;
-import neo.framework.CVarSystem.idCVar;
 import static neo.framework.CmdSystem.CMD_FL_RENDERER;
-import neo.framework.CmdSystem.cmdFunction_t;
 import static neo.framework.CmdSystem.cmdSystem;
 import static neo.framework.Common.common;
-import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.geometry.DrawVert;
-import neo.idlib.geometry.DrawVert.idDrawVert;
 import static neo.idlib.math.Simd.SIMDProcessor;
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
-import org.lwjgl.BufferUtils;
-import static org.lwjgl.opengl.ARBVertexBufferObject.GL_ARRAY_BUFFER_ARB;
-import static org.lwjgl.opengl.ARBVertexBufferObject.GL_ELEMENT_ARRAY_BUFFER_ARB;
-import static org.lwjgl.opengl.ARBVertexBufferObject.GL_STATIC_DRAW_ARB;
-import static org.lwjgl.opengl.ARBVertexBufferObject.GL_STREAM_DRAW_ARB;
+import static org.lwjgl.opengl.ARBVertexBufferObject.*;
 
 /**
  *
@@ -45,6 +37,9 @@ import static org.lwjgl.opengl.ARBVertexBufferObject.GL_STREAM_DRAW_ARB;
 public class VertexCache {
 
     public static final idVertexCache vertexCache = new idVertexCache();
+    static final int EXPAND_HEADERS = 1024;
+    //
+    static final int FRAME_MEMORY_BYTES = 0x200000;
 
     // vertex cache calls should only be made by the front end
     static final int NUM_VERTEX_FRAMES = 2;
@@ -55,21 +50,40 @@ public class VertexCache {
         TAG_USED,
         TAG_FIXED, // for the temp buffers
         TAG_TEMP   // in frame temp area, not static area
-    };
+    }
 
     static class vertCache_s implements Iterable<vertCache_s> {//TODO:use iterators for all our makeshift linked lists.
 
-        private int /*GLuint*/ vbo = 0;
-        private int /*GLuint*/ vao = 0;
-        private ByteBuffer     virtMem;    // only one of vbo / virtMem will be set
-        private boolean        indexBuffer;// holds indexes instead of vertexes
-        private int            offset;
-        private int            size;       // may be larger than the amount asked for, due
+        private int frameUsed;             // it can't be purged if near the current frame
+        private boolean indexBuffer;// holds indexes instead of vertexes
+        private vertCache_s next, prev; // may be on the static list or one of the frame lists
+        private int offset;
+        private int size;       // may be larger than the amount asked for, due
         //                                 // to round up and minimum fragment sizes
         private vertBlockTag_t tag;        // a tag of 0 is a free block
-        private vertCache_s    user;       // will be set to zero when purged
-        private vertCache_s    next, prev; // may be on the static list or one of the frame lists
-        private int frameUsed;             // it can't be purged if near the current frame
+        private vertCache_s user;       // will be set to zero when purged
+        private final int /*GLuint*/ vao = 0;
+        private int /*GLuint*/ vbo = 0;
+        private ByteBuffer virtMem;    // only one of vbo / virtMem will be set
+
+        /**
+         * Creates an array starting at the current object, till it reaches
+         * NULL.
+         */
+        public static vertCache_s[] toArray(vertCache_s cache_s) {
+            List<vertCache_s> array = new ArrayList<>(10);
+            Iterator<vertCache_s> iterator;
+
+            if (cache_s != null) {
+                iterator = cache_s.iterator();
+                array.add(cache_s);
+                while (iterator.hasNext()) {
+                    array.add(iterator.next());
+                }
+            }
+
+            return (vertCache_s[]) array.toArray();
+        }
 
         @Override
         public Iterator<vertCache_s> iterator() {
@@ -93,31 +107,7 @@ public class VertexCache {
 
             return i;
         }
-
-        /**
-         * Creates an array starting at the current object, till it reaches
-         * NULL.
-         */
-        public static vertCache_s[] toArray(vertCache_s cache_s) {
-            List<vertCache_s> array = new ArrayList<>(10);
-            Iterator<vertCache_s> iterator;
-
-            if (cache_s != null) {
-                iterator = cache_s.iterator();
-                array.add(cache_s);
-                while (iterator.hasNext()) {
-                    array.add(iterator.next());
-                }
-            }
-
-            return (vertCache_s[]) array.toArray();
-        }
     }
-
-    ;
-    //
-    static final int FRAME_MEMORY_BYTES = 0x200000;
-    static final int EXPAND_HEADERS     = 1024;
 //
 
     /*
@@ -142,42 +132,40 @@ public class VertexCache {
         }
     }
 
-    ;
-
     //================================================================================
     public static class idVertexCache {
 
-        private static final idCVar r_showVertexCache  = new idCVar("r_showVertexCache", "0", CVAR_INTEGER | CVAR_RENDERER, "");
+        private static final idCVar r_showVertexCache = new idCVar("r_showVertexCache", "0", CVAR_INTEGER | CVAR_RENDERER, "");
         private static final idCVar r_vertexBufferMegs = new idCVar("r_vertexBufferMegs", "32", CVAR_INTEGER | CVAR_RENDERER, "");
         //
-        private       int           staticCountTotal;
-        private       int           staticAllocTotal;       // for end of frame purging
-        //
-        private       int           staticAllocThisFrame;   // debug counter
-        private       int           staticCountThisFrame;
-        private       int           dynamicAllocThisFrame;
-        private       int           dynamicCountThisFrame;
-        //
-        private       int           currentFrame;           // for purgable block tracking
-        private       int           listNum;                // currentFrame % NUM_VERTEX_FRAMES, determines which tempBuffers to use
-        //
-        private       boolean       virtualMemory;          // not fast stuff
-        //
-        private       boolean       allocatingTempBuffer;   // force GL_STREAM_DRAW_ARB
-        //
         private final vertCache_s[] tempBuffers;            // allocated at startup
-        private       boolean       tempOverflow;           // had to alloc a temp in static memory
+        //
+        private boolean allocatingTempBuffer;   // force GL_STREAM_DRAW_ARB
+        //
+        private int currentFrame;           // for purgable block tracking
+        private final vertCache_s deferredFreeList;       // head of doubly linked list
+        private int dynamicAllocThisFrame;
+        private int dynamicCountThisFrame;
+        private final vertCache_s dynamicHeaders;         // head of doubly linked list
+        // staticHeaders.next is most recently used
+        //
+        private int frameBytes;             // for each of NUM_VERTEX_FRAMES frames
+        private final vertCache_s freeDynamicHeaders;     // head of doubly linked list
         //
 //        private final idBlockAlloc<vertCache_s> headerAllocator = new idBlockAlloc<>(1024);
         //
-        private       vertCache_s   freeStaticHeaders;      // head of doubly linked list
-        private       vertCache_s   freeDynamicHeaders;     // head of doubly linked list
-        private       vertCache_s   dynamicHeaders;         // head of doubly linked list
-        private       vertCache_s   deferredFreeList;       // head of doubly linked list
-        private       vertCache_s   staticHeaders;          // head of doubly linked list in MRU order,
-        // staticHeaders.next is most recently used
+        private final vertCache_s freeStaticHeaders;      // head of doubly linked list
+        private int listNum;                // currentFrame % NUM_VERTEX_FRAMES, determines which tempBuffers to use
         //
-        private       int           frameBytes;             // for each of NUM_VERTEX_FRAMES frames
+        private int staticAllocThisFrame;   // debug counter
+        private int staticAllocTotal;       // for end of frame purging
+        private int staticCountThisFrame;
+        //
+        private int staticCountTotal;
+        private final vertCache_s staticHeaders;          // head of doubly linked list in MRU order,
+        private boolean tempOverflow;           // had to alloc a temp in static memory
+        //
+        private boolean virtualMemory;          // not fast stuff
         //
         //
 
@@ -249,10 +237,7 @@ public class VertexCache {
          =============
          */
         public boolean IsFast() {
-            if (virtualMemory) {
-                return false;
-            }
-            return true;
+            return !virtualMemory;
         }
 
         /*
@@ -431,11 +416,11 @@ public class VertexCache {
                 } else {
                     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, buffer.vbo);
                 }
-                return (ByteBuffer) ByteBuffer.allocate(Integer.BYTES).putInt(buffer.offset).flip();
+                return ByteBuffer.allocate(Integer.BYTES).putInt(buffer.offset).flip();
             }
 
             // virtual memory is a real pointer
-            return (ByteBuffer) buffer.virtMem.position(buffer.offset).flip();
+            return buffer.virtMem.position(buffer.offset).flip();
         }
 
         // if r_useIndexBuffers is enabled, but you need to draw something without
@@ -699,7 +684,7 @@ public class VertexCache {
             }
         }
 
-//        private void InitMemoryBlocks(int size);
+        //        private void InitMemoryBlocks(int size);
         private void ActuallyFree(vertCache_s block) {
             if (null == block) {
                 common.Error("idVertexCache Free: NULL pointer");
@@ -726,7 +711,7 @@ public class VertexCache {
                     block.virtMem = null;
                 }
             }
-            block.tag = TAG_FREE;		// mark as free
+            block.tag = TAG_FREE;        // mark as free
 
             // unlink stick it back on the free list
             block.next.prev = block.prev;
@@ -745,6 +730,6 @@ public class VertexCache {
             block.next.prev = block;
             block.prev.next = block;
         }
-    };
+    }
 
 }

@@ -1,25 +1,11 @@
 package neo.Renderer;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
-import static neo.Renderer.Interaction.LIGHT_TRIS_DEFERRED;
 import neo.Renderer.Model.dominantTri_s;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.tr_local.USE_TRI_DATA_ALLOCATOR;
-import neo.Renderer.tr_local.deformInfo_s;
-import static neo.Renderer.tr_local.frameData;
-import neo.Renderer.tr_local.frameData_t;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_trisurf.faceTangents_t;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.sizeof;
-import static neo.framework.BuildDefines._DEBUG;
+import neo.Renderer.tr_local.*;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.cmp_t;
@@ -27,15 +13,31 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import static neo.Renderer.Interaction.LIGHT_TRIS_DEFERRED;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.tr_local.*;
+import static neo.TempDump.*;
+import static neo.framework.BuildDefines._DEBUG;
+import static neo.framework.Common.common;
 import static neo.idlib.math.Simd.SIMDProcessor;
 import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
  */
 public class tr_trisurf {
 
+    //
+    // instead of using the texture T vector, cross the normal and S vector for an orthogonal axis
+    static final boolean DERIVE_UNSMOOTHED_BITANGENT = true;
+    //
+    static final int MAX_SIL_EDGES = 0x10000;
+    static final int SILEDGE_HASH_SIZE = 1024;
     /*
      ==============================================================================
 
@@ -115,20 +117,59 @@ public class tr_trisurf {
      ==============================================================================
      */
     // this shouldn't change anything, but previously renderbumped models seem to need it
-    static final boolean USE_INVA                    = true;
-    //
-    // instead of using the texture T vector, cross the normal and S vector for an orthogonal axis
-    static final boolean DERIVE_UNSMOOTHED_BITANGENT = true;
-    //
-    static final int     MAX_SIL_EDGES               = 0x10000;
-    static final int     SILEDGE_HASH_SIZE           = 1024;
-    //
-    static int         numSilEdges;
-    static silEdge_t[] silEdges;
-    static idHashIndex silEdgeHash = new idHashIndex(SILEDGE_HASH_SIZE, MAX_SIL_EDGES);
-    static int numPlanes;
+    static final boolean USE_INVA = true;
     //
     private static final boolean ID_DEBUG_MEMORY = false;
+    /*
+     =================
+     R_DeriveTangentsWithoutNormals
+
+     Build texture space tangents for bump mapping
+     If a surface is deformed, this must be recalculated
+
+     This assumes that any mirrored vertexes have already been duplicated, so
+     any shared vertexes will have the tangent spaces smoothed across.
+
+     Texture wrapping slightly complicates this, but as long as the normals
+     are shared, and the tangent vectors are projected onto the normals, the
+     separate vertexes should wind up with identical tangent spaces.
+
+     mirroring a normalmap WILL cause a slightly visible seam unless the normals
+     are completely flat around the edge's full bilerp support.
+
+     Vertexes which are smooth shaded must have their tangent vectors
+     in the same plane, which will allow a seamless
+     rendering as long as the normal map is even on both sides of the
+     seam.
+
+     A smooth shaded surface may have multiple tangent vectors at a vertex
+     due to texture seams or mirroring, but it should only have a single
+     normal vector.
+
+     Each triangle has a pair of tangent vectors in it's plane
+
+     Should we consider having vertexes point at shared tangent spaces
+     to save space or speed transforms?
+
+     this version only handles bilateral symetry
+     =================
+     */    static int DEBUG_R_DeriveTangentsWithoutNormals = 0;
+    /*
+     =================
+     R_IdentifySilEdges
+
+     If the surface will not deform, coplanar edges (polygon interiors)
+     can never create silhouette plains, and can be omited
+     =================
+     */
+    static int c_coplanarSilEdges;
+    /*
+     ===============
+     R_DefineEdge
+     ===============
+     */
+    static int c_duplicatedEdges, c_tripledEdges;
+    static int c_totalSilEdges;
 
 //
 //    static final idBlockAlloc<srfTriangles_s> srfTrianglesAllocator = new idBlockAlloc<>(1 << 8);
@@ -166,6 +207,24 @@ public class tr_trisurf {
 ////            triDupVertAllocator = new idDynamicAlloc(1 << 16, 1 << 10);
 //        }
 //    }
+    static int numPlanes;
+    //
+    static int numSilEdges;
+    static idHashIndex silEdgeHash = new idHashIndex(SILEDGE_HASH_SIZE, MAX_SIL_EDGES);
+    static silEdge_t[] silEdges;
+
+    /*
+     ==============
+     R_AllocStaticTriSurf
+     ==============
+     */private static int DBG_R_AllocStaticTriSurf = 0;
+    /*
+     =================
+     R_CleanupTriangles
+
+     FIXME: allow createFlat and createSmooth normals, as well as explicit
+     =================
+     */private static int DBG_R_CleanupTriangles = 0;
 
     /*
      ===============
@@ -239,78 +298,6 @@ public class tr_trisurf {
 //        triMirroredVertAllocator.FreeEmptyBaseBlocks();
 //        triDupVertAllocator.FreeEmptyBaseBlocks();
     }
-
-    /*
-     ===============
-     R_ShowTriMemory_f
-     ===============
-     */
-    @Deprecated
-    public static class R_ShowTriSurfMemory_f extends cmdFunction_t {
-
-        private static final cmdFunction_t instance = new R_ShowTriSurfMemory_f();
-
-        private R_ShowTriSurfMemory_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-//            common.Printf("%6d kB in %d triangle surfaces\n",
-//                    (srfTrianglesAllocator.GetAllocCount() /* sizeof( srfTriangles_t )*/) >> 10,
-//                    srfTrianglesAllocator.GetAllocCount());
-//
-//            common.Printf("%6d kB vertex memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triVertexAllocator.GetBaseBlockMemory() >> 10, triVertexAllocator.GetFreeBlockMemory() >> 10,
-//                    triVertexAllocator.GetNumFreeBlocks(), triVertexAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB index memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triIndexAllocator.GetBaseBlockMemory() >> 10, triIndexAllocator.GetFreeBlockMemory() >> 10,
-//                    triIndexAllocator.GetNumFreeBlocks(), triIndexAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB shadow vert memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triShadowVertexAllocator.GetBaseBlockMemory() >> 10, triShadowVertexAllocator.GetFreeBlockMemory() >> 10,
-//                    triShadowVertexAllocator.GetNumFreeBlocks(), triShadowVertexAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB tri plane memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triPlaneAllocator.GetBaseBlockMemory() >> 10, triPlaneAllocator.GetFreeBlockMemory() >> 10,
-//                    triPlaneAllocator.GetNumFreeBlocks(), triPlaneAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB sil index memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triSilIndexAllocator.GetBaseBlockMemory() >> 10, triSilIndexAllocator.GetFreeBlockMemory() >> 10,
-//                    triSilIndexAllocator.GetNumFreeBlocks(), triSilIndexAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB sil edge memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triSilEdgeAllocator.GetBaseBlockMemory() >> 10, triSilEdgeAllocator.GetFreeBlockMemory() >> 10,
-//                    triSilEdgeAllocator.GetNumFreeBlocks(), triSilEdgeAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB dominant tri memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triDominantTrisAllocator.GetBaseBlockMemory() >> 10, triDominantTrisAllocator.GetFreeBlockMemory() >> 10,
-//                    triDominantTrisAllocator.GetNumFreeBlocks(), triDominantTrisAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB mirror vert memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triMirroredVertAllocator.GetBaseBlockMemory() >> 10, triMirroredVertAllocator.GetFreeBlockMemory() >> 10,
-//                    triMirroredVertAllocator.GetNumFreeBlocks(), triMirroredVertAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB dup vert memory (%d kB free in %d blocks, %d empty base blocks)\n",
-//                    triDupVertAllocator.GetBaseBlockMemory() >> 10, triDupVertAllocator.GetFreeBlockMemory() >> 10,
-//                    triDupVertAllocator.GetNumFreeBlocks(), triDupVertAllocator.GetNumEmptyBaseBlocks());
-//
-//            common.Printf("%6d kB total triangle memory\n",
-//                    (srfTrianglesAllocator.GetAllocCount() /* sizeof( srfTriangles_t )*/ + triVertexAllocator.GetBaseBlockMemory()
-//                    + triIndexAllocator.GetBaseBlockMemory()
-//                    + triShadowVertexAllocator.GetBaseBlockMemory()
-//                    + triPlaneAllocator.GetBaseBlockMemory()
-//                    + triSilIndexAllocator.GetBaseBlockMemory()
-//                    + triSilEdgeAllocator.GetBaseBlockMemory()
-//                    + triDominantTrisAllocator.GetBaseBlockMemory()
-//                    + triMirroredVertAllocator.GetBaseBlockMemory()
-//                    + triDupVertAllocator.GetBaseBlockMemory()) >> 10);
-        }
-    };
 
     /*
      =================
@@ -556,13 +543,9 @@ public class tr_trisurf {
         throw new UnsupportedOperationException();
     }
 
-    /*
-     ==============
-     R_AllocStaticTriSurf
-     ==============
-     */private static int DBG_R_AllocStaticTriSurf = 0;
     @Deprecated
-    public static srfTriangles_s R_AllocStaticTriSurf() {DBG_R_AllocStaticTriSurf++;
+    public static srfTriangles_s R_AllocStaticTriSurf() {
+        DBG_R_AllocStaticTriSurf++;
 //        srfTriangles_s tris = srfTrianglesAllocator.Alloc();
 //        memset(tris, 0, sizeof(srfTriangles_t));
         return new srfTriangles_s();
@@ -970,13 +953,6 @@ public class tr_trisurf {
         }
     }
 
-    /*
-     ===============
-     R_DefineEdge
-     ===============
-     */
-    static int c_duplicatedEdges, c_tripledEdges;
-
     public static void R_DefineEdge(int v1, int v2, int planeNum) {
         int i, hashKey;
 
@@ -1021,48 +997,12 @@ public class tr_trisurf {
         numSilEdges++;
     }
 
-    /*
-     =================
-     SilEdgeSort
-     =================
-     */
-    public static class SilEdgeSort implements cmp_t<silEdge_t> {
-
-        @Override
-        public int compare(silEdge_t a, silEdge_t b) {
-            if (a.p1 < b.p1) {
-                return -1;
-            }
-            if (a.p1 > b.p1) {
-                return 1;
-            }
-            if (a.p2 < b.p2) {
-                return -1;//TODO:returning 1 is like true, 0 false...what is -1 then?
-            }
-            if (a.p2 > b.p2) {
-                return 1;
-            }
-            return 0;
-        }
-    };
-
-    /*
-     =================
-     R_IdentifySilEdges
-
-     If the surface will not deform, coplanar edges (polygon interiors)
-     can never create silhouette plains, and can be omited
-     =================
-     */
-    static int c_coplanarSilEdges;
-    static int c_totalSilEdges;
-
     public static void R_IdentifySilEdges(srfTriangles_s tri, boolean omitCoplanarEdges) {
         int i;
         int numTris;
         int shared, single;
 
-        omitCoplanarEdges = false;	// optimization doesn't work for some reason
+        omitCoplanarEdges = false;    // optimization doesn't work for some reason
 
         numTris = tri.numIndexes / 3;
 
@@ -1108,7 +1048,7 @@ public class tr_trisurf {
                 int j;
                 float d;
 
-                if (silEdges[i].p2 == numPlanes) {	// the fake dangling edge
+                if (silEdges[i].p2 == numPlanes) {    // the fake dangling edge
                     continue;
                 }
 
@@ -1124,7 +1064,7 @@ public class tr_trisurf {
                 for (j = 0; j < 3; j++) {
                     i1 = tri.silIndexes[base + j];
                     d = plane.Distance(tri.verts[i1].xyz);
-                    if (d != 0) {		// even a small epsilon causes problems
+                    if (d != 0) {        // even a small epsilon causes problems
                         break;
                     }
                 }
@@ -1164,11 +1104,7 @@ public class tr_trisurf {
             }
         }
 
-        if (0 == single) {
-            tri.perfectHull = true;
-        } else {
-            tri.perfectHull = false;
-        }
+        tri.perfectHull = 0 == single;
 
         tri.numSilEdges = numSilEdges;
         tri.silEdges = new silEdge_t[numSilEdges];//triSilEdgeAllocator.Alloc(numSilEdges);
@@ -1200,30 +1136,8 @@ public class tr_trisurf {
         d1[4] = c.st.oGet(1) - a.st.oGet(1);
 
         area = d0[3] * d1[4] - d0[4] * d1[3];
-        if (area >= 0) {
-            return false;
-        }
-        return true;
+        return !(area >= 0);
     }
-
-    /*
-     ==================
-     R_DeriveFaceTangents
-     ==================
-     */
-    public static class faceTangents_t {
-
-        idVec3[] tangents = new idVec3[2];
-        boolean negativePolarity;
-        boolean degenerate;
-        
-        static faceTangents_t[] generateArray(final int length) {
-            return Stream.
-                    generate(faceTangents_t::new).
-                    limit(length).
-                    toArray(faceTangents_t[]::new);
-        }
-    };
 
     public static void R_DeriveFaceTangents(final srfTriangles_s tri, faceTangents_t[] faceTangents) {
         int i;
@@ -1313,30 +1227,6 @@ public class tr_trisurf {
         }
     }
 
-    /*
-     ===================
-     R_DuplicateMirroredVertexes
-
-     Modifies the surface to bust apart any verts that are shared by both positive and
-     negative texture polarities, so tangent space smoothing at the vertex doesn't
-     degenerate.
-
-     This will create some identical vertexes (which will eventually get different tangent
-     vectors), so never optimize the resulting mesh, or it will get the mirrored edges back.
-
-     Reallocates tri.verts and changes tri.indexes in place
-     Silindexes are unchanged by this.
-
-     sets mirroredVerts and mirroredVerts[]
-
-     ===================
-     */
-    static class tangentVert_t {
-
-        final boolean[] polarityUsed = new boolean[2];
-        int negativeRemap;
-    };
-
     public static void R_DuplicateMirroredVertexes(srfTriangles_s tri) {
         tangentVert_t[] tVerts;
         tangentVert_t vert;
@@ -1414,41 +1304,6 @@ public class tr_trisurf {
         tri.numVerts = totalVerts;
     }
 
-    /*
-     =================
-     R_DeriveTangentsWithoutNormals
-
-     Build texture space tangents for bump mapping
-     If a surface is deformed, this must be recalculated
-
-     This assumes that any mirrored vertexes have already been duplicated, so
-     any shared vertexes will have the tangent spaces smoothed across.
-
-     Texture wrapping slightly complicates this, but as long as the normals
-     are shared, and the tangent vectors are projected onto the normals, the
-     separate vertexes should wind up with identical tangent spaces.
-
-     mirroring a normalmap WILL cause a slightly visible seam unless the normals
-     are completely flat around the edge's full bilerp support.
-
-     Vertexes which are smooth shaded must have their tangent vectors
-     in the same plane, which will allow a seamless
-     rendering as long as the normal map is even on both sides of the
-     seam.
-
-     A smooth shaded surface may have multiple tangent vectors at a vertex
-     due to texture seams or mirroring, but it should only have a single
-     normal vector.
-
-     Each triangle has a pair of tangent vectors in it's plane
-
-     Should we consider having vertexes point at shared tangent spaces
-     to save space or speed transforms?
-
-     this version only handles bilateral symetry
-     =================
-     */    static int DEBUG_R_DeriveTangentsWithoutNormals = 0;
-
     public static void R_DeriveTangentsWithoutNormals(srfTriangles_s tri) {
         int i, j;
         faceTangents_t[] faceTangents;
@@ -1524,33 +1379,6 @@ public class tr_trisurf {
         out.oSet(2, v.oGet(2) * length);
     }
 
-    /*
-     ===================
-     R_BuildDominantTris
-
-     Find the largest triangle that uses each vertex
-     ===================
-     */
-    static class indexSort_t {
-
-        int vertexNum;
-        int faceNum;
-    };
-
-    static class IndexSort implements cmp_t<indexSort_t> {
-
-        @Override
-        public int compare(indexSort_t a, indexSort_t b) {
-            if (a.vertexNum < b.vertexNum) {
-                return -1;
-            }
-            if (a.vertexNum > b.vertexNum) {
-                return 1;
-            }
-            return 0;
-        }
-    };
-
     public static void R_BuildDominantTris(srfTriangles_s tri) {
         int i, j;
         dominantTri_s[] dt;
@@ -1623,7 +1451,7 @@ public class tr_trisurf {
                 if (len < 0.001f) {
                     len = 0.001f;
                 }
-                dt[vertNum].normalizationScale[2] = 1.0f / len;		// normal
+                dt[vertNum].normalizationScale[2] = 1.0f / len;        // normal
 
                 // texture area
                 area = d0[3] * d1[4] - d0[4] * d1[3];
@@ -1635,7 +1463,7 @@ public class tr_trisurf {
                 if (len < 0.001f) {
                     len = 0.001f;
                 }
-                dt[vertNum].normalizationScale[0] = (area > 0 ? 1 : -1) / len;	// tangents[0]
+                dt[vertNum].normalizationScale[0] = (area > 0 ? 1 : -1) / len;    // tangents[0]
 
                 bitangent.oSet(0, (d0[3] * d1[0] - d0[0] * d1[3]));
                 bitangent.oSet(1, (d0[3] * d1[1] - d0[1] * d1[3]));
@@ -1647,7 +1475,7 @@ public class tr_trisurf {
                 if (DERIVE_UNSMOOTHED_BITANGENT) {
                     dt[vertNum].normalizationScale[1] = (area > 0 ? 1 : -1);
                 } else {
-                    dt[vertNum].normalizationScale[1] = (area > 0 ? 1 : -1) / len;	// tangents[1]
+                    dt[vertNum].normalizationScale[1] = (area > 0 ? 1 : -1) / len;    // tangents[1]
                 }
             }
         }
@@ -1802,7 +1630,7 @@ public class tr_trisurf {
 //        temp[1] = (d0[1] * d1[4] - d0[4] * d1[1]) * inva;
 //        temp[2] = (d0[2] * d1[4] - d0[4] * d1[2]) * inva;
 //		VectorNormalizeFast2( temp, tangents[0] );
-//        
+//
 //        temp[0] = (d0[3] * d1[0] - d0[0] * d1[3]) * inva;
 //        temp[1] = (d0[3] * d1[1] - d0[1] * d1[3]) * inva;
 //        temp[2] = (d0[3] * d1[2] - d0[2] * d1[3]) * inva;
@@ -1812,7 +1640,7 @@ public class tr_trisurf {
 //        temp[1] = (d0[1] * d1[4] - d0[4] * d1[1]);
 //        temp[2] = (d0[2] * d1[4] - d0[4] * d1[2]);
 //		VectorNormalizeFast2( temp, tangents[0] );
-//        
+//
 //        temp[0] = (d0[3] * d1[0] - d0[0] * d1[3]);
 //        temp[1] = (d0[3] * d1[1] - d0[1] * d1[3]);
 //        temp[2] = (d0[3] * d1[2] - d0[2] * d1[3]);
@@ -1917,16 +1745,6 @@ public class tr_trisurf {
     public static void R_DeriveTangents(srfTriangles_s tri) {
         R_DeriveTangents(tri, true);
     }
-    /*
-     =================
-     R_RemoveDuplicatedTriangles
-
-     silIndexes must have already been calculated
-
-     silIndexes are used instead of indexes, because duplicated
-     triangles could have different texture coordinates.
-     =================
-     */
 
     public static void R_RemoveDuplicatedTriangles(srfTriangles_s tri) {
         int c_removed;
@@ -2130,6 +1948,16 @@ public class tr_trisurf {
 
         return newTri;
     }
+    /*
+     =================
+     R_RemoveDuplicatedTriangles
+
+     silIndexes must have already been calculated
+
+     silIndexes are used instead of indexes, because duplicated
+     triangles could have different texture coordinates.
+     =================
+     */
 
     /*
      =================
@@ -2179,13 +2007,6 @@ public class tr_trisurf {
         }
     }
 
-    /*
-     =================
-     R_CleanupTriangles
-
-     FIXME: allow createFlat and createSmooth normals, as well as explicit
-     =================
-     */private static int DBG_R_CleanupTriangles = 0;
     public static void R_CleanupTriangles(srfTriangles_s tri, boolean createNormals, boolean identifySilEdges, boolean useUnsmoothedTangents) {
         DBG_R_CleanupTriangles++;
         R_RangeCheckIndexes(tri);
@@ -2193,15 +2014,15 @@ public class tr_trisurf {
         R_CreateSilIndexes(tri);
 
 //	R_RemoveDuplicatedTriangles( tri );	// this may remove valid overlapped transparent triangles
-        
+
         R_RemoveDegenerateTriangles(tri);
 
         R_TestDegenerateTextureSpace(tri);
 
 //	R_RemoveUnusedVerts( tri );
-        
+
         if (identifySilEdges) {
-            R_IdentifySilEdges(tri, true);	// assume it is non-deformable, and omit coplanar edges
+            R_IdentifySilEdges(tri, true);    // assume it is non-deformable, and omit coplanar edges
         }
 
         // bust vertexes that share a mirrored edge into separate vertexes
@@ -2209,7 +2030,7 @@ public class tr_trisurf {
 
         // optimize the index order (not working?)
 //	R_OrderIndexes( tri.numIndexes, tri.indexes );
-        
+
         R_CreateDupVerts(tri);
 
         R_BoundTriSurf(tri);
@@ -2224,14 +2045,6 @@ public class tr_trisurf {
             R_DeriveTangents(tri);
         }
     }
-
-    /*
-     ===================================================================================
-
-     DEFORMED SURFACES
-
-     ===================================================================================
-     */
 
     /*
      ===================
@@ -2264,10 +2077,10 @@ public class tr_trisurf {
 //	R_RemoveDuplicatedTriangles( &tri );
 //	R_RemoveDegenerateTriangles( &tri );
 //	R_RemoveUnusedVerts( &tri );
-        R_IdentifySilEdges(tri, false);			// we cannot remove coplanar edges, because
+        R_IdentifySilEdges(tri, false);            // we cannot remove coplanar edges, because
         // they can deform to silhouettes
 
-        R_DuplicateMirroredVertexes(tri);		// split mirror points into multiple points
+        R_DuplicateMirroredVertexes(tri);        // split mirror points into multiple points
 
         R_CreateDupVerts(tri);
 
@@ -2335,10 +2148,10 @@ public class tr_trisurf {
 //	R_RemoveDuplicatedTriangles( &tri );
 //	R_RemoveDegenerateTriangles( &tri );
 //	R_RemoveUnusedVerts( &tri );
-        R_IdentifySilEdges(tri, false);			// we cannot remove coplanar edges, because
+        R_IdentifySilEdges(tri, false);            // we cannot remove coplanar edges, because
         //                                              // they can deform to silhouettes
 
-        R_DuplicateMirroredVertexes(tri);		// split mirror points into multiple points
+        R_DuplicateMirroredVertexes(tri);        // split mirror points into multiple points
 
         R_CreateDupVerts(tri);
 
@@ -2449,6 +2262,14 @@ public class tr_trisurf {
         return newArray;
     }
 
+    /*
+     ===================================================================================
+
+     DEFORMED SURFACES
+
+     ===================================================================================
+     */
+
     private static int[] Resize(int[] indexes, int numIndexes) {
         if (indexes == null) {
             return new int[numIndexes];
@@ -2464,5 +2285,172 @@ public class tr_trisurf {
         System.arraycopy(indexes, 0, newIndexes, 0, size);
 
         return newIndexes;
+    }
+
+    /*
+     ===============
+     R_ShowTriMemory_f
+     ===============
+     */
+    @Deprecated
+    public static class R_ShowTriSurfMemory_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new R_ShowTriSurfMemory_f();
+
+        private R_ShowTriSurfMemory_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+//            common.Printf("%6d kB in %d triangle surfaces\n",
+//                    (srfTrianglesAllocator.GetAllocCount() /* sizeof( srfTriangles_t )*/) >> 10,
+//                    srfTrianglesAllocator.GetAllocCount());
+//
+//            common.Printf("%6d kB vertex memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triVertexAllocator.GetBaseBlockMemory() >> 10, triVertexAllocator.GetFreeBlockMemory() >> 10,
+//                    triVertexAllocator.GetNumFreeBlocks(), triVertexAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB index memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triIndexAllocator.GetBaseBlockMemory() >> 10, triIndexAllocator.GetFreeBlockMemory() >> 10,
+//                    triIndexAllocator.GetNumFreeBlocks(), triIndexAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB shadow vert memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triShadowVertexAllocator.GetBaseBlockMemory() >> 10, triShadowVertexAllocator.GetFreeBlockMemory() >> 10,
+//                    triShadowVertexAllocator.GetNumFreeBlocks(), triShadowVertexAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB tri plane memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triPlaneAllocator.GetBaseBlockMemory() >> 10, triPlaneAllocator.GetFreeBlockMemory() >> 10,
+//                    triPlaneAllocator.GetNumFreeBlocks(), triPlaneAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB sil index memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triSilIndexAllocator.GetBaseBlockMemory() >> 10, triSilIndexAllocator.GetFreeBlockMemory() >> 10,
+//                    triSilIndexAllocator.GetNumFreeBlocks(), triSilIndexAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB sil edge memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triSilEdgeAllocator.GetBaseBlockMemory() >> 10, triSilEdgeAllocator.GetFreeBlockMemory() >> 10,
+//                    triSilEdgeAllocator.GetNumFreeBlocks(), triSilEdgeAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB dominant tri memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triDominantTrisAllocator.GetBaseBlockMemory() >> 10, triDominantTrisAllocator.GetFreeBlockMemory() >> 10,
+//                    triDominantTrisAllocator.GetNumFreeBlocks(), triDominantTrisAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB mirror vert memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triMirroredVertAllocator.GetBaseBlockMemory() >> 10, triMirroredVertAllocator.GetFreeBlockMemory() >> 10,
+//                    triMirroredVertAllocator.GetNumFreeBlocks(), triMirroredVertAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB dup vert memory (%d kB free in %d blocks, %d empty base blocks)\n",
+//                    triDupVertAllocator.GetBaseBlockMemory() >> 10, triDupVertAllocator.GetFreeBlockMemory() >> 10,
+//                    triDupVertAllocator.GetNumFreeBlocks(), triDupVertAllocator.GetNumEmptyBaseBlocks());
+//
+//            common.Printf("%6d kB total triangle memory\n",
+//                    (srfTrianglesAllocator.GetAllocCount() /* sizeof( srfTriangles_t )*/ + triVertexAllocator.GetBaseBlockMemory()
+//                    + triIndexAllocator.GetBaseBlockMemory()
+//                    + triShadowVertexAllocator.GetBaseBlockMemory()
+//                    + triPlaneAllocator.GetBaseBlockMemory()
+//                    + triSilIndexAllocator.GetBaseBlockMemory()
+//                    + triSilEdgeAllocator.GetBaseBlockMemory()
+//                    + triDominantTrisAllocator.GetBaseBlockMemory()
+//                    + triMirroredVertAllocator.GetBaseBlockMemory()
+//                    + triDupVertAllocator.GetBaseBlockMemory()) >> 10);
+        }
+    }
+
+    /*
+     =================
+     SilEdgeSort
+     =================
+     */
+    public static class SilEdgeSort implements cmp_t<silEdge_t> {
+
+        @Override
+        public int compare(silEdge_t a, silEdge_t b) {
+            if (a.p1 < b.p1) {
+                return -1;
+            }
+            if (a.p1 > b.p1) {
+                return 1;
+            }
+            if (a.p2 < b.p2) {
+                return -1;//TODO:returning 1 is like true, 0 false...what is -1 then?
+            }
+            if (a.p2 > b.p2) {
+                return 1;
+            }
+            return 0;
+        }
+    }
+
+    /*
+     ==================
+     R_DeriveFaceTangents
+     ==================
+     */
+    public static class faceTangents_t {
+
+        boolean degenerate;
+        boolean negativePolarity;
+        idVec3[] tangents = new idVec3[2];
+
+        static faceTangents_t[] generateArray(final int length) {
+            return Stream.
+                    generate(faceTangents_t::new).
+                    limit(length).
+                    toArray(faceTangents_t[]::new);
+        }
+    }
+
+    /*
+     ===================
+     R_DuplicateMirroredVertexes
+
+     Modifies the surface to bust apart any verts that are shared by both positive and
+     negative texture polarities, so tangent space smoothing at the vertex doesn't
+     degenerate.
+
+     This will create some identical vertexes (which will eventually get different tangent
+     vectors), so never optimize the resulting mesh, or it will get the mirrored edges back.
+
+     Reallocates tri.verts and changes tri.indexes in place
+     Silindexes are unchanged by this.
+
+     sets mirroredVerts and mirroredVerts[]
+
+     ===================
+     */
+    static class tangentVert_t {
+
+        final boolean[] polarityUsed = new boolean[2];
+        int negativeRemap;
+    }
+
+    /*
+     ===================
+     R_BuildDominantTris
+
+     Find the largest triangle that uses each vertex
+     ===================
+     */
+    static class indexSort_t {
+
+        int faceNum;
+        int vertexNum;
+    }
+
+    static class IndexSort implements cmp_t<indexSort_t> {
+
+        @Override
+        public int compare(indexSort_t a, indexSort_t b) {
+            if (a.vertexNum < b.vertexNum) {
+                return -1;
+            }
+            if (a.vertexNum > b.vertexNum) {
+                return 1;
+            }
+            return 0;
+        }
     }
 }

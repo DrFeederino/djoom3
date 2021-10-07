@@ -1,50 +1,92 @@
 package neo.Renderer;
 
+import neo.Renderer.Image.GeneratorFunction;
+import neo.Renderer.Image.idImage;
+import neo.Renderer.Model.srfTriangles_s;
+import neo.TempDump.CPP_class.Pointer;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.cmdFunction_t;
+import neo.framework.File_h.idFile;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.geometry.DrawVert.idDrawVert;
+import neo.idlib.math.Vector.idVec3;
+import org.lwjgl.BufferUtils;
+
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
-import neo.Renderer.Image.GeneratorFunction;
+
 import static neo.Renderer.Image.globalImages;
-import neo.Renderer.Image.idImage;
 import static neo.Renderer.Image.textureDepth_t.TD_HIGH_QUALITY;
 import static neo.Renderer.Image_files.R_WriteTGA;
 import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
 import static neo.Renderer.Material.textureRepeat_t.TR_REPEAT;
 import static neo.Renderer.MegaTexture.megaTextureHeader_t.ReadDdsFileHeader_t;
 import static neo.Renderer.MegaTexture.megaTextureHeader_t.WriteDdsFileHeader_t;
-import neo.Renderer.Model.srfTriangles_s;
 import static neo.Renderer.qgl.qglProgramLocalParameter4fvARB;
 import static neo.Renderer.qgl.qglTexSubImage2D;
 import static neo.Renderer.tr_backend.GL_SelectTexture;
-import neo.TempDump.CPP_class.Pointer;
-
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_RENDERER;
-import neo.framework.CVarSystem.idCVar;
-import neo.framework.CmdSystem.cmdFunction_t;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.Common.common;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_CUR;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_SET;
-import neo.framework.File_h.idFile;
-
 import static neo.framework.Session.session;
-import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.geometry.DrawVert.idDrawVert;
-import neo.idlib.math.Vector.idVec3;
-import org.lwjgl.BufferUtils;
 import static org.lwjgl.opengl.ARBVertexProgram.GL_VERTEX_PROGRAM_ARB;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
  */
 public class MegaTexture {
+
+    static final int MAX_LEVELS = 12;
+
+    static final int MAX_LEVEL_WIDTH = 512;
+    static final int MAX_MEGA_CHANNELS = 3;        // normal, diffuse, specular
+    static final int TILE_PER_LEVEL = 4;
+    static final int TILE_SIZE = MAX_LEVEL_WIDTH / TILE_PER_LEVEL;
+    static final short[][] colors/*[8][4]*/ = {
+            {0, 0, 0, 55},
+            {255, 0, 0, 255},
+            {0, 255, 0, 255},
+            {255, 255, 0, 255},
+            {0, 0, 255, 255},
+            {255, 0, 255, 255},
+            {0, 255, 255, 255},
+            {255, 255, 255, 255}
+    };
+    static fillColors fillColor = new fillColors();
+
+    /*
+
+     allow sparse population of the upper detail tiles
+
+     */
+    static int RoundDownToPowerOfTwo(int num) {
+        int pot;
+        for (pot = 1; (pot * 2) <= num; pot <<= 1) {
+        }
+        return pot;
+    }
+
+    static byte ReadByte(idFile f) {
+        ByteBuffer b = ByteBuffer.allocate(1);
+
+        f.Read(b, 1);
+        return b.get();
+    }
+
+    static short ReadShort(idFile f) {
+        ByteBuffer b = ByteBuffer.allocate(2);
+
+        f.Read(b, 2);
+
+//        return (short) (b[0] + (b[1] << 8));
+        return b.getShort();
+    }
 
     static class idTextureTile {
 
@@ -54,12 +96,7 @@ public class MegaTexture {
 
         public int x;
         public int y;
-    };
-    static final int TILE_PER_LEVEL = 4;
-    static final int MAX_MEGA_CHANNELS = 3;		// normal, diffuse, specular
-    static final int MAX_LEVELS = 12;
-    static final int MAX_LEVEL_WIDTH = 512;
-    static final int TILE_SIZE = MAX_LEVEL_WIDTH / TILE_PER_LEVEL;
+    }
 
     static class idTextureLevel {
 
@@ -70,17 +107,16 @@ public class MegaTexture {
                 + Integer.SIZE
                 + Pointer.SIZE//idImage * image
                 + (idTextureTile.SIZE * TILE_PER_LEVEL * TILE_PER_LEVEL);
-
-        public idMegaTexture mega;
-//
-        public int tileOffset;
-        public int tilesWide;
-        public int tilesHigh;
-//
+        //
         public idImage image;
+        public idMegaTexture mega;
         public idTextureTile[][] tileMap = new idTextureTile[TILE_PER_LEVEL][TILE_PER_LEVEL];
-//
-        private FloatBuffer parms = BufferUtils.createFloatBuffer(4);
+        //
+        public int tileOffset;
+        public int tilesHigh;
+        public int tilesWide;
+        //
+        private final FloatBuffer parms = BufferUtils.createFloatBuffer(4);
 //
 
         /*
@@ -232,15 +268,15 @@ public class MegaTexture {
                 }
             }
         }
-    };
+    }
 
     static class megaTextureHeader_t implements Serializable {
 
         public static final transient int BYTES = Integer.BYTES * 3;
 
         int tileSize;
-        int tilesWide;
         int tilesHigh;
+        int tilesWide;
 
         public static ByteBuffer ReadDdsFileHeader_t() {
             return ByteBuffer.allocate(BYTES);
@@ -260,7 +296,7 @@ public class MegaTexture {
 
             return buffer;
         }
-    };
+    }
 
     public static class idMegaTexture {
 
@@ -272,26 +308,178 @@ public class MegaTexture {
                 + Integer.SIZE
                 + (idTextureLevel.SIZE * MAX_LEVELS)
                 + megaTextureHeader_t.BYTES;
-
-        private idFile fileHandle;
-        //
-        private srfTriangles_s currentTriMapping;
-        //
-        private idVec3 currentViewOrigin;
-        //
-        private final float[][] localViewToTextureCenter = new float[2][4];
-        //
-        private int numLevels;
-        private final idTextureLevel[] levels = new idTextureLevel[MAX_LEVELS];				// 0 is the highest resolution
-        private megaTextureHeader_t header;
+        private static final FloatBuffer parms/*[4]*/ = BufferUtils.createFloatBuffer(4); // no contribution
         //
         private static final idCVar r_megaTextureLevel = new idCVar("r_megaTextureLevel", "0", CVAR_RENDERER | CVAR_INTEGER, "draw only a specific level");
         private static final idCVar r_showMegaTexture = new idCVar("r_showMegaTexture", "0", CVAR_RENDERER | CVAR_BOOL, "display all the level images");
         private static final idCVar r_showMegaTextureLabels = new idCVar("r_showMegaTextureLabels", "0", CVAR_RENDERER | CVAR_BOOL, "draw colored blocks in each tile");
         private static final idCVar r_skipMegaTexture = new idCVar("r_skipMegaTexture", "0", CVAR_RENDERER | CVAR_INTEGER, "only use the lowest level image");
         private static final idCVar r_terrainScale = new idCVar("r_terrainScale", "3", CVAR_RENDERER | CVAR_INTEGER, "vertically scale USGS data");
+
+        static {
+            parms.put(new float[]{-2, -2, 0, 1}).rewind();
+        }
+
+        private final idTextureLevel[] levels = new idTextureLevel[MAX_LEVELS];                // 0 is the highest resolution
+        //
+        private final float[][] localViewToTextureCenter = new float[2][4];
+        //
+        private srfTriangles_s currentTriMapping;
+        //
+        private idVec3 currentViewOrigin;
+        private idFile fileHandle;
         //
         //
+        private megaTextureHeader_t header;
+        //
+        private int numLevels;
+
+        private static void GenerateMegaMipMaps(megaTextureHeader_t header, idFile outFile) {
+            outFile.Flush();
+
+            // out fileSystem doesn't allow read / write access...
+            idFile inFile = fileSystem.OpenFileRead(outFile.GetName());
+
+            int tileOffset = 1;
+            int width = header.tilesWide;
+            int height = header.tilesHigh;
+
+            int tileSize = header.tileSize * header.tileSize * 4;
+            byte[] oldBlock = new byte[tileSize];
+            byte[] newBlock = new byte[tileSize];
+
+            while (width > 1 || height > 1) {
+                int newHeight = (height + 1) >> 1;
+                if (newHeight < 1) {
+                    newHeight = 1;
+                }
+                int newWidth = (width + 1) >> 1;
+                if (width < 1) {
+                    width = 1;
+                }
+                common.Printf("generating %d x %d block mip level\n", newWidth, newHeight);
+
+                int tileNum;
+
+                for (int y = 0; y < newHeight; y++) {
+                    common.Printf("row %d\n", y);
+                    session.UpdateScreen();
+
+                    for (int x = 0; x < newWidth; x++) {
+                        // mip map four original blocks down into a single new block
+                        for (int yy = 0; yy < 2; yy++) {
+                            for (int xx = 0; xx < 2; xx++) {
+                                int tx = x * 2 + xx;
+                                int ty = y * 2 + yy;
+
+                                if (tx > width || ty > height) {
+                                    // off edge, zero fill
+//							memset( newBlock, 0, sizeof( newBlock ) );
+                                } else {
+                                    tileNum = tileOffset + ty * width + tx;
+                                    inFile.Seek(tileNum * tileSize, FS_SEEK_SET);
+                                    inFile.Read(ByteBuffer.wrap(oldBlock), tileSize);
+                                }
+                                // mip map the new pixels
+                                for (int yyy = 0; yyy < TILE_SIZE / 2; yyy++) {
+                                    for (int xxx = 0; xxx < TILE_SIZE / 2; xxx++) {
+                                        final int in = (yyy * 2 * TILE_SIZE + xxx * 2) * 4;
+                                        final int out = (((TILE_SIZE / 2 * yy) + yyy) * TILE_SIZE + (TILE_SIZE / 2 * xx) + xxx) * 4;
+                                        newBlock[out + 0] = (byte) ((oldBlock[in + 0] + oldBlock[in + 4] + oldBlock[in + 0 + TILE_SIZE * 4] + oldBlock[in + 4 + TILE_SIZE * 4]) >> 2);
+                                        newBlock[out + 1] = (byte) ((oldBlock[in + 1] + oldBlock[in + 5] + oldBlock[in + 1 + TILE_SIZE * 4] + oldBlock[in + 5 + TILE_SIZE * 4]) >> 2);
+                                        newBlock[out + 2] = (byte) ((oldBlock[in + 2] + oldBlock[in + 6] + oldBlock[in + 2 + TILE_SIZE * 4] + oldBlock[in + 6 + TILE_SIZE * 4]) >> 2);
+                                        newBlock[out + 3] = (byte) ((oldBlock[in + 3] + oldBlock[in + 7] + oldBlock[in + 3 + TILE_SIZE * 4] + oldBlock[in + 7 + TILE_SIZE * 4]) >> 2);
+                                    }
+                                }
+
+                                // write the block out
+                                tileNum = tileOffset + width * height + y * newWidth + x;
+                                outFile.Seek(tileNum * tileSize, FS_SEEK_SET);
+                                outFile.Write(ByteBuffer.wrap(newBlock), tileSize);
+
+                            }
+                        }
+                    }
+                }
+                tileOffset += width * height;
+                width = newWidth;
+                height = newHeight;
+            }
+
+//	delete inFile;
+        }
+
+        /*
+         ====================
+         GenerateMegaPreview
+
+         Make a 2k x 2k preview image for a mega texture that can be used in modeling programs
+         ====================
+         */
+        private static void GenerateMegaPreview(final String fileName) {
+            idFile fileHandle = fileSystem.OpenFileRead(fileName);
+            if (null == fileHandle) {
+                common.Printf("idMegaTexture: failed to open %s\n", fileName);
+                return;
+            }
+
+            idStr outName = new idStr(fileName);
+            outName.StripFileExtension();
+            outName.oPluSet("_preview.tga");
+
+            common.Printf("Creating %s.\n", outName.toString());
+
+            megaTextureHeader_t header;
+            ByteBuffer headerBuffer = ReadDdsFileHeader_t();
+
+            fileHandle.Read(headerBuffer);
+            header = ReadDdsFileHeader_t(headerBuffer);
+
+            if (header.tileSize < 64 || header.tilesWide < 1 || header.tilesHigh < 1) {
+                common.Printf("idMegaTexture: bad header on %s\n", fileName);
+                return;
+            }
+
+            int tileSize = header.tileSize;
+            int width = header.tilesWide;
+            int height = header.tilesHigh;
+            int tileOffset = 1;
+            int tileBytes = tileSize * tileSize * 4;
+            // find the level that fits
+            while (width * tileSize > 2048 || height * tileSize > 2048) {
+                tileOffset += width * height;
+                width >>= 1;
+                if (width < 1) {
+                    width = 1;
+                }
+                height >>= 1;
+                if (height < 1) {
+                    height = 1;
+                }
+            }
+
+            ByteBuffer pic = ByteBuffer.allocate(width * height * tileBytes);// R_StaticAlloc(width * height * tileBytes);
+            ByteBuffer oldBlock = ByteBuffer.allocate(tileBytes);
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int tileNum = tileOffset + y * width + x;
+                    fileHandle.Seek(tileNum * tileBytes, FS_SEEK_SET);
+                    fileHandle.Read(oldBlock, tileBytes);
+
+                    for (int yy = 0; yy < tileSize; yy++) {
+//				memcpy( pic + ( ( y * tileSize + yy ) * width * tileSize + x * tileSize  ) * 4,
+//					oldBlock + yy * tileSize * 4, tileSize * 4 );
+                        pic.position(((y * tileSize + yy) * width * tileSize + x * tileSize) * 4);
+                        pic.put(oldBlock.array(), yy * tileSize * 4, tileSize * 4);
+                    }
+                }
+            }
+
+            R_WriteTGA(outName.toString(), pic, width * tileSize, height * tileSize, false);
+
+//            R_StaticFree(pic);
+//	delete fileHandle;
+        }
 
         public boolean InitFromMegaFile(final String fileBase) {
             idStr name = new idStr("megaTextures/" + fileBase);
@@ -321,7 +509,7 @@ public class MegaTexture {
             width = header.tilesWide;
             height = header.tilesHigh;
 
-            int tileOffset = 1;					// just past the header
+            int tileOffset = 1;                    // just past the header
 
 //	memset( levels, 0, sizeof( levels ) );
             Arrays.fill(levels, 0);
@@ -332,7 +520,7 @@ public class MegaTexture {
                 level.tileOffset = tileOffset;
                 level.tilesWide = width;
                 level.tilesHigh = height;
-                level.parms.put(0, -1);		// initially mask everything
+                level.parms.put(0, -1);        // initially mask everything
                 level.parms.put(1, 0);
                 level.parms.put(2, 0);
                 level.parms.put(3, (float) width / TILE_PER_LEVEL);
@@ -373,7 +561,7 @@ public class MegaTexture {
          This is not very robust, but works for rectangular grids
          ====================
          */
-        public void SetMappingForSurface(final srfTriangles_s tri) {	// analyzes xyz and st to create a mapping
+        public void SetMappingForSurface(final srfTriangles_s tri) {    // analyzes xyz and st to create a mapping
             if (tri.equals(currentTriMapping)) {
                 return;
             }
@@ -425,13 +613,8 @@ public class MegaTexture {
                 localViewToTextureCenter[i][3] = -c;
             }
         }
-        private static final FloatBuffer parms/*[4]*/ = BufferUtils.createFloatBuffer(4); // no contribution
 
-        static {
-            parms.put(new float[]{-2, -2, 0, 1}).rewind();
-        }
-
-        public void BindForViewOrigin(final idVec3 viewOrigin) {	// binds images and sets program parameters
+        public void BindForViewOrigin(final idVec3 viewOrigin) {    // binds images and sets program parameters
 
             SetViewOrigin(viewOrigin);
 
@@ -448,7 +631,7 @@ public class MegaTexture {
 
                     qglProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, i, parms);
                 } else {
-                    idTextureLevel level = levels[ numLevels - 1 - i];
+                    idTextureLevel level = levels[numLevels - 1 - i];
 
                     if (r_showMegaTexture.GetBool()) {
                         if ((i & 1) == 1) {
@@ -477,6 +660,9 @@ public class MegaTexture {
             qglProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, 8, parms);
         }
 
+        //// private:
+//// friend class idTextureLevel;
+
         /*
          ====================
          Unbind
@@ -485,10 +671,45 @@ public class MegaTexture {
          need tracking
          ====================
          */
-        public void Unbind() {								// removes texture bindings
+        public void Unbind() {                                // removes texture bindings
             for (int i = 0; i < numLevels; i++) {
                 GL_SelectTexture(1 + i);
                 globalImages.BindNull();
+            }
+        }
+
+        private void SetViewOrigin(final idVec3 viewOrigin) {
+            if (r_showMegaTextureLabels.IsModified()) {
+                r_showMegaTextureLabels.ClearModified();
+                currentViewOrigin.oSet(0, viewOrigin.oGet(0) + 0.1f);    // force a change
+                for (int i = 0; i < numLevels; i++) {
+                    levels[i].Invalidate();
+                }
+            }
+
+            if (viewOrigin == currentViewOrigin) {
+                return;
+            }
+            if (r_skipMegaTexture.GetBool()) {
+                return;
+            }
+
+            currentViewOrigin = viewOrigin;
+
+            float[] texCenter = new float[2];
+
+            // convert the viewOrigin to a texture center, which will
+            // be a different conversion for each megaTexture
+            for (int i = 0; i < 2; i++) {
+                texCenter[i]
+                        = viewOrigin.oGet(0) * localViewToTextureCenter[i][0]
+                        + viewOrigin.oGet(1) * localViewToTextureCenter[i][1]
+                        + viewOrigin.oGet(2) * localViewToTextureCenter[i][2]
+                        + localViewToTextureCenter[i][3];
+            }
+
+            for (int i = 0; i < numLevels; i++) {
+                levels[i].UpdateForCenter(texCenter);
             }
         }
 
@@ -662,7 +883,7 @@ public class MegaTexture {
                         for (row = 0; row < TILE_SIZE; row++) {
                             pixbuf = row * columns * 4;
                             breakOut:
-                            for (column = 0; column < columns;) {
+                            for (column = 0; column < columns; ) {
                                 packetHeader = ReadByte(file);
                                 packetSize = (byte) (1 + (packetHeader & 0x7f));
                                 if ((packetHeader & 0x80) == 0x80) {        // run-length packet
@@ -766,205 +987,8 @@ public class MegaTexture {
 //	}
 //}
             }
-        };
-//// private:
-//// friend class idTextureLevel;
-
-        private void SetViewOrigin(final idVec3 viewOrigin) {
-            if (r_showMegaTextureLabels.IsModified()) {
-                r_showMegaTextureLabels.ClearModified();
-                currentViewOrigin.oSet(0, viewOrigin.oGet(0) + 0.1f);	// force a change
-                for (int i = 0; i < numLevels; i++) {
-                    levels[i].Invalidate();
-                }
-            }
-
-            if (viewOrigin == currentViewOrigin) {
-                return;
-            }
-            if (r_skipMegaTexture.GetBool()) {
-                return;
-            }
-
-            currentViewOrigin = viewOrigin;
-
-            float[] texCenter = new float[2];
-
-            // convert the viewOrigin to a texture center, which will
-            // be a different conversion for each megaTexture
-            for (int i = 0; i < 2; i++) {
-                texCenter[i]
-                        = viewOrigin.oGet(0) * localViewToTextureCenter[i][0]
-                        + viewOrigin.oGet(1) * localViewToTextureCenter[i][1]
-                        + viewOrigin.oGet(2) * localViewToTextureCenter[i][2]
-                        + localViewToTextureCenter[i][3];
-            }
-
-            for (int i = 0; i < numLevels; i++) {
-                levels[i].UpdateForCenter(texCenter);
-            }
         }
-
-        private static void GenerateMegaMipMaps(megaTextureHeader_t header, idFile outFile) {
-            outFile.Flush();
-
-            // out fileSystem doesn't allow read / write access...
-            idFile inFile = fileSystem.OpenFileRead(outFile.GetName());
-
-            int tileOffset = 1;
-            int width = header.tilesWide;
-            int height = header.tilesHigh;
-
-            int tileSize = header.tileSize * header.tileSize * 4;
-            byte[] oldBlock = new byte[tileSize];
-            byte[] newBlock = new byte[tileSize];
-
-            while (width > 1 || height > 1) {
-                int newHeight = (height + 1) >> 1;
-                if (newHeight < 1) {
-                    newHeight = 1;
-                }
-                int newWidth = (width + 1) >> 1;
-                if (width < 1) {
-                    width = 1;
-                }
-                common.Printf("generating %d x %d block mip level\n", newWidth, newHeight);
-
-                int tileNum;
-
-                for (int y = 0; y < newHeight; y++) {
-                    common.Printf("row %d\n", y);
-                    session.UpdateScreen();
-
-                    for (int x = 0; x < newWidth; x++) {
-                        // mip map four original blocks down into a single new block
-                        for (int yy = 0; yy < 2; yy++) {
-                            for (int xx = 0; xx < 2; xx++) {
-                                int tx = x * 2 + xx;
-                                int ty = y * 2 + yy;
-
-                                if (tx > width || ty > height) {
-                                    // off edge, zero fill
-//							memset( newBlock, 0, sizeof( newBlock ) );
-                                } else {
-                                    tileNum = tileOffset + ty * width + tx;
-                                    inFile.Seek(tileNum * tileSize, FS_SEEK_SET);
-                                    inFile.Read(ByteBuffer.wrap(oldBlock), tileSize);
-                                }
-                                // mip map the new pixels
-                                for (int yyy = 0; yyy < TILE_SIZE / 2; yyy++) {
-                                    for (int xxx = 0; xxx < TILE_SIZE / 2; xxx++) {
-                                        final int in = (yyy * 2 * TILE_SIZE + xxx * 2) * 4;
-                                        final int out = (((TILE_SIZE / 2 * yy) + yyy) * TILE_SIZE + (TILE_SIZE / 2 * xx) + xxx) * 4;
-                                        newBlock[out + 0] = (byte) ((oldBlock[in + 0] + oldBlock[in + 4] + oldBlock[in + 0 + TILE_SIZE * 4] + oldBlock[in + 4 + TILE_SIZE * 4]) >> 2);
-                                        newBlock[out + 1] = (byte) ((oldBlock[in + 1] + oldBlock[in + 5] + oldBlock[in + 1 + TILE_SIZE * 4] + oldBlock[in + 5 + TILE_SIZE * 4]) >> 2);
-                                        newBlock[out + 2] = (byte) ((oldBlock[in + 2] + oldBlock[in + 6] + oldBlock[in + 2 + TILE_SIZE * 4] + oldBlock[in + 6 + TILE_SIZE * 4]) >> 2);
-                                        newBlock[out + 3] = (byte) ((oldBlock[in + 3] + oldBlock[in + 7] + oldBlock[in + 3 + TILE_SIZE * 4] + oldBlock[in + 7 + TILE_SIZE * 4]) >> 2);
-                                    }
-                                }
-
-                                // write the block out
-                                tileNum = tileOffset + width * height + y * newWidth + x;
-                                outFile.Seek(tileNum * tileSize, FS_SEEK_SET);
-                                outFile.Write(ByteBuffer.wrap(newBlock), tileSize);
-
-                            }
-                        }
-                    }
-                }
-                tileOffset += width * height;
-                width = newWidth;
-                height = newHeight;
-            }
-
-//	delete inFile;
-        }
-
-        /*
-         ====================
-         GenerateMegaPreview
-
-         Make a 2k x 2k preview image for a mega texture that can be used in modeling programs
-         ====================
-         */
-        private static void GenerateMegaPreview(final String fileName) {
-            idFile fileHandle = fileSystem.OpenFileRead(fileName);
-            if (null == fileHandle) {
-                common.Printf("idMegaTexture: failed to open %s\n", fileName);
-                return;
-            }
-
-            idStr outName = new idStr(fileName);
-            outName.StripFileExtension();
-            outName.oPluSet("_preview.tga");
-
-            common.Printf("Creating %s.\n", outName.toString());
-
-            megaTextureHeader_t header;
-            ByteBuffer headerBuffer = ReadDdsFileHeader_t();
-
-            fileHandle.Read(headerBuffer);
-            header = ReadDdsFileHeader_t(headerBuffer);
-
-            if (header.tileSize < 64 || header.tilesWide < 1 || header.tilesHigh < 1) {
-                common.Printf("idMegaTexture: bad header on %s\n", fileName);
-                return;
-            }
-
-            int tileSize = header.tileSize;
-            int width = header.tilesWide;
-            int height = header.tilesHigh;
-            int tileOffset = 1;
-            int tileBytes = tileSize * tileSize * 4;
-            // find the level that fits
-            while (width * tileSize > 2048 || height * tileSize > 2048) {
-                tileOffset += width * height;
-                width >>= 1;
-                if (width < 1) {
-                    width = 1;
-                }
-                height >>= 1;
-                if (height < 1) {
-                    height = 1;
-                }
-            }
-
-            ByteBuffer pic = ByteBuffer.allocate(width * height * tileBytes);// R_StaticAlloc(width * height * tileBytes);
-            ByteBuffer oldBlock = ByteBuffer.allocate(tileBytes);
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int tileNum = tileOffset + y * width + x;
-                    fileHandle.Seek(tileNum * tileBytes, FS_SEEK_SET);
-                    fileHandle.Read(oldBlock, tileBytes);
-
-                    for (int yy = 0; yy < tileSize; yy++) {
-//				memcpy( pic + ( ( y * tileSize + yy ) * width * tileSize + x * tileSize  ) * 4,
-//					oldBlock + yy * tileSize * 4, tileSize * 4 );
-                        pic.position(((y * tileSize + yy) * width * tileSize + x * tileSize) * 4);
-                        pic.put(oldBlock.array(), yy * tileSize * 4, tileSize * 4);
-                    }
-                }
-            }
-
-            R_WriteTGA(outName.toString(), pic, width * tileSize, height * tileSize, false);
-
-//            R_StaticFree(pic);
-//	delete fileHandle;
-        }
-    };
-
-    /*
-
-     allow sparse population of the upper detail tiles
-
-     */
-    static int RoundDownToPowerOfTwo(int num) {
-        int pot;
-        for (pot = 1; (pot * 2) <= num; pot <<= 1) {
-        }
-        return pot;
     }
-    static fillColors fillColor = new fillColors();
 
     static class fillColors {
 
@@ -987,17 +1011,7 @@ public class MegaTexture {
             intVal &= ~down;
             intVal |= ((color & 0xFF) << index);
         }
-    };
-    static final short[][] colors/*[8][4]*/ = {
-                {0, 0, 0, 55},
-                {255, 0, 0, 255},
-                {0, 255, 0, 255},
-                {255, 255, 0, 255},
-                {0, 0, 255, 255},
-                {255, 0, 255, 255},
-                {0, 255, 255, 255},
-                {255, 255, 255, 255}
-            };
+    }
 
     static class R_EmptyLevelImage extends GeneratorFunction {
 
@@ -1022,31 +1036,15 @@ public class MegaTexture {
             // FIXME: this won't live past vid mode changes
             image.GenerateImage(data, MAX_LEVEL_WIDTH, MAX_LEVEL_WIDTH, TF_DEFAULT, false, TR_REPEAT, TD_HIGH_QUALITY);
         }
-    };
+    }
 
     //===================================================================================================
     static class _TargaHeader {
 
-        char id_length, colormap_type, image_type;
         short colormap_index, colormap_length;
         char colormap_size;
-        short x_origin, y_origin, width, height;
+        char id_length, colormap_type, image_type;
         char pixel_size, attributes;
-    };
-
-    static byte ReadByte(idFile f) {
-        ByteBuffer b = ByteBuffer.allocate(1);
-
-        f.Read(b, 1);
-        return b.get();
-    }
-
-    static short ReadShort(idFile f) {
-        ByteBuffer b = ByteBuffer.allocate(2);
-
-        f.Read(b, 2);
-
-//        return (short) (b[0] + (b[1] << 8));
-        return b.getShort();
+        short x_origin, y_origin, width, height;
     }
 }

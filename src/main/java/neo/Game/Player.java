@@ -1,40 +1,16 @@
 package neo.Game;
 
-import static java.lang.Math.atan2;
-import static java.lang.Math.ceil;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Stream;
-import static neo.CM.CollisionModel.CM_BOX_EPSILON;
-import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 import neo.CM.CollisionModel.contactInfo_t;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Vehicle;
 import neo.Game.AI.AAS.idAAS;
 import neo.Game.AI.AI.idAI;
-import static neo.Game.AFEntity.EV_Gibbed;
-import static neo.Game.AI.AI.talkState_t.TALK_OK;
 import neo.Game.Actor.idActor;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_LEGS;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_TORSO;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD;
 import neo.Game.Camera.idCamera;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_ActivateTargets;
-import static neo.Game.Entity.EV_Touch;
-import static neo.Game.Entity.TH_PHYSICS;
-import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idEntity;
-import static neo.Game.Entity.signalNum_t.SIG_TOUCH;
+import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameEdit.idDragEntity;
-import static neo.Game.GameSys.Class.EV_Remove;
-
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t0;
 import neo.Game.GameSys.Class.eventCallback_t1;
@@ -42,221 +18,107 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_armorProtection;
-import static neo.Game.GameSys.SysCvar.g_armorProtectionMP;
-import static neo.Game.GameSys.SysCvar.g_balanceTDM;
-import static neo.Game.GameSys.SysCvar.g_damageScale;
-import static neo.Game.GameSys.SysCvar.g_debugDamage;
-import static neo.Game.GameSys.SysCvar.g_debugMove;
-import static neo.Game.GameSys.SysCvar.g_dragEntity;
-import static neo.Game.GameSys.SysCvar.g_editEntityMode;
-import static neo.Game.GameSys.SysCvar.g_fov;
-import static neo.Game.GameSys.SysCvar.g_gun_x;
-import static neo.Game.GameSys.SysCvar.g_gun_y;
-import static neo.Game.GameSys.SysCvar.g_gun_z;
-import static neo.Game.GameSys.SysCvar.g_healthTakeAmt;
-import static neo.Game.GameSys.SysCvar.g_healthTakeLimit;
-import static neo.Game.GameSys.SysCvar.g_healthTakeTime;
-import static neo.Game.GameSys.SysCvar.g_knockback;
-import static neo.Game.GameSys.SysCvar.g_mpWeaponAngleScale;
-import static neo.Game.GameSys.SysCvar.g_showEnemies;
-import static neo.Game.GameSys.SysCvar.g_showHud;
-import static neo.Game.GameSys.SysCvar.g_showPlayerShadow;
-import static neo.Game.GameSys.SysCvar.g_showProjectilePct;
-import static neo.Game.GameSys.SysCvar.g_showviewpos;
-import static neo.Game.GameSys.SysCvar.g_skill;
-import static neo.Game.GameSys.SysCvar.g_stopTime;
-import static neo.Game.GameSys.SysCvar.g_testDeath;
-import static neo.Game.GameSys.SysCvar.g_useDynamicProtection;
-import static neo.Game.GameSys.SysCvar.g_viewNodalX;
-import static neo.Game.GameSys.SysCvar.g_viewNodalZ;
-import static neo.Game.GameSys.SysCvar.net_clientPredictGUI;
-import static neo.Game.GameSys.SysCvar.pm_airTics;
-import static neo.Game.GameSys.SysCvar.pm_bboxwidth;
-import static neo.Game.GameSys.SysCvar.pm_bobpitch;
-import static neo.Game.GameSys.SysCvar.pm_bobroll;
-import static neo.Game.GameSys.SysCvar.pm_bobup;
-import static neo.Game.GameSys.SysCvar.pm_crouchbob;
-import static neo.Game.GameSys.SysCvar.pm_crouchrate;
-import static neo.Game.GameSys.SysCvar.pm_crouchspeed;
-import static neo.Game.GameSys.SysCvar.pm_crouchviewheight;
-import static neo.Game.GameSys.SysCvar.pm_deadviewheight;
-import static neo.Game.GameSys.SysCvar.pm_jumpheight;
-import static neo.Game.GameSys.SysCvar.pm_maxviewpitch;
-import static neo.Game.GameSys.SysCvar.pm_minviewpitch;
-import static neo.Game.GameSys.SysCvar.pm_modelView;
-import static neo.Game.GameSys.SysCvar.pm_noclipspeed;
-import static neo.Game.GameSys.SysCvar.pm_normalheight;
-import static neo.Game.GameSys.SysCvar.pm_normalviewheight;
-import static neo.Game.GameSys.SysCvar.pm_runbob;
-import static neo.Game.GameSys.SysCvar.pm_runpitch;
-import static neo.Game.GameSys.SysCvar.pm_runroll;
-import static neo.Game.GameSys.SysCvar.pm_runspeed;
-import static neo.Game.GameSys.SysCvar.pm_spectatebbox;
-import static neo.Game.GameSys.SysCvar.pm_spectatespeed;
-import static neo.Game.GameSys.SysCvar.pm_stamina;
-import static neo.Game.GameSys.SysCvar.pm_staminarate;
-import static neo.Game.GameSys.SysCvar.pm_staminathreshold;
-import static neo.Game.GameSys.SysCvar.pm_stepsize;
-import static neo.Game.GameSys.SysCvar.pm_thirdPerson;
-import static neo.Game.GameSys.SysCvar.pm_thirdPersonAngle;
-import static neo.Game.GameSys.SysCvar.pm_thirdPersonClip;
-import static neo.Game.GameSys.SysCvar.pm_thirdPersonDeath;
-import static neo.Game.GameSys.SysCvar.pm_thirdPersonHeight;
-import static neo.Game.GameSys.SysCvar.pm_thirdPersonRange;
-import static neo.Game.GameSys.SysCvar.pm_usecylinder;
-import static neo.Game.GameSys.SysCvar.pm_walkbob;
-import static neo.Game.GameSys.SysCvar.pm_walkspeed;
-import static neo.Game.Game_local.MASK_DEADSOLID;
-import static neo.Game.Game_local.MASK_PLAYERSOLID;
-import static neo.Game.Game_local.MASK_SHOT_BOUNDINGBOX;
-import static neo.Game.Game_local.MASK_SHOT_RENDERMODEL;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.MAX_CLIENTS;
-import static neo.Game.Game_local.MAX_EVENT_PARAM_SIZE;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY2;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY3;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_DEMONIC;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_HEART;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ITEM;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_PDA;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_VOICE;
-import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
-import neo.Game.Game_local.idEntityPtr;
-import static neo.Game.Game_network.net_clientSelfSmoothing;
+import neo.Game.Game_local.*;
 import neo.Game.Item.idItem;
 import neo.Game.Misc.idLocationEntity;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_DM;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_TDM;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.SUDDENDEATH;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.WARMUP;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_Player.idPhysics_Player;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_DEAD;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_FREEZE;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_NOCLIP;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_NORMAL;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_SPECTATOR;
 import neo.Game.Physics.Physics_Player.waterLevel_t;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_FEET;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_HEAD;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_WAIST;
 import neo.Game.PlayerIcon.idPlayerIcon;
 import neo.Game.PlayerView.idPlayerView;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Program.idScriptBool;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.Game.Sound.SSF_GLOBAL;
-import static neo.Game.Sound.SSF_PRIVATE_SOUND;
-import static neo.Game.Weapon.AMMO_NUMTYPES;
-import static neo.Game.Weapon.LIGHTID_VIEW_MUZZLE_FLASH;
 import neo.Game.Weapon.idWeapon;
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_CORPSE;
-import static neo.Renderer.Material.CONTENTS_MONSTERCLIP;
-import static neo.Renderer.Material.SURF_NODAMAGE;
-import neo.Renderer.Material.idMaterial;
-import neo.Renderer.Material.shaderStage_t;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIME_OF_DEATH;
-import neo.Renderer.RenderWorld.guiPoint_t;
-import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_AIR;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderView_s;
+import neo.Renderer.Material.*;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.snd_shader.soundShaderParms_t;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atoi;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itob;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
-import static neo.framework.Async.NetworkSystem.networkSystem;
-import static neo.framework.CVarSystem.cvarSystem;
-import static neo.framework.Common.STRTABLE_ID;
-import static neo.framework.Common.STRTABLE_ID_LENGTH;
-import static neo.framework.Common.common;
-
 import neo.framework.BuildDefines;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.DeclManager.declType_t;
-import static neo.framework.DeclManager.declType_t.DECL_AUDIO;
-import static neo.framework.DeclManager.declType_t.DECL_EMAIL;
-import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
-import static neo.framework.DeclManager.declType_t.DECL_PDA;
-import static neo.framework.DeclManager.declType_t.DECL_VIDEO;
 import neo.framework.DeclPDA.idDeclAudio;
 import neo.framework.DeclPDA.idDeclEmail;
 import neo.framework.DeclPDA.idDeclPDA;
 import neo.framework.DeclPDA.idDeclVideo;
 import neo.framework.DeclSkin.idDeclSkin;
-import static neo.framework.UsercmdGen.BUTTON_ATTACK;
-import static neo.framework.UsercmdGen.BUTTON_MLOOK;
-import static neo.framework.UsercmdGen.BUTTON_RUN;
-import static neo.framework.UsercmdGen.BUTTON_SCORES;
-import static neo.framework.UsercmdGen.BUTTON_ZOOM;
-import static neo.framework.UsercmdGen.IMPULSE_0;
-import static neo.framework.UsercmdGen.IMPULSE_12;
-import static neo.framework.UsercmdGen.IMPULSE_13;
-import static neo.framework.UsercmdGen.IMPULSE_14;
-import static neo.framework.UsercmdGen.IMPULSE_15;
-import static neo.framework.UsercmdGen.IMPULSE_17;
-import static neo.framework.UsercmdGen.IMPULSE_18;
-import static neo.framework.UsercmdGen.IMPULSE_19;
-import static neo.framework.UsercmdGen.IMPULSE_20;
-import static neo.framework.UsercmdGen.IMPULSE_22;
-import static neo.framework.UsercmdGen.IMPULSE_28;
-import static neo.framework.UsercmdGen.IMPULSE_29;
-import static neo.framework.UsercmdGen.IMPULSE_40;
-import static neo.framework.UsercmdGen.UCF_IMPULSE_SEQUENCE;
-import neo.framework.UsercmdGen.usercmd_t;
+import neo.framework.UsercmdGen.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.colorBlack;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.idLib.sys;
 import neo.idlib.Text.Lexer.idLexer;
-import static neo.idlib.Text.Str.S_COLOR_GRAY;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
-import static neo.idlib.math.Angles.getAng_zero;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Interpolate.idInterpolate;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
-import static neo.idlib.math.Math_h.SHORT2ANGLE;
-import static neo.idlib.math.Math_h.Square;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
-import static neo.idlib.math.Vector.RAD2DEG;
-import static neo.idlib.math.Vector.getVec3_origin;
-import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec2;
-import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.*;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.UserInterface.idUserInterface;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static java.lang.Math.*;
+import static neo.CM.CollisionModel.CM_BOX_EPSILON;
+import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
+import static neo.Game.AFEntity.EV_Gibbed;
+import static neo.Game.AI.AI.talkState_t.TALK_OK;
+import static neo.Game.Animation.Anim.ANIMCHANNEL_LEGS;
+import static neo.Game.Animation.Anim.ANIMCHANNEL_TORSO;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD;
+import static neo.Game.Entity.*;
+import static neo.Game.Entity.signalNum_t.SIG_TOUCH;
+import static neo.Game.GameSys.Class.EV_Remove;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.*;
+import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
+import static neo.Game.Game_network.net_clientSelfSmoothing;
+import static neo.Game.MultiplayerGame.gameType_t.GAME_DM;
+import static neo.Game.MultiplayerGame.gameType_t.GAME_TDM;
+import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.SUDDENDEATH;
+import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.WARMUP;
+import static neo.Game.Physics.Physics_Player.pmtype_t.*;
+import static neo.Game.Physics.Physics_Player.waterLevel_t.*;
+import static neo.Game.Sound.SSF_GLOBAL;
+import static neo.Game.Sound.SSF_PRIVATE_SOUND;
+import static neo.Game.Weapon.AMMO_NUMTYPES;
+import static neo.Game.Weapon.LIGHTID_VIEW_MUZZLE_FLASH;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
+import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
+import static neo.Renderer.RenderWorld.*;
+import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_AIR;
+import static neo.TempDump.*;
+import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
+import static neo.framework.Async.NetworkSystem.networkSystem;
+import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.Common.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.*;
+import static neo.framework.UsercmdGen.*;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Lib.idLib.sys;
+import static neo.idlib.Text.Str.S_COLOR_GRAY;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Angles.getAng_zero;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.RAD2DEG;
+import static neo.idlib.math.Vector.*;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -264,6 +126,23 @@ import static neo.ui.UserInterface.uiManager;
  */
 public class Player {
 
+    public static final int ADRENALINE = 3;
+    //
+    public static final int ASYNC_PLAYER_INV_AMMO_BITS = idMath.BitsForInteger(999);    // 9 bits to cover the range [0, 999]
+    public static final int ASYNC_PLAYER_INV_CLIP_BITS = -7;       // -7 bits to cover the range [-1, 60]
+    public static final int BASE_HEARTRATE = 70;       // default
+    //
+// powerups - the "type" in item .def must match
+// enum {
+    public static final int BERSERK = 0;
+    //
+    public static final int DEAD_HEARTRATE = 0;        // fall to as you die
+    public static final int DEATH_VOLUME = 15;       // volume at death
+    public static final int DMG_VOLUME = 5;        // volume when taking damage
+    public static final int DYING_HEARTRATE = 30;       // used for volumen calc when dying/dead
+    public static final idEventDef EV_Player_DisableWeapon = new idEventDef("disableWeapon");
+    public static final idEventDef EV_Player_EnableWeapon = new idEventDef("enableWeapon");
+    public static final idEventDef EV_Player_ExitTeleporter = new idEventDef("exitTeleporter");
     /*
      ===============================================================================
 
@@ -272,89 +151,97 @@ public class Player {
 
      ===============================================================================
      */
-    public static final  idEventDef EV_Player_GetButtons        = new idEventDef("getButtons", null, 'd');
-    public static final  idEventDef EV_Player_GetMove           = new idEventDef("getMove", null, 'v');
-    public static final  idEventDef EV_Player_GetViewAngles     = new idEventDef("getViewAngles", null, 'v');
-    public static final  idEventDef EV_Player_StopFxFov         = new idEventDef("stopFxFov");
-    public static final  idEventDef EV_Player_EnableWeapon      = new idEventDef("enableWeapon");
-    public static final  idEventDef EV_Player_DisableWeapon     = new idEventDef("disableWeapon");
-    public static final  idEventDef EV_Player_GetCurrentWeapon  = new idEventDef("getCurrentWeapon", null, 's');
-    public static final  idEventDef EV_Player_GetPreviousWeapon = new idEventDef("getPreviousWeapon", null, 's');
-    public static final  idEventDef EV_Player_SelectWeapon      = new idEventDef("selectWeapon", "s");
-    public static final  idEventDef EV_Player_GetWeaponEntity   = new idEventDef("getWeaponEntity", null, 'e');
-    public static final  idEventDef EV_Player_OpenPDA           = new idEventDef("openPDA");
-    public static final  idEventDef EV_Player_InPDA             = new idEventDef("inPDA", null, 'd');
-    public static final  idEventDef EV_Player_ExitTeleporter    = new idEventDef("exitTeleporter");
-    public static final  idEventDef EV_Player_StopAudioLog      = new idEventDef("stopAudioLog");
-    public static final  idEventDef EV_Player_HideTip           = new idEventDef("hideTip");
-    public static final  idEventDef EV_Player_LevelTrigger      = new idEventDef("levelTrigger");
-    public static final  idEventDef EV_SpectatorTouch           = new idEventDef("spectatorTouch", "et");
-    public static final  idEventDef EV_Player_GetIdealWeapon    = new idEventDef("getIdealWeapon", null, 's');
+    public static final idEventDef EV_Player_GetButtons = new idEventDef("getButtons", null, 'd');
+    public static final idEventDef EV_Player_GetCurrentWeapon = new idEventDef("getCurrentWeapon", null, 's');
+    public static final idEventDef EV_Player_GetIdealWeapon = new idEventDef("getIdealWeapon", null, 's');
+    public static final idEventDef EV_Player_GetMove = new idEventDef("getMove", null, 'v');
+    public static final idEventDef EV_Player_GetPreviousWeapon = new idEventDef("getPreviousWeapon", null, 's');
+    public static final idEventDef EV_Player_GetViewAngles = new idEventDef("getViewAngles", null, 'v');
+    public static final idEventDef EV_Player_GetWeaponEntity = new idEventDef("getWeaponEntity", null, 'e');
+    public static final idEventDef EV_Player_HideTip = new idEventDef("hideTip");
+    public static final idEventDef EV_Player_InPDA = new idEventDef("inPDA", null, 'd');
+    public static final idEventDef EV_Player_LevelTrigger = new idEventDef("levelTrigger");
+    public static final idEventDef EV_Player_OpenPDA = new idEventDef("openPDA");
+    public static final idEventDef EV_Player_SelectWeapon = new idEventDef("selectWeapon", "s");
+    public static final idEventDef EV_Player_StopAudioLog = new idEventDef("stopAudioLog");
+    public static final idEventDef EV_Player_StopFxFov = new idEventDef("stopFxFov");
+    public static final idEventDef EV_SpectatorTouch = new idEventDef("spectatorTouch", "et");
+    public static final int FOCUS_GUI_TIME = 500;
+    public static final int FOCUS_TIME = 300;
     //
-    public static final  float      THIRD_PERSON_FOCUS_DISTANCE = 512.0f;
-    public static final  int        LAND_DEFLECT_TIME           = 150;
-    public static final  int        LAND_RETURN_TIME            = 300;
-    public static final  int        FOCUS_TIME                  = 300;
-    public static final  int        FOCUS_GUI_TIME              = 500;
-    //
-    public static final  int        MAX_WEAPONS                 = 16;
-    //
-    public static final  int        DEAD_HEARTRATE              = 0;        // fall to as you die
-    public static final  int        LOWHEALTH_HEARTRATE_ADJ     = 20;       //
-    public static final  int        DYING_HEARTRATE             = 30;       // used for volumen calc when dying/dead
-    public static final  int        BASE_HEARTRATE              = 70;       // default
-    public static final  int        ZEROSTAMINA_HEARTRATE       = 115;      // no stamina
-    public static final  int        MAX_HEARTRATE               = 130;      // maximum
-    public static final  int        ZERO_VOLUME                 = -40;      // volume at zero
-    public static final  int        DMG_VOLUME                  = 5;        // volume when taking damage
-    public static final  int        DEATH_VOLUME                = 15;       // volume at death
-    //
-    public static final  int        SAVING_THROW_TIME           = 5000;     // maximum one "saving throw" every five seconds
-    //
-    public static final  int        ASYNC_PLAYER_INV_AMMO_BITS  = idMath.BitsForInteger(999);    // 9 bits to cover the range [0, 999]
-    public static final  int        ASYNC_PLAYER_INV_CLIP_BITS  = -7;       // -7 bits to cover the range [-1, 60]
-    //
-    // distance between ladder rungs (actually is half that distance, but this sounds better)
-    public static final  int        LADDER_RUNG_DISTANCE        = 32;
+    public static final int HEALTHPULSE_TIME = 333;
     //
     // amount of health per dose from the health station
-    public static final  int        HEALTH_PER_DOSE             = 10;
+    public static final int HEALTH_PER_DOSE = 10;
+    public static final int INFLUENCE_LEVEL1 = 1;            // no gun or hud
+    public static final int INFLUENCE_LEVEL2 = 2;            // no gun, hud, movement
+    public static final int INFLUENCE_LEVEL3 = 3;            // slow player movement
+    // };
+//
+// influence levels
+// enum {
+    public static final int INFLUENCE_NONE = 0;            // none
+    public static final int INVISIBILITY = 1;
     //
-    // time before a weapon dropped to the floor disappears
-    public static final  int        WEAPON_DROP_TIME            = 20 * 1000;
-    //
-    // time before a next or prev weapon switch happens
-    public static final  int        WEAPON_SWITCH_DELAY         = 150;
-    //
-    // how many units to raise spectator above default view height so it's in the head of someone
-    public static final  int        SPECTATE_RAISE              = 25;
-    //
-    public static final  int        HEALTHPULSE_TIME            = 333;
-    //
-    // minimum speed to bob and play run/walk animations at
-    public static final  float      MIN_BOB_SPEED               = 5.0f;
+    // distance between ladder rungs (actually is half that distance, but this sounds better)
+    public static final int LADDER_RUNG_DISTANCE = 32;
+    public static final int LAND_DEFLECT_TIME = 150;
+    public static final int LAND_RETURN_TIME = 300;
+    public static final int LOWHEALTH_HEARTRATE_ADJ = 20;       //
+    public static final int MAX_HEARTRATE = 130;      // maximum
+    public static final int MAX_INVENTORY_ITEMS = 20;
+    public static final int MAX_PDAS = 64;
+    public static final int MAX_PDA_ITEMS = 128;
+    public static final int MAX_POWERUPS = 4;
     //
 //
+//
+    public static final int MAX_RESPAWN_TIME = 10000;
+    //
+    public static final int MAX_WEAPONS = 16;
+    public static final int MEGAHEALTH = 2;
+    public static final int MELEE_DAMAGE = 2;
 //    
-    public static final  int        MAX_RESPAWN_TIME            = 10000;
-    public static final  int        RAGDOLL_DEATH_TIME          = 3000;
-    public static final  int        MAX_PDAS                    = 64;
-    public static final  int        MAX_PDA_ITEMS               = 128;
-    public static final  int        STEPUP_TIME                 = 200;
-    public static final  int        MAX_INVENTORY_ITEMS         = 20;
-//    
+    public static final int MELEE_DISTANCE = 3;
+    //
+    // minimum speed to bob and play run/walk animations at
+    public static final float MIN_BOB_SPEED = 5.0f;
+    public static final int PROJECTILE_DAMAGE = 1;
+
+    public static final int RAGDOLL_DEATH_TIME = 3000;
+    //
+    public static final int SAVING_THROW_TIME = 5000;     // maximum one "saving throw" every five seconds
+    //
+    // how many units to raise spectator above default view height so it's in the head of someone
+    public static final int SPECTATE_RAISE = 25;
+    // };
+//
+// powerup modifiers
+// enum {
+    public static final int SPEED = 0;
+    public static final int STEPUP_TIME = 200;
+    //
+    public static final float THIRD_PERSON_FOCUS_DISTANCE = 512.0f;
+    //
+    // time before a weapon dropped to the floor disappears
+    public static final int WEAPON_DROP_TIME = 20 * 1000;
+    //
+    // time before a next or prev weapon switch happens
+    public static final int WEAPON_SWITCH_DELAY = 150;
+    public static final int ZEROSTAMINA_HEARTRATE = 115;      // no stamina
+    public static final int ZERO_VOLUME = -40;      // volume at zero
 
     public static class idItemInfo {
 
-        idStr name = new idStr();
         idStr icon = new idStr();
+        idStr name = new idStr();
     }
 
     public static class idObjectiveInfo {
 
-        idStr title = new idStr();
-        idStr text = new idStr();
         idStr screenshot = new idStr();
+        idStr text = new idStr();
+        idStr title = new idStr();
     }
 
     public static class idLevelTriggerInfo {
@@ -362,79 +249,53 @@ public class Player {
         idStr levelName = new idStr();
         idStr triggerName = new idStr();
     }
-
-    ;
-    //
-// powerups - the "type" in item .def must match
-// enum {
-    public static final int BERSERK           = 0;
-    public static final int INVISIBILITY      = 1;
-    public static final int MEGAHEALTH        = 2;
-    public static final int ADRENALINE        = 3;
-    public static final int MAX_POWERUPS      = 4;
-    // };
-//
-// powerup modifiers
-// enum {
-    public static final int SPEED             = 0;
-    public static final int PROJECTILE_DAMAGE = 1;
-    public static final int MELEE_DAMAGE      = 2;
-    public static final int MELEE_DISTANCE    = 3;
-    // };
-//
-// influence levels
-// enum {
-    public static final int INFLUENCE_NONE    = 0;            // none
-    public static final int INFLUENCE_LEVEL1  = 1;            // no gun or hud
-    public static final int INFLUENCE_LEVEL2  = 2;            // no gun, hud, movement
-    public static final int INFLUENCE_LEVEL3  = 3;            // slow player movement
 // };
 
     public static class idInventory {
 
-        public int maxHealth;
-        public int weapons;
-        public int powerups;
-        public int armor;
-        public int maxarmor;
-        public final int[] ammo           = new int[AMMO_NUMTYPES];
-        public final int[] clip           = new int[MAX_WEAPONS];
+        public final int[] ammo = new int[AMMO_NUMTYPES];
+        public final int[] clip = new int[MAX_WEAPONS];
+        //
+        public final int[] pdasViewed = new int[4]; // 128 bit flags for indicating if a pda has been viewed
         public final int[] powerupEndTime = new int[MAX_POWERUPS];
         //
         // mp
-        public int   ammoPredictTime;
+        public int ammoPredictTime;
         //
-        public int   deplete_armor;
+        public boolean ammoPulse;
+        public int armor;
+        public boolean armorPulse;
+        public int deplete_ammount;
+        //
+        public int deplete_armor;
         public float deplete_rate;
-        public int   deplete_ammount;
-        public int   nextArmorDepleteTime;
-        //
-        public final int[] pdasViewed = new int[4]; // 128 bit flags for indicating if a pda has been viewed
-        //
-        public int                        selPDA;
-        public int                        selEMail;
-        public int                        selVideo;
-        public int                        selAudio;
-        public boolean                    pdaOpened;
-        public boolean                    turkeyScore;
-        public idList<idDict>             items;
-        public idStrList                  pdas;
-        public idStrList                  pdaSecurity;
-        public idStrList                  videos;
-        public idStrList                  emails;
-        //
-        public boolean                    ammoPulse;
-        public boolean                    weaponPulse;
-        public boolean                    armorPulse;
-        public int                        lastGiveTime;
+        public idStrList emails;
+        public idList<idDict> items;
+        public int lastGiveTime;
         //
         public idList<idLevelTriggerInfo> levelTriggers;
+        public int maxHealth;
+        public int maxarmor;
+        public int nextArmorDepleteTime;
+        public int nextItemNum;
         //
         public int nextItemPickup;
-        public int nextItemNum;
+        public idList<idObjectiveInfo> objectiveNames = new idList<>();
         public int onePickupTime;
-        public idList<idItemInfo>      pickupItemNames = new idList<>(idItemInfo.class);
-        public idList<idObjectiveInfo> objectiveNames  = new idList<>();
+        public boolean pdaOpened;
+        public idStrList pdaSecurity;
+        public idStrList pdas;
+        public idList<idItemInfo> pickupItemNames = new idList<>(idItemInfo.class);
+        public int powerups;
+        public int selAudio;
+        public int selEMail;
+        //
+        public int selPDA;
+        public int selVideo;
+        public boolean turkeyScore;
+        public idStrList videos;
+        public boolean weaponPulse;
+        public int weapons;
 
         public idInventory() {
             items = new idList<>();
@@ -959,7 +820,7 @@ public class Player {
                 }
             } else if (0 == idStr.Icmp(statname, "armor")) {
                 if (armor >= maxarmor) {
-                    return false;	// can't hold any more, so leave the item
+                    return false;    // can't hold any more, so leave the item
                 }
                 amount = Integer.parseInt(value);
                 if (amount != 0) {
@@ -1002,7 +863,7 @@ public class Player {
                     }
 
                     if (i >= MAX_WEAPONS) {
-                        gameLocal.Error("Unknown weapon '%s'", weaponName);
+                        idGameLocal.Error("Unknown weapon '%s'", weaponName);
                     }
 
                     // cache the media for this weapon
@@ -1056,7 +917,7 @@ public class Player {
                     }
                 }
                 if (weapon_index >= MAX_WEAPONS) {
-                    gameLocal.Error("Unknown weapon '%s'", weapon_classname[0]);
+                    idGameLocal.Error("Unknown weapon '%s'", weapon_classname[0]);
                 }
             } else if (null == weapon_classname[0]) {
                 weapon_classname[0] = spawnArgs.GetString(va("def_weapon%d", weapon_index));
@@ -1105,7 +966,7 @@ public class Player {
         public int/*ammo_t*/ AmmoIndexForWeaponClass(final String weapon_classname, int[] ammoRequired) {
             final idDeclEntityDef decl = gameLocal.FindEntityDef(weapon_classname, false);
             if (null == decl) {
-                gameLocal.Error("Unknown weapon in decl '%s'", weapon_classname);
+                idGameLocal.Error("Unknown weapon in decl '%s'", weapon_classname);
             }
             if (ammoRequired != null) {
                 ammoRequired[0] = decl.dict.GetInt("ammoRequired");
@@ -1163,7 +1024,7 @@ public class Player {
             return true;
         }
 
-        public int HasAmmo(final String weapon_classname) {			// looks up the ammo information for the weapon class first
+        public int HasAmmo(final String weapon_classname) {            // looks up the ammo information for the weapon class first
             int[] ammoRequired = new int[1];
             int ammo_i = AmmoIndexForWeaponClass(weapon_classname, ammoRequired);
             return HasAmmo(ammo_i, ammoRequired[0]);
@@ -1182,26 +1043,46 @@ public class Player {
                 }
             }
         }
-    };
+    }
 
     public static class loggedAccel_t {
 
-        int    time;
         idVec3 dir;        // scaled larger for running
+        int time;
 
         public loggedAccel_t() {
             dir = new idVec3();
         }
-    };
+    }
 
     public static class aasLocation_t {
 
         int areaNum;
         idVec3 pos;
-    };
+    }
 
     public static class idPlayer extends idActor {
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        // enum {
+        public static final int EVENT_IMPULSE = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_EXIT_TELEPORTER = EVENT_IMPULSE + 1;
+        public static final int EVENT_ABORT_TELEPORTER = EVENT_IMPULSE + 2;
+        public static final int EVENT_MAXEVENTS = EVENT_IMPULSE + 5;
+        public static final int EVENT_POWERUP = EVENT_IMPULSE + 3;
+        public static final int EVENT_SPECTATE = EVENT_IMPULSE + 4;
+        //
+        // mp stuff
+        //        public static final idVec3[] colorBarTable = new idVec3[5];
+        public static final idVec3[] colorBarTable = {
+                new idVec3(0.25f, 0.25f, 0.25f),
+                new idVec3(1.00f, 0.00f, 0.00f),
+                new idVec3(0.00f, 0.80f, 0.10f),
+                new idVec3(0.20f, 0.50f, 0.80f),
+                new idVec3(1.00f, 0.80f, 0.10f)
+        };
+        private static final int NUM_LOGGED_ACCELS = 16;   // for weapon turning angle offsets
+        //
+        private static final int NUM_LOGGED_VIEW_ANGLES = 64;   // for weapon turning angle offsets
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idActor.getEventCallBacks());
@@ -1225,243 +1106,223 @@ public class Player {
             eventCallbacks.put(EV_Player_GetIdealWeapon, (eventCallback_t0<idPlayer>) idPlayer::Event_GetIdealWeapon);
         }
 
-        // enum {
-        public static final int EVENT_IMPULSE          = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_EXIT_TELEPORTER  = EVENT_IMPULSE + 1;
-        public static final int EVENT_ABORT_TELEPORTER = EVENT_IMPULSE + 2;
-        public static final int EVENT_POWERUP          = EVENT_IMPULSE + 3;
-        public static final int EVENT_SPECTATE         = EVENT_IMPULSE + 4;
-        public static final int EVENT_MAXEVENTS        = EVENT_IMPULSE + 5;
-        // };
+        private final loggedAccel_t[] loggedAccel;                   // [currentLoggedAccel & (NUM_LOGGED_ACCELS-1)]
+        private final idAngles[] loggedViewAngles;              // [gameLocal.framenum&(LOGGED_VIEW_ANGLES-1)]
+        public idScriptBool AI_ATTACK_HELD = new idScriptBool();
+        public idScriptBool AI_BACKWARD = new idScriptBool();
+        public idScriptBool AI_CROUCH = new idScriptBool();
+        public idScriptBool AI_DEAD = new idScriptBool();
         //
-        public usercmd_t                 usercmd;
-        //
-        public idPlayerView              playerView;            // handles damage kicks and effects
-        //
-        public boolean                   noclip;
-        public boolean                   godmode;
-        //
-        public boolean                   spawnAnglesSet;        // on first usercmd, we must set deltaAngles
-        public idAngles                  spawnAngles;
-        public idAngles                  viewAngles;            // player view angles
-        public idAngles                  cmdAngles;             // player cmd angles
-        //
-        public int                       buttonMask;
-        public int                       oldButtons;
-        public int                       oldFlags;
-        //
-        public int                       lastHitTime;           // last time projectile fired by player hit target
-        public int                       lastSndHitTime;        // MP hit sound - != lastHitTime because we throttle
-        public int                       lastSavingThrowTime;   // for the "free miss" effect
-        //
-        public idScriptBool AI_FORWARD      = new idScriptBool();
-        public idScriptBool AI_BACKWARD     = new idScriptBool();
-        public idScriptBool AI_STRAFE_LEFT  = new idScriptBool();
+        public idScriptBool AI_FORWARD = new idScriptBool();
+        public idScriptBool AI_HARDLANDING = new idScriptBool();
+        public idScriptBool AI_JUMP = new idScriptBool();
+        public idScriptBool AI_ONGROUND = new idScriptBool();
+        public idScriptBool AI_ONLADDER = new idScriptBool();
+        public idScriptBool AI_PAIN = new idScriptBool();
+        public idScriptBool AI_RELOAD = new idScriptBool();
+        public idScriptBool AI_RUN = new idScriptBool();
+        public idScriptBool AI_SOFTLANDING = new idScriptBool();
+        public idScriptBool AI_STRAFE_LEFT = new idScriptBool();
         public idScriptBool AI_STRAFE_RIGHT = new idScriptBool();
-        public idScriptBool AI_ATTACK_HELD  = new idScriptBool();
+        public idScriptBool AI_TELEPORT = new idScriptBool();
+        public idScriptBool AI_TURN_LEFT = new idScriptBool();
+        public idScriptBool AI_TURN_RIGHT = new idScriptBool();
         public idScriptBool AI_WEAPON_FIRED = new idScriptBool();
-        public idScriptBool AI_JUMP         = new idScriptBool();
-        public idScriptBool AI_CROUCH       = new idScriptBool();
-        public idScriptBool AI_ONGROUND     = new idScriptBool();
-        public idScriptBool AI_ONLADDER     = new idScriptBool();
-        public idScriptBool AI_DEAD         = new idScriptBool();
-        public idScriptBool AI_RUN          = new idScriptBool();
-        public idScriptBool AI_PAIN         = new idScriptBool();
-        public idScriptBool AI_HARDLANDING  = new idScriptBool();
-        public idScriptBool AI_SOFTLANDING  = new idScriptBool();
-        public idScriptBool AI_RELOAD       = new idScriptBool();
-        public idScriptBool AI_TELEPORT     = new idScriptBool();
-        public idScriptBool AI_TURN_LEFT    = new idScriptBool();
-        public idScriptBool AI_TURN_RIGHT   = new idScriptBool();
         //
-        // inventory
-        public idInventory               inventory;
+        public int buttonMask;
+        public idAngles cmdAngles;             // player cmd angles
+        public idVec3 colorBar;                 // used for scoreboard and hud display
+        public int colorBarIndex;
+        public int deathClearContentsTime;
+        public boolean doingDeathSkin;
         //
-        public idEntityPtr<idWeapon>     weapon;
-        public idUserInterface           hud;                   // MP: is NULL if not local player
-        public idUserInterface           objectiveSystem;
-        public boolean                   objectiveSystemOpen;
-        //
-        public int                       weapon_soulcube;
-        public int                       weapon_pda;
-        public int                       weapon_fists;
-        //
-        public int                       heartRate;
-        public idInterpolate<Float>      heartInfo;
-        public int                       lastHeartAdjust;
-        public int                       lastHeartBeat;
-        public int                       lastDmgTime;
-        public int                       deathClearContentsTime;
-        public boolean                   doingDeathSkin;
-        public int                       lastArmorPulse;        // lastDmgTime if we had armor at time of hit
-        public float                     stamina;
-        public float                     healthPool;            // amount of health to give over time
-        public int                       nextHealthPulse;
-        public boolean                   healthPulse;
-        public boolean                   healthTake;
-        public int                       nextHealthTake;
-        //
-        //
-        public boolean                   hiddenWeapon;          // if the weapon is hidden ( in noWeapons maps )
-        public idEntityPtr<idProjectile> soulCubeProjectile;
-        //
-        // mp stuff
-        //        public static final idVec3[] colorBarTable = new idVec3[5];
-        public static final idVec3[] colorBarTable = {
-                new idVec3(0.25f, 0.25f, 0.25f),
-                new idVec3(1.00f, 0.00f, 0.00f),
-                new idVec3(0.00f, 0.80f, 0.10f),
-                new idVec3(0.20f, 0.50f, 0.80f),
-                new idVec3(1.00f, 0.80f, 0.10f)
-        };
-        public  int                   spectator;
-        public  idVec3                colorBar;                 // used for scoreboard and hud display
-        public  int                   colorBarIndex;
-        public  boolean               scoreBoardOpen;
-        public  boolean               forceScoreBoard;
-        public  boolean               forceRespawn;
-        public  boolean               spectating;
-        public  int                   lastSpectateTeleport;
-        public  boolean               lastHitToggle;
-        public  boolean               forcedReady;
-        public  boolean               wantSpectate;             // from userInfo
-        public  boolean               weaponGone;               // force stop firing
-        public  boolean               useInitialSpawns;         // toggled by a map restart to be active for the first game spawn
-        public  int                   latchedTeam;              // need to track when team gets changed
-        public  int                   tourneyRank;              // for tourney cycling - the higher, the more likely to play next - server
-        public  int                   tourneyLine;              // client side - our spot in the wait line. 0 means no info.
-        public  int                   spawnedTime;              // when client first enters the game
-        //
-        public  idEntityPtr<idEntity> teleportEntity;           // while being teleported, this is set to the entity we'll use for exit
-        public  int                   teleportKiller;           // entity number of an entity killing us at teleporter exit
-        public  boolean               lastManOver;              // can't respawn in last man anymore (srv only)
-        public  boolean               lastManPlayAgain;         // play again when end game delay is cancelled out before expiring (srv only)
-        public  boolean               lastManPresent;           // true when player was in when game started (spectators can't join a running LMS)
-        public  boolean               isLagged;                 // replicated from server, true if packets haven't been received from client.
-        public  boolean               isChatting;               // replicated from server, true if the player is chatting.
-        //
-        // timers
-        public  int                   minRespawnTime;           // can respawn when time > this, force after g_forcerespawn
-        public  int                   maxRespawnTime;           // force respawn after this time
+        public idDragEntity dragEntity;
+        public idMat3 firstPersonViewAxis;
         //
         // the first person view values are always calculated, even
         // if a third person view is used
-        public  idVec3                firstPersonViewOrigin;
-        public  idMat3                firstPersonViewAxis;
+        public idVec3 firstPersonViewOrigin;
+        public boolean forceRespawn;
+        public boolean forceScoreBoard;
+        public boolean forcedReady;
+        public boolean godmode;
+        public float healthPool;            // amount of health to give over time
+        public boolean healthPulse;
+        public boolean healthTake;
+        public idInterpolate<Float> heartInfo;
         //
-        public  idDragEntity          dragEntity;
+        public int heartRate;
         //
-        private int/*jointHandle_t*/  hipJoint;
+        //
+        public boolean hiddenWeapon;          // if the weapon is hidden ( in noWeapons maps )
+        public idUserInterface hud;                   // MP: is NULL if not local player
+        //
+        // inventory
+        public idInventory inventory;
+        public boolean isChatting;               // replicated from server, true if the player is chatting.
+        public boolean isLagged;                 // replicated from server, true if packets haven't been received from client.
+        public int lastArmorPulse;        // lastDmgTime if we had armor at time of hit
+        public int lastDmgTime;
+        public int lastHeartAdjust;
+        public int lastHeartBeat;
+        //
+        public int lastHitTime;           // last time projectile fired by player hit target
+        public boolean lastHitToggle;
+        public boolean lastManOver;              // can't respawn in last man anymore (srv only)
+        public boolean lastManPlayAgain;         // play again when end game delay is cancelled out before expiring (srv only)
+        public boolean lastManPresent;           // true when player was in when game started (spectators can't join a running LMS)
+        public int lastSavingThrowTime;   // for the "free miss" effect
+        public int lastSndHitTime;        // MP hit sound - != lastHitTime because we throttle
+        public int lastSpectateTeleport;
+        public int latchedTeam;              // need to track when team gets changed
+        public int maxRespawnTime;           // force respawn after this time
+        //
+        // timers
+        public int minRespawnTime;           // can respawn when time > this, force after g_forcerespawn
+        public int nextHealthPulse;
+        public int nextHealthTake;
+        //
+        public boolean noclip;
+        public idUserInterface objectiveSystem;
+        public boolean objectiveSystemOpen;
+        public int oldButtons;
+        public int oldFlags;
+        //
+        public idPlayerView playerView;            // handles damage kicks and effects
+        public boolean scoreBoardOpen;
+        public idEntityPtr<idProjectile> soulCubeProjectile;
+        public idAngles spawnAngles;
+        //
+        public boolean spawnAnglesSet;        // on first usercmd, we must set deltaAngles
+        public int spawnedTime;              // when client first enters the game
+        public boolean spectating;
+        public int spectator;
+        public float stamina;
+        //
+        public idEntityPtr<idEntity> teleportEntity;           // while being teleported, this is set to the entity we'll use for exit
+        public int teleportKiller;           // entity number of an entity killing us at teleporter exit
+        public int tourneyLine;              // client side - our spot in the wait line. 0 means no info.
+        public int tourneyRank;              // for tourney cycling - the higher, the more likely to play next - server
+        public boolean useInitialSpawns;         // toggled by a map restart to be active for the first game spawn
+        // };
+        //
+        public usercmd_t usercmd;
+        public idAngles viewAngles;            // player view angles
+        public boolean wantSpectate;             // from userInfo
+        //
+        public idEntityPtr<idWeapon> weapon;
+        public boolean weaponGone;               // force stop firing
+        public int weapon_fists;
+        public int weapon_pda;
+        //
+        public int weapon_soulcube;
+        private int MPAim;                   // player num in aim
+        private int MPAimFadeTime;  // for GUI fade
+        private boolean MPAimHighlight;
+        //
+        private final idList<aasLocation_t> aasLocation;              // for AI tracking the player
+        private int airTics;                  // set to pm_airTics at start, drops in vacuum
+        //
+        private boolean airless;
+        private final idStr baseSkinName;
+        private int bobCycle;                 // for view bobbing and footstep generation
+        //
+        private int bobFoot;
+        private float bobFrac;
+        private float bobfracsin;
+        private final idInterpolate<Float> centerView;
         private int/*jointHandle_t*/  chestJoint;
-        private int/*jointHandle_t*/  headJoint;
+        private int currentLoggedAccel;
         //
-        private idPhysics_Player      physicsObj;               // player physics
-        //
-        private idList<aasLocation_t> aasLocation;              // for AI tracking the player
-        //
-        private int                   bobFoot;
-        private float                 bobFrac;
-        private float                 bobfracsin;
-        private int                   bobCycle;                 // for view bobbing and footstep generation
-        private float                 xyspeed;
-        private int                   stepUpTime;
-        private float                 stepUpDelta;
-        private float                 idealLegsYaw;
-        private float                 legsYaw;
-        private boolean               legsForward;
-        private float                 oldViewYaw;
-        private idAngles              viewBobAngles;
-        private idVec3                viewBob;
-        private int                   landChange;
-        private int                   landTime;
-        //
-        private int                   currentWeapon;
-        private int                   idealWeapon;
-        private int                   previousWeapon;
-        private int                   weaponSwitchTime;
-        private boolean               weaponEnabled;
-        private boolean               showWeaponViewModel;
-        //
-        private idDeclSkin            skin;
-        private idDeclSkin            powerUpSkin;
-        private idStr                 baseSkinName;
-        //
-        private int                   numProjectilesFired;      // number of projectiles fired
-        private int                   numProjectileHits;        // number of hits on mobs
-        //
-        private boolean               airless;
-        private int                   airTics;                  // set to pm_airTics at start, drops in vacuum
-        private int                   lastAirDamage;
-        //
-        private boolean               gibDeath;
-        private boolean               gibsLaunched;
-        private idVec3                gibsDir;
-        //
-        private idInterpolate<Float>  zoomFov;
-        private idInterpolate<Float>  centerView;
-        private boolean               fxFov;
-        //
-        private float                 influenceFov;
-        private int                   influenceActive;          // level of influence.. 1 == no gun or hud .. 2 == 1 + no movement
-        private idEntity              influenceEntity;
-        private idMaterial            influenceMaterial;
-        private float                 influenceRadius;
-        private idDeclSkin            influenceSkin;
-        //
-        private idCamera              privateCameraView;
-        //
-        private static final int             NUM_LOGGED_VIEW_ANGLES = 64;   // for weapon turning angle offsets
-        private        final idAngles[]      loggedViewAngles;              // [gameLocal.framenum&(LOGGED_VIEW_ANGLES-1)]
-        private static final int             NUM_LOGGED_ACCELS      = 16;   // for weapon turning angle offsets
-        private        final loggedAccel_t[] loggedAccel;                   // [currentLoggedAccel & (NUM_LOGGED_ACCELS-1)]
-        private              int             currentLoggedAccel;
+        private int currentWeapon;
+        private idUserInterface cursor;
+        private idAI focusCharacter;
         //
         // if there is a focusGUIent, the attack button will be changed into mouse clicks
-        private              idEntity           focusGUIent;
-        private              idUserInterface    focusUI;        // focusGUIent->renderEntity.gui, gui2, or gui3
-        private              idAI               focusCharacter;
-        private              int                talkCursor;     // show the state of the focusCharacter (0 == can't talk/dead, 1 == ready to talk, 2 == busy talking)
-        private              int                focusTime;
-        private              idAFEntity_Vehicle focusVehicle;
-        private              idUserInterface    cursor;
-        //	
+        private idEntity focusGUIent;
+        private int focusTime;
+        private idUserInterface focusUI;        // focusGUIent->renderEntity.gui, gui2, or gui3
+        private idAFEntity_Vehicle focusVehicle;
+        private boolean fxFov;
+        //
+        private boolean gibDeath;
+        private idVec3 gibsDir;
+        private boolean gibsLaunched;
+        private int/*jointHandle_t*/  headJoint;
+        //
+        private int/*jointHandle_t*/  hipJoint;
+        private float idealLegsYaw;
+        private int idealWeapon;
+        private int influenceActive;          // level of influence.. 1 == no gun or hud .. 2 == 1 + no movement
+        private idEntity influenceEntity;
+        //
+        private float influenceFov;
+        private idMaterial influenceMaterial;
+        private float influenceRadius;
+        private idDeclSkin influenceSkin;
+        private boolean isTelefragged;  // proper obituaries
+        private int landChange;
+        private int landTime;
+        private int lastAirDamage;
+        //
+        private int lastDamageDef;
+        private idVec3 lastDamageDir;
+        private int lastDamageLocation;
+        private int lastMPAim;
+        private int lastMPAimTime;  // last time the aim changed
+        private /*unsigned*/ int lastSnapshotSequence;    // track state hitches on clients
+        private int lastSpectateChange;
+        private int lastTeleFX;
+        private boolean leader;          // for sudden death situations
+        private boolean legsForward;
+        private float legsYaw;
+        private int numProjectileHits;        // number of hits on mobs
+        //
+        private int numProjectilesFired;      // number of projectiles fired
+        private boolean objectiveUp;
+        //
         // full screen guis track mouse movements directly
-        private              int                oldMouseX;
-        private              int                oldMouseY;
+        private int oldMouseX;
+        private int oldMouseY;
+        private float oldViewYaw;
         //
-        private              idStr              pdaAudio;
-        private              idStr              pdaVideo;
-        private              idStr              pdaVideoWave;
+        private final idStr pdaAudio;
+        private final idStr pdaVideo;
+        private final idStr pdaVideoWave;
         //
-        private              boolean            tipUp;
-        private              boolean            objectiveUp;
+        private final idPhysics_Player physicsObj;               // player physics
         //
-        private              int                lastDamageDef;
-        private              idVec3             lastDamageDir;
-        private              int                lastDamageLocation;
-        private              int                smoothedFrame;
-        private              boolean            smoothedOriginUpdated;
-        private              idVec3             smoothedOrigin;
-        private              idAngles           smoothedAngles;
+        private idPlayerIcon playerIcon;
+        private idDeclSkin powerUpSkin;
+        private int previousWeapon;
+        //
+        private idCamera privateCameraView;
         //
         // mp
-        private              boolean            ready;           // from userInfo
-        private              boolean            respawning;      // set to true while in SpawnToPoint for telefrag checks
-        private              boolean            leader;          // for sudden death situations
-        private              int                lastSpectateChange;
-        private              int                lastTeleFX;
-        private /*unsigned*/ int                lastSnapshotSequence;    // track state hitches on clients
-        private              boolean            weaponCatchup;           // raise up the weapon silently ( state catchups )
-        private              int                MPAim;                   // player num in aim
-        private              int                lastMPAim;
-        private              int                lastMPAimTime;  // last time the aim changed
-        private              int                MPAimFadeTime;  // for GUI fade
-        private              boolean            MPAimHighlight;
-        private              boolean            isTelefragged;  // proper obituaries
+        private boolean ready;           // from userInfo
+        private boolean respawning;      // set to true while in SpawnToPoint for telefrag checks
         //
-        private              idPlayerIcon       playerIcon;
+        private boolean selfSmooth;
+        private boolean showWeaponViewModel;
         //
-        private              boolean            selfSmooth;
+        private final idDeclSkin skin;
+        private idAngles smoothedAngles;
+        private int smoothedFrame;
+        private idVec3 smoothedOrigin;
+        private boolean smoothedOriginUpdated;
+        private float stepUpDelta;
+        private int stepUpTime;
+        private int talkCursor;     // show the state of the focusCharacter (0 == can't talk/dead, 1 == ready to talk, 2 == busy talking)
+        //
+        private boolean tipUp;
+        private final idVec3 viewBob;
+        private final idAngles viewBobAngles;
+        private boolean weaponCatchup;           // raise up the weapon silently ( state catchups )
+        private boolean weaponEnabled;
+        private int weaponSwitchTime;
+        private float xyspeed;
+        //
+        private final idInterpolate<Float> zoomFov;
         //
         //
 
@@ -1526,11 +1387,11 @@ public class Player {
 
             firstPersonViewOrigin = getVec3_zero();
             firstPersonViewAxis = getMat3_identity();
-            
+
             dragEntity = new idDragEntity();
-            
+
             physicsObj = new idPhysics_Player();
-            
+
             aasLocation = new idList<>();
 
             hipJoint = INVALID_JOINT;
@@ -1665,6 +1526,10 @@ public class Player {
 //	virtual					~idPlayer();
 //
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         /*
          ==============
          idPlayer::Spawn
@@ -1675,12 +1540,12 @@ public class Player {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             idStr temp = new idStr();
 //            idBounds bounds;
 
             if (entityNumber >= MAX_CLIENTS) {
-                gameLocal.Error("entityNum > MAX_CLIENTS for player.  Player may only be spawned with a client.");
+                idGameLocal.Error("entityNum > MAX_CLIENTS for player.  Player may only be spawned with a client.");
             }
 
             // allow thinking during cinematics
@@ -1890,7 +1755,7 @@ public class Player {
             }
 
             if (objectiveSystemOpen || gameLocal.inCinematic || influenceActive != 0) {
-                if (objectiveSystemOpen && AI_PAIN._()) {
+                if (objectiveSystemOpen && AI_PAIN.underscore()) {
                     TogglePDA();
                 }
                 usercmd.forwardmove = 0;
@@ -1987,7 +1852,7 @@ public class Player {
                 }
 
                 // clear out our pain flag so we can tell if we recieve any damage between now and the next time we think
-                AI_PAIN._(false);
+                AI_PAIN.underscore(false);
             }
 
             // calculate the exact bobbed view position, which is used to
@@ -2690,41 +2555,41 @@ public class Player {
             value[0] = spawnArgs.GetString("bone_hips", "");
             hipJoint = animator.GetJointHandle(value[0]);
             if (hipJoint == INVALID_JOINT) {
-                gameLocal.Error("Joint '%s' not found for 'bone_hips' on '%s'", value[0], name);
+                idGameLocal.Error("Joint '%s' not found for 'bone_hips' on '%s'", value[0], name);
             }
 
             value[0] = spawnArgs.GetString("bone_chest", "");
             chestJoint = animator.GetJointHandle(value[0]);
             if (chestJoint == INVALID_JOINT) {
-                gameLocal.Error("Joint '%s' not found for 'bone_chest' on '%s'", value[0], name);
+                idGameLocal.Error("Joint '%s' not found for 'bone_chest' on '%s'", value[0], name);
             }
 
             value[0] = spawnArgs.GetString("bone_head", "");
             headJoint = animator.GetJointHandle(value[0]);
             if (headJoint == INVALID_JOINT) {
-                gameLocal.Error("Joint '%s' not found for 'bone_head' on '%s'", value[0], name);
+                idGameLocal.Error("Joint '%s' not found for 'bone_head' on '%s'", value[0], name);
             }
 
             // initialize the script variables
-            AI_FORWARD._(false);
-            AI_BACKWARD._(false);
-            AI_STRAFE_LEFT._(false);
-            AI_STRAFE_RIGHT._(false);
-            AI_ATTACK_HELD._(false);
-            AI_WEAPON_FIRED._(false);
-            AI_JUMP._(false);
-            AI_DEAD._(false);
-            AI_CROUCH._(false);
-            AI_ONGROUND._(false);
-            AI_ONLADDER._(false);
-            AI_HARDLANDING._(false);
-            AI_SOFTLANDING._(false);
-            AI_RUN._(false);
-            AI_PAIN._(false);
-            AI_RELOAD._(false);
-            AI_TELEPORT._(false);
-            AI_TURN_LEFT._(false);
-            AI_TURN_RIGHT._(false);
+            AI_FORWARD.underscore(false);
+            AI_BACKWARD.underscore(false);
+            AI_STRAFE_LEFT.underscore(false);
+            AI_STRAFE_RIGHT.underscore(false);
+            AI_ATTACK_HELD.underscore(false);
+            AI_WEAPON_FIRED.underscore(false);
+            AI_JUMP.underscore(false);
+            AI_DEAD.underscore(false);
+            AI_CROUCH.underscore(false);
+            AI_ONGROUND.underscore(false);
+            AI_ONLADDER.underscore(false);
+            AI_HARDLANDING.underscore(false);
+            AI_SOFTLANDING.underscore(false);
+            AI_RUN.underscore(false);
+            AI_PAIN.underscore(false);
+            AI_RELOAD.underscore(false);
+            AI_TELEPORT.underscore(false);
+            AI_TURN_LEFT.underscore(false);
+            AI_TURN_RIGHT.underscore(false);
 
             // reset the script object
             ConstructScriptObject();
@@ -2844,7 +2709,6 @@ public class Player {
             }
         }
 
-
         /*
          ===========
          idPlayer::SelectInitialSpawnPoint
@@ -2961,9 +2825,9 @@ public class Player {
                         lastTeleFX = gameLocal.time;
                     }
                 }
-                AI_TELEPORT._(true);
+                AI_TELEPORT.underscore(true);
             } else {
-                AI_TELEPORT._(false);
+                AI_TELEPORT.underscore(false);
             }
 
             // kill anything at the new position
@@ -3117,7 +2981,7 @@ public class Player {
             UpdateSkinSetup(false);
 
             isChatting = userInfo.GetBool("ui_chat", "0");
-            if (canModify && isChatting && AI_DEAD._()) {
+            if (canModify && isChatting && AI_DEAD.underscore()) {
                 // if dead, always force chat icon off.
                 isChatting = false;
                 userInfo.SetBool("ui_chat", false);
@@ -3136,7 +3000,7 @@ public class Player {
             int[] teamCount = new int[2];
             idEntity ent;
 
-            teamCount[ 0] = teamCount[ 1] = 0;
+            teamCount[0] = teamCount[1] = 0;
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
                 if (ent != null && ent.IsType(idPlayer.class)) {
@@ -3144,9 +3008,9 @@ public class Player {
                 }
             }
             balanceTeam = -1;
-            if (teamCount[ 0] < teamCount[ 1]) {
+            if (teamCount[0] < teamCount[1]) {
                 balanceTeam = 0;
-            } else if (teamCount[ 0] > teamCount[ 1]) {
+            } else if (teamCount[0] > teamCount[1]) {
                 balanceTeam = 1;
             }
             if (balanceTeam != -1 && team != balanceTeam) {
@@ -3196,26 +3060,26 @@ public class Player {
                 weapon.GetEntity().EnterCinematic();
             }
 
-            AI_FORWARD._(false);
-            AI_BACKWARD._(false);
-            AI_STRAFE_LEFT._(false);
-            AI_STRAFE_RIGHT._(false);
-            AI_RUN._(false);
-            AI_ATTACK_HELD._(false);
-            AI_WEAPON_FIRED._(false);
-            AI_JUMP._(false);
-            AI_CROUCH._(false);
-            AI_ONGROUND._(true);
-            AI_ONLADDER._(false);
-            AI_DEAD._(health <= 0);
-            AI_RUN._(false);
-            AI_PAIN._(false);
-            AI_HARDLANDING._(false);
-            AI_SOFTLANDING._(false);
-            AI_RELOAD._(false);
-            AI_TELEPORT._(false);
-            AI_TURN_LEFT._(false);
-            AI_TURN_RIGHT._(false);
+            AI_FORWARD.underscore(false);
+            AI_BACKWARD.underscore(false);
+            AI_STRAFE_LEFT.underscore(false);
+            AI_STRAFE_RIGHT.underscore(false);
+            AI_RUN.underscore(false);
+            AI_ATTACK_HELD.underscore(false);
+            AI_WEAPON_FIRED.underscore(false);
+            AI_JUMP.underscore(false);
+            AI_CROUCH.underscore(false);
+            AI_ONGROUND.underscore(true);
+            AI_ONLADDER.underscore(false);
+            AI_DEAD.underscore(health <= 0);
+            AI_RUN.underscore(false);
+            AI_PAIN.underscore(false);
+            AI_HARDLANDING.underscore(false);
+            AI_SOFTLANDING.underscore(false);
+            AI_RELOAD.underscore(false);
+            AI_TELEPORT.underscore(false);
+            AI_TURN_LEFT.underscore(false);
+            AI_TURN_RIGHT.underscore(false);
         }
 
         public void ExitCinematic() {
@@ -3258,31 +3122,31 @@ public class Player {
             fallspeed = velocity.oMultiply(physicsObj.GetGravityNormal());
 
             if (influenceActive != 0) {
-                AI_FORWARD._(false);
-                AI_BACKWARD._(false);
-                AI_STRAFE_LEFT._(false);
-                AI_STRAFE_RIGHT._(false);
+                AI_FORWARD.underscore(false);
+                AI_BACKWARD.underscore(false);
+                AI_STRAFE_LEFT.underscore(false);
+                AI_STRAFE_RIGHT.underscore(false);
             } else if (gameLocal.time - lastDmgTime < 500) {
                 forwardspeed = velocity.oMultiply(viewAxis.oGet(0));
                 sidespeed = velocity.oMultiply(viewAxis.oGet(1));
-                AI_FORWARD._(AI_ONGROUND._() && (forwardspeed > 20.01f));
-                AI_BACKWARD._(AI_ONGROUND._() && (forwardspeed < -20.01f));
-                AI_STRAFE_LEFT._(AI_ONGROUND._() && (sidespeed > 20.01f));
-                AI_STRAFE_RIGHT._(AI_ONGROUND._() && (sidespeed < -20.01f));
+                AI_FORWARD.underscore(AI_ONGROUND.underscore() && (forwardspeed > 20.01f));
+                AI_BACKWARD.underscore(AI_ONGROUND.underscore() && (forwardspeed < -20.01f));
+                AI_STRAFE_LEFT.underscore(AI_ONGROUND.underscore() && (sidespeed > 20.01f));
+                AI_STRAFE_RIGHT.underscore(AI_ONGROUND.underscore() && (sidespeed < -20.01f));
             } else if (xyspeed > MIN_BOB_SPEED) {
-                AI_FORWARD._(AI_ONGROUND._() && (usercmd.forwardmove > 0));
-                AI_BACKWARD._(AI_ONGROUND._() && (usercmd.forwardmove < 0));
-                AI_STRAFE_LEFT._(AI_ONGROUND._() && (usercmd.rightmove < 0));
-                AI_STRAFE_RIGHT._(AI_ONGROUND._() && (usercmd.rightmove > 0));
+                AI_FORWARD.underscore(AI_ONGROUND.underscore() && (usercmd.forwardmove > 0));
+                AI_BACKWARD.underscore(AI_ONGROUND.underscore() && (usercmd.forwardmove < 0));
+                AI_STRAFE_LEFT.underscore(AI_ONGROUND.underscore() && (usercmd.rightmove < 0));
+                AI_STRAFE_RIGHT.underscore(AI_ONGROUND.underscore() && (usercmd.rightmove > 0));
             } else {
-                AI_FORWARD._(false);
-                AI_BACKWARD._(false);
-                AI_STRAFE_LEFT._(false);
-                AI_STRAFE_RIGHT._(false);
+                AI_FORWARD.underscore(false);
+                AI_BACKWARD.underscore(false);
+                AI_STRAFE_LEFT.underscore(false);
+                AI_STRAFE_RIGHT.underscore(false);
             }
 
-            AI_RUN._(((usercmd.buttons & BUTTON_RUN) != 0) && ((NOT(pm_stamina.GetFloat())) || (stamina > pm_staminathreshold.GetFloat())));
-            AI_DEAD._(health <= 0);
+            AI_RUN.underscore(((usercmd.buttons & BUTTON_RUN) != 0) && ((NOT(pm_stamina.GetFloat())) || (stamina > pm_staminathreshold.GetFloat())));
+            AI_DEAD.underscore(health <= 0);
         }
 
         public void SetViewAngles(final idAngles angles) {
@@ -3295,7 +3159,7 @@ public class Player {
             // set the delta angle
             idAngles delta = new idAngles();
             for (int i = 0; i < 3; i++) {
-                delta.oSet(i, (float) (angles.oGet(i) - SHORT2ANGLE(usercmd.angles[i])));
+                delta.oSet(i, angles.oGet(i) - SHORT2ANGLE(usercmd.angles[i]));
             }
             SetDeltaViewAngles(delta);
         }
@@ -3390,7 +3254,7 @@ public class Player {
          =================
          */
         public void CalcDamagePoints(idEntity inflictor, idEntity attacker, final idDict damageDef,
-                final float damageScale, final int location, int[] health, int[] armor) {
+                                     final float damageScale, final int location, int[] health, int[] armor) {
             int[] damage = {0};
             int armorSave;
 
@@ -3638,7 +3502,7 @@ public class Player {
                     blink_time = 0;
 
                     // let the anim script know we took damage
-                    AI_PAIN._(Pain(inflictor, attacker, damage[0], dir, location));
+                    AI_PAIN.underscore(Pain(inflictor, attacker, damage[0], dir, location));
                     if (!g_testDeath.GetBool()) {
                         lastDmgTime = gameLocal.time;
                     }
@@ -3735,8 +3599,8 @@ public class Player {
                 health = -999;
             }
 
-            if (AI_DEAD._()) {
-                AI_PAIN._(true);
+            if (AI_DEAD.underscore()) {
+                AI_PAIN.underscore(true);
                 return;
             }
 
@@ -3747,7 +3611,7 @@ public class Player {
                 playerView.Fade(colorBlack, 12000);
             }
 
-            AI_DEAD._(true);
+            AI_DEAD.underscore(true);
             SetAnimState(ANIMCHANNEL_LEGS, "Legs_Death", 4);
             SetAnimState(ANIMCHANNEL_TORSO, "Torso_Death", 4);
             SetWaitState("");
@@ -3770,7 +3634,7 @@ public class Player {
             StartSound("snd_death", SND_CHANNEL_VOICE, 0, false, null);
             StopSound(etoi(SND_CHANNEL_BODY2), false);
 
-            fl.takedamage = true;		// can still be gibbed
+            fl.takedamage = true;        // can still be gibbed
 
             // get rid of weapon
             weapon.GetEntity().OwnerDied();
@@ -3842,7 +3706,7 @@ public class Player {
          create the renderView for the current tic
          ==================
          */
-        public void CalculateRenderView() {	// called every tic by player code
+        public void CalculateRenderView() {    // called every tic by player code
             int i;
             float range;
 
@@ -3985,12 +3849,11 @@ public class Player {
             blink_time = 0;
 
             // play the fire animation
-            AI_WEAPON_FIRED._(true);
+            AI_WEAPON_FIRED.underscore(true);
 
             // update view feedback
             playerView.WeaponFireFeedback(weaponDef);
         }
-
 
         /*
          ====================
@@ -4166,7 +4029,7 @@ public class Player {
 
             if (angle != 0) {
                 if (angles.pitch > 45.0f) {
-                    angles.pitch = 45.0f;		// don't go too far overhead
+                    angles.pitch = 45.0f;        // don't go too far overhead
                 } else {
                     angles.pitch = 0;
                 }
@@ -4180,7 +4043,7 @@ public class Player {
             angles.pitch *= 0.5f;
             renderView.viewaxis = angles.ToMat3().oMultiply(physicsObj.GetGravityAxis());
 
-            idMath.SinCos((float) DEG2RAD(angle), sideScale, forwardScale);
+            idMath.SinCos(DEG2RAD(angle), sideScale, forwardScale);
             view.oMinSet(renderView.viewaxis.oGet(0).oMultiply(range * forwardScale[0]));
             view.oPluSet(renderView.viewaxis.oGet(1).oMultiply(range * sideScale[0]));
 
@@ -4204,7 +4067,7 @@ public class Player {
             focusPoint.oMinSet(view);
             focusDist = idMath.Sqrt(focusPoint.oGet(0) * focusPoint.oGet(0) + focusPoint.oGet(1) * focusPoint.oGet(1));
             if (focusDist < 1.0f) {
-                focusDist = 1.0f;	// should never happen
+                focusDist = 1.0f;    // should never happen
             }
 
             angles.pitch = -RAD2DEG(atan2(focusPoint.z, focusDist));
@@ -4218,7 +4081,7 @@ public class Player {
         public boolean Give(final String statname, final String value) {
             int amount;
 
-            if (AI_DEAD._()) {
+            if (AI_DEAD.underscore()) {
                 return false;
             }
 
@@ -4272,7 +4135,6 @@ public class Player {
         public boolean Give(final idStr statname, final idStr value) {
             return this.Give(statname.toString(), value.toString());
         }
-
 
         /*
          ===============
@@ -4340,7 +4202,7 @@ public class Player {
          */
         public void GiveHealthPool(float amt) {
 
-            if (AI_DEAD._()) {
+            if (AI_DEAD.underscore()) {
                 return;
             }
 
@@ -4927,7 +4789,7 @@ public class Player {
             assert (!gameLocal.isClient);
 
             // make sure there's something to steal
-            idWeapon player_weapon = (idWeapon) player.weapon.GetEntity();
+            idWeapon player_weapon = player.weapon.GetEntity();
             if (NOT(player_weapon) || !player_weapon.CanDrop() || weaponGone) {
                 return;
             }
@@ -4967,8 +4829,8 @@ public class Player {
             Give("weapon", weapon_classname);
             int ammo_i = player.inventory.AmmoIndexForWeaponClass(weapon_classname, null);
             idealWeapon = newweap;
-            inventory.ammo[ ammo_i] += ammoavailable;
-            inventory.clip[ newweap] = inclip;
+            inventory.ammo[ammo_i] += ammoavailable;
+            inventory.clip[newweap] = inclip;
         }
 
         public void AddProjectilesFired(int count) {
@@ -5004,7 +4866,7 @@ public class Player {
                     }
                     assert (aimed != null);
                     // full highlight, no fade till loosing aim
-                    hud.SetStateString("aim_text", gameLocal.userInfo[ MPAim].GetString("ui_name"));
+                    hud.SetStateString("aim_text", gameLocal.userInfo[MPAim].GetString("ui_name"));
                     if (aimed != null) {
                         hud.SetStateFloat("aim_color", aimed.colorBarIndex);
                     }
@@ -5017,7 +4879,7 @@ public class Player {
                     }
                     assert (aimed != null);
                     // start fading right away
-                    hud.SetStateString("aim_text", gameLocal.userInfo[ lastMPAim].GetString("ui_name"));
+                    hud.SetStateString("aim_text", gameLocal.userInfo[lastMPAim].GetString("ui_name"));
                     if (aimed != null) {
                         hud.SetStateFloat("aim_color", aimed.colorBarIndex);
                     }
@@ -5075,9 +4937,9 @@ public class Player {
 
             ammo_souls = idWeapon.GetAmmoNumForName("ammo_souls");
             max_souls = inventory.MaxAmmoForAmmoClass(this, "ammo_souls");
-            if (inventory.ammo[ ammo_souls] < max_souls) {
-                inventory.ammo[ ammo_souls]++;
-                if (inventory.ammo[ ammo_souls] >= max_souls) {
+            if (inventory.ammo[ammo_souls] < max_souls) {
+                inventory.ammo[ammo_souls]++;
+                if (inventory.ammo[ammo_souls] >= max_souls) {
                     hud.HandleNamedEvent("soulCubeReady");
                     StartSound("snd_soulcube_ready", SND_CHANNEL_ANY, 0, false, null);
                 }
@@ -5107,10 +4969,10 @@ public class Player {
          All heartrates are target rates.. the heart rate will start falling as soon as there have been no adjustments for 5 seconds
          Once it starts falling it always tries to get to DEF_HEARTRATE
 
-         The exception to the above rule is upon death at which point the rate is set to DYING_HEARTRATE and starts falling 
+         The exception to the above rule is upon death at which point the rate is set to DYING_HEARTRATE and starts falling
          immediately to zero
 
-         Heart rate volumes go from zero ( -40 db for DEF_HEARTRATE to 5 db for MAX_HEARTRATE ) the volume is 
+         Heart rate volumes go from zero ( -40 db for DEF_HEARTRATE to 5 db for MAX_HEARTRATE ) the volume is
          scaled linearly based on the actual rate
 
          Exception to the above rule is once the player is dead, the dying heart rate starts at either the current volume if
@@ -5123,7 +4985,7 @@ public class Player {
                 return;
             }
 
-            if (AI_DEAD._() && !force) {
+            if (AI_DEAD.underscore() && !force) {
                 return;
             }
 
@@ -5240,7 +5102,7 @@ public class Player {
                         hud.HandleNamedEvent("Air");
                     }
                 }
-                airTics += 2;	// regain twice as fast as lose
+                airTics += 2;    // regain twice as fast as lose
                 if (airTics > pm_airTics.GetInteger()) {
                     airTics = pm_airTics.GetInteger();
                 }
@@ -5272,7 +5134,7 @@ public class Player {
                     _health -= amt;
                     entityGui.spawnArgs.SetInt("gui_parm1", _health);
                     if (entityGui.GetRenderEntity() != null && entityGui.GetRenderEntity().gui[0] != null) {
-                        entityGui.GetRenderEntity().gui[ 0].SetStateInt("gui_parm1", _health);
+                        entityGui.GetRenderEntity().gui[0].SetStateInt("gui_parm1", _health);
                     }
                     health += amt;
                     if (health > 100) {
@@ -5479,7 +5341,7 @@ public class Player {
                 }
             } else {
                 // put everything back together again
-                currentWeapon = -1;	// to make sure the def will be loaded if necessary
+                currentWeapon = -1;    // to make sure the def will be loaded if necessary
                 Show();
                 Event_EnableWeapon();
             }
@@ -5614,7 +5476,7 @@ public class Player {
                     hud.SetStateFloat("aim_color", aimed.colorBarIndex);
                     hud.HandleNamedEvent("aim_flash");
                     MPAimHighlight = true;
-                    MPAimFadeTime = 0;	// no fade till loosing focus
+                    MPAimFadeTime = 0;    // no fade till loosing focus
                 } else if (MPAimHighlight) {
                     hud.HandleNamedEvent("aim_fade");
                     MPAimFadeTime = gameLocal.realClientTime;
@@ -5838,14 +5700,14 @@ public class Player {
             } else {
                 // show remaining ammo
                 _hud.SetStateString("player_totalammo", va("%d", ammoamount - inclip));
-                _hud.SetStateString("player_ammo", (weapon.GetEntity().ClipSize() != 0) ? va("%d", inclip) : "--");		// how much in the current clip
+                _hud.SetStateString("player_ammo", (weapon.GetEntity().ClipSize() != 0) ? va("%d", inclip) : "--");        // how much in the current clip
                 _hud.SetStateString("player_clips", (weapon.GetEntity().ClipSize() != 0) ? va("%d", ammoamount / weapon.GetEntity().ClipSize()) : "--");
                 _hud.SetStateString("player_allammo", va("%d/%d", inclip, ammoamount - inclip));
             }
 
             _hud.SetStateBool("player_ammo_empty", (ammoamount == 0));
-            _hud.SetStateBool("player_clip_empty", ((weapon.GetEntity().ClipSize() != 0) ? inclip == 0 : false));
-            _hud.SetStateBool("player_clip_low", ((weapon.GetEntity().ClipSize() != 0) ? inclip <= weapon.GetEntity().LowAmmo() : false));
+            _hud.SetStateBool("player_clip_empty", (weapon.GetEntity().ClipSize() != 0 && inclip == 0));
+            _hud.SetStateBool("player_clip_low", (weapon.GetEntity().ClipSize() != 0 && inclip <= weapon.GetEntity().LowAmmo()));
 
             _hud.HandleNamedEvent("updateAmmo");
         }
@@ -5969,7 +5831,7 @@ public class Player {
             }
 
             // clear out our pain flag so we can tell if we recieve any damage between now and the next time we think
-            AI_PAIN._(false);
+            AI_PAIN.underscore(false);
 
             // calculate the exact bobbed view position, which is used to
             // position the view weapon, among other things
@@ -6100,7 +5962,7 @@ public class Player {
             // if not a local client assume the client has all ammo types
             if (entityNumber != gameLocal.localClientNum) {
                 for (i = 0; i < AMMO_NUMTYPES; i++) {
-                    inventory.ammo[ i] = 999;
+                    inventory.ammo[i] = 999;
                 }
             }
 
@@ -6110,7 +5972,7 @@ public class Player {
                     UpdateDeathSkin(true);
                 }
                 // die
-                AI_DEAD._(true);
+                AI_DEAD.underscore(true);
                 ClearPowerUps();
                 SetAnimState(ANIMCHANNEL_LEGS, "Legs_Death", 4);
                 SetAnimState(ANIMCHANNEL_TORSO, "Torso_Death", 4);
@@ -6142,7 +6004,7 @@ public class Player {
                     final idDeclEntityDef def = (idDeclEntityDef) declManager.DeclByIndex(DECL_ENTITYDEF, lastDamageDef, false);
                     if (def != null) {
                         playerView.DamageImpulse(lastDamageDir.oMultiply(viewAxis.Transpose()), def.dict);
-                        AI_PAIN._(Pain(null, null, oldHealth - health, lastDamageDir, lastDamageLocation));
+                        AI_PAIN.underscore(Pain(null, null, oldHealth - health, lastDamageDir, lastDamageLocation));
                         lastDmgTime = gameLocal.time;
                     } else {
                         common.Warning("NET: no damage def for damage feedback '%d'\n", lastDamageDef);
@@ -6207,7 +6069,7 @@ public class Player {
             for (i = 0; i < AMMO_NUMTYPES; i++) {
                 ammo = msg.ReadBits(ASYNC_PLAYER_INV_AMMO_BITS);
                 if (gameLocal.time >= inventory.ammoPredictTime) {
-                    inventory.ammo[ i] = ammo;
+                    inventory.ammo[i] = ammo;
                 }
             }
             for (i = 0; i < MAX_WEAPONS; i++) {
@@ -6438,7 +6300,7 @@ public class Player {
             } else {
                 colorBarIndex = 0;
             }
-            colorBar = colorBarTable[ colorBarIndex];
+            colorBar = colorBarTable[colorBarIndex];
             if (PowerUpActive(BERSERK)) {
                 powerUpSkin.oSet(declManager.FindSkin(baseSkinName + "_berserk"));
             }
@@ -6451,11 +6313,7 @@ public class Player {
 
         public void UpdatePlayerIcons() {
             int time = networkSystem.ServerGetClientTimeSinceLastPacket(entityNumber);
-            if (time > cvarSystem.GetCVarInteger("net_clientMaxPrediction")) {
-                isLagged = true;
-            } else {
-                isLagged = false;
-            }
+            isLagged = time > cvarSystem.GetCVarInteger("net_clientMaxPrediction");
         }
 
         public void DrawPlayerIcons() {
@@ -6499,9 +6357,9 @@ public class Player {
         }
 
         private void StopFiring() {
-            AI_ATTACK_HELD._(false);
-            AI_WEAPON_FIRED._(false);
-            AI_RELOAD._(false);
+            AI_ATTACK_HELD.underscore(false);
+            AI_WEAPON_FIRED.underscore(false);
+            AI_RELOAD.underscore(false);
             if (weapon.GetEntity() != null) {
                 weapon.GetEntity().EndAttack();
             }
@@ -6524,7 +6382,7 @@ public class Player {
 
             if (!hiddenWeapon && weapon.GetEntity().IsReady()) {
                 if (weapon.GetEntity().AmmoInClip() != 0 || weapon.GetEntity().AmmoAvailable() != 0) {
-                    AI_ATTACK_HELD._(true);
+                    AI_ATTACK_HELD.underscore(true);
                     weapon.GetEntity().BeginAttack();
                     if ((weapon_soulcube >= 0) && (currentWeapon == weapon_soulcube)) {
                         if (hud != null) {
@@ -6556,13 +6414,13 @@ public class Player {
 
             weapon.GetEntity().RaiseWeapon();
             if (weapon.GetEntity().IsReloading()) {
-                if (!AI_RELOAD._()) {
-                    AI_RELOAD._(true);
+                if (!AI_RELOAD.underscore()) {
+                    AI_RELOAD.underscore(true);
                     SetState("ReloadWeapon");
                     UpdateScript();
                 }
             } else {
-                AI_RELOAD._(false);
+                AI_RELOAD.underscore(false);
             }
 
             if (idealWeapon == weapon_soulcube && soulCubeProjectile.GetEntity() != null) {
@@ -6576,7 +6434,7 @@ public class Player {
                     currentWeapon = idealWeapon;
                     weaponGone = false;
                     animPrefix.oSet(spawnArgs.GetString(va("def_weapon%d", currentWeapon)));
-                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[ currentWeapon]);
+                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[currentWeapon]);
                     animPrefix.Strip("weapon_");
 
                     weapon.GetEntity().NetCatchup();
@@ -6601,14 +6459,14 @@ public class Player {
                         currentWeapon = idealWeapon;
                         weaponGone = false;
                         animPrefix.oSet(spawnArgs.GetString(va("def_weapon%d", currentWeapon)));
-                        weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[ currentWeapon]);
+                        weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[currentWeapon]);
                         animPrefix.Strip("weapon_");
 
                         weapon.GetEntity().Raise();
                     }
                 }
             } else {
-                weaponGone = false;	// if you drop and re-get weap, you may miss the = false above 
+                weaponGone = false;    // if you drop and re-get weap, you may miss the = false above
                 if (weapon.GetEntity().IsHolstered()) {
                     if (NOT(weapon.GetEntity().AmmoAvailable())) {
                         // weapons can switch automatically if they have no more ammo
@@ -6624,19 +6482,19 @@ public class Player {
             }
 
             // check for attack
-            AI_WEAPON_FIRED._(false);
+            AI_WEAPON_FIRED.underscore(false);
             if (0 == influenceActive) {
                 if (((usercmd.buttons & BUTTON_ATTACK) != 0) && !weaponGone) {
                     FireWeapon();
                 } else if ((oldButtons & BUTTON_ATTACK) != 0) {
-                    AI_ATTACK_HELD._(false);
+                    AI_ATTACK_HELD.underscore(false);
                     weapon.GetEntity().EndAttack();
                 }
             }
 
             // update our ammo clip in our inventory
             if ((currentWeapon >= 0) && (currentWeapon < MAX_WEAPONS)) {
-                inventory.clip[ currentWeapon] = weapon.GetEntity().AmmoInClip();
+                inventory.clip[currentWeapon] = weapon.GetEntity().AmmoInClip();
                 if (hud != null && (currentWeapon == idealWeapon)) {
                     UpdateHudAmmo(hud);
                 }
@@ -6715,7 +6573,7 @@ public class Player {
             if (!weapon.GetEntity().IsLinked()) {
                 if (idealWeapon != -1) {
                     animPrefix.oSet(spawnArgs.GetString(va("def_weapon%d", idealWeapon)));
-                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[ idealWeapon]);
+                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[idealWeapon]);
                     assert (weapon.GetEntity().IsLinked());
                 } else {
                     return;
@@ -6765,7 +6623,7 @@ public class Player {
             }
         }
 
-        private void SpectateFreeFly(boolean force) {	// ignore the timeout to force when followed spec is no longer valid
+        private void SpectateFreeFly(boolean force) {    // ignore the timeout to force when followed spec is no longer valid
             idPlayer player;
             idVec3 newOrig;
             idVec3 spawn_origin = new idVec3();
@@ -6837,7 +6695,7 @@ public class Player {
                 return a;
             }
 
-            idAngles current = loggedViewAngles[ gameLocal.framenum & (NUM_LOGGED_VIEW_ANGLES - 1)];
+            idAngles current = loggedViewAngles[gameLocal.framenum & (NUM_LOGGED_VIEW_ANGLES - 1)];
 
             idAngles av;//, base;
             int[] weaponAngleOffsetAverages = {0};
@@ -6849,7 +6707,7 @@ public class Player {
 
             // calcualte this so the wrap arounds work properly
             for (int j = 1; j < weaponAngleOffsetAverages[0]; j++) {
-                idAngles a2 = loggedViewAngles[ (gameLocal.framenum - j) & (NUM_LOGGED_VIEW_ANGLES - 1)];
+                idAngles a2 = loggedViewAngles[(gameLocal.framenum - j) & (NUM_LOGGED_VIEW_ANGLES - 1)];
 
                 idAngles delta = a2.oMinus(current);
 
@@ -6874,6 +6732,10 @@ public class Player {
 
             return a;
         }
+//
+//        private void UseObjects();
+//
+//
 
         /*
          ==============
@@ -6902,7 +6764,7 @@ public class Player {
                 float f;
                 float t = gameLocal.time - acc.time;
                 if (t >= weaponOffsetTime[0]) {
-                    break;	// remainder are too old to care about
+                    break;    // remainder are too old to care about
                 }
 
                 f = t / weaponOffsetTime[0];
@@ -6912,10 +6774,6 @@ public class Player {
 
             return ofs;
         }
-//
-//        private void UseObjects();
-//
-//
 
         /*
          =================
@@ -6936,8 +6794,8 @@ public class Player {
             waterLevel_t waterLevel;
             boolean noDamage;
 
-            AI_SOFTLANDING._(false);
-            AI_HARDLANDING._(false);
+            AI_SOFTLANDING.underscore(false);
+            AI_HARDLANDING.underscore(false);
 
             // if the player is not on the ground
             if (!physicsObj.HasGroundContacts()) {
@@ -7012,7 +6870,7 @@ public class Player {
             }
 
             if (delta > fatalDelta) {
-                AI_HARDLANDING._(true);
+                AI_HARDLANDING.underscore(true);
                 landChange = -32;
                 landTime = gameLocal.time;
                 if (!noDamage) {
@@ -7020,7 +6878,7 @@ public class Player {
                     Damage(null, null, new idVec3(0, 0, -1), "damage_fatalfall", 1.0f, 0);
                 }
             } else if (delta > hardDelta) {
-                AI_HARDLANDING._(true);
+                AI_HARDLANDING.underscore(true);
                 landChange = -24;
                 landTime = gameLocal.time;
                 if (!noDamage) {
@@ -7028,7 +6886,7 @@ public class Player {
                     Damage(null, null, new idVec3(0, 0, -1), "damage_hardfall", 1.0f, 0);
                 }
             } else if (delta > 30) {
-                AI_HARDLANDING._(true);
+                AI_HARDLANDING.underscore(true);
                 landChange = -16;
                 landTime = gameLocal.time;
                 if (!noDamage) {
@@ -7036,7 +6894,7 @@ public class Player {
                     Damage(null, null, new idVec3(0, 0, -1), "damage_softfall", 1.0f, 0);
                 }
             } else if (delta > 7) {
-                AI_SOFTLANDING._(true);
+                AI_SOFTLANDING.underscore(true);
                 landChange = -8;
                 landTime = gameLocal.time;
             } else if (delta > 3) {
@@ -7093,7 +6951,7 @@ public class Player {
 
                 // check for footstep / splash sounds
                 old = bobCycle;
-                bobCycle = (int) (old + bobmove * gameLocal.msec) & 255;
+                bobCycle = (int) (old + bobmove * idGameLocal.msec) & 255;
                 bobFoot = (bobCycle & 128) >> 7;
                 bobfracsin = idMath.Fabs((float) Math.sin((bobCycle & 127) / 127.0 * idMath.PI));
             }
@@ -7116,12 +6974,12 @@ public class Player {
 
             delta = bobfracsin * pm_bobpitch.GetFloat() * speed;
             if (physicsObj.IsCrouching()) {
-                delta *= 3;		// crouching
+                delta *= 3;        // crouching
             }
             viewBobAngles.pitch += delta;
             delta = bobfracsin * pm_bobroll.GetFloat() * speed;
             if (physicsObj.IsCrouching()) {
-                delta *= 3;		// crouching accentuates roll
+                delta *= 3;        // crouching accentuates roll
             }
             if ((bobFoot & 1) != 0) {
                 delta = -delta;
@@ -7198,11 +7056,11 @@ public class Player {
 
             // circularly clamp the angles with deltas
             for (i = 0; i < 3; i++) {
-                cmdAngles.oSet(i, (float) SHORT2ANGLE(usercmd.angles[i]));
+                cmdAngles.oSet(i, SHORT2ANGLE(usercmd.angles[i]));
                 if (influenceActive == INFLUENCE_LEVEL3) {
-                    viewAngles.oPluSet(i, idMath.ClampFloat(-1.0f, 1.0f, idMath.AngleDelta(idMath.AngleNormalize180((float) (SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.oGet(i))), viewAngles.oGet(i))));
+                    viewAngles.oPluSet(i, idMath.ClampFloat(-1.0f, 1.0f, idMath.AngleDelta(idMath.AngleNormalize180(SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.oGet(i)), viewAngles.oGet(i))));
                 } else {
-                    viewAngles.oSet(i, idMath.AngleNormalize180((float) (SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.oGet(i))));
+                    viewAngles.oSet(i, idMath.AngleNormalize180(SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.oGet(i)));
                 }
             }
             if (!centerView.IsDone(gameLocal.time)) {
@@ -7234,7 +7092,7 @@ public class Player {
             SetAngles(new idAngles(0, viewAngles.yaw, 0));
 
             // save in the log for analyzing weapon angle offsets
-            loggedViewAngles[ gameLocal.framenum & (NUM_LOGGED_VIEW_ANGLES - 1)] = viewAngles;
+            loggedViewAngles[gameLocal.framenum & (NUM_LOGGED_VIEW_ANGLES - 1)] = viewAngles;
         }
 
         private void EvaluateControls() {
@@ -7279,7 +7137,7 @@ public class Player {
                 bobFrac = 0;
             } else if (!physicsObj.OnLadder() && ((usercmd.buttons & BUTTON_RUN) != 0) && (usercmd.forwardmove != 0 || usercmd.rightmove != 0) && (usercmd.upmove >= 0)) {
                 if (!gameLocal.isMultiplayer && !physicsObj.IsCrouching() && !PowerUpActive(ADRENALINE)) {
-                    stamina -= MS2SEC(gameLocal.msec);
+                    stamina -= MS2SEC(idGameLocal.msec);
                 }
                 if (stamina < 0) {
                     stamina = 0;
@@ -7300,7 +7158,7 @@ public class Player {
                     rate *= 1.25f;
                 }
 
-                stamina += rate * MS2SEC(gameLocal.msec);
+                stamina += rate * MS2SEC(idGameLocal.msec);
                 if (stamina > pm_stamina.GetFloat()) {
                     stamina = pm_stamina.GetFloat();
                 }
@@ -7367,15 +7225,15 @@ public class Player {
 
             oldViewYaw = viewAngles.yaw;
 
-            AI_TURN_LEFT._(false);
-            AI_TURN_RIGHT._(false);
+            AI_TURN_LEFT.underscore(false);
+            AI_TURN_RIGHT.underscore(false);
             if (idealLegsYaw < -45.0f) {
                 idealLegsYaw = 0;
-                AI_TURN_RIGHT._(true);
+                AI_TURN_RIGHT.underscore(true);
                 blend = true;
             } else if (idealLegsYaw > 45.0f) {
                 idealLegsYaw = 0;
-                AI_TURN_LEFT._(true);
+                AI_TURN_LEFT.underscore(true);
                 blend = true;
             }
 
@@ -7538,15 +7396,15 @@ public class Player {
             }
 
             if (noclip || gameLocal.inCinematic || (influenceActive == INFLUENCE_LEVEL2)) {
-                AI_CROUCH._(false);
-                AI_ONGROUND._(influenceActive == INFLUENCE_LEVEL2);
-                AI_ONLADDER._(false);
-                AI_JUMP._(false);
+                AI_CROUCH.underscore(false);
+                AI_ONGROUND.underscore(influenceActive == INFLUENCE_LEVEL2);
+                AI_ONLADDER.underscore(false);
+                AI_JUMP.underscore(false);
             } else {
-                AI_CROUCH._(physicsObj.IsCrouching());
-                AI_ONGROUND._(physicsObj.HasGroundContacts());
-                AI_ONLADDER._(physicsObj.OnLadder());
-                AI_JUMP._(physicsObj.HasJumped());
+                AI_CROUCH.underscore(physicsObj.IsCrouching());
+                AI_ONGROUND.underscore(physicsObj.HasGroundContacts());
+                AI_ONLADDER.underscore(physicsObj.OnLadder());
+                AI_JUMP.underscore(physicsObj.HasJumped());
 
                 // check if we're standing on top of a monster and give a push if we are
                 idEntity groundEnt = physicsObj.GetGroundEntity();
@@ -7564,7 +7422,7 @@ public class Player {
                 }
             }
 
-            if (AI_JUMP._()) {
+            if (AI_JUMP.underscore()) {
                 // bounce the view weapon
                 loggedAccel_t acc = loggedAccel[currentLoggedAccel & (NUM_LOGGED_ACCELS - 1)];
                 currentLoggedAccel++;
@@ -7573,7 +7431,7 @@ public class Player {
                 acc.dir.oSet(0, acc.dir.oSet(1, 0));
             }
 
-            if (AI_ONLADDER._()) {
+            if (AI_ONLADDER.underscore()) {
                 int old_rung = (int) (oldOrigin.z / LADDER_RUNG_DISTANCE);
                 int new_rung = (int) (physicsObj.GetOrigin().z / LADDER_RUNG_DISTANCE);
 
@@ -7605,8 +7463,8 @@ public class Player {
                 }
             }
 
-            if (healthPool != 0 && gameLocal.time > nextHealthPulse && !AI_DEAD._() && health > 0) {
-                assert (!gameLocal.isClient);	// healthPool never be set on client
+            if (healthPool != 0 && gameLocal.time > nextHealthPulse && !AI_DEAD.underscore() && health > 0) {
+                assert (!gameLocal.isClient);    // healthPool never be set on client
                 int amt = (int) ((healthPool > 5) ? 5 : healthPool);
                 health += amt;
                 if (health > inventory.maxHealth) {
@@ -7619,8 +7477,8 @@ public class Player {
                 healthPulse = true;
             }
             if (BuildDefines.ID_DEMO_BUILD) {
-                if (!gameLocal.inCinematic && influenceActive == 0 && g_skill.GetInteger() == 3 && gameLocal.time > nextHealthTake && !AI_DEAD._() && health > g_healthTakeLimit.GetInteger()) {
-                    assert (!gameLocal.isClient);	// healthPool never be set on client
+                if (!gameLocal.inCinematic && influenceActive == 0 && g_skill.GetInteger() == 3 && gameLocal.time > nextHealthTake && !AI_DEAD.underscore() && health > g_healthTakeLimit.GetInteger()) {
+                    assert (!gameLocal.isClient);    // healthPool never be set on client
                     health -= g_healthTakeAmt.GetInteger();
                     if (health < g_healthTakeLimit.GetInteger()) {
                         health = g_healthTakeLimit.GetInteger();
@@ -7641,9 +7499,9 @@ public class Player {
                     doingDeathSkin = true;
                     renderEntity.noShadow = true;
                     if (state_hitch) {
-                        renderEntity.shaderParms[ SHADERPARM_TIME_OF_DEATH] = gameLocal.time * 0.001f - 2.0f;
+                        renderEntity.shaderParms[SHADERPARM_TIME_OF_DEATH] = gameLocal.time * 0.001f - 2.0f;
                     } else {
-                        renderEntity.shaderParms[ SHADERPARM_TIME_OF_DEATH] = gameLocal.time * 0.001f;
+                        renderEntity.shaderParms[SHADERPARM_TIME_OF_DEATH] = gameLocal.time * 0.001f;
                     }
                     UpdateVisuals();
                 }
@@ -7655,7 +7513,7 @@ public class Player {
                 }
             } else {
                 renderEntity.noShadow = false;
-                renderEntity.shaderParms[ SHADERPARM_TIME_OF_DEATH] = 0.0f;
+                renderEntity.shaderParms[SHADERPARM_TIME_OF_DEATH] = 0.0f;
                 UpdateVisuals();
                 doingDeathSkin = false;
             }
@@ -7675,7 +7533,7 @@ public class Player {
 
             powerUpSkin = null;
             inventory.powerups &= ~(1 << i);
-            inventory.powerupEndTime[ i] = 0;
+            inventory.powerupEndTime[i] = 0;
             switch (i) {
                 case BERSERK: {
                     StopSound(etoi(SND_CHANNEL_DEMONIC), false);
@@ -7748,11 +7606,7 @@ public class Player {
 
             // only update the focus character when attack button isn't pressed so players
             // can still chainsaw NPC's
-            if (gameLocal.isMultiplayer || (NOT(focusCharacter) && ((usercmd.buttons & BUTTON_ATTACK) != 0))) {
-                allowFocus = false;
-            } else {
-                allowFocus = true;
-            }
+            allowFocus = !gameLocal.isMultiplayer && (!NOT(focusCharacter) || ((usercmd.buttons & BUTTON_ATTACK) == 0));
 
             oldFocus = focusGUIent;
             oldUI = focusUI;
@@ -7795,7 +7649,7 @@ public class Player {
             // no pretense at sorting here, just assume that there will only be one active
             // gui within range along the trace
             for (i = 0; i < listedClipModels; i++) {
-                clip = clipModelList[ i];
+                clip = clipModelList[i];
                 ent = clip.GetEntity();
 
                 if (ent.IsHidden()) {
@@ -7967,7 +7821,7 @@ public class Player {
          ================
          idPlayer::UpdateLocation
 
-         Searches nearby locations 
+         Searches nearby locations
          ================
          */
         private void UpdateLocation() {
@@ -8147,6 +8001,9 @@ public class Player {
             }
             objectiveSystem.StateChanged(gameLocal.time);
         }
+//
+//        private void ExtractEmailInfo(final idStr email, final String scan, idStr out);
+//
 
         private int AddGuiPDAData(final declType_t dataType, final String listName, final idDeclPDA src, idUserInterface gui) {
             int c, i;
@@ -8194,9 +8051,6 @@ public class Player {
             }
             return 0;
         }
-//
-//        private void ExtractEmailInfo(final idStr email, final String scan, idStr out);
-//
 
         private void UpdateObjectiveInfo() {
             if (objectiveSystem == null) {
@@ -8227,7 +8081,7 @@ public class Player {
                 end = start.oPlus(viewAngles.ToForward().oMultiply(80.0f));
                 gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
                 if (trace[0].fraction < 1.0f) {
-                    ent = gameLocal.entities[ trace[0].c.entityNum];
+                    ent = gameLocal.entities[trace[0].c.entityNum];
                     if (ent != null && ent.IsType(idAFEntity_Vehicle.class)) {
                         Hide();
                         ((idAFEntity_Vehicle) ent).Use(this);
@@ -8332,15 +8186,15 @@ public class Player {
         private void Event_GetWeaponEntity() {
             idThread.ReturnEntity(weapon.GetEntity());
         }
+//
+//        private void Event_PDAAvailable();
+//
 
         private void Event_OpenPDA() {
             if (!gameLocal.isMultiplayer) {
                 TogglePDA();
             }
         }
-//
-//        private void Event_PDAAvailable();
-//
 
         private void Event_InPDA() {
             idThread.ReturnInt(objectiveSystemOpen);
@@ -8381,7 +8235,7 @@ public class Player {
 
             if (teleportKiller != -1) {
                 // we got killed while being teleported
-                Damage(gameLocal.entities[ teleportKiller], gameLocal.entities[ teleportKiller], getVec3_origin(), "damage_telefrag", 1.0f, INVALID_JOINT);
+                Damage(gameLocal.entities[teleportKiller], gameLocal.entities[teleportKiller], getVec3_origin(), "damage_telefrag", 1.0f, INVALID_JOINT);
                 teleportKiller = -1;
             } else {
                 // kill anything that would have waited at teleport exit
@@ -8427,9 +8281,6 @@ public class Player {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

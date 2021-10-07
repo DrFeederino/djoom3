@@ -1,24 +1,12 @@
 package neo.idlib;
 
-import java.util.Objects;
-
-import static neo.TempDump.atob;
-import static neo.TempDump.atof;
-import static neo.TempDump.atoi;
-import static neo.TempDump.btoi;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
 import neo.framework.File_h.idFile;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.LittleLong;
-import static neo.idlib.Lib.MAX_STRING_CHARS;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_PUNCTUATION;
-import static neo.idlib.Text.Token.TT_STRING;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.cmp_t;
@@ -26,14 +14,24 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrPool.idPoolStr;
 import neo.idlib.containers.StrPool.idStrPool;
 import neo.idlib.hashing.CRC32;
-import static neo.idlib.hashing.CRC32.CRC32_FinishChecksum;
-import static neo.idlib.hashing.CRC32.CRC32_InitChecksum;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.util.Objects;
+
+import static neo.TempDump.*;
+import static neo.framework.Common.common;
+import static neo.idlib.Lib.LittleLong;
+import static neo.idlib.Lib.MAX_STRING_CHARS;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.TT_PUNCTUATION;
+import static neo.idlib.Text.Token.TT_STRING;
+import static neo.idlib.hashing.CRC32.CRC32_FinishChecksum;
+import static neo.idlib.hashing.CRC32.CRC32_InitChecksum;
 
 /**
  *
@@ -42,17 +40,17 @@ public class Dict_h {
 
     /**
      * ===============================================================================
-     *
+     * <p>
      * Key/value dictionary
-     *
+     * <p>
      * This is a dictionary class that tracks an arbitrary number of key / value
      * pair combinations. It is used for map entity spawning, GUI state
      * management, and other things.
-     *
+     * <p>
      * Keys are compared case-insensitive.
-     *
+     * <p>
      * Does not allocate memory until the first key/value pair is added.
-     *
+     * <p>
      * ===============================================================================
      */
     public static class idKeyValue extends idDict implements Cloneable {
@@ -109,7 +107,7 @@ public class Dict_h {
         @Override
         public String toString() {
             return "idKeyValue{" + "key=" + key + ", value=" + value + '}';
-        }       
+        }
 
         @Override
         protected Object clone() throws CloneNotSupportedException {
@@ -119,27 +117,65 @@ public class Dict_h {
 
     public static class idDict {
 
-        private idList<idKeyValue> args = new idList<>();
-        private idHashIndex argHash = new idHashIndex();
-        //        
+        //
         private static final idStrPool globalKeys = new idStrPool();
         private static final idStrPool globalValues = new idStrPool();
+        private static final int DBG_Set = 0;
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        private final idHashIndex argHash = new idHashIndex();
+        private final idList<idKeyValue> args = new idList<>();
 
         public idDict() {
             args.SetGranularity(16);
             argHash.SetGranularity(16);
             argHash.Clear(128, 16);
         }
+//public						~idDict( );
 
         // allow declaration with assignment
         public idDict(final idDict other) {
             this.oSet(other);
         }
-//public						~idDict( );
+
+        static void WriteString(final String s, idFile f) throws idException {
+            int len = s.length();
+            if (len >= MAX_STRING_CHARS - 1) {
+                idLib.common.Error("idDict::WriteToFileHandle: bad string");
+            }
+            f.WriteString(s);//, len + 1);
+        }
+
+        static idStr ReadString(idFile f) throws idException {
+            char[] str = new char[MAX_STRING_CHARS];
+            short[] c = {0};
+            int len;
+
+            for (len = 0; len < MAX_STRING_CHARS; len++) {
+                f.ReadChar(c);//, 1);
+                str[len] = (char) c[0];
+                if (str[len] == 0) {
+                    break;
+                }
+            }
+            if (len == MAX_STRING_CHARS) {
+                idLib.common.Error("idDict::ReadFromFileHandle: bad string");
+            }
+
+            return new idStr(str);
+        }
+
+        public static void Init() {
+            globalKeys.SetCaseSensitive(false);
+            globalValues.SetCaseSensitive(true);
+        }
+
+        public static void Shutdown() {
+            globalKeys.Clear();
+            globalValues.Clear();
+        }
 
         // set the granularity for the index
         public void SetGranularity(int granularity) {
@@ -361,7 +397,6 @@ public class Dict_h {
             Set(key.toString(), value.toString());//TODO:check if toString is sufficient instead of checking whether it's an idStr first?
         }
 
-        private static int DBG_Set = 0;
         public void Set(final String key, final String value) throws idException {
             int i;
             idKeyValue kv = new idKeyValue();
@@ -497,14 +532,6 @@ public class Dict_h {
             idMat3 out = new idMat3();
             GetMatrix(key, defaultString, out);
             return out;
-        }
-
-        static void WriteString(final String s, idFile f) throws idException {
-            int len = s.length();
-            if (len >= MAX_STRING_CHARS - 1) {
-                idLib.common.Error("idDict::WriteToFileHandle: bad string");
-            }
-            f.WriteString(s);//, len + 1);
         }
 
         public boolean GetString(final String key, final String defaultString, final String[] out) throws idException {
@@ -710,6 +737,8 @@ public class Dict_h {
 
             return -1;
         }
+        // finds the next key/value pair with the given key prefix.
+        // lastMatch can be used to do additional searches past the first match.
 
         // delete the key/value pair with the given key
         public void Delete(final String key) {
@@ -743,8 +772,6 @@ public class Dict_h {
         public idKeyValue MatchPrefix(final String prefix) {
             return this.MatchPrefix(prefix, null);
         }
-        // finds the next key/value pair with the given key prefix.
-        // lastMatch can be used to do additional searches past the first match.
 
         public idKeyValue MatchPrefix(final String prefix, final idKeyValue lastMatch) {
             int i;
@@ -788,29 +815,10 @@ public class Dict_h {
         public void WriteToFileHandle(idFile f) throws idException {
             int c = LittleLong(args.Num());
             f.WriteInt(c);//, sizeof(c));
-            for (int i = 0; i < args.Num(); i++) {	// don't loop on the swapped count use the original
+            for (int i = 0; i < args.Num(); i++) {    // don't loop on the swapped count use the original
                 WriteString(args.oGet(i).GetKey().toString(), f);
                 WriteString(args.oGet(i).GetValue().toString(), f);
             }
-        }
-
-        static idStr ReadString(idFile f) throws idException {
-            char[] str = new char[MAX_STRING_CHARS];
-            short[] c = {0};
-            int len;
-
-            for (len = 0; len < MAX_STRING_CHARS; len++) {
-                f.ReadChar(c);//, 1);
-                str[len] = (char) c[0];
-                if (str[len] == 0) {
-                    break;
-                }
-            }
-            if (len == MAX_STRING_CHARS) {
-                idLib.common.Error("idDict::ReadFromFileHandle: bad string");
-            }
-
-            return new idStr(str);
         }
 
         public void ReadFromFileHandle(idFile f) throws idException {
@@ -844,16 +852,6 @@ public class Dict_h {
             }
             CRC32_FinishChecksum(ret);
             return ret[0];
-        }
-
-        public static void Init() {
-            globalKeys.SetCaseSensitive(false);
-            globalValues.SetCaseSensitive(true);
-        }
-
-        public static void Shutdown() {
-            globalKeys.Clear();
-            globalValues.Clear();
         }
 
         public static class ShowMemoryUsage_f extends cmdFunction_t {
@@ -893,7 +891,7 @@ public class Dict_h {
                 }
                 idLib.common.Printf("%5d keys\n", keyStrings.Num());
             }
-        };
+        }
 
         public static class ListValues_f extends cmdFunction_t {
 
@@ -917,7 +915,8 @@ public class Dict_h {
                 }
                 idLib.common.Printf("%5d values\n", valueStrings.Num());
             }
-        };
+        }
+
     }
 
     static class KeyCompare implements cmp_t<idKeyValue> {

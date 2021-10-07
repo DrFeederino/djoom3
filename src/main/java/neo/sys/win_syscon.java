@@ -1,11 +1,10 @@
 package neo.sys;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
+import neo.framework.EditField.idEditField;
+import neo.idlib.Text.Str.idStr;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -13,19 +12,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+
 import static neo.TempDump.NOT;
 import static neo.TempDump.isNotNullOrEmpty;
 import static neo.framework.Common.common;
-import neo.framework.EditField.idEditField;
 import static neo.framework.Licensee.GAME_NAME;
-import neo.idlib.Text.Str.idStr;
 import static neo.sys.RC.doom_resource.IDI_ICON1;
 import static neo.sys.win_local.win32;
 import static neo.sys.win_main.Sys_Error;
@@ -35,81 +26,18 @@ import static neo.sys.win_main.Sys_Error;
  */
 public class win_syscon {
 
-    static final int COPY_ID      = 1;
-    static final int QUIT_ID      = 2;
-    static final int CLEAR_ID     = 3;
-
-    static final int ERRORBOX_ID  = 10;
-    static final int ERRORTEXT_ID = 11;
-
-    static final int EDIT_ID      = 100;
-    static final int INPUT_ID     = 101;
-
+    static final int CLEAR_ID = 3;
     static final int COMMAND_HISTORY = 64;
-
+    static final int COPY_ID = 1;
+    static final int EDIT_ID = 100;
+    static final int ERRORBOX_ID = 10;
+    static final int ERRORTEXT_ID = 11;
+    static final int INPUT_ID = 101;
+    static final int QUIT_ID = 2;
     private static final int CONSOLE_BUFFER_SIZE = 16384;
-
-    private static class WinConData {//TODO:refactor names to reflect the types; e.g:hWnd -> jFrame or something.
-
-        JFrame /*HWND*/ hWnd;
-        StringBuilder buffer = new StringBuilder(0x7000);
-        JTextArea textArea;
-        JScrollPane/*HWND*/ hwndBuffer;
-        //
-        JButton/*HWND*/     hwndButtonClear;
-        JButton/*HWND*/     hwndButtonCopy;
-        JButton/*HWND*/     hwndButtonQuit;
-        //
-        JTextField/*HWND*/  hwndErrorBox;
-        //	HWND		hwndErrorText;
-//
-//	HBITMAP		hbmLogo;
-//	HBITMAP		hbmClearBitmap;
-//
-//	HBRUSH		hbrEditBackground;
-//	HBRUSH		hbrErrorBackground;
-//
-        Font/*HFONT*/       hfBufferFont;
-        Font/*HFONT*/       hfButtonFont;
-        //
-        JTextField /*HWND*/ hwndInputLine;
-        //
-        StringBuilder errorString = new StringBuilder(80);
-        //
-//	char		consoleText[512], returnedText[512];
-        int windowWidth, windowHeight;
-        //
-//	WNDPROC		SysInputLineWndProc;
-//
-        idEditField[] historyEditLines = new idEditField[COMMAND_HISTORY];
-        //
-//	int			nextHistoryLine;// the last line in the history buffer, not masked
-//	int			historyLine;	// the line being displayed from history buffer
-//								// will be <= nextHistoryLine
-//
-        idEditField   consoleField     = new idEditField();
-        //
-        private static final WindowAdapter QUIT_ON_CLOSE = new WindowAdapter() {
-
-            @Override
-            public void windowClosing(WindowEvent e) {
-                common.Quit();
-            }
-
-        };
-
-        void setQuitOnClose(boolean quitOnClose) {
-            if (quitOnClose) {
-                this.hWnd.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                this.hWnd.addWindowListener(QUIT_ON_CLOSE);
-            } else {
-                this.hWnd.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                this.hWnd.removeWindowListener(QUIT_ON_CLOSE);
-            }
-        }
-    };
-
     static WinConData s_wcd = new WinConData();
+
+    private static /*unsigned*/ long s_totalChars;
 
 //    static LONG WINAPI    ConWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 //	char *cmdString;
@@ -430,7 +358,7 @@ public class win_syscon {
 //        wc.setVisible(true);
 
         // don't show it now that we have a splash screen up
-        if (win32.win_viewlog.GetBool()) {
+        if (win_local.Win32Vars_t.win_viewlog.GetBool()) {
             wc.setVisible(true);
 //		UpdateWindow( s_wcd.hWnd );
 //		SetForegroundWindow( s_wcd.hWnd );
@@ -649,8 +577,6 @@ public class win_syscon {
 //	return s_wcd.returnedText;
     }
 
-    private static /*unsigned*/ long s_totalChars;
-
     /*
      ** Conbuf_AppendText
      */
@@ -742,6 +668,66 @@ public class win_syscon {
             s_wcd.hWnd.getContentPane().remove(s_wcd.hwndInputLine);
             s_wcd.hWnd.pack();
             s_wcd.hwndInputLine = null;
+        }
+    }
+
+    private static class WinConData {//TODO:refactor names to reflect the types; e.g:hWnd -> jFrame or something.
+
+        //
+        private static final WindowAdapter QUIT_ON_CLOSE = new WindowAdapter() {
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                common.Quit();
+            }
+
+        };
+        StringBuilder buffer = new StringBuilder(0x7000);
+        //
+//	int			nextHistoryLine;// the last line in the history buffer, not masked
+//	int			historyLine;	// the line being displayed from history buffer
+//								// will be <= nextHistoryLine
+//
+        idEditField consoleField = new idEditField();
+        //
+        StringBuilder errorString = new StringBuilder(80);
+        JFrame /*HWND*/ hWnd;
+        //	HWND		hwndErrorText;
+//
+//	HBITMAP		hbmLogo;
+//	HBITMAP		hbmClearBitmap;
+//
+//	HBRUSH		hbrEditBackground;
+//	HBRUSH		hbrErrorBackground;
+//
+        Font/*HFONT*/       hfBufferFont;
+        Font/*HFONT*/       hfButtonFont;
+        //
+//	WNDPROC		SysInputLineWndProc;
+//
+        idEditField[] historyEditLines = new idEditField[COMMAND_HISTORY];
+        JScrollPane/*HWND*/ hwndBuffer;
+        //
+        JButton/*HWND*/     hwndButtonClear;
+        JButton/*HWND*/     hwndButtonCopy;
+        JButton/*HWND*/     hwndButtonQuit;
+        //
+        JTextField/*HWND*/  hwndErrorBox;
+        //
+        JTextField /*HWND*/ hwndInputLine;
+        JTextArea textArea;
+        //
+//	char		consoleText[512], returnedText[512];
+        int windowWidth, windowHeight;
+
+        void setQuitOnClose(boolean quitOnClose) {
+            if (quitOnClose) {
+                this.hWnd.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                this.hWnd.addWindowListener(QUIT_ON_CLOSE);
+            } else {
+                this.hWnd.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                this.hWnd.removeWindowListener(QUIT_ON_CLOSE);
+            }
         }
     }
 

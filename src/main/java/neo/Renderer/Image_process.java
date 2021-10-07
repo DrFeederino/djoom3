@@ -1,9 +1,10 @@
 package neo.Renderer;
 
+import org.lwjgl.BufferUtils;
+
 import java.nio.ByteBuffer;
 
 import static neo.idlib.Lib.idLib.common;
-import org.lwjgl.BufferUtils;
 
 /**
  *
@@ -28,8 +29,10 @@ public class Image_process {
     static ByteBuffer R_ResampleTexture(final ByteBuffer in, int inwidth, int inheight, int outwidth, int outheight) {
         int i, j;
         ByteBuffer inrow, inrow2;
-        /*unsigned*/ int frac, fracstep;
-        /*unsigned*/ int[] p1 = new int[MAX_DIMENSION], p2 = new int[MAX_DIMENSION];
+        /*unsigned*/
+        int frac, fracstep;
+        /*unsigned*/
+        int[] p1 = new int[MAX_DIMENSION], p2 = new int[MAX_DIMENSION];
         ByteBuffer pix1, pix2, pix3, pix4;
         ByteBuffer out, out_p;
 
@@ -63,10 +66,10 @@ public class Image_process {
             inrow2.position(4 * inwidth * (int) ((i + 0.75f) * inheight / outheight));
             frac = fracstep >> 1;
             for (j = 0; j < outwidth; j++) {
-                pix1 = (ByteBuffer) inrow.duplicate().position(p1[j]);
-                pix2 = (ByteBuffer) inrow.duplicate().position(p2[j]);
-                pix3 = (ByteBuffer) inrow2.duplicate().position(p1[j]);
-                pix4 = (ByteBuffer) inrow2.duplicate().position(p2[j]);
+                pix1 = inrow.duplicate().position(p1[j]);
+                pix2 = inrow.duplicate().position(p2[j]);
+                pix3 = inrow2.duplicate().position(p1[j]);
+                pix4 = inrow2.duplicate().position(p2[j]);
                 out_p.put((byte) (addUnsignedBytes(pix1.get(), pix2.get(), pix3.get(), pix4.get()) >> 2));
                 out_p.put((byte) (addUnsignedBytes(pix1.get(), pix2.get(), pix3.get(), pix4.get()) >> 2));
                 out_p.put((byte) (addUnsignedBytes(pix1.get(), pix2.get(), pix3.get(), pix4.get()) >> 2));
@@ -261,7 +264,7 @@ public class Image_process {
         height >>= 1;
 
         if (width == 0 || height == 0) {
-            width += height;	// get largest
+            width += height;    // get largest
             if (preserveBorder) {
                 for (i = 0; i < width; i++, out_p += 4) {
                     out.put(out_p + 0, border[0]);

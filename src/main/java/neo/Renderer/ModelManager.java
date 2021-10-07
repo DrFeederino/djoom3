@@ -1,6 +1,5 @@
 package neo.Renderer;
 
-import static neo.Renderer.Model.MD5_MESH_EXT;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model_beam.idRenderModelBeam;
 import neo.Renderer.Model_liquid.idRenderModelLiquid;
@@ -9,27 +8,24 @@ import neo.Renderer.Model_md3.idRenderModelMD3;
 import neo.Renderer.Model_md5.idRenderModelMD5;
 import neo.Renderer.Model_prt.idRenderModelPrt;
 import neo.Renderer.Model_sprite.idRenderModelSprite;
-import static neo.Renderer.tr_lightrun.R_CheckForEntityDefsUsingModel;
-import static neo.Renderer.tr_lightrun.R_FreeDerivedData;
-import static neo.Renderer.tr_lightrun.R_ReCreateWorldReferences;
-import static neo.Renderer.tr_local.frameData;
-import static neo.Renderer.tr_trisurf.R_PurgeTriSurfData;
-import static neo.framework.CmdSystem.CMD_FL_CHEAT;
-import static neo.framework.CmdSystem.CMD_FL_RENDERER;
-import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import neo.framework.CmdSystem.idCmdSystem;
+import neo.framework.CmdSystem.*;
 import neo.framework.Common.MemInfo_t;
-import static neo.framework.Common.com_purgeAll;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
-import static neo.framework.Session.session;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
+
+import static neo.Renderer.Model.MD5_MESH_EXT;
+import static neo.Renderer.tr_lightrun.*;
+import static neo.Renderer.tr_local.frameData;
+import static neo.Renderer.tr_trisurf.R_PurgeTriSurfData;
+import static neo.framework.CmdSystem.*;
+import static neo.framework.Common.com_purgeAll;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Session.session;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -39,6 +35,10 @@ public class ModelManager {
 
     private static idRenderModelManagerLocal localModelManager = new idRenderModelManagerLocal();
     public static idRenderModelManager renderModelManager = localModelManager;
+
+    public static void setRenderModelManager(idRenderModelManager renderModelManager) {
+        ModelManager.renderModelManager = ModelManager.localModelManager = (idRenderModelManagerLocal) renderModelManager;
+    }
 
     /*
      ===============================================================================
@@ -112,17 +112,17 @@ public class ModelManager {
 
         // print memory info
         public abstract void PrintMemInfo(MemInfo_t mi);
-    };
+    }
 
     public static class idRenderModelManagerLocal extends idRenderModelManager {
 
-        private idList<idRenderModel> models;
-        private idHashIndex hash;
-        private idRenderModel defaultModel;
         private idRenderModel beamModel;
+        private idRenderModel defaultModel;
+        private final idHashIndex hash;
+        private boolean insideLevelLoad;        // don't actually load now
+        private final idList<idRenderModel> models;
         private idRenderModel spriteModel;
-        private idRenderModel trailModel;
-        private boolean insideLevelLoad;		// don't actually load now
+        private final idRenderModel trailModel;
         //
         //
 
@@ -184,7 +184,7 @@ public class ModelManager {
             if (null == model) {
                 return;
             }
-            if (null == ((idRenderModelStatic) model)) {//TODO:always false?
+            if (null == model) {//TODO:always false?
                 common.Error("idRenderModelManager::FreeModel: model '%s' is not a static model", model.Name());
                 return;
             }
@@ -555,7 +555,7 @@ public class ModelManager {
 
                 model.Print();
             }
-        };
+        }
 
         /*
          ==============
@@ -598,7 +598,7 @@ public class ModelManager {
                 common.Printf("%d loaded models\n", inUse);
                 common.Printf("total memory: %4.1fM\n", (float) totalMem / (1024 * 1024));
             }
-        };
+        }
 
         /*
          ==============
@@ -618,13 +618,9 @@ public class ModelManager {
 
             @Override
             public void run(idCmdArgs args) {
-                if (idStr.Icmp(args.Argv(1), "all") == 0) {
-                    localModelManager.ReloadModels(true);
-                } else {
-                    localModelManager.ReloadModels(false);
-                }
+                localModelManager.ReloadModels(idStr.Icmp(args.Argv(1), "all") == 0);
             }
-        };
+        }
 
         /*
          ==============
@@ -660,10 +656,7 @@ public class ModelManager {
                     common.Printf("...not found\n");
                 }
             }
-        };
-    };
+        }
 
-    public static void setRenderModelManager(idRenderModelManager renderModelManager) {
-        ModelManager.renderModelManager = ModelManager.localModelManager = (idRenderModelManagerLocal) renderModelManager;
     }
 }

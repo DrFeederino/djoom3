@@ -1,15 +1,11 @@
 package neo.Renderer;
 
 import neo.Renderer.Interaction.idInteraction;
-import static neo.Renderer.Material.MF_NOPORTALFOG;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
-import static neo.Renderer.ModelManager.renderModelManager;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import static neo.Renderer.RenderSystem_init.r_showUpdates;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 import neo.Renderer.RenderWorld.renderLight_s;
 import neo.Renderer.RenderWorld_local.doublePortal_s;
 import neo.Renderer.RenderWorld_local.idRenderWorldLocal;
@@ -18,24 +14,27 @@ import neo.Renderer.RenderWorld_local.portal_s;
 import neo.Renderer.tr_local.areaReference_s;
 import neo.Renderer.tr_local.idRenderEntityLocal;
 import neo.Renderer.tr_local.idRenderLightLocal;
-import static neo.Renderer.tr_local.tr;
-import static neo.Renderer.tr_main.R_AxisToModelMatrix;
-import static neo.Renderer.tr_main.R_LocalPlaneToGlobal;
-import static neo.Renderer.tr_main.R_LocalPointToGlobal;
-import static neo.Renderer.tr_polytope.R_PolytopeSurface;
-import static neo.Renderer.tr_stencilshadow.R_MakeShadowFrustums;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.Session.session;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.Renderer.Material.MF_NOPORTALFOG;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderSystem_init.r_showUpdates;
+import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_main.*;
+import static neo.Renderer.tr_polytope.R_PolytopeSurface;
+import static neo.Renderer.tr_stencilshadow.R_MakeShadowFrustums;
+import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.Session.session;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -115,64 +114,13 @@ public class tr_lightrun {
      */
 
     /*
-     =================================================================================
-
-     LIGHT TESTING
-
-     =================================================================================
+     =================
+     R_CreateLightRefs
+     =================
      */
-    /*
-     ====================
-     R_ModulateLights_f
+    static final int MAX_LIGHT_VERTS = 40;
 
-     Modifies the shaderParms on all the lights so the level
-     designers can easily test different color schemes
-     ====================
-     */
-    public static class R_ModulateLights_f extends cmdFunction_t {
-
-        private static final cmdFunction_t instance = new R_ModulateLights_f();
-
-        private R_ModulateLights_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-            if (null == tr.primaryWorld) {
-                return;
-            }
-            if (args.Argc() != 4) {
-                common.Printf("usage: modulateLights <redFloat> <greenFloat> <blueFloat>\n");
-                return;
-            }
-
-            float[] modulate = new float[3];
-            int i;
-            for (i = 0; i < 3; i++) {
-                modulate[i] = Float.parseFloat(args.Argv(i + 1));
-            }
-
-            int count = 0;
-            for (i = 0; i < tr.primaryWorld.lightDefs.Num(); i++) {
-                idRenderLightLocal light;
-
-                light = tr.primaryWorld.lightDefs.oGet(i);
-                if (light != null) {
-                    count++;
-                    for (int j = 0; j < 3; j++) {
-                        light.parms.shaderParms[j] *= modulate[j];
-                    }
-                }
-            }
-            common.Printf("modulated %d lights\n", count);
-        }
-    };
-
-//======================================================================================
+    //======================================================================================
     /*
      ===============
      R_CreateEntityRefs
@@ -248,7 +196,7 @@ public class tr_lightrun {
      =====================
      */
     public static void R_SetLightProject(idPlane[] lightProject/*[4]*/, final idVec3 origin, final idVec3 target,
-            final idVec3 rightVector, final idVec3 upVector, final idVec3 start, final idVec3 stop) {
+                                         final idVec3 rightVector, final idVec3 upVector, final idVec3 start, final idVec3 stop) {
         float dist;
         float scale;
         float rLen, uLen;
@@ -402,7 +350,7 @@ public class tr_lightrun {
         if (!light.parms.pointLight) {
             // projected light
 
-            R_SetLightProject(light.lightProject, getVec3_origin() /* light.parms.origin */ , light.parms.target,
+            R_SetLightProject(light.lightProject, getVec3_origin() /* light.parms.origin */, light.parms.target,
                     light.parms.right, light.parms.up, light.parms.start, light.parms.end);
         } else {
             // point light
@@ -449,7 +397,7 @@ public class tr_lightrun {
             light.globalLightOrigin = light.parms.origin.oPlus(dir.oMultiply(100000));
         } else {
             light.globalLightOrigin = light.parms.origin.oPlus(light.parms.axis.oMultiply(light.parms.lightCenter));
-        }                                                                         
+        }
 
         R_FreeLightDefFrustum(light);
 
@@ -459,13 +407,6 @@ public class tr_lightrun {
         // six unless the light center is outside the box
         R_MakeShadowFrustums(light);
     }
-
-    /*
-     =================
-     R_CreateLightRefs
-     =================
-     */
-    static final int MAX_LIGHT_VERTS = 40;
 
     public static void R_CreateLightRefs(idRenderLightLocal light) {
         idVec3[] points = new idVec3[MAX_LIGHT_VERTS];
@@ -536,8 +477,6 @@ public class tr_lightrun {
         }
     }
 
-//=================================================================================
-
     /*
      ===============
      WindingCompletelyInsideLight
@@ -558,6 +497,8 @@ public class tr_lightrun {
         }
         return true;
     }
+
+//=================================================================================
 
     /*
      ======================
@@ -594,7 +535,7 @@ public class tr_lightrun {
 
                 // we only handle a single fog volume covering a portal
                 // this will never cause incorrect drawing, but it may
-                // fail to cull a portal 
+                // fail to cull a portal
                 if (dp.fogLight != null) {
                     continue;
                 }
@@ -875,6 +816,64 @@ public class tr_lightrun {
     }
 
     /*
+     =================================================================================
+
+     LIGHT TESTING
+
+     =================================================================================
+     */
+    /*
+     ====================
+     R_ModulateLights_f
+
+     Modifies the shaderParms on all the lights so the level
+     designers can easily test different color schemes
+     ====================
+     */
+    public static class R_ModulateLights_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new R_ModulateLights_f();
+
+        private R_ModulateLights_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+            if (null == tr.primaryWorld) {
+                return;
+            }
+            if (args.Argc() != 4) {
+                common.Printf("usage: modulateLights <redFloat> <greenFloat> <blueFloat>\n");
+                return;
+            }
+
+            float[] modulate = new float[3];
+            int i;
+            for (i = 0; i < 3; i++) {
+                modulate[i] = Float.parseFloat(args.Argv(i + 1));
+            }
+
+            int count = 0;
+            for (i = 0; i < tr.primaryWorld.lightDefs.Num(); i++) {
+                idRenderLightLocal light;
+
+                light = tr.primaryWorld.lightDefs.oGet(i);
+                if (light != null) {
+                    count++;
+                    for (int j = 0; j < 3; j++) {
+                        light.parms.shaderParms[j] *= modulate[j];
+                    }
+                }
+            }
+            common.Printf("modulated %d lights\n", count);
+        }
+    }
+
+    /*
      ===================
      R_RegenerateWorld_f
 
@@ -904,5 +903,6 @@ public class tr_lightrun {
 
             common.Printf("Regenerated world, staticAllocCount = %d.\n", tr.staticAllocCount);
         }
-    };
+    }
+
 }

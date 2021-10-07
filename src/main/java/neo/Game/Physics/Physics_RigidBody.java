@@ -3,56 +3,53 @@ package neo.Game.Physics;
 import neo.CM.CollisionModel.contactInfo_t;
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
-import static neo.Game.Entity.TH_PHYSICS;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.rb_showActive;
-import static neo.Game.GameSys.SysCvar.rb_showBodies;
-import static neo.Game.GameSys.SysCvar.rb_showInertia;
-import static neo.Game.GameSys.SysCvar.rb_showMass;
-import static neo.Game.GameSys.SysCvar.rb_showTimings;
-import static neo.Game.GameSys.SysCvar.rb_showVelocity;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Physics.Clip.idClipModel;
-import static neo.Game.Physics.Physics.CONTACT_EPSILON;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Base.idPhysics_Base;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Timer.idTimer;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.FLOAT_IS_NAN;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.Min3Index;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.SkewSymmetric;
-import static neo.idlib.math.Matrix.idMat3.TransposeMultiply;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Ode.deriveFunction_t;
 import neo.idlib.math.Ode.idODE;
 import neo.idlib.math.Ode.idODE_Euler;
 import neo.idlib.math.Quat.idCQuat;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec6;
 
 import java.nio.FloatBuffer;
+
+import static neo.Game.Entity.TH_PHYSICS;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Physics.Physics.CONTACT_EPSILON;
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.idlib.Lib.colorCyan;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Matrix.idMat3.*;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class Physics_RigidBody {
 
+    public static final float RB_FORCE_MAX = 1e20f;
+    public static final int RB_FORCE_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(RB_FORCE_MAX)) + 1;
+    public static final int RB_FORCE_TOTAL_BITS = 16;
+    public static final int RB_FORCE_MANTISSA_BITS = RB_FORCE_TOTAL_BITS - 1 - RB_FORCE_EXPONENT_BITS;
+    public static final float RB_MOMENTUM_MAX = 1e20f;
+    public static final int RB_MOMENTUM_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(RB_MOMENTUM_MAX)) + 1;
+    public static final int RB_MOMENTUM_TOTAL_BITS = 16;
+    public static final int RB_MOMENTUM_MANTISSA_BITS = RB_MOMENTUM_TOTAL_BITS - 1 - RB_MOMENTUM_EXPONENT_BITS;
     /*
      ===================================================================================
 
@@ -63,28 +60,66 @@ public class Physics_RigidBody {
 
      ===================================================================================
      */
-    public static final  float   RB_VELOCITY_MAX           = 16000;
-    public static final  int     RB_VELOCITY_TOTAL_BITS    = 16;
-    public static final  int     RB_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(RB_VELOCITY_MAX)) + 1;
-    public static final  int     RB_VELOCITY_MANTISSA_BITS = RB_VELOCITY_TOTAL_BITS - 1 - RB_VELOCITY_EXPONENT_BITS;
-    public static final  float   RB_MOMENTUM_MAX           = 1e20f;
-    public static final  int     RB_MOMENTUM_TOTAL_BITS    = 16;
-    public static final  int     RB_MOMENTUM_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(RB_MOMENTUM_MAX)) + 1;
-    public static final  int     RB_MOMENTUM_MANTISSA_BITS = RB_MOMENTUM_TOTAL_BITS - 1 - RB_MOMENTUM_EXPONENT_BITS;
-    public static final  float   RB_FORCE_MAX              = 1e20f;
-    public static final  int     RB_FORCE_TOTAL_BITS       = 16;
-    public static final  int     RB_FORCE_EXPONENT_BITS    = idMath.BitsForInteger(idMath.BitsForFloat(RB_FORCE_MAX)) + 1;
-    public static final  int     RB_FORCE_MANTISSA_BITS    = RB_FORCE_TOTAL_BITS - 1 - RB_FORCE_EXPONENT_BITS;
+    public static final float RB_VELOCITY_MAX = 16000;
+    public static final int RB_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(RB_VELOCITY_MAX)) + 1;
+    public static final int RB_VELOCITY_TOTAL_BITS = 16;
+    public static final int RB_VELOCITY_MANTISSA_BITS = RB_VELOCITY_TOTAL_BITS - 1 - RB_VELOCITY_EXPONENT_BITS;
     //
-    static final         float   STOP_SPEED                = 10.0f;
+    static final float STOP_SPEED = 10.0f;
     //
-    private static final boolean RB_TIMINGS                = false;
-    private static final boolean TEST_COLLISION_DETECTION  = false;
+    private static final boolean RB_TIMINGS = false;
+    private static final boolean TEST_COLLISION_DETECTION = false;
     //
-    static               int     lastTimerReset            = 0;
-    static               int     numRigidBodies            = 0;
+    static int lastTimerReset = 0;
+    static int numRigidBodies = 0;
     static idTimer timer_total, timer_collision;
 //
+
+    /*
+     ================
+     idPhysics_RigidBody_SavePState
+     ================
+     */
+    static void idPhysics_RigidBody_SavePState(idSaveGame savefile, final rigidBodyPState_s state) {
+        savefile.WriteInt(state.atRest);
+        savefile.WriteFloat(state.lastTimeStep);
+        savefile.WriteVec3(state.localOrigin);
+        savefile.WriteMat3(state.localAxis);
+        savefile.WriteVec6(state.pushVelocity);
+        savefile.WriteVec3(state.externalForce);
+        savefile.WriteVec3(state.externalTorque);
+
+        savefile.WriteVec3(state.i.position);
+        savefile.WriteMat3(state.i.orientation);
+        savefile.WriteVec3(state.i.linearMomentum);
+        savefile.WriteVec3(state.i.angularMomentum);
+    }
+
+    /*
+     ================
+     idPhysics_RigidBody_RestorePState
+     ================
+     */
+    static void idPhysics_RigidBody_RestorePState(idRestoreGame savefile, rigidBodyPState_s state) {
+        int[] atRest = {0};
+        float[] lastTimeStep = {0};
+
+        savefile.ReadInt(atRest);
+        savefile.ReadFloat(lastTimeStep);
+        savefile.ReadVec3(state.localOrigin);
+        savefile.ReadMat3(state.localAxis);
+        savefile.ReadVec6(state.pushVelocity);
+        savefile.ReadVec3(state.externalForce);
+        savefile.ReadVec3(state.externalTorque);
+
+        savefile.ReadVec3(state.i.position);
+        savefile.ReadMat3(state.i.orientation);
+        savefile.ReadVec3(state.i.linearMomentum);
+        savefile.ReadVec3(state.i.angularMomentum);
+
+        state.atRest = atRest[0];
+        state.lastTimeStep = lastTimeStep[0];
+    }
 
     public static class rigidBodyIState_s {
 
@@ -93,14 +128,12 @@ public class Physics_RigidBody {
                 + idMat3.BYTES
                 + idVec3.BYTES
                 + idVec3.BYTES;
-
-        idVec3 position;                    // position of trace model
-        idMat3 orientation;                 // orientation of trace model
-        idVec3 linearMomentum;              // translational momentum relative to center of mass
-        idVec3 angularMomentum;             // rotational momentum relative to center of mass
-
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        idVec3 angularMomentum;             // rotational momentum relative to center of mass
+        idVec3 linearMomentum;              // translational momentum relative to center of mass
+        idMat3 orientation;                 // orientation of trace model
+        idVec3 position;                    // position of trace model
 
         private rigidBodyIState_s() {
             position = new idVec3();
@@ -108,7 +141,7 @@ public class Physics_RigidBody {
             linearMomentum = new idVec3();
             angularMomentum = new idVec3();
         }
-        
+
         private rigidBodyIState_s(float[] state) {
             this();
             this.fromFloats(state);
@@ -153,14 +186,14 @@ public class Physics_RigidBody {
 
     public static class rigidBodyPState_s {
 
-        int               atRest;           // set when simulation is suspended
-        float             lastTimeStep;     // length of last time step
-        idVec3            localOrigin;      // origin relative to master
-        idMat3            localAxis;        // axis relative to master
-        idVec6            pushVelocity;     // push velocity
-        idVec3            externalForce;    // external force relative to center of mass
-        idVec3            externalTorque;   // external torque relative to center of mass
+        int atRest;           // set when simulation is suspended
+        idVec3 externalForce;    // external force relative to center of mass
+        idVec3 externalTorque;   // external torque relative to center of mass
         rigidBodyIState_s i;                // state used for integration
+        float lastTimeStep;     // length of last time step
+        idMat3 localAxis;        // axis relative to master
+        idVec3 localOrigin;      // origin relative to master
+        idVec6 pushVelocity;     // push velocity
 
         public rigidBodyPState_s() {
             this.localOrigin = new idVec3();
@@ -185,35 +218,45 @@ public class Physics_RigidBody {
     public static class idPhysics_RigidBody extends idPhysics_Base {
         // CLASS_PROTOTYPE( idPhysics_RigidBody );
 
+        static final float MAX_INERTIA_SCALE = 10.0f;
+        static idVec3 curAngularVelocity;
+        static idVec3 curLinearVelocity;
+        /*
+         ================
+         idPhysics_RigidBody::DropToFloorAndRest
+
+         Drops the object straight down to the floor and verifies if the object is at rest on the floor.
+         ================
+         */                   private static int DBG_DropToFloorAndRest = 0;
+        private float angularFriction;      // rotational friction
+        private float bouncyness;           // bouncyness
+        private final idVec3 centerOfMass;         // center of mass of trace model
+        private idClipModel clipModel;            // clip model used for collision detection
+        private float contactFriction;      // friction with contact surfaces
         // state of the rigid body
         private rigidBodyPState_s current;
-        private rigidBodyPState_s saved;
-        //
-        // rigid body properties
-        private float             linearFriction;       // translational friction
-        private float             angularFriction;      // rotational friction
-        private float             contactFriction;      // friction with contact surfaces
-        private float             bouncyness;           // bouncyness
-        private idClipModel       clipModel;            // clip model used for collision detection
-        //
-        // derived properties
-        private float             mass;                 // mass of body
-        private float             inverseMass;          // 1 / mass
-        private idVec3            centerOfMass;         // center of mass of trace model
-        private idMat3            inertiaTensor;        // mass distribution
-        private idMat3            inverseInertiaTensor; // inverse inertia tensor
-        //
-        private idODE             integrator;           // integrator
-        private boolean           dropToFloor;          // true if dropping to the floor and putting to rest
-        private boolean           testSolid;            // true if testing for solid when dropping to the floor
-        private boolean           noImpact;             // if true do not activate when another object collides
-        private boolean           noContact;            // if true do not determine contacts and no contact friction
+        private boolean dropToFloor;          // true if dropping to the floor and putting to rest
         //
         // master
-        private boolean           hasMaster;
-        private boolean           isOrientated;
+        private boolean hasMaster;
+        private final idMat3 inertiaTensor;        // mass distribution
+        //
+        private final idODE integrator;           // integrator
+        private idMat3 inverseInertiaTensor; // inverse inertia tensor
+        private float inverseMass;          // 1 / mass
+        private boolean isOrientated;
+        //
+        // rigid body properties
+        private float linearFriction;       // translational friction
+        //
+        // derived properties
+        private float mass;                 // mass of body
         //
         //
+        private boolean noContact;            // if true do not determine contacts and no contact friction
+        private boolean noImpact;             // if true do not activate when another object collides
+        private rigidBodyPState_s saved;
+        private boolean testSolid;            // true if testing for solid when dropping to the floor
 
         public idPhysics_RigidBody() {
 
@@ -256,8 +299,8 @@ public class Physics_RigidBody {
 
         // ~idPhysics_RigidBody();
         @Override
-        protected void _deconstructor(){
-            if ( clipModel != null ) {
+        protected void _deconstructor() {
+            if (clipModel != null) {
                 idClipModel.delete(clipModel);
             }
 //            delete integrator;
@@ -358,8 +401,6 @@ public class Physics_RigidBody {
             noImpact = true;
         }
 
-        static final float MAX_INERTIA_SCALE = 10.0f;
-
         // common physics interface
         @Override
         public void SetClipModel(idClipModel model, float density, int id /*= 0*/, boolean freeOld /*= true*/) {
@@ -458,7 +499,6 @@ public class Physics_RigidBody {
         public idBounds GetAbsBounds(int id /*= -1*/) {
             return clipModel.GetAbsBounds();
         }
-
 
         /*
          ================
@@ -818,14 +858,12 @@ public class Physics_RigidBody {
             current.i.angularMomentum.oSet(newAngularVelocity.oMultiply(inertiaTensor));
             Activate();
         }
-        static idVec3 curLinearVelocity;
 
         @Override
         public idVec3 GetLinearVelocity(int id /*= 0*/) {
             curLinearVelocity = current.i.linearMomentum.oMultiply(inverseMass);
             return curLinearVelocity;
         }
-        static idVec3 curAngularVelocity;
 
         @Override
         public idVec3 GetAngularVelocity(int id /*= 0*/) {
@@ -901,7 +939,7 @@ public class Physics_RigidBody {
             dir.SubVec3_oSet(1, current.i.angularMomentum);
             dir.SubVec3_Normalize(0);
             dir.SubVec3_Normalize(1);
-            final contactInfo_t[] contactz = contacts.Ptr(contactInfo_t[].class);
+            final contactInfo_t[] contactz = contacts.getList(contactInfo_t[].class);
             num = gameLocal.clip.Contacts(contactz, 10, clipModel.GetOrigin(),
                     dir, CONTACT_EPSILON, clipModel, clipModel.GetAxis(), clipMask, self);
             for (int i = 0; i < num; i++) {
@@ -922,7 +960,7 @@ public class Physics_RigidBody {
 
             // velocity with which the af is pushed
             current.pushVelocity.SubVec3_oPluSet(0, (current.i.position.oMinus(saved.i.position)).oDivide(deltaTime * idMath.M_MS2SEC));
-            current.pushVelocity.SubVec3_oPluSet(1, rotation.GetVec().oMultiply((float) -DEG2RAD(rotation.GetAngle())).oDivide(deltaTime * idMath.M_MS2SEC));
+            current.pushVelocity.SubVec3_oPluSet(1, rotation.GetVec().oMultiply(-DEG2RAD(rotation.GetAngle())).oDivide(deltaTime * idMath.M_MS2SEC));
         }
 
         @Override
@@ -1039,77 +1077,6 @@ public class Physics_RigidBody {
                 clipModel.Link(gameLocal.clip, self, clipModel.GetId(), current.i.position, current.i.orientation);
             }
         }
-
-        private static class rigidBodyDerivatives_s {
-            public static final int BYTES =
-                            idVec3.BYTES +
-                            idMat3.BYTES +
-                            idVec3.BYTES +
-                            idVec3.BYTES;
-
-            idVec3 linearVelocity;
-            idMat3 angularMatrix;
-            idVec3 force;
-            idVec3 torque;
-
-            private rigidBodyDerivatives_s(float[] derivatives) {
-                FloatBuffer b = FloatBuffer.wrap(derivatives);
-                if (b.hasRemaining()) {
-                    linearVelocity = new idVec3(b.get(), b.get(), b.get());
-                }
-                if (b.hasRemaining()) {
-                    angularMatrix = new idMat3(
-                            b.get(), b.get(), b.get(),
-                            b.get(), b.get(), b.get(),
-                            b.get(), b.get(), b.get());
-                }
-                if (b.hasRemaining()) {
-                    force = new idVec3(b.get(), b.get(), b.get());
-                }
-                if (b.hasRemaining()) {
-                    torque = new idVec3(b.get(), b.get(), b.get());
-                }
-            }
-
-            private float[] toFloats() {
-                final FloatBuffer buffer = FloatBuffer.allocate(BYTES / Float.BYTES);
-                buffer.put(linearVelocity.ToFloatPtr())
-                        .put(angularMatrix.ToFloatPtr())
-                        .put(force.ToFloatPtr())
-                        .put(torque.ToFloatPtr());
-
-                return buffer.array();
-            }
-        };
-
-        private /*friend*/ static class RigidBodyDerivatives extends deriveFunction_t {
-
-            public static final deriveFunction_t INSTANCE = new RigidBodyDerivatives();
-
-            private RigidBodyDerivatives() {
-            }
-
-            @Override
-            public void run(final float t, final Object clientData, final float[] state, float[] derivatives) {
-                idPhysics_RigidBody p = (idPhysics_RigidBody) clientData;
-                rigidBodyIState_s s = new rigidBodyIState_s(state);//TODO:from float array to object
-                // NOTE: this struct should be build conform rigidBodyIState_t
-                rigidBodyDerivatives_s d = new rigidBodyDerivatives_s(derivatives);
-                idVec3 angularVelocity;
-                idMat3 inverseWorldInertiaTensor;
-
-                inverseWorldInertiaTensor = s.orientation.oMultiply(p.inverseInertiaTensor.oMultiply(s.orientation.Transpose()));
-                angularVelocity = inverseWorldInertiaTensor.oMultiply(s.angularMomentum);
-                // derivatives
-                d.linearVelocity = s.linearMomentum.oMultiply(p.inverseMass);
-                d.angularMatrix = SkewSymmetric(angularVelocity).oMultiply(s.orientation);
-                d.force = s.linearMomentum.oMultiply(-p.linearFriction).oPlus(p.current.externalForce);
-                d.torque = s.angularMomentum.oMultiply(-p.angularFriction).oPlus(p.current.externalTorque);
-
-                System.arraycopy(d.toFloats(), 0, derivatives, 0 ,derivatives.length);
-            }
-        };
-
 
         /*
          ================
@@ -1302,18 +1269,12 @@ public class Physics_RigidBody {
             }
         }
 
-        /*
-         ================
-         idPhysics_RigidBody::DropToFloorAndRest
-
-         Drops the object straight down to the floor and verifies if the object is at rest on the floor.
-         ================
-         */                   private static int DBG_DropToFloorAndRest = 0;
-        private void DropToFloorAndRest() {                DBG_DropToFloorAndRest++;
+        private void DropToFloorAndRest() {
+            DBG_DropToFloorAndRest++;
             idVec3 down;
             trace_s[] tr = {null};
 
-            if(this.DBG_count==8209){
+            if (this.DBG_count == 8209) {
                 int bla = 1;
             }
 
@@ -1435,11 +1396,7 @@ public class Physics_RigidBody {
             av = inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum);
 
             // if too much rotational velocity
-            if (av.LengthSqr() > STOP_SPEED) {
-                return false;
-            }
-
-            return true;
+            return !(av.LengthSqr() > STOP_SPEED);
         }
 
         private void Rest() {
@@ -1462,9 +1419,9 @@ public class Physics_RigidBody {
             if (rb_showInertia.GetBool()) {
                 idMat3 I = inertiaTensor;
                 gameRenderWorld.DrawText(va("\n\n\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )",
-                        I.oGet(0).x, I.oGet(0).y, I.oGet(0).z,
-                        I.oGet(1).x, I.oGet(1).y, I.oGet(1).z,
-                        I.oGet(2).x, I.oGet(2).y, I.oGet(2).z),
+                                I.oGet(0).x, I.oGet(0).y, I.oGet(0).z,
+                                I.oGet(1).x, I.oGet(1).y, I.oGet(1).z,
+                                I.oGet(2).x, I.oGet(2).y, I.oGet(2).z),
                         current.i.position, 0.05f, colorCyan, gameLocal.GetLocalPlayer().viewAngles.ToMat3(), 1);
             }
 
@@ -1472,52 +1429,75 @@ public class Physics_RigidBody {
                 DrawVelocity(clipModel.GetId(), 0.1f, 4.0f);
             }
         }
-    };
 
-    /*
-     ================
-     idPhysics_RigidBody_SavePState
-     ================
-     */
-    static void idPhysics_RigidBody_SavePState(idSaveGame savefile, final rigidBodyPState_s state) {
-        savefile.WriteInt(state.atRest);
-        savefile.WriteFloat(state.lastTimeStep);
-        savefile.WriteVec3(state.localOrigin);
-        savefile.WriteMat3(state.localAxis);
-        savefile.WriteVec6(state.pushVelocity);
-        savefile.WriteVec3(state.externalForce);
-        savefile.WriteVec3(state.externalTorque);
+        private static class rigidBodyDerivatives_s {
+            public static final int BYTES =
+                    idVec3.BYTES +
+                            idMat3.BYTES +
+                            idVec3.BYTES +
+                            idVec3.BYTES;
+            idMat3 angularMatrix;
+            idVec3 force;
+            idVec3 linearVelocity;
+            idVec3 torque;
 
-        savefile.WriteVec3(state.i.position);
-        savefile.WriteMat3(state.i.orientation);
-        savefile.WriteVec3(state.i.linearMomentum);
-        savefile.WriteVec3(state.i.angularMomentum);
-    }
+            private rigidBodyDerivatives_s(float[] derivatives) {
+                FloatBuffer b = FloatBuffer.wrap(derivatives);
+                if (b.hasRemaining()) {
+                    linearVelocity = new idVec3(b.get(), b.get(), b.get());
+                }
+                if (b.hasRemaining()) {
+                    angularMatrix = new idMat3(
+                            b.get(), b.get(), b.get(),
+                            b.get(), b.get(), b.get(),
+                            b.get(), b.get(), b.get());
+                }
+                if (b.hasRemaining()) {
+                    force = new idVec3(b.get(), b.get(), b.get());
+                }
+                if (b.hasRemaining()) {
+                    torque = new idVec3(b.get(), b.get(), b.get());
+                }
+            }
 
-    /*
-     ================
-     idPhysics_RigidBody_RestorePState
-     ================
-     */
-    static void idPhysics_RigidBody_RestorePState(idRestoreGame savefile, rigidBodyPState_s state) {
-        int[] atRest = {0};
-        float[] lastTimeStep = {0};
+            private float[] toFloats() {
+                final FloatBuffer buffer = FloatBuffer.allocate(BYTES / Float.BYTES);
+                buffer.put(linearVelocity.ToFloatPtr())
+                        .put(angularMatrix.ToFloatPtr())
+                        .put(force.ToFloatPtr())
+                        .put(torque.ToFloatPtr());
 
-        savefile.ReadInt(atRest);
-        savefile.ReadFloat(lastTimeStep);
-        savefile.ReadVec3(state.localOrigin);
-        savefile.ReadMat3(state.localAxis);
-        savefile.ReadVec6(state.pushVelocity);
-        savefile.ReadVec3(state.externalForce);
-        savefile.ReadVec3(state.externalTorque);
+                return buffer.array();
+            }
+        }
 
-        savefile.ReadVec3(state.i.position);
-        savefile.ReadMat3(state.i.orientation);
-        savefile.ReadVec3(state.i.linearMomentum);
-        savefile.ReadVec3(state.i.angularMomentum);
+        private /*friend*/ static class RigidBodyDerivatives extends deriveFunction_t {
 
-        state.atRest = atRest[0];
-        state.lastTimeStep = lastTimeStep[0];
+            public static final deriveFunction_t INSTANCE = new RigidBodyDerivatives();
+
+            private RigidBodyDerivatives() {
+            }
+
+            @Override
+            public void run(final float t, final Object clientData, final float[] state, float[] derivatives) {
+                idPhysics_RigidBody p = (idPhysics_RigidBody) clientData;
+                rigidBodyIState_s s = new rigidBodyIState_s(state);//TODO:from float array to object
+                // NOTE: this struct should be build conform rigidBodyIState_t
+                rigidBodyDerivatives_s d = new rigidBodyDerivatives_s(derivatives);
+                idVec3 angularVelocity;
+                idMat3 inverseWorldInertiaTensor;
+
+                inverseWorldInertiaTensor = s.orientation.oMultiply(p.inverseInertiaTensor.oMultiply(s.orientation.Transpose()));
+                angularVelocity = inverseWorldInertiaTensor.oMultiply(s.angularMomentum);
+                // derivatives
+                d.linearVelocity = s.linearMomentum.oMultiply(p.inverseMass);
+                d.angularMatrix = SkewSymmetric(angularVelocity).oMultiply(s.orientation);
+                d.force = s.linearMomentum.oMultiply(-p.linearFriction).oPlus(p.current.externalForce);
+                d.torque = s.angularMomentum.oMultiply(-p.angularFriction).oPlus(p.current.externalTorque);
+
+                System.arraycopy(d.toFloats(), 0, derivatives, 0, derivatives.length);
+            }
+        }
     }
 
 }

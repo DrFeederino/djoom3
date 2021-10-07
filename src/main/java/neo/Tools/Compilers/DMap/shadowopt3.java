@@ -1,11 +1,21 @@
 package neo.Tools.Compilers.DMap;
 
-import java.util.Arrays;
-import static neo.Renderer.Interaction.R_FreeInteractionCullInfo;
 import neo.Renderer.Interaction.srfCullInfo_t;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.tr_local.idRenderEntityLocal;
 import neo.Renderer.tr_local.optimizedShadow_t;
+import neo.Tools.Compilers.DMap.dmap.mapLight_t;
+import neo.Tools.Compilers.DMap.dmap.mapTri_s;
+import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
+import neo.idlib.containers.List.cmp_t;
+import neo.idlib.geometry.Winding.idWinding;
+import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.idVec4;
+
+import java.util.Arrays;
+
+import static neo.Renderer.Interaction.R_FreeInteractionCullInfo;
 import static neo.Renderer.tr_stencilshadow.R_CreateShadowVolume;
 import static neo.Renderer.tr_stencilshadow.R_LightProjectionMatrix;
 import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_OFFLINE;
@@ -15,37 +25,22 @@ import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
 import static neo.TempDump.NOT;
 import static neo.TempDump.etoi;
 import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.mapLight_t;
-import neo.Tools.Compilers.DMap.dmap.mapTri_s;
-import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
-import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_CLIP_SILS;
-import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_CULL_OCCLUDED;
-import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_MERGE_SURFACES;
-import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_SIL_OPTIMIZE;
+import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.*;
 import static neo.Tools.Compilers.DMap.map.FindFloatPlane;
 import static neo.Tools.Compilers.DMap.map.FreeOptimizeGroupList;
 import static neo.Tools.Compilers.DMap.optimize.OptimizeGroupList;
 import static neo.Tools.Compilers.DMap.output.ShareMapTriVerts;
-import neo.Tools.Compilers.DMap.shadowopt3.shadowOptEdge_s;
-import neo.Tools.Compilers.DMap.shadowopt3.shadowTri_t;
-import neo.Tools.Compilers.DMap.shadowopt3.silPlane_t;
-import neo.Tools.Compilers.DMap.shadowopt3.silQuad_s;
-import static neo.Tools.Compilers.DMap.tritools.CopyTriList;
-import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
-import static neo.Tools.Compilers.DMap.tritools.MergeTriLists;
+import static neo.Tools.Compilers.DMap.tritools.*;
 import static neo.framework.Common.common;
-import neo.idlib.containers.List.cmp_t;
-import neo.idlib.geometry.Winding.idWinding;
 import static neo.idlib.math.Plane.ON_EPSILON;
-import neo.idlib.math.Plane.idPlane;
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
 
 /**
  *
  */
 public class shadowopt3 {
 
+    //
+    static final float EDGE_EPSILON = 0.1f;
     /*
 
      given a set of faces that are clipped to the required frustum
@@ -76,11 +71,11 @@ public class shadowopt3 {
      if triangles on both sides have two verts in common
      continue
      make a sil edge from one triangle to the other
-		
 
 
 
-     classify triangles on common planes, so they can be optimized 
+
+     classify triangles on common planes, so they can be optimized
 
      what about interpenetrating triangles???
 
@@ -105,69 +100,41 @@ public class shadowopt3 {
      for each vertex
      project onto the apropriate plane and mark plane bit as in use
      for each triangle
-     if points project onto different planes, clip 
+     if points project onto different planes, clip
      */
-    static final int           MAX_SHADOW_TRIS = 32768;
+    static final int MAX_SHADOW_TRIS = 32768;
     //
-    static       shadowTri_t[] outputTris      = new shadowTri_t[MAX_SHADOW_TRIS];
-    static int numOutputTris;
+    static final int MAX_SIL_EDGES = MAX_SHADOW_TRIS * 3;
+    static shadowOptEdge_s[] silEdges = new shadowOptEdge_s[MAX_SIL_EDGES];
     //
-    static final int               MAX_SIL_EDGES = MAX_SHADOW_TRIS * 3;
-    static       shadowOptEdge_s[] silEdges      = new shadowOptEdge_s[MAX_SIL_EDGES];
-    static int numSilEdges;
-    //
-    static final int         MAX_SIL_QUADS = MAX_SHADOW_TRIS * 3;
-    static       silQuad_s[] silQuads      = new silQuad_s[MAX_SIL_QUADS];
-    static int numSilQuads;
+    static final int MAX_SIL_QUADS = MAX_SHADOW_TRIS * 3;
+    static silQuad_s[] silQuads = new silQuad_s[MAX_SIL_QUADS];
     //
     static float EDGE_PLANE_EPSILON = 0.1f;
-    static float UNIQUE_EPSILON     = 0.1f;
+    static float UNIQUE_EPSILON = 0.1f;
+    /*
+     ===================
+     ClipTriangle_r
+     ===================
+     */
+    static int c_removedFragments;
+    static int maxRetIndexes;
+    static int maxUniqued;
+    static int numOutputTris;
+    static int numSilEdges;
     //
-    static int               numSilPlanes;
-    static silPlane_t[]      silPlanes;
+    static int numSilPlanes;
+    static int numSilQuads;
     //
 // the uniqued verts are still in projection centered space, not global space
-    static int               numUniqued;
-    static int               numUniquedBeforeProjection;
-    static int               maxUniqued;
-    static idVec3[]          uniqued;
+    static int numUniqued;
+    static int numUniquedBeforeProjection;
+    //
+    static shadowTri_t[] outputTris = new shadowTri_t[MAX_SHADOW_TRIS];
     //
     static optimizedShadow_t ret;
-    static int               maxRetIndexes;
-    //
-    static final float EDGE_EPSILON = 0.1f;
-
-    static class shadowTri_t {
-
-        idVec3[]           v     = new idVec3[3];
-        idVec3[]           edge  = new idVec3[3];   // positive side is inside the triangle
-        int/*glIndex_t*/[] index = new int[3];
-        idPlane plane;                              // positive side is forward for the triangle, which is away from the light
-        int     planeNum;                           // from original triangle, not calculated from the clipped verts
-    };
-
-    static class shadowOptEdge_s {
-
-        int/*glIndex_t*/[] index = new int[2];
-        shadowOptEdge_s nextEdge;
-    };
-
-    static class silQuad_s {
-
-        int[] nearV = new int[2];
-        int[] farV  = new int[2];        // will always be a projection of near[]
-        silQuad_s nextQuad;
-    };
-
-    static class silPlane_t {
-
-        idVec3          normal;    // all sil planes go through the projection origin
-        shadowOptEdge_s edges;
-        silQuad_s       fragmentedQuads;
-    };
-
-//static int FindUniqueVert( idVec3 v );
-//=====================================================================================
+    static silPlane_t[] silPlanes;
+    static idVec3[] uniqued;
 
     /*
      =================
@@ -230,19 +197,11 @@ public class shadowopt3 {
             return true;
         }
         d = b.plane.Distance(a.v[2]);
-        if (d > 0) {
-            return true;
-        }
-
-        return false;
+        return d > 0;
     }
 
-    /*
-     ===================
-     ClipTriangle_r
-     ===================
-     */
-    static int c_removedFragments;
+    //static int FindUniqueVert( idVec3 v );
+//=====================================================================================
 
     static void ClipTriangle_r(final shadowTri_t tri, int startTri, int skipTri, int numTris, final shadowTri_t[] tris) {
         // create edge planes for this triangle
@@ -314,7 +273,6 @@ public class shadowopt3 {
         numOutputTris++;
     }
 
-
     /*
      ====================
      ClipOccluders
@@ -367,7 +325,7 @@ public class shadowopt3 {
             c_removedFragments = 0;
             ClipTriangle_r(tris[i], 0, i, numTris, tris);
             if (numOutputTris == oldOutput) {
-                numRemoved++;		// completely unused
+                numRemoved++;        // completely unused
             } else if (c_removedFragments == 0) {
                 // the entire triangle is visible
                 numComplete++;
@@ -390,8 +348,6 @@ public class shadowopt3 {
         common.Printf("%d triangles fragmented\n", numFragmented);
         common.Printf("%d shadowing fragments before optimization\n", numOutputTris);
     }
-
-//=====================================================================================
 
     /*
      ================
@@ -448,29 +404,6 @@ public class shadowopt3 {
         FreeOptimizeGroupList(optGroups);
     }
 
-//==================================================================================
-    @Deprecated
-    static class EdgeSort implements cmp_t<Long> {
-
-        @Override
-        public int compare(Long a, Long b) {
-//	if ( *(unsigned *)a < *(unsigned *)b ) {
-//		return -1;
-//	}
-//	if ( *(unsigned *)a > *(unsigned *)b ) {
-//		return 1;
-//	}
-            if (a < b) {
-                return -1;
-            }
-            if (a > b) {
-                return 1;
-            }
-
-            return 0;
-        }
-    }
-
     /*
      =====================
      GenerateSilEdges
@@ -495,7 +428,7 @@ public class shadowopt3 {
             int b = outputTris[i].index[1];
             int c = outputTris[i].index[2];
             if (a == b || a == c || b == c) {
-                continue;		// degenerate
+                continue;        // degenerate
             }
 
             for (j = 0; j < 3; j++) {
@@ -504,7 +437,7 @@ public class shadowopt3 {
                 v1 = outputTris[i].index[j];
                 v2 = outputTris[i].index[(j + 1) % 3];
                 if (v1 == v2) {
-                    continue;		// degenerate
+                    continue;        // degenerate
                 }
                 if (v1 > v2) {
                     edges[numEdges] = (v1 << 16) | (v2 << 1);
@@ -517,7 +450,7 @@ public class shadowopt3 {
 
 //        qsort(edges, numEdges, sizeof(edges[0]), EdgeSort);
         Arrays.sort(edges, 0, numEdges);//, new EdgeSort());//TODO:check whether the default sort is enough
-        edges[numEdges] = -1;	// force the last to make an edge if no matched to previous
+        edges[numEdges] = -1;    // force the last to make an edge if no matched to previous
 
         for (i = 0; i < numEdges; i++) {
             if ((edges[i] ^ edges[i + 1]) == 1) {
@@ -545,8 +478,6 @@ public class shadowopt3 {
         }
     }
 
-//==================================================================================
-
     /*
      =====================
      GenerateSilPlanes
@@ -562,7 +493,7 @@ public class shadowopt3 {
         numSilPlanes = 0;
         for (int i = 0; i < numSilEdges; i++) {
             if (silEdges[i].index[0] == silEdges[i].index[1]) {
-                continue;	// degenerate
+                continue;    // degenerate
             }
 
             idVec3 v1 = uniqued[silEdges[i].index[0]];
@@ -594,8 +525,6 @@ public class shadowopt3 {
         }
     }
 
-//==================================================================================
-
     /*
      =============
      SaveQuad
@@ -612,6 +541,7 @@ public class shadowopt3 {
         numSilQuads++;
     }
 
+//=====================================================================================
 
     /*
      ===================
@@ -645,7 +575,7 @@ public class shadowopt3 {
      ===================
      */
     static void FragmentSilQuad(silQuad_s quad, silPlane_t silPlane,
-            shadowOptEdge_s startEdge, shadowOptEdge_s skipEdge) {
+                                shadowOptEdge_s startEdge, shadowOptEdge_s skipEdge) {
         if (quad.nearV[0] == quad.nearV[1]) {
             return;
         }
@@ -765,7 +695,6 @@ public class shadowopt3 {
         SaveQuad(silPlane, quad);
     }
 
-
     /*
      ===============
      FragmentSilQuads
@@ -795,8 +724,6 @@ public class shadowopt3 {
             }
         }
     }
-
-//=======================================================================
 
     /*
      =====================
@@ -908,6 +835,8 @@ public class shadowopt3 {
         silPlanes = null;//Mem_Free(silPlanes);
     }
 
+//==================================================================================
+
     /*
      =================
      EmitUnoptimizedSilEdges
@@ -988,7 +917,7 @@ public class shadowopt3 {
      ======================
      */
     static void ProjectUniqued(idVec3 projectionOrigin, idPlane projectionPlane) {
-        // calculate the projection 
+        // calculate the projection
         idVec4[] mat = new idVec4[4];
 
         R_LightProjectionMatrix(projectionOrigin, projectionPlane, mat);
@@ -1018,6 +947,8 @@ public class shadowopt3 {
         }
         numUniqued *= 2;
     }
+
+//=======================================================================
 
     /*
      ====================
@@ -1060,9 +991,9 @@ public class shadowopt3 {
         ret.numFrontCapIndexes = numOutputTris * 3;
         ret.numRearCapIndexes = numOutputTris * 3;
         if (etoi(dmapGlobals.shadowOptLevel) >= etoi(SO_CLIP_SILS)) {
-            ret.numSilPlaneIndexes = numSilQuads * 12;	// this is the worst case with clipping
+            ret.numSilPlaneIndexes = numSilQuads * 12;    // this is the worst case with clipping
         } else {
-            ret.numSilPlaneIndexes = numSilEdges * 6;	// this is the worst case with clipping
+            ret.numSilPlaneIndexes = numSilEdges * 6;    // this is the worst case with clipping
         }
 
         ret.totalIndexes = 0;
@@ -1084,7 +1015,7 @@ public class shadowopt3 {
         ret.totalIndexes = ret.numFrontCapIndexes + ret.numRearCapIndexes;
 
         if (etoi(dmapGlobals.shadowOptLevel) >= etoi(SO_CLIP_SILS)) {
-            // re-optimize the sil planes, cutting 
+            // re-optimize the sil planes, cutting
             EmitFragmentedSilQuads();
         } else {
             // indexes for silhouette edges
@@ -1145,6 +1076,8 @@ public class shadowopt3 {
             common.Printf("removed %d degenerate triangles from shadow\n", c_removed);
         }
     }
+
+//==================================================================================
 
     /*
      ====================
@@ -1238,7 +1171,7 @@ public class shadowopt3 {
      lightShadow_t list is a further culling and optimization of the data.
      ========================
      */
-    static srfTriangles_s CreateLightShadow(optimizeGroup_s shadowerGroups, final mapLight_t light) {;
+    static srfTriangles_s CreateLightShadow(optimizeGroup_s shadowerGroups, final mapLight_t light) {
 
         common.Printf("----- CreateLightShadow %p -----\n", light);
 
@@ -1294,5 +1227,57 @@ public class shadowopt3 {
         }
 
         return shadowTris;
+    }
+
+    static class shadowTri_t {
+
+        idVec3[] edge = new idVec3[3];   // positive side is inside the triangle
+        int/*glIndex_t*/[] index = new int[3];
+        idPlane plane;                              // positive side is forward for the triangle, which is away from the light
+        int planeNum;                           // from original triangle, not calculated from the clipped verts
+        idVec3[] v = new idVec3[3];
+    }
+
+    static class shadowOptEdge_s {
+
+        int/*glIndex_t*/[] index = new int[2];
+        shadowOptEdge_s nextEdge;
+    }
+
+    static class silQuad_s {
+
+        int[] farV = new int[2];        // will always be a projection of near[]
+        int[] nearV = new int[2];
+        silQuad_s nextQuad;
+    }
+
+    static class silPlane_t {
+
+        shadowOptEdge_s edges;
+        silQuad_s fragmentedQuads;
+        idVec3 normal;    // all sil planes go through the projection origin
+    }
+
+    //==================================================================================
+    @Deprecated
+    static class EdgeSort implements cmp_t<Long> {
+
+        @Override
+        public int compare(Long a, Long b) {
+//	if ( *(unsigned *)a < *(unsigned *)b ) {
+//		return -1;
+//	}
+//	if ( *(unsigned *)a > *(unsigned *)b ) {
+//		return 1;
+//	}
+            if (a < b) {
+                return -1;
+            }
+            if (a > b) {
+                return 1;
+            }
+
+            return 0;
+        }
     }
 }

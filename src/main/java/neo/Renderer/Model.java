@@ -1,8 +1,5 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.util.stream.Stream;
-
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.VertexCache.vertCache_s;
@@ -20,6 +17,9 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import org.lwjgl.BufferUtils;
 
+import java.nio.ByteBuffer;
+import java.util.stream.Stream;
+
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 
 /**
@@ -27,6 +27,12 @@ import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
  */
 public class Model {
 
+    //typedef enum {
+    public static final int INVALID_JOINT = -1;
+    public static final String MD5_ANIM_EXT = "md5anim";
+    public static final String MD5_CAMERA_EXT = "md5camera";
+    public static final String MD5_MESH_EXT = "md5mesh";
+    public static final int MD5_VERSION = 10;
     /*
      ===============================================================================
 
@@ -36,14 +42,11 @@ public class Model {
      */
     // shared between the renderer, game, and Maya export DLL
     public static final String MD5_VERSION_STRING = "MD5Version";
-    public static final String MD5_MESH_EXT = "md5mesh";
-    public static final String MD5_ANIM_EXT = "md5anim";
-    public static final String MD5_CAMERA_EXT = "md5camera";
-    public static final int MD5_VERSION = 10;
     //
     // using shorts for triangle indexes can save a significant amount of traffic, but
     // to support the large models that renderBump loads, they need to be 32 bits
     static final int GL_INDEX_TYPE;
+    static final int SHADOW_CAP_INFINITE = 64;
 
     static {
         if (true) {
@@ -53,34 +56,41 @@ public class Model {
         }
     }
 
+    public enum dynamicModel_t {
+
+        DM_STATIC, // never creates a dynamic model
+        DM_CACHED, // once created, stays constant until the entity is updated (animating characters)
+        DM_CONTINUOUS    // must be recreated for every single view (time dependent things like particles)
+    }
+
     static class silEdge_t {
         // NOTE: making this a glIndex is dubious, as there can be 2x the faces as verts
 
-        int/*glIndex_t*/ p1, p2;		// planes defining the edge
-        int/*glIndex_t*/ v1, v2;		// verts defining the edge
+        int/*glIndex_t*/ p1, p2;        // planes defining the edge
+        int/*glIndex_t*/ v1, v2;        // verts defining the edge
 
         public silEdge_t() {
-        }        
-        
+        }
+
         static silEdge_t[] generateArray(final int length) {
             return Stream.
                     generate(silEdge_t::new).
                     limit(length).
                     toArray(silEdge_t[]::new);
         }
-    };
+    }
 
     // this is used for calculating unsmoothed normals and tangents for deformed models
     public static class dominantTri_s {
 
-        public int/*glIndex_t*/ v2, v3;
         public final float[] normalizationScale = new float[3];
-    };
+        public int/*glIndex_t*/ v2, v3;
+    }
 
     static class lightingCache_s {
         static final int BYTES = idVec3.BYTES;
 
-        idVec3 localLightVector;		// this is the statically computed vector to the light
+        idVec3 localLightVector;        // this is the statically computed vector to the light
         // in texture space for cards without vertex programs
 
         lightingCache_s(ByteBuffer Position) {
@@ -94,15 +104,15 @@ public class Model {
                 data.put(c.localLightVector.Write());
             }
 
-            return (ByteBuffer) data.flip();
+            return data.flip();
         }
-    };
+    }
 
     public static class shadowCache_s {
 
         public static final int BYTES = idVec4.BYTES;
 
-        public idVec4 xyz;			// we use homogenous coordinate tricks
+        public idVec4 xyz;            // we use homogenous coordinate tricks
 
         public shadowCache_s() {
             xyz = new idVec4();
@@ -119,71 +129,53 @@ public class Model {
                 data.put(c.xyz.Write());
             }
 
-            return (ByteBuffer) data.flip();
+            return data.flip();
         }
-    };
-    static final int SHADOW_CAP_INFINITE = 64;
+    }
 
     // our only drawing geometry type
     public static class srfTriangles_s {
 
+        private static int DBG_counter = 0;
+        public final int DBG_count = DBG_counter++;
         public idBounds bounds;                 // for culling
-
-        int     ambientViewCount;               // if == tr.viewCount, it is visible this view
-
-        boolean generateNormals;                // create normals from geometry, instead of using explicit ones
-        public boolean tangentsCalculated;      // set when the vertex tangents have been calculated
-        boolean facePlanesCalculated;           // set when the face planes have been calculated
-        boolean perfectHull;                    // true if there aren't any dangling edges
-        boolean deformedSurface;                // if true, indexes, silIndexes, mirrorVerts, and silEdges are
-                                                // pointers into the original surface, and should not be freed
-
-        public int                 numVerts;    // number of vertices
-        public idDrawVert[]        verts;       // vertices, allocated with special allocator
-
-        public int                 numIndexes;  // for shadows, this has both front and rear end caps and silhouette planes
+        public idPlane[] facePlanes;            // [numIndexes/3] plane equations
         public int /*glIndex_t*/[] indexes;     // indexes, allocated with special allocator
-
-        public int/*glIndex_t*/[]  silIndexes;  // indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
-
-        int         numMirroredVerts;           // this many verts at the end of the vert list are tangent mirrors
-        int[]       mirroredVerts;              // tri->mirroredVerts[0] is the mirror of tri->numVerts - tri->numMirroredVerts + 0
-
-        int         numDupVerts;                // number of duplicate vertexes
-        int[]       dupVerts;                   // pairs of the number of the first vertex and the number of the duplicate vertex
-
-        int         numSilEdges;                // number of silhouette edges
+        public int numIndexes;  // for shadows, this has both front and rear end caps and silhouette planes
+        public int numShadowIndexesNoCaps;     // shadow volumes with the front and rear caps omitted
+        // pointers into the original surface, and should not be freed
+        public int numShadowIndexesNoFrontCaps;// shadow volumes with front caps omitted
+        public int numVerts;    // number of vertices
+        public int shadowCapPlaneBits;         // bits 0-5 are set when that plane of the interacting light has triangles
+        public shadowCache_s[] shadowVertexes;  // these will be copied to shadowCache when it is going to be drawn.
+        public int/*glIndex_t*/[] silIndexes;  // indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
+        public boolean tangentsCalculated;      // set when the vertex tangents have been calculated
+        public idDrawVert[] verts;       // vertices, allocated with special allocator
+        vertCache_s ambientCache;            // idDrawVert
+        srfTriangles_s ambientSurface;          // for light interactions, point back at the original surface that generated
+        int ambientViewCount;               // if == tr.viewCount, it is visible this view
+        boolean deformedSurface;                // if true, indexes, silIndexes, mirrorVerts, and silEdges are
+        dominantTri_s[] dominantTris;           // [numVerts] for deformed surface fast tangent calculation
+        int[] dupVerts;                   // pairs of the number of the first vertex and the number of the duplicate vertex
+        boolean facePlanesCalculated;           // set when the face planes have been calculated
+        boolean generateNormals;                // create normals from geometry, instead of using explicit ones
+        // data in vertex object space, not directly readable by the CPU
+        vertCache_s indexCache;              // int
+        // projected on it, which means that if the view is on the outside of that
+        // plane, we need to draw the rear caps of the shadow volume
+        // turboShadows will have SHADOW_CAP_INFINITE
+        vertCache_s lightingCache;           // lightingCache_t
+        // these are NULL when vertex programs are available
+        int[] mirroredVerts;              // tri->mirroredVerts[0] is the mirror of tri->numVerts - tri->numMirroredVerts + 0
+        // the interaction, which we will get the ambientCache from
+        srfTriangles_s nextDeferredFree;        // chain of tris to free next frame
+        int numDupVerts;                // number of duplicate vertexes
+        int numMirroredVerts;           // this many verts at the end of the vert list are tangent mirrors
+        int numSilEdges;                // number of silhouette edges
+        boolean perfectHull;                    // true if there aren't any dangling edges
+        vertCache_s shadowCache;             // shadowCache_t
         silEdge_t[] silEdges;                   // silhouette edges
 
-        public idPlane[] facePlanes;            // [numIndexes/3] plane equations
-
-        dominantTri_s[] dominantTris;           // [numVerts] for deformed surface fast tangent calculation
-
-        public int  numShadowIndexesNoFrontCaps;// shadow volumes with front caps omitted
-        public int  numShadowIndexesNoCaps;     // shadow volumes with the front and rear caps omitted
-
-        public int  shadowCapPlaneBits;         // bits 0-5 are set when that plane of the interacting light has triangles
-                                                // projected on it, which means that if the view is on the outside of that
-                                                // plane, we need to draw the rear caps of the shadow volume
-                                                // turboShadows will have SHADOW_CAP_INFINITE
-
-        public shadowCache_s[] shadowVertexes;  // these will be copied to shadowCache when it is going to be drawn.
-                                                // these are NULL when vertex programs are available
-
-        srfTriangles_s ambientSurface;          // for light interactions, point back at the original surface that generated
-                                                // the interaction, which we will get the ambientCache from
-
-        srfTriangles_s nextDeferredFree;        // chain of tris to free next frame
-
-                                                // data in vertex object space, not directly readable by the CPU
-        vertCache_s    indexCache;              // int
-        vertCache_s    ambientCache;            // idDrawVert
-        vertCache_s    lightingCache;           // lightingCache_t
-        vertCache_s    shadowCache;             // shadowCache_t
-
-        private static int DBG_counter = 0;
-        public  final  int DBG_count = DBG_counter++;
-        
         public srfTriangles_s() {
             this.bounds = new idBounds();
             this.ambientViewCount = 0;
@@ -216,33 +208,23 @@ public class Model {
             this.lightingCache = null;
             this.shadowCache = null;
         }
-    };
+    }
 
     static class idTriList extends idList<srfTriangles_s> {
-    };
+    }
 
-    public static class modelSurface_s{
-
-        public int            id;
-        public idMaterial     shader;
-        public srfTriangles_s geometry;
+    public static class modelSurface_s {
 
         private static int DBG_counter = 0;
-        public final   int DBG_count   = DBG_counter++;
-        
-        public modelSurface_s(){
+        public final int DBG_count = DBG_counter++;
+        public srfTriangles_s geometry;
+        public int id;
+        public idMaterial shader;
+
+        public modelSurface_s() {
             int a = 1;
         }
-    };
-
-    public enum dynamicModel_t {
-
-        DM_STATIC, // never creates a dynamic model
-        DM_CACHED, // once created, stays constant until the entity is updated (animating characters)
-        DM_CONTINUOUS	// must be recreated for every single view (time dependent things like particles)
-    };
-    //typedef enum {
-    public static final int INVALID_JOINT = -1;
+    }
     //} jointHandle_t;
 
     public static class idMD5Joint {
@@ -253,7 +235,7 @@ public class Model {
         public idMD5Joint() {
             parent = null;
         }
-    };
+    }
 
     // the init methods may be called again on an already created model when
     // a reloadModels is issued
@@ -406,5 +388,6 @@ public class Model {
         public abstract void WriteToDemoFile(idDemoFile f);
 
         public abstract void oSet(idRenderModel FindModel);
-    };
+    }
+
 }

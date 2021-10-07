@@ -1,36 +1,21 @@
 package neo.Tools.Compilers.RoqVQ;
 
-import static java.lang.Math.sqrt;
+import neo.Tools.Compilers.RoqVQ.QuadDefs.*;
+import neo.framework.File_h.idFile;
+import neo.idlib.math.Math_h.idMath;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+
+import static java.lang.Math.sqrt;
 import static neo.TempDump.NOT;
 import static neo.TempDump.replaceByIndex;
-import static neo.Tools.Compilers.RoqVQ.GDefs.BIEMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.BMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.BQEMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.GIEMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.GMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.GQEMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.RGBADIST;
-import static neo.Tools.Compilers.RoqVQ.GDefs.RIEMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.RMULT;
-import static neo.Tools.Compilers.RoqVQ.GDefs.RQEMULT;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.CCC;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.DEAD;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.DEP;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.FCC;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.MAXSIZE;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.MINSIZE;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.MOT;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.PAT;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.SLD;
-import neo.Tools.Compilers.RoqVQ.QuadDefs.quadcel;
+import static neo.Tools.Compilers.RoqVQ.GDefs.*;
+import static neo.Tools.Compilers.RoqVQ.QuadDefs.*;
 import static neo.Tools.Compilers.RoqVQ.Roq.theRoQ;
 import static neo.framework.Common.common;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.File_h.idFile;
 import static neo.framework.Session.session;
-import neo.idlib.math.Math_h.idMath;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -38,13 +23,13 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class Codec {
 
-    static final int   MAXERRORMAX = 200;
-    //#define IPSIZE int
-    static final float MOTION_MIN  = 1.0f;
-    static final float MIN_SNR     = 3.0f;
     //
-    static final int   FULLFRAME   = 0;
-    static final int   JUSTMOTION  = 1;
+    static final int FULLFRAME = 0;
+    static final int JUSTMOTION = 1;
+    static final int MAXERRORMAX = 200;
+    static final float MIN_SNR = 3.0f;
+    //#define IPSIZE int
+    static final float MOTION_MIN = 1.0f;
     //
     //#define VQDATA		double
 
@@ -60,35 +45,41 @@ public class Codec {
 
     static class codec {
 
-        private NSBitmapImageRep image;
-        private NSBitmapImageRep newImage;
-        private NSBitmapImageRep[] previousImage = new NSBitmapImageRep[2];// the ones in video ram and offscreen ram
-        private int       numQuadCels;
-        private int       whichFrame;
-        private int       slop;
-        private boolean   detail;
-        private int       onQuad;
-        private int       initRGBtab;
-        private quadcel[] qStatus;
-        private int       dxMean;
-        private int       dyMean;
-        private int       codebooksize;
-        private int[] index2 = new int[256];
-        private int overAmount;
-        private int pixelsWide;
-        private int pixelsHigh;
-        private int codebookmade;
-        private boolean[] used2 = new boolean[256];
-        private boolean[] used4 = new boolean[256];
+        /* Because Shellsort is a variation on Insertion Sort, it has the same
+         * inconsistency that I noted in the InsertionSort class.  Notice where I
+         * subtract a move to compensate for calling a swap for visual purposes.
+         */
+        private static final int STRIDE_FACTOR = 3;    // good value for stride factor is not well-understood
+        private final double /*VQDATA*/[][] codebook2;
+        private final double /*VQDATA*/[][] codebook4;
+        private final int codebookmade;
+        private final int codebooksize;
+        private boolean detail;
         private int dimension2;
         private int dimension4;
+        private int dxMean;
+        private int dyMean;
+        private NSBitmapImageRep image;
+        private final int[] index2 = new int[256];
+        private int initRGBtab;
+        private byte[] luti;
         //
-        private byte[] luty = new byte[256];
-        private byte[]                luti;
-        private double /*VQDATA*/[][] codebook2;
-        private double /*VQDATA*/[][] codebook4;
+        private final byte[] luty = new byte[256];
+        private NSBitmapImageRep newImage;
+        private int numQuadCels;
+        private int onQuad;
+        private final int overAmount;
+        private int pixelsHigh;
+        private int pixelsWide;
+        private final NSBitmapImageRep[] previousImage = new NSBitmapImageRep[2];// the ones in video ram and offscreen ram
+        private quadcel[] qStatus;
+        private int slop;
+        private final boolean[] used2 = new boolean[256];
+        private final boolean[] used4 = new boolean[256];
         //
         //
+        private int whichFrame;
+        // ~codec();
 
         public codec() {
             int i;
@@ -113,7 +104,6 @@ public class Codec {
             codebookmade = 0;
             slop = 0;
         }
-        // ~codec();
 
         public void SparseEncode() {
             int i, j, osize, fsize, onf, ong, wtype, temp;
@@ -242,7 +232,7 @@ public class Codec {
              temp++;
              }
              }
-             if (temp) { dxMean /= temp; dyMean /= temp; }	
+             if (temp) { dxMean /= temp; dyMean /= temp; }
              */
             common.Printf("sparseEncode: dx/dy mean is %d,%d\n", dxMean, dyMean);
 
@@ -326,7 +316,7 @@ public class Codec {
             detail = false;
 
             while (GetCurrentQuadOutputSize(qStatus) < fsize && ong < onf && flist[ong] > 0 && qStatus[ilist[ong]].mark == false) {
-//		badsnr = [self getCurrentRMSE: qStatus]; 
+//		badsnr = [self getCurrentRMSE: qStatus];
                 osize = AddQuad(qStatus, ilist[ong++]);
 //		if ([self getCurrentRMSE: qStatus] >= badsnr) {
 //		    break;
@@ -336,7 +326,7 @@ public class Codec {
             if (GetCurrentQuadOutputSize(qStatus) < fsize) {
                 ong = 0;
                 while (GetCurrentQuadOutputSize(qStatus) < fsize && ong < onf) {
-//			badsnr = [self getCurrentRMSE: qStatus]; 
+//			badsnr = [self getCurrentRMSE: qStatus];
                     i = ilist[ong++];
                     if (qStatus[i].mark) {
                         detail = false;
@@ -372,7 +362,7 @@ public class Codec {
                 }
                 ong = 0;
                 while (GetCurrentQuadOutputSize(qStatus) < fsize && ong < onf && flist[ong] > 0) {
-//			badsnr = [self getCurrentRMSE: qStatus]; 
+//			badsnr = [self getCurrentRMSE: qStatus];
                     i = ilist[ong++];
 //			if (qStatus[i].rsnr <= MIN_SNR) {
 //			    break;
@@ -437,7 +427,7 @@ public class Codec {
             flist = null;
             ilist = null;
             if (newImage != null) {
-//                delete 
+//                delete
                 newImage = null;
             }
 
@@ -671,7 +661,8 @@ public class Codec {
         public float Snr(byte[] old, byte[] bnew, int size) {
             int i, j;
             float fsnr;
-            /*register*/ int ind;
+            /*register*/
+            int ind;
             int o_p, n_p;
 
             ind = 0;
@@ -727,8 +718,8 @@ public class Codec {
             fabort = 0;
             lowX = lowY = -1;
             depthx = depthy = 1;
-            searchY = 8;	//16;
-            searchX = 8;	//32;
+            searchY = 8;    //16;
+            searchX = 8;    //32;
             //if (xLen == (yLen*4)) depthx = 2;
             //if (theRoQ.Scaleable()) depthx = depthy = 2;
 
@@ -874,7 +865,7 @@ public class Codec {
 
             if (dimension4 == 64) {
 //                return 0;	// do not use this for alpha pieces
-                return false;	// this either!
+                return false;    // this either!
             }
             snr = 0;
 
@@ -1318,12 +1309,6 @@ public class Codec {
             common.Printf("VQ took %d msec\n", endMsec - startMsec);
         }
 
-        /* Because Shellsort is a variation on Insertion Sort, it has the same 
-         * inconsistency that I noted in the InsertionSort class.  Notice where I 
-         * subtract a move to compensate for calling a swap for visual purposes.
-         */
-        private static final int STRIDE_FACTOR = 3; 	// good value for stride factor is not well-understood
-
         private void Sort(float[] list, int[] intIndex, int numElements) {
             // 3 is a fairly good choice (Sedgewick)
             int c, d, stride;
@@ -1350,7 +1335,7 @@ public class Codec {
                             itemp = intIndex[d];
                             intIndex[d] = intIndex[d + stride];
                             intIndex[d + stride] = itemp;
-                            d -= stride;		// jump by stride factor
+                            d -= stride;        // jump by stride factor
                         } else {
                             found = true;
                         }
@@ -1563,13 +1548,13 @@ public class Codec {
 
             for (y = 0; y < 256; y++) {
                 x = y * 6;
-                y0 = (float) lineout[x++];
-                y1 = (float) lineout[x++];
-                y2 = (float) lineout[x++];
-                y3 = (float) lineout[x++];
-                cb = (float) lineout[x++];
+                y0 = lineout[x++];
+                y1 = lineout[x++];
+                y2 = lineout[x++];
+                y3 = lineout[x++];
+                cb = lineout[x++];
                 cb -= 128;
-                cr = (float) lineout[x];
+                cr = lineout[x];
                 cr -= 128;
                 x = 0;
                 codebook2[y][x++] = glimit(y0 + 1.40200f * cr);
@@ -1595,12 +1580,12 @@ public class Codec {
                         numc = 0;
                         for (yy = y; yy < (y + 2); yy++) {
                             temp = (yy * dimension2) + x * (dimension2 / 4);
-                            codebook4[onf][temp + 0] = codebook2[best][numc++];	//r
-                            codebook4[onf][temp + 1] = codebook2[best][numc++];	//g
-                            codebook4[onf][temp + 2] = codebook2[best][numc++];	//b
-                            codebook4[onf][temp + 3] = codebook2[best][numc++];	//r a
-                            codebook4[onf][temp + 4] = codebook2[best][numc++];	//g r
-                            codebook4[onf][temp + 5] = codebook2[best][numc++];	//b g 
+                            codebook4[onf][temp + 0] = codebook2[best][numc++];    //r
+                            codebook4[onf][temp + 1] = codebook2[best][numc++];    //g
+                            codebook4[onf][temp + 2] = codebook2[best][numc++];    //b
+                            codebook4[onf][temp + 3] = codebook2[best][numc++];    //r a
+                            codebook4[onf][temp + 4] = codebook2[best][numc++];    //g r
+                            codebook4[onf][temp + 5] = codebook2[best][numc++];    //b g
                         }
                     }
                 }
@@ -1998,5 +1983,6 @@ public class Codec {
             }
             return lownum;
         }
-    };
+    }
+
 }

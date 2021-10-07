@@ -1,50 +1,20 @@
 package neo.ui;
 
-import java.nio.ByteBuffer;
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
 import neo.TempDump.SERiAL;
-import static neo.TempDump.atoi;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.File_h.idFile;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.KeyInput.K_MOUSE2;
-import static neo.framework.Session.session;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.Max;
-import static neo.idlib.Lib.Min;
-import static neo.idlib.Lib.colorWhite;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
-import static neo.ui.DeviceContext.VIRTUAL_HEIGHT;
-import static neo.ui.DeviceContext.VIRTUAL_WIDTH;
 import neo.ui.DeviceContext.idDeviceContext;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_ASTEROID;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_ASTRONAUT;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_BASE;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_EXPLOSION;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_POINTS;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_POWERUP;
-import static neo.ui.GameSSDWindow.SSD.SSD_ENTITY_PROJECTILE;
-import neo.ui.GameSSDWindow.SSDAsteroid;
-import neo.ui.GameSSDWindow.SSDAsteroidData_t;
-import neo.ui.GameSSDWindow.SSDAstronaut;
-import neo.ui.GameSSDWindow.SSDAstronautData_t;
-import neo.ui.GameSSDWindow.SSDGameStats_t;
-import neo.ui.GameSSDWindow.SSDLevelData_t;
-import neo.ui.GameSSDWindow.SSDPowerupData_t;
-import neo.ui.GameSSDWindow.SSDWeaponData_t;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
@@ -52,18 +22,30 @@ import neo.ui.Window.idWindow;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinVar;
 
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.atoi;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.KeyInput.K_MOUSE1;
+import static neo.framework.KeyInput.K_MOUSE2;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.DEG2RAD;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.ui.DeviceContext.VIRTUAL_HEIGHT;
+import static neo.ui.DeviceContext.VIRTUAL_WIDTH;
+import static neo.ui.GameSSDWindow.SSD.*;
+
 /**
  *
  */
 public class GameSSDWindow {
 
-    public static final float Z_NEAR = 100.0f;
-    public static final float Z_FAR = 4000.0f;
-    public static final int ENTITY_START_DIST = 3000;
-//
-    public static final float V_WIDTH = 640.0f;
-    public static final float V_HEIGHT = 480.0f;
-//
+    public static final String ASTEROID_MATERIAL = "game/SSD/asteroid";
+    public static final String ASTRONAUT_MATERIAL = "game/SSD/astronaut";
+    //
     /*
      *****************************************************************************
      * SSDCrossHair
@@ -71,18 +53,93 @@ public class GameSSDWindow {
      */
     public static final String CROSSHAIR_STANDARD_MATERIAL = "game/SSD/crosshair_standard";
     public static final String CROSSHAIR_SUPER_MATERIAL = "game/SSD/crosshair_super";
+    public static final int ENTITY_START_DIST = 3000;
+    public static final int EXPLOSION_MATERIAL_COUNT = 2;
+    /*
+     *****************************************************************************
+     * SSDAsteroid
+     ****************************************************************************
+     */
+    public static final int MAX_ASTEROIDS = 64;
 //    
+    /*
+     *****************************************************************************
+     * SSDAstronaut
+     ****************************************************************************
+     */
+    public static final int MAX_ASTRONAUT = 8;
+
+    /*
+     *****************************************************************************
+     * SSDExplosion
+     ****************************************************************************
+     */
+    public static final int MAX_EXPLOSIONS = 64;
+
+    /*
+     *****************************************************************************
+     * SSDPoints
+     ****************************************************************************
+     */
+    public static final int MAX_POINTS = 16;
+
+    //
+    public static final int MAX_POWERUPS = 64;
+
+    /*
+     *****************************************************************************
+     * SSDProjectile
+     ****************************************************************************
+     */
+    public static final int MAX_PROJECTILES = 64;
+    //
+    public static final int POWERUP_MATERIAL_COUNT = 6;
+    public static final String PROJECTILE_MATERIAL = "game/SSD/fball";
+
+    public static final float V_HEIGHT = 480.0f;
+    //
+    public static final float V_WIDTH = 640.0f;
+    public static final float Z_FAR = 4000.0f;
+
+    public static final float Z_NEAR = 100.0f;
+    public static final String[] explosionMaterials = {
+            "game/SSD/fball",
+            "game/SSD/teleport"
+    };
+    /*
+     *****************************************************************************
+     * SSDPowerup
+     ****************************************************************************
+     */
+    public static final String[][] powerupMaterials/*[][2]*/ = {
+            {"game/SSD/powerupHealthClosed", "game/SSD/powerupHealthOpen"},
+            {"game/SSD/powerupSuperBlasterClosed", "game/SSD/powerupSuperBlasterOpen"},
+            {"game/SSD/powerupNukeClosed", "game/SSD/powerupNukeOpen"},
+            {"game/SSD/powerupRescueClosed", "game/SSD/powerupRescueOpen"},
+            {"game/SSD/powerupBonusPointsClosed", "game/SSD/powerupBonusPointsOpen"},
+            {"game/SSD/powerupDamageClosed", "game/SSD/powerupDamageOpen"}};
+
+    public enum SSD {
+
+        SSD_ENTITY_BASE,//= 0,
+        SSD_ENTITY_ASTEROID,
+        SSD_ENTITY_ASTRONAUT,
+        SSD_ENTITY_EXPLOSION,
+        SSD_ENTITY_POINTS,
+        SSD_ENTITY_PROJECTILE,
+        SSD_ENTITY_POWERUP
+    }
 
     public static class SSDCrossHair {
 
-//	enum {
+        public static final int CROSSHAIR_COUNT = 2;
+        //	enum {
         public static final int CROSSHAIR_STANDARD = 0;
         public static final int CROSSHAIR_SUPER = 1;
-        public static final int CROSSHAIR_COUNT = 2;
-//	};
+        //	};
         public idMaterial[] crosshairMaterial = new idMaterial[CROSSHAIR_COUNT];
-        int currentCrosshair;
         float crosshairWidth, crosshairHeight;
+        int currentCrosshair;
 //
 
         public SSDCrossHair() {
@@ -125,55 +182,44 @@ public class GameSSDWindow {
                     crosshairWidth, crosshairHeight,
                     crosshairMaterial[currentCrosshair], colorWhite, 1.0f, 1.0f);
         }
-    };
-
-    public enum SSD {
-
-        SSD_ENTITY_BASE,//= 0,
-        SSD_ENTITY_ASTEROID,
-        SSD_ENTITY_ASTRONAUT,
-        SSD_ENTITY_EXPLOSION,
-        SSD_ENTITY_POINTS,
-        SSD_ENTITY_PROJECTILE,
-        SSD_ENTITY_POWERUP
-    };
+    }
 
     /*
      *****************************************************************************
-     * SSDEntity	
+     * SSDEntity
      ****************************************************************************
      */
     public static class SSDEntity {
 
-        //SSDEntity Information
-        public SSD type;
-        public int id;
-        public idStr materialName;
-        public idMaterial material;
-        public idVec3 position;
-        public idVec2 size;
-        public float radius;
-        public float hitRadius;
-        public float rotation;
-//
-        public idVec4 matColor;
-//
-        public idStr text;
-        public float textScale;
-        public idVec4 foreColor;
-//
-        public idGameSSDWindow game;
         public int currentTime;
-        public int lastUpdate;
-        public int elapsed;
-//
+        //
         public boolean destroyed;
+        public int elapsed;
+        public idVec4 foreColor;
+        //
+        public idGameSSDWindow game;
+        public float hitRadius;
+        public int id;
+        //
+        public boolean inUse;
+        public int lastUpdate;
+        //
+        public idVec4 matColor;
+        public idMaterial material;
+        public idStr materialName;
         public boolean noHit;
         public boolean noPlayerDamage;
+        public idVec3 position;
+        public float radius;
+        public float rotation;
+        public idVec2 size;
+        //
+        public idStr text;
+        public float textScale;
+        //SSDEntity Information
+        public SSD type;
 //
-        public boolean inUse;
 //
-//	
 
         public SSDEntity() {
             EntityInit();
@@ -327,10 +373,7 @@ public class GameSSDWindow {
             idVec2 diff = screenPos.ToVec2().oMinus(pt);
             float dist = idMath.Fabs(diff.LengthSqr());
 
-            if (dist < scaleRadSqr) {
-                return true;
-            }
-            return false;
+            return dist < scaleRadSqr;
         }
 
         public void EntityUpdate() {
@@ -352,7 +395,7 @@ public class GameSSDWindow {
 //	idVec3 center = screenBounds.GetCenter();
             x = screenBounds.oGet(0).x;
             y = screenBounds.oGet(1).y;
-            dc.DrawMaterialRotated(x, y, persize.x, persize.y, material, matColor, 1.0f, 1.0f, (float) DEG2RAD(rotation));
+            dc.DrawMaterialRotated(x, y, persize.x, persize.y, material, matColor, 1.0f, 1.0f, DEG2RAD(rotation));
 
             if (text.Length() > 0) {
                 idRectangle rect = new idRectangle(x, y, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
@@ -382,7 +425,7 @@ public class GameSSDWindow {
 
         public idVec3 WorldToScreen(final idVec3 worldPos) {
 
-            float d = 0.5f * V_WIDTH * idMath.Tan((float) (DEG2RAD(90.0f) / 2.0f));
+            float d = 0.5f * V_WIDTH * idMath.Tan(DEG2RAD(90.0f) / 2.0f);
 
             //World To Camera Coordinates
             idVec3 cameraTrans = new idVec3(0, 0, d);
@@ -408,17 +451,17 @@ public class GameSSDWindow {
 
             return worldPos;
         }
-    };
+    }
 
     /*
      *****************************************************************************
-     * SSDMover	
+     * SSDMover
      ****************************************************************************
      */
     public static class SSDMover extends SSDEntity {
 
-        public idVec3 speed;
         public float rotationSpeed;
+        public idVec3 speed;
 //
 
         public SSDMover() {
@@ -465,60 +508,16 @@ public class GameSSDWindow {
                 rotation += 360.0f;
             }
         }
-    };
-    /*
-     *****************************************************************************
-     * SSDAsteroid	
-     ****************************************************************************
-     */
-    public static final int MAX_ASTEROIDS = 64;
-    public static final String ASTEROID_MATERIAL = "game/SSD/asteroid";
+    }
 
     public static class SSDAsteroid extends SSDMover {
 
+        //
+        protected static final SSDAsteroid[] asteroidPool = new SSDAsteroid[MAX_ASTEROIDS];
         public int health;
-
-        public SSDAsteroid() {
-        }
         // ~SSDAsteroid();
 
-        @Override
-        public void WriteToSaveGame(idFile savefile) {
-            super.WriteToSaveGame(savefile);
-
-            savefile.WriteInt(health);
-        }
-
-        @Override
-        public void ReadFromSaveGame(idFile savefile, idGameSSDWindow _game) {
-            super.ReadFromSaveGame(savefile, _game);
-
-            health = savefile.ReadInt();
-        }
-
-        public void Init(idGameSSDWindow _game, final idVec3 startPosition, final idVec2 _size, float _speed, float rotate, int _health) {
-
-            EntityInit();
-            MoverInit(new idVec3(0, 0, -_speed), rotate);
-
-            SetGame(_game);
-
-            type = SSD_ENTITY_ASTEROID;
-
-            SetMaterial(ASTEROID_MATERIAL);
-            SetSize(_size);
-            SetRadius((float) Max(size.x, size.y), 0.3f);
-            SetRotation(game.random.RandomInt(360));
-
-            position = startPosition;
-
-            health = _health;
-        }
-
-        @Override
-        public void EntityUpdate() {
-
-            super.EntityUpdate();
+        public SSDAsteroid() {
         }
 
         public static SSDAsteroid GetNewAsteroid(idGameSSDWindow _game, final idVec3 startPosition, final idVec2 _size, float _speed, float rotate, int _health) {
@@ -565,24 +564,6 @@ public class GameSSDWindow {
                 ent.ReadFromSaveGame(savefile, _game);
             }
         }
-//        
-        protected static final SSDAsteroid[] asteroidPool = new SSDAsteroid[MAX_ASTEROIDS];
-    };
-    /*
-     *****************************************************************************
-     * SSDAstronaut	
-     ****************************************************************************
-     */
-    public static final int MAX_ASTRONAUT = 8;
-    public static final String ASTRONAUT_MATERIAL = "game/SSD/astronaut";
-
-    public static class SSDAstronaut extends SSDMover {
-
-        public int health;
-
-        public SSDAstronaut() {
-        }
-        // ~SSDAstronaut();
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -598,22 +579,40 @@ public class GameSSDWindow {
             health = savefile.ReadInt();
         }
 
-        public void Init(idGameSSDWindow _game, final idVec3 startPosition, float _speed, float rotate, int _health) {
+        public void Init(idGameSSDWindow _game, final idVec3 startPosition, final idVec2 _size, float _speed, float rotate, int _health) {
 
             EntityInit();
             MoverInit(new idVec3(0, 0, -_speed), rotate);
 
             SetGame(_game);
 
-            type = SSD_ENTITY_ASTRONAUT;
+            type = SSD_ENTITY_ASTEROID;
 
-            SetMaterial(ASTRONAUT_MATERIAL);
-            SetSize(new idVec2(256, 256));
-            SetRadius((float) Max(size.x, size.y), 0.3f);
-            SetRotation(game.random.RandomInt(360));
+            SetMaterial(ASTEROID_MATERIAL);
+            SetSize(_size);
+            SetRadius(Max(size.x, size.y), 0.3f);
+            SetRotation(idGameSSDWindow.random.RandomInt(360));
 
             position = startPosition;
+
             health = _health;
+        }
+
+        @Override
+        public void EntityUpdate() {
+
+            super.EntityUpdate();
+        }
+    }
+
+    public static class SSDAstronaut extends SSDMover {
+
+        //
+        protected static final SSDAstronaut[] astronautPool = new SSDAstronaut[MAX_ASTRONAUT];
+        public int health;
+        // ~SSDAstronaut();
+
+        public SSDAstronaut() {
         }
 
         public static SSDAstronaut GetNewAstronaut(idGameSSDWindow _game, final idVec3 startPosition, float _speed, float rotate, int _health) {
@@ -659,42 +658,114 @@ public class GameSSDWindow {
                 ent.ReadFromSaveGame(savefile, _game);
             }
         }
-//        
-        protected static final SSDAstronaut[] astronautPool = new SSDAstronaut[MAX_ASTRONAUT];
-    };
-    /*
-     *****************************************************************************
-     * SSDExplosion	
-     ****************************************************************************
-     */
-    public static final int MAX_EXPLOSIONS = 64;
-    public static final String[] explosionMaterials = {
-        "game/SSD/fball",
-        "game/SSD/teleport"
-    };
-    public static final int EXPLOSION_MATERIAL_COUNT = 2;
+
+        @Override
+        public void WriteToSaveGame(idFile savefile) {
+            super.WriteToSaveGame(savefile);
+
+            savefile.WriteInt(health);
+        }
+
+        @Override
+        public void ReadFromSaveGame(idFile savefile, idGameSSDWindow _game) {
+            super.ReadFromSaveGame(savefile, _game);
+
+            health = savefile.ReadInt();
+        }
+
+        public void Init(idGameSSDWindow _game, final idVec3 startPosition, float _speed, float rotate, int _health) {
+
+            EntityInit();
+            MoverInit(new idVec3(0, 0, -_speed), rotate);
+
+            SetGame(_game);
+
+            type = SSD_ENTITY_ASTRONAUT;
+
+            SetMaterial(ASTRONAUT_MATERIAL);
+            SetSize(new idVec2(256, 256));
+            SetRadius(Max(size.x, size.y), 0.3f);
+            SetRotation(idGameSSDWindow.random.RandomInt(360));
+
+            position = startPosition;
+            health = _health;
+        }
+    }
 
     public static class SSDExplosion extends SSDEntity {
 
-        public idVec2 finalSize;
-        public int length;
-        public int beginTime;
-        public int endTime;
-        public int explosionType;
-//
-        //The entity that is exploding
-        public SSDEntity buddy;
-        public boolean killBuddy;
-        public boolean followBuddy;
         // enum {
         public static final int EXPLOSION_NORMAL = 0;
         public static final int EXPLOSION_TELEPORT = 1;
+        //
+        protected static final SSDExplosion[] explosionPool = new SSDExplosion[MAX_EXPLOSIONS];
+        public int beginTime;
+        //
+        //The entity that is exploding
+        public SSDEntity buddy;
+        public int endTime;
+        public int explosionType;
+        public idVec2 finalSize;
+        public boolean followBuddy;
+        public boolean killBuddy;
         // };
+        public int length;
+        // ~SSDExplosion();
 
         public SSDExplosion() {
             type = SSD_ENTITY_EXPLOSION;
         }
-        // ~SSDExplosion();
+
+        public static SSDExplosion GetNewExplosion(idGameSSDWindow _game, final idVec3 _position, final idVec2 _size, int _length, int _type, SSDEntity _buddy, boolean _killBuddy /*= true*/, boolean _followBuddy /*= true*/) {
+            for (int i = 0; i < MAX_EXPLOSIONS; i++) {
+                if (!explosionPool[i].inUse) {
+                    explosionPool[i].Init(_game, _position, _size, _length, _type, _buddy, _killBuddy, _followBuddy);
+                    explosionPool[i].inUse = true;
+                    return explosionPool[i];
+                }
+            }
+            return null;
+        }
+
+        public static SSDExplosion GetNewExplosion(idGameSSDWindow _game, final idVec3 _position, final idVec2 _size, int _length, int _type, SSDEntity _buddy, boolean _killBuddy /*= true*/) {
+            return GetNewExplosion(_game, _position, _size, _length, _type, _buddy, _killBuddy, true);
+        }
+
+        public static SSDExplosion GetNewExplosion(idGameSSDWindow _game, final idVec3 _position, final idVec2 _size, int _length, int _type, SSDEntity _buddy) {
+            return GetNewExplosion(_game, _position, _size, _length, _type, _buddy, true);
+        }
+
+        public static SSDExplosion GetSpecificExplosion(int id) {
+            return explosionPool[id];
+        }
+
+        public static void WriteExplosions(idFile savefile) {
+            int count = 0;
+            for (int i = 0; i < MAX_EXPLOSIONS; i++) {
+                if (explosionPool[i].inUse) {
+                    count++;
+                }
+            }
+            savefile.WriteInt(count);
+            for (int i = 0; i < MAX_EXPLOSIONS; i++) {
+                if (explosionPool[i].inUse) {
+                    savefile.WriteInt(explosionPool[i].id);
+                    explosionPool[i].WriteToSaveGame(savefile);
+                }
+            }
+        }
+
+        public static void ReadExplosions(idFile savefile, idGameSSDWindow _game) {
+
+            int count;
+            count = savefile.ReadInt();
+            for (int i = 0; i < count; i++) {
+                int id;
+                id = savefile.ReadInt();
+                SSDExplosion ent = GetSpecificExplosion(id);
+                ent.ReadFromSaveGame(savefile, _game);
+            }
+        }
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -791,82 +862,68 @@ public class GameSSDWindow {
                 }
             }
         }
+    }
 
-        public static SSDExplosion GetNewExplosion(idGameSSDWindow _game, final idVec3 _position, final idVec2 _size, int _length, int _type, SSDEntity _buddy, boolean _killBuddy /*= true*/, boolean _followBuddy /*= true*/) {
-            for (int i = 0; i < MAX_EXPLOSIONS; i++) {
-                if (!explosionPool[i].inUse) {
-                    explosionPool[i].Init(_game, _position, _size, _length, _type, _buddy, _killBuddy, _followBuddy);
-                    explosionPool[i].inUse = true;
-                    return explosionPool[i];
+    public static class SSDPoints extends SSDEntity {
+
+        //
+        protected static final SSDPoints[] pointsPool = new SSDPoints[MAX_POINTS];
+        idVec4 beginColor;
+        idVec3 beginPosition;
+        int beginTime;
+        int distance;
+        idVec4 endColor;
+        idVec3 endPosition;
+        int endTime;
+        int length;
+        // ~SSDPoints();
+
+        public SSDPoints() {
+            type = SSD_ENTITY_POINTS;
+        }
+
+        public static SSDPoints GetNewPoints(idGameSSDWindow _game, SSDEntity _ent, int _points, int _length, int _distance, final idVec4 color) {
+            for (int i = 0; i < MAX_POINTS; i++) {
+                if (!pointsPool[i].inUse) {
+                    pointsPool[i].Init(_game, _ent, _points, _length, _distance, color);
+                    pointsPool[i].inUse = true;
+                    return pointsPool[i];
                 }
             }
             return null;
         }
 
-        public static SSDExplosion GetNewExplosion(idGameSSDWindow _game, final idVec3 _position, final idVec2 _size, int _length, int _type, SSDEntity _buddy, boolean _killBuddy /*= true*/) {
-            return GetNewExplosion(_game, _position, _size, _length, _type, _buddy, _killBuddy, true);
+        public static SSDPoints GetSpecificPoints(int id) {
+            return pointsPool[id];
         }
 
-        public static SSDExplosion GetNewExplosion(idGameSSDWindow _game, final idVec3 _position, final idVec2 _size, int _length, int _type, SSDEntity _buddy) {
-            return GetNewExplosion(_game, _position, _size, _length, _type, _buddy, true);
-        }
-
-        public static SSDExplosion GetSpecificExplosion(int id) {
-            return explosionPool[id];
-        }
-
-        public static void WriteExplosions(idFile savefile) {
+        public static void WritePoints(idFile savefile) {
             int count = 0;
-            for (int i = 0; i < MAX_EXPLOSIONS; i++) {
-                if (explosionPool[i].inUse) {
+            for (int i = 0; i < MAX_POINTS; i++) {
+                if (pointsPool[i].inUse) {
                     count++;
                 }
             }
             savefile.WriteInt(count);
-            for (int i = 0; i < MAX_EXPLOSIONS; i++) {
-                if (explosionPool[i].inUse) {
-                    savefile.WriteInt(explosionPool[i].id);
-                    explosionPool[i].WriteToSaveGame(savefile);
+            for (int i = 0; i < MAX_POINTS; i++) {
+                if (pointsPool[i].inUse) {
+                    savefile.WriteInt(pointsPool[i].id);
+                    pointsPool[i].WriteToSaveGame(savefile);
                 }
             }
         }
 
-        public static void ReadExplosions(idFile savefile, idGameSSDWindow _game) {
+        public static void ReadPoints(idFile savefile, idGameSSDWindow _game) {
 
             int count;
             count = savefile.ReadInt();
             for (int i = 0; i < count; i++) {
                 int id;
                 id = savefile.ReadInt();
-                SSDExplosion ent = GetSpecificExplosion(id);
+                SSDPoints ent = GetSpecificPoints(id);
                 ent.ReadFromSaveGame(savefile, _game);
             }
         }
-//        
-        protected static final SSDExplosion[] explosionPool = new SSDExplosion[MAX_EXPLOSIONS];
-    };
-    /*
-     *****************************************************************************
-     * SSDPoints
-     ****************************************************************************
-     */
-    public static final int MAX_POINTS = 16;
-
-    public static class SSDPoints extends SSDEntity {
-
-        int length;
-        int distance;
-        int beginTime;
-        int endTime;
-        idVec3 beginPosition;
-        idVec3 endPosition;
-        idVec4 beginColor;
-        idVec4 endColor;
-
-        public SSDPoints() {
-            type = SSD_ENTITY_POINTS;
-        }
-        // ~SSDPoints();
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -959,72 +1016,65 @@ public class GameSSDWindow {
                 destroyed = true;
             }
         }
+    }
 
-        public static SSDPoints GetNewPoints(idGameSSDWindow _game, SSDEntity _ent, int _points, int _length, int _distance, final idVec4 color) {
-            for (int i = 0; i < MAX_POINTS; i++) {
-                if (!pointsPool[i].inUse) {
-                    pointsPool[i].Init(_game, _ent, _points, _length, _distance, color);
-                    pointsPool[i].inUse = true;
-                    return pointsPool[i];
+    public static class SSDProjectile extends SSDEntity {
+
+        //
+        protected static final SSDProjectile[] projectilePool = new SSDProjectile[MAX_PROJECTILES];
+        int beginTime;
+        idVec3 dir;
+        idVec3 endPosition;
+        int endTime;
+        idVec3 speed;
+        // ~SSDProjectile();
+
+        public SSDProjectile() {
+            type = SSD_ENTITY_PROJECTILE;
+        }
+
+        public static SSDProjectile GetNewProjectile(idGameSSDWindow _game, final idVec3 _beginPosition, final idVec3 _endPosition, float _speed, float _size) {
+            for (int i = 0; i < MAX_PROJECTILES; i++) {
+                if (!projectilePool[i].inUse) {
+                    projectilePool[i].Init(_game, _beginPosition, _endPosition, _speed, _size);
+                    projectilePool[i].inUse = true;
+                    return projectilePool[i];
                 }
             }
             return null;
         }
 
-        public static SSDPoints GetSpecificPoints(int id) {
-            return pointsPool[id];
+        public static SSDProjectile GetSpecificProjectile(int id) {
+            return projectilePool[id];
         }
 
-        public static void WritePoints(idFile savefile) {
+        public static void WriteProjectiles(idFile savefile) {
             int count = 0;
-            for (int i = 0; i < MAX_POINTS; i++) {
-                if (pointsPool[i].inUse) {
+            for (int i = 0; i < MAX_PROJECTILES; i++) {
+                if (projectilePool[i].inUse) {
                     count++;
                 }
             }
             savefile.WriteInt(count);
-            for (int i = 0; i < MAX_POINTS; i++) {
-                if (pointsPool[i].inUse) {
-                    savefile.WriteInt(pointsPool[i].id);
-                    pointsPool[i].WriteToSaveGame(savefile);
+            for (int i = 0; i < MAX_PROJECTILES; i++) {
+                if (projectilePool[i].inUse) {
+                    savefile.WriteInt(projectilePool[i].id);
+                    projectilePool[i].WriteToSaveGame(savefile);
                 }
             }
         }
 
-        public static void ReadPoints(idFile savefile, idGameSSDWindow _game) {
+        public static void ReadProjectiles(idFile savefile, idGameSSDWindow _game) {
 
             int count;
             count = savefile.ReadInt();
             for (int i = 0; i < count; i++) {
                 int id;
                 id = savefile.ReadInt();
-                SSDPoints ent = GetSpecificPoints(id);
+                SSDProjectile ent = GetSpecificProjectile(id);
                 ent.ReadFromSaveGame(savefile, _game);
             }
         }
-//
-        protected static final SSDPoints[] pointsPool = new SSDPoints[MAX_POINTS];
-    };
-    /*
-     *****************************************************************************
-     * SSDProjectile
-     ****************************************************************************
-     */
-    public static final int MAX_PROJECTILES = 64;
-    public static final String PROJECTILE_MATERIAL = "game/SSD/fball";
-
-    public static class SSDProjectile extends SSDEntity {
-
-        idVec3 dir;
-        idVec3 speed;
-        int beginTime;
-        int endTime;
-        idVec3 endPosition;
-
-        public SSDProjectile() {
-            type = SSD_ENTITY_PROJECTILE;
-        }
-        // ~SSDProjectile();
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -1085,68 +1135,7 @@ public class GameSSDWindow {
                 destroyed = true;
             }
         }
-
-        public static SSDProjectile GetNewProjectile(idGameSSDWindow _game, final idVec3 _beginPosition, final idVec3 _endPosition, float _speed, float _size) {
-            for (int i = 0; i < MAX_PROJECTILES; i++) {
-                if (!projectilePool[i].inUse) {
-                    projectilePool[i].Init(_game, _beginPosition, _endPosition, _speed, _size);
-                    projectilePool[i].inUse = true;
-                    return projectilePool[i];
-                }
-            }
-            return null;
-        }
-
-        public static SSDProjectile GetSpecificProjectile(int id) {
-            return projectilePool[id];
-        }
-
-        public static void WriteProjectiles(idFile savefile) {
-            int count = 0;
-            for (int i = 0; i < MAX_PROJECTILES; i++) {
-                if (projectilePool[i].inUse) {
-                    count++;
-                }
-            }
-            savefile.WriteInt(count);
-            for (int i = 0; i < MAX_PROJECTILES; i++) {
-                if (projectilePool[i].inUse) {
-                    savefile.WriteInt(projectilePool[i].id);
-                    projectilePool[i].WriteToSaveGame(savefile);
-                }
-            }
-        }
-
-        public static void ReadProjectiles(idFile savefile, idGameSSDWindow _game) {
-
-            int count;
-            count = savefile.ReadInt();
-            for (int i = 0; i < count; i++) {
-                int id;
-                id = savefile.ReadInt();
-                SSDProjectile ent = GetSpecificProjectile(id);
-                ent.ReadFromSaveGame(savefile, _game);
-            }
-        }
-//
-        protected static final SSDProjectile[] projectilePool = new SSDProjectile[MAX_PROJECTILES];
-    };
-    /*
-     *****************************************************************************
-     * SSDPowerup
-     ****************************************************************************
-     */
-    public static final String[][] powerupMaterials/*[][2]*/ = {
-                {"game/SSD/powerupHealthClosed", "game/SSD/powerupHealthOpen"},
-                {"game/SSD/powerupSuperBlasterClosed", "game/SSD/powerupSuperBlasterOpen"},
-                {"game/SSD/powerupNukeClosed", "game/SSD/powerupNukeOpen"},
-                {"game/SSD/powerupRescueClosed", "game/SSD/powerupRescueOpen"},
-                {"game/SSD/powerupBonusPointsClosed", "game/SSD/powerupBonusPointsOpen"},
-                {"game/SSD/powerupDamageClosed", "game/SSD/powerupDamageOpen"}};
-//    
-    public static final int POWERUP_MATERIAL_COUNT = 6;
-//    
-    public static final int MAX_POWERUPS = 64;
+    }
 //    
 
     /**
@@ -1160,27 +1149,73 @@ public class GameSSDWindow {
      */
     public static class SSDPowerup extends SSDMover {
 
-//        enum POWERUP_STATE {
+        //
+        protected static final SSDPowerup[] powerupPool = new SSDPowerup[MAX_POWERUPS];
+        //        enum POWERUP_STATE {
         static final int POWERUP_STATE_CLOSED = 0;
         static final int POWERUP_STATE_OPEN = 1;
-//        };
-//        enum POWERUP_TYPE {
-        static final int POWERUP_TYPE_HEALTH = 0;
-        static final int POWERUP_TYPE_SUPER_BLASTER = 1;
         static final int POWERUP_TYPE_ASTEROID_NUKE = 2;
-        static final int POWERUP_TYPE_RESCUE_ALL = 3;
         static final int POWERUP_TYPE_BONUS_POINTS = 4;
         static final int POWERUP_TYPE_DAMAGE = 5;
+        //        };
+//        enum POWERUP_TYPE {
+        static final int POWERUP_TYPE_HEALTH = 0;
         static final int POWERUP_TYPE_MAX = 6;
-//        };
+        static final int POWERUP_TYPE_RESCUE_ALL = 3;
+        static final int POWERUP_TYPE_SUPER_BLASTER = 1;
+        //        };
 //
         int powerupState;
-        int powerupType;
 //
+        int powerupType;
+        // virtual ~SSDPowerup();
 
         public SSDPowerup() {
         }
-        // virtual ~SSDPowerup();
+
+        public static SSDPowerup GetNewPowerup(idGameSSDWindow _game, float _speed, float _rotation) {
+
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                if (!powerupPool[i].inUse) {
+                    powerupPool[i].Init(_game, _speed, _rotation);
+                    powerupPool[i].inUse = true;
+                    return powerupPool[i];
+                }
+            }
+            return null;
+        }
+
+        public static SSDPowerup GetSpecificPowerup(int id) {
+            return powerupPool[id];
+        }
+
+        public static void WritePowerups(idFile savefile) {
+            int count = 0;
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                if (powerupPool[i].inUse) {
+                    count++;
+                }
+            }
+            savefile.WriteInt(count);
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                if (powerupPool[i].inUse) {
+                    savefile.WriteInt(powerupPool[i].id);
+                    powerupPool[i].WriteToSaveGame(savefile);
+                }
+            }
+        }
+
+        public static void ReadPowerups(idFile savefile, idGameSSDWindow _game) {
+
+            int count;
+            count = savefile.ReadInt();
+            for (int i = 0; i < count; i++) {
+                int id;
+                id = savefile.ReadInt();
+                SSDPowerup ent = GetSpecificPowerup(id);
+                ent.ReadFromSaveGame(savefile, _game);
+            }
+        }
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -1254,7 +1289,7 @@ public class GameSSDWindow {
                     break;
                 }
                 case POWERUP_TYPE_BONUS_POINTS: {
-                    int points = (game.random.RandomInt(5) + 1) * 100;
+                    int points = (idGameSSDWindow.random.RandomInt(5) + 1) * 100;
                     game.AddScore(this, points);
                     break;
                 }
@@ -1274,20 +1309,20 @@ public class GameSSDWindow {
 
             SetGame(_game);
             SetSize(new idVec2(200, 200));
-            SetRadius((float) Max(size.x, size.y), 0.3f);
+            SetRadius(Max(size.x, size.y), 0.3f);
 
             type = SSD_ENTITY_POWERUP;
 
             idVec3 startPosition = new idVec3();
-            startPosition.x = game.random.RandomInt(V_WIDTH) - (V_WIDTH / 2.0f);
-            startPosition.y = game.random.RandomInt(V_HEIGHT) - (V_HEIGHT / 2.0f);
+            startPosition.x = idGameSSDWindow.random.RandomInt(V_WIDTH) - (V_WIDTH / 2.0f);
+            startPosition.y = idGameSSDWindow.random.RandomInt(V_HEIGHT) - (V_HEIGHT / 2.0f);
             startPosition.z = ENTITY_START_DIST;
 
             position = startPosition;
             //SetPosition(startPosition);
 
             powerupState = POWERUP_STATE_CLOSED;
-            powerupType = game.random.RandomInt(POWERUP_TYPE_MAX + 1);
+            powerupType = idGameSSDWindow.random.RandomInt(POWERUP_TYPE_MAX + 1);
             if (powerupType >= POWERUP_TYPE_MAX) {
                 powerupType = 0;
             }
@@ -1298,58 +1333,12 @@ public class GameSSDWindow {
              }*/
             SetMaterial(powerupMaterials[powerupType][powerupState]);
         }
-
-        public static SSDPowerup GetNewPowerup(idGameSSDWindow _game, float _speed, float _rotation) {
-
-            for (int i = 0; i < MAX_POWERUPS; i++) {
-                if (!powerupPool[i].inUse) {
-                    powerupPool[i].Init(_game, _speed, _rotation);
-                    powerupPool[i].inUse = true;
-                    return powerupPool[i];
-                }
-            }
-            return null;
-        }
-
-        public static SSDPowerup GetSpecificPowerup(int id) {
-            return powerupPool[id];
-        }
-
-        public static void WritePowerups(idFile savefile) {
-            int count = 0;
-            for (int i = 0; i < MAX_POWERUPS; i++) {
-                if (powerupPool[i].inUse) {
-                    count++;
-                }
-            }
-            savefile.WriteInt(count);
-            for (int i = 0; i < MAX_POWERUPS; i++) {
-                if (powerupPool[i].inUse) {
-                    savefile.WriteInt(powerupPool[i].id);
-                    powerupPool[i].WriteToSaveGame(savefile);
-                }
-            }
-        }
-
-        public static void ReadPowerups(idFile savefile, idGameSSDWindow _game) {
-
-            int count;
-            count = savefile.ReadInt();
-            for (int i = 0; i < count; i++) {
-                int id;
-                id = savefile.ReadInt();
-                SSDPowerup ent = GetSpecificPowerup(id);
-                ent.ReadFromSaveGame(savefile, _game);
-            }
-        }
-//
-        protected static final SSDPowerup[] powerupPool = new SSDPowerup[MAX_POWERUPS];
-    };
+    }
 
     public static class SSDLevelData_t implements SERiAL {
 
-        float spawnBuffer;
         int needToWin;
+        float spawnBuffer;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -1365,17 +1354,17 @@ public class GameSSDWindow {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     public static class SSDAsteroidData_t implements SERiAL {
 
-        float speedMin, speedMax;
-        float sizeMin, sizeMax;
-        float rotateMin, rotateMax;
-        int spawnMin, spawnMax;
+        int asteroidDamage;
         int asteroidHealth;
         int asteroidPoints;
-        int asteroidDamage;
+        float rotateMin, rotateMax;
+        float sizeMin, sizeMax;
+        int spawnMin, spawnMax;
+        float speedMin, speedMax;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -1391,16 +1380,16 @@ public class GameSSDWindow {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     public static class SSDAstronautData_t implements SERiAL {
 
-        float speedMin, speedMax;
+        int health;
+        int penalty;
+        int points;
         float rotateMin, rotateMax;
         int spawnMin, spawnMax;
-        int health;
-        int points;
-        int penalty;
+        float speedMin, speedMax;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -1416,13 +1405,13 @@ public class GameSSDWindow {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     public static class SSDPowerupData_t implements SERiAL {
 
-        float speedMin, speedMax;
         float rotateMin, rotateMax;
         int spawnMin, spawnMax;
+        float speedMin, speedMax;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -1438,13 +1427,13 @@ public class GameSSDWindow {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     public static class SSDWeaponData_t implements SERiAL {
 
-        float speed;
         int damage;
         int size;
+        float speed;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -1460,7 +1449,7 @@ public class GameSSDWindow {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     /**
      * SSDLevelStats_t Data that is used for each level. This data is reset each
@@ -1468,22 +1457,22 @@ public class GameSSDWindow {
      */
     public static class SSDLevelStats_t {
 
-        int shotCount;
-        int hitCount;
         int destroyedAsteroids;
-        int nextAsteroidSpawnTime;
-//
+        int hitCount;
+        //
         int killedAstronauts;
-        int savedAstronauts;
-//
+        int nextAsteroidSpawnTime;
+        //
         //Astronaut Level Data
         int nextAstronautSpawnTime;
-//
+        //
         //Powerup Level Data
         int nextPowerupSpawnTime;
-//
+        int savedAstronauts;
+        int shotCount;
+        //
         SSDEntity targetEnt;
-    };
+    }
 
     /**
      * SSDGameStats_t Data that is used for the game that is currently running.
@@ -1491,18 +1480,18 @@ public class GameSSDWindow {
      */
     public static class SSDGameStats_t implements SERiAL {
 
-        boolean gameRunning;
-//
-        int score;
-        int prebonusscore;
-//
-        int health;
-//
-        int currentWeapon;
         int currentLevel;
-        int nextLevel;
-//
+        //
+        int currentWeapon;
+        boolean gameRunning;
+        //
+        int health;
+        //
         SSDLevelStats_t levelStats;
+        int nextLevel;
+        int prebonusscore;
+        //
+        int score;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -1518,7 +1507,7 @@ public class GameSSDWindow {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     /*
      *****************************************************************************
@@ -1527,36 +1516,41 @@ public class GameSSDWindow {
      */
     public static class idGameSSDWindow extends idWindow {
 
+        static final int MAX_SOUND_CHANNEL = 8;
+        //
+        public static idRandom random;
+        public idList<SSDAsteroidData_t> asteroidData;
+        public idList<SSDAstronautData_t> astronautData;
         //WinVars used to call functions from the guis
         public idWinBool beginLevel;
-        public idWinBool resetGame;
         public idWinBool continueGame;
-        public idWinBool refreshGuiData;
         //
         public SSDCrossHair crosshair;
-        public idBounds screenBounds;
+        //
+        public int currentSound;
+        public idList<SSDEntity> entities;
+        //
+        //All current game data is stored in this structure (except the entity list)
+        public SSDGameStats_t gameStats;
         //
         //Level Data
         public int levelCount;
         public idList<SSDLevelData_t> levelData;
-        public idList<SSDAsteroidData_t> asteroidData;
-        public idList<SSDAstronautData_t> astronautData;
         public idList<SSDPowerupData_t> powerupData;
+        public idWinBool refreshGuiData;
+        public idWinBool resetGame;
+        public idBounds screenBounds;
+        public int ssdTime;
         //
-        //	
-        //Weapon Data
-        public int weaponCount;
-        public idList<SSDWeaponData_t> weaponData;
+        //
         //
         public int superBlasterTimeout;
         //
-        //All current game data is stored in this structure (except the entity list)
-        public SSDGameStats_t gameStats;
-        public idList<SSDEntity> entities;
         //
-        public int currentSound;
-        //
-        //
+        //Weapon Data
+        public int weaponCount;
+//	~idGameSSDWindow();
+        public idList<SSDWeaponData_t> weaponData;
 
         public idGameSSDWindow(idUserInterfaceLocal gui) {
             super(gui);
@@ -1570,7 +1564,6 @@ public class GameSSDWindow {
             this.gui = gui;
             CommonInit();
         }
-//	~idGameSSDWindow();
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -1815,7 +1808,7 @@ public class GameSSDWindow {
 
                     AddScore(entities.oGet(i), asteroidData.oGet(gameStats.currentLevel).asteroidPoints);
 
-                    //Don't let the player hit it anymore because 
+                    //Don't let the player hit it anymore because
                     entities.oGet(i).noHit = true;
 
                     gameStats.levelStats.destroyedAsteroids++;
@@ -1873,7 +1866,6 @@ public class GameSSDWindow {
             }
             return ent;
         }
-        static final int MAX_SOUND_CHANNEL = 8;
 
         public void PlaySound(final String sound) {
 
@@ -1884,9 +1876,6 @@ public class GameSSDWindow {
                 currentSound = 0;
             }
         }
-//
-        public static idRandom random;
-        public int ssdTime;
 //
         //Initialization
 
@@ -2644,5 +2633,6 @@ public class GameSSDWindow {
             superBlasterTimeout = 0;
         }
         // void FreeSoundEmitter(bool immediate);
-    };
+    }
+
 }

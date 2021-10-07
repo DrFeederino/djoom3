@@ -1,116 +1,124 @@
 package neo.Game.Physics;
 
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import java.util.Arrays;
 import neo.CM.CollisionModel.contactInfo_t;
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
-import static neo.Game.Entity.TH_PHYSICS;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.af_contactFrictionScale;
-import static neo.Game.GameSys.SysCvar.af_forceFriction;
-import static neo.Game.GameSys.SysCvar.af_highlightBody;
-import static neo.Game.GameSys.SysCvar.af_highlightConstraint;
-import static neo.Game.GameSys.SysCvar.af_jointFrictionScale;
-import static neo.Game.GameSys.SysCvar.af_maxAngularVelocity;
-import static neo.Game.GameSys.SysCvar.af_maxLinearVelocity;
-import static neo.Game.GameSys.SysCvar.af_showActive;
-import static neo.Game.GameSys.SysCvar.af_showBodies;
-import static neo.Game.GameSys.SysCvar.af_showBodyNames;
-import static neo.Game.GameSys.SysCvar.af_showConstrainedBodies;
-import static neo.Game.GameSys.SysCvar.af_showConstraintNames;
-import static neo.Game.GameSys.SysCvar.af_showConstraints;
-import static neo.Game.GameSys.SysCvar.af_showInertia;
-import static neo.Game.GameSys.SysCvar.af_showLimits;
-import static neo.Game.GameSys.SysCvar.af_showMass;
-import static neo.Game.GameSys.SysCvar.af_showPrimaryOnly;
-import static neo.Game.GameSys.SysCvar.af_showTimings;
-import static neo.Game.GameSys.SysCvar.af_showTotalMass;
-import static neo.Game.GameSys.SysCvar.af_showTrees;
-import static neo.Game.GameSys.SysCvar.af_showVelocity;
-import static neo.Game.GameSys.SysCvar.af_skipFriction;
-import static neo.Game.GameSys.SysCvar.af_skipLimits;
-import static neo.Game.GameSys.SysCvar.af_skipSelfCollision;
-import static neo.Game.GameSys.SysCvar.af_timeScale;
-import static neo.Game.GameSys.SysCvar.af_useImpulseFriction;
-import static neo.Game.GameSys.SysCvar.af_useJointImpulseFriction;
-import static neo.Game.GameSys.SysCvar.af_useLinearTime;
-import static neo.Game.GameSys.SysCvar.af_useSymmetry;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.impactInfo_s;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_BALLANDSOCKETJOINT;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_CONELIMIT;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_CONTACT;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_FIXED;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_FRICTION;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_HINGE;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_HINGESTEERING;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_INVALID;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_PLANE;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_PYRAMIDLIMIT;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_SLIDER;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_SPRING;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_SUSPENSION;
-import static neo.Game.Physics.Physics_AF.constraintType_t.CONSTRAINT_UNIVERSALJOINT;
 import neo.Game.Physics.Physics_Base.idPhysics_Base;
-import static neo.TempDump.NOT;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorMagenta;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.colorYellow;
-import static neo.idlib.Lib.idLib.cvarSystem;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Timer.idTimer;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Lcp.idLCP;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.FLOAT_IS_NAN;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.Square;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.SkewSymmetric;
-import static neo.idlib.math.Matrix.idMat3.TransposeMultiply;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
-import static neo.idlib.math.Matrix.idMat3.getMat3_zero;
 import neo.idlib.math.Matrix.idMatX;
-import static neo.idlib.math.Matrix.idMatX.MATX_ALLOCA;
 import neo.idlib.math.Quat.idCQuat;
 import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector;
+import neo.idlib.math.Vector.*;
+
+import java.util.Arrays;
+
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static neo.Game.Entity.TH_PHYSICS;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Physics.Physics_AF.constraintType_t.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Lib.idLib.cvarSystem;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Matrix.idMat3.*;
+import static neo.idlib.math.Matrix.idMatX.MATX_ALLOCA;
 import static neo.idlib.math.Vector.RAD2DEG;
-import static neo.idlib.math.Vector.getVec3_origin;
-import static neo.idlib.math.Vector.getVec3_zero;
-import static neo.idlib.math.Vector.getVec6_infinity;
-import static neo.idlib.math.Vector.getVec6_origin;
-import static neo.idlib.math.Vector.getVec6_zero;
-import neo.idlib.math.Vector.idVec2;
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
-import neo.idlib.math.Vector.idVec6;
-import neo.idlib.math.Vector.idVecX;
+import static neo.idlib.math.Vector.*;
 import static neo.idlib.math.Vector.idVecX.VECX_ALLOCA;
 
 /**
  *
  */
 public class Physics_AF {
+
+    //
+    public static final boolean AF_TIMINGS = true;
+
+    public static final float CENTER_OF_MASS_EPSILON = 1e-4f;
+    public static final float CONTACT_LCP_EPSILON = 1e-6f;
+    //
+    public static final float ERROR_REDUCTION = 0.5f;
+    public static final float ERROR_REDUCTION_MAX = 256.0f;
+    public static final float IMPULSE_THRESHOLD = 500.0f;
+    public static final float LCP_EPSILON = 1e-7f;
+    public static final float LIMIT_ERROR_REDUCTION = 0.3f;
+    public static final float LIMIT_LCP_EPSILON = 1e-4f;
+    public static final float MAX_MOVE_TIME = -1.0f;
+    public static final float MIN_MOVE_TIME = -1.0f;
+    public static final float NO_MOVE_ROTATION_TOLERANCE = 10.0f;
+    public static final float NO_MOVE_TIME = 1.0f;
+    public static final float NO_MOVE_TRANSLATION_TOLERANCE = 10.0f;
+    public static final float SUSPEND_ANGULAR_ACCELERATION = 30.0f;
+    public static final float SUSPEND_ANGULAR_VELOCITY = 15.0f;
+    public static final float SUSPEND_LINEAR_ACCELERATION = 20.0f;
+    public static final float SUSPEND_LINEAR_VELOCITY = 10.0f;
+    public static final boolean TEST_COLLISION_DETECTION = false;
+    private static final idVec6 vec6_lcp_epsilon = new idVec6(LCP_EPSILON, LCP_EPSILON, LCP_EPSILON, LCP_EPSILON, LCP_EPSILON, LCP_EPSILON);
+    // #ifdef AF_TIMINGS
+    static int lastTimerReset = 0;
+    static int numArticulatedFigures = 0;
+    static idTimer timer_total = new idTimer(),
+            timer_pc = new idTimer(),
+            timer_ac = new idTimer(),
+            timer_collision = new idTimer(),
+            timer_lcp = new idTimer();
+
+    /*
+     ================
+     idPhysics_AF_SavePState
+     ================
+     */
+    static void idPhysics_AF_SavePState(idSaveGame saveFile, final AFPState_s state) {
+        saveFile.WriteInt(state.atRest);
+        saveFile.WriteFloat(state.noMoveTime);
+        saveFile.WriteFloat(state.activateTime);
+        saveFile.WriteFloat(state.lastTimeStep);
+        saveFile.WriteVec6(state.pushVelocity);
+    }
+// #endif
+
+    /*
+     ================
+     idPhysics_AF_RestorePState
+     ================
+     */
+    static void idPhysics_AF_RestorePState(idRestoreGame saveFile, AFPState_s state) {
+        int[] atRest = {0};
+        float[] noMoveTime = {0};
+        float[] activateTime = {0};
+        float[] lastTimeStep = {0};
+
+        saveFile.ReadInt(atRest);
+        saveFile.ReadFloat(noMoveTime);
+        saveFile.ReadFloat(activateTime);
+        saveFile.ReadFloat(lastTimeStep);
+        saveFile.ReadVec6(state.pushVelocity);
+
+        state.atRest = atRest[0];
+        state.noMoveTime = noMoveTime[0];
+        state.activateTime = activateTime[0];
+        state.lastTimeStep = lastTimeStep[0];
+    }
 
     /*
      ===================================================================================
@@ -149,38 +157,7 @@ public class Physics_AF {
                 return values()[index];
             }
         }
-    };
-    //
-    public static final  float   ERROR_REDUCTION               = 0.5f;
-    public static final  float   ERROR_REDUCTION_MAX           = 256.0f;
-    public static final  float   LIMIT_ERROR_REDUCTION         = 0.3f;
-    public static final  float   LCP_EPSILON                   = 1e-7f;
-    public static final  float   LIMIT_LCP_EPSILON             = 1e-4f;
-    public static final  float   CONTACT_LCP_EPSILON           = 1e-6f;
-    public static final  float   CENTER_OF_MASS_EPSILON        = 1e-4f;
-    public static final  float   NO_MOVE_TIME                  = 1.0f;
-    public static final  float   NO_MOVE_TRANSLATION_TOLERANCE = 10.0f;
-    public static final  float   NO_MOVE_ROTATION_TOLERANCE    = 10.0f;
-    public static final  float   MIN_MOVE_TIME                 = -1.0f;
-    public static final  float   MAX_MOVE_TIME                 = -1.0f;
-    public static final  float   IMPULSE_THRESHOLD             = 500.0f;
-    public static final  float   SUSPEND_LINEAR_VELOCITY       = 10.0f;
-    public static final  float   SUSPEND_ANGULAR_VELOCITY      = 15.0f;
-    public static final  float   SUSPEND_LINEAR_ACCELERATION   = 20.0f;
-    public static final  float   SUSPEND_ANGULAR_ACCELERATION  = 30.0f;
-    private static final idVec6  vec6_lcp_epsilon              = new idVec6(LCP_EPSILON, LCP_EPSILON, LCP_EPSILON, LCP_EPSILON, LCP_EPSILON, LCP_EPSILON);
-    //
-    public static final  boolean AF_TIMINGS                    = true;
-    public static final  boolean TEST_COLLISION_DETECTION      = false;
-    // #ifdef AF_TIMINGS
-    static               int     lastTimerReset                = 0;
-    static               int     numArticulatedFigures         = 0;
-    static               idTimer timer_total                   = new idTimer(),
-                                 timer_pc                      = new idTimer(),
-                                 timer_ac                      = new idTimer(),
-                                 timer_collision               = new idTimer(),
-                                 timer_lcp                     = new idTimer();
-// #endif
+    }
 
     //===============================================================
     //
@@ -190,38 +167,27 @@ public class Physics_AF {
     // base class for all constraints
     public static class idAFConstraint {
 
-        protected constraintType_t type;            // constraint type
-        protected idStr name = new idStr();         // name of constraint
-        protected idAFBody     body1;               // first constrained body
-        protected idAFBody     body2;               // second constrained body, NULL for world
-        protected idPhysics_AF physics;             // for adding additional constraints like limits
+        protected final int[] boxIndex = new int[6];// indexes for special box constrained variables
+        protected idMatX J;                         // transformed constraint matrix
         //
         // simulation variables set by Evaluate
-        protected idMatX       J1, J2;              // matrix with left hand side of constraint equations
-        protected idVecX c1, c2;                    // right hand side of constraint equations
-        protected idVecX lo, hi, e;                 // low and high bounds and lcp epsilon
+        protected idMatX J1, J2;              // matrix with left hand side of constraint equations
+        protected idAFBody body1;               // first constrained body
+        protected idAFBody body2;               // second constrained body, NULL for world
         protected idAFConstraint boxConstraint;     // constraint the boxIndex refers to
-        protected final int[] boxIndex = new int[6];// indexes for special box constrained variables
+        protected idVecX c1, c2;                    // right hand side of constraint equations
+        protected int firstIndex;                // index of the first constraint row in the lcp matrix
+        protected constraintFlags_s fl;
         //
         // simulation variables used during calculations
         protected idMatX invI;                      // transformed inertia
-        protected idMatX J;                         // transformed constraint matrix
-        protected idVecX s;                         // temp solution
         protected idVecX lm;                        // lagrange multipliers
-        protected int    firstIndex;                // index of the first constraint row in the lcp matrix
+        protected idVecX lo, hi, e;                 // low and high bounds and lcp epsilon
+        protected idStr name = new idStr();         // name of constraint
+        protected idPhysics_AF physics;             // for adding additional constraints like limits
+        protected idVecX s;                         // temp solution
 //
-
-        protected static final class constraintFlags_s {
-
-            boolean allowPrimary;//: 1;             // true if the constraint can be used as a primary constraint
-            boolean frameConstraint;//: 1;	        // true if this constraint is added to the frame constraints
-            boolean noCollision;//: 1;              // true if body1 and body2 never collide with each other
-            boolean isPrimary;//: 1;                // true if this is a primary constraint
-            boolean isZero;//: 1;                   // true if 's' is zero during calculations
-        };
-        protected constraintFlags_s fl;
-//
-//
+        protected constraintType_t type;            // constraint type
 
         // friend class idPhysics_AF;
         // friend class idAFTree;
@@ -247,11 +213,13 @@ public class Physics_AF {
 //	memset( &fl, 0, sizeof( fl ) );
             fl = new constraintFlags_s();
         }
-        // virtual					~idAFConstraint( void );
+//
+//
 
         public constraintType_t GetType() {
             return type;
         }
+        // virtual					~idAFConstraint( void );
 
         public idStr GetName() {
             return name;
@@ -350,7 +318,16 @@ public class Physics_AF {
             s = new idVecX(size);
             lm = new idVecX(size);
         }
-    };
+
+        protected static final class constraintFlags_s {
+
+            boolean allowPrimary;//: 1;             // true if the constraint can be used as a primary constraint
+            boolean frameConstraint;//: 1;	        // true if this constraint is added to the frame constraints
+            boolean isPrimary;//: 1;                // true if this is a primary constraint
+            boolean isZero;//: 1;                   // true if 's' is zero during calculations
+            boolean noCollision;//: 1;              // true if body1 and body2 never collide with each other
+        }
+    }
 
     //===============================================================
     //
@@ -360,6 +337,11 @@ public class Physics_AF {
     // fixed or rigid joint which allows zero degrees of freedom
     // constrains body1 to have a fixed position and orientation relative to body2
     public static class idAFConstraint_Fixed extends idAFConstraint {
+
+        //
+//
+        protected idVec3 offset;                        // offset of body1 relative to body2 in body2 space
+        protected idMat3 relAxis;                    // rotation of body1 relative to body2
 
         public idAFConstraint_Fixed(final idStr name, idAFBody body1, idAFBody body2) {
             assert (body1 != null);
@@ -451,10 +433,6 @@ public class Physics_AF {
         }
 //
 //
-        protected idVec3 offset;						// offset of body1 relative to body2 in body2 space
-        protected idMat3 relAxis;					// rotation of body1 relative to body2
-//
-//
 
         @Override
         protected void Evaluate(float invTimeStep) {
@@ -505,7 +483,7 @@ public class Physics_AF {
                 relAxis = body1.GetWorldAxis();
             }
         }
-    };
+    }
 
     //===============================================================
     //
@@ -516,12 +494,12 @@ public class Physics_AF {
     // constrains body1 relative to body2 with a ball and socket joint
     public static class idAFConstraint_BallAndSocketJoint extends idAFConstraint {
 
-        protected idVec3                                    anchor1;        // anchor in body1 space
-        protected idVec3                                    anchor2;        // anchor in body2 space
-        protected float                                     friction;       // joint friction
-        protected idAFConstraint_ConeLimit                  coneLimit;      // cone shaped limit
-        protected idAFConstraint_PyramidLimit               pyramidLimit;   // pyramid shaped limit
+        protected idVec3 anchor1;        // anchor in body1 space
+        protected idVec3 anchor2;        // anchor in body2 space
+        protected idAFConstraint_ConeLimit coneLimit;      // cone shaped limit
         protected idAFConstraint_BallAndSocketJointFriction fc;             // friction constraint
+        protected float friction;       // joint friction
+        protected idAFConstraint_PyramidLimit pyramidLimit;   // pyramid shaped limit
         //
         //
 
@@ -784,7 +762,7 @@ public class Physics_AF {
                 fc.Add(physics, invTimeStep);
             }
         }
-    };
+    }
 
     //===============================================================
     //
@@ -857,7 +835,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // do nothing
         }
-    };
+    }
 
     //===============================================================
     //
@@ -868,20 +846,22 @@ public class Physics_AF {
     // like a ball and socket joint but also constrains the rotation about the cardan shafts
     public static class idAFConstraint_UniversalJoint extends idAFConstraint {
 
-        protected idVec3                                anchor1;        // anchor in body1 space
-        protected idVec3                                anchor2;        // anchor in body2 space
-        protected idVec3                                shaft1;         // body1 cardan shaft in body1 space
-        protected idVec3                                shaft2;         // body2 cardan shaft in body2 space
-        protected idVec3                                axis1;          // cardan axis in body1 space
-        protected idVec3                                axis2;          // cardan axis in body2 space
-        protected float                                 friction;       // joint friction
-        protected idAFConstraint_ConeLimit              coneLimit;      // cone shaped limit
-        protected idAFConstraint_PyramidLimit           pyramidLimit;   // pyramid shaped limit
-        protected idAFConstraint_UniversalJointFriction fc;             // friction constraint
+        private static int DBG_SetAnchor = 0;
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        protected idVec3 anchor1;        // anchor in body1 space
+        protected idVec3 anchor2;        // anchor in body2 space
+        protected idVec3 axis1;          // cardan axis in body1 space
+        protected idVec3 axis2;          // cardan axis in body2 space
+        protected idAFConstraint_ConeLimit coneLimit;      // cone shaped limit
+        protected idAFConstraint_UniversalJointFriction fc;             // friction constraint
+        protected float friction;       // joint friction
+        protected idAFConstraint_PyramidLimit pyramidLimit;   // pyramid shaped limit
+        protected idVec3 shaft1;         // body1 cardan shaft in body1 space
+        protected idVec3 shaft2;         // body2 cardan shaft in body2 space
+        // ~idAFConstraint_UniversalJoint();
 
         public idAFConstraint_UniversalJoint(final idStr name, idAFBody body1, idAFBody body2) {
             assert (body1 != null);
@@ -903,10 +883,9 @@ public class Physics_AF {
             fl.allowPrimary = true;
             fl.noCollision = true;
         }
-        // ~idAFConstraint_UniversalJoint();
 
-        private static int DBG_SetAnchor = 0;
-        public void SetAnchor(final idVec3 worldPosition) {DBG_SetAnchor++;
+        public void SetAnchor(final idVec3 worldPosition) {
+            DBG_SetAnchor++;
 
             // get anchor relative to center of mass of body1
             anchor1.oSet((worldPosition.oMinus(body1.GetWorldOrigin())).oMultiply(body1.GetWorldAxis().Transpose()));
@@ -1260,7 +1239,7 @@ public class Physics_AF {
                 fc.Add(physics, invTimeStep);
             }
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1270,7 +1249,7 @@ public class Physics_AF {
     // universal joint friction
     public static class idAFConstraint_UniversalJointFriction extends idAFConstraint {
 
-        protected idAFConstraint_UniversalJoint joint;			// universal joint
+        protected idAFConstraint_UniversalJoint joint;            // universal joint
         //
         //
 
@@ -1345,7 +1324,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // do nothing
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1357,34 +1336,34 @@ public class Physics_AF {
     public static class idAFConstraint_CylindricalJoint extends idAFConstraint {
 
         public idAFConstraint_CylindricalJoint(final idStr name, idAFBody body1, idAFBody body2) {
-            assert (false);	// FIXME: implement
+            assert (false);    // FIXME: implement
         }
 
         @Override
         public void DebugDraw() {
-            assert (false);	// FIXME: implement
+            assert (false);    // FIXME: implement
         }
 
         @Override
         public void Translate(final idVec3 translation) {
-            assert (false);	// FIXME: implement
+            assert (false);    // FIXME: implement
         }
 
         @Override
         public void Rotate(final idRotation rotation) {
-            assert (false);	// FIXME: implement
+            assert (false);    // FIXME: implement
         }
 
         @Override
         protected void Evaluate(float invTimeStep) {
-            assert (false);	// FIXME: implement
+            assert (false);    // FIXME: implement
         }
 
         @Override
         protected void ApplyFriction(float invTimeStep) {
-            assert (false);	// FIXME: implement
+            assert (false);    // FIXME: implement
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1395,15 +1374,15 @@ public class Physics_AF {
     // constrains all motion of body1 relative to body2 except the rotation about the hinge axis
     public static class idAFConstraint_Hinge extends idAFConstraint {
 
-        protected idVec3                       anchor1;     // anchor in body1 space
-        protected idVec3                       anchor2;     // anchor in body2 space
-        protected idVec3                       axis1;       // axis in body1 space
-        protected idVec3                       axis2;       // axis in body2 space
-        protected idMat3                       initialAxis; // initial axis of body1 relative to body2
-        protected float                        friction;    // hinge friction
-        protected idAFConstraint_ConeLimit     coneLimit;   // cone limit
-        protected idAFConstraint_HingeSteering steering;    // steering
+        protected idVec3 anchor1;     // anchor in body1 space
+        protected idVec3 anchor2;     // anchor in body2 space
+        protected idVec3 axis1;       // axis in body1 space
+        protected idVec3 axis2;       // axis in body2 space
+        protected idAFConstraint_ConeLimit coneLimit;   // cone limit
         protected idAFConstraint_HingeFriction fc;          // friction constraint
+        protected float friction;    // hinge friction
+        protected idMat3 initialAxis; // initial axis of body1 relative to body2
+        protected idAFConstraint_HingeSteering steering;    // steering
         //
         //
 
@@ -1755,7 +1734,7 @@ public class Physics_AF {
                 fc.Add(physics, invTimeStep);
             }
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1836,7 +1815,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // do nothing
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1846,10 +1825,10 @@ public class Physics_AF {
     // constrains two bodies attached to each other with a hinge to get a specified relative orientation
     public static class idAFConstraint_HingeSteering extends idAFConstraint {
 
+        protected float epsilon;          // lcp epsilon
         protected idAFConstraint_Hinge hinge;            // hinge
-        protected float                steerAngle;       // desired steer angle in degrees
-        protected float                steerSpeed;       // steer speed
-        protected float                epsilon;          // lcp epsilon
+        protected float steerAngle;       // desired steer angle in degrees
+        protected float steerSpeed;       // steer speed
         //
         //
 
@@ -1914,7 +1893,7 @@ public class Physics_AF {
                 }
             }
 
-            c1.p[0] = (float) (DEG2RAD(speed) * invTimeStep);
+            c1.p[0] = DEG2RAD(speed) * invTimeStep;
 
             physics.AddFrameConstraint(this);
 
@@ -1960,7 +1939,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // do nothing
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2109,7 +2088,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // no friction
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2148,7 +2127,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             assert (false);    // FIXME: implement
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2282,7 +2261,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // no friction
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2295,12 +2274,12 @@ public class Physics_AF {
 
         protected idVec3 anchor1;                    // anchor in body1 space
         protected idVec3 anchor2;                    // anchor in body2 space
-        protected float  kstretch;                   // spring constant when stretched
-        protected float  kcompress;                  // spring constant when compressed
-        protected float  damping;                    // spring damping
-        protected float  restLength;                 // rest length of spring
-        protected float  minLength;                  // minimum spring length
-        protected float  maxLength;                  // maximum spring length
+        protected float damping;                    // spring damping
+        protected float kcompress;                  // spring constant when compressed
+        protected float kstretch;                   // spring constant when stretched
+        protected float maxLength;                  // maximum spring length
+        protected float minLength;                  // minimum spring length
+        protected float restLength;                 // rest length of spring
         //
         //
 
@@ -2484,7 +2463,7 @@ public class Physics_AF {
 
             if (length > restLength) {
                 if (kstretch > 0.0f) {
-                    idVec3 springForce = force.oMultiply((float) Square(length - restLength) * kstretch - dampingForce);
+                    idVec3 springForce = force.oMultiply(Square(length - restLength) * kstretch - dampingForce);
                     body1.AddForce(a1, springForce);
                     if (master != null) {
                         master.AddForce(a2, springForce.oNegative());
@@ -2539,7 +2518,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // no friction
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2549,6 +2528,12 @@ public class Physics_AF {
     // constrains body1 to either be in contact with or move away from body2
     public static class idAFConstraint_Contact extends idAFConstraint {
 
+        //
+//
+        protected contactInfo_t contact;                    // contact information
+        // ~idAFConstraint_Contact();
+        protected idAFConstraint_ContactFriction fc;                    // contact friction
+
         public idAFConstraint_Contact() {
             name.oSet("contact");
             type = CONSTRAINT_CONTACT;
@@ -2557,7 +2542,6 @@ public class Physics_AF {
             fl.allowPrimary = false;
             fl.frameConstraint = true;
         }
-        // ~idAFConstraint_Contact();
 
         public void Setup(idAFBody b1, idAFBody b2, contactInfo_t c) {
             idVec3 p;
@@ -2626,11 +2610,6 @@ public class Physics_AF {
         public void GetCenter(idVec3 center) {
             center.oSet(contact.point);
         }
-
-        //
-//
-        protected contactInfo_t                  contact;                    // contact information
-        protected idAFConstraint_ContactFriction fc;                    // contact friction
 //
 //
 
@@ -2690,7 +2669,7 @@ public class Physics_AF {
                 fc.Add(physics, invTimeStep);
             }
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2699,6 +2678,10 @@ public class Physics_AF {
     //===============================================================
     // contact friction
     public static class idAFConstraint_ContactFriction extends idAFConstraint {
+
+        //
+//
+        idAFConstraint_Contact cc;                            // contact constraint
 
         public idAFConstraint_ContactFriction() {
             type = CONSTRAINT_FRICTION;
@@ -2838,9 +2821,6 @@ public class Physics_AF {
         }
 //
 //
-        idAFConstraint_Contact cc;							// contact constraint
-//
-//
 
         @Override
         protected void Evaluate(float invTimeStep) {
@@ -2851,7 +2831,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // do nothing
         }
-    };
+    }
 
     //===============================================================
     //
@@ -2861,13 +2841,13 @@ public class Physics_AF {
     // constrains an axis attached to body1 to be inside a cone relative to body2
     public static class idAFConstraint_ConeLimit extends idAFConstraint {
 
+        protected idVec3 body1Axis;              // axis in body1 space that should stay within the cone
         protected idVec3 coneAnchor;             // top of the cone in body2 space
         protected idVec3 coneAxis;               // cone axis in body2 space
-        protected idVec3 body1Axis;              // axis in body1 space that should stay within the cone
-        protected float  cosAngle;               // cos( coneAngle / 2 )
-        protected float  sinHalfAngle;           // sin( coneAngle / 4 )
-        protected float  cosHalfAngle;           // cos( coneAngle / 4 )
-        protected float  epsilon;                // lcp epsilon
+        protected float cosAngle;               // cos( coneAngle / 2 )
+        protected float cosHalfAngle;           // cos( coneAngle / 4 )
+        protected float epsilon;                // lcp epsilon
+        protected float sinHalfAngle;           // sin( coneAngle / 4 )
         //
         //
 
@@ -2894,7 +2874,7 @@ public class Physics_AF {
          ================
          */
         public void Setup(idAFBody b1, idAFBody b2, final idVec3 coneAnchor, final idVec3 coneAxis,
-                final float coneAngle, final idVec3 body1Axis) {
+                          final float coneAngle, final idVec3 body1Axis) {
             this.body1 = b1;
             this.body2 = b2;
             this.coneAxis.oSet(coneAxis);
@@ -3082,7 +3062,7 @@ public class Physics_AF {
         @Override
         protected void ApplyFriction(float invTimeStep) {
         }
-    };
+    }
 
     //===============================================================
     //
@@ -3092,13 +3072,13 @@ public class Physics_AF {
     // constrains an axis attached to body1 to be inside a pyramid relative to body2
     public static class idAFConstraint_PyramidLimit extends idAFConstraint {
 
-        protected idVec3 pyramidAnchor;                 // top of the pyramid in body2 space
-        protected idMat3 pyramidBasis;                  // pyramid basis in body2 space with base[2] being the pyramid axis
         protected idVec3 body1Axis;                     // axis in body1 space that should stay within the cone
-        protected float[] cosAngle     = new float[2];  // cos( pyramidAngle / 2 )
-        protected float[] sinHalfAngle = new float[2];  // sin( pyramidAngle / 4 )
+        protected float[] cosAngle = new float[2];  // cos( pyramidAngle / 2 )
         protected float[] cosHalfAngle = new float[2];  // cos( pyramidAngle / 4 )
         protected float epsilon;                        // lcp epsilon
+        protected idVec3 pyramidAnchor;                 // top of the pyramid in body2 space
+        protected idMat3 pyramidBasis;                  // pyramid basis in body2 space with base[2] being the pyramid axis
+        protected float[] sinHalfAngle = new float[2];  // sin( pyramidAngle / 4 )
         //
         //
 
@@ -3352,7 +3332,7 @@ public class Physics_AF {
         @Override
         protected void ApplyFriction(float invTimeStep) {
         }
-    };
+    }
 
     //===============================================================
     //
@@ -3362,21 +3342,21 @@ public class Physics_AF {
     // vehicle suspension
     public static class idAFConstraint_Suspension extends idAFConstraint {
 
-        protected idVec3      localOrigin;         // position of suspension relative to body1
-        protected idMat3      localAxis;           // orientation of suspension relative to body1
-        protected float       suspensionUp;        // suspension up movement
-        protected float       suspensionDown;      // suspension down movement
-        protected float       suspensionKCompress; // spring compress constant
-        protected float       suspensionDamping;   // spring damping
-        protected float       steerAngle;          // desired steer angle in degrees
-        protected float       friction;            // friction
-        protected boolean     motorEnabled;        // whether the motor is enabled or not
-        protected float       motorForce;          // motor force
-        protected float       motorVelocity;       // desired velocity
+        protected float epsilon;             // lcp epsilon
+        protected float friction;            // friction
+        protected idMat3 localAxis;           // orientation of suspension relative to body1
+        protected idVec3 localOrigin;         // position of suspension relative to body1
+        protected boolean motorEnabled;        // whether the motor is enabled or not
+        protected float motorForce;          // motor force
+        protected float motorVelocity;       // desired velocity
+        protected float steerAngle;          // desired steer angle in degrees
+        protected float suspensionDamping;   // spring damping
+        protected float suspensionDown;      // suspension down movement
+        protected float suspensionKCompress; // spring compress constant
+        protected float suspensionUp;        // suspension up movement
+        protected trace_s trace;               // contact point with the ground
         protected idClipModel wheelModel;          // wheel model
-        protected idVec3      wheelOffset;         // wheel position relative to body1
-        protected trace_s     trace;               // contact point with the ground
-        protected float       epsilon;             // lcp epsilon
+        protected idVec3 wheelOffset;         // wheel position relative to body1
         //
         //
 
@@ -3605,7 +3585,7 @@ public class Physics_AF {
         protected void ApplyFriction(float invTimeStep) {
             // do nothing
         }
-    };
+    }
 
     //===============================================================
     //
@@ -3614,13 +3594,12 @@ public class Physics_AF {
     //===============================================================
     public static class AFBodyPState_s {
 
-        idVec3 worldOrigin;              // position in world space
-        idMat3 worldAxis;                // axis at worldOrigin
-        idVec6 spatialVelocity;          // linear and rotational velocity of body
-        idVec6 externalForce;            // external force and torque applied to body
-
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        idVec6 externalForce;            // external force and torque applied to body
+        idVec6 spatialVelocity;          // linear and rotational velocity of body
+        idMat3 worldAxis;                // axis at worldOrigin
+        idVec3 worldOrigin;              // position in world space
 
         public AFBodyPState_s() {
             this.worldOrigin = new idVec3();
@@ -3640,71 +3619,63 @@ public class Physics_AF {
             spatialVelocity.oSet(body.spatialVelocity);
             externalForce.oSet(body.externalForce);
         }
-    };
+    }
 
     public static class idAFBody {
 
-        // properties
-        private idStr                  name;                // name of body
-        private idAFBody               parent;              // parent of this body
-        private idList<idAFBody>       children;            // children of this body
-        private idClipModel            clipModel;           // model used for collision detection
-        private idAFConstraint         primaryConstraint;   // primary constraint (this.constraint.body1 = this)
-        private idList<idAFConstraint> constraints;         // all constraints attached to this body
-        private idAFTree               tree;                // tree structure this body is part of
-        private float                  linearFriction;      // translational friction
-        private float                  angularFriction;     // rotational friction
-        private float                  contactFriction;     // friction with contact surfaces
-        private float                  bouncyness;          // bounce
-        private int                    clipMask;            // contents this body collides with
-        private idVec3                 frictionDir;         // specifies a single direction of friction in body space
-        private idVec3                 contactMotorDir;     // contact motor direction
-        private float                  contactMotorVelocity;// contact motor velocity
-        private float                  contactMotorForce;   // maximum force applied to reach the motor velocity
+        private static int DBG_SetDensity = 0;
         //
-        // derived properties
-        private float                  mass;                // mass of body
-        private float                  invMass;             // inverse mass
-        private idVec3                 centerOfMass;        // center of mass of body
-        private idMat3                 inertiaTensor;       // inertia tensor
-        private idMat3                 inverseInertiaTensor;// inverse inertia tensor
-        //
-        // physics state
-        private AFBodyPState_s[] state = new AFBodyPState_s[2];
-        private AFBodyPState_s current;                     // current physics state
-        private AFBodyPState_s next;                        // next physics state
-        private AFBodyPState_s saved;                       // saved physics state
-        private idVec3         atRestOrigin;                // origin at rest
-        private idMat3         atRestAxis;                  // axis at rest
-        //
-        // simulation variables used during calculations
-        private idMatX         inverseWorldSpatialInertia;  // inverse spatial inertia in world space
-        private idMatX         I, invI;                     // transformed inertia
-        private idMatX  J;                                  // transformed constraint matrix
-        private idVecX  s;                                  // temp solution
-        private idVecX  totalForce;                         // total force acting on body
-        private idVecX  auxForce;                           // force from auxiliary constraints
-        private idVecX  acceleration;                       // acceleration
-        private float[] response;                           // forces on body in response to auxiliary constraint forces
-        private int[]   responseIndex;                      // index to response forces
-        private int     numResponses;                       // number of response forces
-        private int     maxAuxiliaryIndex;                  // largest index of an auxiliary constraint constraining this body
-        private int     maxSubTreeAuxiliaryIndex;           // largest index of an auxiliary constraint constraining this body or one of it's children
-//
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
-
-        private final class bodyFlags_s {
-
-            boolean clipMaskSet;//: 1;          // true if this body has a clip mask set
-            boolean selfCollision;//: 1;	// true if this body can collide with other bodies of this AF
-            boolean spatialInertiaSparse;//: 1;	// true if the spatial inertia matrix is sparse
-            boolean useFrictionDir;//: 1;	// true if a single friction direction should be used
-            boolean useContactMotorDir;//: 1;	// true if a contact motor should be used
-            boolean isZero;//: 1;               // true if 's' is zero during calculations
-        };
+        private final int DBG_count = DBG_counter++;
+        private idMatX I, invI;                     // transformed inertia
+        private idMatX J;                                  // transformed constraint matrix
+        private idVecX acceleration;                       // acceleration
+        private float angularFriction;     // rotational friction
+        private idMat3 atRestAxis;                  // axis at rest
+        private idVec3 atRestOrigin;                // origin at rest
+        private idVecX auxForce;                           // force from auxiliary constraints
+        private float bouncyness;          // bounce
+        private idVec3 centerOfMass;        // center of mass of body
+        private idList<idAFBody> children;            // children of this body
+        private int clipMask;            // contents this body collides with
+        private idClipModel clipModel;           // model used for collision detection
+        private idList<idAFConstraint> constraints;         // all constraints attached to this body
+        private float contactFriction;     // friction with contact surfaces
+        private idVec3 contactMotorDir;     // contact motor direction
+        private float contactMotorForce;   // maximum force applied to reach the motor velocity
+        private float contactMotorVelocity;// contact motor velocity
+        private AFBodyPState_s current;                     // current physics state
         //
         private bodyFlags_s fl;
+        private idVec3 frictionDir;         // specifies a single direction of friction in body space
+        private idMat3 inertiaTensor;       // inertia tensor
+        private float invMass;             // inverse mass
+        private idMat3 inverseInertiaTensor;// inverse inertia tensor
+        //
+        // simulation variables used during calculations
+        private idMatX inverseWorldSpatialInertia;  // inverse spatial inertia in world space
+        private float linearFriction;      // translational friction
+        //
+        // derived properties
+        private float mass;                // mass of body
+        private int maxAuxiliaryIndex;                  // largest index of an auxiliary constraint constraining this body
+        private int maxSubTreeAuxiliaryIndex;           // largest index of an auxiliary constraint constraining this body or one of it's children
+        // properties
+        private idStr name;                // name of body
+        private AFBodyPState_s next;                        // next physics state
+        private int numResponses;                       // number of response forces
+        private idAFBody parent;              // parent of this body
+        private idAFConstraint primaryConstraint;   // primary constraint (this.constraint.body1 = this)
+        private float[] response;                           // forces on body in response to auxiliary constraint forces
+        private int[] responseIndex;                      // index to response forces
+        private idVecX s;                                  // temp solution
+        private AFBodyPState_s saved;                       // saved physics state
+        //
+        // physics state
+        private final AFBodyPState_s[] state = new AFBodyPState_s[2];
+        private idVecX totalForce;                         // total force acting on body
+
+        private idAFTree tree;                // tree structure this body is part of
         //
         //
 
@@ -3734,7 +3705,7 @@ public class Physics_AF {
         }
 
         // ~idAFBody();
-        protected void _deconstructor(){
+        protected void _deconstructor() {
             idClipModel.delete(clipModel);
         }
 
@@ -3896,8 +3867,8 @@ public class Physics_AF {
             return bouncyness;
         }
 
-        private static int DBG_SetDensity = 0;
-        public void SetDensity(float density, final idMat3 inertiaScale /*= mat3_identity*/) {DBG_SetDensity++;
+        public void SetDensity(float density, final idMat3 inertiaScale /*= mat3_identity*/) {
+            DBG_SetDensity++;
 
             float[] massTemp = {mass};
 
@@ -4024,7 +3995,9 @@ public class Physics_AF {
             }
         }
 
-        /**@deprecated returns immutable response*/
+        /**
+         * @deprecated returns immutable response
+         */
         @Deprecated
         public idVec6 GetResponseForce(int index) {
 //            return reinterpret_cast < idVec6 > (response[ index * 8]);
@@ -4084,7 +4057,17 @@ public class Physics_AF {
             saveFile.ReadVec3(atRestOrigin);
             saveFile.ReadMat3(atRestAxis);
         }
-    };
+
+        private final class bodyFlags_s {
+
+            boolean clipMaskSet;//: 1;          // true if this body has a clip mask set
+            boolean isZero;//: 1;               // true if 's' is zero during calculations
+            boolean selfCollision;//: 1;	// true if this body can collide with other bodies of this AF
+            boolean spatialInertiaSparse;//: 1;	// true if the spatial inertia matrix is sparse
+            boolean useContactMotorDir;//: 1;	// true if a contact motor should be used
+            boolean useFrictionDir;//: 1;	// true if a single friction direction should be used
+        }
+    }
 
     //===============================================================
     //                                                        M
@@ -4094,9 +4077,10 @@ public class Physics_AF {
     public static class idAFTree {
         // friend class idPhysics_AF;
 
-        private idList<idAFBody> sortedBodies = new idList<>();
+        private static int DBG_force = 0;
         //
         //
+        private final idList<idAFBody> sortedBodies = new idList<>();
 
         /*
          ================
@@ -4333,7 +4317,8 @@ public class Physics_AF {
                 if (primaryConstraint != null) {
                     primaryConstraint.J1.TransposeMultiplyAdd(force, primaryConstraint.lm);
                 }
-                for (j = 0; j < body.children.Num(); j++) {   DBG_force++;
+                for (j = 0; j < body.children.Num(); j++) {
+                    DBG_force++;
                     child = body.children.oGet(j).primaryConstraint;
                     child.J2.TransposeMultiplyAdd(force, child.lm);
                 }
@@ -4341,7 +4326,7 @@ public class Physics_AF {
                 System.arraycopy(force.p, 0, body.response, from, 6);
                 body.responseIndex[body.numResponses++] = auxiliaryIndex;
             }
-        }           private static int DBG_force = 0;
+        }
 
         /*
          ================
@@ -4446,7 +4431,7 @@ public class Physics_AF {
             }
 
             if (i >= sortedBodies.Num()) {
-                gameLocal.Error("Articulated figure tree has no root.");
+                idGameLocal.Error("Articulated figure tree has no root.");
             }
 
             body = sortedBodies.oGet(i);
@@ -4475,7 +4460,7 @@ public class Physics_AF {
                 gameRenderWorld.DebugArrow(color, body.parent.current.worldOrigin, body.current.worldOrigin, 1);
             }
         }
-    };
+    }
 
     //===============================================================
     //                                                        M
@@ -4484,89 +4469,110 @@ public class Physics_AF {
     //===============================================================
     public static class AFPState_s {
 
-        int    atRest;                    // >= 0 if articulated figure is at rest
-        float  noMoveTime;                // time the articulated figure is hardly moving
-        float  activateTime;              // time since last activation
-        float  lastTimeStep;              // last time step
-        idVec6 pushVelocity;              // velocity with which the af is pushed
-
         private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        float activateTime;              // time since last activation
+        int atRest;                    // >= 0 if articulated figure is at rest
+        float lastTimeStep;              // last time step
+        float noMoveTime;                // time the articulated figure is hardly moving
+        idVec6 pushVelocity;              // velocity with which the af is pushed
 
         public AFPState_s() {
             pushVelocity = new idVec6();
         }
-    };
+    }
 
     public static class AFCollision_s {
 
-        trace_s  trace;
         idAFBody body;
-    };
+        trace_s trace;
+    }
 
     public static class idPhysics_AF extends idPhysics_Base {
 
-        // articulated figure
-        private idList<idAFTree>               trees;                     // tree structures
-        private idList<idAFBody>               bodies;                    // all bodies
-        private idList<idAFConstraint>         constraints;               // all frame independent constraints
-        private idList<idAFConstraint>         primaryConstraints;        // list with primary constraints
-        private idList<idAFConstraint>         auxiliaryConstraints;      // list with auxiliary constraints
-        private idList<idAFConstraint>         frameConstraints;          // constraints that only live one frame
-        private idList<idAFConstraint_Contact> contactConstraints;        // contact constraints
-        private idList<Integer>                contactBodies;             // body id for each contact
-        private idList<AFCollision_s>          collisions;                // collisions
-        private boolean                        changedAF;                 // true when the articulated figure just changed
+        static final float AF_FORCE_MAX = 1e20f;
+        static final int AF_FORCE_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(AF_FORCE_MAX)) + 1;
+        static final int AF_FORCE_TOTAL_BITS = 16;
+        static final int AF_FORCE_MANTISSA_BITS = AF_FORCE_TOTAL_BITS - 1 - AF_FORCE_EXPONENT_BITS;
+        static final float AF_VELOCITY_MAX = 16000;
+        static final int AF_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(AF_VELOCITY_MAX)) + 1;
+        static final int AF_VELOCITY_TOTAL_BITS = 16;
+        static final int AF_VELOCITY_MANTISSA_BITS = AF_VELOCITY_TOTAL_BITS - 1 - AF_VELOCITY_EXPONENT_BITS;
+        /*
+         ================
+         idPhysics_AF::CheckForCollisions
+
+         check for collisions between the current and next state
+         if there is a collision the next state is set to the state at the moment of impact
+         assumes all bodies are linked for collision detection and relinks all bodies after moving them
+         ================
+         */                   private static int DBG_CheckForCollisions = 0;
+        private static int DBG_Translate = 0;
+        private static int DBG_VerifyContactConstraints = 0;
+        private static idBounds absBounds;
+        private static idBounds relBounds;
+        private float angularFriction;           // default rotational friction
+        private final idList<idAFConstraint> auxiliaryConstraints;      // list with auxiliary constraints
+        private final idList<idAFBody> bodies;                    // all bodies
+        private float bouncyness;                // default bouncyness
+        private boolean changedAF;                 // true when the articulated figure just changed
+        private final idList<AFCollision_s> collisions;                // collisions
+        private boolean comeToRest;                // if true the figure can come to rest
+        private final idList<idAFConstraint> constraints;               // all frame independent constraints
+        private final idList<Integer> contactBodies;             // body id for each contact
+        private final idList<idAFConstraint_Contact> contactConstraints;        // contact constraints
+        private float contactFriction;           // default friction with contact surfaces
+        private float contactFrictionDent;       // contact friction dives from 1 to this value and goes up again
+        private float contactFrictionDentEnd;    // end time of contact friction dent
+        private float contactFrictionDentScale;  // dent scale
+        private float contactFrictionDentStart;  // start time of contact friction dent
         //
-        // properties
-        private float                          linearFriction;            // default translational friction
-        private float                          angularFriction;           // default rotational friction
-        private float                          contactFriction;           // default friction with contact surfaces
-        private float                          bouncyness;                // default bouncyness
-        private float                          totalMass;                 // total mass of articulated figure
-        private float                          forceTotalMass;            // force this total mass
-        //
-        private idVec2                         suspendVelocity;           // simulation may not be suspended if a body has more velocity
-        private idVec2                         suspendAcceleration;       // simulation may not be suspended if a body has more acceleration
-        private float                          noMoveTime;                // suspend simulation if hardly any movement for this many seconds
-        private float                          noMoveTranslation;         // maximum translation considered no movement
-        private float                          noMoveRotation;            // maximum rotation considered no movement
-        private float                          minMoveTime;               // if > 0 the simulation is never suspended before running this many seconds
-        private float                          maxMoveTime;               // if > 0 the simulation is always suspeded after running this many seconds
-        private float                          impulseThreshold;          // threshold below which impulses are ignored to avoid continuous activation
-        //
-        private float                          timeScale;                 // the time is scaled with this value for slow motion effects
-        private float                          timeScaleRampStart;        // start of time scale change
-        private float                          timeScaleRampEnd;          // end of time scale change
-        //
-        private float                          jointFrictionScale;        // joint friction scale
-        private float                          jointFrictionDent;         // joint friction dives from 1 to this value and goes up again
-        private float                          jointFrictionDentStart;    // start time of joint friction dent
-        private float                          jointFrictionDentEnd;      // end time of joint friction dent
-        private float                          jointFrictionDentScale;    // dent scale
-        //
-        private float                          contactFrictionScale;      // contact friction scale
-        private float                          contactFrictionDent;       // contact friction dives from 1 to this value and goes up again
-        private float                          contactFrictionDentStart;  // start time of contact friction dent
-        private float                          contactFrictionDentEnd;    // end time of contact friction dent
-        private float                          contactFrictionDentScale;  // dent scale
-        //
-        private boolean                        enableCollision;           // if true collision detection is enabled
-        private boolean                        selfCollision;             // if true the self collision is allowed
-        private boolean                        comeToRest;                // if true the figure can come to rest
-        private boolean                        linearTime;                // if true use the linear time algorithm
-        private boolean                        noImpact;                  // if true do not activate when another object collides
-        private boolean                        worldConstraintsLocked;    // if true world constraints cannot be moved
-        private boolean                        forcePushable;             // if true can be pushed even when bound to a master
+        private float contactFrictionScale;      // contact friction scale
         //
         // physics state
-        private AFPState_s                     current;
-        private AFPState_s                     saved;
+        private AFPState_s current;
         //
-        private idAFBody                       masterBody;                // master body
-        private idLCP                          lcp;                       // linear complementarity problem solver
+        private boolean enableCollision;           // if true collision detection is enabled
+        private boolean forcePushable;             // if true can be pushed even when bound to a master
+        private float forceTotalMass;            // force this total mass
+        private final idList<idAFConstraint> frameConstraints;          // constraints that only live one frame
+        private float impulseThreshold;          // threshold below which impulses are ignored to avoid continuous activation
+        private float jointFrictionDent;         // joint friction dives from 1 to this value and goes up again
+        private float jointFrictionDentEnd;      // end time of joint friction dent
+        private float jointFrictionDentScale;    // dent scale
+        private float jointFrictionDentStart;    // start time of joint friction dent
+        //
+        private float jointFrictionScale;        // joint friction scale
+        private final idLCP lcp;                       // linear complementarity problem solver
+        //
+        // properties
+        private float linearFriction;            // default translational friction
+        private boolean linearTime;                // if true use the linear time algorithm
+        //
+        private idAFBody masterBody;                // master body
+        private float maxMoveTime;               // if > 0 the simulation is always suspeded after running this many seconds
+        private float minMoveTime;               // if > 0 the simulation is never suspended before running this many seconds
+        private boolean noImpact;                  // if true do not activate when another object collides
+        private float noMoveRotation;            // maximum rotation considered no movement
 //
 //
+        private float noMoveTime;                // suspend simulation if hardly any movement for this many seconds
+        // ~idPhysics_AF();
+        private float noMoveTranslation;         // maximum translation considered no movement
+        private final idList<idAFConstraint> primaryConstraints;        // list with primary constraints
+        private AFPState_s saved;
+        private boolean selfCollision;             // if true the self collision is allowed
+        private idVec2 suspendAcceleration;       // simulation may not be suspended if a body has more acceleration
+        //
+        private idVec2 suspendVelocity;           // simulation may not be suspended if a body has more velocity
+        //
+        private float timeScale;                 // the time is scaled with this value for slow motion effects
+        private float timeScaleRampEnd;          // end of time scale change
+        private float timeScaleRampStart;        // start of time scale change
+        private float totalMass;                 // total mass of articulated figure
+        // articulated figure
+        private final idList<idAFTree> trees;                     // tree structures
+        private boolean worldConstraintsLocked;    // if true world constraints cannot be moved
 
         // CLASS_PROTOTYPE( idPhysics_AF );
         public idPhysics_AF() {
@@ -4576,7 +4582,7 @@ public class Physics_AF {
             primaryConstraints = new idList<>();
             auxiliaryConstraints = new idList<>();
             frameConstraints = new idList<>();
-            contactConstraints = new idList<>()     ;
+            contactConstraints = new idList<>();
             contactBodies = new idList<>();
             contacts = new idList<>();
             collisions = new idList<>();
@@ -4634,7 +4640,6 @@ public class Physics_AF {
                 lastTimerReset = 0;
             }
         }
-        // ~idPhysics_AF();
 
         @Override
         public void Save(idSaveGame saveFile) {
@@ -4790,15 +4795,15 @@ public class Physics_AF {
             int id = 0;
 
             if (null == body.clipModel) {
-                gameLocal.Error("idPhysics_AF::AddBody: body '%s' has no clip model.", body.name);
+                idGameLocal.Error("idPhysics_AF::AddBody: body '%s' has no clip model.", body.name);
             }
 
             if (bodies.Find(body) != null) {
-                gameLocal.Error("idPhysics_AF::AddBody: body '%s' added twice.", body.name);
+                idGameLocal.Error("idPhysics_AF::AddBody: body '%s' added twice.", body.name);
             }
 
             if (GetBody(body.name.toString()) != null) {
-                gameLocal.Error("idPhysics_AF::AddBody: a body with the name '%s' already exists.", body.name);
+                idGameLocal.Error("idPhysics_AF::AddBody: a body with the name '%s' already exists.", body.name);
             }
 
             id = bodies.Num();
@@ -4825,22 +4830,22 @@ public class Physics_AF {
         public void AddConstraint(idAFConstraint constraint) {
 
             if (constraints.Find(constraint) != null) {
-                gameLocal.Error("idPhysics_AF::AddConstraint: constraint '%s' added twice.", constraint.name);
+                idGameLocal.Error("idPhysics_AF::AddConstraint: constraint '%s' added twice.", constraint.name);
             }
             if (GetConstraint(constraint.name.toString()) != null) {
-                gameLocal.Error("idPhysics_AF::AddConstraint: a constraint with the name '%s' already exists.", constraint.name);
+                idGameLocal.Error("idPhysics_AF::AddConstraint: a constraint with the name '%s' already exists.", constraint.name);
             }
             if (null == constraint.body1) {
-                gameLocal.Error("idPhysics_AF::AddConstraint: body1 == NULL on constraint '%s'.", constraint.name);
+                idGameLocal.Error("idPhysics_AF::AddConstraint: body1 == NULL on constraint '%s'.", constraint.name);
             }
             if (null == bodies.Find(constraint.body1)) {
-                gameLocal.Error("idPhysics_AF::AddConstraint: body1 of constraint '%s' is not part of the articulated figure.", constraint.name);
+                idGameLocal.Error("idPhysics_AF::AddConstraint: body1 of constraint '%s' is not part of the articulated figure.", constraint.name);
             }
             if (constraint.body2 != null && null == bodies.Find(constraint.body2)) {
-                gameLocal.Error("idPhysics_AF::AddConstraint: body2 of constraint '%s' is not part of the articulated figure.", constraint.name);
+                idGameLocal.Error("idPhysics_AF::AddConstraint: body2 of constraint '%s' is not part of the articulated figure.", constraint.name);
             }
             if (constraint.body1.equals(constraint.body2)) {
-                gameLocal.Error("idPhysics_AF::AddConstraint: body1 and body2 of constraint '%s' are the same.", constraint.name);
+                idGameLocal.Error("idPhysics_AF::AddConstraint: body1 and body2 of constraint '%s' are the same.", constraint.name);
             }
 
             constraints.Append(constraint);
@@ -4860,7 +4865,7 @@ public class Physics_AF {
 
             id = bodies.FindIndex(body);
             if (id == -1) {
-                gameLocal.Error("ForceBodyId: body '%s' is not part of the articulated figure.\n", body.name);
+                idGameLocal.Error("ForceBodyId: body '%s' is not part of the articulated figure.\n", body.name);
             }
             if (id != newId) {
                 idAFBody b = bodies.oGet(newId);
@@ -4876,7 +4881,7 @@ public class Physics_AF {
 
             id = bodies.FindIndex(body);
             if (id == -1 && body != null) {//TODO:can't be null
-                gameLocal.Error("GetBodyId: body '%s' is not part of the articulated figure.\n", body.name);
+                idGameLocal.Error("GetBodyId: body '%s' is not part of the articulated figure.\n", body.name);
             }
             return id;
         }
@@ -4889,7 +4894,7 @@ public class Physics_AF {
                     return i;
                 }
             }
-            gameLocal.Error("GetBodyId: no body with the name '%s' is not part of the articulated figure.\n", bodyName);
+            idGameLocal.Error("GetBodyId: no body with the name '%s' is not part of the articulated figure.\n", bodyName);
             return 0;
         }
 
@@ -4898,7 +4903,7 @@ public class Physics_AF {
 
             id = constraints.FindIndex(constraint);
             if (id == -1 && constraint != null) {//TODO:can't be null
-                gameLocal.Error("GetConstraintId: constraint '%s' is not part of the articulated figure.\n", constraint.name);
+                idGameLocal.Error("GetConstraintId: constraint '%s' is not part of the articulated figure.\n", constraint.name);
             }
             return id;
         }
@@ -4911,7 +4916,7 @@ public class Physics_AF {
                     return i;
                 }
             }
-            gameLocal.Error("GetConstraintId: no constraint with the name '%s' is not part of the articulated figure.\n", constraintName);
+            idGameLocal.Error("GetConstraintId: no constraint with the name '%s' is not part of the articulated figure.\n", constraintName);
             return 0;
         }
 
@@ -4943,7 +4948,7 @@ public class Physics_AF {
 
         public idAFBody GetBody(final int id) {
             if (id < 0 || id >= bodies.Num()) {
-                gameLocal.Error("GetBody: no body with id %d exists\n", id);
+                idGameLocal.Error("GetBody: no body with id %d exists\n", id);
                 return null;
             }
             return bodies.oGet(id);
@@ -4964,10 +4969,11 @@ public class Physics_AF {
 
             return null;
         }
+        // set joint friction dent
 
         public idAFConstraint GetConstraint(final int id) {
             if (id < 0 || id >= constraints.Num()) {
-                gameLocal.Error("GetConstraint: no constraint with id %d exists\n", id);
+                idGameLocal.Error("GetConstraint: no constraint with id %d exists\n", id);
                 return null;
             }
             return constraints.oGet(id);
@@ -4997,7 +5003,7 @@ public class Physics_AF {
             int j;
 
             if (id < 0 || id > bodies.Num()) {
-                gameLocal.Error("DeleteBody: no body with id %d.", id);
+                idGameLocal.Error("DeleteBody: no body with id %d.", id);
                 return;
             }
 
@@ -5044,7 +5050,7 @@ public class Physics_AF {
         public void DeleteConstraint(final int id) {
 
             if (id < 0 || id >= constraints.Num()) {
-                gameLocal.Error("DeleteConstraint: no constraint with id %d.", id);
+                idGameLocal.Error("DeleteConstraint: no constraint with id %d.", id);
                 return;
             }
 
@@ -5125,7 +5131,6 @@ public class Physics_AF {
         public void SetJointFrictionScale(final float scale) {
             jointFrictionScale = scale;
         }
-        // set joint friction dent
 
         public void SetJointFrictionDent(final float dent, final float start, final float end) {
             jointFrictionDent = dent;
@@ -5282,8 +5287,6 @@ public class Physics_AF {
             }
         }
 
-        private static idBounds relBounds;
-
         @Override
         public idBounds GetBounds(int id /*= -1*/) {
             int i;
@@ -5305,8 +5308,6 @@ public class Physics_AF {
                 return relBounds;
             }
         }
-
-        private static idBounds absBounds;
 
         @Override
         public idBounds GetAbsBounds(int id /*= -1*/) {
@@ -5594,7 +5595,6 @@ public class Physics_AF {
             self.BecomeActive(TH_PHYSICS);
         }
 
-
         /*
          ================
          idPhysics_AF::PutToRest
@@ -5662,9 +5662,9 @@ public class Physics_AF {
             Rotate(rotation);
         }
 
-        private static int DBG_Translate = 0;
         @Override
-        public void Translate(final idVec3 translation, int id /*= -1*/) {  DBG_Translate++;
+        public void Translate(final idVec3 translation, int id /*= -1*/) {
+            DBG_Translate++;
             int i;
             idAFBody body;
 
@@ -5978,7 +5978,7 @@ public class Physics_AF {
 
                 // velocity with which the af is pushed
                 current.pushVelocity.SubVec3_oPluSet(0, (body.current.worldOrigin.oMinus(body.saved.worldOrigin)).oDivide(deltaTime * idMath.M_MS2SEC));
-                current.pushVelocity.SubVec3_oPluSet(1, rotation.GetVec().oMultiply((float) -DEG2RAD(rotation.GetAngle())).oDivide(deltaTime * idMath.M_MS2SEC));
+                current.pushVelocity.SubVec3_oPluSet(1, rotation.GetVec().oMultiply(-DEG2RAD(rotation.GetAngle())).oDivide(deltaTime * idMath.M_MS2SEC));
             }
         }
 
@@ -6037,15 +6037,6 @@ public class Physics_AF {
                 Activate();
             }
         }
-
-        static final float AF_VELOCITY_MAX           = 16000;
-        static final int   AF_VELOCITY_TOTAL_BITS    = 16;
-        static final int   AF_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(AF_VELOCITY_MAX)) + 1;
-        static final int   AF_VELOCITY_MANTISSA_BITS = AF_VELOCITY_TOTAL_BITS - 1 - AF_VELOCITY_EXPONENT_BITS;
-        static final float AF_FORCE_MAX              = 1e20f;
-        static final int   AF_FORCE_TOTAL_BITS       = 16;
-        static final int   AF_FORCE_EXPONENT_BITS    = idMath.BitsForInteger(idMath.BitsForFloat(AF_FORCE_MAX)) + 1;
-        static final int   AF_FORCE_MANTISSA_BITS    = AF_FORCE_TOTAL_BITS - 1 - AF_FORCE_EXPONENT_BITS;
 
         @Override
         public void WriteToSnapshot(idBitMsgDelta msg) {
@@ -6167,7 +6158,7 @@ public class Physics_AF {
                     b.invMass = 1.0f / b.mass;
                     b.inertiaTensor.oMulSet(scale);
                     b.inverseInertiaTensor.oSet(b.inertiaTensor.Inverse());
-                    int a =0;
+                    int a = 0;
                 }
                 totalMass = forceTotalMass;
             }
@@ -6584,7 +6575,7 @@ public class Physics_AF {
 
                     if (constraint.boxIndex[j] >= 0) {
                         if (constraint.boxConstraint.fl.isPrimary) {
-                            gameLocal.Error("cannot reference primary constraints for the box index");
+                            idGameLocal.Error("cannot reference primary constraints for the box index");
                         }
                         boxIndex[k] = constraint.boxConstraint.firstIndex + constraint.boxIndex[j];
                     } else {
@@ -6649,8 +6640,8 @@ public class Physics_AF {
             }
         }
 
-        private static int DBG_VerifyContactConstraints = 0;
-        private void VerifyContactConstraints() {      DBG_VerifyContactConstraints++;
+        private void VerifyContactConstraints() {
+            DBG_VerifyContactConstraints++;
 // if (false){
             // int i;
             // float impulseNumerator, impulseDenominator;
@@ -6792,7 +6783,7 @@ public class Physics_AF {
 
                 // convert angular velocity to a rotation matrix
                 vec = body.next.spatialVelocity.SubVec3(1);
-                angle = -timeStep * (float) RAD2DEG(vec.Normalize());
+                angle = -timeStep * RAD2DEG(vec.Normalize());
                 rotation = new idRotation(getVec3_origin(), vec, angle);
                 rotation.Normalize180();
 
@@ -6931,16 +6922,8 @@ public class Physics_AF {
             return false;
         }
 
-        /*
-         ================
-         idPhysics_AF::CheckForCollisions
-
-         check for collisions between the current and next state
-         if there is a collision the next state is set to the state at the moment of impact
-         assumes all bodies are linked for collision detection and relinks all bodies after moving them
-         ================
-         */                   private static int DBG_CheckForCollisions = 0;
-        private void CheckForCollisions(float timeStep) {              DBG_CheckForCollisions++;
+        private void CheckForCollisions(float timeStep) {
+            DBG_CheckForCollisions++;
 //	#define TEST_COLLISION_DETECTION
             int i, index;
             idAFBody body;
@@ -7278,41 +7261,5 @@ public class Physics_AF {
         public void oSet(idClass oGet) {
             //To change body of implemented methods use File | Settings | File Templates.
         }
-    };
-
-    /*
-     ================
-     idPhysics_AF_SavePState
-     ================
-     */
-    static void idPhysics_AF_SavePState(idSaveGame saveFile, final AFPState_s state) {
-        saveFile.WriteInt(state.atRest);
-        saveFile.WriteFloat(state.noMoveTime);
-        saveFile.WriteFloat(state.activateTime);
-        saveFile.WriteFloat(state.lastTimeStep);
-        saveFile.WriteVec6(state.pushVelocity);
-    }
-
-    /*
-     ================
-     idPhysics_AF_RestorePState
-     ================
-     */
-    static void idPhysics_AF_RestorePState(idRestoreGame saveFile, AFPState_s state) {
-        int[] atRest = {0};
-        float[] noMoveTime = {0};
-        float[] activateTime = {0};
-        float[] lastTimeStep = {0};
-
-        saveFile.ReadInt(atRest);
-        saveFile.ReadFloat(noMoveTime);
-        saveFile.ReadFloat(activateTime);
-        saveFile.ReadFloat(lastTimeStep);
-        saveFile.ReadVec6(state.pushVelocity);
-
-        state.atRest = atRest[0];
-        state.noMoveTime = noMoveTime[0];
-        state.activateTime = activateTime[0];
-        state.lastTimeStep = lastTimeStep[0];
     }
 }

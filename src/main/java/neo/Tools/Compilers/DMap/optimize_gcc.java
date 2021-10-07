@@ -2,15 +2,20 @@ package neo.Tools.Compilers.DMap;
 
 import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
 import neo.Tools.Compilers.DMap.optimize.optVertex_s;
-import static neo.framework.Common.common;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.DrawVert.idDrawVert;
+
+import static neo.framework.Common.common;
 
 /**
  *
  */
 public class optimize_gcc {
 
+    //
+    static final int MAX_OPT_VERTEXES = 0x10000;
+    public static final optVertex_s[] optVerts = new optVertex_s[MAX_OPT_VERTEXES];
+    public static int numOptVerts;
     /*
      crazy gcc 3.3.5 optimization bug
      happens even at -O1
@@ -18,10 +23,6 @@ public class optimize_gcc {
      see dmap.gcc.zip test map and .proc outputs
      */
     public static idBounds optBounds;
-    //
-    static final int MAX_OPT_VERTEXES = 0x10000;
-    public static int numOptVerts;
-    public static final optVertex_s[] optVerts = new optVertex_s[MAX_OPT_VERTEXES];
 
     /*
      ================

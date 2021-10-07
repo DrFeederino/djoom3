@@ -1,39 +1,37 @@
 package neo.Game;
 
-import java.util.stream.Stream;
 import neo.CM.CollisionModel.trace_s;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_NONE;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
 import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.ik_debug;
-import static neo.Game.GameSys.SysCvar.ik_enable;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Mover.idPlat;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
-import static neo.Renderer.Material.CONTENTS_IKCLIP;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.Model.INVALID_JOINT;
 import neo.Renderer.Model.idRenderModel;
-import static neo.idlib.Lib.Min;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorYellow;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+
+import java.util.stream.Stream;
+
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_NONE;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
+import static neo.Game.GameSys.SysCvar.ik_debug;
+import static neo.Game.GameSys.SysCvar.ik_enable;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Renderer.Material.CONTENTS_IKCLIP;
+import static neo.Renderer.Material.CONTENTS_SOLID;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Str.va;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -58,12 +56,12 @@ public class IK /*ea*/ {
      */
     public static class idIK {
 
-        protected boolean    initialized;
-        protected boolean    ik_activate;
-        protected idEntity   self;        // entity using the animated model
         protected idAnimator animator;        // animator on entity
-        protected int        modifiedAnim;        // animation modified by the IK
-        protected idVec3     modelOffset;
+        protected boolean ik_activate;
+        protected boolean initialized;
+        protected idVec3 modelOffset;
+        protected int modifiedAnim;        // animation modified by the IK
+        protected idEntity self;        // entity using the animated model
         //
         //
 
@@ -198,7 +196,7 @@ public class IK /*ea*/ {
             return length;
         }
 
-    };
+    }
 
     /*
      ===============================================================================
@@ -217,48 +215,55 @@ public class IK /*ea*/ {
     public static class idIK_Walk extends idIK {
 
         private static final int MAX_LEGS = 8;
+        private static final idVec3[] footWinding/*[4]*/ = {
+                new idVec3(1.0f, 1.0f, 0),
+                new idVec3(-1.0f, 1.0f, 0),
+                new idVec3(-1.0f, -1.0f, 0),
+                new idVec3(1.0f, -1.0f, 0)
+        };
+        private final int/*jointHandle_t*/[] ankleJoints = new int[MAX_LEGS];
+        private final int/*jointHandle_t*/[] dirJoints = new int[MAX_LEGS];
+        private final int/*jointHandle_t*/[] footJoints = new int[MAX_LEGS];
+        //
+        private final idVec3[] hipForward = new idVec3[MAX_LEGS];
+        private final int/*jointHandle_t*/[] hipJoints = new int[MAX_LEGS];
+        private final idVec3[] kneeForward = new idVec3[MAX_LEGS];
+        private final int/*jointHandle_t*/[] kneeJoints = new int[MAX_LEGS];
+        private final float[] lowerLegLength = new float[MAX_LEGS];
+        private final idMat3[] lowerLegToKneeJoint = new idMat3[MAX_LEGS];
+        private final float[] oldAnkleHeights = new float[MAX_LEGS];
+        //
+        private final float[] upperLegLength = new float[MAX_LEGS];
+        //
+        private final idMat3[] upperLegToHipJoint = new idMat3[MAX_LEGS];
+        private int enabledLegs;
+        private float footDownTrace;
         //
         private idClipModel footModel;
+        private float footShift;
+        private float footUpTrace;
+        private float minWaistAnkleDist;
+        private float minWaistFloorDist;
         //
-        private int         numLegs;
-        private int         enabledLegs;
-        private final int/*jointHandle_t*/[] footJoints  = new int[MAX_LEGS];
-        private final int/*jointHandle_t*/[] ankleJoints = new int[MAX_LEGS];
-        private final int/*jointHandle_t*/[] kneeJoints  = new int[MAX_LEGS];
-        private final int/*jointHandle_t*/[] hipJoints   = new int[MAX_LEGS];
-        private final int/*jointHandle_t*/[] dirJoints   = new int[MAX_LEGS];
-        private int/*jointHandle_t*/ waistJoint;
-        //
-        private final idVec3[] hipForward          = new idVec3[MAX_LEGS];
-        private final idVec3[] kneeForward         = new idVec3[MAX_LEGS];
-        //
-        private final float[]  upperLegLength      = new float[MAX_LEGS];
-        private final float[]  lowerLegLength      = new float[MAX_LEGS];
-        //
-        private final idMat3[] upperLegToHipJoint  = new idMat3[MAX_LEGS];
-        private final idMat3[] lowerLegToKneeJoint = new idMat3[MAX_LEGS];
-        //
-        private float   smoothing;
-        private float   waistSmoothing;
-        private float   footShift;
-        private float   waistShift;
-        private float   minWaistFloorDist;
-        private float   minWaistAnkleDist;
-        private float   footUpTrace;
-        private float   footDownTrace;
-        private boolean tiltWaist;
-        private boolean usePivot;
+        private int numLegs;
+        private boolean oldHeightsValid;
+        private float oldWaistHeight;
         //
         // state
-        private int     pivotFoot;
-        private float   pivotYaw;
-        private idVec3  pivotPos;
-        private boolean oldHeightsValid;
-        private float   oldWaistHeight;
-        private final float[] oldAnkleHeights = new float[MAX_LEGS];
+        private int pivotFoot;
+        private idVec3 pivotPos;
+        private float pivotYaw;
+        //
+        private float smoothing;
+        private boolean tiltWaist;
+        private boolean usePivot;
+        private int/*jointHandle_t*/ waistJoint;
         private idVec3 waistOffset;
+        private float waistShift;
         //
         //
+        private float waistSmoothing;
+        // virtual					~idIK_Walk( void );
 
         public idIK_Walk() {
             int i;
@@ -302,7 +307,6 @@ public class IK /*ea*/ {
             oldWaistHeight = 0;
             waistOffset = new idVec3();
         }
-        // virtual					~idIK_Walk( void );
 
         @Override
         public void Save(idSaveGame savefile) {
@@ -443,12 +447,6 @@ public class IK /*ea*/ {
             }
             savefile.ReadVec3(waistOffset);
         }
-        private static final idVec3[] footWinding/*[4]*/ = {
-                    new idVec3(1.0f, 1.0f, 0),
-                    new idVec3(-1.0f, 1.0f, 0),
-                    new idVec3(-1.0f, -1.0f, 0),
-                    new idVec3(1.0f, -1.0f, 0)
-                };
 
         @Override
         public boolean Init(idEntity self, final String anim, final idVec3 modelOffset) {
@@ -487,25 +485,25 @@ public class IK /*ea*/ {
                 jointName = self.spawnArgs.GetString(va("ik_foot%d", i + 1));
                 footJoints[i] = animator.GetJointHandle(jointName);
                 if (footJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Walk::Init: invalid foot joint '%s'", jointName);
+                    Game_local.idGameLocal.Error("idIK_Walk::Init: invalid foot joint '%s'", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_ankle%d", i + 1));
                 ankleJoints[i] = animator.GetJointHandle(jointName);
                 if (ankleJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Walk::Init: invalid ankle joint '%s'", jointName);
+                    Game_local.idGameLocal.Error("idIK_Walk::Init: invalid ankle joint '%s'", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_knee%d", i + 1));
                 kneeJoints[i] = animator.GetJointHandle(jointName);
                 if (kneeJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Walk::Init: invalid knee joint '%s'\n", jointName);
+                    Game_local.idGameLocal.Error("idIK_Walk::Init: invalid knee joint '%s'\n", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_hip%d", i + 1));
                 hipJoints[i] = animator.GetJointHandle(jointName);
                 if (hipJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Walk::Init: invalid hip joint '%s'\n", jointName);
+                    Game_local.idGameLocal.Error("idIK_Walk::Init: invalid hip joint '%s'\n", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_dir%d", i + 1));
@@ -517,25 +515,25 @@ public class IK /*ea*/ {
             jointName = self.spawnArgs.GetString("ik_waist");
             waistJoint = animator.GetJointHandle(jointName);
             if (waistJoint == INVALID_JOINT) {
-                gameLocal.Error("idIK_Walk::Init: invalid waist joint '%s'\n", jointName);
+                Game_local.idGameLocal.Error("idIK_Walk::Init: invalid waist joint '%s'\n", jointName);
             }
 
             // get the leg bone lengths and rotation matrices
             for (i = 0; i < numLegs; i++) {
                 oldAnkleHeights[i] = 0;
 
-                ankleAxis = joints[ ankleJoints[ i]].ToMat3();
-                ankleOrigin = joints[ ankleJoints[ i]].ToVec3();
+                ankleAxis = joints[ankleJoints[i]].ToMat3();
+                ankleOrigin = joints[ankleJoints[i]].ToVec3();
 
-                kneeAxis = joints[ kneeJoints[ i]].ToMat3();
-                kneeOrigin = joints[ kneeJoints[ i]].ToVec3();
+                kneeAxis = joints[kneeJoints[i]].ToMat3();
+                kneeOrigin = joints[kneeJoints[i]].ToVec3();
 
-                hipAxis = joints[ hipJoints[ i]].ToMat3();
-                hipOrigin = joints[ hipJoints[ i]].ToVec3();
+                hipAxis = joints[hipJoints[i]].ToMat3();
+                hipOrigin = joints[hipJoints[i]].ToVec3();
 
                 // get the IK direction
                 if (dirJoints[i] != INVALID_JOINT) {
-                    dirOrigin = joints[ dirJoints[ i]].ToVec3();
+                    dirOrigin = joints[dirJoints[i]].ToVec3();
                     dir = dirOrigin.oMinus(kneeOrigin);
                 } else {
                     dir.Set(1.0f, 0, 0);
@@ -669,7 +667,7 @@ public class IK /*ea*/ {
             // test whether or not the character is standing on a plat
             boolean onPlat = false;
             for (i = 0; i < phys.GetNumContacts(); i++) {
-                idEntity ent = gameLocal.entities[ phys.GetContact(i).entityNum];
+                idEntity ent = gameLocal.entities[phys.GetContact(i).entityNum];
                 if (ent != null && ent.IsType(idPlat.class)) {
                     onPlat = true;
                     break;
@@ -831,7 +829,7 @@ public class IK /*ea*/ {
         public void DisableLeg(int num) {
             enabledLegs &= ~(1 << num);
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -850,22 +848,22 @@ public class IK /*ea*/ {
     public static class idIK_Reach extends idIK {
 
         private static final int MAX_ARMS = 2;
-        //
-        private int numArms;
-        private int enabledArms;
-        private final int/*jointHandle_t*/[] handJoints = new int[MAX_ARMS];
-        private final int/*jointHandle_t*/[] elbowJoints = new int[MAX_ARMS];
-        private final int/*jointHandle_t*/[] shoulderJoints = new int[MAX_ARMS];
         private final int/*jointHandle_t*/[] dirJoints = new int[MAX_ARMS];
+        private final idVec3[] elbowForward = new idVec3[MAX_ARMS];
+        private final int/*jointHandle_t*/[] elbowJoints = new int[MAX_ARMS];
+        private final int/*jointHandle_t*/[] handJoints = new int[MAX_ARMS];
+        private final float[] lowerArmLength = new float[MAX_ARMS];
+        private final idMat3[] lowerArmToElbowJoint = new idMat3[MAX_ARMS];
         //
         private final idVec3[] shoulderForward = new idVec3[MAX_ARMS];
-        private final idVec3[] elbowForward = new idVec3[MAX_ARMS];
+        private final int/*jointHandle_t*/[] shoulderJoints = new int[MAX_ARMS];
         //
         private final float[] upperArmLength = new float[MAX_ARMS];
-        private final float[] lowerArmLength = new float[MAX_ARMS];
         //
         private final idMat3[] upperArmToShoulderJoint = new idMat3[MAX_ARMS];
-        private final idMat3[] lowerArmToElbowJoint = new idMat3[MAX_ARMS];
+        private int enabledArms;
+        //
+        private int numArms;
         //
         //
 
@@ -1009,19 +1007,19 @@ public class IK /*ea*/ {
                 jointName = self.spawnArgs.GetString(va("ik_hand%d", i + 1));
                 handJoints[i] = animator.GetJointHandle(jointName);
                 if (handJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Reach::Init: invalid hand joint '%s'", jointName);
+                    Game_local.idGameLocal.Error("idIK_Reach::Init: invalid hand joint '%s'", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_elbow%d", i + 1));
                 elbowJoints[i] = animator.GetJointHandle(jointName);
                 if (elbowJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Reach::Init: invalid elbow joint '%s'\n", jointName);
+                    Game_local.idGameLocal.Error("idIK_Reach::Init: invalid elbow joint '%s'\n", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_shoulder%d", i + 1));
                 shoulderJoints[i] = animator.GetJointHandle(jointName);
                 if (shoulderJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idIK_Reach::Init: invalid shoulder joint '%s'\n", jointName);
+                    Game_local.idGameLocal.Error("idIK_Reach::Init: invalid shoulder joint '%s'\n", jointName);
                 }
 
                 jointName = self.spawnArgs.GetString(va("ik_elbowDir%d", i + 1));
@@ -1033,18 +1031,18 @@ public class IK /*ea*/ {
             // get the arm bone lengths and rotation matrices
             for (i = 0; i < numArms; i++) {
 
-                handAxis = joints[ handJoints[ i]].ToMat3();
-                handOrigin = joints[ handJoints[ i]].ToVec3();
+                handAxis = joints[handJoints[i]].ToMat3();
+                handOrigin = joints[handJoints[i]].ToVec3();
 
-                elbowAxis = joints[ elbowJoints[ i]].ToMat3();
-                elbowOrigin = joints[ elbowJoints[ i]].ToVec3();
+                elbowAxis = joints[elbowJoints[i]].ToMat3();
+                elbowOrigin = joints[elbowJoints[i]].ToVec3();
 
-                shoulderAxis = joints[ shoulderJoints[ i]].ToMat3();
-                shoulderOrigin = joints[ shoulderJoints[ i]].ToVec3();
+                shoulderAxis = joints[shoulderJoints[i]].ToMat3();
+                shoulderOrigin = joints[shoulderJoints[i]].ToVec3();
 
                 // get the IK direction
                 if (dirJoints[i] != INVALID_JOINT) {
-                    dirOrigin = joints[ dirJoints[ i]].ToVec3();
+                    dirOrigin = joints[dirJoints[i]].ToVec3();
                     dir = dirOrigin.oMinus(elbowOrigin);
                 } else {
                     dir.Set(-1.0f, 0.0f, 0.0f);
@@ -1141,5 +1139,6 @@ public class IK /*ea*/ {
 
             ik_activate = false;
         }
-    };
+    }
+
 }

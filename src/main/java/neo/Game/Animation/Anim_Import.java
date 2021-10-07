@@ -1,29 +1,25 @@
 package neo.Game.Animation;
 
-import static neo.Game.GameSys.SysCvar.g_exportMask;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Renderer.Model.MD5_ANIM_EXT;
-import static neo.Renderer.Model.MD5_CAMERA_EXT;
-import static neo.Renderer.Model.MD5_MESH_EXT;
 import neo.TempDump.TODO_Exception;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.CVarSystem.cvarSystem;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.FileSystem_h.idFileList;
-import static neo.framework.Licensee.BASE_GAMEDIR;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Parser;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token;
 import neo.idlib.Text.Token.idToken;
+
+import static neo.Game.GameSys.SysCvar.g_exportMask;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Renderer.Model.*;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Licensee.BASE_GAMEDIR;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
 
 /**
  *
@@ -32,13 +28,13 @@ public class Anim_Import {
 
     /**
      * *********************************************************************
-     *
+     * <p>
      * Maya conversion functions
-     *
-     **********************************************************************
+     * <p>
+     * *********************************************************************
      */
     public static idStr Maya_Error;
-//
+    //
 //    public static exporterInterface_t Maya_ConvertModel = null;
 //    public static exporterShutdown_t Maya_Shutdown = null;
     public static int importDLL = 0;
@@ -56,180 +52,15 @@ public class Anim_Import {
 
         private static boolean initialized;
         //
-        public         idStr   commandLine;
-        public         idStr   src;
-        public         idStr   dest;
-        public         boolean force;
+        public idStr commandLine;
+        public idStr dest;
+        public boolean force;
+        public idStr src;
         //
         //
 
-        private void Reset() {
-            force = false;
-            commandLine.oSet("");
-            src.oSet("");
-            dest.oSet("");
-        }
-
-        private boolean ParseOptions(Lexer.idLexer lex) throws idException {
-            Token.idToken token = new Token.idToken();
-            idStr destdir = new idStr();
-            idStr sourcedir = new idStr();
-
-            if (!lex.ReadToken(token)) {
-                lex.Error("Expected filename");
-                return false;
-            }
-
-            src = token;
-            dest = token;
-
-            while (lex.ReadToken(token)) {
-                if (token.equals("-")) {
-                    if (!lex.ReadToken(token)) {
-                        lex.Error("Expecting option");
-                        return false;
-                    }
-                    if (token.equals("sourcedir")) {
-                        if (!lex.ReadToken(token)) {
-                            lex.Error("Missing pathname after -sourcedir");
-                            return false;
-                        }
-                        sourcedir = token;
-                    } else if (token.equals("destdir")) {
-                        if (!lex.ReadToken(token)) {
-                            lex.Error("Missing pathname after -destdir");
-                            return false;
-                        }
-                        destdir = token;
-                    } else if (token.equals("dest")) {
-                        if (!lex.ReadToken(token)) {
-                            lex.Error("Missing filename after -dest");
-                            return false;
-                        }
-                        dest = token;
-                    } else {
-                        commandLine.oPluSet(va(" -%s", token.toString()));
-                    }
-                } else {
-                    commandLine.oPluSet(va(" %s", token.toString()));
-                }
-            }
-
-            if (sourcedir.Length() != 0) {
-                src.StripPath();
-                sourcedir.BackSlashesToSlashes();
-                src.oSet(String.format("%s/%s", sourcedir.toString(), src.toString()));
-            }
-
-            if (destdir.Length() != 0) {
-                dest.StripPath();
-                destdir.BackSlashesToSlashes();
-                dest.oSet(String.format("%s/%s", destdir.toString(), dest.toString()));
-            }
-
-            return true;
-        }
-
-        private int ParseExportSection(Parser.idParser parser) {
-            Token.idToken command = new idToken();
-            Token.idToken token = new idToken();
-            idStr defaultCommands = new idStr();
-            Lexer.idLexer lex = new idLexer();
-            idStr temp = new idStr();
-            idStr parms = new idStr();
-            int count;
-
-            // only export sections that match our export mask
-            if (isNotNullOrEmpty(g_exportMask.GetString())) {
-                if (parser.CheckTokenString("{")) {
-                    parser.SkipBracedSection(false);
-                    return 0;
-                }
-
-                parser.ReadToken(token);
-                if (token.Icmp(g_exportMask.GetString()) != 0) {
-                    parser.SkipBracedSection();
-                    return 0;
-                }
-                parser.ExpectTokenString("{");
-            } else if (!parser.CheckTokenString("{")) {
-                // skip the export mask
-                parser.ReadToken(token);
-                parser.ExpectTokenString("{");
-            }
-
-            count = 0;
-
-            lex.SetFlags(LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWPATHNAMES | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
-
-            while (true) {
-
-                if (!parser.ReadToken(command)) {
-                    parser.Error("Unexpoected end-of-file");
-                    break;
-                }
-
-                if (command.equals("}")) {
-                    break;
-                }
-
-                if (command.equals("options")) {
-                    parser.ParseRestOfLine(defaultCommands);
-                } else if (command.equals("addoptions")) {
-                    parser.ParseRestOfLine(temp);
-                    defaultCommands.oPluSet(" ");
-                    defaultCommands.oPluSet(temp);
-                } else if ((command.equals("mesh")) || (command.equals("anim")) || (command.equals("camera"))) {
-                    if (!parser.ReadToken(token)) {
-                        parser.Error("Expected filename");
-                    }
-
-                    temp = token;
-                    parser.ParseRestOfLine(parms);
-
-                    if (defaultCommands.Length() != 0) {
-                        temp.oSet(String.format("%s %s", temp.toString(), defaultCommands));
-                    }
-
-                    if (parms.Length() != 0) {
-                        temp.oSet(String.format("%s %s", temp, parms));
-                    }
-
-                    lex.LoadMemory(temp, temp.Length(), parser.GetFileName());
-
-                    Reset();
-                    if (ParseOptions(lex)) {
-                        String game = cvarSystem.GetCVarString("fs_game");
-                        if (game.length() == 0) {
-                            game = BASE_GAMEDIR;
-                        }
-
-                        if (command.equals("mesh")) {
-                            dest.SetFileExtension(MD5_MESH_EXT);
-                        } else if (command.equals("anim")) {
-                            dest.SetFileExtension(MD5_ANIM_EXT);
-                        } else if (command.equals("camera")) {
-                            dest.SetFileExtension(MD5_CAMERA_EXT);
-                        } else {
-                            dest.SetFileExtension(command.toString());
-                        }
-//				idStr back = commandLine;
-                        commandLine.oSet(String.format("%s %s -dest %s -game %s%s", command.toString(), src.toString(), dest.toString(), game, commandLine.toString()));
-                        if (ConvertMayaToMD5()) {
-                            count++;
-                        } else {
-                            parser.Warning("Failed to export '%s' : %s", src, Maya_Error);
-                        }
-                    }
-                    lex.FreeSource();
-                } else {
-                    parser.Error("Unknown token: %s", command);
-                    parser.SkipBracedSection(false);
-                    break;
-                }
-            }
-
-            return count;
+        public idModelExport() {
+            Reset();
         }
 
         /*
@@ -318,11 +149,197 @@ public class Anim_Import {
             throw new TODO_Exception();
         }
 
+        public static void Shutdown() {
+//            if (Maya_Shutdown) {
+//                Maya_Shutdown.run();
+//            }
+//
+//            if (importDLL != 0) {
+//                sys.DLL_Unload(importDLL);
+//            }
+//
+//            importDLL = 0;
+//            Maya_Shutdown = null;
+//            Maya_ConvertModel = null;
+//            Maya_Error.Clear();
+//            initialized = false;
+            throw new TODO_Exception();
+        }
+
+        private void Reset() {
+            force = false;
+            commandLine.oSet("");
+            src.oSet("");
+            dest.oSet("");
+        }
+
+        private boolean ParseOptions(Lexer.idLexer lex) throws idException {
+            Token.idToken token = new Token.idToken();
+            idStr destdir = new idStr();
+            idStr sourcedir = new idStr();
+
+            if (!lex.ReadToken(token)) {
+                lex.Error("Expected filename");
+                return false;
+            }
+
+            src = token;
+            dest = token;
+
+            while (lex.ReadToken(token)) {
+                if (token.equals("-")) {
+                    if (!lex.ReadToken(token)) {
+                        lex.Error("Expecting option");
+                        return false;
+                    }
+                    if (token.equals("sourcedir")) {
+                        if (!lex.ReadToken(token)) {
+                            lex.Error("Missing pathname after -sourcedir");
+                            return false;
+                        }
+                        sourcedir = token;
+                    } else if (token.equals("destdir")) {
+                        if (!lex.ReadToken(token)) {
+                            lex.Error("Missing pathname after -destdir");
+                            return false;
+                        }
+                        destdir = token;
+                    } else if (token.equals("dest")) {
+                        if (!lex.ReadToken(token)) {
+                            lex.Error("Missing filename after -dest");
+                            return false;
+                        }
+                        dest = token;
+                    } else {
+                        commandLine.oPluSet(va(" -%s", token.toString()));
+                    }
+                } else {
+                    commandLine.oPluSet(va(" %s", token.toString()));
+                }
+            }
+
+            if (sourcedir.Length() != 0) {
+                src.StripPath();
+                sourcedir.BackSlashesToSlashes();
+                src.oSet(String.format("%s/%s", sourcedir, src.toString()));
+            }
+
+            if (destdir.Length() != 0) {
+                dest.StripPath();
+                destdir.BackSlashesToSlashes();
+                dest.oSet(String.format("%s/%s", destdir, dest.toString()));
+            }
+
+            return true;
+        }
+
+        private int ParseExportSection(Parser.idParser parser) {
+            Token.idToken command = new idToken();
+            Token.idToken token = new idToken();
+            idStr defaultCommands = new idStr();
+            Lexer.idLexer lex = new idLexer();
+            idStr temp = new idStr();
+            idStr parms = new idStr();
+            int count;
+
+            // only export sections that match our export mask
+            if (isNotNullOrEmpty(g_exportMask.GetString())) {
+                if (parser.CheckTokenString("{")) {
+                    parser.SkipBracedSection(false);
+                    return 0;
+                }
+
+                parser.ReadToken(token);
+                if (token.Icmp(g_exportMask.GetString()) != 0) {
+                    parser.SkipBracedSection();
+                    return 0;
+                }
+                parser.ExpectTokenString("{");
+            } else if (!parser.CheckTokenString("{")) {
+                // skip the export mask
+                parser.ReadToken(token);
+                parser.ExpectTokenString("{");
+            }
+
+            count = 0;
+
+            lex.SetFlags(LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWPATHNAMES | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
+
+            while (true) {
+
+                if (!parser.ReadToken(command)) {
+                    parser.Error("Unexpoected end-of-file");
+                    break;
+                }
+
+                if (command.equals("}")) {
+                    break;
+                }
+
+                if (command.equals("options")) {
+                    parser.ParseRestOfLine(defaultCommands);
+                } else if (command.equals("addoptions")) {
+                    parser.ParseRestOfLine(temp);
+                    defaultCommands.oPluSet(" ");
+                    defaultCommands.oPluSet(temp);
+                } else if ((command.equals("mesh")) || (command.equals("anim")) || (command.equals("camera"))) {
+                    if (!parser.ReadToken(token)) {
+                        parser.Error("Expected filename");
+                    }
+
+                    temp = token;
+                    parser.ParseRestOfLine(parms);
+
+                    if (defaultCommands.Length() != 0) {
+                        temp.oSet(String.format("%s %s", temp, defaultCommands));
+                    }
+
+                    if (parms.Length() != 0) {
+                        temp.oSet(String.format("%s %s", temp, parms));
+                    }
+
+                    lex.LoadMemory(temp, temp.Length(), parser.GetFileName());
+
+                    Reset();
+                    if (ParseOptions(lex)) {
+                        String game = cvarSystem.GetCVarString("fs_game");
+                        if (game.length() == 0) {
+                            game = BASE_GAMEDIR;
+                        }
+
+                        if (command.equals("mesh")) {
+                            dest.SetFileExtension(MD5_MESH_EXT);
+                        } else if (command.equals("anim")) {
+                            dest.SetFileExtension(MD5_ANIM_EXT);
+                        } else if (command.equals("camera")) {
+                            dest.SetFileExtension(MD5_CAMERA_EXT);
+                        } else {
+                            dest.SetFileExtension(command.toString());
+                        }
+//				idStr back = commandLine;
+                        commandLine.oSet(String.format("%s %s -dest %s -game %s%s", command, src.toString(), dest.toString(), game, commandLine.toString()));
+                        if (ConvertMayaToMD5()) {
+                            count++;
+                        } else {
+                            parser.Warning("Failed to export '%s' : %s", src, Maya_Error);
+                        }
+                    }
+                    lex.FreeSource();
+                } else {
+                    parser.Error("Unknown token: %s", command);
+                    parser.SkipBracedSection(false);
+                    break;
+                }
+            }
+
+            return count;
+        }
+
         /*
          =====================
          idModelExport::ConvertMayaToMD5
 
-         Checks if a Maya model should be converted to an MD5, and converts if if the time/date or 
+         Checks if a Maya model should be converted to an MD5, and converts if if the time/date or
          version number has changed.
          =====================
          */
@@ -412,27 +429,6 @@ public class Anim_Import {
 //
 //            // conversion succeded
 //            return true;
-            throw new TODO_Exception();
-        }
-
-        public idModelExport() {
-            Reset();
-        }
-
-        public static void Shutdown() {
-//            if (Maya_Shutdown) {
-//                Maya_Shutdown.run();
-//            }
-//
-//            if (importDLL != 0) {
-//                sys.DLL_Unload(importDLL);
-//            }
-//
-//            importDLL = 0;
-//            Maya_Shutdown = null;
-//            Maya_ConvertModel = null;
-//            Maya_Error.Clear();
-//            initialized = false;
             throw new TODO_Exception();
         }
 
@@ -530,5 +526,6 @@ public class Anim_Import {
 
             return count;
         }
-    };
+    }
+
 }

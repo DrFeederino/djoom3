@@ -1,48 +1,26 @@
 package neo.Tools.Compilers.DMap;
 
-import java.util.Arrays;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglBlendFunc;
-import static neo.Renderer.qgl.qglColor3f;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglFlush;
-import static neo.Renderer.qgl.qglPointSize;
-import static neo.Renderer.qgl.qglVertex3fv;
-import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
 import neo.Tools.Compilers.DMap.dmap.mapTri_s;
 import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
 import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import static neo.Tools.Compilers.DMap.gldraw.Draw_ClearWindow;
-import neo.Tools.Compilers.DMap.optimize.optEdge_s;
-import neo.Tools.Compilers.DMap.optimize.optTri_s;
-import neo.Tools.Compilers.DMap.optimize.optVertex_s;
-import static neo.Tools.Compilers.DMap.tritjunction.CountGroupListTris;
-import static neo.Tools.Compilers.DMap.tritjunction.FixAreaGroupsTjunctions;
-import static neo.Tools.Compilers.DMap.tritjunction.FreeTJunctionHash;
-import static neo.Tools.Compilers.DMap.tritools.AllocTri;
-import static neo.Tools.Compilers.DMap.tritools.CountTriList;
-import static neo.Tools.Compilers.DMap.tritools.FreeTri;
-import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
-import static neo.Tools.Compilers.DMap.tritools.PlaneForTri;
-import static neo.framework.Common.common;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Random.idRandom;
-import static neo.idlib.math.Vector.DotProduct;
-import static neo.idlib.math.Vector.VectorMA;
-import static neo.idlib.math.Vector.VectorSubtract;
-import neo.idlib.math.Vector.idVec3;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_LINES;
-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
-import static org.lwjgl.opengl.GL11.GL_ONE;
-import static org.lwjgl.opengl.GL11.GL_POINTS;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import neo.idlib.math.Vector.*;
+
+import java.util.Arrays;
+
+import static neo.Renderer.qgl.*;
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
+import static neo.Tools.Compilers.DMap.gldraw.Draw_ClearWindow;
+import static neo.Tools.Compilers.DMap.tritjunction.*;
+import static neo.Tools.Compilers.DMap.tritools.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Vector.*;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
@@ -53,76 +31,25 @@ public class optimize {
     // the shadow volume optimizer call internal optimizer routines, normal triangles
     // will just be done by OptimizeEntity()
 
-    static idBounds optBounds;
+    //
+    static final double COLINEAR_EPSILON = 0.1;
+    //
+    static final int MAX_OPT_EDGES = 0x40000;
     //
     static final int MAX_OPT_VERTEXES = 0x10000;
-    static int numOptVerts;
-    static       optVertex_s[] optVerts      = new optVertex_s[MAX_OPT_VERTEXES];
-    //
-    static final int           MAX_OPT_EDGES = 0x40000;
     static int numOptEdges;
+    static int numOptVerts;
+    static int numOriginalEdges;
+    static idBounds optBounds;
     static optEdge_s[] optEdges = new optEdge_s[MAX_OPT_EDGES];
+    static optVertex_s[] optVerts = new optVertex_s[MAX_OPT_VERTEXES];
     //
 //static bool IsTriangleValid( const optVertex_s *v1, const optVertex_s *v2, const optVertex_s *v3 );
 //static bool IsTriangleDegenerate( const optVertex_s *v1, const optVertex_s *v2, const optVertex_s *v3 );
 //
     static idRandom orandom;
-    //
-    static final double COLINEAR_EPSILON = 0.1;
 
-    static class optVertex_s {
-
-        idDrawVert v;
-        idVec3 pv;			// projected against planar axis, third value is 0
-        optEdge_s edges;
-        optVertex_s islandLink;
-        boolean addedToIsland;
-        boolean emited;			// when regenerating triangles
-    };
-
-    static class optEdge_s {
-
-        optVertex_s v1, v2;
-        optEdge_s islandLink;
-        boolean addedToIsland;
-        boolean created;		// not one of the original edges
-        boolean combined;		// combined from two or more colinear edges
-        optTri_s frontTri, backTri;
-        optEdge_s v1link, v2link;
-    };
-
-    static class optTri_s {
-
-        optTri_s next;
-        idVec3 midpoint;
-        optVertex_s[] v = new optVertex_s[3];
-        boolean filled;
-    };
-
-    static class optIsland_t {
-
-        optimizeGroup_s group;
-        optVertex_s verts;
-        optEdge_s edges;
-        optTri_s tris;
-    };
-
-    static class edgeLength_t {
-
-        optVertex_s v1, v2;
-        float length;
-    };
-
-    static class originalEdges_t {
-
-        optVertex_s v1, v2;
-    };
-
-    static class edgeCrossing_s {
-
-        edgeCrossing_s next;
-        optVertex_s ov;
-    };
+    static originalEdges_t[] originalEdges;
 
     /*
 
@@ -145,7 +72,7 @@ public class optimize {
 
         for (vert = island.verts; vert != null; vert = vert.islandLink) {
             c = 0;
-            for (e = vert.edges; e != null;) {
+            for (e = vert.edges; e != null; ) {
                 c++;
                 if (e.v1 == vert) {
                     e = e.v1link;
@@ -161,7 +88,6 @@ public class optimize {
             }
         }
     }
-
 
     /*
      ====================
@@ -239,7 +165,6 @@ public class optimize {
         common.Error("RemoveEdgeFromIsland: couldn't free edge");
     }
 
-
     /*
      ====================
      LinkEdge
@@ -252,12 +177,6 @@ public class optimize {
         e.v2link = e.v2.edges;
         e.v2.edges = e;
     }
-
-//#ifdef __linux__
-//
-//optVertex_s *FindOptVertex( idDrawVert *v, optimizeGroup_s *opt );
-//
-//#else
 
     /*
      ================
@@ -298,8 +217,6 @@ public class optimize {
 
         return vert;
     }
-
-//#endif
 
     /*
      ================
@@ -386,8 +303,6 @@ public class optimize {
 //	GLimp_SwapBuffers();
     }
 
-//=================================================================
-
     /*
      =================
      VertexBetween
@@ -400,12 +315,14 @@ public class optimize {
         d1 = p1.pv.oMinus(v1.pv);
         d2 = p1.pv.oMinus(v2.pv);
         d = d1.oMultiply(d2);
-        if (d < 0) {
-            return true;
-        }
-        return false;
+        return d < 0;
     }
 
+//#ifdef __linux__
+//
+//optVertex_s *FindOptVertex( idDrawVert *v, optimizeGroup_s *opt );
+//
+//#else
 
     /*
      ====================
@@ -418,7 +335,7 @@ public class optimize {
      ====================
      */
     static optVertex_s EdgeIntersection(final optVertex_s p1, final optVertex_s p2,
-            final optVertex_s l1, final optVertex_s l2, optimizeGroup_s opt) {
+                                        final optVertex_s l1, final optVertex_s l2, optimizeGroup_s opt) {
         float f;
         idDrawVert v;
         idVec3 dir1, dir2, cross1, cross2;
@@ -450,6 +367,7 @@ public class optimize {
         return FindOptVertex(v, opt);
     }
 
+//#endif
 
     /*
      ====================
@@ -473,21 +391,10 @@ public class optimize {
             s3 = (p1.pv.oMinus(l2.pv)).oMultiply(l2.pv.oMinus(l1.pv));
             s4 = (p2.pv.oMinus(l2.pv)).oMultiply(l2.pv.oMinus(l1.pv));
 
-            if (s1 > 0 || s2 > 0 || s3 > 0 || s4 > 0) {
-                positive = true;
-            } else {
-                positive = false;
-            }
-            if (s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0) {
-                negative = true;
-            } else {
-                negative = false;
-            }
+            positive = s1 > 0 || s2 > 0 || s3 > 0 || s4 > 0;
+            negative = s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0;
 
-            if (positive && negative) {
-                return true;
-            }
-            return false;
+            return positive && negative;
         } else if (!p1.equals(l1) && !p1.equals(l2) && !p2.equals(l1) && !p2.equals(l2)) {
             // no shared verts
             t1 = IsTriangleValid(l1, l2, p1);
@@ -498,17 +405,12 @@ public class optimize {
 
             t1 = IsTriangleValid(l1, p1, l2);
             t2 = IsTriangleValid(l1, p2, l2);
-            if (t1 && t2) {
-                return false;
-            }
-
-            return true;
+            return !t1 || !t2;
         } else {
             // a shared vert, not colinear, so not crossing
             return false;
         }
     }
-
 
     /*
      ====================
@@ -531,11 +433,7 @@ public class optimize {
         if (!PointsStraddleLine(a1, a2, b1, b2)) {
             return false;
         }
-        if (!PointsStraddleLine(b1, b2, a1, a2)) {
-            return false;
-        }
-
-        return true;
+        return PointsStraddleLine(b1, b2, a1, a2);
     }
 
     /*
@@ -578,20 +476,7 @@ public class optimize {
         return true;
     }
 
-    static class LengthSort implements cmp_t<edgeLength_t> {
-
-        @Override
-        public int compare(edgeLength_t a, edgeLength_t b) {
-
-            if (a.length < b.length) {
-                return -1;
-            }
-            if (a.length > b.length) {
-                return 1;
-            }
-            return 0;
-        }
-    };
+//=================================================================
 
     /*
      ==================
@@ -660,8 +545,6 @@ public class optimize {
         lengths = null;//Mem_Free(lengths);
     }
 
-//==================================================================
-
     /*
      ====================
      RemoveIfColinear
@@ -682,13 +565,13 @@ public class optimize {
         // we must find exactly two edges before testing for colinear
         e1 = null;
         e2 = null;
-        for (e = ov.edges; e != null;) {
+        for (e = ov.edges; e != null; ) {
             if (NOT(e1)) {
                 e1 = e;
             } else if (NOT(e2)) {
                 e2 = e;
             } else {
-                return;		// can't remove a vertex with three edges
+                return;        // can't remove a vertex with three edges
             }
             if (e.v1 == v2) {
                 e = e.v1link;
@@ -837,8 +720,6 @@ public class optimize {
         }
     }
 
-//==================================================================
-
     /*
      ===================
      FreeOptTriangles
@@ -855,7 +736,6 @@ public class optimize {
 
         island.tris = null;
     }
-
 
     /*
      =================
@@ -887,13 +767,8 @@ public class optimize {
         d1 = v1.pv.oMinus(v3.pv);
         d2 = v2.pv.oMinus(v3.pv);
         normal = d1.Cross(d2);
-        if (normal.oGet(2) <= 0) {
-            return false;
-        }
-
-        return true;
+        return !(normal.oGet(2) <= 0);
     }
-
 
     /*
      =================
@@ -909,15 +784,11 @@ public class optimize {
         d1 = v2.pv.oMinus(v1.pv);
         d2 = v3.pv.oMinus(v1.pv);
         normal = d1.Cross(d2);
-        if (normal.oGet(2) == 0) {
-            return true;
-        }
-        return false;
+        return normal.oGet(2) == 0;
 //#else
 //	return (bool)!IsTriangleValid( v1, v2, v3 );
 //#endif
     }
-
 
     /*
      ==================
@@ -948,13 +819,10 @@ public class optimize {
         d1 = tri.optVert[2].pv.oMinus(p);
         d2 = tri.optVert[0].pv.oMinus(p);
         normal = d1.Cross(d2);
-        if (normal.oGet(2) < 0) {
-            return false;
-        }
-
-        return true;
+        return !(normal.oGet(2) < 0);
     }
 
+//==================================================================
 
     /*
      ====================
@@ -1034,7 +902,7 @@ public class optimize {
             qglFlush();
         }
 
-        for (opposite = second.edges; opposite != null;) {
+        for (opposite = second.edges; opposite != null; ) {
             if (!opposite.equals(e1) && (opposite.v1.equals(third) || opposite.v2.equals(third))) {
                 break;
             }
@@ -1086,11 +954,7 @@ public class optimize {
                 break;
             }
         }
-        if (tri != null) {
-            optTri.filled = true;
-        } else {
-            optTri.filled = false;
-        }
+        optTri.filled = tri != null;
         if (dmapGlobals.drawflag) {
             if (optTri.filled) {
                 qglColor3f((128 + orandom.RandomInt(127)) / 255.0f, 0, 0);
@@ -1117,7 +981,9 @@ public class optimize {
         LinkTriToEdge(optTri, opposite);
     }
 
-// debugging tool
+//==================================================================
+
+    // debugging tool
     static void ReportNearbyVertexes(final optVertex_s v, final optIsland_t island) {
         optVertex_s ov;
         float d;
@@ -1245,12 +1111,12 @@ public class optimize {
 
                         if (IsTriangleValid(ov, second, middle)
                                 && IsTriangleValid(ov, middle, third)) {
-                            break;	// should use the subdivided ones
+                            break;    // should use the subdivided ones
                         }
                     }
 
                     if (check != null) {
-                        continue;	// don't use it
+                        continue;    // don't use it
                     }
 
                     // the triangle is valid
@@ -1316,8 +1182,6 @@ public class optimize {
         }
     }
 
-//===========================================================================
-
     /*
      ====================
      RemoveInteriorEdges
@@ -1365,8 +1229,6 @@ public class optimize {
         }
     }
 
-//==================================================================================
-
     /*
      =================
      AddEdgeIfNotAlready
@@ -1376,9 +1238,9 @@ public class optimize {
         optEdge_s e;
 
         // make sure that there isn't an identical edge already added
-        for (e = v1.edges; e != null;) {
+        for (e = v1.edges; e != null; ) {
             if ((e.v1.equals(v1) && e.v2.equals(v2)) || (e.v1.equals(v2) && e.v2.equals(v1))) {
-                return;		// already added
+                return;        // already added
             }
             if (e.v1.equals(v1)) {
                 e = e.v1link;
@@ -1423,8 +1285,6 @@ public class optimize {
         qglEnd();
         qglFlush();
     }
-    static originalEdges_t[] originalEdges;
-    static int numOriginalEdges;
 
     /*
      =================
@@ -1561,7 +1421,7 @@ public class optimize {
                 newVert = EdgeIntersection(v1, v2, v3, v4, opt);
 
                 if (NOT(newVert)) {
-//common.Printf( "lines %i (%i to %i) and %i (%i to %i) are colinear\n", i, v1 - optVerts, v2 - optVerts, 
+//common.Printf( "lines %i (%i to %i) and %i (%i to %i) are colinear\n", i, v1 - optVerts, v2 - optVerts,
 //		   j, v3 - optVerts, v4 - optVerts );	// !@#
                     // colinear, so add both verts of each edge to opposite
                     if (VertexBetween(v3, v1, v2)) {
@@ -1596,10 +1456,10 @@ public class optimize {
                 }
 //#if 0
 //if ( newVert && newVert != v1 && newVert != v2 && newVert != v3 && newVert != v4 ) {
-//common.Printf( "lines %i (%i to %i) and %i (%i to %i) cross at new point %i\n", i, v1 - optVerts, v2 - optVerts, 
+//common.Printf( "lines %i (%i to %i) and %i (%i to %i) cross at new point %i\n", i, v1 - optVerts, v2 - optVerts,
 //		   j, v3 - optVerts, v4 - optVerts, newVert - optVerts );
 //} else if ( newVert ) {
-//common.Printf( "lines %i (%i to %i) and %i (%i to %i) intersect at old point %i\n", i, v1 - optVerts, v2 - optVerts, 
+//common.Printf( "lines %i (%i to %i) and %i (%i to %i) intersect at old point %i\n", i, v1 - optVerts, v2 - optVerts,
 //		  j, v3 - optVerts, v4 - optVerts, newVert - optVerts );
 //}
 //#endif
@@ -1631,7 +1491,7 @@ public class optimize {
             for (cross = crossings[i]; cross != null; cross = cross.next) {
                 numCross++;
             }
-            numCross += 2;	// account for originals
+            numCross += 2;    // account for originals
             sorted = new optVertex_s[numCross];// Mem_Alloc(numCross);
             sorted[0] = originalEdges[i].v1;
             sorted[1] = originalEdges[i].v2;
@@ -1689,7 +1549,9 @@ public class optimize {
         }
     }
 
-//=================================================================
+//===========================================================================
+
+    //=================================================================
     /*
      ===================
      CullUnusedVerts
@@ -1706,7 +1568,7 @@ public class optimize {
         c_keep = 0;
         c_free = 0;
 
-        for (prev = island.verts; prev != null;) {
+        for (prev = island.verts; prev != null; ) {
             vert = prev;
 
             if (NOT(vert.edges)) {
@@ -1736,6 +1598,8 @@ public class optimize {
             common.Printf("%6d verts freed\n", c_free);
         }
     }
+
+//==================================================================================
 
     /*
      ====================
@@ -1800,7 +1664,7 @@ public class optimize {
         vert.islandLink = island.verts;
         island.verts = vert;
 
-        for (e = vert.edges; e != null;) {
+        for (e = vert.edges; e != null; ) {
             if (!e.addedToIsland) {
                 e.addedToIsland = true;
 
@@ -1885,7 +1749,6 @@ public class optimize {
         OptimizeIsland(island);
     }
 
-
     /*
      ====================
      PointInSourceTris
@@ -1955,7 +1818,6 @@ public class optimize {
         opt.regeneratedTris = null;
     }
 
-
     /*
      ==================
      SetGroupTriPlaneNums
@@ -1973,7 +1835,6 @@ public class optimize {
             }
         }
     }
-
 
     /*
      ===================
@@ -2013,7 +1874,6 @@ public class optimize {
         common.Printf("%6d tris after final t junction fixing\n", c_tjunc2);
     }
 
-
     /*
      ==================
      OptimizeEntity
@@ -2025,6 +1885,75 @@ public class optimize {
         common.Printf("----- OptimizeEntity -----\n");
         for (i = 0; i < e.numAreas; i++) {
             OptimizeGroupList(e.areas[i].groups);
+        }
+    }
+
+    static class optVertex_s {
+
+        boolean addedToIsland;
+        optEdge_s edges;
+        boolean emited;            // when regenerating triangles
+        optVertex_s islandLink;
+        idVec3 pv;            // projected against planar axis, third value is 0
+        idDrawVert v;
+    }
+
+    static class optEdge_s {
+
+        boolean addedToIsland;
+        boolean combined;        // combined from two or more colinear edges
+        boolean created;        // not one of the original edges
+        optTri_s frontTri, backTri;
+        optEdge_s islandLink;
+        optVertex_s v1, v2;
+        optEdge_s v1link, v2link;
+    }
+
+    static class optTri_s {
+
+        boolean filled;
+        idVec3 midpoint;
+        optTri_s next;
+        optVertex_s[] v = new optVertex_s[3];
+    }
+
+    static class optIsland_t {
+
+        optEdge_s edges;
+        optimizeGroup_s group;
+        optTri_s tris;
+        optVertex_s verts;
+    }
+
+    static class edgeLength_t {
+
+        float length;
+        optVertex_s v1, v2;
+    }
+
+    static class originalEdges_t {
+
+        optVertex_s v1, v2;
+    }
+
+    static class edgeCrossing_s {
+
+        edgeCrossing_s next;
+        optVertex_s ov;
+    }
+
+    static class LengthSort implements cmp_t<edgeLength_t> {
+
+        @Override
+        public int compare(edgeLength_t a, edgeLength_t b) {
+
+            if (a.length < b.length) {
+                return -1;
+            }
+            if (a.length > b.length) {
+                return 1;
+            }
+            return 0;
         }
     }
 }

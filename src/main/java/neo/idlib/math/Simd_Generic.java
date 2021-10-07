@@ -1,16 +1,11 @@
 package neo.idlib.math;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
 import neo.Renderer.Model.dominantTri_s;
 import neo.TempDump;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMatX;
 import neo.idlib.math.Plane.idPlane;
@@ -20,6 +15,13 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.idlib.math.Vector.idVecX;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.Arrays;
+
+import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
+
 /**
  *
  */
@@ -27,7 +29,8 @@ public class Simd_Generic {
 //     UNROLL1(Y) { int _IX; for (_IX=0;_IX<count;_IX++) {Y_IX;} }
 //#define UNROLL2(Y) { int _IX, _NM = count&0xfffffffe; for (_IX=0;_IX<_NM;_IX+=2){Y(_IX+0);Y(_IX+1);} if (_IX < count) {Y_IX;}}
 
-//    static void UNROLL4(float[] dst, float constant, float[] src, int count) {
+    static final boolean DERIVE_UNSMOOTHED_BITANGENT = true;
+    //    static void UNROLL4(float[] dst, float constant, float[] src, int count) {
 //        int _IX, _NM = count & 0xfffffffc;
 //        for (_IX = 0; _IX < _NM; _IX += 4) {
 //            dst[_IX + 0] = src[_IX + 0] + constant;
@@ -41,7 +44,6 @@ public class Simd_Generic {
 //    }
 //#define UNROLL8(Y) { int _IX, _NM = count&0xfffffff8; for (_IX=0;_IX<_NM;_IX+=8){Y(_IX+0);Y(_IX+1);Y(_IX+2);Y(_IX+3);Y(_IX+4);Y(_IX+5);Y(_IX+6);Y(_IX+7);} _NM = count&0xfffffffe; for(;_IX<_NM;_IX+=2){Y_IX; Y(_IX+1);} if (_IX < count) {Y_IX;} }
     static final int MIXBUFFER_SAMPLES = 4096;
-    static final boolean DERIVE_UNSMOOTHED_BITANGENT = true;
     /*
      ===============================================================================
 
@@ -51,6 +53,35 @@ public class Simd_Generic {
      */
 
     static class idSIMD_Generic extends idSIMDProcessor {
+
+        private final int NSKIP1_0 = ((1 << 3) | (0 & 7)),
+                NSKIP2_0 = ((2 << 3) | (0 & 7)), NSKIP2_1 = ((2 << 3) | (1 & 7)),
+                NSKIP3_0 = ((3 << 3) | (0 & 7)), NSKIP3_1 = ((3 << 3) | (1 & 7)), NSKIP3_2 = ((3 << 3) | (2 & 7)),
+                NSKIP4_0 = ((4 << 3) | (0 & 7)), NSKIP4_1 = ((4 << 3) | (1 & 7)), NSKIP4_2 = ((4 << 3) | (2 & 7)), NSKIP4_3 = ((4 << 3) | (3 & 7)),
+                NSKIP5_0 = ((5 << 3) | (0 & 7)), NSKIP5_1 = ((5 << 3) | (1 & 7)), NSKIP5_2 = ((5 << 3) | (2 & 7)), NSKIP5_3 = ((5 << 3) | (3 & 7)), NSKIP5_4 = ((5 << 3) | (4 & 7)),
+                NSKIP6_0 = ((6 << 3) | (0 & 7)), NSKIP6_1 = ((6 << 3) | (1 & 7)), NSKIP6_2 = ((6 << 3) | (2 & 7)), NSKIP6_3 = ((6 << 3) | (3 & 7)), NSKIP6_4 = ((6 << 3) | (4 & 7)), NSKIP6_5 = ((6 << 3) | (5 & 7)),
+                NSKIP7_0 = ((7 << 3) | (0 & 7)), NSKIP7_1 = ((7 << 3) | (1 & 7)), NSKIP7_2 = ((7 << 3) | (2 & 7)), NSKIP7_3 = ((7 << 3) | (3 & 7)), NSKIP7_4 = ((7 << 3) | (4 & 7)), NSKIP7_5 = ((7 << 3) | (5 & 7)), NSKIP7_6 = ((7 << 3) | (6 & 7));
+
+        //TODO: move to TempDump
+        private static ByteBuffer jmtobb(final idJointMat[] joints) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(idJointMat.SIZE * joints.length).order(ByteOrder.LITTLE_ENDIAN);
+
+            for (int i = 0; i < joints.length; i++) {
+                byteBuffer.position(i * idJointMat.SIZE);
+                byteBuffer.asFloatBuffer().put(joints[i].ToFloatPtr());
+            }
+
+            return byteBuffer;
+        }
+
+        private static idJointMat toIdJointMat(final ByteBuffer jointsPtr, final int position) {
+            ByteBuffer buffer = jointsPtr.duplicate().position(position).order(ByteOrder.LITTLE_ENDIAN);
+            float[] temp = new float[12];
+            for (int i = 0; i < 12; i++) {
+                temp[i] = buffer.getFloat();
+            }
+            return new idJointMat(temp);
+        }
 
         @Override
         public String GetName() {
@@ -1283,7 +1314,7 @@ public class Simd_Generic {
             switch (m1.GetNumColumns()) {
                 case 1: {
                     if (l == 6) {
-                        for (i = 0; i < k; i++) {		// Nx1 * 1x6
+                        for (i = 0; i < k; i++) {        // Nx1 * 1x6
                             dstPtr[dIndex++] = m1Ptr[m1Index + i] * m2Ptr[m2Index + 0];
                             dstPtr[dIndex++] = m1Ptr[m1Index + i] * m2Ptr[m2Index + 1];
                             dstPtr[dIndex++] = m1Ptr[m1Index + i] * m2Ptr[m2Index + 2];
@@ -1305,7 +1336,7 @@ public class Simd_Generic {
                 }
                 case 2: {
                     if (l == 6) {
-                        for (i = 0; i < k; i++) {		// Nx2 * 2x6
+                        for (i = 0; i < k; i++) {        // Nx2 * 2x6
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 6];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 1] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 7];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 2] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 8];
@@ -1328,7 +1359,7 @@ public class Simd_Generic {
                 }
                 case 3: {
                     if (l == 6) {
-                        for (i = 0; i < k; i++) {		// Nx3 * 3x6
+                        for (i = 0; i < k; i++) {        // Nx3 * 3x6
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 6] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 12];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 1] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 7] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 13];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 2] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 8] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 14];
@@ -1351,11 +1382,11 @@ public class Simd_Generic {
                 }
                 case 4: {
                     if (l == 6) {
-                        for (i = 0; i < k; i++) {		// Nx4 * 4x6
-                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0] + m1Ptr[m1Index + 1] * m2Ptr[m2Index +  6] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 12] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 18];
-                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 1] + m1Ptr[m1Index + 1] * m2Ptr[m2Index +  7] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 13] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 19];
-                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 2] + m1Ptr[m1Index + 1] * m2Ptr[m2Index +  8] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 14] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 20];
-                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 3] + m1Ptr[m1Index + 1] * m2Ptr[m2Index +  9] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 15] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 21];
+                        for (i = 0; i < k; i++) {        // Nx4 * 4x6
+                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 6] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 12] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 18];
+                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 1] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 7] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 13] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 19];
+                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 2] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 8] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 14] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 20];
+                            dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 3] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 9] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 15] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 21];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 4] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 10] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 16] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 22];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 5] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 11] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 17] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 23];
                             m1Index += 4;
@@ -1375,7 +1406,7 @@ public class Simd_Generic {
                 }
                 case 5: {
                     if (l == 6) {
-                        for (i = 0; i < k; i++) {		// Nx5 * 5x6
+                        for (i = 0; i < k; i++) {        // Nx5 * 5x6
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 6] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 12] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 18] + m1Ptr[m1Index + 4] * m2Ptr[m2Index + 24];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 1] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 7] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 13] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 19] + m1Ptr[m1Index + 4] * m2Ptr[m2Index + 25];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 2] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 8] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 14] + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 20] + m1Ptr[m1Index + 4] * m2Ptr[m2Index + 26];
@@ -1400,7 +1431,7 @@ public class Simd_Generic {
                 case 6: {
                     switch (k) {
                         case 1: {
-                            if (l == 1) {		// 1x6 * 6x1
+                            if (l == 1) {        // 1x6 * 6x1
                                 dstPtr[0] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0] + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 1] + m1Ptr[m1Index + 2] * m2Ptr[m2Index + 2]
                                         + m1Ptr[m1Index + 3] * m2Ptr[m2Index + 3] + m1Ptr[m1Index + 4] * m2Ptr[m2Index + 4] + m1Ptr[m1Index + 5] * m2Ptr[m2Index + 5];
                                 return;
@@ -1408,7 +1439,7 @@ public class Simd_Generic {
                             break;
                         }
                         case 2: {
-                            if (l == 2) {		// 2x6 * 6x2
+                            if (l == 2) {        // 2x6 * 6x2
                                 for (i = 0; i < 2; i++) {
                                     for (j = 0; j < 2; j++) {
                                         dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 2 + j]
@@ -1426,7 +1457,7 @@ public class Simd_Generic {
                             break;
                         }
                         case 3: {
-                            if (l == 3) {		// 3x6 * 6x3
+                            if (l == 3) {        // 3x6 * 6x3
                                 for (i = 0; i < 3; i++) {
                                     for (j = 0; j < 3; j++) {
                                         dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 3 + j]
@@ -1444,7 +1475,7 @@ public class Simd_Generic {
                             break;
                         }
                         case 4: {
-                            if (l == 4) {		// 4x6 * 6x4
+                            if (l == 4) {        // 4x6 * 6x4
                                 for (i = 0; i < 4; i++) {
                                     for (j = 0; j < 4; j++) {
                                         dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 4 + j]
@@ -1461,7 +1492,7 @@ public class Simd_Generic {
                             }
                         }
                         case 5: {
-                            if (l == 5) {		// 5x6 * 6x5
+                            if (l == 5) {        // 5x6 * 6x5
                                 for (i = 0; i < 5; i++) {
                                     for (j = 0; j < 5; j++) {
                                         dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 5 + j]
@@ -1479,7 +1510,7 @@ public class Simd_Generic {
                         }
                         case 6: {
                             switch (l) {
-                                case 1: {		// 6x6 * 6x1
+                                case 1: {        // 6x6 * 6x1
                                     for (i = 0; i < 6; i++) {
                                         dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 1]
                                                 + m1Ptr[m1Index + 1] * m2Ptr[m2Index + 1 * 1]
@@ -1492,7 +1523,7 @@ public class Simd_Generic {
                                     }
                                     return;
                                 }
-                                case 2: {		// 6x6 * 6x2
+                                case 2: {        // 6x6 * 6x2
                                     for (i = 0; i < 6; i++) {
                                         for (j = 0; j < 2; j++) {
                                             dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 2 + j]
@@ -1507,7 +1538,7 @@ public class Simd_Generic {
                                     }
                                     return;
                                 }
-                                case 3: {		// 6x6 * 6x3
+                                case 3: {        // 6x6 * 6x3
                                     for (i = 0; i < 6; i++) {
                                         for (j = 0; j < 3; j++) {
                                             dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 3 + j]
@@ -1522,7 +1553,7 @@ public class Simd_Generic {
                                     }
                                     return;
                                 }
-                                case 4: {		// 6x6 * 6x4
+                                case 4: {        // 6x6 * 6x4
                                     for (i = 0; i < 6; i++) {
                                         for (j = 0; j < 4; j++) {
                                             dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 4 + j]
@@ -1537,7 +1568,7 @@ public class Simd_Generic {
                                     }
                                     return;
                                 }
-                                case 5: {		// 6x6 * 6x5
+                                case 5: {        // 6x6 * 6x5
                                     for (i = 0; i < 6; i++) {
                                         for (j = 0; j < 5; j++) {
                                             dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 5 + j]
@@ -1552,7 +1583,7 @@ public class Simd_Generic {
                                     }
                                     return;
                                 }
-                                case 6: {		// 6x6 * 6x6
+                                case 6: {        // 6x6 * 6x6
                                     for (i = 0; i < 6; i++) {
                                         for (j = 0; j < 6; j++) {
                                             dstPtr[dIndex] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0 * 6 + j]
@@ -1629,7 +1660,7 @@ public class Simd_Generic {
 
             switch (m1.GetNumRows()) {
                 case 1:
-                    if (k == 6 && l == 1) {			// 1x6 * 1x1
+                    if (k == 6 && l == 1) {            // 1x6 * 1x1
                         for (i = 0; i < 6; i++) {
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0] * m2Ptr[m2Index + 0];
                             m1Index++;
@@ -1646,7 +1677,7 @@ public class Simd_Generic {
                     }
                     break;
                 case 2:
-                    if (k == 6 && l == 2) {			// 2x6 * 2x2
+                    if (k == 6 && l == 2) {            // 2x6 * 2x2
                         for (i = 0; i < 6; i++) {
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 2 + 0] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 2 + 0];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 2 + 1] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 2 + 1];
@@ -1664,7 +1695,7 @@ public class Simd_Generic {
                     }
                     break;
                 case 3:
-                    if (k == 6 && l == 3) {			// 3x6 * 3x3
+                    if (k == 6 && l == 3) {            // 3x6 * 3x3
                         for (i = 0; i < 6; i++) {
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 3 + 0] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 3 + 0] + m1Ptr[m1Index + 2 * 6] * m2Ptr[m2Index + 2 * 3 + 0];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 3 + 1] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 3 + 1] + m1Ptr[m1Index + 2 * 6] * m2Ptr[m2Index + 2 * 3 + 1];
@@ -1683,7 +1714,7 @@ public class Simd_Generic {
                     }
                     break;
                 case 4:
-                    if (k == 6 && l == 4) {			// 4x6 * 4x4
+                    if (k == 6 && l == 4) {            // 4x6 * 4x4
                         for (i = 0; i < 6; i++) {
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 4 + 0] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 4 + 0] + m1Ptr[m1Index + 2 * 6] * m2Ptr[m2Index + 2 * 4 + 0] + m1Ptr[m1Index + 3 * 6] * m2Ptr[m2Index + 3 * 4 + 0];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 4 + 1] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 4 + 1] + m1Ptr[m1Index + 2 * 6] * m2Ptr[m2Index + 2 * 4 + 1] + m1Ptr[m1Index + 3 * 6] * m2Ptr[m2Index + 3 * 4 + 1];
@@ -1704,7 +1735,7 @@ public class Simd_Generic {
                     }
                     break;
                 case 5:
-                    if (k == 6 && l == 5) {			// 5x6 * 5x5
+                    if (k == 6 && l == 5) {            // 5x6 * 5x5
                         for (i = 0; i < 6; i++) {
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 5 + 0] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 5 + 0] + m1Ptr[m1Index + 2 * 6] * m2Ptr[m2Index + 2 * 5 + 0] + m1Ptr[m1Index + 3 * 6] * m2Ptr[m2Index + 3 * 5 + 0] + m1Ptr[m1Index + 4 * 6] * m2Ptr[m2Index + 4 * 5 + 0];
                             dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 6] * m2Ptr[m2Index + 0 * 5 + 1] + m1Ptr[m1Index + 1 * 6] * m2Ptr[m2Index + 1 * 5 + 1] + m1Ptr[m1Index + 2 * 6] * m2Ptr[m2Index + 2 * 5 + 1] + m1Ptr[m1Index + 3 * 6] * m2Ptr[m2Index + 3 * 5 + 1] + m1Ptr[m1Index + 4 * 6] * m2Ptr[m2Index + 4 * 5 + 1];
@@ -1728,7 +1759,7 @@ public class Simd_Generic {
                 case 6:
                     if (l == 6) {
                         switch (k) {
-                            case 1:						// 6x1 * 6x6
+                            case 1:                        // 6x1 * 6x6
                                 m2Index = 0;
                                 for (j = 0; j < 6; j++) {
                                     dstPtr[dIndex++] = m1Ptr[m1Index + 0 * 1] * m2Ptr[m2Index + 0 * 6]
@@ -1740,7 +1771,7 @@ public class Simd_Generic {
                                     m2Index++;
                                 }
                                 return;
-                            case 2:						// 6x2 * 6x6
+                            case 2:                        // 6x2 * 6x6
                                 for (i = 0; i < 2; i++) {
                                     m2Index = 0;
                                     for (j = 0; j < 6; j++) {
@@ -1755,7 +1786,7 @@ public class Simd_Generic {
                                     m1Index++;
                                 }
                                 return;
-                            case 3:						// 6x3 * 6x6
+                            case 3:                        // 6x3 * 6x6
                                 for (i = 0; i < 3; i++) {
                                     m2Index = 0;
                                     for (j = 0; j < 6; j++) {
@@ -1770,7 +1801,7 @@ public class Simd_Generic {
                                     m1Index++;
                                 }
                                 return;
-                            case 4:						// 6x4 * 6x6
+                            case 4:                        // 6x4 * 6x6
                                 for (i = 0; i < 4; i++) {
                                     m2Index = 0;
                                     for (j = 0; j < 6; j++) {
@@ -1785,7 +1816,7 @@ public class Simd_Generic {
                                     m1Index++;
                                 }
                                 return;
-                            case 5:						// 6x5 * 6x6
+                            case 5:                        // 6x5 * 6x6
                                 for (i = 0; i < 5; i++) {
                                     m2Index = 0;
                                     for (j = 0; j < 6; j++) {
@@ -1800,7 +1831,7 @@ public class Simd_Generic {
                                     m1Index++;
                                 }
                                 return;
-                            case 6:						// 6x6 * 6x6
+                            case 6:                        // 6x6 * 6x6
                                 for (i = 0; i < 6; i++) {
                                     m2Index = 0;
                                     for (j = 0; j < 6; j++) {
@@ -1848,13 +1879,6 @@ public class Simd_Generic {
         private int NSKIP(final int n, final int s) {
             return ((n << 3) | (s & 7));
         }
-        private final int NSKIP1_0 = ((1 << 3) | (0 & 7)),
-                NSKIP2_0 = ((2 << 3) | (0 & 7)), NSKIP2_1 = ((2 << 3) | (1 & 7)),
-                NSKIP3_0 = ((3 << 3) | (0 & 7)), NSKIP3_1 = ((3 << 3) | (1 & 7)), NSKIP3_2 = ((3 << 3) | (2 & 7)),
-                NSKIP4_0 = ((4 << 3) | (0 & 7)), NSKIP4_1 = ((4 << 3) | (1 & 7)), NSKIP4_2 = ((4 << 3) | (2 & 7)), NSKIP4_3 = ((4 << 3) | (3 & 7)),
-                NSKIP5_0 = ((5 << 3) | (0 & 7)), NSKIP5_1 = ((5 << 3) | (1 & 7)), NSKIP5_2 = ((5 << 3) | (2 & 7)), NSKIP5_3 = ((5 << 3) | (3 & 7)), NSKIP5_4 = ((5 << 3) | (4 & 7)),
-                NSKIP6_0 = ((6 << 3) | (0 & 7)), NSKIP6_1 = ((6 << 3) | (1 & 7)), NSKIP6_2 = ((6 << 3) | (2 & 7)), NSKIP6_3 = ((6 << 3) | (3 & 7)), NSKIP6_4 = ((6 << 3) | (4 & 7)), NSKIP6_5 = ((6 << 3) | (5 & 7)),
-                NSKIP7_0 = ((7 << 3) | (0 & 7)), NSKIP7_1 = ((7 << 3) | (1 & 7)), NSKIP7_2 = ((7 << 3) | (2 & 7)), NSKIP7_3 = ((7 << 3) | (3 & 7)), NSKIP7_4 = ((7 << 3) | (4 & 7)), NSKIP7_5 = ((7 << 3) | (5 & 7)), NSKIP7_6 = ((7 << 3) | (6 & 7));
 
         @Override
         public void MatX_LowerTriangularSolve(idMatX L, float[] x, float[] b, int n) {
@@ -2528,27 +2552,6 @@ public class Simd_Generic {
             }
         }
 
-        //TODO: move to TempDump
-        private static ByteBuffer jmtobb(final idJointMat[] joints) {
-            ByteBuffer byteBuffer = ByteBuffer.allocate(idJointMat.SIZE * joints.length).order(ByteOrder.LITTLE_ENDIAN);
-
-            for (int i = 0; i < joints.length; i++) {
-                byteBuffer.position(i * idJointMat.SIZE);
-                byteBuffer.asFloatBuffer().put(joints[i].ToFloatPtr());
-            }
-
-            return byteBuffer;
-        }
-
-        private static idJointMat toIdJointMat(final ByteBuffer jointsPtr, final int position) {
-            ByteBuffer buffer = ((ByteBuffer) jointsPtr.duplicate().position(position)).order(ByteOrder.LITTLE_ENDIAN);
-            float[] temp = new float[12];
-            for (int i = 0; i < 12; i++) {
-                temp[i] = buffer.getFloat();
-            }
-            return new idJointMat(temp);
-        }
-
         @Override
         public void TracePointCull(byte[] cullBits, byte[] totalOr, float radius, idPlane[] planes, idDrawVert[] verts, int numVerts) {
             int i;
@@ -2584,7 +2587,7 @@ public class Simd_Generic {
                 t = d3 - radius;
                 bits |= FLOATSIGNBITSET(t) << 7;
 
-                bits ^= 0x0F;		// flip lower four bits
+                bits ^= 0x0F;        // flip lower four bits
 
                 tOr |= bits;
                 cullBits[i] = (byte) bits;
@@ -2616,7 +2619,7 @@ public class Simd_Generic {
                 bits |= FLOATSIGNBITSET(d4) << 4;
                 bits |= FLOATSIGNBITSET(d5) << 5;
 
-                cullBits[i] = (byte) (bits ^ 0x3F);		// flip lower 6 bits
+                cullBits[i] = (byte) (bits ^ 0x3F);        // flip lower 6 bits
             }
         }
 
@@ -3053,28 +3056,28 @@ public class Simd_Generic {
             if (kHz == 11025) {
                 if (numChannels == 1) {
                     for (int i = 0; i < numSamples; i++) {
-                        dest[i * 4 + 0] = dest[i * 4 + 1] = dest[i * 4 + 2] = dest[i * 4 + 3] = (float) pcm[i + 0];
+                        dest[i * 4 + 0] = dest[i * 4 + 1] = dest[i * 4 + 2] = dest[i * 4 + 3] = pcm[i + 0];
                     }
                 } else {
                     for (int i = 0; i < numSamples; i += 2) {
-                        dest[i * 4 + 0] = dest[i * 4 + 2] = dest[i * 4 + 4] = dest[i * 4 + 6] = (float) pcm[i + 0];
-                        dest[i * 4 + 1] = dest[i * 4 + 3] = dest[i * 4 + 5] = dest[i * 4 + 7] = (float) pcm[i + 1];
+                        dest[i * 4 + 0] = dest[i * 4 + 2] = dest[i * 4 + 4] = dest[i * 4 + 6] = pcm[i + 0];
+                        dest[i * 4 + 1] = dest[i * 4 + 3] = dest[i * 4 + 5] = dest[i * 4 + 7] = pcm[i + 1];
                     }
                 }
             } else if (kHz == 22050) {
                 if (numChannels == 1) {
                     for (int i = 0; i < numSamples; i++) {
-                        dest[i * 2 + 0] = dest[i * 2 + 1] = (float) pcm[i + 0];
+                        dest[i * 2 + 0] = dest[i * 2 + 1] = pcm[i + 0];
                     }
                 } else {
                     for (int i = 0; i < numSamples; i += 2) {
-                        dest[i * 2 + 0] = dest[i * 2 + 2] = (float) pcm[i + 0];
-                        dest[i * 2 + 1] = dest[i * 2 + 3] = (float) pcm[i + 1];
+                        dest[i * 2 + 0] = dest[i * 2 + 2] = pcm[i + 0];
+                        dest[i * 2 + 1] = dest[i * 2 + 3] = pcm[i + 1];
                     }
                 }
             } else if (kHz == 44100) {
                 for (int i = 0; i < numSamples; i++) {
-                    dest[i] = (float) pcm[i];
+                    dest[i] = pcm[i];
                 }
             } else {
 //		assert( 0 );
@@ -3128,7 +3131,7 @@ public class Simd_Generic {
                 assert (false);
             }
         }
-        
+
         @Override
         public void UpSampleOGGTo44kHz(FloatBuffer dest, int offset, float[][] ogg, int numSamples, int kHz, int numChannels) {
             offset += dest.position();
@@ -3136,34 +3139,34 @@ public class Simd_Generic {
                 if (numChannels == 1) {
                     for (int i = 0; i < numSamples; i++) {
                         dest.put(offset + (i * 4 + 0), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 4 + 1), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 4 + 2), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 4 + 3), ogg[0][i] * 32768.0f);
+                                .put(offset + (i * 4 + 1), ogg[0][i] * 32768.0f)
+                                .put(offset + (i * 4 + 2), ogg[0][i] * 32768.0f)
+                                .put(offset + (i * 4 + 3), ogg[0][i] * 32768.0f);
                     }
                 } else {
                     for (int i = 0; i < numSamples >> 1; i++) {
                         dest.put(offset + (i * 8 + 0), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 8 + 2), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 8 + 4), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 8 + 6), ogg[0][i] * 32768.0f);
+                                .put(offset + (i * 8 + 2), ogg[0][i] * 32768.0f)
+                                .put(offset + (i * 8 + 4), ogg[0][i] * 32768.0f)
+                                .put(offset + (i * 8 + 6), ogg[0][i] * 32768.0f);
                         dest.put(offset + (i * 8 + 1), ogg[1][i] * 32768.0f)
-                            .put(offset + (i * 8 + 3), ogg[1][i] * 32768.0f)
-                            .put(offset + (i * 8 + 5), ogg[1][i] * 32768.0f)
-                            .put(offset + (i * 8 + 7), ogg[1][i] * 32768.0f);
+                                .put(offset + (i * 8 + 3), ogg[1][i] * 32768.0f)
+                                .put(offset + (i * 8 + 5), ogg[1][i] * 32768.0f)
+                                .put(offset + (i * 8 + 7), ogg[1][i] * 32768.0f);
                     }
                 }
             } else if (kHz == 22050) {
                 if (numChannels == 1) {
                     for (int i = 0; i < numSamples; i++) {
                         dest.put(offset + (i * 2 + 0), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 2 + 1), ogg[0][i] * 32768.0f);
+                                .put(offset + (i * 2 + 1), ogg[0][i] * 32768.0f);
                     }
                 } else {
                     for (int i = 0; i < numSamples >> 1; i++) {
                         dest.put(offset + (i * 4 + 0), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 4 + 2), ogg[0][i] * 32768.0f);
+                                .put(offset + (i * 4 + 2), ogg[0][i] * 32768.0f);
                         dest.put(offset + (i * 4 + 1), ogg[1][i] * 32768.0f)
-                            .put(offset + (i * 4 + 3), ogg[1][i] * 32768.0f);
+                                .put(offset + (i * 4 + 3), ogg[1][i] * 32768.0f);
                     }
                 }
             } else if (kHz == 44100) {
@@ -3174,7 +3177,7 @@ public class Simd_Generic {
                 } else {
                     for (int i = 0; i < numSamples >> 1; i++) {
                         dest.put(offset + (i * 2 + 0), ogg[0][i] * 32768.0f)
-                            .put(offset + (i * 2 + 1), ogg[1][i] * 32768.0f);
+                                .put(offset + (i * 2 + 1), ogg[1][i] * 32768.0f);
                     }
                 }
             } else {
@@ -3297,5 +3300,6 @@ public class Simd_Generic {
                 }
             }
         }
-    };
+    }
+
 }

@@ -1,109 +1,84 @@
 package neo.Game;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AF.idAF;
-
-import static neo.Game.Animation.Anim.ANIMCHANNEL_ALL;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_SetAngularVelocity;
-import static neo.Game.Entity.EV_SetLinearVelocity;
-import static neo.Game.Entity.TH_PHYSICS;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEPARTICLES;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
-import neo.Game.Entity.idAnimatedEntity;
-import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.idClass;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.Entity.*;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_bloodEffects;
-import static neo.Game.GameSys.SysCvar.g_vehicleForce;
-import static neo.Game.GameSys.SysCvar.g_vehicleSuspensionDamping;
-import static neo.Game.GameSys.SysCvar.g_vehicleSuspensionDown;
-import static neo.Game.GameSys.SysCvar.g_vehicleSuspensionKCompress;
-import static neo.Game.GameSys.SysCvar.g_vehicleSuspensionUp;
-import static neo.Game.GameSys.SysCvar.g_vehicleTireFriction;
-import static neo.Game.GameSys.SysCvar.g_vehicleVelocity;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import neo.Game.Game_local.idEntityPtr;
+import neo.Game.Game_local.*;
 import neo.Game.Item.idMoveableItem;
-import static neo.Game.Physics.Clip.JOINT_HANDLE_TO_CLIPMODEL_ID;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force_Constant.idForce_Constant;
 import neo.Game.Physics.Physics.impactInfo_s;
-import neo.Game.Physics.Physics_AF.idAFBody;
-import neo.Game.Physics.Physics_AF.idAFConstraint_BallAndSocketJoint;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Contact;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Hinge;
-import neo.Game.Physics.Physics_AF.idAFConstraint_Suspension;
-import neo.Game.Physics.Physics_AF.idAFConstraint_UniversalJoint;
-import neo.Game.Physics.Physics_AF.idPhysics_AF;
+import neo.Game.Physics.Physics_AF.*;
 import neo.Game.Player.idPlayer;
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_CORPSE;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.Model.INVALID_JOINT;
 import neo.Renderer.Model.idMD5Joint;
 import neo.Renderer.Model.idRenderModel;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIME_OF_DEATH;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import static neo.TempDump.NOT;
-import static neo.framework.Common.EDITOR_AF;
+import neo.Renderer.RenderWorld.*;
 import neo.framework.DeclAF.getJointTransform_t;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
-import static neo.idlib.math.Math_h.MS2SEC;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.RAD2DEG;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static neo.Game.Animation.Anim.ANIMCHANNEL_ALL;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
+import static neo.Game.Entity.*;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Game.Physics.Clip.JOINT_HANDLE_TO_CLIPMODEL_ID;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.NOT;
+import static neo.framework.Common.EDITOR_AF;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.RAD2DEG;
 
 /**
  *
  */
 public class AFEntity {
 
-    public static final idEventDef EV_SetConstraintPosition = new idEventDef("SetConstraintPosition", "sv");
+    public static final float BOUNCE_SOUND_MAX_VELOCITY = 200;
+    /*
+     ===============================================================================
+
+     idAFEntity_Base
+
+     ===============================================================================
+     */
+    public static final float BOUNCE_SOUND_MIN_VELOCITY = 80;
     //
     public static final idEventDef EV_Gib = new idEventDef("gib", "s");
     public static final idEventDef EV_Gibbed = new idEventDef("<gibbed>");
-//    
+    public static final idEventDef EV_SetConstraintPosition = new idEventDef("SetConstraintPosition", "sv");
+    //
     public static final idEventDef EV_SetFingerAngle = new idEventDef("setFingerAngle", "f");
     public static final idEventDef EV_StopFingers = new idEventDef("stopFingers");
 
@@ -119,13 +94,34 @@ public class AFEntity {
      */
     public static final int GIB_DELAY = 200;  // only gib this often to keep performace hits when blowing up several mobs
 
+    //
+    public static final String[] clawConstraintNames = {
+            "claw1", "claw2", "claw3", "claw4"
+    };
+
+    /*
+     ================
+     GetArgString
+     ================
+     */
+    public static String GetArgString(final idDict args, final idDict defArgs, final String key) {
+        String s;
+
+        s = args.GetString(key);
+//	if ( !s[0] && defArgs ) {
+        if (s.isEmpty() && defArgs != null) {
+            s = defArgs.GetString(key);
+        }
+        return s;
+    }
+
     public static class idMultiModelAF extends idEntity {
 //        public CLASS_PROTOTYPE(idMultiModelAF );//TODO:include this?
 
         protected idPhysics_AF physicsObj;
+        private idList<Integer> modelDefHandles;
         //
         private idList<idRenderModel> modelHandles;
-        private idList<Integer> modelDefHandles;
         //
         //
 
@@ -134,7 +130,7 @@ public class AFEntity {
             physicsObj.SetSelf(this);
         }
 
-//							~idMultiModelAF( void );
+        //							~idMultiModelAF( void );
         @Override
         public void Think() {
             RunPhysics();
@@ -186,7 +182,9 @@ public class AFEntity {
         public java.lang.Class /*idTypeInfo*/ GetType() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
+//
+//
 
     /*
      ===============================================================================
@@ -292,7 +290,15 @@ public class AFEntity {
                 lastBody = body;
             }
         }
-    };
+    }
+
+    /*
+     ===============================================================================
+
+     idAFEntity_Gibbable
+
+     ===============================================================================
+     */
 
     /*
      ===============================================================================
@@ -304,10 +310,10 @@ public class AFEntity {
     public static class idAFAttachment extends idAnimatedEntity {
 // public	CLASS_PROTOTYPE( idAFAttachment );
 
-        protected idEntity body;
-        protected idClipModel combatModel;	// render model for hit detection of head
-        protected int idleAnim;
         protected int/*jointHandle_t*/ attachJoint;
+        protected idEntity body;
+        protected idClipModel combatModel;    // render model for hit detection of head
+        protected int idleAnim;
         //
         //
 
@@ -322,7 +328,7 @@ public class AFEntity {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             idleAnim = animator.GetAnim("idle");
         }
 
@@ -408,7 +414,7 @@ public class AFEntity {
         @Override
         public impactInfo_s GetImpactInfo(idEntity ent, int id, final idVec3 point) {
             if (body != null) {
-               return  body.GetImpactInfo(ent, JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint), point);
+                return body.GetImpactInfo(ent, JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint), point);
             } else {
                 return idEntity_GetImpactInfo(ent, id, point);
             }
@@ -485,35 +491,23 @@ public class AFEntity {
                 combatModel.Unlink();
             }
         }
-    };
-
-    /*
-     ===============================================================================
-
-     idAFEntity_Base
-
-     ===============================================================================
-     */
-    public static final float BOUNCE_SOUND_MIN_VELOCITY = 80;
-    public static final float BOUNCE_SOUND_MAX_VELOCITY = 200;
-//
-//
+    }
 
     public static class idAFEntity_Base extends idAnimatedEntity {
-// public	CLASS_PROTOTYPE( idAFEntity_Base );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        // public	CLASS_PROTOTYPE( idAFEntity_Base );
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idAnimatedEntity.getEventCallBacks());
             eventCallbacks.put(EV_SetConstraintPosition, (eventCallback_t2<idAFEntity_Base>) idAFEntity_Base::Event_SetConstraintPosition);
         }
 
-        protected idAF        af;                   // articulated figure
+        protected idAF af;                   // articulated figure
         protected idClipModel combatModel;          // render model for hit detection
-        protected int         combatModelContents;
-        protected idVec3      spawnOrigin;          // spawn origin
-        protected idMat3      spawnAxis;            // rotation axis used when spawned
-        protected int         nextSoundTime;        // next time this can make a sound
+        protected int combatModelContents;
+        protected int nextSoundTime;        // next time this can make a sound
+        protected idMat3 spawnAxis;            // rotation axis used when spawned
+        protected idVec3 spawnOrigin;          // spawn origin
         //
         //
 
@@ -527,10 +521,50 @@ public class AFEntity {
         }
         // virtual					~idAFEntity_Base( void );
 
+        public static void DropAFs(idEntity ent, final String type, idList<idEntity> list) {
+            idKeyValue kv;
+            String skinName;
+            idEntity[] newEnt = {null};
+            idAFEntity_Base af;
+            idDict args = new idDict();
+            idDeclSkin skin;
+
+            // drop the articulated figures
+            kv = ent.spawnArgs.MatchPrefix(va("def_drop%sAF", type), null);
+            while (kv != null) {
+
+                args.Set("classname", kv.GetValue());
+                gameLocal.SpawnEntityDef(args, newEnt);
+
+                if (newEnt[0] != null && newEnt[0].IsType(idAFEntity_Base.class)) {
+                    af = (idAFEntity_Base) newEnt[0];
+                    af.GetPhysics().SetOrigin(ent.GetPhysics().GetOrigin());
+                    af.GetPhysics().SetAxis(ent.GetPhysics().GetAxis());
+                    af.af.SetupPose(ent, gameLocal.time);
+                    if (list != null) {
+                        list.Append(af);
+                    }
+                }
+
+                kv = ent.spawnArgs.MatchPrefix(va("def_drop%sAF", type), kv);
+            }
+
+            // change the skin to hide all the dropped articulated figures
+            skinName = ent.spawnArgs.GetString(va("skin_drop%s", type));
+            if (!skinName.isEmpty()) {
+                skin = declManager.FindSkin(skinName);
+                ent.SetSkin(skin);
+            }
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             spawnOrigin.oSet(GetPhysics().GetOrigin());
             spawnAxis.oSet(GetPhysics().GetAxis());
             nextSoundTime = 0;
@@ -629,9 +663,7 @@ public class AFEntity {
         @Override
         public boolean UpdateAnimationControllers() {
             if (af.IsActive()) {
-                if (af.UpdateAnimation()) {
-                    return true;
-                }
+                return af.UpdateAnimation();
             }
             return false;
         }
@@ -651,7 +683,7 @@ public class AFEntity {
 
             af.SetAnimator(GetAnimator());
             if (!af.Load(this, fileName[0])) {
-                gameLocal.Error("idAFEntity_Base::LoadAF: Couldn't load af file '%s' on entity '%s'", fileName[0], name);
+                idGameLocal.Error("idAFEntity_Base::LoadAF: Couldn't load af file '%s' on entity '%s'", fileName[0], name);
             }
 
             af.Start();
@@ -771,42 +803,6 @@ public class AFEntity {
             common.InitTool(EDITOR_AF, spawnArgs);
         }
 
-        public static void DropAFs(idEntity ent, final String type, idList<idEntity> list) {
-            idKeyValue kv;
-            String skinName;
-            idEntity[] newEnt = {null};
-            idAFEntity_Base af;
-            idDict args = new idDict();
-            idDeclSkin skin;
-
-            // drop the articulated figures
-            kv = ent.spawnArgs.MatchPrefix(va("def_drop%sAF", type), null);
-            while (kv != null) {
-
-                args.Set("classname", kv.GetValue());
-                gameLocal.SpawnEntityDef(args, newEnt);
-
-                if (newEnt[0] != null && newEnt[0].IsType(idAFEntity_Base.class)) {
-                    af = (idAFEntity_Base) newEnt[0];
-                    af.GetPhysics().SetOrigin(ent.GetPhysics().GetOrigin());
-                    af.GetPhysics().SetAxis(ent.GetPhysics().GetAxis());
-                    af.af.SetupPose(ent, gameLocal.time);
-                    if (list != null) {
-                        list.Append(af);
-                    }
-                }
-
-                kv = ent.spawnArgs.MatchPrefix(va("def_drop%sAF", type), kv);
-            }
-
-            // change the skin to hide all the dropped articulated figures
-            skinName = ent.spawnArgs.GetString(va("skin_drop%s", type));
-            if (!skinName.isEmpty()) {
-                skin = declManager.FindSkin(skinName);
-                ent.SetSkin(skin);
-            }
-        }
-
         protected void Event_SetConstraintPosition(final idEventArg<String> name, final idEventArg<idVec3> pos) {
             af.SetConstraintPosition(name.value, pos.value);
         }
@@ -815,22 +811,11 @@ public class AFEntity {
         public eventCallback_t getEventCallBack(idEventDef event) {
             return eventCallbacks.get(event);
         }
-
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-    };
-    /*
-     ===============================================================================
-
-     idAFEntity_Gibbable
-
-     ===============================================================================
-     */
+    }
 
     public static class idAFEntity_Gibbable extends idAFEntity_Base {
         // CLASS_PROTOTYPE( idAFEntity_Gibbable );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idAFEntity_Base.getEventCallBacks());
@@ -838,9 +823,9 @@ public class AFEntity {
             eventCallbacks.put(EV_Gibbed, (eventCallback_t0<idAFEntity_Gibbable>) idAFEntity_Base::Event_Remove);
         }
 
+        protected boolean gibbed;
         protected idRenderModel skeletonModel;
-        protected int           skeletonModelDefHandle;
-        protected boolean       gibbed;
+        protected int skeletonModelDefHandle;
         //
         //
 
@@ -851,10 +836,14 @@ public class AFEntity {
         }
         // ~idAFEntity_Gibbable( void );
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             InitSkeletonModel();
 
             gibbed = false;
@@ -932,7 +921,7 @@ public class AFEntity {
 
             idDict damageDef = gameLocal.FindEntityDefDict(damageDefName);
             if (null == damageDef) {
-                gameLocal.Error("Unknown damageDef '%s'", damageDefName);
+                idGameLocal.Error("Unknown damageDef '%s'", damageDefName);
             }
 
             // spawn gib articulated figures
@@ -972,7 +961,7 @@ public class AFEntity {
 
             final idDict damageDef = gameLocal.FindEntityDefDict(damageDefName);
             if (null == damageDef) {
-                gameLocal.Error("Unknown damageDef '%s'", damageDefName);
+                idGameLocal.Error("Unknown damageDef '%s'", damageDefName);
             }
 
             if (damageDef.GetBool("gibNonSolid")) {
@@ -992,7 +981,7 @@ public class AFEntity {
                     gameLocal.SetGibTime(gameLocal.time + GIB_DELAY);
                     SpawnGibs(dir, damageDefName);
                     renderEntity.noShadow = true;
-                    renderEntity.shaderParms[ SHADERPARM_TIME_OF_DEATH] = gameLocal.time * 0.001f;
+                    renderEntity.shaderParms[SHADERPARM_TIME_OF_DEATH] = gameLocal.time * 0.001f;
                     StartSound("snd_gibbed", SND_CHANNEL_ANY, 0, false, null);
                     gibbed = true;
                 }
@@ -1021,7 +1010,7 @@ public class AFEntity {
                 }
                 if (skeletonModel != null && renderEntity.hModel != null) {
                     if (skeletonModel.NumJoints() != renderEntity.hModel.NumJoints()) {
-                        gameLocal.Error("gib model '%s' has different number of joints than model '%s'",
+                        idGameLocal.Error("gib model '%s' has different number of joints than model '%s'",
                                 skeletonModel.Name(), renderEntity.hModel.Name());
                     }
                 }
@@ -1033,11 +1022,7 @@ public class AFEntity {
         }
 
         /**
-         *
-         *
          * inherited grandfather functions.
-         *
-         *
          */
         public final void idAFEntity_Base_Think() {
             super.Think();
@@ -1060,10 +1045,6 @@ public class AFEntity {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
         @Override
         protected void _deconstructor() {
             if (skeletonModelDefHandle != -1) {
@@ -1073,7 +1054,7 @@ public class AFEntity {
 
             super._deconstructor();
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -1084,7 +1065,7 @@ public class AFEntity {
      */
     public static class idAFEntity_Generic extends idAFEntity_Gibbable {
         // CLASS_PROTOTYPE( idAFEntity_Generic );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks());
@@ -1100,12 +1081,16 @@ public class AFEntity {
         }
         // ~idAFEntity_Generic( void );
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             if (!LoadAF()) {
-                gameLocal.Error("Couldn't load af file on entity '%s'", name);
+                idGameLocal.Error("Couldn't load af file on entity '%s'", name);
             }
 
             SetCombatModel();
@@ -1175,11 +1160,7 @@ public class AFEntity {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -1190,7 +1171,7 @@ public class AFEntity {
      */
     public static class idAFEntity_WithAttachedHead extends idAFEntity_Gibbable {
         // CLASS_PROTOTYPE( idAFEntity_WithAttachedHead );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks());
@@ -1198,12 +1179,16 @@ public class AFEntity {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idAFEntity_WithAttachedHead>) idAFEntity_WithAttachedHead::Event_Activate);
         }
 
-        private idEntityPtr<idAFAttachment> head;
+        private final idEntityPtr<idAFAttachment> head;
         //
         //
 
         public idAFEntity_WithAttachedHead() {
             head = new idEntityPtr<>(null);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         // ~idAFEntity_WithAttachedHead();
@@ -1219,7 +1204,7 @@ public class AFEntity {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             SetupHead();
 
             LoadAF();
@@ -1267,7 +1252,7 @@ public class AFEntity {
                 jointName = spawnArgs.GetString("head_joint");
                 joint = animator.GetJointHandle(jointName);
                 if (joint == INVALID_JOINT) {
-                    gameLocal.Error("Joint '%s' not found for 'head_joint' on '%s'", jointName, name.toString());
+                    idGameLocal.Error("Joint '%s' not found for 'head_joint' on '%s'", jointName, name.toString());
                 }
 
                 headEnt = (idAFAttachment) gameLocal.SpawnEntityType(idAFAttachment.class, null);
@@ -1396,11 +1381,7 @@ public class AFEntity {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -1412,13 +1393,13 @@ public class AFEntity {
     public static class idAFEntity_Vehicle extends idAFEntity_Base {
         // CLASS_PROTOTYPE( idAFEntity_Vehicle );
 
-        protected idPlayer player;
+        protected idDeclParticle dustSmoke;
         protected int/*jointHandle_t*/ eyesJoint;
-        protected int/*jointHandle_t*/ steeringWheelJoint;
-        protected float wheelRadius;
+        protected idPlayer player;
         protected float steerAngle;
         protected float steerSpeed;
-        protected idDeclParticle dustSmoke;
+        protected int/*jointHandle_t*/ steeringWheelJoint;
+        protected float wheelRadius;
         //
         //
 
@@ -1448,12 +1429,12 @@ public class AFEntity {
 
 //	if ( !eyesJointName[0] ) {
             if (eyesJointName.isEmpty()) {
-                gameLocal.Error("idAFEntity_Vehicle '%s' no eyes joint specified", name);
+                idGameLocal.Error("idAFEntity_Vehicle '%s' no eyes joint specified", name);
             }
             eyesJoint = animator.GetJointHandle(eyesJointName);
 //	if ( !steeringWheelJointName[0] ) {
             if (steeringWheelJointName.isEmpty()) {
-                gameLocal.Error("idAFEntity_Vehicle '%s' no steering wheel joint specified", name);
+                idGameLocal.Error("idAFEntity_Vehicle '%s' no steering wheel joint specified", name);
             }
             steeringWheelJoint = animator.GetJointHandle(steeringWheelJointName);
 
@@ -1510,7 +1491,7 @@ public class AFEntity {
 
             return steerAngle;
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -1519,13 +1500,25 @@ public class AFEntity {
      */
     public static class idAFEntity_VehicleSimple extends idAFEntity_Vehicle {
 
-        protected idClipModel wheelModel;
+        // ~idAFEntity_VehicleSimple();
+        private static final String[] wheelJointKeys = {
+                "wheelJointFrontLeft",
+                "wheelJointFrontRight",
+                "wheelJointRearLeft",
+                "wheelJointRearRight"
+        };
+        private static final idVec3[] wheelPoly/*[4]*/ = {
+                new idVec3(2, 2, 0),
+                new idVec3(2, -2, 0),
+                new idVec3(-2, -2, 0),
+                new idVec3(-2, 2, 0)
+        };
         protected final idAFConstraint_Suspension[] suspension = new idAFConstraint_Suspension[4];
-        protected final int/*jointHandle_t*/[] wheelJoints = new int[4];
         protected final float[] wheelAngles = new float[4];
         //
         //
-
+        protected final int/*jointHandle_t*/[] wheelJoints = new int[4];
+        protected idClipModel wheelModel;
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleSimple );
         public idAFEntity_VehicleSimple() {
@@ -1534,19 +1527,6 @@ public class AFEntity {
                 suspension[i] = null;
             }
         }
-        // ~idAFEntity_VehicleSimple();
-        private static final String[] wheelJointKeys = {
-            "wheelJointFrontLeft",
-            "wheelJointFrontRight",
-            "wheelJointRearLeft",
-            "wheelJointRearRight"
-        };
-        private static final idVec3[] wheelPoly/*[4]*/ = {
-                    new idVec3(2, 2, 0),
-                    new idVec3(2, -2, 0),
-                    new idVec3(-2, -2, 0),
-                    new idVec3(-2, 2, 0)
-                };
 
         @Override
         public void Spawn() {
@@ -1564,11 +1544,11 @@ public class AFEntity {
                 final String wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "");
 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleSimple '%s' no '%s' specified", name, wheelJointKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleSimple '%s' no '%s' specified", name, wheelJointKeys[i]);
                 }
                 wheelJoints[i] = animator.GetJointHandle(wheelJointName);
                 if (wheelJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idAFEntity_VehicleSimple '%s' can't find wheel joint '%s'", name, wheelJointName);
+                    idGameLocal.Error("idAFEntity_VehicleSimple '%s' can't find wheel joint '%s'", name, wheelJointName);
                 }
 
                 GetAnimator().GetJointTransform(wheelJoints[i], 0, origin, axis);
@@ -1615,11 +1595,7 @@ public class AFEntity {
                 for (i = 0; i < 2; i++) {
 
                     // front wheel drive
-                    if (velocity != 0) {
-                        suspension[i].EnableMotor(true);
-                    } else {
-                        suspension[i].EnableMotor(false);
-                    }
+                    suspension[i].EnableMotor(velocity != 0);
                     suspension[i].SetMotorVelocity(velocity);
                     suspension[i].SetMotorForce(force);
 
@@ -1653,7 +1629,7 @@ public class AFEntity {
 
                     origin = suspension[i].GetWheelOrigin();
                     velocity = body.GetPointVelocity(origin).oMultiply(body.GetWorldAxis().oGet(0));
-                    wheelAngles[i] += velocity * MS2SEC(gameLocal.msec) / wheelRadius;
+                    wheelAngles[i] += velocity * MS2SEC(idGameLocal.msec) / wheelRadius;
 
                     // additional rotation about the wheel axis
                     wheelRotation.SetAngle(RAD2DEG(wheelAngles[i]));
@@ -1696,7 +1672,7 @@ public class AFEntity {
             }
         }
 
-    };
+    }
 
     /*
      ===============================================================================
@@ -1705,13 +1681,28 @@ public class AFEntity {
      */
     public static class idAFEntity_VehicleFourWheels extends idAFEntity_Vehicle {
 
-        protected final idAFBody[] wheels = new idAFBody[4];
+        private static final String[] steeringHingeKeys = {
+                "steeringHingeFrontLeft",
+                "steeringHingeFrontRight"
+        };
+        private static final String[] wheelBodyKeys = {
+                "wheelBodyFrontLeft",
+                "wheelBodyFrontRight",
+                "wheelBodyRearLeft",
+                "wheelBodyRearRight"
+        };
+        private static final String[] wheelJointKeys = {
+                "wheelJointFrontLeft",
+                "wheelJointFrontRight",
+                "wheelJointRearLeft",
+                "wheelJointRearRight"
+        };
         protected final idAFConstraint_Hinge[] steering = new idAFConstraint_Hinge[2];
-        protected final int/*jointHandle_t*/[] wheelJoints = new int[4];
+        //
+        //
         protected final float[] wheelAngles = new float[4];
-        //
-        //
-
+        protected final int/*jointHandle_t*/[] wheelJoints = new int[4];
+        protected final idAFBody[] wheels = new idAFBody[4];
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleFourWheels );
         public idAFEntity_VehicleFourWheels() {
@@ -1725,22 +1716,6 @@ public class AFEntity {
             steering[0] = null;
             steering[1] = null;
         }
-        private static final String[] wheelBodyKeys = {
-            "wheelBodyFrontLeft",
-            "wheelBodyFrontRight",
-            "wheelBodyRearLeft",
-            "wheelBodyRearRight"
-        };
-        private static final String[] wheelJointKeys = {
-            "wheelJointFrontLeft",
-            "wheelJointFrontRight",
-            "wheelJointRearLeft",
-            "wheelJointRearRight"
-        };
-        private static final String[] steeringHingeKeys = {
-            "steeringHingeFrontLeft",
-            "steeringHingeFrontRight"
-        };
 
         @Override
         public void Spawn() {
@@ -1751,20 +1726,20 @@ public class AFEntity {
                 wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "");
 //		if ( !wheelBodyName[0] ) {
                 if (wheelBodyName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleFourWheels '%s' no '%s' specified", name, wheelBodyKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleFourWheels '%s' no '%s' specified", name, wheelBodyKeys[i]);
                 }
                 wheels[i] = af.GetPhysics().GetBody(wheelBodyName);
                 if (null == wheels[i]) {
-                    gameLocal.Error("idAFEntity_VehicleFourWheels '%s' can't find wheel body '%s'", name, wheelBodyName);
+                    idGameLocal.Error("idAFEntity_VehicleFourWheels '%s' can't find wheel body '%s'", name, wheelBodyName);
                 }
                 wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "");
 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleFourWheels '%s' no '%s' specified", name, wheelJointKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleFourWheels '%s' no '%s' specified", name, wheelJointKeys[i]);
                 }
                 wheelJoints[i] = animator.GetJointHandle(wheelJointName);
                 if (wheelJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idAFEntity_VehicleFourWheels '%s' can't find wheel joint '%s'", name, wheelJointName);
+                    idGameLocal.Error("idAFEntity_VehicleFourWheels '%s' can't find wheel joint '%s'", name, wheelJointName);
                 }
             }
 
@@ -1772,11 +1747,11 @@ public class AFEntity {
                 steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "");
 //		if ( !steeringHingeName[0] ) {
                 if (steeringHingeName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleFourWheels '%s' no '%s' specified", name, steeringHingeKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleFourWheels '%s' no '%s' specified", name, steeringHingeKeys[i]);
                 }
                 steering[i] = (idAFConstraint_Hinge) af.GetPhysics().GetConstraint(steeringHingeName);
                 if (NOT(steering[i])) {
-                    gameLocal.Error("idAFEntity_VehicleFourWheels '%s': can't find steering hinge '%s'", name, steeringHingeName);
+                    idGameLocal.Error("idAFEntity_VehicleFourWheels '%s': can't find steering hinge '%s'", name, steeringHingeName);
                 }
             }
 
@@ -1839,7 +1814,7 @@ public class AFEntity {
                     if (force == 0) {
                         velocity = wheels[i].GetLinearVelocity().oMultiply(wheels[i].GetWorldAxis().oGet(0));
                     }
-                    wheelAngles[i] += velocity * MS2SEC(gameLocal.msec) / wheelRadius;
+                    wheelAngles[i] += velocity * MS2SEC(idGameLocal.msec) / wheelRadius;
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(RAD2DEG(wheelAngles[i]));
                     axis = af.GetPhysics().GetAxis(0);
@@ -1866,7 +1841,7 @@ public class AFEntity {
                 LinkCombat();
             }
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -1875,13 +1850,34 @@ public class AFEntity {
      */
     public static class idAFEntity_VehicleSixWheels extends idAFEntity_Vehicle {
 
-        private final idAFBody[] wheels = new idAFBody[6];
+        private static final String[] steeringHingeKeys = {
+                "steeringHingeFrontLeft",
+                "steeringHingeFrontRight",
+                "steeringHingeRearLeft",
+                "steeringHingeRearRight"
+        };
+        private static final String[] wheelBodyKeys = {
+                "wheelBodyFrontLeft",
+                "wheelBodyFrontRight",
+                "wheelBodyMiddleLeft",
+                "wheelBodyMiddleRight",
+                "wheelBodyRearLeft",
+                "wheelBodyRearRight"
+        };
+        private static final String[] wheelJointKeys = {
+                "wheelJointFrontLeft",
+                "wheelJointFrontRight",
+                "wheelJointMiddleLeft",
+                "wheelJointMiddleRight",
+                "wheelJointRearLeft",
+                "wheelJointRearRight"
+        };
         private final idAFConstraint_Hinge[] steering = new idAFConstraint_Hinge[4];
-        private final int/*jointHandle_t*/[] wheelJoints = new int[6];
+        //
+        //
         private final float[] wheelAngles = new float[6];
-        //
-        //
-
+        private final int/*jointHandle_t*/[] wheelJoints = new int[6];
+        private final idAFBody[] wheels = new idAFBody[6];
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleSixWheels );
         public idAFEntity_VehicleSixWheels() {
@@ -1897,28 +1893,6 @@ public class AFEntity {
             steering[2] = null;
             steering[3] = null;
         }
-        private static final String[] wheelBodyKeys = {
-            "wheelBodyFrontLeft",
-            "wheelBodyFrontRight",
-            "wheelBodyMiddleLeft",
-            "wheelBodyMiddleRight",
-            "wheelBodyRearLeft",
-            "wheelBodyRearRight"
-        };
-        private static final String[] wheelJointKeys = {
-            "wheelJointFrontLeft",
-            "wheelJointFrontRight",
-            "wheelJointMiddleLeft",
-            "wheelJointMiddleRight",
-            "wheelJointRearLeft",
-            "wheelJointRearRight"
-        };
-        private static final String[] steeringHingeKeys = {
-            "steeringHingeFrontLeft",
-            "steeringHingeFrontRight",
-            "steeringHingeRearLeft",
-            "steeringHingeRearRight"
-        };
 
         @Override
         public void Spawn() {
@@ -1930,20 +1904,20 @@ public class AFEntity {
                 wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "");
 //		if ( !wheelBodyName[0] ) {
                 if (wheelBodyName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleSixWheels '%s' no '%s' specified", name, wheelBodyKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleSixWheels '%s' no '%s' specified", name, wheelBodyKeys[i]);
                 }
                 wheels[i] = af.GetPhysics().GetBody(wheelBodyName);
                 if (NOT(wheels[i])) {
-                    gameLocal.Error("idAFEntity_VehicleSixWheels '%s' can't find wheel body '%s'", name, wheelBodyName);
+                    idGameLocal.Error("idAFEntity_VehicleSixWheels '%s' can't find wheel body '%s'", name, wheelBodyName);
                 }
                 wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "");
 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleSixWheels '%s' no '%s' specified", name, wheelJointKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleSixWheels '%s' no '%s' specified", name, wheelJointKeys[i]);
                 }
                 wheelJoints[i] = animator.GetJointHandle(wheelJointName);
                 if (wheelJoints[i] == INVALID_JOINT) {
-                    gameLocal.Error("idAFEntity_VehicleSixWheels '%s' can't find wheel joint '%s'", name, wheelJointName);
+                    idGameLocal.Error("idAFEntity_VehicleSixWheels '%s' can't find wheel joint '%s'", name, wheelJointName);
                 }
             }
 
@@ -1951,11 +1925,11 @@ public class AFEntity {
                 steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "");
 //		if ( !steeringHingeName[0] ) {
                 if (steeringHingeName.isEmpty()) {
-                    gameLocal.Error("idAFEntity_VehicleSixWheels '%s' no '%s' specified", name, steeringHingeKeys[i]);
+                    idGameLocal.Error("idAFEntity_VehicleSixWheels '%s' no '%s' specified", name, steeringHingeKeys[i]);
                 }
                 steering[i] = (idAFConstraint_Hinge) af.GetPhysics().GetConstraint(steeringHingeName);
                 if (NOT(steering[i])) {
-                    gameLocal.Error("idAFEntity_VehicleSixWheels '%s': can't find steering hinge '%s'", name, steeringHingeName);
+                    idGameLocal.Error("idAFEntity_VehicleSixWheels '%s': can't find steering hinge '%s'", name, steeringHingeName);
                 }
             }
 
@@ -2024,7 +1998,7 @@ public class AFEntity {
                     if (force == 0) {
                         velocity = wheels[i].GetLinearVelocity().oMultiply(wheels[i].GetWorldAxis().oGet(0));
                     }
-                    wheelAngles[i] += velocity * MS2SEC(gameLocal.msec) / wheelRadius;
+                    wheelAngles[i] += velocity * MS2SEC(idGameLocal.msec) / wheelRadius;
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(RAD2DEG(wheelAngles[i]));
                     axis = af.GetPhysics().GetAxis(0);
@@ -2051,7 +2025,7 @@ public class AFEntity {
                 LinkCombat();
             }
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -2061,12 +2035,12 @@ public class AFEntity {
     public static class idAFEntity_SteamPipe extends idAFEntity_Base {
         // CLASS_PROTOTYPE( idAFEntity_SteamPipe );
 
+        private idForce_Constant force;
         private int steamBody;
         private float steamForce;
-        private float steamUpForce;
-        private idForce_Constant force;
-        private renderEntity_s steamRenderEntity;
         private int/*qhandle_t*/ steamModelDefHandle;
+        private renderEntity_s steamRenderEntity;
+        private float steamUpForce;
         //
         //
 
@@ -2171,12 +2145,7 @@ public class AFEntity {
                 steamModelDefHandle = gameRenderWorld.AddEntityDef(steamRenderEntity);
             }
         }
-    };
-
-//
-    public static final String[] clawConstraintNames = {
-        "claw1", "claw2", "claw3", "claw4"
-    };
+    }
 
     /*
      ===============================================================================
@@ -2186,7 +2155,7 @@ public class AFEntity {
     public static class idAFEntity_ClawFourFingers extends idAFEntity_Base {
         // public:
         // CLASS_PROTOTYPE( idAFEntity_ClawFourFingers );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(idAFEntity_Base.getEventCallBacks());
@@ -2194,11 +2163,19 @@ public class AFEntity {
             eventCallbacks.put(EV_StopFingers, (eventCallback_t0<idAFEntity_ClawFourFingers>) idAFEntity_ClawFourFingers::Event_StopFingers);
         }
 
+        //
+        //
+        private final idAFConstraint_Hinge[] fingers = new idAFConstraint_Hinge[4];
+
         public idAFEntity_ClawFourFingers() {
             fingers[0] = null;
             fingers[1] = null;
             fingers[2] = null;
             fingers[3] = null;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -2218,7 +2195,7 @@ public class AFEntity {
             for (i = 0; i < 4; i++) {
                 fingers[i] = (idAFConstraint_Hinge) af.GetPhysics().GetConstraint(clawConstraintNames[i]);
                 if (NOT(fingers[i])) {
-                    gameLocal.Error("idClaw_FourFingers '%s': can't find claw constraint '%s'", name, clawConstraintNames[i]);
+                    idGameLocal.Error("idClaw_FourFingers '%s': can't find claw constraint '%s'", name, clawConstraintNames[i]);
                 }
             }
         }
@@ -2231,6 +2208,8 @@ public class AFEntity {
                 fingers[i].Save(savefile);
             }
         }
+        //
+        //
 
         @Override
         public void Restore(idRestoreGame savefile) {
@@ -2244,11 +2223,6 @@ public class AFEntity {
             SetCombatModel();
             LinkCombat();
         }
-        //
-        //
-        private final idAFConstraint_Hinge[] fingers = new idAFConstraint_Hinge[4];
-        //
-        //
 
         private void Event_SetFingerAngle(idEventArg<Float> angle) {
             int i;
@@ -2273,11 +2247,7 @@ public class AFEntity {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -2295,7 +2265,7 @@ public class AFEntity {
 
         renderEntity_s ent;
         idMD5Joint[] joints;
-    };
+    }
 
     static class GetJointTransform extends getJointTransform_t {
 
@@ -2328,21 +2298,5 @@ public class AFEntity {
             axis.oSet(frame[i].ToMat3());
             return true;
         }
-    };
-
-    /*
-     ================
-     GetArgString
-     ================
-     */
-    public static String GetArgString(final idDict args, final idDict defArgs, final String key) {
-        String s;
-
-        s = args.GetString(key);
-//	if ( !s[0] && defArgs ) {
-        if (s.isEmpty() && defArgs != null) {
-            s = defArgs.GetString(key);
-        }
-        return s;
     }
 }

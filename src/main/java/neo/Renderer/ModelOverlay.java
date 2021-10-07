@@ -1,23 +1,19 @@
 package neo.Renderer;
 
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_BoundTriSurf;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurfVertexCaches;
-import static neo.framework.Common.common;
 import neo.framework.DemoFile.idDemoFile;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec2;
+
+import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
@@ -35,35 +31,38 @@ public class ModelOverlay {
 
     static class overlayVertex_s {
 
-        int vertexNum;
         float[] st = new float[2];
-    };
+        int vertexNum;
+    }
 
     private static class overlaySurface_s {
 
-        int[] surfaceNum = {0};
-        int surfaceId;
-        int numIndexes;
         int/*glIndex_t*/[] indexes;
+        int numIndexes;
         int numVerts;
+        int surfaceId;
+        int[] surfaceNum = {0};
         overlayVertex_s[] verts;
 
         private void clear() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     static class overlayMaterial_s {
 
         idMaterial material;
         idList<overlaySurface_s> surfaces;
-    };
+    }
 
     static class idRenderModelOverlay {
 
+        //
+        private idList<overlayMaterial_s> materials;
+        // ~idRenderModelOverlay();
+
         public idRenderModelOverlay() {
         }
-        // ~idRenderModelOverlay();
 
         public static idRenderModelOverlay Alloc() {
             return new idRenderModelOverlay();
@@ -72,6 +71,17 @@ public class ModelOverlay {
         @Deprecated
         public static void Free(idRenderModelOverlay overlay) {
 //	delete overlay;
+        }
+
+        // Removes overlay surfaces from the model.
+        public static void RemoveOverlaySurfacesFromModel(idRenderModel baseModel) {
+            idRenderModelStatic staticModel;
+
+//	assert( dynamic_cast<idRenderModelStatic *>(baseModel) != NULL );
+            staticModel = (idRenderModelStatic) baseModel;
+
+            staticModel.DeleteSurfacesWithNegativeId();
+            staticModel.overlaysAdded = 0;
         }
 
         /*
@@ -334,19 +344,8 @@ public class ModelOverlay {
                 newTri.numIndexes = numIndexes;
                 R_BoundTriSurf(newTri);
 
-                staticModel.overlaysAdded++;	// so we don't create an overlay on an overlay surface
+                staticModel.overlaysAdded++;    // so we don't create an overlay on an overlay surface
             }
-        }
-
-        // Removes overlay surfaces from the model.
-        public static void RemoveOverlaySurfacesFromModel(idRenderModel baseModel) {
-            idRenderModelStatic staticModel;
-
-//	assert( dynamic_cast<idRenderModelStatic *>(baseModel) != NULL );
-            staticModel = (idRenderModelStatic) baseModel;
-
-            staticModel.DeleteSurfacesWithNegativeId();
-            staticModel.overlaysAdded = 0;
         }
 
         public void ReadFromDemoFile(idDemoFile f) {
@@ -356,8 +355,6 @@ public class ModelOverlay {
         public void WriteToDemoFile(idDemoFile f) {
             // FIXME: implement
         }
-//
-        private idList<overlayMaterial_s> materials;
 //
 
         private void FreeSurface(overlaySurface_s surface) {
@@ -371,5 +368,6 @@ public class ModelOverlay {
             }
             surface.clear();
         }
-    };
+    }
+
 }

@@ -1,74 +1,64 @@
 package neo.Game;
 
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_Hide;
-import static neo.Game.Entity.EV_PostSpawn;
-import static neo.Game.Entity.EV_Show;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
-import neo.Game.Entity.idEntity;
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.eventCallback_t3;
-import neo.Game.GameSys.Class.eventCallback_t4;
-import neo.Game.GameSys.Class.idClass;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.Entity.*;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.developer;
-import static neo.Game.GameSys.SysCvar.g_editEntityMode;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_ALPHA;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_MODE;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMESCALE;
-import neo.Renderer.RenderWorld.renderLight_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
-import static neo.framework.Common.EDITOR_LIGHT;
-import static neo.framework.Common.EDITOR_SOUND;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.PackColor;
-import static neo.idlib.Lib.UnpackColor;
-import static neo.idlib.Lib.colorBlack;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
-import static neo.idlib.math.Vector.getVec3_zero;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.Entity.*;
+import static neo.Game.GameSys.SysCvar.developer;
+import static neo.Game.GameSys.SysCvar.g_editEntityMode;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Renderer.Material.CONTENTS_SOLID;
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.etoi;
+import static neo.framework.Common.EDITOR_LIGHT;
+import static neo.framework.Common.EDITOR_SOUND;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Math_h.SEC2MS;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_zero;
+
 /**
  *
  */
 public class Light {
 
+    public static final idEventDef EV_Light_FadeIn = new idEventDef("fadeInLight", "f");
+    public static final idEventDef EV_Light_FadeOut = new idEventDef("fadeOutLight", "f");
+    public static final idEventDef EV_Light_GetLightParm = new idEventDef("getLightParm", "d", 'f');
+    public static final idEventDef EV_Light_Off = new idEventDef("Off", null);
+    public static final idEventDef EV_Light_On = new idEventDef("On", null);
+    public static final idEventDef EV_Light_SetLightParm = new idEventDef("setLightParm", "df");
+    public static final idEventDef EV_Light_SetLightParms = new idEventDef("setLightParms", "ffff");
+    public static final idEventDef EV_Light_SetRadius = new idEventDef("setRadius", "f");
+    public static final idEventDef EV_Light_SetRadiusXYZ = new idEventDef("setRadiusXYZ", "fff");
     /*
      ===============================================================================
 
@@ -77,20 +67,15 @@ public class Light {
      ===============================================================================
      */
     public static final idEventDef EV_Light_SetShader = new idEventDef("setShader", "s");
-    public static final idEventDef EV_Light_GetLightParm = new idEventDef("getLightParm", "d", 'f');
-    public static final idEventDef EV_Light_SetLightParm = new idEventDef("setLightParm", "df");
-    public static final idEventDef EV_Light_SetLightParms = new idEventDef("setLightParms", "ffff");
-    public static final idEventDef EV_Light_SetRadiusXYZ = new idEventDef("setRadiusXYZ", "fff");
-    public static final idEventDef EV_Light_SetRadius = new idEventDef("setRadius", "f");
-    public static final idEventDef EV_Light_On = new idEventDef("On", null);
-    public static final idEventDef EV_Light_Off = new idEventDef("Off", null);
-    public static final idEventDef EV_Light_FadeOut = new idEventDef("fadeOutLight", "f");
-    public static final idEventDef EV_Light_FadeIn = new idEventDef("fadeInLight", "f");
 
     public static class idLight extends idEntity {
+        // enum {
+        public static final int EVENT_BECOMEBROKEN = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_MAXEVENTS = EVENT_BECOMEBROKEN + 1;
         // public 	CLASS_PROTOTYPE( idLight );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
-        static{
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
+        static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Light_SetShader, (eventCallback_t1<idLight>) idLight::Event_SetShader);
             eventCallbacks.put(EV_Light_GetLightParm, (eventCallback_t1<idLight>) idLight::Event_GetLightParm);
@@ -108,26 +93,26 @@ public class Light {
             eventCallbacks.put(EV_Light_FadeIn, (eventCallback_t1<idLight>) idLight::Event_FadeIn);
         }
 
-
-        private renderLight_s renderLight;          // light presented to the renderer
-        private idVec3 localLightOrigin;            // light origin relative to the physics origin
-        private idMat3 localLightAxis;              // light axis relative to physics axis
-        private int/*qhandle_t*/ lightDefHandle;    // handle to renderer light def
-        private idStr brokenModel;
-        private int[] levels = {0};
-        private int currentLevel;
         private idVec3 baseColor;
         private boolean breakOnTrigger;//TODO:give all variables default init values like c++, opposite of lazy init?
+        private final idStr brokenModel;
         private int count;
-        private int triggercount;
-        private idEntity lightParent;
-        private idVec4 fadeFrom;
-        private idVec4 fadeTo;
-        private int fadeStart;
+        private int currentLevel;
         private int fadeEnd;
+        private final idVec4 fadeFrom;
+        private int fadeStart;
+        private idVec4 fadeTo;
+        private final int[] levels = {0};
+        private int/*qhandle_t*/ lightDefHandle;    // handle to renderer light def
+        private idEntity lightParent;
+        private idMat3 localLightAxis;              // light axis relative to physics axis
+        private idVec3 localLightOrigin;            // light origin relative to the physics origin
+        private final renderLight_s renderLight;          // light presented to the renderer
+        //
+        //
         private boolean soundWasPlaying;
-        //
-        //
+        // ~idLight();
+        private int triggercount;
 
         public idLight() {
 //	memset( &renderLight, 0, sizeof( renderLight ) );
@@ -149,12 +134,15 @@ public class Light {
             fadeEnd = 0;
             soundWasPlaying = false;
         }
-        // ~idLight();
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             boolean[] start_off = {false};
             boolean needBroken;
             String[] demonic_shader = {null};
@@ -167,13 +155,13 @@ public class Light {
             localLightAxis = renderLight.axis.oMultiply(GetPhysics().GetAxis().Transpose());
 
             // set the base color from the shader parms
-            baseColor.Set(renderLight.shaderParms[ SHADERPARM_RED], renderLight.shaderParms[ SHADERPARM_GREEN], renderLight.shaderParms[ SHADERPARM_BLUE]);
+            baseColor.Set(renderLight.shaderParms[SHADERPARM_RED], renderLight.shaderParms[SHADERPARM_GREEN], renderLight.shaderParms[SHADERPARM_BLUE]);
 
             // set the number of light levels
             spawnArgs.GetInt("levels", "1", levels);
             currentLevel = levels[0];
             if (levels[0] <= 0) {
-                gameLocal.Error("Invalid light level set on entity #%d(%s)", entityNumber, name);
+                Game_local.idGameLocal.Error("Invalid light level set on entity #%d(%s)", entityNumber, name);
             }
 
             // make sure the demonic shader is cached
@@ -187,7 +175,7 @@ public class Light {
             // can get the current intensity of the light
             renderEntity.referenceShader = renderLight.shader;
 
-            lightDefHandle = -1;		// no static version yet
+            lightDefHandle = -1;        // no static version yet
 
             // see if an optimized shadow volume exists
             // the renderer will ignore this value after a light has been moved,
@@ -218,9 +206,9 @@ public class Light {
 
             // if we have a health make light breakable
             if (health != 0) {
-                idStr model = new idStr(spawnArgs.GetString("model"));		// get the visual model
+                idStr model = new idStr(spawnArgs.GetString("model"));        // get the visual model
                 if (0 == model.Length()) {
-                    gameLocal.Error("Breakable light without a model set on entity #%d(%s)", entityNumber, name);
+                    Game_local.idGameLocal.Error("Breakable light without a model set on entity #%d(%s)", entityNumber, name);
                 }
 
                 fl.takedamage = true;
@@ -248,7 +236,7 @@ public class Light {
                 // make sure the model gets cached
                 if (NOT(renderModelManager.CheckModel(brokenModel))) {
                     if (needBroken) {
-                        gameLocal.Error("Model '%s' not found for entity %d(%s)", brokenModel, entityNumber, name);
+                        Game_local.idGameLocal.Error("Model '%s' not found for entity %d(%s)", brokenModel, entityNumber, name);
                     } else {
                         brokenModel.oSet("");
                     }
@@ -317,7 +305,7 @@ public class Light {
                 assert (false);
                 if (developer.GetBool()) {
                     // we really want to know if this happens
-                    gameLocal.Error("idLight::Restore: prelightModel '_prelight_%s' not found", name);
+                    Game_local.idGameLocal.Error("idLight::Restore: prelightModel '_prelight_%s' not found", name);
                 } else {
                     // but let it slide after release
                     gameLocal.Warning("idLight::Restore: prelightModel '_prelight_%s' not found", name);
@@ -451,24 +439,24 @@ public class Light {
         @Override
         public void SetColor(final idVec4 color) {
             baseColor = color.ToVec3();
-            renderLight.shaderParms[ SHADERPARM_ALPHA] = color.oGet(3);
-            renderEntity.shaderParms[ SHADERPARM_ALPHA] = color.oGet(3);
+            renderLight.shaderParms[SHADERPARM_ALPHA] = color.oGet(3);
+            renderEntity.shaderParms[SHADERPARM_ALPHA] = color.oGet(3);
             SetLightLevel();
         }
 
         @Override
         public void GetColor(idVec3 out) {
-            out.oSet(0, renderLight.shaderParms[ SHADERPARM_RED]);
-            out.oSet(1, renderLight.shaderParms[ SHADERPARM_GREEN]);
-            out.oSet(2, renderLight.shaderParms[ SHADERPARM_BLUE]);
+            out.oSet(0, renderLight.shaderParms[SHADERPARM_RED]);
+            out.oSet(1, renderLight.shaderParms[SHADERPARM_GREEN]);
+            out.oSet(2, renderLight.shaderParms[SHADERPARM_BLUE]);
         }
 
         @Override
         public void GetColor(idVec4 out) {
-            out.oSet(0, renderLight.shaderParms[ SHADERPARM_RED]);
-            out.oSet(1, renderLight.shaderParms[ SHADERPARM_GREEN]);
-            out.oSet(2, renderLight.shaderParms[ SHADERPARM_BLUE]);
-            out.oSet(3, renderLight.shaderParms[ SHADERPARM_ALPHA]);
+            out.oSet(0, renderLight.shaderParms[SHADERPARM_RED]);
+            out.oSet(1, renderLight.shaderParms[SHADERPARM_GREEN]);
+            out.oSet(2, renderLight.shaderParms[SHADERPARM_BLUE]);
+            out.oSet(3, renderLight.shaderParms[SHADERPARM_ALPHA]);
         }
 
         public idVec3 GetBaseColor() {
@@ -483,22 +471,22 @@ public class Light {
 
         public void SetLightParm(int parmnum, float value) {
             if ((parmnum < 0) || (parmnum >= MAX_ENTITY_SHADER_PARMS)) {
-                gameLocal.Error("shader parm index (%d) out of range", parmnum);
+                Game_local.idGameLocal.Error("shader parm index (%d) out of range", parmnum);
             }
 
-            renderLight.shaderParms[ parmnum] = value;
+            renderLight.shaderParms[parmnum] = value;
             PresentLightDefChange();
         }
 
         public void SetLightParms(float parm0, float parm1, float parm2, float parm3) {
-            renderLight.shaderParms[ SHADERPARM_RED] = parm0;
-            renderLight.shaderParms[ SHADERPARM_GREEN] = parm1;
-            renderLight.shaderParms[ SHADERPARM_BLUE] = parm2;
-            renderLight.shaderParms[ SHADERPARM_ALPHA] = parm3;
-            renderEntity.shaderParms[ SHADERPARM_RED] = parm0;
-            renderEntity.shaderParms[ SHADERPARM_GREEN] = parm1;
-            renderEntity.shaderParms[ SHADERPARM_BLUE] = parm2;
-            renderEntity.shaderParms[ SHADERPARM_ALPHA] = parm3;
+            renderLight.shaderParms[SHADERPARM_RED] = parm0;
+            renderLight.shaderParms[SHADERPARM_GREEN] = parm1;
+            renderLight.shaderParms[SHADERPARM_BLUE] = parm2;
+            renderLight.shaderParms[SHADERPARM_ALPHA] = parm3;
+            renderEntity.shaderParms[SHADERPARM_RED] = parm0;
+            renderEntity.shaderParms[SHADERPARM_GREEN] = parm1;
+            renderEntity.shaderParms[SHADERPARM_BLUE] = parm2;
+            renderEntity.shaderParms[SHADERPARM_ALPHA] = parm3;
             PresentLightDefChange();
             PresentModelDefChange();
         }
@@ -518,7 +506,7 @@ public class Light {
         public void On() {
             currentLevel = levels[0];
             // offset the start time of the shader to sync it to the game time
-            renderLight.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            renderLight.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
             if ((soundWasPlaying || refSound.waitfortrigger) && refSound.shader != null) {
                 StartSoundShader(refSound.shader, SND_CHANNEL_ANY, 0, false, null);
                 soundWasPlaying = false;
@@ -596,12 +584,12 @@ public class Light {
             ActivateTargets(activator);
 
             // offset the start time of the shader to sync it to the game time
-            renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
-            renderLight.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            renderLight.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
 
             // set the state parm
-            renderEntity.shaderParms[ SHADERPARM_MODE] = 1;
-            renderLight.shaderParms[ SHADERPARM_MODE] = 1;
+            renderEntity.shaderParms[SHADERPARM_MODE] = 1;
+            renderLight.shaderParms[SHADERPARM_MODE] = 1;
 
             // if the light has a sound, either start the alternate (broken) sound, or stop the sound
             String parm = spawnArgs.GetString("snd_broken");
@@ -636,15 +624,16 @@ public class Light {
 
             intensity = (float) currentLevel / (float) levels[0];
             color = baseColor.oMultiply(intensity);
-            renderLight.shaderParms[ SHADERPARM_RED] = color.oGet(0);
-            renderLight.shaderParms[ SHADERPARM_GREEN] = color.oGet(1);
-            renderLight.shaderParms[ SHADERPARM_BLUE] = color.oGet(2);
-            renderEntity.shaderParms[ SHADERPARM_RED] = color.oGet(0);
-            renderEntity.shaderParms[ SHADERPARM_GREEN] = color.oGet(1);
-            renderEntity.shaderParms[ SHADERPARM_BLUE] = color.oGet(2);
+            renderLight.shaderParms[SHADERPARM_RED] = color.oGet(0);
+            renderLight.shaderParms[SHADERPARM_GREEN] = color.oGet(1);
+            renderLight.shaderParms[SHADERPARM_BLUE] = color.oGet(2);
+            renderEntity.shaderParms[SHADERPARM_RED] = color.oGet(0);
+            renderEntity.shaderParms[SHADERPARM_GREEN] = color.oGet(1);
+            renderEntity.shaderParms[SHADERPARM_BLUE] = color.oGet(2);
             PresentLightDefChange();
             PresentModelDefChange();
         }
+        // };
 
         @Override
         public void ShowEditingDialog() {
@@ -654,10 +643,6 @@ public class Light {
                 common.InitTool(EDITOR_SOUND, spawnArgs);
             }
         }
-        // enum {
-        public static final int EVENT_BECOMEBROKEN = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_MAXEVENTS = EVENT_BECOMEBROKEN + 1;
-        // };
 
         @Override
         public void ClientPredictionThink() {
@@ -720,7 +705,7 @@ public class Light {
                 }
             }
             UnpackColor(msg.ReadLong(), baseColor);
-            // lightParentEntityNum = msg.ReadBits( GENTITYNUM_BITS );	
+            // lightParentEntityNum = msg.ReadBits( GENTITYNUM_BITS );
 
             /*	// only helps prediction
              UnpackColor( msg.ReadLong(), fadeFrom );
@@ -802,10 +787,10 @@ public class Light {
         private void Event_GetLightParm(idEventArg<Integer> _parmnum) {
             int parmnum = _parmnum.value;
             if ((parmnum < 0) || (parmnum >= MAX_ENTITY_SHADER_PARMS)) {
-                gameLocal.Error("shader parm index (%d) out of range", parmnum);
+                Game_local.idGameLocal.Error("shader parm index (%d) out of range", parmnum);
             }
 
-            idThread.ReturnFloat(renderLight.shaderParms[ parmnum]);
+            idThread.ReturnFloat(renderLight.shaderParms[parmnum]);
         }
 
         private void Event_SetLightParm(idEventArg<Integer> parmnum, idEventArg<Float> value) {
@@ -927,10 +912,6 @@ public class Light {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
         @Override
         protected void _deconstructor() {
             if (lightDefHandle != -1) {
@@ -939,5 +920,6 @@ public class Light {
 
             super._deconstructor();
         }
-    };
+    }
+
 }

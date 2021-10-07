@@ -1,25 +1,13 @@
 package neo.ui;
 
 import neo.Game.Animation.Anim.idMD5Anim;
-import static neo.Game.GameEdit.gameEdit;
-import static neo.Renderer.RenderSystem.renderSystem;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import neo.Renderer.RenderWorld.idRenderWorld;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
-import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.Common.common;
+import neo.Renderer.RenderWorld.*;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Vector.getVec3_origin;
-
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.ui.DeviceContext.idDeviceContext;
@@ -31,6 +19,13 @@ import neo.ui.Winvar.idWinStr;
 import neo.ui.Winvar.idWinVar;
 import neo.ui.Winvar.idWinVec4;
 
+import static neo.Game.GameEdit.gameEdit;
+import static neo.Renderer.RenderSystem.renderSystem;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Vector.getVec3_origin;
+
 /**
  *
  */
@@ -38,27 +33,27 @@ public class RenderWindow {
 
     public static final class idRenderWindow extends idWindow {
 
-        private renderView_s   refdef;
-        private idRenderWorld  world;
-        private renderEntity_s worldEntity;
-        private final renderLight_s rLight = new renderLight_s();
-        private idMD5Anim        modelAnim;
-        //
-        private int/*qhandle_t*/ worldModelDef;
-        private int/*qhandle_t*/ lightDef;
-        private int/*qhandle_t*/ modelDef;
-        private final idWinStr  modelName   = new idWinStr();
-        private final idWinStr  animName    = new idWinStr();
-        private final idStr     animClass   = new idStr();
+        private final idStr animClass = new idStr();
+        private final idWinStr animName = new idWinStr();
+        private final idWinVec4 lightColor = new idWinVec4();
         private final idWinVec4 lightOrigin = new idWinVec4();
-        private final idWinVec4 lightColor  = new idWinVec4();
+        private final idWinStr modelName = new idWinStr();
         private final idWinVec4 modelOrigin = new idWinVec4();
         private final idWinVec4 modelRotate = new idWinVec4();
-        private final idWinVec4 viewOffset  = new idWinVec4();
         private final idWinBool needsRender = new idWinBool();
-        private int     animLength;
-        private int     animEndTime;
+        private final renderLight_s rLight = new renderLight_s();
+        private final idWinVec4 viewOffset = new idWinVec4();
+        private int animEndTime;
+        private int animLength;
+        private int/*qhandle_t*/ lightDef;
+        private idMD5Anim modelAnim;
+        private int/*qhandle_t*/ modelDef;
+        private renderView_s refdef;
         private boolean updateAnimation;
+        private idRenderWorld world;
+        private renderEntity_s worldEntity;
+        //
+        private int/*qhandle_t*/ worldModelDef;
         //
         //
 
@@ -104,7 +99,7 @@ public class RenderWindow {
             refdef.width = (int) drawRect.w;
             refdef.height = (int) drawRect.h;
             refdef.fov_x = 90;
-            refdef.fov_y = (float) (2 * Math.atan((float) drawRect.h / drawRect.w) * idMath.M_RAD2DEG);
+            refdef.fov_y = (float) (2 * Math.atan(drawRect.h / drawRect.w) * idMath.M_RAD2DEG);
 
             refdef.time = time;
             world.RenderScene(refdef);
@@ -171,7 +166,8 @@ public class RenderWindow {
 
         /**
          * This function renders the 3D shit to the screen.
-         * @param time 
+         *
+         * @param time
          */
         private void Render(int time) {
             rLight.origin = lightOrigin.ToVec3();//TODO:ref?
@@ -244,5 +240,6 @@ public class RenderWindow {
             }
             updateAnimation = false;
         }
-    };
+    }
+
 }

@@ -1,26 +1,14 @@
 package neo.Game;
 
-import java.util.Scanner;
-import java.util.regex.Pattern;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.AI.AI.idAI;
 import neo.Game.Animation.Anim_Blend.idAnimator;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
 import neo.Game.Entity.idEntity;
 import neo.Game.Game.idGameEdit;
-
-import static neo.Game.GameSys.SysCvar.g_dragDamping;
-import static neo.Game.GameSys.SysCvar.g_dragShowSelection;
-import static neo.Game.GameSys.SysCvar.g_editEntityMode;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Game_local.idEntityPtr;
 import neo.Game.Light.idLight;
 import neo.Game.Misc.idFuncEmitter;
-import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
-import static neo.Game.Physics.Clip.JOINT_HANDLE_TO_CLIPMODEL_ID;
 import neo.Game.Physics.Force_Drag.idForce_Drag;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_AF.idPhysics_AF;
@@ -29,28 +17,13 @@ import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
 import neo.Game.Sound.idSound;
 import neo.Game.WorldSpawn.idWorldspawn;
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_RENDERMODEL;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.Model.INVALID_JOINT;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.TempDump.NOT;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
-import static neo.framework.UsercmdGen.BUTTON_ATTACK;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.colorYellow;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
@@ -58,13 +31,60 @@ import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
+import java.util.Scanner;
+import java.util.regex.Pattern;
+
+import static neo.Game.Entity.TH_THINK;
+import static neo.Game.Entity.TH_UPDATEVISUALS;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
+import static neo.Game.Physics.Clip.JOINT_HANDLE_TO_CLIPMODEL_ID;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.TempDump.NOT;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
+import static neo.framework.UsercmdGen.BUTTON_ATTACK;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Str.va;
+
 /**
  *
  */
 public class GameEdit {
 
+    /*
+     ===============================================================================
+
+     Allows entities to be dragged through the world with physics.
+
+     ===============================================================================
+     */
+    public static final float MAX_DRAG_TRACE_DISTANCE = 2048.0f;
     private static final idGameEdit gameEditLocal = new idGameEdit();
     public static final idGameEdit gameEdit = gameEditLocal;
+
+    private static int sscanf(idStr key, String pattern) {
+        int a = -1;
+        String result;
+
+        pattern = pattern.replaceAll("%d", "\\d+");
+
+        Scanner scanner = new Scanner(key.toString());
+
+        result = scanner.findInLine(Pattern.compile(pattern));
+        if (isNotNullOrEmpty(result)) {
+            scanner = new Scanner(result);
+            scanner.findInLine("bind");
+            a = scanner.nextInt();
+        }
+        scanner.close();
+
+        return a;
+    }
 
     /*
      ===============================================================================
@@ -75,11 +95,16 @@ public class GameEdit {
      */
     public static class idCursor3D extends idEntity {
 
-//    public 	CLASS_PROTOTYPE( idCursor3D );
+        //
+//
+        public idForce_Drag drag;
+        //~idCursor3D( void );
+        public idVec3 draggedPosition;
+
+        //    public 	CLASS_PROTOTYPE( idCursor3D );
         public idCursor3D() {
             draggedPosition.Zero();
         }
-        //~idCursor3D( void );
 
         @Override
         public void Spawn() {
@@ -106,30 +131,17 @@ public class GameEdit {
             }
             Present();
         }
-//        
-//        
-        public idForce_Drag drag;
-        public idVec3 draggedPosition;
-    };
-
-    /*
-     ===============================================================================
-
-     Allows entities to be dragged through the world with physics.
-
-     ===============================================================================
-     */
-    public static final float MAX_DRAG_TRACE_DISTANCE = 2048.0f;
+    }
 
     public static class idDragEntity {
 
+        private idStr bodyName;         // name of the body being dragged
+        private idCursor3D cursor;           // cursor entity
         private idEntityPtr<idEntity> dragEnt;          // entity being dragged
+        private int id;               // id of body being dragged
         private int/*jointHandle_t*/  joint;            // joint being dragged
-        private int                   id;               // id of body being dragged
-        private idVec3                localEntityPoint; // dragged point in entity space
-        private idVec3                localPlayerPoint; // dragged point in player space
-        private idStr                 bodyName;         // name of the body being dragged
-        private idCursor3D            cursor;           // cursor entity
+        private final idVec3 localEntityPoint; // dragged point in entity space
+        private final idVec3 localPlayerPoint; // dragged point in player space
         private idEntityPtr<idEntity> selected;         // last dragged entity
         //
         //
@@ -172,7 +184,7 @@ public class GameEdit {
                     gameLocal.clip.TracePoint(trace, viewPoint, viewPoint.oPlus(viewAxis.oGet(0).oMultiply(MAX_DRAG_TRACE_DISTANCE)), (CONTENTS_SOLID | CONTENTS_RENDERMODEL | CONTENTS_BODY), player);
                     if (trace[0].fraction < 1.0f) {
 
-                        newEnt = gameLocal.entities[ trace[0].c.entityNum];
+                        newEnt = gameLocal.entities[trace[0].c.entityNum];
                         if (newEnt != null) {
 
                             if (newEnt.GetBindMaster() != null) {
@@ -377,7 +389,7 @@ public class GameEdit {
             }
         }
 
-    };
+    }
 
     /*
      ===============================================================================
@@ -388,15 +400,15 @@ public class GameEdit {
      */
     public static class selectedTypeInfo_s {
 
-        Class/*idTypeInfo*/ typeInfo;
         idStr textKey;
-    };
+        Class/*idTypeInfo*/ typeInfo;
+    }
 
     public static class idEditEntities {
 
         private int nextSelectTime;
-        private idList<selectedTypeInfo_s> selectableEntityClasses;
-        private idList<idEntity> selectedEntities;
+        private final idList<selectedTypeInfo_s> selectableEntityClasses;
+        private final idList<idEntity> selectedEntities;
         //
         //
 
@@ -622,24 +634,5 @@ public class GameEdit {
         public boolean EntityIsSelectable(idEntity ent) {
             return EntityIsSelectable(ent, null);
         }
-    };
-
-    private static int sscanf(idStr key, String pattern) {
-        int a = -1;
-        String result;
-
-        pattern = pattern.replaceAll("%d", "\\d+");
-
-        Scanner scanner = new Scanner(key.toString());
-
-        result = scanner.findInLine(Pattern.compile(pattern));
-        if (isNotNullOrEmpty(result)) {
-            scanner = new Scanner(result);
-            scanner.findInLine("bind");
-            a = scanner.nextInt();
-        }
-        scanner.close();
-
-        return a;
     }
 }

@@ -69,6 +69,11 @@ public class Random {
      */
     static class idRandom2 {
 
+        public static final int MAX_RAND = 0x7fff;
+        private static final long IEEE_MASK = 0x007fffff;
+        private static final long IEEE_ONE = 0x3f800000;
+        private long seed;
+
         public idRandom2() {
             this.seed = 0;
         }
@@ -110,10 +115,5 @@ public class Random {
             i = idRandom2.IEEE_ONE | (seed & idRandom2.IEEE_MASK);
             return (2.0f * i - 3.0f);
         }
-
-        public static final  int  MAX_RAND  = 0x7fff;
-        private              long seed;
-        private static final long IEEE_ONE  = 0x3f800000;
-        private static final long IEEE_MASK = 0x007fffff;
     }
 }

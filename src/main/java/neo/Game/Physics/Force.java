@@ -23,19 +23,12 @@ public class Force {
     public static class idForce extends idClass {
         // CLASS_PROTOTYPE( idForce );
 
-        private static idList<idForce> forceList = new idList<>();
+        private static final idList<idForce> forceList = new idList<>();
         //
         //
 
         public idForce() {
             forceList.Append(this);
-        }
-
-        // virtual				~idForce( void );
-        protected void _deconstructor() {
-            forceList.Remove(this);
-
-            super._deconstructor();
         }
 
         public static void DeletePhysics(final idPhysics phys) {
@@ -48,6 +41,13 @@ public class Force {
 
         public static void ClearForceList() {
             forceList.Clear();
+        }
+
+        // virtual				~idForce( void );
+        protected void _deconstructor() {
+            forceList.Remove(this);
+
+            super._deconstructor();
         }
 
         // common force interface
@@ -78,5 +78,6 @@ public class Force {
         public void oSet(idClass oGet) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
+
 }

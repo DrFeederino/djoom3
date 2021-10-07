@@ -1,9 +1,6 @@
 package neo.Game;
 
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
-import neo.Game.Entity.idEntity;
+import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t0;
@@ -12,34 +9,46 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.sound.idSoundEmitter;
-import static neo.TempDump.etoi;
-import static neo.framework.Common.EDITOR_SOUND;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
 import neo.idlib.Dict_h.idDict;
-import static neo.idlib.Lib.BIT;
-import static neo.idlib.math.Angles.getAng_zero;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Vector.getVec3_zero;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static neo.Game.Entity.*;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.TempDump.etoi;
+import static neo.framework.Common.EDITOR_SOUND;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.math.Angles.getAng_zero;
+import static neo.idlib.math.Vector.getVec3_zero;
 
 /**
  *
  */
 public class Sound {
 
-    public static final idEventDef EV_Speaker_On    = new idEventDef("On", null);
-    public static final idEventDef EV_Speaker_Off   = new idEventDef("Off", null);
+    public static final idEventDef EV_Speaker_Off = new idEventDef("Off", null);
+    public static final idEventDef EV_Speaker_On = new idEventDef("On", null);
     public static final idEventDef EV_Speaker_Timer = new idEventDef("<timer>", null);
-
+    public static final int SSF_ANTI_PRIVATE_SOUND = BIT(1);    // plays for everyone but the current listenerId
+    public static final int SSF_GLOBAL = BIT(3);    // play full volume to all speakers and all listeners
+    public static final int SSF_LOOPING = BIT(5);    // repeat the sound continuously
+    public static final int SSF_NO_DUPS = BIT(9);    // try not to play the same sound twice in a row
+    public static final int SSF_NO_FLICKER = BIT(8);    // always return 1.0 for volume queries
+    public static final int SSF_NO_OCCLUSION = BIT(2);    // don't flow through portals, only use straight line
+    public static final int SSF_OMNIDIRECTIONAL = BIT(4);    // fall off with distance, but play same volume in all speakers
+    public static final int SSF_PLAY_ONCE = BIT(6);    // never restart if already playing on any channel of a given emitter
+    // sound shader flags
+    public static final int SSF_PRIVATE_SOUND = BIT(0);    // only plays for the current listenerId
+    public static final int SSF_UNCLAMPED = BIT(7);    // don't clamp calculated volumes at 1.0
     /*
      ===============================================================================
 
@@ -51,37 +60,22 @@ public class Sound {
     // we have far too many of them to change at this time.
     static final float DOOM_TO_METERS = 0.0254f;                    // doom to meters
     static final float METERS_TO_DOOM = (1.0f / DOOM_TO_METERS);    // meters to doom
+    // sound classes are used to fade most sounds down inside cinematics, leaving dialog
+    // flagged with a non-zero class full volume
+    static final int SOUND_MAX_CLASSES = 4;
 
-    // sound shader flags
-    public static final int SSF_PRIVATE_SOUND      = BIT(0);    // only plays for the current listenerId
-    public static final int SSF_ANTI_PRIVATE_SOUND = BIT(1);    // plays for everyone but the current listenerId
-    public static final int SSF_NO_OCCLUSION       = BIT(2);    // don't flow through portals, only use straight line
-    public static final int SSF_GLOBAL             = BIT(3);    // play full volume to all speakers and all listeners
-    public static final int SSF_OMNIDIRECTIONAL    = BIT(4);    // fall off with distance, but play same volume in all speakers
-    public static final int SSF_LOOPING            = BIT(5);    // repeat the sound continuously
-    public static final int SSF_PLAY_ONCE          = BIT(6);    // never restart if already playing on any channel of a given emitter
-    public static final int SSF_UNCLAMPED          = BIT(7);    // don't clamp calculated volumes at 1.0
-    public static final int SSF_NO_FLICKER         = BIT(8);    // always return 1.0 for volume queries
-    public static final int SSF_NO_DUPS            = BIT(9);    // try not to play the same sound twice in a row
+    static final int SOUND_MAX_LIST_WAVS = 32;
 
     // these options can be overriden from sound shader defaults on a per-emitter and per-channel basis
     static class soundShaderParms_t {
 
-        float minDistance;
         float maxDistance;
-        float volume;                  // in dB, unfortunately.  Negative values get quieter
+        float minDistance;
         float shakes;
-        int   soundShaderFlags;        // SSF_* bit flags
-        int   soundClass;              // for global fading of sounds
+        int soundClass;              // for global fading of sounds
+        int soundShaderFlags;        // SSF_* bit flags
+        float volume;                  // in dB, unfortunately.  Negative values get quieter
     }
-
-    ;
-
-    static final int SOUND_MAX_LIST_WAVS = 32;
-
-    // sound classes are used to fade most sounds down inside cinematics, leaving dialog
-    // flagged with a non-zero class full volume
-    static final int SOUND_MAX_CLASSES = 4;
 
     /*
      ===============================================================================
@@ -91,7 +85,8 @@ public class Sound {
      ===============================================================================
      */
     public static class idSound extends idEntity {
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idSound>) idSound::Event_Trigger);
@@ -101,18 +96,18 @@ public class Sound {
         }
 
 
-        private float    lastSoundVol;
-        private float    soundVol;
-        private float    random;
-        private float    wait;
-        private boolean  timerOn;
-        private idVec3   shakeTranslate;
-        private idAngles shakeRotate;
-        private int      playingUntilTime;
+        private float lastSoundVol;
+        private int playingUntilTime;
+        private float random;
+        private final idAngles shakeRotate;
+        private final idVec3 shakeTranslate;
+        private float soundVol;
+        private boolean timerOn;
+        private float wait;
         //
         //
 
-//	CLASS_PROTOTYPE( idSound );
+        //	CLASS_PROTOTYPE( idSound );
         public idSound() {
             lastSoundVol = 0.0f;
             soundVol = 0.0f;
@@ -122,6 +117,10 @@ public class Sound {
             wait = 0.0f;
             timerOn = false;
             playingUntilTime = 0;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -193,7 +192,7 @@ public class Sound {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             spawnArgs.GetVector("move", "0 0 0", shakeTranslate);
             spawnArgs.GetAngles("rotate", "0 0 0", shakeRotate);
             random = spawnArgs.GetFloat("random", "0");
@@ -219,7 +218,7 @@ public class Sound {
             }
         }
 
-//        public void ToggleOnOff(idEntity other, idEntity activator);
+        //        public void ToggleOnOff(idEntity other, idEntity activator);
         @Override
         public void Think() {
 //	idAngles	ang;
@@ -253,7 +252,6 @@ public class Sound {
             common.InitTool(EDITOR_SOUND, spawnArgs);
         }
 
-
         /*
          ================
          idSound::Event_Trigger
@@ -273,17 +271,9 @@ public class Sound {
                 }
             } else {
                 if (gameLocal.isMultiplayer) {
-                    if (refSound.referenceSound != null && (gameLocal.time < playingUntilTime)) {
-                        DoSound(false);
-                    } else {
-                        DoSound(true);
-                    }
+                    DoSound(refSound.referenceSound == null || (gameLocal.time >= playingUntilTime));
                 } else {
-                    if (refSound.referenceSound != null && refSound.referenceSound.CurrentlyPlaying()) {
-                        DoSound(false);
-                    } else {
-                        DoSound(true);
-                    }
+                    DoSound(refSound.referenceSound == null || !refSound.referenceSound.CurrentlyPlaying());
                 }
             }
         }
@@ -335,9 +325,6 @@ public class Sound {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

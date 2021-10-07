@@ -2,12 +2,25 @@ package neo.idlib.math;
 
 /**
  * ===============================================================================
- *
+ * <p>
  * Math
- *
+ * <p>
  * ===============================================================================
  */
 public class Math_h {
+
+    private static final int IEEE_DBLE_EXPONENT_BIAS = 0;
+    private static final int IEEE_DBLE_EXPONENT_BITS = 15;
+    private static final int IEEE_DBLE_MANTISSA_BITS = 63;
+    private static final int IEEE_DBLE_SIGN_BIT = 79;
+    private static final int IEEE_DBL_EXPONENT_BIAS = 1023;
+    private static final int IEEE_DBL_EXPONENT_BITS = 11;
+    private static final int IEEE_DBL_MANTISSA_BITS = 52;
+    private static final int IEEE_DBL_SIGN_BIT = 63;
+    private static final int IEEE_FLT_EXPONENT_BIAS = 127;
+    private static final int IEEE_FLT_EXPONENT_BITS = 8;
+    private static final int IEEE_FLT_MANTISSA_BITS = 23;
+    private static final int IEEE_FLT_SIGN_BIT = 31;
 
     public static float DEG2RAD(float a) {
         return (a) * idMath.M_DEG2RAD;
@@ -43,8 +56,8 @@ public class Math_h {
 
     public static int FLOATSIGNBITSET(float f) {
         return (/**
-                 * (const unsigned long *)&
-                 */
+         * (const unsigned long *)&
+         */
                 (Float.floatToIntBits(f) & 0x80000000) == 0) ? 0 : 1;
     }
 
@@ -79,19 +92,6 @@ public class Math_h {
     public static boolean FLOAT_IS_DENORMAL(float x) {
         return ((Float.floatToIntBits(x) & 0x7f800000) == 0x00000000) && ((Float.floatToIntBits(x) & 0x007fffff) != 0x00000000);
     }
-
-    private static final int IEEE_FLT_MANTISSA_BITS  = 23;
-    private static final int IEEE_FLT_EXPONENT_BITS  = 8;
-    private static final int IEEE_FLT_EXPONENT_BIAS  = 127;
-    private static final int IEEE_FLT_SIGN_BIT       = 31;
-    private static final int IEEE_DBL_MANTISSA_BITS  = 52;
-    private static final int IEEE_DBL_EXPONENT_BITS  = 11;
-    private static final int IEEE_DBL_EXPONENT_BIAS  = 1023;
-    private static final int IEEE_DBL_SIGN_BIT       = 63;
-    private static final int IEEE_DBLE_MANTISSA_BITS = 63;
-    private static final int IEEE_DBLE_EXPONENT_BITS = 15;
-    private static final int IEEE_DBLE_EXPONENT_BIAS = 0;
-    private static final int IEEE_DBLE_SIGN_BIT      = 79;
 
     public static int MaxIndex(float x, float y) {
         return (x > y) ? 0 : 1;
@@ -130,6 +130,33 @@ public class Math_h {
     }
 
     public static class idMath {
+
+        public static final int EXP_BIAS = 127;
+        public static final int EXP_POS = 23;
+        public static final float FLT_EPSILON = 1.192092896e-07f;// smallest positive number such that 1.0+FLT_EPSILON != 1.0
+        public static final float INFINITY = 1e30f;// huge number which should be larger than any valid number used
+        //	enum {
+        public static final int LOOKUP_BITS = 8;
+        public static final int LOOKUP_POS = (EXP_POS - LOOKUP_BITS);
+        public static final float M_MS2SEC = 0.001f;// milliseconds to seconds multiplier
+        public static final float PI = 3.14159265358979323846f;// pi
+//TODO:radians?
+        public static final float M_DEG2RAD = PI / 180.0f;// degrees to radians multiplier
+        public static final float M_RAD2DEG = 180.0f / PI;// radians to degrees multiplier
+        public static final int SEED_POS = (EXP_POS - 8);
+        public static final float SQRT_1OVER2 = 0.70710678118654752440f;// sqrt( 1 / 2 )
+        public static final int SQRT_TABLE_SIZE = (2 << LOOKUP_BITS);
+        public static final int LOOKUP_MASK = (SQRT_TABLE_SIZE - 1);
+        private static final long[] iSqrt = new long[SQRT_TABLE_SIZE];
+        public static final float TWO_PI = 2.0f * PI;// pi * 2
+        static final float E = 2.71828182845904523536f;// e
+        static final float HALF_PI = 0.5f * PI;// pi / 2
+        static final float M_SEC2MS = 1000.0f;// seconds to milliseconds multiplier
+        static final float ONEFOURTH_PI = 0.25f * PI;// pi / 4
+        static final float SQRT_1OVER3 = 0.57735026918962576450f;// sqrt( 1 / 3 )
+        static final float SQRT_THREE = 1.73205080756887729352f;// sqrt( 3 )
+        static final float SQRT_TWO = 1.41421356237309504880f;// sqrt( 2 )
+        private static boolean initialized;
 
         public static void Init() {
             _flint fi, fo;
@@ -218,11 +245,10 @@ public class Math_h {
         static double Sqrt64(float x) {// square root with 64 bits precision
             return x * InvSqrt64(x);
         }
-//TODO:radians?
 
         public static float Sin(float a) {
             return (float) Math.sin(a);
-        }			// sine with 32 bits precision
+        }            // sine with 32 bits precision
 
         public static float Sin16(float a) {// sine with 16 bits precision, maximum absolute error is 2.3082e-09
             float s;
@@ -250,16 +276,16 @@ public class Math_h {
 //	}
 //#endif
             s = a * a;
-            return (float) (a * (((((-2.39e-08f * s + 2.7526e-06f) * s - 1.98409e-04f) * s + 8.3333315e-03f) * s - 1.666666664e-01f) * s + 1.0f));
+            return a * (((((-2.39e-08f * s + 2.7526e-06f) * s - 1.98409e-04f) * s + 8.3333315e-03f) * s - 1.666666664e-01f) * s + 1.0f);
         }
 
         static double Sin64(float a) {
             return Math.sin(a);
-        }			// sine with 64 bits precision
+        }            // sine with 64 bits precision
 
         public static float Cos(float a) {
             return (float) Math.cos(a);
-        }			// cosine with 32 bits precision
+        }            // cosine with 32 bits precision
 
         public static float Cos16(float a) {// cosine with 16 bits precision, maximum absolute error is 2.3082e-09
             float s, d;
@@ -295,12 +321,12 @@ public class Math_h {
 //	}
 //#endif
             s = a * a;
-            return (float) (d * (((((-2.605e-07f * s + 2.47609e-05f) * s - 1.3888397e-03f) * s + 4.16666418e-02f) * s - 4.999999963e-01f) * s + 1.0f));
+            return d * (((((-2.605e-07f * s + 2.47609e-05f) * s - 1.3888397e-03f) * s + 4.16666418e-02f) * s - 4.999999963e-01f) * s + 1.0f);
         }
 
         static double Cos64(float a) {
             return Math.cos(a);
-        }		// cosine with 64 bits precision
+        }        // cosine with 64 bits precision
 
         public static void SinCos(float a, float[] s, float[] c) {// sine and cosine with 32 bits precision
 //#ifdef _WIN32//i wish.
@@ -570,7 +596,7 @@ public class Math_h {
             int i, s, e, m, exponent;
             float x, x2, y, p, q;
 
-            x = f * 1.44269504088896340f;		// multiply with ( 1 / log( 2 ) )
+            x = f * 1.44269504088896340f;        // multiply with ( 1 / log( 2 ) )
 //#if 1
 //	i = *reinterpret_cast<int *>(&x);
             i = Float.floatToIntBits(x);
@@ -590,7 +616,7 @@ public class Math_h {
             x -= (float) i;
             if (x >= 0.5f) {
                 x -= 0.5f;
-                y *= 1.4142135623730950488f;	// multiply with sqrt( 2 )
+                y *= 1.4142135623730950488f;    // multiply with sqrt( 2 )
             }
             x2 = x * x;
             p = x * (7.2152891511493f + x2 * 0.0576900723731f);
@@ -614,10 +640,10 @@ public class Math_h {
 //	i = *reinterpret_cast<int *>(&f);
             i = Float.floatToIntBits(f);
             exponent = ((i >> IEEE_FLT_MANTISSA_BITS) & ((1 << IEEE_FLT_EXPONENT_BITS) - 1)) - IEEE_FLT_EXPONENT_BIAS;
-            i -= (exponent + 1) << IEEE_FLT_MANTISSA_BITS;	// get value in the range [.5, 1>
+            i -= (exponent + 1) << IEEE_FLT_MANTISSA_BITS;    // get value in the range [.5, 1>
 //	y = *reinterpret_cast<float *>(&i);
             y = Float.intBitsToFloat(i);
-            y *= 1.4142135623730950488f;						// multiply with sqrt( 2 )
+            y *= 1.4142135623730950488f;                        // multiply with sqrt( 2 )
             y = (y - 1.0f) / (y + 1.0f);
             y2 = y * y;
             y = y * (2.000000000046727f + y2 * (0.666666635059382f + y2 * (0.4000059794795f + y2 * (0.28525381498f + y2 * 0.2376245609f))));
@@ -889,9 +915,10 @@ public class Math_h {
             value |= mantissa >> (IEEE_FLT_MANTISSA_BITS - mantissaBits);
             return value;
         }
+        //	};
 
         public static float BitsToFloat(int i, int exponentBits, int mantissaBits) {
-            int exponentSign[] = {1, -1};
+            int[] exponentSign = {1, -1};
             int sign, exponent, mantissa, value;
 
             assert (exponentBits >= 2 && exponentBits <= 8);
@@ -918,35 +945,10 @@ public class Math_h {
             return hash;
         }
 
-        public static final float PI           = 3.14159265358979323846f;// pi
-        public static final float TWO_PI       = 2.0f * PI;// pi * 2
-        static final        float HALF_PI      = 0.5f * PI;// pi / 2
-        static final        float ONEFOURTH_PI = 0.25f * PI;// pi / 4
-        static final        float E            = 2.71828182845904523536f;// e
-        static final        float SQRT_TWO     = 1.41421356237309504880f;// sqrt( 2 )
-        static final        float SQRT_THREE   = 1.73205080756887729352f;// sqrt( 3 )
-        public static final float SQRT_1OVER2  = 0.70710678118654752440f;// sqrt( 1 / 2 )
-        static final        float SQRT_1OVER3  = 0.57735026918962576450f;// sqrt( 1 / 3 )
-        public static final float M_DEG2RAD    = PI / 180.0f;// degrees to radians multiplier
-        public static final float M_RAD2DEG    = 180.0f / PI;// radians to degrees multiplier
-        static final        float M_SEC2MS     = 1000.0f;// seconds to milliseconds multiplier
-        public static final float M_MS2SEC     = 0.001f;// milliseconds to seconds multiplier
-        public static final float INFINITY     = 1e30f;// huge number which should be larger than any valid number used
-        public static final float FLT_EPSILON  = 1.192092896e-07f;// smallest positive number such that 1.0+FLT_EPSILON != 1.0
-        //	enum {
-        public static final int LOOKUP_BITS     = 8;
-        public static final int EXP_POS         = 23;
-        public static final int EXP_BIAS        = 127;
-        public static final int LOOKUP_POS      = (EXP_POS - LOOKUP_BITS);
-        public static final int SEED_POS        = (EXP_POS - 8);
-        public static final int SQRT_TABLE_SIZE = (2 << LOOKUP_BITS);
-        public static final int LOOKUP_MASK     = (SQRT_TABLE_SIZE - 1);
-        //	};
-
         static class _flint {
 
-            private int   i;
             private float f;
+            private int i;
 
             public _flint(int i) {
                 setI(i);
@@ -973,8 +975,6 @@ public class Math_h {
                 this.f = f;
                 this.i = Float.floatToIntBits(f);
             }
-        };
-        private static long iSqrt[] = new long[SQRT_TABLE_SIZE];
-        private static boolean initialized;
+        }
     }
 }

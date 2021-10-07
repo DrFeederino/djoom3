@@ -13,11 +13,7 @@ import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import neo.Renderer.RenderSystem.fontInfoEx_t;
-import neo.Renderer.RenderSystem.fontInfo_t;
-import neo.Renderer.RenderSystem.glconfig_s;
-import neo.Renderer.RenderSystem.glyphInfo_t;
-import neo.Renderer.RenderSystem.idRenderSystem;
+import neo.Renderer.RenderSystem.*;
 import neo.Renderer.RenderWorld.idRenderWorld;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderLight_s;
@@ -43,9 +39,7 @@ import org.lwjgl.BufferUtils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -58,64 +52,20 @@ import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
 import static neo.Renderer.Material.textureRepeat_t.TR_REPEAT;
 import static neo.Renderer.MegaTexture.RoundDownToPowerOfTwo;
 import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderSystem.BIGCHAR_HEIGHT;
-import static neo.Renderer.RenderSystem.BIGCHAR_WIDTH;
-import static neo.Renderer.RenderSystem.GLYPHS_PER_FONT;
-import static neo.Renderer.RenderSystem.GLYPH_END;
-import static neo.Renderer.RenderSystem.GLYPH_START;
-import static neo.Renderer.RenderSystem.R_CheckCvars;
-import static neo.Renderer.RenderSystem.R_GetCommandBuffer;
-import static neo.Renderer.RenderSystem.R_IssueRenderCommands;
-import static neo.Renderer.RenderSystem.R_PerformanceCounters;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem.SMALLCHAR_HEIGHT;
-import static neo.Renderer.RenderSystem.SMALLCHAR_WIDTH;
-import static neo.Renderer.RenderSystem_init.GL_CheckErrors;
-import static neo.Renderer.RenderSystem_init.R_InitCommands;
-import static neo.Renderer.RenderSystem_init.R_InitCvars;
-import static neo.Renderer.RenderSystem_init.R_InitMaterials;
-import static neo.Renderer.RenderSystem_init.R_InitOpenGL;
-import static neo.Renderer.RenderSystem_init.R_ReadTiledPixels;
-import static neo.Renderer.RenderSystem_init.R_SetColorMappings;
-import static neo.Renderer.RenderSystem_init.r_frontBuffer;
-import static neo.Renderer.RenderSystem_init.r_renderer;
-import static neo.Renderer.RenderSystem_init.r_screenFraction;
-import static neo.Renderer.RenderSystem_init.r_showDemo;
+import static neo.Renderer.RenderSystem.*;
+import static neo.Renderer.RenderSystem_init.*;
 import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.qgl.qglGetError;
-import static neo.Renderer.qgl.qglReadBuffer;
-import static neo.Renderer.qgl.qglReadPixels;
+import static neo.Renderer.qgl.*;
 import static neo.Renderer.tr_backend.RB_ShowImages;
-import static neo.Renderer.tr_font.BUILD_FREETYPE;
-import static neo.Renderer.tr_font.R_DoneFreeType;
-import static neo.Renderer.tr_font.fdFile;
-import static neo.Renderer.tr_font.fdOffset;
-import static neo.Renderer.tr_font.readFloat;
-import static neo.Renderer.tr_font.readInt;
-import static neo.Renderer.tr_local.backEndName_t.BE_ARB;
-import static neo.Renderer.tr_local.backEndName_t.BE_ARB2;
-import static neo.Renderer.tr_local.backEndName_t.BE_BAD;
-import static neo.Renderer.tr_local.backEndName_t.BE_NV10;
-import static neo.Renderer.tr_local.backEndName_t.BE_NV20;
-import static neo.Renderer.tr_local.backEndName_t.BE_R200;
-import static neo.Renderer.tr_local.demoCommand_t.DC_CAPTURE_RENDER;
-import static neo.Renderer.tr_local.demoCommand_t.DC_CROP_RENDER;
-import static neo.Renderer.tr_local.demoCommand_t.DC_END_FRAME;
-import static neo.Renderer.tr_local.demoCommand_t.DC_GUI_MODEL;
-import static neo.Renderer.tr_local.demoCommand_t.DC_UNCROP_RENDER;
-import static neo.Renderer.tr_local.renderCommand_t.RC_COPY_RENDER;
-import static neo.Renderer.tr_local.renderCommand_t.RC_SET_BUFFER;
-import static neo.Renderer.tr_local.renderCommand_t.RC_SWAP_BUFFERS;
-import static neo.Renderer.tr_main.R_GlobalToNormalizedDeviceCoordinates;
-import static neo.Renderer.tr_main.R_ShutdownFrameData;
-import static neo.Renderer.tr_main.R_ToggleSmpFrame;
+import static neo.Renderer.tr_font.*;
+import static neo.Renderer.tr_local.backEndName_t.*;
+import static neo.Renderer.tr_local.demoCommand_t.*;
+import static neo.Renderer.tr_local.renderCommand_t.*;
+import static neo.Renderer.tr_main.*;
 import static neo.Renderer.tr_rendertools.RB_ShutdownDebugTools;
 import static neo.Renderer.tr_trisurf.R_InitTriSurfData;
 import static neo.Renderer.tr_trisurf.R_ShutdownTriSurfData;
-import static neo.TempDump.btoi;
-import static neo.TempDump.ctos;
-import static neo.TempDump.fprintf;
+import static neo.TempDump.*;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DemoFile.demoSystem_t.DS_RENDER;
@@ -126,11 +76,7 @@ import static neo.idlib.Lib.colorWhite;
 import static neo.idlib.Text.Str.C_COLOR_DEFAULT;
 import static neo.idlib.math.Vector.getVec3_zero;
 import static neo.sys.win_glimp.GLimp_Shutdown;
-import static org.lwjgl.opengl.GL11.GL_BACK;
-import static org.lwjgl.opengl.GL11.GL_FRONT;
-import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
-import static org.lwjgl.opengl.GL11.GL_RGB;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
@@ -140,25 +86,267 @@ public class tr_local {
     // to be double buffered to allow it to run in
     // parallel on a dual cpu machine
 
-    final static int SMP_FRAMES = 1;
+    public static final int GLS_ALPHAMASK = 0x00001000;
+    public static final int GLS_ATEST_BITS = 0x70000000;
     //
-    final static int FALLOFF_TEXTURE_SIZE = 64;
+    public static final int GLS_ATEST_EQ_255 = 0x10000000;
+    public static final int GLS_ATEST_GE_128 = 0x40000000;
+    public static final int GLS_ATEST_LT_128 = 0x20000000;
+    // picky to get the bilerp correct at terminator
+    public static final int GLS_BLUEMASK = 0x00000800;
+
+    //
+    public static final int GLS_DEPTHFUNC_ALWAYS = 0x00010000;
+
+    //
+    public static final int GLS_DEFAULT = GLS_DEPTHFUNC_ALWAYS;
+    public static final int GLS_DEPTHFUNC_EQUAL = 0x00020000;
+
+    public static final int GLS_DEPTHFUNC_LESS = 0x0;
+
+    //
+    //
+    // these masks are the inverse, meaning when set the glColorMask value will be 0,
+    // preventing that channel from being written
+    public static final int GLS_DEPTHMASK = 0x00000100;
+
+    public static final int GLS_DSTBLEND_BITS = 0x000000f0;
+
+    public static final int GLS_DSTBLEND_DST_ALPHA = 0x00000070;
+
+    public static final int GLS_DSTBLEND_ONE = 0x00000020;
+
+    public static final int GLS_DSTBLEND_ONE_MINUS_DST_ALPHA = 0x00000080;
+
+    public static final int GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA = 0x00000060;
+
+    public static final int GLS_DSTBLEND_ONE_MINUS_SRC_COLOR = 0x00000040;
+
+    public static final int GLS_DSTBLEND_SRC_ALPHA = 0x00000050;
+    public static final int GLS_DSTBLEND_SRC_COLOR = 0x00000030;
+    //
+    public static final int GLS_DSTBLEND_ZERO = 0x0;
+
+    public static final int GLS_GREENMASK = 0x00000400;
+
+    //
+    public static final int GLS_POLYMODE_LINE = 0x00002000;
+
+    public static final int GLS_REDMASK = 0x00000200;
+
+    public static final int GLS_COLORMASK = (GLS_REDMASK | GLS_GREENMASK | GLS_BLUEMASK);
+
+    public static final int GLS_SRCBLEND_ALPHA_SATURATE = 0x00000009;
+
+    public static final int GLS_SRCBLEND_BITS = 0x0000000f;
+    public static final int GLS_SRCBLEND_DST_ALPHA = 0x00000007;
+
+    public static final int GLS_SRCBLEND_DST_COLOR = 0x00000003;
+
+    public static final int GLS_SRCBLEND_ONE = 0x0;
+//=======================================================================
+    public static final int GLS_SRCBLEND_ONE_MINUS_DST_ALPHA = 0x00000008;
+
+    public static final int GLS_SRCBLEND_ONE_MINUS_DST_COLOR = 0x00000004;
+
+    public static final int GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA = 0x00000006;
+    public static final int GLS_SRCBLEND_SRC_ALPHA = 0x00000005;
+
+    /*
+     ====================================================================
+
+     GL wrapper/helper functions
+
+     ====================================================================
+     */
+    public static final int GLS_SRCBLEND_ZERO = 0x00000001;
+
+    /*
+     ============================================================
+
+     TRISURF
+
+     ============================================================
+     */
+    public static final boolean USE_TRI_DATA_ALLOCATOR = true;
+
     //
     final static float DEFAULT_FOG_DISTANCE = 500.0f;
+    /*
+     ==============================================================================
+
+     SURFACES
+
+     ==============================================================================
+     */
+//
+//
+//
+// drawSurf_t structures command the back end to render surfaces
+// a given srfTriangles_t may be used with multiple viewEntity_t,
+// as when viewed in a subview or multiple viewport render, or
+// with multiple shaders when skinned, or, possibly with multiple
+// lights, although currently each lighting interaction creates
+// unique srfTriangles_t
+// drawSurf_t are always allocated and freed every frame, they are never cached
+    static final int DSF_VIEW_INSIDE_SHADOW = 1;
+
+    //
+    final static int FALLOFF_TEXTURE_SIZE = 64;
+
     //
     final static int FOG_ENTER_SIZE = 64;
     final static float FOG_ENTER = (FOG_ENTER_SIZE + 1.0f) / (FOG_ENTER_SIZE * 2);
-    // picky to get the bilerp correct at terminator
+
+    //=======================================================================
+    // this is the inital allocation for max number of drawsurfs
+// in a given view, but it will automatically grow if needed
+    static final int INITIAL_DRAWSURFS = 0x4000;
+    static final int MAX_CLIP_PLANES = 1;                // we may expand this to six for some subview issues
+    static final int MAX_GUI_SURFACES = 1024;        // default size of the drawSurfs list for guis, will be automatically expanded as needed
+    static final int MAX_MULTITEXTURE_UNITS = 8;
+    static final int MAX_RENDER_CROPS = 8;
+    final static int SMP_FRAMES = 1;
+    public static backEndState_t backEnd;
+    public static frameData_t frameData;
+    public static glconfig_s glConfig = new glconfig_s();                 // outside of TR since it shouldn't be cleared during ref re-init
+    public static idRenderSystemLocal tr = new idRenderSystemLocal();
+    enum backEndName_t {
+
+        BE_ARB,
+        BE_NV10,
+        BE_NV20,
+        BE_R200,
+        BE_ARB2,
+        BE_BAD
+    }
+    enum demoCommand_t {
+
+        DC_BAD,
+        DC_RENDERVIEW,
+        DC_UPDATE_ENTITYDEF,
+        DC_DELETE_ENTITYDEF,
+        DC_UPDATE_LIGHTDEF,
+        DC_DELETE_LIGHTDEF,
+        DC_LOADMAP,
+        DC_CROP_RENDER,
+        DC_UNCROP_RENDER,
+        DC_CAPTURE_RENDER,
+        DC_END_FRAME,
+        DC_DEFINE_MODEL,
+        DC_SET_PORTAL_STATE,
+        DC_UPDATE_SOUNDOCCLUSION,
+        DC_GUI_MODEL
+    }
+    /*
+
+     All vertex programs use the same constant register layout:
+
+     c[4]	localLightOrigin
+     c[5]	localViewOrigin
+     c[6]	lightProjection S
+     c[7]	lightProjection T
+     c[8]	lightProjection Q
+     c[9]	lightFalloff	S
+     c[10]	bumpMatrix S
+     c[11]	bumpMatrix T
+     c[12]	diffuseMatrix S
+     c[13]	diffuseMatrix T
+     c[14]	specularMatrix S
+     c[15]	specularMatrix T
+
+
+     c[20]	light falloff tq constant
+
+     // texture 0 was cube map
+     // texture 1 will be the per-surface bump map
+     // texture 2 will be the light falloff texture
+     // texture 3 will be the light projection texture
+     // texture 4 is the per-surface diffuse map
+     // texture 5 is the per-surface specular map
+     // texture 6 is the specular half angle cube map
+
+     */
+    public enum programParameter_t {
+
+        _0_, _1_, _2_, _3_,//fillers
+        //
+        PP_LIGHT_ORIGIN,//= 4,
+        PP_VIEW_ORIGIN,
+        PP_LIGHT_PROJECT_S,
+        PP_LIGHT_PROJECT_T,
+        PP_LIGHT_PROJECT_Q,
+        PP_LIGHT_FALLOFF_S,
+        PP_BUMP_MATRIX_S,
+        PP_BUMP_MATRIX_T,
+        PP_DIFFUSE_MATRIX_S,
+        PP_DIFFUSE_MATRIX_T,
+        PP_SPECULAR_MATRIX_S,
+        PP_SPECULAR_MATRIX_T,
+        PP_COLOR_MODULATE,
+        PP_COLOR_ADD,
+        //
+        _8_, _9_,//more fillers
+        //
+        PP_LIGHT_FALLOFF_TQ //= 20	// only for NV programs
+    }
+    //    public static void R_Init();
+    /*
+     ============================================================
+
+     DRAW_*
+
+     ============================================================
+     */
+    public enum program_t {
+
+        PROG_INVALID,
+        VPROG_INTERACTION,
+        VPROG_ENVIRONMENT,
+        VPROG_BUMPY_ENVIRONMENT,
+        VPROG_R200_INTERACTION,
+        VPROG_STENCIL_SHADOW,
+        VPROG_NV20_BUMP_AND_LIGHT,
+        VPROG_NV20_DIFFUSE_COLOR,
+        VPROG_NV20_SPECULAR_COLOR,
+        VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR,
+        VPROG_TEST,
+        FPROG_INTERACTION,
+        FPROG_ENVIRONMENT,
+        FPROG_BUMPY_ENVIRONMENT,
+        FPROG_TEST,
+        VPROG_AMBIENT,
+        FPROG_AMBIENT,
+        VPROG_GLASSWARP,
+        FPROG_GLASSWARP,
+        PROG_USER
+    }
+    /*
+     =============================================================
+
+     RENDERER BACK END COMMAND QUEUE
+
+     TR_CMDS
+
+     =============================================================
+     */
+    enum renderCommand_t {
+
+        RC_NOP,
+        RC_DRAW_VIEW,
+        RC_SET_BUFFER,
+        RC_COPY_RENDER,
+        RC_SWAP_BUFFERS    // can't just assume swap at end of list because  of forced list submission before syncs
+    }
 
     // idScreenRect gets carried around with each drawSurf, so it makes sense
     // to keep it compact, instead of just using the idBounds class
     public static class idScreenRect {
 
-        public int x1, y1, x2, y2;					// inclusive pixel bounds inside viewport
-        public float zmin, zmax;					// for depth bounds test
-
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        public int x1, y1, x2, y2;                    // inclusive pixel bounds inside viewport
+        public float zmin, zmax;                    // for depth bounds test
         //
         //
 
@@ -175,6 +363,13 @@ public class tr_local {
             this.zmax = other.zmax;
         }
 
+        static idScreenRect[] generateArray(final int length) {
+            return Stream.
+                    generate(idScreenRect::new).
+                    limit(length).
+                    toArray(idScreenRect[]::new);
+        }
+
         // clear to backwards values
         public void Clear() {
             x1 = y1 = 32000;
@@ -183,7 +378,7 @@ public class tr_local {
             zmax = 1.0f;
         }
 
-        public void AddPoint(float x, float y) {			// adds a point
+        public void AddPoint(float x, float y) {            // adds a point
             final short ix = (short) idMath.FtoiFast(x);
             final short iy = (short) idMath.FtoiFast(y);
 
@@ -201,7 +396,7 @@ public class tr_local {
             }
         }
 
-        public void Expand() {								// expand by one pixel each way to fix roundoffs
+        public void Expand() {                                // expand by one pixel each way to fix roundoffs
             x1--;
             y1--;
             x2++;
@@ -266,10 +461,7 @@ public class tr_local {
             if (this.x2 != other.x2) {
                 return false;
             }
-            if (this.y2 != other.y2) {
-                return false;
-            }
-            return true;
+            return this.y2 == other.y2;
         }
 
         @Deprecated
@@ -285,79 +477,34 @@ public class tr_local {
         public String toString() {
             return "idScreenRect{" + "x1=" + x1 + ", y1=" + y1 + ", x2=" + x2 + ", y2=" + y2 + '}';
         }
-
-        static idScreenRect[] generateArray(final int length) {
-            return Stream.
-                    generate(idScreenRect::new).
-                    limit(length).
-                    toArray(idScreenRect[]::new);
-        }
-    };
-
-    enum demoCommand_t {
-
-        DC_BAD,
-        DC_RENDERVIEW,
-        DC_UPDATE_ENTITYDEF,
-        DC_DELETE_ENTITYDEF,
-        DC_UPDATE_LIGHTDEF,
-        DC_DELETE_LIGHTDEF,
-        DC_LOADMAP,
-        DC_CROP_RENDER,
-        DC_UNCROP_RENDER,
-        DC_CAPTURE_RENDER,
-        DC_END_FRAME,
-        DC_DEFINE_MODEL,
-        DC_SET_PORTAL_STATE,
-        DC_UPDATE_SOUNDOCCLUSION,
-        DC_GUI_MODEL
-    };
-    /*
-     ==============================================================================
-
-     SURFACES
-
-     ==============================================================================
-     */
-//
-//
-//
-// drawSurf_t structures command the back end to render surfaces
-// a given srfTriangles_t may be used with multiple viewEntity_t,
-// as when viewed in a subview or multiple viewport render, or
-// with multiple shaders when skinned, or, possibly with multiple
-// lights, although currently each lighting interaction creates
-// unique srfTriangles_t
-// drawSurf_t are always allocated and freed every frame, they are never cached
-    static final int DSF_VIEW_INSIDE_SHADOW = 1;
+    }
 
     public static class drawSurf_s {
 
-        public srfTriangles_s geo;
-        public viewEntity_s   space;
-        public idMaterial     material;             // may be NULL for shadow volumes
-        public float          sort;                 // material->sort, modified by gui / entity sort offsets
-        public float[]        shaderRegisters;      // evaluated and adjusted for referenceShaders
-        public drawSurf_s     nextOnLight;          // viewLight chains
-        public idScreenRect   scissorRect;          // for scissor clipping, local inside renderView viewport
-        public int            dsFlags;              // DSF_VIEW_INSIDE_SHADOW, etc
-        public vertCache_s    dynamicTexCoords;     // float * in vertex cache memory
-        // specular directions for non vertex program cards, skybox texcoords, etc
-
         private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
-    };
+        private final int DBG_count = DBG_counter++;
+        public int dsFlags;              // DSF_VIEW_INSIDE_SHADOW, etc
+        public vertCache_s dynamicTexCoords;     // float * in vertex cache memory
+        public srfTriangles_s geo;
+        public idMaterial material;             // may be NULL for shadow volumes
+        public drawSurf_s nextOnLight;          // viewLight chains
+        public idScreenRect scissorRect;          // for scissor clipping, local inside renderView viewport
+        public float[] shaderRegisters;      // evaluated and adjusted for referenceShaders
+        // specular directions for non vertex program cards, skybox texcoords, etc
+        public float sort;                 // material->sort, modified by gui / entity sort offsets
+        public viewEntity_s space;
+    }
 
     public static class shadowFrustum_t {
 
-        int numPlanes;		// this is always 6 for now
-        idPlane[] planes = new idPlane[6];
         // positive sides facing inward
         // plane 5 is always the plane the projection is going to, the
         // other planes are just clip planes
         // all planes are in global coordinates
 //
         boolean makeClippedPlanes;
+        int numPlanes;        // this is always 6 for now
+        idPlane[] planes = new idPlane[6];
         // a projected light with a single frustum needs to make sil planes
         // from triangles that clip against side planes, but a point light
         // that has adjacent frustums doesn't need to
@@ -367,18 +514,18 @@ public class tr_local {
                 planes[p] = new idPlane();
             }
         }
-    };
+    }
 
-// areas have references to hold all the lights and entities in them
+    // areas have references to hold all the lights and entities in them
     public static class areaReference_s {
 
+        portalArea_s area;                  // so owners can find all the areas they are in
         areaReference_s areaNext;           // chain in the area
         areaReference_s areaPrev;
-        areaReference_s ownerNext;          // chain on either the entityDef or lightDef
         idRenderEntityLocal entity;         // only one of entity / light will be non-NULL
         idRenderLightLocal light;           // only one of entity / light will be non-NULL
-        portalArea_s area;                  // so owners can find all the areas they are in
-    };
+        areaReference_s ownerNext;          // chain on either the entityDef or lightDef
+    }
 
     // idRenderLight should become the new public interface replacing the qhandle_t to light defs in the idRenderWorld interface
     public static abstract class idRenderLight {
@@ -397,7 +544,7 @@ public class tr_local {
         public abstract void ForceUpdate();
 
         public abstract int GetIndex();
-    };
+    }
 
     // idRenderEntity should become the new public interface replacing the qhandle_t to entity defs in the idRenderWorld interface
     public static abstract class idRenderEntity {
@@ -421,53 +568,53 @@ public class tr_local {
         public abstract void ProjectOverlay(final idPlane[] localTextureAxis/*[2]*/, final idMaterial material);
 
         public abstract void RemoveDecals();
-    };
+    }
 
     public static class idRenderLightLocal extends idRenderLight {
 
-        public renderLight_s parms;			// specification
+        //                                                      // and should go in the dynamic frame memory, or kept
+//                                                      // in the cached memory
+        public boolean archived;            // for demo writing
+        //
+        public int areaNum;                // if not -1, we may be able to cull all the light's
+        public idImage falloffImage;
+        public idInteraction firstInteraction;        // doubly linked list
+        //
+        public doublePortal_s foggedPortals;
+        //
 //
-        public boolean lightHasMoved;			// the light has changed its position since it was
-//                                                      // first added, so the prelight model is not valid
-//
-        public float[] modelMatrix = new float[16];	// this is just a rearrangement of parms.axis and parms.origin
-//
-        public idRenderWorldLocal world;
-        public int index;				// in world lightdefs
-//
-        public int areaNum;				// if not -1, we may be able to cull all the light's
-//                                                      // interactions if !viewDef->connectedAreas[areaNum]
+        public idPlane[] frustum = new idPlane[6];    // in global space, positive side facing out, last two are front/back
+        public srfTriangles_s frustumTris;        // triangulated frustumWindings[]
+        public idWinding[] frustumWindings = new idWinding[6];// used for culling
+        //
+        public idVec3 globalLightOrigin;        // accounting for lightCenter and parallel
+        public int index;                // in world lightdefs
+        public idInteraction lastInteraction;
+        //                                                      // interactions if !viewDef->connectedAreas[areaNum]
 //
         public int lastModifiedFrameNum;                // to determine if it is constantly changing,
-//                                                      // and should go in the dynamic frame memory, or kept
-//                                                      // in the cached memory
-        public boolean archived;			// for demo writing
-//
+        //
+        public boolean lightHasMoved;            // the light has changed its position since it was
+        //
 //
         // derived information
         public idPlane[] lightProject = new idPlane[4];
+        //
+        public idMaterial lightShader;            // guaranteed to be valid, even if parms.shader isn't
+        //                                                      // first added, so the prelight model is not valid
 //
-        public idMaterial lightShader;			// guaranteed to be valid, even if parms.shader isn't
-        public idImage falloffImage;
-//
-        public idVec3 globalLightOrigin;		// accounting for lightCenter and parallel
-//
-//
-        public idPlane[] frustum = new idPlane[6];	// in global space, positive side facing out, last two are front/back
-        public idWinding[] frustumWindings = new idWinding[6];// used for culling
-        public srfTriangles_s frustumTris;		// triangulated frustumWindings[]
-//
+        public float[] modelMatrix = new float[16];    // this is just a rearrangement of parms.axis and parms.origin
+        //
         public int numShadowFrustums;                   // one for projected lights, usually six for point lights
+        public renderLight_s parms;            // specification
+        //
+        public areaReference_s references;        // each area the light is present in will have a lightRef
         public shadowFrustum_t[] shadowFrustums = new shadowFrustum_t[6];
-//
-        public int viewCount;				// if == tr.viewCount, the light is on the viewDef->viewLights list
+        //
+        public int viewCount;                // if == tr.viewCount, the light is on the viewDef->viewLights list
         public viewLight_s viewLight;
-//
-        public areaReference_s references;		// each area the light is present in will have a lightRef
-        public idInteraction firstInteraction;		// doubly linked list
-        public idInteraction lastInteraction;
-//
-        public doublePortal_s foggedPortals;
+        //
+        public idRenderWorldLocal world;
         //
         //
 
@@ -530,52 +677,52 @@ public class tr_local {
         public int GetIndex() {
             return index;
         }
-    };
+    }
 
     public static class idRenderEntityLocal extends idRenderEntity {
 
-        public renderEntity_s parms;
-//
-        public float[] modelMatrix = new float[16];	// this is just a rearrangement of parms.axis and parms.origin
-//
-        public idRenderWorldLocal world;
-        public int index;				// in world entityDefs
-//
-        public int lastModifiedFrameNum;                // to determine if it is constantly changing,
+        //
+        //
+        private static int DBG_counter = 0;
+        private final int DBG_count = DBG_counter++;
         // and should go in the dynamic frame memory, or kept
         // in the cached memory
-        public boolean archived;			// for demo writing
-//
-        public idRenderModel dynamicModel;		// if parms.model->IsDynamicModel(), this is the generated data
-        public int dynamicModelFrameCount;              // continuously animating dynamic models will recreate
+        public boolean archived;            // for demo writing
         // dynamicModel if this doesn't == tr.viewCount
         public idRenderModel cachedDynamicModel;
-//
-        public idBounds referenceBounds;		// the local bounds used to place entityRefs, either from parms or a model
-//
-        // a viewEntity_t is created whenever a idRenderEntityLocal is considered for inclusion
-        // in a given view, even if it turns out to not be visible
-        public int viewCount;				// if tr.viewCount == viewCount, viewEntity is valid,
-        // but the entity may still be off screen
-        public viewEntity_s viewEntity;			// in frame temporary memory
-//
-        public int visibleCount;
         // if tr.viewCount == visibleCount, at least one ambient
         // surface has actually been added by R_AddAmbientDrawsurfs
         // note that an entity could still be in the view frustum and not be visible due
         // to portal passing
 //
-        public idRenderModelDecal decals;		// chain of decals that have been projected on this model
-        public idRenderModelOverlay overlay;		// blood overlays on animated models
-//
-        public areaReference_s entityRefs;		// chain of all references
-        public idInteraction firstInteraction;		// doubly linked list
+        public idRenderModelDecal decals;        // chain of decals that have been projected on this model
+        //
+        public idRenderModel dynamicModel;        // if parms.model->IsDynamicModel(), this is the generated data
+        public int dynamicModelFrameCount;              // continuously animating dynamic models will recreate
+        //
+        public areaReference_s entityRefs;        // chain of all references
+        public idInteraction firstInteraction;        // doubly linked list
+        public int index;                // in world entityDefs
         public idInteraction lastInteraction;
+        //
+        public int lastModifiedFrameNum;                // to determine if it is constantly changing,
+        //
+        public float[] modelMatrix = new float[16];    // this is just a rearrangement of parms.axis and parms.origin
+        public idRenderModelOverlay overlay;        // blood overlays on animated models
+        public renderEntity_s parms;
+        //
+        public idBounds referenceBounds;        // the local bounds used to place entityRefs, either from parms or a model
+        //
+        // a viewEntity_t is created whenever a idRenderEntityLocal is considered for inclusion
+        // in a given view, even if it turns out to not be visible
+        public int viewCount;                // if tr.viewCount == viewCount, viewEntity is valid,
+        // but the entity may still be off screen
+        public viewEntity_s viewEntity;            // in frame temporary memory
+        //
+        public int visibleCount;
+        //
+        public idRenderWorldLocal world;
         boolean needsPortalSky;
-        //
-        //
-        private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
 
         public idRenderEntityLocal() {
             parms = new renderEntity_s();//memset( parms, 0, sizeof( parms ) );
@@ -635,7 +782,7 @@ public class tr_local {
         public void RemoveDecals() {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-    };
+    }
 
     // viewLights are allocated on the frame temporary stack memory
     // a viewLight contains everything that the back end needs out of an idRenderLightLocal,
@@ -644,43 +791,43 @@ public class tr_local {
     // but should never exist if its volume does not intersect the view frustum
     public static class viewLight_s {
 
-        public viewLight_s next;
-//
+        public final drawSurf_s[] globalInteractions = {null};      // get shadows from everything
+        //
+        public final drawSurf_s[] globalShadows = {null};           // shadow everything
+        public final drawSurf_s[] localInteractions = {null};       // don't get local shadows
+        public final drawSurf_s[] localShadows = {null};            // don't shadow local Surfaces
+        public final drawSurf_s[] translucentInteractions = {null}; // get shadows from everything
+        public idImage falloffImage;                // falloff image used by backend
+        public idPlane fogPlane;                // fog plane for backend fog volume rendering
+        public srfTriangles_s frustumTris;            // light frustum for backend fog volume rendering
+        //
+        public idVec3 globalLightOrigin;            // global light origin used by backend
+        //
         // back end should NOT reference the lightDef, because it can change when running SMP
         public idRenderLightLocal lightDef;
-//
+        public idPlane[] lightProject = new idPlane[4];        // light project used by backend
+        public idMaterial lightShader;                // light shader used by backend
+        public viewLight_s next;
+        //
         // for scissor clipping, local inside renderView viewport
         // scissorRect.Empty() is true if the viewEntity_t was never actually
         // seen through any portals
         public idScreenRect scissorRect;
-//
+        public float[] shaderRegisters;                         // shader registers used by backend
+        //
         // if the view isn't inside the light, we can use the non-reversed
         // shadow drawing, avoiding the draws of the front and rear caps
         public boolean viewInsideLight;
-//
+        //
         // true if globalLightOrigin is inside the view frustum, even if it may
         // be obscured by geometry.  This allows us to skip shadows from non-visible objects
         public boolean viewSeesGlobalLightOrigin;
-//
+        //
         // if !viewInsideLight, the corresponding bit for each of the shadowFrustum
         // projection planes that the view is on the negative side of will be set,
         // allowing us to skip drawing the projected caps of shadows if we can't see the face
         public int viewSeesShadowPlaneBits;
-//
-        public idVec3 globalLightOrigin;			// global light origin used by backend
-        public idPlane[] lightProject = new idPlane[4];		// light project used by backend
-        public idPlane fogPlane;				// fog plane for backend fog volume rendering
-        public srfTriangles_s frustumTris;			// light frustum for backend fog volume rendering
-        public idMaterial lightShader;				// light shader used by backend
-        public float[] shaderRegisters;                         // shader registers used by backend
-        public idImage falloffImage;				// falloff image used by backend
-//
-        public final drawSurf_s[] globalShadows = {null};           // shadow everything
-        public final drawSurf_s[] localInteractions = {null};       // don't get local shadows
-        public final drawSurf_s[] localShadows = {null};            // don't shadow local Surfaces
-        public final drawSurf_s[] globalInteractions = {null};      // get shadows from everything
-        public final drawSurf_s[] translucentInteractions = {null}; // get shadows from everything
-    };
+    }
 
     /**
      * a viewEntity is created whenever a idRenderEntityLocal is considered for
@@ -692,26 +839,25 @@ public class tr_local {
      * single frame, as when seen in a mirror
      */
     public static class viewEntity_s {
-        public viewEntity_s        next;
+        private static int DBG_COUNTER = 0;
+        private final int DBG_COUNT = DBG_COUNTER++;
         //
         // back end should NOT reference the entityDef, because it can change when running SMP
         public idRenderEntityLocal entityDef;
+        public float modelDepthHack;
+        //
+        public float[] modelMatrix = new float[16];         // local coords to global coords
+        public float[] modelViewMatrix = new float[16];         // local coords to eye coords
+        public viewEntity_s next;
         //
         // for scissor clipping, local inside renderView viewport
         // scissorRect.Empty() is true if the viewEntity_t was never actually
         // seen through any portals, but was created for shadow casting.
         // a viewEntity can have a non-empty scissorRect, meaning that an area
         // that it is in is visible, and still not be visible.
-        public idScreenRect        scissorRect     = new idScreenRect();
+        public idScreenRect scissorRect = new idScreenRect();
         //
-        public boolean             weaponDepthHack;
-        public float               modelDepthHack;
-        //
-        public float[]             modelMatrix     = new float[16];         // local coords to global coords
-        public float[]             modelViewMatrix = new float[16];         // local coords to eye coords
-
-        private static int DBG_COUNTER = 0;
-        private final  int DBG_COUNT   = DBG_COUNTER++;
+        public boolean weaponDepthHack;
 
         public viewEntity_s() {
 //            TempDump.printCallStack("--------------"+DBG_COUNT);
@@ -734,23 +880,29 @@ public class tr_local {
             this.weaponDepthHack = false;
             this.modelDepthHack = 0;
         }
-    };
-    static final int MAX_CLIP_PLANES = 1;				// we may expand this to six for some subview issues
+    }
 
     // viewDefs are allocated on the frame temporary stack memory
     public static class viewDef_s {
         // specified in the call to DrawScene()
 
-        public renderView_s       renderView;
-//
-        public float[]            projectionMatrix = new float[16];
-        public viewEntity_s       worldSpace;
-//
-        public idRenderWorldLocal renderWorld;
-//
-        public float              floatTime;
-//
-        public idVec3             initialViewAreaOrigin;
+        //
+        public int areaNum;               // -1 = not in a valid area
+        public idPlane[] clipPlanes;            // in world space, the positive side
+        //
+        public boolean[] connectedAreas;
+        //
+        // drawSurfs are the visible surfaces of the viewEntities, sorted
+        // by the material sort parameter
+        public drawSurf_s[] drawSurfs;             // we don't use an idList for this, because
+        //
+        public float floatTime;
+        public idPlane[] frustum;
+        //
+        public idVec3 initialViewAreaOrigin;
+        //
+        public boolean isEditor;
+        public boolean isMirror;              // the portal is a mirror, invert the face culling
         // Used to find the portalArea that view flooding will take place from.
         // for a normal view, the initialViewOrigin will be renderView.viewOrg,
         // but a mirror may put the projection origin outside
@@ -760,41 +912,34 @@ public class tr_local {
         // mirror intersects a portal, and the initialViewAreaOrigin is on
         // a different side than the renderView.viewOrg is.
 //
-        public boolean            isSubview;             // true if this view is not the main view
-        public boolean            isMirror;              // the portal is a mirror, invert the face culling
-        public boolean            isXraySubview;
+        public boolean isSubview;             // true if this view is not the main view
+        public boolean isXraySubview;
+        public int maxDrawSurfs;          // may be resized
         //
-        public boolean            isEditor;
+        public int numClipPlanes;         // mirrors will often use a single clip plane
+        public int numDrawSurfs;          // it is allocated in frame temporary memory
+        public int numViewEntitys;
         //
-        public int                numClipPlanes;         // mirrors will often use a single clip plane
-        public idPlane[]          clipPlanes;            // in world space, the positive side
-                                                         // of the plane is the visible side
-        public idScreenRect       viewport;              // in real pixels and proper Y flip
+        public float[] projectionMatrix = new float[16];
+        public renderView_s renderView;
         //
-        public idScreenRect       scissor;
+        public idRenderWorldLocal renderWorld;
+        //
+        public idScreenRect scissor;
+        public drawSurf_s subviewSurface;
         // for scissor clipping, local inside renderView viewport
         // subviews may only be rendering part of the main view
         // these are real physical pixel values, possibly scaled and offset from the
         // renderView x/y/width/height
 //
-        public viewDef_s          superView;             // never go into an infinite subview loop
-        public drawSurf_s         subviewSurface;
-//
-        // drawSurfs are the visible surfaces of the viewEntities, sorted
-        // by the material sort parameter
-        public drawSurf_s[]       drawSurfs;             // we don't use an idList for this, because
-        public int                numDrawSurfs;          // it is allocated in frame temporary memory
-        public int                maxDrawSurfs;          // may be resized
-//
-        public viewLight_s        viewLights;            // chain of all viewLights effecting view
-        public viewEntity_s       viewEntitys;           // chain of all viewEntities effecting view, including off screen ones casting shadows
-        public int                numViewEntitys;
-        public idPlane[]          frustum;
-        public idFrustum          viewFrustum;
-//
-        public int                areaNum;               // -1 = not in a valid area
-//
-        public boolean[]          connectedAreas;
+        public viewDef_s superView;             // never go into an infinite subview loop
+        public viewEntity_s viewEntitys;           // chain of all viewEntities effecting view, including off screen ones casting shadows
+        public idFrustum viewFrustum;
+        //
+        public viewLight_s viewLights;            // chain of all viewLights effecting view
+        // of the plane is the visible side
+        public idScreenRect viewport;              // in real pixels and proper Y flip
+        public viewEntity_s worldSpace;
         // An array in frame temporary memory that lists if an area can be reached without
         // crossing a closed door.  This is used to avoid drawing interactions
         // when the light is behind a closed door.
@@ -845,55 +990,37 @@ public class tr_local {
         }
     }
 
-// complex light / surface interactions are broken up into multiple passes of a
+    // complex light / surface interactions are broken up into multiple passes of a
 // simple interaction shader
     public static class drawInteraction_t {
 
-        public drawSurf_s surf;
-//
-        public idImage lightImage;
-        public idImage lightFalloffImage;
-        public idImage bumpImage;
-        public idImage diffuseImage;
-        public idImage specularImage;
-//
+        //
         public final idVec4 diffuseColor = new idVec4();        // may have a light color baked into it, will be < tr.backEndRendererMaxLight
-        public final idVec4 specularColor = new idVec4();       // may have a light color baked into it, will be < tr.backEndRendererMaxLight
-        public stageVertexColor_t vertexColor;                  // applies to both diffuse and specular
-//
-        public int ambientLight;                                // use tr.ambientNormalMap instead of normalization cube map
-//                                                              // (not a bool just to avoid an uninitialized memory check of the pad region by valgrind)
+        //                                                              // (not a bool just to avoid an uninitialized memory check of the pad region by valgrind)
 //
         // these are loaded into the vertex program
         public final idVec4 localLightOrigin = new idVec4();
         public final idVec4 localViewOrigin = new idVec4();
-        public idVec4[] lightProjection = new idVec4[4];	// in local coordinates, possibly with a texture matrix baked in
+        public final idVec4 specularColor = new idVec4();       // may have a light color baked into it, will be < tr.backEndRendererMaxLight
+        //
+        public int ambientLight;                                // use tr.ambientNormalMap instead of normalization cube map
+        public idImage bumpImage;
         public idVec4[] bumpMatrix = idVec4.generateArray(2);
+        public idImage diffuseImage;
         public idVec4[] diffuseMatrix = idVec4.generateArray(2);
+        public idImage lightFalloffImage;
+        //
+        public idImage lightImage;
+        public idVec4[] lightProjection = new idVec4[4];    // in local coordinates, possibly with a texture matrix baked in
+        public idImage specularImage;
         public idVec4[] specularMatrix = idVec4.generateArray(2);
+        public drawSurf_s surf;
+        public stageVertexColor_t vertexColor;                  // applies to both diffuse and specular
 
         void oSet(drawInteraction_t d) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
-
-    /*
-     =============================================================
-
-     RENDERER BACK END COMMAND QUEUE
-
-     TR_CMDS
-
-     =============================================================
-     */
-    enum renderCommand_t {
-
-        RC_NOP,
-        RC_DRAW_VIEW,
-        RC_SET_BUFFER,
-        RC_COPY_RENDER,
-        RC_SWAP_BUFFERS	// can't just assume swap at end of list because  of forced list submission before syncs
-    };
+    }
 
     static class emptyCommand_t {
 
@@ -908,47 +1035,43 @@ public class tr_local {
         void oSet(renderCommand_t next) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     static class setBufferCommand_t extends emptyCommand_t {
 
-//        renderCommand_t commandId, next;
+        //        renderCommand_t commandId, next;
         int/*GLenum*/ buffer;
         int frameCount;
-    };
+    }
 
     static class drawSurfsCommand_t extends emptyCommand_t {
 
-//        renderCommand_t commandId, next;
+        //        renderCommand_t commandId, next;
         viewDef_s viewDef;
-    };
+    }
 
     static class copyRenderCommand_t extends emptyCommand_t {
 
-//        renderCommand_t commandId, next;
-        int x, y, imageWidth, imageHeight;
+        int cubeFace;                    // when copying to a cubeMap
         idImage image;
-        int cubeFace;					// when copying to a cubeMap
-    };
-//=======================================================================
-    // this is the inital allocation for max number of drawsurfs
-// in a given view, but it will automatically grow if needed
-    static final int INITIAL_DRAWSURFS = 0x4000;
+        //        renderCommand_t commandId, next;
+        int x, y, imageWidth, imageHeight;
+    }
 
-// a request for frame memory will never fail
+    // a request for frame memory will never fail
 // (until malloc fails), but it may force the
 // allocation of a new memory block that will
 // be discontinuous with the existing memory
     static class frameMemoryBlock_s {
 
+        byte[] base = new byte[4];    // dynamically allocated as [size]
         frameMemoryBlock_s next;
+        int poop;            // so that base is 16 byte aligned
         int size;
         int used;
-        int poop;			// so that base is 16 byte aligned
-        byte[] base = new byte[4];	// dynamically allocated as [size]
-    };
+    }
 
-// all of the information needed by the back end must be
+    // all of the information needed by the back end must be
 // contained in a frameData_t.  This entire structure is
 // duplicated so the front and back end can run in parallel
 // on an SMP machine (OBSOLETE: this capability has been removed)
@@ -956,49 +1079,47 @@ public class tr_local {
         // one or more blocks of memory for all frame
         // temporary allocations
 
-        frameMemoryBlock_s memory;
-//
+        //
         // alloc will point somewhere into the memory chain
         frameMemoryBlock_s alloc;
-//
-        srfTriangles_s firstDeferredFreeTriSurf;
-        srfTriangles_s lastDeferredFreeTriSurf;
-//
-        int memoryHighwater;	// max used on any frame
-//
-        // the currently building command list 
+        //
+        // the currently building command list
         // commands can be inserted at the front if needed, as for required
         // dynamically generated textures
         emptyCommand_t cmdHead, cmdTail;// may be of other command type based on commandId
-    };
-    public static frameData_t frameData;
-//=======================================================================
+        //
+        srfTriangles_s firstDeferredFreeTriSurf;
+        srfTriangles_s lastDeferredFreeTriSurf;
+        frameMemoryBlock_s memory;
+        //
+        int memoryHighwater;    // max used on any frame
+    }
 
     /*
      ** performanceCounters_t
      */
     static class performanceCounters_t {
 
-        int c_sphere_cull_in, c_sphere_cull_clip, c_sphere_cull_out;
+        int c_alloc, c_free;    // counts for R_StaticAllc/R_StaticFree
         int c_box_cull_in, c_box_cull_out;
         int c_createInteractions;// number of calls to idInteraction::CreateInteraction
         int c_createLightTris;
         int c_createShadowVolumes;
-        int c_generateMd5;
+        int c_deformedIndexes;    // idMD5Mesh::GenerateSurface
+        int c_deformedSurfaces;    // idMD5Mesh::GenerateSurface
+        int c_deformedVerts;    // idMD5Mesh::GenerateSurface
         int c_entityDefCallbacks;
-        int c_alloc, c_free;	// counts for R_StaticAllc/R_StaticFree
-        int c_visibleViewEntities;
-        int c_shadowViewEntities;
-        int c_viewLights;
-        int c_numViews;		// number of total views rendered
-        int c_deformedSurfaces;	// idMD5Mesh::GenerateSurface
-        int c_deformedVerts;	// idMD5Mesh::GenerateSurface
-        int c_deformedIndexes;	// idMD5Mesh::GenerateSurface
-        int c_tangentIndexes;	// R_DeriveTangents()
         int c_entityUpdates, c_lightUpdates, c_entityReferences, c_lightReferences;
+        int c_generateMd5;
         int c_guiSurfs;
-        int frontEndMsec;	// sum of time in all RE_RenderScene's in a frame
-    };
+        int c_numViews;        // number of total views rendered
+        int c_shadowViewEntities;
+        int c_sphere_cull_in, c_sphere_cull_clip, c_sphere_cull_out;
+        int c_tangentIndexes;    // R_DeriveTangents()
+        int c_viewLights;
+        int c_visibleViewEntities;
+        int frontEndMsec;    // sum of time in all RE_RenderScene's in a frame
+    }
 
     static class tmu_t {
 
@@ -1007,17 +1128,16 @@ public class tr_local {
         int currentCubeMap;
         int texEnv;
         textureType_t textureType;
-    };
-    static final int MAX_MULTITEXTURE_UNITS = 8;
+    }
 
     static class glstate_t {
 
-        tmu_t[] tmu;
         int currenttmu;
-//
+        //
         int faceCulling;
+        boolean forceGlState;    // the next GL_State will ignore glStateBits and set everything
         int glStateBits;
-        boolean forceGlState;	// the next GL_State will ignore glStateBits and set everything
+        tmu_t[] tmu;
 
         glstate_t() {
             this.tmu = new tmu_t[MAX_MULTITEXTURE_UNITS];
@@ -1025,86 +1145,75 @@ public class tr_local {
                 tmu[a] = new tmu_t();
             }
         }
-    };
+    }
 
     static class backEndCounters_t {
 
-        int c_surfaces;
-        int c_shaders;
-        int c_vertexes;
-        int c_indexes;		// one set per pass
-        int c_totalIndexes;	// counting all passes
-//
+        //
         int c_drawElements;
         int c_drawIndexes;
-        int c_drawVertexes;
         int c_drawRefIndexes;
         int c_drawRefVertexes;
-//
+        int c_drawVertexes;
+        int c_indexes;        // one set per pass
+        float c_overDraw;
+        int c_shaders;
+        //
         int c_shadowElements;
         int c_shadowIndexes;
         int c_shadowVertexes;
-//
+        int c_surfaces;
+        int c_totalIndexes;    // counting all passes
+        //
         int c_vboIndexes;
-        float c_overDraw;
+        int c_vertexes;
+        //
+        float maxLightValue;    // for light scale
+        int msec;        // total msec for backend run
+    }
 //
-        float maxLightValue;	// for light scale
-        int msec;		// total msec for backend run
-    };
 
-// all state modified by the back end is separated
+    // all state modified by the back end is separated
 // from the front end state
     static class backEndState_t {
 
-        int frameCount;		// used to track all images used in a frame
-        viewDef_s viewDef;
-        backEndCounters_t pc;
-//
-        viewEntity_s currentSpace;		// for detecting when a matrix must change
-        idScreenRect currentScissor;
-        // for scissor clipping, local inside renderView viewport
-//
-        viewLight_s vLight;
-        int depthFunc;			// GLS_DEPTHFUNC_EQUAL, or GLS_DEPTHFUNC_LESS for translucent
-        float[] lightTextureMatrix = new float[16];	// only if lightStage->texture.hasMatrix
-        float[] lightColor = new float[4];		// evaluation of current light's color stage
-//
-        float lightScale;			// Every light color calaculation will be multiplied by this,
-        // which will guarantee that the result is < tr.backEndRendererMaxLight
-        // A card with high dynamic range will have this set to 1.0
-        float overBright;			// The amount that all light interactions must be multiplied by
+        //
+        int c_copyFrameBuffer;
         // with post processing to get the desired total light level.
         // A high dynamic range card will have this set to 1.0.
 //
-        boolean currentRenderCopied;	// true if any material has already referenced _currentRender
-//
+        boolean currentRenderCopied;    // true if any material has already referenced _currentRender
+        idScreenRect currentScissor;
+        //
+        viewEntity_s currentSpace;        // for detecting when a matrix must change
+        int depthFunc;            // GLS_DEPTHFUNC_EQUAL, or GLS_DEPTHFUNC_LESS for translucent
+        int frameCount;        // used to track all images used in a frame
+        //
         // our OpenGL state deltas
         glstate_t glState;
+        float[] lightColor = new float[4];        // evaluation of current light's color stage
+        //
+        float lightScale;            // Every light color calaculation will be multiplied by this,
+        float[] lightTextureMatrix = new float[16];    // only if lightStage->texture.hasMatrix
+        // which will guarantee that the result is < tr.backEndRendererMaxLight
+        // A card with high dynamic range will have this set to 1.0
+        float overBright;            // The amount that all light interactions must be multiplied by
+        backEndCounters_t pc;
+        // for scissor clipping, local inside renderView viewport
 //
-        int c_copyFrameBuffer;
+        viewLight_s vLight;
+        viewDef_s viewDef;
 
         backEndState_t() {
             this.pc = new backEndCounters_t();
             this.glState = new glstate_t();
         }
-    };
-    static final int MAX_GUI_SURFACES = 1024;		// default size of the drawSurfs list for guis, will be automatically expanded as needed
-
-    enum backEndName_t {
-
-        BE_ARB,
-        BE_NV10,
-        BE_NV20,
-        BE_R200,
-        BE_ARB2,
-        BE_BAD
-    };
+    }
 
     static class renderCrop_t {
 
-        public int x, y, width, height;	// these are in physical, OpenGL Y-at-bottom pixels
-    };
-    static final int MAX_RENDER_CROPS = 8;
+        public int x, y, width, height;    // these are in physical, OpenGL Y-at-bottom pixels
+    }
 
     /*
      ** Most renderer globals are defined here.
@@ -1114,71 +1223,79 @@ public class tr_local {
      */
     public static class idRenderSystemLocal extends idRenderSystem {
 
-        // renderer globals
-        public boolean registered;		// cleared at shutdown, set at InitOpenGL
-        //
-        public boolean takingScreenshot;
-        //
-        public int frameCount;                  // incremented every frame
-        public int viewCount;                   // incremented every view (twice a scene if subviewed)
+        /*
+         =============
+         EndFrame
+
+         Returns the number of msec spent in the back end
+         =============
+         */ private static int DBG_EndFrame = 0;
         public int DBG_viewCount;                   // incremented every view (twice a scene if subviewed)
-        // and every R_MarkFragments call
         //
-        public int staticAllocCount;            // running total of bytes allocated
+        public idImage ambientCubeImage;    // hack for testing dependent ambient lighting
+        // determines how much overbrighting needs
+        // to be done post-process
         //
-        public float frameShaderTime;           // shader time for all non-world 2D rendering
-        //
-        public int[] viewportOffset = new int[2];// for doing larger-than-window tiled renderings
-        public int[] tiledViewport = new int[2];
+        public idVec4 ambientLightVector;    // used for "ambient bump mapping"
         //
         // determines which back end to use, and if vertex programs are in use
         public backEndName_t backEndRenderer;
         public boolean backEndRendererHasVertexPrograms;
-        public float backEndRendererMaxLight;	// 1.0 for standard, unlimited for floats
-        // determines how much overbrighting needs
-        // to be done post-process
-        //
-        public idVec4 ambientLightVector;	// used for "ambient bump mapping"
-        //
-        public float sortOffset;		// for determinist sorting of equal sort materials
-        //
-        public idList<idRenderWorldLocal> worlds;
-        //
-        public idRenderWorldLocal primaryWorld;
-        public renderView_s primaryRenderView;
-        public viewDef_s primaryView;
+        public float backEndRendererMaxLight;    // 1.0 for standard, unlimited for floats
+        public int currentRenderCrop;
         // many console commands need to know which world they should operate on
         //
         public idMaterial defaultMaterial;
+        public idGuiModel demoGuiModel;
+        //
+        public int frameCount;                  // incremented every frame
+        //
+        public float frameShaderTime;           // shader time for all non-world 2D rendering
+        //
+        @Deprecated
+        public short[] gammaTable = new short[256];    // brightness / gamma modify this
+        public idGuiModel guiModel;
+        //
+        // GUI drawing variables for surface creation
+        public int guiRecursionLevel;        // to prevent infinite overruns
+        //
+        public viewEntity_s identitySpace;    // can use if we don't know viewDef->worldSpace is valid
+        //
+        public drawSurfsCommand_t lockSurfacesCmd;    // use this when r_lockSurfaces = 1
+        public FileChannel/*FILE*/ logFile;            // for logging GL calls and frame breaks
+        //
+        public performanceCounters_t pc;    // performance counters
+        public renderView_s primaryRenderView;
+        public viewDef_s primaryView;
+        //
+        public idRenderWorldLocal primaryWorld;
+        // renderer globals
+        public boolean registered;        // cleared at shutdown, set at InitOpenGL
+        //
+        public renderCrop_t[] renderCrops;// = new renderCrop_t[MAX_RENDER_CROPS];
+        //
+        public float sortOffset;        // for determinist sorting of equal sort materials
+        // and every R_MarkFragments call
+        //
+        public int staticAllocCount;            // running total of bytes allocated
+        //
+        public int stencilIncr, stencilDecr;    // GL_INCR / INCR_WRAP_EXT, GL_DECR / GL_DECR_EXT
+        //
+        public boolean takingScreenshot;
         public idImage testImage;
         public idCinematic testVideo;
         public float testVideoStartTime;
-        //
-        public idImage ambientCubeImage;	// hack for testing dependent ambient lighting
+        public int[] tiledViewport = new int[2];
+        public int viewCount;                   // incremented every view (twice a scene if subviewed)
         //
         public viewDef_s viewDef;
         //
-        public performanceCounters_t pc;	// performance counters
-        //
-        public drawSurfsCommand_t lockSurfacesCmd;	// use this when r_lockSurfaces = 1
-        //
-        public viewEntity_s identitySpace;	// can use if we don't know viewDef->worldSpace is valid
-        public FileChannel/*FILE*/ logFile;			// for logging GL calls and frame breaks
-        //
-        public int stencilIncr, stencilDecr;	// GL_INCR / INCR_WRAP_EXT, GL_DECR / GL_DECR_EXT
-        //
-        public renderCrop_t[] renderCrops;// = new renderCrop_t[MAX_RENDER_CROPS];
-        public int currentRenderCrop;
-        //
-        // GUI drawing variables for surface creation
-        public int guiRecursionLevel;		// to prevent infinite overruns
-        public idGuiModel guiModel;
-        public idGuiModel demoGuiModel;
-        //
-        @Deprecated
-        public short[] gammaTable = new short[256];	// brightness / gamma modify this
+        public int[] viewportOffset = new int[2];// for doing larger-than-window tiled renderings
         //
         //
+        //
+        public idList<idRenderWorldLocal> worlds;
+        // ~idRenderSystemLocal( void );
 
         // external functions
         // virtual void			Init( void );
@@ -1224,7 +1341,6 @@ public class tr_local {
             this.worlds = new idList<>();
             Clear();
         }
-        // ~idRenderSystemLocal( void );
 
         public void Clear() {
             registered = false;
@@ -1280,7 +1396,7 @@ public class tr_local {
          Check for changes in the back end renderSystem, possibly invalidating cached data
          ==================
          */
-        public void SetBackEndRenderer() {			// sets tr.backEndRenderer based on cvars
+        public void SetBackEndRenderer() {            // sets tr.backEndRenderer based on cvars
             if (!r_renderer.IsModified()) {
                 return;
             }
@@ -1391,7 +1507,7 @@ public class tr_local {
             common.Printf("------- Initializing renderSystem --------\n");
 
             // clear all our internal state
-            viewCount = 1;		// so cleared structures never match viewCount
+            viewCount = 1;        // so cleared structures never match viewCount
             // we used to memset tr, but now that it is a class, we can't, so
             // there may be other state we need to reset
 
@@ -1510,10 +1626,7 @@ public class tr_local {
 
         @Override
         public boolean IsOpenGLRunning() {
-            if (!glConfig.isInitialized) {
-                return false;
-            }
-            return true;
+            return glConfig.isInitialized;
         }
 
         @Override
@@ -1618,7 +1731,7 @@ public class tr_local {
                     pointSize = 48;
                 }
                 // we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
-                float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
+                float glyphScale = 1.0f;        // change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
                 glyphScale *= 48.0f / pointSize;
 
                 idStr.snPrintf(name, name.capacity(), "%s/fontImage_%d.dat", fontName, pointSize);
@@ -1657,7 +1770,7 @@ public class tr_local {
                     outFont.glyphs[i].s2 = readFloat();
                     outFont.glyphs[i].t2 = readFloat();
                     int junk /* font.glyphs[i].glyph */ = readInt();
-                    //FIXME: the +6, -6 skips the embedded fonts/ 
+                    //FIXME: the +6, -6 skips the embedded fonts/
 //                    memcpy(outFont.glyphs[i].shaderName, fdFile[fdOffset + 6], 32 - 6);
                     outFont.glyphs[i].shaderName = new String(Arrays.copyOfRange(fdFile, fdOffset + 6, fdOffset + 32));
                     fdOffset += 32;
@@ -1692,7 +1805,7 @@ public class tr_local {
 
             //memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfoEx_t ) );
 //            return true;
-//            
+//
             if (BUILD_FREETYPE) {
                 common.Warning("RegisterFont: couldn't load FreeType code %s", name);
 //            } else {
@@ -1720,7 +1833,7 @@ public class tr_local {
 //                }
 //
 //                // font = registeredFonts[registeredFontCount++];
-//                // make a 256x256 image buffer, once it is full, register it, clean it and keep going 
+//                // make a 256x256 image buffer, once it is full, register it, clean it and keep going
 //                // until all glyphs are rendered
 //                out = new char[1024 * 1024];// Mem_Alloc(1024 * 1024);
 //                if (out == null) {//TODO:remove
@@ -1749,7 +1862,7 @@ public class tr_local {
 //                    if (xOut == -1 || yOut == -1 || i == GLYPH_END) {
 //                        // ran out of room
 //                        // we need to create an image from the bitmap, set all the handles in the glyphs to this point
-//                        // 
+//                        //
 //
 //                        scaledSize = 256 * 256;
 //                        newSize = scaledSize * 4;
@@ -2101,14 +2214,6 @@ public class tr_local {
             }
         }
 
-        /*
-         =============
-         EndFrame
-
-         Returns the number of msec spent in the back end
-         =============
-         */ private static int DBG_EndFrame = 0;
-
         @Override
         public void EndFrame(int[] frontEndMsec, int[] backEndMsec) {
             emptyCommand_t cmd;
@@ -2163,7 +2268,7 @@ public class tr_local {
         }
 
         /*
-         ================== 
+         ==================
          TakeScreenshot
 
          Move to tr_imagefiles.c...
@@ -2171,7 +2276,7 @@ public class tr_local {
          Will automatically tile render large screen shots if necessary
          Downsample is the number of steps to mipmap the image before saving it
          If ref == NULL, session->updateScreen will be used
-         ================== 
+         ==================
          */
         @Override
         public void TakeScreenshot(int width, int height, String fileName, int blends, renderView_s ref) {
@@ -2212,12 +2317,12 @@ public class tr_local {
             }
 
             // fill in the header (this is vertically flipped, which qglReadPixels emits)
-            buffer[ 2] = 2;		// uncompressed type
+            buffer[2] = 2;        // uncompressed type
             buffer[12] = (byte) (width & 255);
             buffer[13] = (byte) (width >> 8);
             buffer[14] = (byte) (height & 255);
             buffer[15] = (byte) (height >> 8);
-            buffer[16] = 24;	// pixel size
+            buffer[16] = 24;    // pixel size
 
             // swap rgb to bgr
             c = 18 + width * height * 3;
@@ -2439,147 +2544,12 @@ public class tr_local {
             image.SetImageFilterAndRepeat();
             return true;
         }
-    };
-    public static backEndState_t backEnd;
-    public static idRenderSystemLocal tr       = new idRenderSystemLocal();
-    public static glconfig_s          glConfig = new glconfig_s();                 // outside of TR since it shouldn't be cleared during ref re-init
+    }
 
-    /*
-     ====================================================================
-
-     GL wrapper/helper functions
-
-     ====================================================================
-     */
-    public static final int GLS_SRCBLEND_ZERO                = 0x00000001;
-    public static final int GLS_SRCBLEND_ONE                 = 0x0;
-    public static final int GLS_SRCBLEND_DST_COLOR           = 0x00000003;
-    public static final int GLS_SRCBLEND_ONE_MINUS_DST_COLOR = 0x00000004;
-    public static final int GLS_SRCBLEND_SRC_ALPHA           = 0x00000005;
-    public static final int GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA = 0x00000006;
-    public static final int GLS_SRCBLEND_DST_ALPHA           = 0x00000007;
-    public static final int GLS_SRCBLEND_ONE_MINUS_DST_ALPHA = 0x00000008;
-    public static final int GLS_SRCBLEND_ALPHA_SATURATE      = 0x00000009;
-    public static final int GLS_SRCBLEND_BITS                = 0x0000000f;
-    //
-    public static final int GLS_DSTBLEND_ZERO                = 0x0;
-    public static final int GLS_DSTBLEND_ONE                 = 0x00000020;
-    public static final int GLS_DSTBLEND_SRC_COLOR           = 0x00000030;
-    public static final int GLS_DSTBLEND_ONE_MINUS_SRC_COLOR = 0x00000040;
-    public static final int GLS_DSTBLEND_SRC_ALPHA           = 0x00000050;
-    public static final int GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA = 0x00000060;
-    public static final int GLS_DSTBLEND_DST_ALPHA           = 0x00000070;
-    public static final int GLS_DSTBLEND_ONE_MINUS_DST_ALPHA = 0x00000080;
-    public static final int GLS_DSTBLEND_BITS                = 0x000000f0;
-    //
-    //
-    // these masks are the inverse, meaning when set the glColorMask value will be 0,
-    // preventing that channel from being written
-    public static final int GLS_DEPTHMASK                    = 0x00000100;
-    public static final int GLS_REDMASK                      = 0x00000200;
-    public static final int GLS_GREENMASK                    = 0x00000400;
-    public static final int GLS_BLUEMASK                     = 0x00000800;
-    public static final int GLS_ALPHAMASK                    = 0x00001000;
-    public static final int GLS_COLORMASK                    = (GLS_REDMASK | GLS_GREENMASK | GLS_BLUEMASK);
-    //
-    public static final int GLS_POLYMODE_LINE                = 0x00002000;
-    //
-    public static final int GLS_DEPTHFUNC_ALWAYS             = 0x00010000;
-    public static final int GLS_DEPTHFUNC_EQUAL              = 0x00020000;
-    public static final int GLS_DEPTHFUNC_LESS               = 0x0;
-    //
-    public static final int GLS_ATEST_EQ_255                 = 0x10000000;
-    public static final int GLS_ATEST_LT_128                 = 0x20000000;
-    public static final int GLS_ATEST_GE_128                 = 0x40000000;
-    public static final int GLS_ATEST_BITS                   = 0x70000000;
-    //
-    public static final int GLS_DEFAULT                      = GLS_DEPTHFUNC_ALWAYS;
+    //optimizedShadow_t SuperOptimizeOccluders( idVec4 *verts, glIndex_t *indexes, int numIndexes,
+//										 idPlane projectionPlane, idVec3 projectionOrigin );
 //
-
-    //    public static void R_Init();
-    /*
-     ============================================================
-
-     DRAW_*
-
-     ============================================================
-     */
-    public enum program_t {
-
-        PROG_INVALID,
-        VPROG_INTERACTION,
-        VPROG_ENVIRONMENT,
-        VPROG_BUMPY_ENVIRONMENT,
-        VPROG_R200_INTERACTION,
-        VPROG_STENCIL_SHADOW,
-        VPROG_NV20_BUMP_AND_LIGHT,
-        VPROG_NV20_DIFFUSE_COLOR,
-        VPROG_NV20_SPECULAR_COLOR,
-        VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR,
-        VPROG_TEST,
-        FPROG_INTERACTION,
-        FPROG_ENVIRONMENT,
-        FPROG_BUMPY_ENVIRONMENT,
-        FPROG_TEST,
-        VPROG_AMBIENT,
-        FPROG_AMBIENT,
-        VPROG_GLASSWARP,
-        FPROG_GLASSWARP,
-        PROG_USER
-    };
-
-    /*
-
-     All vertex programs use the same constant register layout:
-
-     c[4]	localLightOrigin
-     c[5]	localViewOrigin
-     c[6]	lightProjection S
-     c[7]	lightProjection T
-     c[8]	lightProjection Q
-     c[9]	lightFalloff	S
-     c[10]	bumpMatrix S
-     c[11]	bumpMatrix T
-     c[12]	diffuseMatrix S
-     c[13]	diffuseMatrix T
-     c[14]	specularMatrix S
-     c[15]	specularMatrix T
-
-
-     c[20]	light falloff tq constant
-
-     // texture 0 was cube map
-     // texture 1 will be the per-surface bump map
-     // texture 2 will be the light falloff texture
-     // texture 3 will be the light projection texture
-     // texture 4 is the per-surface diffuse map
-     // texture 5 is the per-surface specular map
-     // texture 6 is the specular half angle cube map
-
-     */
-    public enum programParameter_t {
-
-        _0_, _1_, _2_, _3_,//fillers
-        //        
-        PP_LIGHT_ORIGIN,//= 4,
-        PP_VIEW_ORIGIN,
-        PP_LIGHT_PROJECT_S,
-        PP_LIGHT_PROJECT_T,
-        PP_LIGHT_PROJECT_Q,
-        PP_LIGHT_FALLOFF_S,
-        PP_BUMP_MATRIX_S,
-        PP_BUMP_MATRIX_T,
-        PP_DIFFUSE_MATRIX_S,
-        PP_DIFFUSE_MATRIX_T,
-        PP_SPECULAR_MATRIX_S,
-        PP_SPECULAR_MATRIX_T,
-        PP_COLOR_MODULATE,
-        PP_COLOR_ADD,
-        //        
-        _8_, _9_,//more fillers
-        //
-        PP_LIGHT_FALLOFF_TQ //= 20	// only for NV programs
-    };
+//void CleanupOptimizedShadowTris( srfTriangles_t *tri );
 
     /*
      ============================================================
@@ -2592,58 +2562,44 @@ public class tr_local {
      */
     public static class optimizedShadow_t {
 
-        public idVec3[]           verts;                  // includes both front and back projections, caller should free
-        public int                numVerts;
         public int/*glIndex_t*/[] indexes;    // caller should free
         //
         // indexes must be sorted frontCap, rearCap, silPlanes so the caps can be removed
         // when the viewer is in a position that they don't need to see them
-        public int                numFrontCapIndexes;
-        public int                numRearCapIndexes;
-        public int                numSilPlaneIndexes;
-        public int                totalIndexes;
-    };
-//optimizedShadow_t SuperOptimizeOccluders( idVec4 *verts, glIndex_t *indexes, int numIndexes,
-//										 idPlane projectionPlane, idVec3 projectionOrigin );
-//
-//void CleanupOptimizedShadowTris( srfTriangles_t *tri );
-
-    /*
-     ============================================================
-
-     TRISURF
-
-     ============================================================
-     */
-    public static final boolean USE_TRI_DATA_ALLOCATOR = true;
+        public int numFrontCapIndexes;
+        public int numRearCapIndexes;
+        public int numSilPlaneIndexes;
+        public int numVerts;
+        public int totalIndexes;
+        public idVec3[] verts;                  // includes both front and back projections, caller should free
+    }
 
     // deformable meshes precalculate as much as possible from a base frame, then generate
     // complete srfTriangles_t from just a new set of vertexes
     public static class deformInfo_s {
         public static final int BYTES = Integer.BYTES * 11;
-
-        int   numSourceVerts;
+        //
+        dominantTri_s[] dominantTris;
+        int[] dupVerts;
+        int[]/*glIndex_t */ indexes;
+        int[] mirroredVerts;
+        //
+        int numDupVerts;
+        //
+        int numIndexes;
+        //
+        int numMirroredVerts;
         // numOutputVerts may be smaller if the input had duplicated or degenerate triangles
         // it will often be larger if the input had mirrored texture seams that needed
         // to be busted for proper tangent spaces
-        int   numOutputVerts;
+        int numOutputVerts;
         //
-        int   numMirroredVerts;
-        int[] mirroredVerts;
-        //
-        int   numIndexes;
-        int[]/*glIndex_t */ indexes;
+        int numSilEdges;
+        int numSourceVerts;
+        silEdge_t[] silEdges;
         //
         int[]/*glIndex_t */ silIndexes;
-        //
-        int             numDupVerts;
-        int[]           dupVerts;
-        //
-        int             numSilEdges;
-        silEdge_t[]     silEdges;
-        //
-        dominantTri_s[] dominantTris;
-    };
+    }
 
     /*
      =============================================================
@@ -2654,10 +2610,11 @@ public class tr_local {
      */
     public static class localTrace_t {
 
-        float  fraction;
+        final int[] indexes = new int[3];
+        float fraction;
+        idVec3 normal;
         // only valid if fraction < 1.0
         idVec3 point;
-        idVec3 normal;
-        final int[] indexes = new int[3];
-    };
+    }
+
 }

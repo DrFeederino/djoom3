@@ -1,11 +1,7 @@
 package neo.idlib;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import neo.Game.Entity.idEntity.entityFlags_s;
 import neo.Game.Projectile.idProjectile.projectileFlags_s;
-import static neo.TempDump.ctos;
 import neo.framework.CVarSystem.idCVarSystem;
 import neo.framework.Common.idCommon;
 import neo.framework.FileSystem_h.idFileSystem;
@@ -23,94 +19,21 @@ import neo.idlib.math.Vector.idVec4;
 import neo.idlib.math.Vector.idVec5;
 import neo.sys.sys_public.idSys;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+import static neo.TempDump.ctos;
+
 /**
  *
  */
 public class Lib {
 
-    /*
-     ===============================================================================
+    //
+    public static final int MAX_STRING_CHARS = 1024;        // max length of a string
 
-     idLib contains stateless support classes and concrete types. Some classes
-     do have static variables, but such variables are initialized once and
-     read-only after initialization (they do not maintain a modifiable state).
-
-     The interface pointers idSys, idCommon, idCVarSystem and idFileSystem
-     should be set before using idLib. The pointers stored here should not
-     be used by any part of the engine except for idLib.
-
-     The frameNumber should be continuously set to the number of the current
-     frame if frame base memory logging is required.
-
-     ===============================================================================
-     */
-    public static class idLib {
-
-        public static idSys        sys         = null;
-        public static idCommon     common      = null;
-        public static idCVarSystem cvarSystem  = null;
-        public static idFileSystem fileSystem  = null;
-        public static int          frameNumber = 0;
-
-        public static void Init() {
-
-//	assert( sizeof( bool ) == 1 );
-            // initialize little/big endian conversion
-            Lib.Swap_Init();
-//
-//            // initialize memory manager
-//            Heap.Mem_Init();
-//
-            // init string memory allocator
-            idStr.InitMemory();
-
-            // initialize generic SIMD implementation
-            idSIMD.Init();
-
-            // initialize math
-            idMath.Init();
-
-            // test idMatX
-            idMatX.Test();
-
-            // test idPolynomial
-            idPolynomial.Test();
-
-            // initialize the dictionary string pools
-            idDict.Init();
-        }
-
-        public static void ShutDown() {
-
-            // shut down the dictionary string pools
-            idDict.Shutdown();
-
-            // shut down the string memory allocator
-            idStr.ShutdownMemory();
-
-            // shut down the SIMD engine
-            idSIMD.Shutdown();
-
-//            // shut down the memory manager
-//            Heap.Mem_Shutdown();
-        }
-
-        // wrapper to idCommon functions 
-        public static void Error(final String... fmt) {
-//	va_list		argptr;
-//	char		text[MAX_STRING_CHARS];
-//
-//	va_start( argptr, fmt );
-//	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
-//	va_end( argptr );
-//
-//	common->Error( "%s", text );
-        }
-
-        public static void Warning(final String... fmt) {
-        }
-    };
-//
+    //
 //
 //
 ///*
@@ -128,18 +51,11 @@ public class Lib {
 ////typedef unsigned long			ulong;
 //
 ////typedef int						qhandle_t;
-
-    public static int BIT(int num) {//TODO:is int voldoende?
-        return (1 << num);
-    }
-
-    //
-    public static final int    MAX_STRING_CHARS = 1024;        // max length of a string
     //
 // maximum world size
-    public static final int    MAX_WORLD_COORD  = (128 * 1024);
-    public static final int    MIN_WORLD_COORD  = (-128 * 1024);
-    public static final int    MAX_WORLD_SIZE   = (MAX_WORLD_COORD - MIN_WORLD_COORD);
+    public static final int MAX_WORLD_COORD = (128 * 1024);
+    public static final int MIN_WORLD_COORD = (-128 * 1024);
+    public static final int MAX_WORLD_SIZE = (MAX_WORLD_COORD - MIN_WORLD_COORD);
     //
     // basic colors
    /*
@@ -149,23 +65,33 @@ public class Lib {
 
      ===============================================================================
      */
-    public static final idVec4 colorBlack       = new idVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    public static final idVec4 colorWhite       = new idVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    public static final idVec4 colorRed         = new idVec4(1.00f, 0.00f, 0.00f, 1.00f);
-    public static final idVec4 colorGreen       = new idVec4(0.00f, 1.00f, 0.00f, 1.00f);
-    public static final idVec4 colorBlue        = new idVec4(0.00f, 0.00f, 1.00f, 1.00f);
-    public static final idVec4 colorYellow      = new idVec4(1.00f, 1.00f, 0.00f, 1.00f);
-    public static final idVec4 colorMagenta     = new idVec4(1.00f, 0.00f, 1.00f, 1.00f);
-    public static final idVec4 colorCyan        = new idVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    public static final idVec4 colorOrange      = new idVec4(1.00f, 0.50f, 0.00f, 1.00f);
-    public static final idVec4 colorPurple      = new idVec4(0.60f, 0.00f, 0.60f, 1.00f);
-    public static final idVec4 colorPink        = new idVec4(0.73f, 0.40f, 0.48f, 1.00f);
-    public static final idVec4 colorBrown       = new idVec4(0.40f, 0.35f, 0.08f, 1.00f);
-    public static final idVec4 colorLtGrey      = new idVec4(0.75f, 0.75f, 0.75f, 1.00f);
-    public static final idVec4 colorMdGrey      = new idVec4(0.50f, 0.50f, 0.50f, 1.00f);
-    public static final idVec4 colorDkGrey      = new idVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    public static final idVec4 colorBlack = new idVec4(0.00f, 0.00f, 0.00f, 1.00f);
+    public static final idVec4 colorBlue = new idVec4(0.00f, 0.00f, 1.00f, 1.00f);
+    public static final idVec4 colorBrown = new idVec4(0.40f, 0.35f, 0.08f, 1.00f);
+    public static final idVec4 colorCyan = new idVec4(0.00f, 1.00f, 1.00f, 1.00f);
+    public static final idVec4 colorDkGrey = new idVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    public static final idVec4 colorGreen = new idVec4(0.00f, 1.00f, 0.00f, 1.00f);
+    public static final idVec4 colorLtGrey = new idVec4(0.75f, 0.75f, 0.75f, 1.00f);
+    public static final idVec4 colorMagenta = new idVec4(1.00f, 0.00f, 1.00f, 1.00f);
+    public static final idVec4 colorMdGrey = new idVec4(0.50f, 0.50f, 0.50f, 1.00f);
+    public static final idVec4 colorOrange = new idVec4(1.00f, 0.50f, 0.00f, 1.00f);
+    public static final idVec4 colorPink = new idVec4(0.73f, 0.40f, 0.48f, 1.00f);
+    public static final idVec4 colorPurple = new idVec4(0.60f, 0.00f, 0.60f, 1.00f);
+    public static final idVec4 colorRed = new idVec4(1.00f, 0.00f, 0.00f, 1.00f);
+    public static final idVec4 colorWhite = new idVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    public static final idVec4 colorYellow = new idVec4(1.00f, 1.00f, 0.00f, 1.00f);
+    /*
+     ================
+     Swap_Init
+     ================
+     */
+    private static final boolean SWAP_TEST = Swap_IsBigEndian();
     //
-    static              int[]  colorMask        = {255, 0};
+    static int[] colorMask = {255, 0};
+
+    public static int BIT(int num) {//TODO:is int voldoende?
+        return (1 << num);
+    }
 
     /*
      ================
@@ -233,34 +159,11 @@ public class Lib {
                 ((color >> 16) & 255) * (1.0f / 255.0f));
     }
 
-    /*
-     ===============================================================================
-
-     Byte order functions
-
-     ===============================================================================
-     */
-    short BigShort(short l) {
-        if (SWAP_TEST) {
-            return ShortSwap(l);
-        } else {
-            return ShortNoSwap(l);
-        }
-    }
-
     public static short LittleShort(short l) {
         if (SWAP_TEST) {
             return ShortSwap(l);
         } else {
             return ShortNoSwap(l);
-        }
-    }
-
-    int BigLong(int l) {
-        if (SWAP_TEST) {
-            return LongSwap(l);
-        } else {
-            return LongNoSwap(l);
         }
     }
 
@@ -459,14 +362,14 @@ public class Lib {
 //		float	f;
 //		byte	b[4];
 //	} dat1, dat2;
-//	
-//	
+//
+//
 //	dat1.f = f;
 //	dat2.b[0] = dat1.b[3];
 //	dat2.b[1] = dat1.b[2];
 //	dat2.b[2] = dat1.b[1];
 //	dat2.b[3] = dat1.b[0];
-//        
+//
 //	return dat2.f;
 
         return ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putFloat(f).order(ByteOrder.BIG_ENDIAN).getFloat(0);
@@ -562,13 +465,13 @@ public class Lib {
     /*
      =====================================================================
      RevBytesSwap
- 
+
      Reverses byte order in place, then reverses bits in those bytes
- 
+
      INPUTS
      bp       bitfield structure to reverse
      elsize   size of the underlying data type
- 
+
      RESULTS
      Reverses the bitfield of size elsize.
      ===================================================================== */
@@ -616,10 +519,10 @@ public class Lib {
      */
     static void SixtetsForIntLittle(byte[] out, int src) {
         int[] b = {
-            (src >> 0) & 0xff,//TODO:check order
-            (src >> 8) & 0xff,
-            (src >> 16) & 0xff,
-            (src >> 24) & 0xff
+                (src >> 0) & 0xff,//TODO:check order
+                (src >> 8) & 0xff,
+                (src >> 16) & 0xff,
+                (src >> 24) & 0xff
         };
         out[0] = (byte) ((b[0] & 0xfc) >> 2);
         out[1] = (byte) (((b[0] & 0x3) << 4) + ((b[1] & 0xf0) >> 4));
@@ -674,32 +577,6 @@ public class Lib {
         return ret;
     }
 
-    public static class idException extends RuntimeException {//TODO:to exception or to runtimeException!!
-
-        public String error;//[MAX_STRING_CHARS];
-
-        public idException() {
-            super();
-        }
-
-        public idException(final String text) {
-//            strcpy(error, text);
-            super(text);
-            this.error = text;
-        }
-
-        public idException(final char[] text) {
-//            strcpy(error, text);
-            super(ctos(text));
-            this.error = ctos(text);
-        }
-
-        public idException(Throwable cause) {
-            super(cause);
-        }       
-        
-    };
-
     // move from Math.h to keep gcc happy
     public static double Max(double x, double y) {
         return (x > y) ? x : y;
@@ -724,17 +601,11 @@ public class Lib {
     public static int Min(int x, int y) {
         return (x < y) ? x : y;
     }
-    /*
-     ================
-     Swap_Init
-     ================
-     */
-    private static final boolean SWAP_TEST = Swap_IsBigEndian();
 
     static void Swap_Init() {
 ////	byte	swaptest[2] = {1,0};
 //
-//	// set the byte swapping variables in a portable manner	
+//	// set the byte swapping variables in a portable manner
 //	if ( !Swap_IsBigEndian() ) {
 ////	if ( *(short *)swaptest == 1) {
 //		// little endian ex: x86
@@ -779,6 +650,29 @@ public class Lib {
     /*
      ===============================================================================
 
+     Byte order functions
+
+     ===============================================================================
+     */
+    short BigShort(short l) {
+        if (SWAP_TEST) {
+            return ShortSwap(l);
+        } else {
+            return ShortNoSwap(l);
+        }
+    }
+
+    int BigLong(int l) {
+        if (SWAP_TEST) {
+            return LongSwap(l);
+        } else {
+            return LongNoSwap(l);
+        }
+    }
+
+    /*
+     ===============================================================================
+
      Assertion
 
      ===============================================================================
@@ -792,5 +686,114 @@ public class Lib {
 //#elif defined( MACOS_X )
 //	kill( getpid(), SIGINT );
 //#endif
+    }
+
+    /*
+     ===============================================================================
+
+     idLib contains stateless support classes and concrete types. Some classes
+     do have static variables, but such variables are initialized once and
+     read-only after initialization (they do not maintain a modifiable state).
+
+     The interface pointers idSys, idCommon, idCVarSystem and idFileSystem
+     should be set before using idLib. The pointers stored here should not
+     be used by any part of the engine except for idLib.
+
+     The frameNumber should be continuously set to the number of the current
+     frame if frame base memory logging is required.
+
+     ===============================================================================
+     */
+    public static class idLib {
+
+        public static idCommon common = null;
+        public static idCVarSystem cvarSystem = null;
+        public static idFileSystem fileSystem = null;
+        public static int frameNumber = 0;
+        public static idSys sys = null;
+
+        public static void Init() {
+
+//	assert( sizeof( bool ) == 1 );
+            // initialize little/big endian conversion
+            Lib.Swap_Init();
+//
+//            // initialize memory manager
+//            Heap.Mem_Init();
+//
+            // init string memory allocator
+            idStr.InitMemory();
+
+            // initialize generic SIMD implementation
+            idSIMD.Init();
+
+            // initialize math
+            idMath.Init();
+
+            // test idMatX
+            idMatX.Test();
+
+            // test idPolynomial
+            idPolynomial.Test();
+
+            // initialize the dictionary string pools
+            idDict.Init();
+        }
+
+        public static void ShutDown() {
+
+            // shut down the dictionary string pools
+            idDict.Shutdown();
+
+            // shut down the string memory allocator
+            idStr.ShutdownMemory();
+
+            // shut down the SIMD engine
+            idSIMD.Shutdown();
+
+//            // shut down the memory manager
+//            Heap.Mem_Shutdown();
+        }
+
+        // wrapper to idCommon functions
+        public static void Error(final String... fmt) {
+//	va_list		argptr;
+//	char		text[MAX_STRING_CHARS];
+//
+//	va_start( argptr, fmt );
+//	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
+//	va_end( argptr );
+//
+//	common->Error( "%s", text );
+        }
+
+        public static void Warning(final String... fmt) {
+        }
+    }
+
+    public static class idException extends RuntimeException {//TODO:to exception or to runtimeException!!
+
+        public String error;//[MAX_STRING_CHARS];
+
+        public idException() {
+            super();
+        }
+
+        public idException(final String text) {
+//            strcpy(error, text);
+            super(text);
+            this.error = text;
+        }
+
+        public idException(final char[] text) {
+//            strcpy(error, text);
+            super(ctos(text));
+            this.error = ctos(text);
+        }
+
+        public idException(Throwable cause) {
+            super(cause);
+        }
+
     }
 }

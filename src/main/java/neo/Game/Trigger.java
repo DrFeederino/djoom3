@@ -1,58 +1,44 @@
 package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
-
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_ActivateTargets;
-import static neo.Game.Entity.EV_Touch;
-import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.idClass;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.Entity.*;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Player.idPlayer;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
-import neo.Game.Trigger.idTrigger;
-import static neo.Renderer.Material.CONTENTS_FLASHLIGHT_TRIGGER;
-import static neo.Renderer.Material.CONTENTS_TRIGGER;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.TempDump.NOT;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorOrange;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.colorYellow;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Vector.RAD2DEG;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.Entity.*;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.Game_local.*;
+import static neo.Renderer.Material.CONTENTS_FLASHLIGHT_TRIGGER;
+import static neo.Renderer.Material.CONTENTS_TRIGGER;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.TempDump.NOT;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.SEC2MS;
+import static neo.idlib.math.Vector.RAD2DEG;
+import static neo.idlib.math.Vector.getVec3_origin;
+
 /**
  *
  */
 public class Trigger {
 
+    public static final idEventDef EV_Disable = new idEventDef("disable", null);
     /*
      ===============================================================================
 
@@ -60,16 +46,16 @@ public class Trigger {
 
      ===============================================================================
      */
-    public static final idEventDef EV_Enable        = new idEventDef("enable", null);
-    public static final idEventDef EV_Disable       = new idEventDef("disable", null);
+    public static final idEventDef EV_Enable = new idEventDef("enable", null);
+    //
+    public static final idEventDef EV_Timer = new idEventDef("<timer>", null);
     //
     public static final idEventDef EV_TriggerAction = new idEventDef("<triggerAction>", "e");
-    //
-    public static final idEventDef EV_Timer         = new idEventDef("<timer>", null);
 
     public static class idTrigger extends idEntity {
         // CLASS_PROTOTYPE( idTrigger );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Enable, (eventCallback_t0<idTrigger>) idTrigger::Event_Enable);
@@ -85,8 +71,8 @@ public class Trigger {
         public idTrigger() {
             scriptFunction = null;
         }
-        
-        public static void DrawDebugInfo(){
+
+        public static void DrawDebugInfo() {
             idMat3 axis = gameLocal.GetLocalPlayer().viewAngles.ToMat3();
             idVec3 up = axis.oGet(2).oMultiply(5.0f);
             idBounds viewTextBounds = new idBounds(gameLocal.GetLocalPlayer().GetPhysics().GetOrigin());
@@ -144,6 +130,10 @@ public class Trigger {
                     }
                 }
             }
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -241,11 +231,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -256,7 +242,8 @@ public class Trigger {
      */
     public static class idTrigger_Multi extends idTrigger {
         // CLASS_PROTOTYPE( idTrigger_Multi );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Touch, (eventCallback_t2<idTrigger_Multi>) idTrigger_Multi::Event_Touch);
@@ -264,18 +251,17 @@ public class Trigger {
             eventCallbacks.put(EV_TriggerAction, (eventCallback_t1<idTrigger_Multi>) idTrigger_Multi::Event_TriggerAction);
         }
 
-
-        private float   wait;
-        private float   random;
-        private float   delay;
-        private float   random_delay;
-        private int     nextTriggerTime;
-        private idStr   requires = new idStr();
-        private int     removeItem;
+        private float delay;
+        private int nextTriggerTime;
+        private float random;
+        private float random_delay;
+        private int removeItem;
+        private final idStr requires = new idStr();
         private boolean touchClient;
         private boolean touchOther;
         private boolean triggerFirst;
         private boolean triggerWithSelf;
+        private float wait;
         //
         //
 
@@ -290,6 +276,10 @@ public class Trigger {
             touchOther = false;
             triggerFirst = false;
             triggerWithSelf = false;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         /*
@@ -307,7 +297,7 @@ public class Trigger {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             wait = spawnArgs.GetFloat("wait", "0.5");
             random = spawnArgs.GetFloat("random", "0");
             delay = spawnArgs.GetFloat("delay", "0");
@@ -389,9 +379,7 @@ public class Trigger {
                 idPlayer player = (idPlayer) activator;
                 float dot = player.viewAngles.ToForward().oMultiply(GetPhysics().GetAxis().oGet(0));
                 float angle = RAD2DEG(idMath.ACos(dot));
-                if (angle > spawnArgs.GetFloat("angleLimit", "30")) {
-                    return false;
-                }
+                return !(angle > spawnArgs.GetFloat("angleLimit", "30"));
             }
             return true;
         }
@@ -513,11 +501,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
 
     /*
@@ -529,7 +513,8 @@ public class Trigger {
      */
     public static class idTrigger_EntityName extends idTrigger {
         //CLASS_PROTOTYPE(idTrigger_EntityName );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Touch, (eventCallback_t2<idTrigger_EntityName>) idTrigger_EntityName::Event_Touch);
@@ -537,14 +522,13 @@ public class Trigger {
             eventCallbacks.put(EV_TriggerAction, (eventCallback_t1<idTrigger_EntityName>) idTrigger_EntityName::Event_TriggerAction);
         }
 
-
-        private float   wait;
-        private float   random;
-        private float   delay;
-        private float   random_delay;
-        private int     nextTriggerTime;
+        private float delay;
+        private final idStr entityName = new idStr();
+        private int nextTriggerTime;
+        private float random;
+        private float random_delay;
         private boolean triggerFirst;
-        private idStr   entityName = new idStr();
+        private float wait;
         //
         //
 
@@ -555,6 +539,10 @@ public class Trigger {
             random_delay = 0.0f;
             nextTriggerTime = 0;
             triggerFirst = false;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -600,7 +588,7 @@ public class Trigger {
 
             entityName.oSet(spawnArgs.GetString("entityname"));
             if (NOT(entityName.Length())) {
-                gameLocal.Error("idTrigger_EntityName '%s' at (%s) doesn't have 'entityname' key specified", name, GetPhysics().GetOrigin().ToString(0));
+                idGameLocal.Error("idTrigger_EntityName '%s' at (%s) doesn't have 'entityname' key specified", name, GetPhysics().GetOrigin().ToString(0));
             }
 
             nextTriggerTime = 0;
@@ -628,7 +616,6 @@ public class Trigger {
             TriggerAction(activator.value);
         }
 
-
         /*
          ================
          idTrigger_EntityName::Event_Trigger
@@ -638,7 +625,8 @@ public class Trigger {
          activator should be set to the activator so it can be held through a delay
          so wait for the delay time before firing
          ================
-         */ private void Event_Trigger(idEventArg<idEntity> _activator) {
+         */
+        private void Event_Trigger(idEventArg<idEntity> _activator) {
             idEntity activator = _activator.value;
             if (nextTriggerTime > gameLocal.time) {
                 // can't retrigger until the wait is over
@@ -701,11 +689,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
 
     /*
@@ -717,20 +701,20 @@ public class Trigger {
      */
     public static class idTrigger_Timer extends idTrigger {
         //	CLASS_PROTOTYPE(idTrigger_Timer );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Timer, (eventCallback_t0<idTrigger_Timer>) idTrigger_Timer::Event_Timer);
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idTrigger_Timer>) idTrigger_Timer::Event_Use);
         }
 
-
-        private float   random;
-        private float   wait;
+        private float delay;
+        private final idStr offName = new idStr();
         private boolean on;
-        private float   delay;
-        private idStr   onName  = new idStr();
-        private idStr   offName = new idStr();
+        private final idStr onName = new idStr();
+        private float random;
+        private float wait;
         //
         //
 
@@ -739,6 +723,10 @@ public class Trigger {
             wait = 0.0f;
             on = false;
             delay = 0.0f;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -846,11 +834,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
 
     /*
@@ -862,17 +846,17 @@ public class Trigger {
      */
     public static class idTrigger_Count extends idTrigger {
         //	CLASS_PROTOTYPE(idTrigger_Count );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idTrigger_Count>) idTrigger_Count::Event_Trigger);
             eventCallbacks.put(EV_TriggerAction, (eventCallback_t1<idTrigger_Count>) idTrigger_Count::Event_TriggerAction);
         }
 
-
-        private int   goal;
-        private int   count;
+        private int count;
         private float delay;
+        private int goal;
         //
         //
 
@@ -880,6 +864,10 @@ public class Trigger {
             goal = 0;
             count = 0;
             delay = 0.0f;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -899,7 +887,7 @@ public class Trigger {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             goal = spawnArgs.GetInt("count", "1");
             delay = spawnArgs.GetFloat("delay", "0");
             count = 0;
@@ -938,11 +926,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
 
     /*
@@ -954,17 +938,17 @@ public class Trigger {
      */
     static class idTrigger_Hurt extends idTrigger {
         //	CLASS_PROTOTYPE(idTrigger_Hurt );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Touch, (eventCallback_t2<idTrigger_Hurt>) idTrigger_Hurt::Event_Touch);
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idTrigger_Hurt>) idTrigger_Hurt::Event_Toggle);
         }
 
-
+        private float delay;
+        private int nextTime;
         private boolean on;
-        private float   delay;
-        private int     nextTime;
         //
         //
 
@@ -972,6 +956,10 @@ public class Trigger {
             on = false;
             delay = 0.0f;
             nextTime = 0;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -999,7 +987,7 @@ public class Trigger {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             on = spawnArgs.GetBool("on", "1");
             delay = spawnArgs.GetFloat("delay", "1.0");
             nextTime = gameLocal.time;
@@ -1035,11 +1023,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
 
     /*
@@ -1051,12 +1035,16 @@ public class Trigger {
      */
     public static class idTrigger_Fade extends idTrigger {
         // CLASS_PROTOTYPE( idTrigger_Fade );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idTrigger_Fade>) idTrigger_Fade::Event_Trigger);
         }
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         private void Event_Trigger(idEventArg<idEntity> activator) {
             idVec4 fadeColor;
@@ -1082,11 +1070,7 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
 
     /*
@@ -1098,7 +1082,8 @@ public class Trigger {
      */
     public static class idTrigger_Touch extends idTrigger {
         // CLASS_PROTOTYPE( idTrigger_Touch );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idTrigger.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idTrigger_Touch>) idTrigger_Touch::Event_Trigger);
@@ -1111,6 +1096,10 @@ public class Trigger {
 
         public idTrigger_Touch() {
             clipModel = null;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -1211,9 +1200,6 @@ public class Trigger {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

@@ -1,14 +1,16 @@
 package neo.idlib.geometry;
 
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.containers.List.idSwap;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Surface.idSurface;
-import static neo.idlib.geometry.Winding.*;
-import static neo.idlib.math.Math_h.*;
-import static neo.idlib.math.Plane.*;
-
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.idlib.containers.List.idSwap;
+import static neo.idlib.geometry.Winding.MAX_POINTS_ON_WINDING;
+import static neo.idlib.geometry.Winding.idFixedWinding;
+import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
+import static neo.idlib.math.Math_h.INTSIGNBITSET;
+import static neo.idlib.math.Plane.*;
 
 /**
  *
@@ -283,5 +285,6 @@ public class Surface_Polytope {
 
             return side;
         }
-    };
+    }
+
 }

@@ -1,19 +1,11 @@
 package neo.Renderer;
 
-import java.util.Arrays;
 import neo.Renderer.Material.decalInfo_t;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.tr_light.R_AddDrawSurf;
-import static neo.Renderer.tr_local.tr;
 import neo.Renderer.tr_local.viewEntity_s;
-import static neo.Renderer.tr_main.R_AxisToModelMatrix;
-import static neo.Renderer.tr_main.R_GlobalPlaneToLocal;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.framework.Common.common;
 import neo.framework.DemoFile.idDemoFile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.DrawVert.idDrawVert;
@@ -21,11 +13,19 @@ import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.SIDE_CROSS;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
+
+import java.util.Arrays;
+
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.tr_light.R_AddDrawSurf;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_main.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Plane.SIDE_CROSS;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
@@ -50,30 +50,30 @@ public class ModelDecal {
 
     static class decalProjectionInfo_s {
 
-        idVec3 projectionOrigin;
-        idBounds projectionBounds;
         idPlane[] boundingPlanes = new idPlane[6];
+        float fadeDepth;
         idPlane[] fadePlanes = new idPlane[2];
-        idPlane[] textureAxis = new idPlane[2];
+        boolean force;
         idMaterial material;
         boolean parallel;
-        float fadeDepth;
+        idBounds projectionBounds;
+        idVec3 projectionOrigin;
         int startTime;
-        boolean force;
-    };
+        idPlane[] textureAxis = new idPlane[2];
+    }
 
     static class idRenderModelDecal {
 
-        private static final int MAX_DECAL_VERTS = 40;
         private static final int MAX_DECAL_INDEXES = 60;
+        private static final int MAX_DECAL_VERTS = 40;
+        private final int[] indexStartTime = new int[MAX_DECAL_INDEXES];
+        private final int[]/*glIndex_t*/ indexes = new int[MAX_DECAL_INDEXES];
         //
         private idMaterial material;
-        private srfTriangles_s tri;
-        private idDrawVert[] verts = new idDrawVert[MAX_DECAL_VERTS];
-        private float[] vertDepthFade = new float[MAX_DECAL_VERTS];
-        private int[]/*glIndex_t*/ indexes = new int[MAX_DECAL_INDEXES];
-        private int[] indexStartTime = new int[MAX_DECAL_INDEXES];
         private idRenderModelDecal nextDecal;
+        private srfTriangles_s tri;
+        private final float[] vertDepthFade = new float[MAX_DECAL_VERTS];
+        private final idDrawVert[] verts = new idDrawVert[MAX_DECAL_VERTS];
         //
         //
 
@@ -208,6 +208,78 @@ public class ModelDecal {
             localInfo.force = info.force;
         }
 
+        // Remove decals that are completely faded away.
+        public static idRenderModelDecal RemoveFadedDecals(idRenderModelDecal decals, int time) {
+            int i, j, minTime, newNumIndexes, newNumVerts;
+            int[] inUse = new int[MAX_DECAL_VERTS];
+            decalInfo_t decalInfo;
+            idRenderModelDecal nextDecal;
+
+            if (decals == null) {
+                return null;
+            }
+
+            // recursively free any next decals
+            decals.nextDecal = RemoveFadedDecals(decals.nextDecal, time);
+
+            // free the decals if no material set
+            if (decals.material == null) {
+                nextDecal = decals.nextDecal;
+                Free(decals);
+                return nextDecal;
+            }
+
+            decalInfo = decals.material.GetDecalInfo();
+            minTime = time - (decalInfo.stayTime + decalInfo.fadeTime);
+
+            newNumIndexes = 0;
+            for (i = 0; i < decals.tri.numIndexes; i += 3) {
+                if (decals.indexStartTime[i] > minTime) {
+                    // keep this triangle
+                    if (newNumIndexes != i) {
+                        for (j = 0; j < 3; j++) {
+                            decals.tri.indexes[newNumIndexes + j] = decals.tri.indexes[i + j];
+                            decals.indexStartTime[newNumIndexes + j] = decals.indexStartTime[i + j];
+                        }
+                    }
+                    newNumIndexes += 3;
+                }
+            }
+
+            // free the decals if all trianges faded away
+            if (newNumIndexes == 0) {
+                nextDecal = decals.nextDecal;
+                Free(decals);
+                return nextDecal;
+            }
+
+            decals.tri.numIndexes = newNumIndexes;
+
+//	memset( inUse, 0, sizeof( inUse ) );
+            Arrays.fill(inUse, 0);
+            for (i = 0; i < decals.tri.numIndexes; i++) {
+                inUse[decals.tri.indexes[i]] = 1;
+            }
+
+            newNumVerts = 0;
+            for (i = 0; i < decals.tri.numVerts; i++) {
+                if (0 == inUse[i]) {
+                    continue;
+                }
+                decals.tri.verts[newNumVerts] = decals.tri.verts[i];
+                decals.vertDepthFade[newNumVerts] = decals.vertDepthFade[i];
+                inUse[i] = newNumVerts;
+                newNumVerts++;
+            }
+            decals.tri.numVerts = newNumVerts;
+
+            for (i = 0; i < decals.tri.numIndexes; i++) {
+                decals.tri.indexes[i] = inUse[decals.tri.indexes[i]];
+            }
+
+            return decals;
+        }
+
         // Creates a deal on the given model.
         public void CreateDecal(final idRenderModel model, final decalProjectionInfo_s localInfo) {
 
@@ -296,78 +368,6 @@ public class ModelDecal {
                     AddDepthFadedWinding(fw, localInfo.material, localInfo.fadePlanes, localInfo.fadeDepth, localInfo.startTime);
                 }
             }
-        }
-
-        // Remove decals that are completely faded away.
-        public static idRenderModelDecal RemoveFadedDecals(idRenderModelDecal decals, int time) {
-            int i, j, minTime, newNumIndexes, newNumVerts;
-            int[] inUse = new int[MAX_DECAL_VERTS];
-            decalInfo_t decalInfo;
-            idRenderModelDecal nextDecal;
-
-            if (decals == null) {
-                return null;
-            }
-
-            // recursively free any next decals
-            decals.nextDecal = RemoveFadedDecals(decals.nextDecal, time);
-
-            // free the decals if no material set
-            if (decals.material == null) {
-                nextDecal = decals.nextDecal;
-                Free(decals);
-                return nextDecal;
-            }
-
-            decalInfo = decals.material.GetDecalInfo();
-            minTime = time - (decalInfo.stayTime + decalInfo.fadeTime);
-
-            newNumIndexes = 0;
-            for (i = 0; i < decals.tri.numIndexes; i += 3) {
-                if (decals.indexStartTime[i] > minTime) {
-                    // keep this triangle
-                    if (newNumIndexes != i) {
-                        for (j = 0; j < 3; j++) {
-                            decals.tri.indexes[newNumIndexes + j] = decals.tri.indexes[i + j];
-                            decals.indexStartTime[newNumIndexes + j] = decals.indexStartTime[i + j];
-                        }
-                    }
-                    newNumIndexes += 3;
-                }
-            }
-
-            // free the decals if all trianges faded away
-            if (newNumIndexes == 0) {
-                nextDecal = decals.nextDecal;
-                Free(decals);
-                return nextDecal;
-            }
-
-            decals.tri.numIndexes = newNumIndexes;
-
-//	memset( inUse, 0, sizeof( inUse ) );
-            Arrays.fill(inUse, 0);
-            for (i = 0; i < decals.tri.numIndexes; i++) {
-                inUse[decals.tri.indexes[i]] = 1;
-            }
-
-            newNumVerts = 0;
-            for (i = 0; i < decals.tri.numVerts; i++) {
-                if (0 == inUse[i]) {
-                    continue;
-                }
-                decals.tri.verts[newNumVerts] = decals.tri.verts[i];
-                decals.vertDepthFade[newNumVerts] = decals.vertDepthFade[i];
-                inUse[i] = newNumVerts;
-                newNumVerts++;
-            }
-            decals.tri.numVerts = newNumVerts;
-
-            for (i = 0; i < decals.tri.numIndexes; i++) {
-                decals.tri.indexes[i] = inUse[decals.tri.indexes[i]];
-            }
-
-            return decals;
         }
 
         // Updates the vertex colors, removing any faded indexes,
@@ -524,5 +524,6 @@ public class ModelDecal {
 
             AddWinding(front, decalMaterial, fadePlanes, fadeDepth, startTime);
         }
-    };
+    }
+
 }

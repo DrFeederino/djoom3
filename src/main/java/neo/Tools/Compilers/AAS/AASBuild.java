@@ -1,85 +1,29 @@
 package neo.Tools.Compilers.AAS;
 
-import static java.lang.Math.abs;
 import neo.Game.GameEdit;
-import static neo.Renderer.Material.CONTENTS_AAS_OBSTACLE;
-import static neo.Renderer.Material.CONTENTS_AAS_SOLID;
-import static neo.Renderer.Material.CONTENTS_AREAPORTAL;
-import static neo.Renderer.Material.CONTENTS_MONSTERCLIP;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.Material.CONTENTS_WATER;
-import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderWorld.PROC_FILE_EXT;
-import static neo.Renderer.RenderWorld.PROC_FILE_ID;
-import static neo.TempDump.NOT;
-import neo.Tools.Compilers.AAS.AASBuild.idAASBuild;
-import static neo.Tools.Compilers.AAS.AASBuild_File.AAS_PLANE_DIST_EPSILON;
-import static neo.Tools.Compilers.AAS.AASBuild_File.AAS_PLANE_NORMAL_EPSILON;
-import static neo.Tools.Compilers.AAS.AASBuild_File.EDGE_HASH_SIZE;
-import static neo.Tools.Compilers.AAS.AASBuild_File.INTEGRAL_EPSILON;
-import static neo.Tools.Compilers.AAS.AASBuild_File.VERTEX_EPSILON;
-import static neo.Tools.Compilers.AAS.AASBuild_File.VERTEX_HASH_BOXSIZE;
-import static neo.Tools.Compilers.AAS.AASBuild_File.VERTEX_HASH_SIZE;
-import static neo.Tools.Compilers.AAS.AASBuild_File.aas_edgeHash;
-import static neo.Tools.Compilers.AAS.AASBuild_File.aas_vertexBounds;
-import static neo.Tools.Compilers.AAS.AASBuild_File.aas_vertexHash;
-import static neo.Tools.Compilers.AAS.AASBuild_File.aas_vertexShift;
-import neo.Tools.Compilers.AAS.AASBuild_File.sizeEstimate_s;
-import static neo.Tools.Compilers.AAS.AASBuild_ledge.LEDGE_EPSILON;
+import neo.Renderer.Material.*;
+import neo.Tools.Compilers.AAS.AASBuild_File.*;
 import neo.Tools.Compilers.AAS.AASBuild_ledge.idLedge;
 import neo.Tools.Compilers.AAS.AASBuild_local.aasProcNode_s;
 import neo.Tools.Compilers.AAS.AASCluster.idAASCluster;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_BBOX_BIT;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_CLUSTERPORTAL;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_OBSTACLE;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_SOLID;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_WATER;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_FLOOR;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_GAP;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_LEDGE;
-import static neo.Tools.Compilers.AAS.AASFile.FACE_FLOOR;
-import static neo.Tools.Compilers.AAS.AASFile.FACE_SOLID;
-import neo.Tools.Compilers.AAS.AASFile.aasArea_s;
-import neo.Tools.Compilers.AAS.AASFile.aasEdge_s;
-import neo.Tools.Compilers.AAS.AASFile.aasFace_s;
-import neo.Tools.Compilers.AAS.AASFile.aasNode_s;
-import neo.Tools.Compilers.AAS.AASFile.idAASSettings;
+import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.Tools.Compilers.AAS.AASFile_local.idAASFileLocal;
 import neo.Tools.Compilers.AAS.AASReach.idAASReach;
-import static neo.Tools.Compilers.AAS.Brush.DisplayRealTimeString;
-import static neo.Tools.Compilers.AAS.Brush.SFL_USED_SPLITTER;
 import neo.Tools.Compilers.AAS.Brush.idBrush;
 import neo.Tools.Compilers.AAS.Brush.idBrushList;
 import neo.Tools.Compilers.AAS.Brush.idBrushMap;
 import neo.Tools.Compilers.AAS.Brush.idBrushSide;
-import static neo.Tools.Compilers.AAS.BrushBSP.NODE_DONE;
-import static neo.Tools.Compilers.AAS.BrushBSP.NODE_VISITED;
 import neo.Tools.Compilers.AAS.BrushBSP.idBrushBSP;
 import neo.Tools.Compilers.AAS.BrushBSP.idBrushBSPNode;
 import neo.Tools.Compilers.AAS.BrushBSP.idBrushBSPPortal;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.EDITOR_AAS;
-import static neo.framework.Common.com_editors;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.FileSystem_h.idFileList;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.BIT;
 import neo.idlib.Lib.idException;
-import static neo.idlib.MapFile.DEFAULT_CURVE_MAX_ERROR_CD;
-import static neo.idlib.MapFile.DEFAULT_CURVE_MAX_LENGTH_CD;
-import neo.idlib.MapFile.idMapBrush;
-import neo.idlib.MapFile.idMapBrushSide;
-import neo.idlib.MapFile.idMapEntity;
-import neo.idlib.MapFile.idMapFile;
-import neo.idlib.MapFile.idMapPatch;
-import neo.idlib.MapFile.idMapPrimitive;
-import static neo.idlib.Text.Lexer.LEXFL_NODOLLARPRECOMPILE;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
+import neo.idlib.MapFile.*;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
@@ -88,21 +32,36 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.geometry.Surface_Patch.idSurface_Patch;
-import static neo.idlib.geometry.Winding.MAX_POINTS_ON_WINDING;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.DEGENERATE_DIST_EPSILON;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_CROSS;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
+
+import static java.lang.Math.abs;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.RenderWorld.PROC_FILE_EXT;
+import static neo.Renderer.RenderWorld.PROC_FILE_ID;
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.AAS.AASBuild_File.*;
+import static neo.Tools.Compilers.AAS.AASBuild_ledge.LEDGE_EPSILON;
+import static neo.Tools.Compilers.AAS.AASFile.*;
+import static neo.Tools.Compilers.AAS.Brush.DisplayRealTimeString;
+import static neo.Tools.Compilers.AAS.Brush.SFL_USED_SPLITTER;
+import static neo.Tools.Compilers.AAS.BrushBSP.NODE_DONE;
+import static neo.Tools.Compilers.AAS.BrushBSP.NODE_VISITED;
+import static neo.framework.Common.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.MapFile.*;
+import static neo.idlib.Text.Lexer.LEXFL_NODOLLARPRECOMPILE;
+import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
+import static neo.idlib.geometry.Winding.MAX_POINTS_ON_WINDING;
+import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
+import static neo.idlib.math.Plane.*;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -111,6 +70,37 @@ import static neo.sys.win_shared.Sys_Milliseconds;
 public class AASBuild {
 
     static final int BFL_PATCH = 0x1000;
+
+    /*
+     ============
+     ParseOptions
+     ============
+     */
+    static int ParseOptions(final idCmdArgs args, idAASSettings settings) {
+        int i;
+        idStr str;
+
+        for (i = 1; i < args.Argc(); i++) {
+
+            str = new idStr(args.Argv(i));
+            str.StripLeading('-');
+
+            if (str.Icmp("usePatches") == 0) {
+                settings.usePatches[0] = true;
+                common.Printf("usePatches = true\n");
+            } else if (str.Icmp("writeBrushMap") == 0) {
+                settings.writeBrushMap[0] = true;
+                common.Printf("writeBrushMap = true\n");
+            } else if (str.Icmp("playerFlood") == 0) {
+                settings.playerFlood[0] = true;
+                common.Printf("playerFlood = true\n");
+            } else if (str.Icmp("noOptimize") == 0) {
+                settings.noOptimize = true;
+                common.Printf("noOptimize = true\n");
+            }
+        }
+        return args.Argc() - 1;
+    }
 
     static abstract class Allowance {
 
@@ -124,17 +114,20 @@ public class AASBuild {
     //===============================================================
     static class idAASBuild {
 
+        private static final int FACE_CHECKED = BIT(31);
+        private static final float GRAVSUBDIV_EPSILON = 0.1f;
         private idAASSettings aasSettings;
         private idAASFileLocal file;
-        private aasProcNode_s[] procNodes;
-        private int numProcNodes;
-        private int numGravitationalSubdivisions;
-        private int numMergedLeafNodes;
-        private int numLedgeSubdivisions;
         private idList<idLedge> ledgeList;
         private idBrushMap ledgeMap;
+        private int numGravitationalSubdivisions;
+        private int numLedgeSubdivisions;
+        private int numMergedLeafNodes;
         //
         //
+        private int numProcNodes;
+        // ~idAASBuild();//TODO:deconstructors?
+        private aasProcNode_s[] procNodes;
 
         public idAASBuild() {
             file = null;
@@ -145,7 +138,6 @@ public class AASBuild {
             numLedgeSubdivisions = 0;
             ledgeMap = null;
         }
-        // ~idAASBuild();//TODO:deconstructors?
 
         public boolean Build(final idStr fileName, final idAASSettings settings) {
             int i, bit, mask, startTime;
@@ -495,10 +487,7 @@ public class AASBuild {
                     nodeNum = node.children[0];
                 }
             } while (nodeNum > 0);
-            if (nodeNum < 0) {
-                return false;
-            }
-            return true;
+            return nodeNum >= 0;
         }
 
         private void ClipBrushSidesWithProcBSP(idBrushList brushList) {
@@ -867,13 +856,8 @@ public class AASBuild {
             } else {
                 normal = portal.GetPlane().Normal();
             }
-            if (normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos[0]) {
-                return true;
-            }
-            return false;
+            return normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos[0];
         }
-        private static final int FACE_CHECKED = BIT(31);
-        private static final float GRAVSUBDIV_EPSILON = 0.1f;
 
         private void GravSubdivLeafNode(idBrushBSPNode node) {
             int s1, s2, i, j, k, side1;
@@ -961,7 +945,7 @@ public class AASBuild {
                             for (j = 0; j < w2.GetNumPoints(); j++) {
                                 d = plane.Distance(w2.oGet(j).ToVec3());
                                 if (d >= GRAVSUBDIV_EPSILON) {
-                                    break;	// point at the same side of the plane as the gap
+                                    break;    // point at the same side of the plane as the gap
                                 }
                                 d = idMath.Fabs(d);
                                 if (d < min) {
@@ -975,7 +959,7 @@ public class AASBuild {
                             for (j = 0; j < w2.GetNumPoints(); j++) {
                                 d = plane.Distance(w2.oGet(j).ToVec3());
                                 if (d <= -GRAVSUBDIV_EPSILON) {
-                                    break;	// point at the same side of the plane as the gap
+                                    break;    // point at the same side of the plane as the gap
                                 }
                                 d = idMath.Fabs(d);
                                 if (d < min) {
@@ -1514,10 +1498,7 @@ public class AASBuild {
                 }
             } while (p != null);
 
-            if (numMerges != 0) {
-                return true;
-            }
-            return false;
+            return numMerges != 0;
         }
 
         private void MergeLeafNodes_r(idBrushBSP bsp, idBrushBSPNode node) {
@@ -1584,7 +1565,7 @@ public class AASBuild {
             if (f > max) {
                 max = f;
             }
-            aas_vertexShift = (int) ((float) max / VERTEX_HASH_BOXSIZE);
+            aas_vertexShift = (int) (max / VERTEX_HASH_BOXSIZE);
             for (i = 0; (1 << i) < aas_vertexShift; i++) {
             }
             if (i == 0) {
@@ -1712,7 +1693,7 @@ public class AASBuild {
             w = portal.GetWinding();
             // turn the winding into a sequence of edges
             numFaceEdges = 0;
-            v1num[0] = -1;		// first vertex unknown
+            v1num[0] = -1;        // first vertex unknown
             for (i = 0; i < w.GetNumPoints(); i++) {
 
                 GetEdge(w.oGet(i).ToVec3(), w.oGet((i + 1) % w.GetNumPoints()).ToVec3(), faceEdges, numFaceEdges, v1num);
@@ -1948,37 +1929,6 @@ public class AASBuild {
 
             return true;
         }
-    };
-
-    /*
-     ============
-     ParseOptions
-     ============
-     */
-    static int ParseOptions(final idCmdArgs args, idAASSettings settings) {
-        int i;
-        idStr str;
-
-        for (i = 1; i < args.Argc(); i++) {
-
-            str = new idStr(args.Argv(i));
-            str.StripLeading('-');
-
-            if (str.Icmp("usePatches") == 0) {
-                settings.usePatches[0] = true;
-                common.Printf("usePatches = true\n");
-            } else if (str.Icmp("writeBrushMap") == 0) {
-                settings.writeBrushMap[0] = true;
-                common.Printf("writeBrushMap = true\n");
-            } else if (str.Icmp("playerFlood") == 0) {
-                settings.playerFlood[0] = true;
-                common.Printf("playerFlood = true\n");
-            } else if (str.Icmp("noOptimize") == 0) {
-                settings.noOptimize = true;
-                common.Printf("noOptimize = true\n");
-            }
-        }
-        return args.Argc() - 1;
     }
 
     /*
@@ -2044,7 +1994,7 @@ public class AASBuild {
             common.SetRefreshOnPrint(false);
             common.PrintWarnings();
         }
-    };
+    }
 
     /*
      ============
@@ -2112,7 +2062,7 @@ public class AASBuild {
             common.SetRefreshOnPrint(false);
             common.PrintWarnings();
         }
-    };
+    }
 
     /*
      ============
@@ -2168,7 +2118,7 @@ public class AASBuild {
             common.SetRefreshOnPrint(false);
             common.PrintWarnings();
         }
-    };
+    }
 
     /*
      ============
@@ -2186,7 +2136,7 @@ public class AASBuild {
         public boolean run(idBrush b1, idBrush b2) {
             return (b1.GetContents() == b2.GetContents() && NOT((b1.GetFlags() | b2.GetFlags()) & BFL_PATCH));
         }
-    };
+    }
 
     /*
      ============
@@ -2204,7 +2154,7 @@ public class AASBuild {
         public boolean run(idBrush b1, idBrush b2) {
             return (b1.GetContents() == b2.GetContents());
         }
-    };
+    }
 
     /*
      ============
@@ -2222,5 +2172,6 @@ public class AASBuild {
         public boolean run(idBrush b1, idBrush b2) {
             return (b1.GetContents() == b2.GetContents());
         }
-    };
+    }
+
 }

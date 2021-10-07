@@ -19,9 +19,7 @@ import static neo.Sound.snd_system.idSoundSystemLocal.s_realTimeDecoding;
 import static neo.TempDump.stobb;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_SET;
-import static neo.idlib.Lib.LittleLong;
-import static neo.idlib.Lib.LittleRevBytes;
-import static neo.idlib.Lib.LittleShort;
+import static neo.idlib.Lib.*;
 import static neo.idlib.math.Simd.SIMDProcessor;
 import static neo.sys.sys_public.CRITICAL_SECTION_ONE;
 import static neo.sys.win_main.Sys_EnterCriticalSection;
@@ -32,14 +30,14 @@ import static neo.sys.win_main.Sys_LeaveCriticalSection;
  */
 public class snd_wavefile {
 
+    static final long fourcc_riff = mmioFOURCC('R', 'I', 'F', 'F');
+
     static long mmioFOURCC(int ch0, int ch1, int ch2, int ch3) {
         return ((byte) ch0
                 | (((byte) ch1) << 8)
                 | (((byte) ch2) << 16)
                 | (((byte) ch3) << 24));
     }
-
-    static final long fourcc_riff = mmioFOURCC('R', 'I', 'F', 'F');
 
     /*
      ===================================================================================
@@ -50,23 +48,23 @@ public class snd_wavefile {
      */
     public static class idWaveFile {
 
-        public  waveformatextensible_s mpwfx;       // Pointer to waveformatex structure
-        //
-        private idFile                 mhmmio;      // I/O handle for the WAVE
-        private mminfo_s               mck;         // Multimedia RIFF chunk
-        private mminfo_s               mckRiff;     // used when opening a WAVE file
-        private long/*dword*/          mdwSize;     // size in samples
+        public waveformatextensible_s mpwfx;       // Pointer to waveformatex structure
+        private boolean isOgg;
         private long/*dword*/          mMemSize;    // size of the wave data in memory
-        private long/*dword*/          mseekBase;
+        //
+        private boolean mbIsReadingFromMemory;
+        private final mminfo_s mck;         // Multimedia RIFF chunk
+        private final mminfo_s mckRiff;     // used when opening a WAVE file
+        private long/*dword*/          mdwSize;     // size in samples
         private long/*ID_TIME_T*/      mfileTime;
         //
-        private boolean                mbIsReadingFromMemory;
-        private ByteBuffer             mpbData;
-        private ByteBuffer             mpbDataCur;
+        private idFile mhmmio;      // I/O handle for the WAVE
+        private ByteBuffer mpbData;
+        private ByteBuffer mpbDataCur;
+        private long/*dword*/          mseekBase;
         private long/*dword*/          mulDataSize;
         //
-        private Object                 ogg;         // only !NULL when !s_realTimeDecoding
-        private boolean                isOgg;
+        private Object ogg;         // only !NULL when !s_realTimeDecoding
         //
         //
 
@@ -391,7 +389,7 @@ public class snd_wavefile {
 
         private int OpenOGG(final String strFileName, waveformatex_s[] pwfx /*= NULL*/) {
 //            memset(pwfx, 0, sizeof(waveformatex_t));
-            int error[] = {0};
+            int[] error = {0};
             STBVorbisInfo vi = null;
             mhmmio = fileSystem.OpenFileRead(strFileName);
             if (null == mhmmio) {
@@ -403,7 +401,7 @@ public class snd_wavefile {
             ByteBuffer buffer = ByteBuffer.allocate(mhmmio.Length());
             mhmmio.Read(buffer);
             try {
-                ByteBuffer d_buffer = (ByteBuffer) BufferUtils.createByteBuffer(buffer.capacity()).put(buffer).rewind();
+                ByteBuffer d_buffer = BufferUtils.createByteBuffer(buffer.capacity()).put(buffer).rewind();
                 final long ov = STBVorbis.stb_vorbis_open_memory(d_buffer, error, null);
                 if (error[0] != 0) {
                     fileSystem.CloseFile(mhmmio);

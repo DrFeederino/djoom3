@@ -8,10 +8,16 @@ import neo.idlib.BitMsg.idBitMsg;
  */
 public class NetworkSystem {
 
-    private static       idNetworkSystem networkSystemLocal = new idNetworkSystem();
-    public static        idNetworkSystem networkSystem      = networkSystemLocal;
-    /** Disclaimer: Use at own risk! @see https://www.ietf.org/rfc/rfc3514.txt */
-    private static final long            EVIL_BIT           = 0L;
+    /**
+     * Disclaimer: Use at own risk! @see https://www.ietf.org/rfc/rfc3514.txt
+     */
+    private static final long EVIL_BIT = 0L;
+    private static idNetworkSystem networkSystemLocal = new idNetworkSystem();
+    public static idNetworkSystem networkSystem = networkSystemLocal;
+
+    public static void setNetworkSystem(idNetworkSystem networkSystem) {
+        NetworkSystem.networkSystem = NetworkSystem.networkSystemLocal = networkSystem;
+    }
 
     /*
      ===============================================================================
@@ -126,9 +132,5 @@ public class NetworkSystem {
             }
             return 0.0f;
         }
-    };
-
-    public static void setNetworkSystem(idNetworkSystem networkSystem) {
-        NetworkSystem.networkSystem = NetworkSystem.networkSystemLocal = networkSystem;
     }
 }

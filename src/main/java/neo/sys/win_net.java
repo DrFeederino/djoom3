@@ -1,57 +1,42 @@
 package neo.sys;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketAddress;
-import java.net.SocketException;
+import neo.TempDump.TODO_Exception;
+import neo.framework.CVarSystem.*;
+import neo.sys.sys_public.netadr_t;
+
+import java.net.*;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import static neo.TempDump.NOT;
-import neo.TempDump.TODO_Exception;
 import static neo.TempDump.ntohl;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import neo.framework.CVarSystem.idCVar;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.Common.common;
-import neo.sys.sys_public.netadr_t;
 
 /**
  *
  */
 public class win_net {
 
-    //    static WSADATA winsockdata;
-    static boolean winsockInitialized     = false;
-    static boolean usingSocks             = false;
-
-    static final idCVar net_ip            = new idCVar("net_ip", "localhost", CVAR_SYSTEM, "local IP address");
-    static final idCVar net_port          = new idCVar("net_port", "0", CVAR_SYSTEM | CVAR_INTEGER, "local IP port number");
-    static final idCVar net_forceLatency  = new idCVar("net_forceLatency", "0", CVAR_SYSTEM | CVAR_INTEGER, "milliseconds latency");
-    static final idCVar net_forceDrop     = new idCVar("net_forceDrop", "0", CVAR_SYSTEM | CVAR_INTEGER, "percentage packet loss");
-
-    static final idCVar net_socksEnabled  = new idCVar("net_socksEnabled", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_BOOL, "");
-    static final idCVar net_socksServer   = new idCVar("net_socksServer", "", CVAR_SYSTEM | CVAR_ARCHIVE, "");
-    static final idCVar net_socksPort     = new idCVar("net_socksPort", "1080", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "");
-    static final idCVar net_socksUsername = new idCVar("net_socksUsername", "", CVAR_SYSTEM | CVAR_ARCHIVE, "");
+    static final int MAX_INTERFACES = 32;
+    //=============================================================================
+    static final int MAX_UDP_MSG_SIZE = 1400;
+    static final idCVar net_forceDrop = new idCVar("net_forceDrop", "0", CVAR_SYSTEM | CVAR_INTEGER, "percentage packet loss");
+    static final idCVar net_forceLatency = new idCVar("net_forceLatency", "0", CVAR_SYSTEM | CVAR_INTEGER, "milliseconds latency");
+    static final idCVar net_ip = new idCVar("net_ip", "localhost", CVAR_SYSTEM, "local IP address");
+    static final idCVar net_port = new idCVar("net_port", "0", CVAR_SYSTEM | CVAR_INTEGER, "local IP port number");
+    static final idCVar net_socksEnabled = new idCVar("net_socksEnabled", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_BOOL, "");
     static final idCVar net_socksPassword = new idCVar("net_socksPassword", "", CVAR_SYSTEM | CVAR_ARCHIVE, "");
+    static final idCVar net_socksPort = new idCVar("net_socksPort", "1080", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "");
+    static final idCVar net_socksServer = new idCVar("net_socksServer", "", CVAR_SYSTEM | CVAR_ARCHIVE, "");
+    static final idCVar net_socksUsername = new idCVar("net_socksUsername", "", CVAR_SYSTEM | CVAR_ARCHIVE, "");
+    static final net_interface[] netint = new net_interface[MAX_INTERFACES];
 
-    static class net_interface {
-        /*unsigned*/ long ip;
-        /*unsigned*/ long mask;
-
-        public net_interface(long ip_a, long ip_m) {
-            this.ip = ip_a;
-            this.mask = ip_m;
-        }
-    };
-
-    static final int             MAX_INTERFACES = 32;
-    static       int             num_interfaces = 0;
-    static final net_interface[] netint         = new net_interface[MAX_INTERFACES];
+    static int num_interfaces = 0;
+    static boolean usingSocks = false;
+    //    static WSADATA winsockdata;
+    static boolean winsockInitialized = false;
 
     //=============================================================================
     /*
@@ -678,7 +663,8 @@ public class win_net {
 
                 while (pIPAddrStrings.hasMoreElements()) {
                     pIPAddr = pIPAddrStrings.nextElement();
-                    /*unsigned*/ long ip_a, ip_m = 0;
+                    /*unsigned*/
+                    long ip_a, ip_m = 0;
 
                     if (pIPAddr instanceof Inet6Address) {
                         continue;//TODO:skip ipv6, for now.
@@ -847,30 +833,36 @@ public class win_net {
 //	return false;
     }
 
-    //=============================================================================
-    static final int MAX_UDP_MSG_SIZE = 1400;
+    static class net_interface {
+        /*unsigned*/ long ip;
+        /*unsigned*/ long mask;
+
+        public net_interface(long ip_a, long ip_m) {
+            this.ip = ip_a;
+            this.mask = ip_m;
+        }
+    }
 
     static class udpMsg_s {
 
-        byte[] data = new byte[MAX_UDP_MSG_SIZE];
         netadr_t address;
+        byte[] data = new byte[MAX_UDP_MSG_SIZE];
+        udpMsg_s next;
         int size;
         int time;
-        udpMsg_s next;
-    };
+    }
 
     static class idUDPLag {
 
+        public udpMsg_s recieveFirst;
+//						~idUDPLag( void );
+        public udpMsg_s recieveLast;
+        public udpMsg_s sendFirst;
+        public udpMsg_s sendLast;
         public idUDPLag() {
             sendFirst = sendLast = recieveFirst = recieveLast = null;//TODO:check this
         }
-//						~idUDPLag( void );
-
-        public udpMsg_s sendFirst;
-        public udpMsg_s sendLast;
-        public udpMsg_s recieveFirst;
-        public udpMsg_s recieveLast;
 //        public idBlockAlloc<udpMsg_t> udpMsgAllocator = new idBlockAlloc(64);
-    };
+    }
 
 }

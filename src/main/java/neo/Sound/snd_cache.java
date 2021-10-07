@@ -1,42 +1,39 @@
 package neo.Sound;
 
-import static java.lang.Math.sin;
-import java.nio.ByteBuffer;
-import java.nio.ShortBuffer;
-import neo.Sound.snd_cache.idSoundSample;
-import static neo.Sound.snd_local.WAVE_FORMAT_TAG_OGG;
-import static neo.Sound.snd_local.WAVE_FORMAT_TAG_PCM;
 import neo.Sound.snd_local.idSampleDecoder;
 import neo.Sound.snd_local.waveformatex_s;
 import neo.Sound.snd_system.idSoundSystemLocal;
 import neo.Sound.snd_wavefile.idWaveFile;
+import neo.framework.Common.MemInfo_t;
+import neo.framework.File_h.idFile;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.idList;
+import neo.idlib.math.Math_h.idMath;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL10;
+
+import java.nio.ByteBuffer;
+import java.nio.ShortBuffer;
+
+import static java.lang.Math.sin;
+import static neo.Sound.snd_local.WAVE_FORMAT_TAG_OGG;
+import static neo.Sound.snd_local.WAVE_FORMAT_TAG_PCM;
 import static neo.TempDump.NOT;
 import static neo.framework.BuildDefines.MACOS_X;
-import neo.framework.Common.MemInfo_t;
 import static neo.framework.Common.com_purgeAll;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.File_h.idFile;
 import static neo.idlib.Lib.Min;
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.containers.List.idList;
-import neo.idlib.math.Math_h.idMath;
 import static neo.idlib.math.Simd.MIXBUFFER_SAMPLES;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.openal.AL10;
-import static org.lwjgl.openal.AL10.AL_FORMAT_MONO16;
-import static org.lwjgl.openal.AL10.AL_FORMAT_STEREO16;
-import static org.lwjgl.openal.AL10.AL_NO_ERROR;
-import static org.lwjgl.openal.AL10.alGetError;
-import static org.lwjgl.openal.AL10.alIsExtensionPresent;
+import static org.lwjgl.openal.AL10.*;
 
 /**
  *
  */
 public class snd_cache {
-    
+
 //    static final boolean USE_SOUND_CACHE_ALLOCATOR = true;
 //    static final idDynamicBlockAlloc<Byte> soundCacheAllocator;
 //
@@ -59,20 +56,20 @@ public class snd_cache {
 
     public static class idSoundSample {
 
-        public idStr             name;                 // name of the sample file
-        public long/*ID_TIME_T*/ timestamp;            // the most recent of all images used in creation, for reloadImages command
-        //
-        public waveformatex_s    objectInfo;           // what are we caching
-        public int               objectSize;           // size of waveform in samples, excludes the header
-        public int               objectMemSize;        // object size in memory
-        public ByteBuffer        nonCacheData;         // if it's not cached
-        public ByteBuffer        amplitudeData;        // precomputed min,max amplitude pairs
-        public int/*ALuint*/     openalBuffer;         // openal buffer
-        public boolean           hardwareBuffer;
-        public boolean           defaultSound;
-        public boolean onDemand;
-        public boolean purged;
+        public ByteBuffer amplitudeData;        // precomputed min,max amplitude pairs
+        public boolean defaultSound;
+        public boolean hardwareBuffer;
         public boolean levelLoadReferenced;            // so we can tell which samples aren't needed any more
+        public idStr name;                 // name of the sample file
+        public ByteBuffer nonCacheData;         // if it's not cached
+        //
+        public waveformatex_s objectInfo;           // what are we caching
+        public int objectMemSize;        // object size in memory
+        public int objectSize;           // size of waveform in samples, excludes the header
+        public boolean onDemand;
+        public int/*ALuint*/     openalBuffer;         // openal buffer
+        public boolean purged;
+        public long/*ID_TIME_T*/ timestamp;            // the most recent of all images used in creation, for reloadImages command
 //
 //
 
@@ -152,7 +149,7 @@ public class snd_cache {
 
                 alGetError();
 //                alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, nonCacheData, objectMemSize, objectInfo.nSamplesPerSec);
-                AL10.alBufferData(openalBuffer/*  <<TODO>>   */, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, nonCacheData, (int) objectInfo.nSamplesPerSec);
+                AL10.alBufferData(openalBuffer/*  <<TODO>>   */, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, nonCacheData, objectInfo.nSamplesPerSec);
                 if (alGetError() != AL_NO_ERROR) {
                     common.Error("idSoundCache: error loading data into OpenAL hardware buffer");
                 } else {
@@ -241,12 +238,12 @@ public class snd_cache {
                     if (AL10.alIsBuffer(openalBuffer)) {
                         alGetError();
 //                        alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, nonCacheData, objectMemSize, objectInfo.nSamplesPerSec);
-                        AL10.alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, nonCacheData, (int) objectInfo.nSamplesPerSec);
+                        AL10.alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, nonCacheData, objectInfo.nSamplesPerSec);
                         if (alGetError() != AL_NO_ERROR) {
                             common.Error("idSoundCache: error loading data into OpenAL hardware buffer");
                         } else {
                             // Compute amplitude block size
-                            int blockSize = (int) (512 * objectInfo.nSamplesPerSec / 44100);
+                            int blockSize = 512 * objectInfo.nSamplesPerSec / 44100;
 
                             // Allocate amplitude data array
                             amplitudeData = BufferUtils.createByteBuffer((objectSize / blockSize + 1) * 2 * Short.BYTES);//soundCacheAllocator.Alloc( ( objectSize / blockSize + 1 ) * 2 * sizeof( short) );
@@ -276,7 +273,7 @@ public class snd_cache {
                 // OGG decompressed at load time (when smaller than s_decompressionLimit seconds, 6 seconds by default)
                 if (objectInfo.wFormatTag == WAVE_FORMAT_TAG_OGG) {
                     if ((MACOS_X && (objectSize < (objectInfo.nSamplesPerSec * idSoundSystemLocal.s_decompressionLimit.GetInteger())))
-                            || (alIsExtensionPresent("EAX-RAM") &&  (objectSize < (objectInfo.nSamplesPerSec * idSoundSystemLocal.s_decompressionLimit.GetInteger())))) {
+                            || (alIsExtensionPresent("EAX-RAM") && (objectSize < (objectInfo.nSamplesPerSec * idSoundSystemLocal.s_decompressionLimit.GetInteger())))) {
                         alGetError();
                         openalBuffer = AL10.alGenBuffers();
                         if (alGetError() != AL_NO_ERROR) {
@@ -324,12 +321,12 @@ public class snd_cache {
 
                             alGetError();
 //                            alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, destData, objectSize * sizeof(short), objectInfo.nSamplesPerSec);
-                            AL10.alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, destData, (int) objectInfo.nSamplesPerSec);
+                            AL10.alBufferData(openalBuffer, objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, destData, objectInfo.nSamplesPerSec);
                             if (alGetError() != AL_NO_ERROR) {
                                 common.Error("idSoundCache: error loading data into OpenAL hardware buffer");
                             } else {
                                 // Compute amplitude block size
-                                int blockSize = (int) (512 * objectInfo.nSamplesPerSec / 44100);
+                                int blockSize = 512 * objectInfo.nSamplesPerSec / 44100;
 
                                 // Allocate amplitude data array
                                 amplitudeData = BufferUtils.createByteBuffer((objectSize / blockSize + 1) * 2 * Short.BYTES);//soundCacheAllocator.Alloc( ( objectSize / blockSize + 1 ) * 2 * sizeof( short ) );
@@ -386,7 +383,7 @@ public class snd_cache {
                     return;
                 }
                 if (newTimestamp == timestamp) {
-                    return;	// don't need to reload it
+                    return;    // don't need to reload it
                 }
             }
 
@@ -395,7 +392,7 @@ public class snd_cache {
             Load();
         }
 
-        public void PurgeSoundSample() {			// frees all data
+        public void PurgeSoundSample() {            // frees all data
             purged = true;
 
             if (hardwareBuffer && idSoundSystemLocal.useOpenAL) {
@@ -421,7 +418,7 @@ public class snd_cache {
             }
         }
 
-        public void CheckForDownSample() {		// down sample if required
+        public void CheckForDownSample() {        // down sample if required
             if (!idSoundSystemLocal.s_force22kHz.GetBool()) {
                 return;
             }
@@ -482,7 +479,7 @@ public class snd_cache {
             }
             return true;
         }
-    };
+    }
 
     /*
      ===================================================================================
@@ -494,7 +491,7 @@ public class snd_cache {
     public static class idSoundCache {
 
         private boolean insideLevelLoad;
-        private idList<idSoundSample> listCache;
+        private final idList<idSoundSample> listCache;
         //
         //
 
@@ -716,5 +713,6 @@ public class snd_cache {
             f.Printf("\nTotal sound bytes allocated: %s\n", idStr.FormatNumber(total).toString());
             fileSystem.CloseFile(f);
         }
-    };
+    }
+
 }

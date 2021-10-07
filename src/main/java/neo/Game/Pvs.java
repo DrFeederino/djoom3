@@ -1,32 +1,27 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Pvs.pvsType_t.PVS_ALL_PORTALS_OPEN;
-import static neo.Game.Pvs.pvsType_t.PVS_CONNECTED_AREAS;
-import static neo.Game.Pvs.pvsType_t.PVS_NORMAL;
 import neo.Renderer.RenderWorld.exitPortal_t;
-import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_VIEW;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.memcmp;
-import static neo.TempDump.reinterpret_cast_long_array;
-import static neo.framework.Common.common;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorRed;
 import neo.idlib.Timer.idTimer;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Game.Pvs.pvsType_t.*;
+import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_VIEW;
+import static neo.TempDump.*;
+import static neo.framework.Common.common;
+import static neo.idlib.Lib.colorCyan;
+import static neo.idlib.Lib.colorRed;
+import static neo.idlib.math.Plane.*;
 
 /**
  *
@@ -42,92 +37,92 @@ public class Pvs {
 
      ===================================================================================
      */
-    public static final int MAX_BOUNDS_AREAS    = 16;
-    public static final int MAX_CURRENT_PVS     = 8;		// must be a power of 2
-
-    public static class pvsHandle_t {
-
-        int i;			// index to current pvs
-	/*unsigned */
-        int h;			// handle for current pvs
-    };
-
-    public static class pvsCurrent_t {
-
-        pvsHandle_t handle;	// current pvs handle
-        byte[] pvs;		    // current pvs bit string
-
-        public pvsCurrent_t() {
-            this.handle = new pvsHandle_t();
-        }
-    };
+    public static final int MAX_BOUNDS_AREAS = 16;
+    public static final int MAX_CURRENT_PVS = 8;        // must be a power of 2
 
     public enum pvsType_t {
 
         PVS_NORMAL,//= 0,               // PVS through portals taking portal states into account
         PVS_ALL_PORTALS_OPEN,//	= 1,	// PVS through portals assuming all portals are open
         PVS_CONNECTED_AREAS,//	= 2	    // PVS considering all topologically connected areas visible
-    };
+    }
+
+    public static class pvsHandle_t {
+
+        /*unsigned */
+        int h;            // handle for current pvs
+        int i;            // index to current pvs
+    }
+
+    public static class pvsCurrent_t {
+
+        pvsHandle_t handle;    // current pvs handle
+        byte[] pvs;            // current pvs bit string
+
+        public pvsCurrent_t() {
+            this.handle = new pvsHandle_t();
+        }
+    }
 
     public static class pvsPassage_t {
 
-        byte[] canSee;		// bit set for all portals that can be seen through this passage
-    };
+        byte[] canSee;        // bit set for all portals that can be seen through this passage
+    }
 
     public static class pvsPortal_t {
 
-        int            areaNum;  // area this portal leads to
-        idWinding      w;        // winding goes counter clockwise seen from the area this portal is part of
-        idBounds       bounds;   // winding bounds
-        idPlane        plane;    // winding plane, normal points towards the area this portal leads to
+        int areaNum;  // area this portal leads to
+        idBounds bounds;   // winding bounds
+        boolean done;     // true if pvs is calculated for this portal
+        byte[] mightSee; // used during construction
         pvsPassage_t[] passages; // passages to portals in the area this portal leads to
-        boolean        done;     // true if pvs is calculated for this portal
-        byte[]         vis;      // PVS for this portal
-        byte[]         mightSee; // used during construction
-        
-        public pvsPortal_t(){
+        idPlane plane;    // winding plane, normal points towards the area this portal leads to
+        byte[] vis;      // PVS for this portal
+        idWinding w;        // winding goes counter clockwise seen from the area this portal is part of
+
+        public pvsPortal_t() {
             bounds = new idBounds();
             plane = new idPlane();
         }
     }
 
-    ;
-
     public static class pvsArea_t {
 
-        int           numPortals;// number of portals in this area
-        idBounds      bounds;    // bounds of the whole area
+        idBounds bounds;    // bounds of the whole area
+        int numPortals;// number of portals in this area
         pvsPortal_t[] portals;   // array with pointers to the portals of this area
 
         public pvsArea_t() {
             bounds = new idBounds();
         }
-    };
+    }
 
     public static class pvsStack_t {
 
+        byte[] mightSee;    // bit set for all portals that might be visible through this passage/portal stack
         pvsStack_t next;        // next stack entry
-        byte[]     mightSee;    // bit set for all portals that might be visible through this passage/portal stack
-    };
+    }
 
     public static class idPVS {
 
-        private int       numAreas;
-        private int       numPortals;
+        public static final int MAX_PASSAGE_BOUNDS = 128;
+        private byte[] areaPVS;
+        private int[] areaQueue;
+        private int areaVisBytes;
+        private int areaVisLongs;
         private boolean[] connectedAreas;
-        private int[]     areaQueue;
-        private byte[]    areaPVS;
         // current PVS for a specific source possibly taking portal states (open/closed) into account
-        private pvsCurrent_t[] currentPVS = new pvsCurrent_t[MAX_CURRENT_PVS];
+        private final pvsCurrent_t[] currentPVS = new pvsCurrent_t[MAX_CURRENT_PVS];
+        private int numAreas;
+        private int numPortals;
         // used to create PVS
-        private int           portalVisBytes;
-        private int           portalVisLongs;
-        private int           areaVisBytes;
-        private int           areaVisLongs;
+        private int portalVisBytes;
+        private int portalVisLongs;
+        private pvsArea_t[] pvsAreas;
+        //
+        //
         private pvsPortal_t[] pvsPortals;
-        private pvsArea_t[]   pvsAreas;
-        //
-        //
+        // ~idPVS( void );
 
         public idPVS() {
             int i;
@@ -149,7 +144,6 @@ public class Pvs {
             pvsAreas = null;
             pvsPortals = null;
         }
-        // ~idPVS( void );
 
         // setup for the current map
         public void Init() {
@@ -232,11 +226,11 @@ public class Pvs {
         }
 
         // get the area(s) the source is in
-        public int GetPVSArea(final idVec3 point) {		// returns the area number
+        public int GetPVSArea(final idVec3 point) {        // returns the area number
             return gameRenderWorld.PointInArea(point);
         }
 
-        public int GetPVSAreas(final idBounds bounds, int[] areas, int maxAreas) {	// returns number of areas
+        public int GetPVSAreas(final idBounds bounds, int[] areas, int maxAreas) {    // returns number of areas
             return gameRenderWorld.BoundsInAreas(bounds, areas, maxAreas);
         }
 
@@ -302,7 +296,8 @@ public class Pvs {
 
         public pvsHandle_t SetupCurrentPVS(final int[] sourceAreas, final int numSourceAreas, final pvsType_t type /*= PVS_NORMAL*/) {
             int i, j;
-            /*unsigned*/ int h;
+            /*unsigned*/
+            int h;
             long[] vis, pvs;
             pvsHandle_t handle;
 
@@ -310,8 +305,8 @@ public class Pvs {
             for (i = 0; i < numSourceAreas; i++) {
                 h
                         ^= /**
-                         * reinterpret_cast<const unsigned int *>
-                         */
+                 * reinterpret_cast<const unsigned int *>
+                 */
                         (sourceAreas[i]);
             }
             handle = AllocCurrentPVS(h);
@@ -373,7 +368,7 @@ public class Pvs {
 
             if (pvs1.i < 0 || pvs1.i >= MAX_CURRENT_PVS || pvs1.h != currentPVS[pvs1.i].handle.h
                     || pvs2.i < 0 || pvs2.i >= MAX_CURRENT_PVS || pvs2.h != currentPVS[pvs2.i].handle.h) {
-                gameLocal.Error("idPVS::MergeCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::MergeCurrentPVS: invalid handle");
             }
 
             handle = AllocCurrentPVS(pvs1.h ^ pvs2.h);
@@ -391,7 +386,7 @@ public class Pvs {
 
         public void FreeCurrentPVS(pvsHandle_t handle) {
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
-                gameLocal.Error("idPVS::FreeCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::FreeCurrentPVS: invalid handle");
             }
             currentPVS[handle.i].handle.i = -1;
         }
@@ -402,7 +397,7 @@ public class Pvs {
 
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS
                     || handle.h != currentPVS[handle.i].handle.h) {
-                gameLocal.Error("idPVS::InCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::InCurrentPVS: invalid handle");
             }
 
             targetArea = gameRenderWorld.PointInArea(target);
@@ -420,7 +415,7 @@ public class Pvs {
 
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS
                     || handle.h != currentPVS[handle.i].handle.h) {
-                gameLocal.Error("idPVS::InCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::InCurrentPVS: invalid handle");
             }
 
             numTargetAreas = gameRenderWorld.BoundsInAreas(target, targetAreas, MAX_BOUNDS_AREAS);
@@ -437,7 +432,7 @@ public class Pvs {
 
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS
                     || handle.h != currentPVS[handle.i].handle.h) {
-                gameLocal.Error("idPVS::InCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::InCurrentPVS: invalid handle");
             }
 
             if (targetArea < 0 || targetArea >= numAreas) {
@@ -452,7 +447,7 @@ public class Pvs {
 
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS
                     || handle.h != currentPVS[handle.i].handle.h) {
-                gameLocal.Error("idPVS::InCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::InCurrentPVS: invalid handle");
             }
 
             for (i = 0; i < numTargetAreas; i++) {
@@ -577,7 +572,7 @@ public class Pvs {
 
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS
                     || handle.h != currentPVS[handle.i].handle.h) {
-                gameLocal.Error("idPVS::DrawCurrentPVS: invalid handle");
+                Game_local.idGameLocal.Error("idPVS::DrawCurrentPVS: invalid handle");
             }
 
             sourceArea = gameRenderWorld.PointInArea(source);
@@ -615,10 +610,11 @@ public class Pvs {
             }
         }
 
-// #if ASYNC_WRITE_PVS
+        // #if ASYNC_WRITE_PVS
         public void WritePVS(final pvsHandle_t handle, idBitMsg msg) {
             msg.WriteData(ByteBuffer.wrap(currentPVS[handle.i].pvs), areaVisBytes);
         }
+// #endif
 
         public void ReadPVS(final pvsHandle_t handle, final idBitMsg msg) {
             ByteBuffer l_pvs = ByteBuffer.allocate(256);
@@ -634,12 +630,11 @@ public class Pvs {
                 }
                 common.Printf("\n");
                 for (i = 0; i < areaVisBytes; i++) {
-                    common.Printf("%x ", currentPVS[ handle.i].pvs[ i]);
+                    common.Printf("%x ", currentPVS[handle.i].pvs[i]);
                 }
                 common.Printf("\n");
             }
         }
-// #endif
 
         private int GetPortalCount() {
             int i, na, np;
@@ -685,7 +680,7 @@ public class Pvs {
                     p = pvsPortals[cp++] = new pvsPortal_t();
                     // the winding goes counter clockwise seen from this area
                     p.w = portal.w.Copy();
-                    p.areaNum = portal.areas[1];	// area[1] is always the area the portal leads to
+                    p.areaNum = portal.areas[1];    // area[1] is always the area the portal leads to
 
                     p.vis = new byte[portalVisBytes];
                     p.mightSee = new byte[portalVisBytes];
@@ -744,21 +739,21 @@ public class Pvs {
             pvsArea_t area;
             pvsPortal_t p;
 
-            area = pvsAreas[ areaNum];
+            area = pvsAreas[areaNum];
 
             for (i = 0; i < area.numPortals; i++) {
                 p = area.portals[i];
                 n = indexOf(p, pvsPortals);//TODO:very importante, what does thus do!?
                 // don't flood through if this portal is not at the front
-                if (0 == (portal.mightSee[ n >> 3] & (1 << (n & 7)))) {
+                if (0 == (portal.mightSee[n >> 3] & (1 << (n & 7)))) {
                     continue;
                 }
                 // don't flood through if already visited this portal
-                if ((portal.vis[ n >> 3] & (1 << (n & 7))) != 0) {
+                if ((portal.vis[n >> 3] & (1 << (n & 7))) != 0) {
                     continue;
                 }
                 // this portal might be visible
-                portal.vis[ n >> 3] |= (1 << (n & 7));
+                portal.vis[n >> 3] |= (1 << (n & 7));
                 // flood through the portal
                 FloodFrontPortalPVS_r(portal, p.areaNum);
             }
@@ -812,7 +807,7 @@ public class Pvs {
                                 }
                             }
                             if (k >= p2.w.GetNumPoints()) {
-                                continue;	// second portal is at the back of the first portal
+                                continue;    // second portal is at the back of the first portal
                             }
                         }
 
@@ -826,13 +821,13 @@ public class Pvs {
                                 }
                             }
                             if (k >= p1.w.GetNumPoints()) {
-                                continue;	// first portal is at the front of the second portal
+                                continue;    // first portal is at the front of the second portal
                             }
                         }
 
                         // the portal might be visible at the front
                         n = indexOf(p2, pvsPortals);
-                        p1.mightSee[ n >> 3] |= 1 << (n & 7);
+                        p1.mightSee[n >> 3] |= 1 << (n & 7);
                     }
                 }
             }
@@ -972,7 +967,7 @@ public class Pvs {
             boolean flipTest, front;
             idPlane plane = new idPlane();
 
-            // check all combinations	
+            // check all combinations
             for (i = 0; i < source.GetNumPoints(); i++) {
 
                 l = (i + 1) % source.GetNumPoints();
@@ -1014,7 +1009,7 @@ public class Pvs {
                         }
                     }
                     if (k == source.GetNumPoints()) {
-                        continue;		// planar with source portal
+                        continue;        // planar with source portal
                     }
 
                     // flip the normal if the source portal is backwards
@@ -1038,10 +1033,10 @@ public class Pvs {
                         }
                     }
                     if (k < pass.GetNumPoints()) {
-                        continue;	// points on negative side, not a seperating plane
+                        continue;    // points on negative side, not a seperating plane
                     }
                     if (!front) {
-                        continue;	// planar with seperating plane
+                        continue;    // planar with seperating plane
                     }
 
                     // flip the normal if we want the back side
@@ -1073,7 +1068,6 @@ public class Pvs {
                 }
             }
         }
-        public static final int MAX_PASSAGE_BOUNDS = 128;
 
         private void CreatePassages() {
             int i, j, l, n, front, passageMemory, byteNum, bitNum;
@@ -1100,7 +1094,7 @@ public class Pvs {
                     passage = source.passages[j] = new pvsPassage_t();
 
                     // if the source portal cannot see this portal
-                    if (0 == (source.mightSee[ n >> 3] & (1 << (n & 7)))) {
+                    if (0 == (source.mightSee[n >> 3] & (1 << (n & 7)))) {
                         // not all portals in the area have to be visible because areas are not necesarily convex
                         // also no passage has to be created for the portal which is the opposite of the source
                         passage.canSee = null;
@@ -1251,7 +1245,7 @@ public class Pvs {
                 // the portals of this area are always visible
                 for (j = 0; j < area.numPortals; j++) {
                     k = indexOf(area.portals[j], pvsPortals);
-                    area.portals[0].vis[ k >> 3] |= 1 << (k & 7);
+                    area.portals[0].vis[k >> 3] |= 1 << (k & 7);
                 }
 
                 // set all areas to visible that can be seen from the portals of this area
@@ -1329,13 +1323,13 @@ public class Pvs {
                 }
             }
 
-            gameLocal.Error("idPVS::AllocCurrentPVS: no free PVS left");
+            Game_local.idGameLocal.Error("idPVS::AllocCurrentPVS: no free PVS left");
 
             handle.i = -1;
             handle.h = 0;
             return handle;
         }
 
-    };
+    }
 
 }

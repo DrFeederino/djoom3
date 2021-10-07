@@ -35,16 +35,21 @@ public class AI_Vagary {
      ***********************************************************************/
 
     private static final idEventDef AI_Vagary_ChooseObjectToThrow = new idEventDef("vagary_ChooseObjectToThrow", "vvfff", 'e');
-    private static final idEventDef AI_Vagary_ThrowObjectAtEnemy  = new idEventDef("vagary_ThrowObjectAtEnemy", "ef");
+    private static final idEventDef AI_Vagary_ThrowObjectAtEnemy = new idEventDef("vagary_ThrowObjectAtEnemy", "ef");
 //
 
     public static class idAI_Vagary extends idAI {
         //CLASS_PROTOTYPE( idAI_Vagary );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idAI.getEventCallBacks());
             eventCallbacks.put(AI_Vagary_ChooseObjectToThrow, (eventCallback_t5<idAI_Vagary>) idAI_Vagary::Event_ChooseObjectToThrow);
             eventCallbacks.put(AI_Vagary_ThrowObjectAtEnemy, (eventCallback_t2<idAI_Vagary>) idAI_Vagary::Event_ThrowObjectAtEnemy);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         private void Event_ChooseObjectToThrow(final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs,
@@ -73,7 +78,7 @@ public class AI_Vagary {
                 if (index >= numListedEntities) {
                     index = 0;
                 }
-                ent = entityList[ index];
+                ent = entityList[index];
                 if (!ent.IsType(idMoveable.class)) {
                     continue;
                 }
@@ -131,15 +136,11 @@ public class AI_Vagary {
             }
         }
 
-
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

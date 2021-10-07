@@ -1,28 +1,50 @@
 package neo.ui;
 
-import java.nio.ByteBuffer;
 import neo.TempDump.SERiAL;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.nio.ByteBuffer;
+
+import static neo.idlib.math.Math_h.DEG2RAD;
 
 /**
  *
  */
 public class Rectangle {
 
-//
+    /*
+     ================
+     RotateVector
+     ================
+     */
+    static void RotateVector(idVec3 v, idVec3 origin, float a, float c, float s) {
+        float x = v.oGet(0);
+        float y = v.oGet(1);
+        if (a != 0) {
+            float x2 = (((x - origin.oGet(0)) * c) - ((y - origin.oGet(1)) * s)) + origin.oGet(0);
+            float y2 = (((x - origin.oGet(0)) * s) + ((y - origin.oGet(1)) * c)) + origin.oGet(1);
+            x = x2;
+            y = y2;
+        }
+        v.oSet(0, x);
+        v.oSet(1, y);
+    }
+
+    //
 // simple rectangle
 //
 //extern void RotateVector(idVec3 &v, idVec3 origin, float a, float c, float s);
     public static class idRectangle implements SERiAL {
 
+        private static final char[][] str = new char[8][48];
+        private static int index = 0;
+        public float h;    // height;
+        public float w;    // width
+//
         public float x;    // horiz position
         public float y;    // vert position
-        public float w;    // width
-        public float h;    // height;
-//
 
         public idRectangle() {
             x = y = w = h = 0.0f;
@@ -57,10 +79,7 @@ public class Rectangle {
             if (w == 0.0 && h == 0.0) {
                 return false;
             }
-            if (xt >= x && xt <= Right() && yt >= y && yt <= Bottom()) {
-                return true;
-            }
-            return false;
+            return xt >= x && xt <= Right() && yt >= y && yt <= Bottom();
         }
 
         public void Empty() {
@@ -170,7 +189,7 @@ public class Rectangle {
             return this;
         }
 
-//	int operator==(const idRectangle &a) const;
+        //	int operator==(const idRectangle &a) const;
         @Override
         public int hashCode() {
             int hash = 7;
@@ -199,10 +218,7 @@ public class Rectangle {
             if (Float.floatToIntBits(this.w) != Float.floatToIntBits(other.w)) {
                 return false;
             }
-            if (Float.floatToIntBits(this.h) != Float.floatToIntBits(other.h)) {
-                return false;
-            }
-            return true;
+            return Float.floatToIntBits(this.h) == Float.floatToIntBits(other.h);
         }
 
         public float oGet(final int index) {
@@ -217,8 +233,6 @@ public class Rectangle {
                     return h;
             }
         }
-        private static int index = 0;
-        private static final char[][] str = new char[8][48];
 
         @Override
         public String toString() {
@@ -253,7 +267,7 @@ public class Rectangle {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     static class idRegion {
 
@@ -292,23 +306,5 @@ public class Rectangle {
             }
             return null;
         }
-    };
-
-    /*
-     ================
-     RotateVector
-     ================
-     */
-    static void RotateVector(idVec3 v, idVec3 origin, float a, float c, float s) {
-        float x = v.oGet(0);
-        float y = v.oGet(1);
-        if (a != 0) {
-            float x2 = (((x - origin.oGet(0)) * c) - ((y - origin.oGet(1)) * s)) + origin.oGet(0);
-            float y2 = (((x - origin.oGet(0)) * s) + ((y - origin.oGet(1)) * c)) + origin.oGet(1);
-            x = x2;
-            y = y2;
-        }
-        v.oSet(0, x);
-        v.oSet(1, y);
     }
 }

@@ -1,31 +1,25 @@
 package neo.Game.Script;
 
+import neo.Game.GameSys.Event.idEventDef;
+import neo.Game.GameSys.SaveGame.idRestoreGame;
+import neo.Game.GameSys.SaveGame.idSaveGame;
+import neo.TempDump.*;
+import neo.framework.File_h.idFile;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.idList;
+import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.math.Vector.idVec3;
+
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import neo.Game.GameSys.Event.idEventDef;
-import neo.Game.GameSys.SaveGame.idRestoreGame;
-import neo.Game.GameSys.SaveGame.idSaveGame;
 import static neo.Game.Game_local.gameLocal;
 import static neo.Game.Game_local.idGameLocal.gameError;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.initializedConstant;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.initializedVariable;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.stackVariable;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.uninitialized;
-import neo.TempDump.CPP_class;
-import neo.TempDump.SERiAL;
-import neo.framework.File_h.idFile;
-import neo.idlib.Lib.idException;
-import neo.idlib.Text.Str.idStr;
-
-import static neo.TempDump.btoi;
-import static neo.TempDump.btos;
-import static neo.TempDump.itob;
+import static neo.Game.Script.Script_Program.idVarDef.initialized_t.*;
+import static neo.TempDump.*;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -33,28 +27,53 @@ import neo.idlib.math.Vector.idVec3;
 public class Script_Program {
 
     public static final int MAX_STRING_LEN = 128;
-    static final        int MAX_GLOBALS    = 196608;       // in bytes
-    static final        int MAX_STRINGS    = 1024;
-    static final        int MAX_FUNCS      = 3072;
-    static final        int MAX_STATEMENTS = 81920;        // statement_s - 18 bytes last I checked
-
+    static final int MAX_FUNCS = 3072;
+    static final int MAX_GLOBALS = 196608;       // in bytes
+    static final int MAX_STATEMENTS = 81920;        // statement_s - 18 bytes last I checked
+    static final int MAX_STRINGS = 1024;
+    static final int ev_argsize = 13;
+    static final int ev_boolean = 14;
+    static final int ev_entity = 6;
     //    public enum etype_t {
-    static final int       ev_error             = -1;
-    static final int       ev_void              = 0;
-    static final int       ev_scriptevent       = 1;
-    static final int       ev_namespace         = 2;
-    static final int       ev_string            = 3;
-    static final int       ev_float             = 4;
-    static final int       ev_vector            = 5;
-    static final int       ev_entity            = 6;
-    static final int       ev_field             = 7;
-    static final int       ev_function          = 8;
-    static final int       ev_virtualfunction   = 9;
-    static final int       ev_pointer           = 10;
-    static final int       ev_object            = 11;
-    static final int       ev_jumpoffset        = 12;
-    static final int       ev_argsize           = 13;
-    static final int       ev_boolean           = 14;
+    static final int ev_error = -1;
+    static final int ev_field = 7;
+    static final int ev_float = 4;
+    static final int ev_function = 8;
+    static final int ev_jumpoffset = 12;
+    static final int ev_namespace = 2;
+    static final int ev_object = 11;
+    static final int ev_pointer = 10;
+    static final int ev_scriptevent = 1;
+    static final int ev_string = 3;
+    static final int ev_vector = 5;
+    static final int ev_virtualfunction = 9;
+    static final int ev_void = 0;
+    static final idTypeDef type_argsize = new idTypeDef(ev_argsize, "<argsize>", 4, null);                // only used for function call and thread opcodes
+    static final idVarDef def_argsize = new idVarDef(type_argsize);
+    static final idTypeDef type_boolean = new idTypeDef(ev_boolean, "boolean", 4, null);
+    static final idVarDef def_boolean = new idVarDef(type_boolean);
+    static final idTypeDef type_entity = new idTypeDef(ev_entity, "entity", 4, null);                    // stored as entity number pointer
+    static final idVarDef def_entity = new idVarDef(type_entity);
+    static final idTypeDef type_field = new idTypeDef(ev_field, "field", 4, null);
+    static final idVarDef def_field = new idVarDef(type_field);
+    static final idTypeDef type_float = new idTypeDef(ev_float, "float", 4, null);
+    static final idVarDef def_float = new idVarDef(type_float);
+    static final idTypeDef type_jumpoffset = new idTypeDef(ev_jumpoffset, "<jump>", 4, null);                // only used for jump opcodes
+    static final idVarDef def_jumpoffset = new idVarDef(type_jumpoffset);        // only used for jump opcodes
+    static final idTypeDef type_namespace = new idTypeDef(ev_namespace, "namespace", 4, null);
+    static final idVarDef def_namespace = new idVarDef(type_namespace);
+    static final idTypeDef type_object = new idTypeDef(ev_object, "object", 4, null);                    // stored as entity number pointer
+    static final idVarDef def_object = new idVarDef(type_object);
+    static final idTypeDef type_pointer = new idTypeDef(ev_pointer, "pointer", 4, null);
+    static final idVarDef def_pointer = new idVarDef(type_pointer);
+    static final idTypeDef type_scriptevent = new idTypeDef(ev_scriptevent, "scriptevent", 4, null);
+    static final idVarDef def_scriptevent = new idVarDef(type_scriptevent);
+    static final idTypeDef type_string = new idTypeDef(ev_string, "string", MAX_STRING_LEN, null);
+    static final idVarDef def_string = new idVarDef(type_string);
+    static final idTypeDef type_vector = new idTypeDef(ev_vector, "vector", 12, null);
+    static final idVarDef def_vector = new idVarDef(type_vector);
+    static final idTypeDef type_virtualfunction = new idTypeDef(ev_virtualfunction, "virtual function", 4, null);
+    static final idVarDef def_virtualfunction = new idVarDef(type_virtualfunction);
     //    };
     /* **********************************************************************
 
@@ -62,37 +81,11 @@ public class Script_Program {
 
      ***********************************************************************/
     // simple types.  function types are dynamically allocated
-    static final idTypeDef type_void            = new idTypeDef(ev_void, "void", 0, null);
-    static final idTypeDef type_scriptevent     = new idTypeDef(ev_scriptevent, "scriptevent", 4, null);
-    static final idTypeDef type_namespace       = new idTypeDef(ev_namespace, "namespace", 4, null);
-    static final idTypeDef type_string          = new idTypeDef(ev_string, "string", MAX_STRING_LEN, null);
-    static final idTypeDef type_float           = new idTypeDef(ev_float, "float", 4, null);
-    static final idTypeDef type_vector          = new idTypeDef(ev_vector, "vector", 12, null);
-    static final idTypeDef type_entity          = new idTypeDef(ev_entity, "entity", 4, null);                    // stored as entity number pointer
-    static final idTypeDef type_field           = new idTypeDef(ev_field, "field", 4, null);
-    static final idTypeDef type_function        = new idTypeDef(ev_function, "function", 4, type_void);
-    static final idTypeDef type_virtualfunction = new idTypeDef(ev_virtualfunction, "virtual function", 4, null);
-    static final idTypeDef type_pointer         = new idTypeDef(ev_pointer, "pointer", 4, null);
-    static final idTypeDef type_object          = new idTypeDef(ev_object, "object", 4, null);                    // stored as entity number pointer
-    static final idTypeDef type_jumpoffset      = new idTypeDef(ev_jumpoffset, "<jump>", 4, null);                // only used for jump opcodes
-    static final idTypeDef type_argsize         = new idTypeDef(ev_argsize, "<argsize>", 4, null);                // only used for function call and thread opcodes
-    static final idTypeDef type_boolean         = new idTypeDef(ev_boolean, "boolean", 4, null);
+    static final idTypeDef type_void = new idTypeDef(ev_void, "void", 0, null);
+    static final idTypeDef type_function = new idTypeDef(ev_function, "function", 4, type_void);
+    static final idVarDef def_function = new idVarDef(type_function);
     //
-    static final idVarDef  def_void             = new idVarDef(type_void);
-    static final idVarDef  def_scriptevent      = new idVarDef(type_scriptevent);
-    static final idVarDef  def_namespace        = new idVarDef(type_namespace);
-    static final idVarDef  def_string           = new idVarDef(type_string);
-    static final idVarDef  def_float            = new idVarDef(type_float);
-    static final idVarDef  def_vector           = new idVarDef(type_vector);
-    static final idVarDef  def_entity           = new idVarDef(type_entity);
-    static final idVarDef  def_field            = new idVarDef(type_field);
-    static final idVarDef  def_function         = new idVarDef(type_function);
-    static final idVarDef  def_virtualfunction  = new idVarDef(type_virtualfunction);
-    static final idVarDef  def_pointer          = new idVarDef(type_pointer);
-    static final idVarDef  def_object           = new idVarDef(type_object);
-    static final idVarDef  def_jumpoffset       = new idVarDef(type_jumpoffset);        // only used for jump opcodes
-    static final idVarDef  def_argsize          = new idVarDef(type_argsize);
-    static final idVarDef  def_boolean          = new idVarDef(type_boolean);
+    static final idVarDef def_void = new idVarDef(type_void);
 
     static {
         type_void.def = def_void;
@@ -120,7 +113,7 @@ public class Script_Program {
     public static class function_t implements SERiAL {
 
         static final int SIZE
-                               = idStr.SIZE
+                = idStr.SIZE
                 + CPP_class.Pointer.SIZE//eventdef
                 + CPP_class.Pointer.SIZE//def
                 + CPP_class.Pointer.SIZE//type
@@ -131,18 +124,17 @@ public class Script_Program {
                 + Integer.SIZE
                 + idList.SIZE;
         static final int BYTES = SIZE / Byte.SIZE;
-
-        private idStr name = new idStr();
+        public idVarDef def;
         //
         public idEventDef eventdef;
-        public idVarDef   def;
-        public idTypeDef  type;
-        public int        firstStatement;
-        public int        numStatements;//TODO:booleans?
-        public int        parmTotal;
-        public int        locals;            // total ints of parms + locals
-        public int        filenum;           // source file defined in
+        public int filenum;           // source file defined in
+        public int firstStatement;
+        public int locals;            // total ints of parms + locals
+        public int numStatements;//TODO:booleans?
         public idList<Integer> parmSize = new idList<>();
+        public int parmTotal;
+        public idTypeDef type;
+        private final idStr name = new idStr();
         //
         //
 
@@ -204,13 +196,13 @@ public class Script_Program {
 
     static class /*union*/ eval_s {//TODO:unionize?
 
-        final String[]     stringPtr;
-        final float        _float;
-        final float[]      vector;
+        final float _float;
+        final int _int;
+        final int entity;
         final function_t[] function;
-        final int          _int;
-        final int          entity;
-        
+        final String[] stringPtr;
+        final float[] vector;
+
         eval_s(final String string) {
             this.stringPtr = new String[]{string};
             _float = Float.NaN;
@@ -218,6 +210,7 @@ public class Script_Program {
             function = null;
             _int = entity = Integer.MIN_VALUE;
         }
+
         eval_s(final float _float) {
             stringPtr = null;
             this._float = _float;
@@ -225,6 +218,7 @@ public class Script_Program {
             function = null;
             _int = entity = Integer.MIN_VALUE;
         }
+
         eval_s(final float[] vector) {
             stringPtr = null;
             _float = Float.NaN;
@@ -232,6 +226,7 @@ public class Script_Program {
             function = null;
             _int = entity = Integer.MIN_VALUE;
         }
+
         eval_s(final function_t func) {
             stringPtr = null;
             _float = Float.NaN;
@@ -239,6 +234,7 @@ public class Script_Program {
             this.function = new function_t[]{func};
             _int = entity = Integer.MIN_VALUE;
         }
+
         eval_s(final int val) {
             stringPtr = null;
             _float = Float.NaN;
@@ -257,18 +253,17 @@ public class Script_Program {
      ***********************************************************************/
     public static final class idTypeDef {
         public static final int BYTES = Integer.BYTES * 8;//TODO:<-
-
-        private int/*etype_t*/ type;
-        private idStr          name;
-        private int            size;
-        //
-        // function types are more complex
-        private idTypeDef      auxType;  // return type
-        private idList<idTypeDef>  parmTypes = new idList<>();
-        private idStrList          parmNames = new idStrList();
-        private idList<function_t> functions = new idList<>();
         //
         public idVarDef def;        // a def that points to this type
+        //
+        // function types are more complex
+        private idTypeDef auxType;  // return type
+        private idList<function_t> functions = new idList<>();
+        private idStr name;
+        private idStrList parmNames = new idStrList();
+        private idList<idTypeDef> parmTypes = new idList<>();
+        private int size;
+        private int/*etype_t*/ type;
 //
 //
 
@@ -640,10 +635,10 @@ public class Script_Program {
      ***********************************************************************/
     public static class idScriptObject implements SERiAL {
 
-        private idTypeDef  type;
         //
-        public  ByteBuffer data;
-        public  int        offset;
+        public ByteBuffer data;
+        public int offset;
+        private idTypeDef type;
 //
 //
 
@@ -818,7 +813,7 @@ public class Script_Program {
                         if (etype != parm.FieldType().Type()) {
                             return null;
                         }
-                        return ((ByteBuffer) data.position(pos)).slice();
+                        return data.position(pos).slice();
                     }
 
                     if (parm.FieldType().Inherits(type_object)) {
@@ -861,11 +856,11 @@ public class Script_Program {
     static class idScriptVariable<type, returnType> {
 
         protected final int/*etype_t*/ etype;
-        private         ByteBuffer     data;
+        private ByteBuffer data;
 //
 //
 
-//        public idScriptVariable() {
+        //        public idScriptVariable() {
 //            etype = null;
 //            data = null;
 //        }
@@ -910,7 +905,7 @@ public class Script_Program {
             return this;
         }
 
-        public returnType _() {
+        public returnType underscore() {
             // check if we attempt to access the object before it's been linked
             assert (data != null);
 
@@ -931,10 +926,10 @@ public class Script_Program {
             }
         }
 
-        public void _(returnType bla) {
+        public void underscore(returnType bla) {
             this.oSet(bla);
         }
-    };
+    }
 
     /* **********************************************************************
 
@@ -950,31 +945,31 @@ public class Script_Program {
         public idScriptBool() {
             super(ev_boolean);
         }
-    };
+    }
 
     public static class idScriptFloat extends idScriptVariable<Float, Float> {
         public idScriptFloat() {
             super(ev_float);
         }
-    };
+    }
 
     private static class idScriptInt extends idScriptVariable<Float, Integer> {
         public idScriptInt() {
             super(ev_float);
         }
-    };
+    }
 
     private static class idScriptVector extends idScriptVariable<idVec3, idVec3> {
         public idScriptVector() {
             super(ev_vector);
         }
-    };
+    }
 
     private static class idScriptString extends idScriptVariable<idStr, String> {
         public idScriptString() {
             super(ev_string);
         }
-    };
+    }
 
     /* **********************************************************************
 
@@ -991,8 +986,6 @@ public class Script_Program {
         }
     }
 
-    ;
-
     /* **********************************************************************
 
      idVarDef
@@ -1003,92 +996,81 @@ public class Script_Program {
      ***********************************************************************/
     static class /*union*/ varEval_s {
         static final int BYTES = Float.BYTES;
-
-
-        idScriptObject objectPtrPtr;
-        String       stringPtr;
-//        final         float[]        floatPtr;
-        idVec3       vectorPtr = new idVec3();
-        function_t   functionPtr;
-//        final         int[]          intPtr;
+        //        final         int[]          intPtr;
 //        final         ByteBuffer     bytePtr;
 //        private int virtualFunction;
 //        private int jumpOffset;
 //        private int stackOffset;		// offset in stack for local variables
 //        private int argSize;
-        varEval_s    evalPtr;
-//        private int ptrOffset;
-        private ByteBuffer primitive = ByteBuffer.allocate(Float.BYTES * 3).order(ByteOrder.LITTLE_ENDIAN);
+        varEval_s evalPtr;
+        function_t functionPtr;
+        idScriptObject objectPtrPtr;
+        String stringPtr;
+        //        final         float[]        floatPtr;
+        idVec3 vectorPtr = new idVec3();
         private int offset;
+        //        private int ptrOffset;
+        private ByteBuffer primitive = ByteBuffer.allocate(Float.BYTES * 3).order(ByteOrder.LITTLE_ENDIAN);
 
         public int getVirtualFunction() {
             return getPrimitive();
-        }
-
-        public int getJumpOffset() {
-            return getPrimitive();
-        }
-
-        public int getStackOffset() {
-            return getPrimitive();
-        }
-
-        public int getArgSize() {
-            return getPrimitive();
-        }
-
-        public int getPtrOffset() {
-            return getPrimitive();
-        }
-
-        private int getPrimitive() {
-            return primitive.getInt(0);
-        }
-
-        public void setIntPtr(final int val) {
-            setPrimitive(val);
-        }
-
-        public void setIntPtr(final byte[] val, int offset) {
-            setBytePtr(ByteBuffer.wrap(val), offset);
-        }
-
-        public void setEntityNumberPtr(final int val) {
-            setPrimitive(val);
-        }
-
-        public void setFloatPtr(final float val) {
-            primitive.putFloat(0, val);
         }
 
         public void setVirtualFunction(final int val) {
             setPrimitive(val);
         }
 
+        public int getJumpOffset() {
+            return getPrimitive();
+        }
+
         public void setJumpOffset(final int val) {
             setPrimitive(val);
+        }
+
+        public int getStackOffset() {
+            return getPrimitive();
         }
 
         public void setStackOffset(final int val) {
             setPrimitive(val);
         }
 
+        public int getArgSize() {
+            return getPrimitive();
+        }
+
         public void setArgSize(final int val) {
             setPrimitive(val);
+        }
+
+        public int getPtrOffset() {
+            return getPrimitive();
         }
 
         public void setPtrOffset(final int val) {
             setPrimitive(val);
         }
 
+        private int getPrimitive() {
+            return primitive.getInt(0);
+        }
+
         private void setPrimitive(final int val) {
             primitive.putInt(0, val);
         }
 
-//        void bytePtr(ByteBuffer data, int ptrOffset) {
-//            throw new UnsupportedOperationException("Not supported yet.");
-//        }
-        
+        public void setIntPtr(final byte[] val, int offset) {
+            setBytePtr(ByteBuffer.wrap(val), offset);
+        }
+
+        idVec3 getVectorPtr() {
+            vectorPtr.oSet(0, primitive.getFloat(0));
+            vectorPtr.oSet(1, primitive.getFloat(4));
+            vectorPtr.oSet(2, primitive.getFloat(8));
+            return vectorPtr;
+        }
+
         void setVectorPtr(idVec3 vector) {
             setVectorPtr(vector.ToFloatPtr());
         }
@@ -1100,28 +1082,37 @@ public class Script_Program {
             primitive.putFloat(8, vector[2]);
         }
 
-        idVec3 getVectorPtr() {
-            vectorPtr.oSet(0, primitive.getFloat(0));
-            vectorPtr.oSet(1, primitive.getFloat(4));
-            vectorPtr.oSet(2, primitive.getFloat(8));
-            return vectorPtr;
-        }
+//        void bytePtr(ByteBuffer data, int ptrOffset) {
+//            throw new UnsupportedOperationException("Not supported yet.");
+//        }
 
         int getIntPtr() {
             return primitive.getInt(0);
+        }
+
+        public void setIntPtr(final int val) {
+            setPrimitive(val);
         }
 
         float getFloatPtr() {
             return primitive.getFloat(0);
         }
 
+        public void setFloatPtr(final float val) {
+            primitive.putFloat(0, val);
+        }
+
         int getEntityNumberPtr() {
             return getIntPtr();
         }
 
+        public void setEntityNumberPtr(final int val) {
+            setPrimitive(val);
+        }
+
         void setBytePtr(ByteBuffer bytes, int offset) {
             this.offset = offset;
-            primitive = (((ByteBuffer) bytes.duplicate().order(ByteOrder.LITTLE_ENDIAN).position(offset)).slice()).order(ByteOrder.LITTLE_ENDIAN);
+            primitive = (bytes.duplicate().order(ByteOrder.LITTLE_ENDIAN).position(offset).slice()).order(ByteOrder.LITTLE_ENDIAN);
         }
 
         void setBytePtr(byte[] bytes, int offset) {
@@ -1148,28 +1139,22 @@ public class Script_Program {
                 + varEval_s.BYTES
                 + Integer.BYTES
                 + Integer.BYTES;
-
-        public int       num;
+        //
+        public initialized_t initialized;
+        public int num;
+        public int numUsers;     // number of users if this is a constant
+        public idVarDef scope;        // function, namespace, or object the var was defined in
+//
         public varEval_s value;
-        public idVarDef  scope;        // function, namespace, or object the var was defined in
-        public int       numUsers;     // number of users if this is a constant
-//
-
-        public enum initialized_t {
-            uninitialized, initializedVariable, initializedConstant, stackVariable
-        }
+        private idVarDefName name;    // name of this var
+        private idVarDef next;    // next var with the same name
         //
-        public  initialized_t initialized;
-        //
-        private idTypeDef     typeDef;
-        private idVarDefName  name;    // name of this var
-        private idVarDef      next;    // next var with the same name
-//
-//
-
+        private idTypeDef typeDef;
         public idVarDef() {
             this(null);
         }
+//
+//
 
         public idVarDef(idTypeDef typeptr /*= NULL*/) {
             typeDef = typeptr;
@@ -1387,6 +1372,10 @@ public class Script_Program {
                     break;
             }
         }
+
+        public enum initialized_t {
+            uninitialized, initializedVariable, initializedConstant, stackVariable
+        }
     }
 
     /* **********************************************************************
@@ -1396,8 +1385,8 @@ public class Script_Program {
      ***********************************************************************/
     static class idVarDefName {
 
-        private idStr name = new idStr();
         private idVarDef defs;
+        private final idStr name = new idStr();
         //
         //
 
@@ -1443,12 +1432,12 @@ public class Script_Program {
 
     public static class statement_s {
 
+        idVarDef a;
+        idVarDef b;
+        idVarDef c;
+        int file;
+        int linenumber;
         int /*unsigned short*/ op;
-        idVarDef               a;
-        idVarDef               b;
-        idVarDef               c;
-        int                    linenumber;
-        int                    file;
 
         public statement_s() {
         }

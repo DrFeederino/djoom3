@@ -1,7 +1,8 @@
 package neo.CM;
 
-import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 
 /**
  *
@@ -23,7 +24,7 @@ public class CollisionModel_rotate {
      ===============================================================================
      */
     // epsilon for round-off errors in epsilon calculations
-    static final float CM_PL_RANGE_EPSILON   = 1e-4f;
+    static final float CM_PL_RANGE_EPSILON = 1e-4f;
     // if the collision point is this close to the rotation axis it is not considered a collision
     static final float ROTATION_AXIS_EPSILON = (CM_CLIP_EPSILON * 0.25f);
 

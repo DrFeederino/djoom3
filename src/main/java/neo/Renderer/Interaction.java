@@ -1,89 +1,45 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.util.stream.Stream;
-
-import static neo.Renderer.Interaction.idInteraction.frustumStates.FRUSTUM_INVALID;
-import static neo.Renderer.Interaction.idInteraction.frustumStates.FRUSTUM_UNINITIALIZED;
-import static neo.Renderer.Interaction.idInteraction.frustumStates.FRUSTUM_VALID;
-import static neo.Renderer.Interaction.idInteraction.frustumStates.FRUSTUM_VALIDAREAS;
-import static neo.Renderer.Material.MF_NOSELFSHADOW;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
-import static neo.Renderer.Material.materialCoverage_t.MC_TRANSLUCENT;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderSystem_init.r_lightAllBackFaces;
-import static neo.Renderer.RenderSystem_init.r_showInteractionFrustums;
-import static neo.Renderer.RenderSystem_init.r_showInteractionScissors;
-import static neo.Renderer.RenderSystem_init.r_skipSuppress;
-import static neo.Renderer.RenderSystem_init.r_useIndexBuffers;
-import static neo.Renderer.RenderSystem_init.r_useInteractionCulling;
-import static neo.Renderer.RenderSystem_init.r_useInteractionScissors;
-import static neo.Renderer.RenderSystem_init.r_useOptimizedShadows;
-import static neo.Renderer.RenderSystem_init.r_usePreciseTriangleInteractions;
-import static neo.Renderer.RenderSystem_init.r_useShadowCulling;
-import static neo.Renderer.RenderSystem_init.r_znear;
-import static neo.Renderer.RenderWorld.R_GlobalShaderOverride;
-import static neo.Renderer.RenderWorld.R_RemapShaderBySkin;
 import neo.Renderer.RenderWorld_local.idRenderWorldLocal;
-import neo.Renderer.VertexCache.vertCache_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.tr_light.R_CreateAmbientCache;
-import static neo.Renderer.tr_light.R_CreateLightingCache;
-import static neo.Renderer.tr_light.R_CreatePrivateShadowCache;
-import static neo.Renderer.tr_light.R_CreateVertexProgramShadowCache;
-import static neo.Renderer.tr_light.R_EntityDefDynamicModel;
-import static neo.Renderer.tr_light.R_LinkLightSurf;
-import neo.Renderer.tr_local.areaReference_s;
-import neo.Renderer.tr_local.idRenderEntityLocal;
-import neo.Renderer.tr_local.idRenderLightLocal;
-import neo.Renderer.tr_local.idScreenRect;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewEntity_s;
-import neo.Renderer.tr_local.viewLight_s;
-import static neo.Renderer.tr_main.R_CullLocalBox;
-import static neo.Renderer.tr_main.R_GlobalPlaneToLocal;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.Renderer.tr_main.R_ScreenRectFromViewFrustumBounds;
-import static neo.Renderer.tr_main.R_ShowColoredScreenRect;
-import static neo.Renderer.tr_shadowbounds.R_CalcIntersectionScissor;
-import static neo.Renderer.tr_stencilshadow.R_CreateShadowVolume;
+import neo.Renderer.tr_local.*;
 import neo.Renderer.tr_stencilshadow.shadowGen_t;
-import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_DYNAMIC;
-import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_STATIC;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_DeriveFacePlanes;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_ReallyFreeStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_ReferenceStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_ReferenceStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_ResizeStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_TriSurfMemory;
-import static neo.TempDump.NOT;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.BV.Frustum.idFrustum;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.MAX_WORLD_SIZE;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorMagenta;
-import static neo.idlib.Lib.colorPurple;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.colorYellow;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_FRONT;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.util.stream.Stream;
+
+import static neo.Renderer.Interaction.idInteraction.frustumStates.*;
+import static neo.Renderer.Material.MF_NOSELFSHADOW;
+import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
+import static neo.Renderer.Material.materialCoverage_t.MC_TRANSLUCENT;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.RenderWorld.R_GlobalShaderOverride;
+import static neo.Renderer.RenderWorld.R_RemapShaderBySkin;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.tr_light.*;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_main.*;
+import static neo.Renderer.tr_shadowbounds.R_CalcIntersectionScissor;
+import static neo.Renderer.tr_stencilshadow.R_CreateShadowVolume;
+import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_DYNAMIC;
+import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_STATIC;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.NOT;
+import static neo.framework.Common.common;
+import static neo.idlib.Lib.*;
+import static neo.idlib.math.Plane.SIDE_BACK;
+import static neo.idlib.math.Plane.SIDE_FRONT;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
@@ -101,9 +57,10 @@ public class Interaction {
      ===============================================================================
      */
 
-    static final srfTriangles_s LIGHT_TRIS_DEFERRED;// = -03146;//((srfTriangles_s *)-1)
-    static byte[] LIGHT_CULL_ALL_FRONT;//((byte *)-1)
     static final float LIGHT_CLIP_EPSILON = 0.1f;
+    static final srfTriangles_s LIGHT_TRIS_DEFERRED;// = -03146;//((srfTriangles_s *)-1)
+    static final int MAX_CLIPPED_POINTS = 20;
+    static byte[] LIGHT_CULL_ALL_FRONT;//((byte *)-1)
 
     static {
         final srfTriangles_s s = LIGHT_TRIS_DEFERRED = new srfTriangles_s();
@@ -114,58 +71,516 @@ public class Interaction {
 
     }
 
+    /**
+     *
+     */
+    /*
+     ================
+     R_CalcInteractionFacing
+
+     Determines which triangles of the surface are facing towards the light origin.
+
+     The facing array should be allocated with one extra index than
+     the number of surface triangles, which will be used to handle dangling
+     edge silhouettes.
+     ================
+     */
+    static void R_CalcInteractionFacing(final idRenderEntityLocal ent, final srfTriangles_s tri, final idRenderLightLocal light, srfCullInfo_t cullInfo) {
+        idVec3 localLightOrigin = new idVec3();
+
+        if (cullInfo.facing != null) {
+            return;
+        }
+
+        R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, localLightOrigin);
+
+        int numFaces = tri.numIndexes / 3;
+
+        if (NOT(tri.facePlanes) || !tri.facePlanesCalculated) {
+            R_DeriveFacePlanes( /*const_cast<srfTriangles_s *>*/(tri));
+        }
+
+        cullInfo.facing = new byte[numFaces + 1];// R_StaticAlloc((numFaces + 1) * sizeof(cullInfo.facing[0]));
+
+        // calculate back face culling
+        float[] planeSide = new float[numFaces];
+
+        // exact geometric cull against face
+        SIMDProcessor.Dot(planeSide, localLightOrigin, tri.facePlanes, numFaces);
+        SIMDProcessor.CmpGE(cullInfo.facing, planeSide, 0.0f, numFaces);
+
+        cullInfo.facing[numFaces] = 1;    // for dangling edges to reference
+    }
+
+    /*
+     =====================
+     R_CalcInteractionCullBits
+
+     We want to cull a little on the sloppy side, because the pre-clipping
+     of geometry to the lights in dmap will give many cases that are right
+     at the border we throw things out on the border, because if any one
+     vertex is clearly inside, the entire triangle will be accepted.
+     =====================
+     */
+    static void R_CalcInteractionCullBits(final idRenderEntityLocal ent, final srfTriangles_s tri, final idRenderLightLocal light, srfCullInfo_t cullInfo) {
+        int i, frontBits;
+
+        if (cullInfo.cullBits != null) {
+            return;
+        }
+
+        frontBits = 0;
+
+        // cull the triangle surface bounding box
+        for (i = 0; i < 6; i++) {
+
+            R_GlobalPlaneToLocal(ent.modelMatrix, light.frustum[i].oNegative(), cullInfo.localClipPlanes[i]);
+
+            // get front bits for the whole surface
+            if (tri.bounds.PlaneDistance(cullInfo.localClipPlanes[i]) >= LIGHT_CLIP_EPSILON) {
+                frontBits |= 1 << i;
+            }
+        }
+
+        // if the surface is completely inside the light frustum
+        if (frontBits == ((1 << 6) - 1)) {
+            cullInfo.cullBits = LIGHT_CULL_ALL_FRONT;
+            return;
+        }
+
+        cullInfo.cullBits = new byte[tri.numVerts];// R_StaticAlloc(tri.numVerts /* sizeof(cullInfo.cullBits[0])*/);
+        SIMDProcessor.Memset(cullInfo.cullBits, 0, tri.numVerts /* sizeof(cullInfo.cullBits[0])*/);
+
+        float[] planeSide = new float[tri.numVerts];
+
+        for (i = 0; i < 6; i++) {
+            // if completely infront of this clipping plane
+            if ((frontBits & (1 << i)) != 0) {
+                continue;
+            }
+            SIMDProcessor.Dot(planeSide, cullInfo.localClipPlanes[i], tri.verts, tri.numVerts);
+            SIMDProcessor.CmpLT(cullInfo.cullBits, (byte) i, planeSide, LIGHT_CLIP_EPSILON, tri.numVerts);
+        }
+    }
+
+    /*
+     ================
+     R_FreeInteractionCullInfo
+     ================
+     */
+    public static void R_FreeInteractionCullInfo(srfCullInfo_t cullInfo) {
+//        if (cullInfo.facing != null) {
+//            R_StaticFree(cullInfo.facing);
+        cullInfo.facing = null;
+//        }
+//        if (cullInfo.cullBits != null) {
+//            if (cullInfo.cullBits != LIGHT_CULL_ALL_FRONT) {
+//                R_StaticFree(cullInfo.cullBits);
+//            }
+        cullInfo.cullBits = null;
+//        }
+    }
+
+    /*
+     =============
+     R_ChopWinding
+
+     Clips a triangle from one buffer to another, setting edge flags
+     The returned buffer may be the same as inNum if no clipping is done
+     If entirely clipped away, clipTris[returned].numVerts == 0
+
+     I have some worries about edge flag cases when polygons are clipped
+     multiple times near the epsilon.
+     =============
+     */
+    static int R_ChopWinding(clipTri_t[] clipTris/*[2]*/, int inNum, final idPlane plane) {
+        clipTri_t in, out;
+        float[] dists = new float[MAX_CLIPPED_POINTS];
+        int[] sides = new int[MAX_CLIPPED_POINTS];
+        int[] counts = new int[3];
+        float dot;
+        int i, j;
+        idVec3 mid = new idVec3();
+        boolean front;
+
+        in = clipTris[inNum];
+        out = clipTris[inNum ^ 1];
+        counts[0] = counts[1] = counts[2] = 0;
+
+        // determine sides for each point
+        front = false;
+        for (i = 0; i < in.numVerts; i++) {
+            dot = in.verts[i].oMultiply(plane.Normal()) + plane.oGet(3);
+            dists[i] = dot;
+            if (dot < LIGHT_CLIP_EPSILON) {    // slop onto the back
+                sides[i] = SIDE_BACK;
+            } else {
+                sides[i] = SIDE_FRONT;
+                if (dot > LIGHT_CLIP_EPSILON) {
+                    front = true;
+                }
+            }
+            counts[sides[i]]++;
+        }
+
+        // if none in front, it is completely clipped away
+        if (!front) {
+            in.numVerts = 0;
+            return inNum;
+        }
+        if (0 == counts[SIDE_BACK]) {
+            return inNum;        // inout stays the same
+        }
+
+        // avoid wrapping checks by duplicating first value to end
+        sides[i] = sides[0];
+        dists[i] = dists[0];
+        in.verts[in.numVerts] = in.verts[0];
+
+        out.numVerts = 0;
+        for (i = 0; i < in.numVerts; i++) {
+            idVec3 p1 = in.verts[i];
+
+            if (sides[i] == SIDE_FRONT) {
+                out.verts[out.numVerts] = p1;
+                out.numVerts++;
+            }
+
+            if (sides[i + 1] == sides[i]) {
+                continue;
+            }
+
+            // generate a split point
+            idVec3 p2 = in.verts[i + 1];
+
+            dot = dists[i] / (dists[i] - dists[i + 1]);
+            for (j = 0; j < 3; j++) {
+                mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)));
+            }
+
+            out.verts[out.numVerts] = mid;
+
+            out.numVerts++;
+        }
+
+        return inNum ^ 1;
+    }
+
+    /*
+     ===================
+     R_ClipTriangleToLight
+
+     Returns false if nothing is left after clipping
+     ===================
+     */
+    static boolean R_ClipTriangleToLight(final idVec3 a, final idVec3 b, final idVec3 c, int planeBits, final idPlane[] frustum/*[6]*/) {
+        int i;
+        clipTri_t[] pingPong = new clipTri_t[2];
+        int p;
+
+        pingPong[0].numVerts = 3;
+        pingPong[0].verts[0] = a;
+        pingPong[0].verts[1] = b;
+        pingPong[0].verts[2] = c;
+
+        p = 0;
+        for (i = 0; i < 6; i++) {
+            if ((planeBits & (1 << i)) != 0) {
+                p = R_ChopWinding(pingPong, p, frustum[i]);
+                if (pingPong[p].numVerts < 1) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /*
+     ====================
+     R_CreateLightTris
+
+     The resulting surface will be a subset of the original triangles,
+     it will never clip triangles, but it may cull on a per-triangle basis.
+     ====================
+     */
+    static srfTriangles_s R_CreateLightTris(final idRenderEntityLocal ent,
+                                            final srfTriangles_s tri, final idRenderLightLocal light,
+                                            final idMaterial shader, srfCullInfo_t cullInfo) {
+        int i;
+        int numIndexes;
+        int/*glIndex_t*/[] indexes;
+        srfTriangles_s newTri;
+        int c_backfaced;
+        int c_distance;
+        idBounds bounds = new idBounds();
+        boolean includeBackFaces;
+        int faceNum;
+
+        tr.pc.c_createLightTris++;
+        c_backfaced = 0;
+        c_distance = 0;
+
+        numIndexes = 0;
+//	indexes = null;
+
+        // it is debatable if non-shadowing lights should light back faces. we aren't at the moment
+        includeBackFaces = r_lightAllBackFaces.GetBool() || light.lightShader.LightEffectsBackSides()
+                || shader.ReceivesLightingOnBackSides()
+                || ent.parms.noSelfShadow || ent.parms.noShadow;
+
+        // allocate a new surface for the lit triangles
+        newTri = R_AllocStaticTriSurf();
+
+        // save a reference to the original surface
+        newTri.ambientSurface = /*const_cast<srfTriangles_s *>*/ (tri);
+
+        // the light surface references the verts of the ambient surface
+        newTri.numVerts = tri.numVerts;
+        R_ReferenceStaticTriSurfVerts(newTri, tri);
+
+        // calculate cull information
+        if (!includeBackFaces) {
+            R_CalcInteractionFacing(ent, tri, light, cullInfo);
+        }
+        R_CalcInteractionCullBits(ent, tri, light, cullInfo);
+
+        // if the surface is completely inside the light frustum
+        if (cullInfo.cullBits == LIGHT_CULL_ALL_FRONT) {
+
+            // if we aren't self shadowing, let back facing triangles get
+            // through so the smooth shaded bump maps light all the way around
+            if (includeBackFaces) {
+
+                // the whole surface is lit so the light surface just references the indexes of the ambient surface
+                R_ReferenceStaticTriSurfIndexes(newTri, tri);
+                numIndexes = tri.numIndexes;
+                bounds = new idBounds(tri.bounds);
+
+            } else {
+
+                // the light tris indexes are going to be a subset of the original indexes so we generally
+                // allocate too much memory here but we decrease the memory block when the number of indexes is known
+                R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes);
+
+                // back face cull the individual triangles
+                indexes = newTri.indexes;
+                final byte[] facing = cullInfo.facing;
+                for (faceNum = i = 0; i < tri.numIndexes; i += 3, faceNum++) {
+                    if (0 == facing[faceNum]) {
+                        c_backfaced++;
+                        continue;
+                    }
+                    indexes[numIndexes + 0] = tri.indexes[i + 0];
+                    indexes[numIndexes + 1] = tri.indexes[i + 1];
+                    indexes[numIndexes + 2] = tri.indexes[i + 2];
+                    numIndexes += 3;
+                }
+
+                // get bounds for the surface
+                SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), tri.verts, indexes, numIndexes);
+
+                // decrease the size of the memory block to the size of the number of used indexes
+                R_ResizeStaticTriSurfIndexes(newTri, numIndexes);
+            }
+
+        } else {
+
+            // the light tris indexes are going to be a subset of the original indexes so we generally
+            // allocate too much memory here but we decrease the memory block when the number of indexes is known
+            R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes);
+
+            // cull individual triangles
+            indexes = newTri.indexes;
+            final byte[] facing = cullInfo.facing;
+            final byte[] cullBits = cullInfo.cullBits;
+            for (faceNum = i = 0; i < tri.numIndexes; i += 3, faceNum++) {
+                int i1, i2, i3;
+
+                // if we aren't self shadowing, let back facing triangles get
+                // through so the smooth shaded bump maps light all the way around
+                if (!includeBackFaces) {
+                    // back face cull
+                    if (0 == facing[faceNum]) {
+                        c_backfaced++;
+                        continue;
+                    }
+                }
+
+                i1 = tri.indexes[i + 0];
+                i2 = tri.indexes[i + 1];
+                i3 = tri.indexes[i + 2];
+
+                // fast cull outside the frustum
+                // if all three points are off one plane side, it definately isn't visible
+                if ((cullBits[i1] & cullBits[i2] & cullBits[i3]) != 0) {
+                    c_distance++;
+                    continue;
+                }
+
+                if (r_usePreciseTriangleInteractions.GetBool()) {
+                    // do a precise clipped cull if none of the points is completely inside the frustum
+                    // note that we do not actually use the clipped triangle, which would have Z fighting issues.
+                    if ((cullBits[i1] & cullBits[i2] & cullBits[i3]) != 0) {
+                        int cull = cullBits[i1] | cullBits[i2] | cullBits[i3];
+                        if (!R_ClipTriangleToLight(tri.verts[i1].xyz, tri.verts[i2].xyz, tri.verts[i3].xyz, cull, cullInfo.localClipPlanes)) {
+                            continue;
+                        }
+                    }
+                }
+
+                // add to the list
+                indexes[numIndexes + 0] = i1;
+                indexes[numIndexes + 1] = i2;
+                indexes[numIndexes + 2] = i3;
+                numIndexes += 3;
+            }
+
+            // get bounds for the surface
+            SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), tri.verts, indexes, numIndexes);
+
+            // decrease the size of the memory block to the size of the number of used indexes
+            R_ResizeStaticTriSurfIndexes(newTri, numIndexes);
+        }
+
+        if (0 == numIndexes) {
+            R_ReallyFreeStaticTriSurf(newTri);
+            return null;
+        }
+
+        newTri.numIndexes = numIndexes;
+
+        newTri.bounds.oSet(bounds);
+
+        return newTri;
+    }
+
+    /*
+     ======================
+     R_PotentiallyInsideInfiniteShadow
+
+     If we know that we are "off to the side" of an infinite shadow volume,
+     we can draw it without caps in zpass mode
+     ======================
+     */
+    static boolean R_PotentiallyInsideInfiniteShadow(final srfTriangles_s occluder, final idVec3 localView, final idVec3 localLight) {
+        idBounds exp = new idBounds();
+
+        // expand the bounds to account for the near clip plane, because the
+        // view could be mathematically outside, but if the near clip plane
+        // chops a volume edge, the zpass rendering would fail.
+        float znear = r_znear.GetFloat();
+        if (tr.viewDef.renderView.cramZNear) {
+            znear *= 0.25f;
+        }
+        float stretch = znear * 2;    // in theory, should vary with FOV
+        exp.oSet(0, 0, occluder.bounds.oGet(0, 0) - stretch);
+        exp.oSet(0, 1, occluder.bounds.oGet(0, 1) - stretch);
+        exp.oSet(0, 2, occluder.bounds.oGet(0, 2) - stretch);
+        exp.oSet(1, 0, occluder.bounds.oGet(1, 0) + stretch);
+        exp.oSet(1, 1, occluder.bounds.oGet(1, 1) + stretch);
+        exp.oSet(1, 2, occluder.bounds.oGet(1, 2) + stretch);
+
+        if (exp.ContainsPoint(localView)) {
+            return true;
+        }
+        if (exp.ContainsPoint(localLight)) {
+            return true;
+        }
+
+        // if the ray from localLight to localView intersects a face of the
+        // expanded bounds, we will be inside the projection
+        idVec3 ray = localView.oMinus(localLight);
+
+        // intersect the ray from the view to the light with the near side of the bounds
+        for (int axis = 0; axis < 3; axis++) {
+            float d, frac;
+            idVec3 hit;
+            final float eza = exp.oGet(0, axis);
+            final float ezo = exp.oGet(1, axis);//eoa
+            final float l_axis = localLight.oGet(axis);
+
+            if (l_axis < eza) {
+                if (localView.oGet(axis) < eza) {
+                    continue;
+                }
+                d = eza - l_axis;
+                frac = d / ray.oGet(axis);
+                hit = localLight.oPlus(ray.oMultiply(frac));
+                hit.oSet(axis, eza);
+            } else if (l_axis > ezo) {
+                if (localView.oGet(axis) > ezo) {
+                    continue;
+                }
+                d = ezo - l_axis;
+                frac = d / ray.oGet(axis);
+                hit = localLight.oPlus(ray.oMultiply(frac));
+                hit.oSet(axis, ezo);
+            } else {
+                continue;
+            }
+
+            if (exp.ContainsPoint(hit)) {
+                return true;
+            }
+        }
+
+        // the view is definitely not inside the projected shadow
+        return false;
+    }
+
     public static class srfCullInfo_t {
 
-        // For each triangle a byte set to 1 if facing the light origin.
-        public byte[] facing;
-//
+        //
+        // Clip planes in surface space used to calculate the cull bits.
+        public final idPlane[] localClipPlanes = idPlane.generateArray(6);
+        //
         // For each vertex a byte with the bits [0-5] set if the
         // vertex is at the back side of the corresponding clip plane.
         // If the 'cullBits' pointer equals LIGHT_CULL_ALL_FRONT all
         // vertices are at the front of all the clip planes.
         public byte[] cullBits;
-//        
-        // Clip planes in surface space used to calculate the cull bits.
-        public final idPlane[] localClipPlanes = idPlane.generateArray(6);
+        // For each triangle a byte set to 1 if facing the light origin.
+        public byte[] facing;
     }
 
     static class surfaceInteraction_t {
 
-        // if lightTris == LIGHT_TRIS_DEFERRED, then the calculation of the
-        // lightTris has been deferred, and must be done if ambientTris is visible
-        srfTriangles_s lightTris;
-//
-        // shadow volume triangle surface
-        srfTriangles_s shadowTris;
-//
+        //
         // so we can check ambientViewCount before adding lightTris, and get
         // at the shared vertex and possibly shadowVertex caches
         srfTriangles_s ambientTris;
-//
-        idMaterial shader;
-        int expCulled;			// only for the experimental shadow buffer renderer
-//        
+        //
         srfCullInfo_t cullInfo;
+        int expCulled;            // only for the experimental shadow buffer renderer
+        // if lightTris == LIGHT_TRIS_DEFERRED, then the calculation of the
+        // lightTris has been deferred, and must be done if ambientTris is visible
+        srfTriangles_s lightTris;
+        //
+        idMaterial shader;
+        //
+        // shadow volume triangle surface
+        srfTriangles_s shadowTris;
         //
         //
 
         public surfaceInteraction_t() {
             this.cullInfo = new srfCullInfo_t();
         }
-        
+
         static surfaceInteraction_t[] generateArray(final int length) {
             return Stream.
                     generate(surfaceInteraction_t::new).
                     limit(length).
                     toArray(surfaceInteraction_t[]::new);
         }
-    };
+    }
 
     static class areaNumRef_s {
 
-        areaNumRef_s next;
         int areaNum;
-    };
+        areaNumRef_s next;
+    }
 
     /*
      ===========================================================================
@@ -176,6 +591,23 @@ public class Interaction {
      */
     public static class idInteraction {
 
+        private static final idVec4[] colors = {colorRed, colorGreen, colorBlue, colorYellow, colorMagenta, colorCyan, colorWhite, colorPurple};
+        //
+        //
+        private static int DBG_counter = 0;
+        private final int DBG_count = DBG_counter++;
+        private final idFrustum frustum;        // frustum which contains the interaction
+        //
+        // get space from here, if NULL, it is a pre-generated shadow volume from dmap
+        public idRenderEntityLocal entityDef;
+        public idInteraction entityNext;        // for entityDef chains
+        public idInteraction entityPrev;
+        public idRenderLightLocal lightDef;
+        //
+        //
+        public idInteraction lightNext;            // for lightDef chains
+
+        public idInteraction lightPrev;
         // this may be 0 if the light and entity do not actually intersect
         // -1 = an untested interaction
         public int numSurfaces;
@@ -184,33 +616,10 @@ public class Interaction {
         // be present as a surfaceInteraction_t with a NULL ambientTris, but
         // possibly having a shader to specify the shadow sorting order
         public surfaceInteraction_t[] surfaces;
-        //	
-        // get space from here, if NULL, it is a pre-generated shadow volume from dmap
-        public idRenderEntityLocal entityDef;
-        public idRenderLightLocal lightDef;
-        //
-        public idInteraction lightNext;			// for lightDef chains
-        public idInteraction lightPrev;
-        public idInteraction entityNext;		// for entityDef chains
-        public idInteraction entityPrev;
-        //
-
-        enum frustumStates {
-
-            FRUSTUM_UNINITIALIZED,
-            FRUSTUM_INVALID,
-            FRUSTUM_VALID,
-            FRUSTUM_VALIDAREAS
-        };
-        private frustumStates frustumState;
-        private final idFrustum frustum;		// frustum which contains the interaction
-        private areaNumRef_s frustumAreas;		// numbers of the areas the frustum touches
         //
         private int dynamicModelFrameCount;     // so we can tell if a callback model animated
-        //
-        //
-        private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        private areaNumRef_s frustumAreas;        // numbers of the areas the frustum touches
+        private frustumStates frustumState;
 
         public idInteraction() {
             numSurfaces = 0;
@@ -277,7 +686,7 @@ public class Interaction {
                 if (renderWorld.interactionTable[index] != null) {
                     common.Error("idInteraction::AllocAndLink: non null table entry");
                 }
-                renderWorld.interactionTable[ index] = interaction;
+                renderWorld.interactionTable[index] = interaction;
             }
 
             return interaction;
@@ -867,7 +1276,6 @@ public class Interaction {
 
             return false;
         }
-        private static final idVec4[] colors = {colorRed, colorGreen, colorBlue, colorYellow, colorMagenta, colorCyan, colorWhite, colorPurple};
 
         // determine the minimum scissor rect that will include the interaction shadows
         // projected to the bounds of the light
@@ -944,413 +1352,20 @@ public class Interaction {
 
             return scissorRect;
         }
-    };
 
-    /**
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     */
-    /*
-     ================
-     R_CalcInteractionFacing
+        enum frustumStates {
 
-     Determines which triangles of the surface are facing towards the light origin.
-
-     The facing array should be allocated with one extra index than
-     the number of surface triangles, which will be used to handle dangling
-     edge silhouettes.
-     ================
-     */
-    static void R_CalcInteractionFacing(final idRenderEntityLocal ent, final srfTriangles_s tri, final idRenderLightLocal light, srfCullInfo_t cullInfo) {
-        idVec3 localLightOrigin = new idVec3();
-
-        if (cullInfo.facing != null) {
-            return;
-        }
-
-        R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, localLightOrigin);
-
-        int numFaces = tri.numIndexes / 3;
-
-        if (NOT(tri.facePlanes) || !tri.facePlanesCalculated) {
-            R_DeriveFacePlanes( /*const_cast<srfTriangles_s *>*/(tri));
-        }
-
-        cullInfo.facing = new byte[numFaces + 1];// R_StaticAlloc((numFaces + 1) * sizeof(cullInfo.facing[0]));
-
-        // calculate back face culling
-        float[] planeSide = new float[numFaces];
-
-        // exact geometric cull against face
-        SIMDProcessor.Dot(planeSide, localLightOrigin, tri.facePlanes, numFaces);
-        SIMDProcessor.CmpGE(cullInfo.facing, planeSide, 0.0f, numFaces);
-
-        cullInfo.facing[ numFaces] = 1;	// for dangling edges to reference
-    }
-
-    /*
-     =====================
-     R_CalcInteractionCullBits
-
-     We want to cull a little on the sloppy side, because the pre-clipping
-     of geometry to the lights in dmap will give many cases that are right
-     at the border we throw things out on the border, because if any one
-     vertex is clearly inside, the entire triangle will be accepted.
-     =====================
-     */
-    static void R_CalcInteractionCullBits(final idRenderEntityLocal ent, final srfTriangles_s tri, final idRenderLightLocal light, srfCullInfo_t cullInfo) {
-        int i, frontBits;
-
-        if (cullInfo.cullBits != null) {
-            return;
-        }
-
-        frontBits = 0;
-
-        // cull the triangle surface bounding box
-        for (i = 0; i < 6; i++) {
-
-            R_GlobalPlaneToLocal(ent.modelMatrix, light.frustum[i].oNegative(), cullInfo.localClipPlanes[i]);
-
-            // get front bits for the whole surface
-            if (tri.bounds.PlaneDistance(cullInfo.localClipPlanes[i]) >= LIGHT_CLIP_EPSILON) {
-                frontBits |= 1 << i;
-            }
-        }
-
-        // if the surface is completely inside the light frustum
-        if (frontBits == ((1 << 6) - 1)) {
-            cullInfo.cullBits = LIGHT_CULL_ALL_FRONT;
-            return;
-        }
-
-        cullInfo.cullBits = new byte[tri.numVerts];// R_StaticAlloc(tri.numVerts /* sizeof(cullInfo.cullBits[0])*/);
-        SIMDProcessor.Memset(cullInfo.cullBits, 0, tri.numVerts /* sizeof(cullInfo.cullBits[0])*/);
-
-        float[] planeSide = new float[tri.numVerts];
-
-        for (i = 0; i < 6; i++) {
-            // if completely infront of this clipping plane
-            if ((frontBits & (1 << i)) != 0) {
-                continue;
-            }
-            SIMDProcessor.Dot(planeSide, cullInfo.localClipPlanes[i], tri.verts, tri.numVerts);
-            SIMDProcessor.CmpLT(cullInfo.cullBits, (byte) i, planeSide, LIGHT_CLIP_EPSILON, tri.numVerts);
+            FRUSTUM_UNINITIALIZED,
+            FRUSTUM_INVALID,
+            FRUSTUM_VALID,
+            FRUSTUM_VALIDAREAS
         }
     }
-
-    /*
-     ================
-     R_FreeInteractionCullInfo
-     ================
-     */
-    public static void R_FreeInteractionCullInfo(srfCullInfo_t cullInfo) {
-//        if (cullInfo.facing != null) {
-//            R_StaticFree(cullInfo.facing);
-        cullInfo.facing = null;
-//        }
-//        if (cullInfo.cullBits != null) {
-//            if (cullInfo.cullBits != LIGHT_CULL_ALL_FRONT) {
-//                R_StaticFree(cullInfo.cullBits);
-//            }
-        cullInfo.cullBits = null;
-//        }
-    }
-    static final int MAX_CLIPPED_POINTS = 20;
 
     static class clipTri_t {
 
         int numVerts;
         idVec3[] verts = new idVec3[MAX_CLIPPED_POINTS];
-    };
-
-    /*
-     =============
-     R_ChopWinding
-
-     Clips a triangle from one buffer to another, setting edge flags
-     The returned buffer may be the same as inNum if no clipping is done
-     If entirely clipped away, clipTris[returned].numVerts == 0
-
-     I have some worries about edge flag cases when polygons are clipped
-     multiple times near the epsilon.
-     =============
-     */
-    static int R_ChopWinding(clipTri_t[] clipTris/*[2]*/, int inNum, final idPlane plane) {
-        clipTri_t in, out;
-        float[] dists = new float[MAX_CLIPPED_POINTS];
-        int[] sides = new int[MAX_CLIPPED_POINTS];
-        int[] counts = new int[3];
-        float dot;
-        int i, j;
-        idVec3 mid = new idVec3();
-        boolean front;
-
-        in = clipTris[inNum];
-        out = clipTris[inNum ^ 1];
-        counts[0] = counts[1] = counts[2] = 0;
-
-        // determine sides for each point
-        front = false;
-        for (i = 0; i < in.numVerts; i++) {
-            dot = in.verts[i].oMultiply(plane.Normal()) + plane.oGet(3);
-            dists[i] = dot;
-            if (dot < LIGHT_CLIP_EPSILON) {	// slop onto the back
-                sides[i] = SIDE_BACK;
-            } else {
-                sides[i] = SIDE_FRONT;
-                if (dot > LIGHT_CLIP_EPSILON) {
-                    front = true;
-                }
-            }
-            counts[sides[i]]++;
-        }
-
-        // if none in front, it is completely clipped away
-        if (!front) {
-            in.numVerts = 0;
-            return inNum;
-        }
-        if (0 == counts[SIDE_BACK]) {
-            return inNum;		// inout stays the same
-        }
-
-        // avoid wrapping checks by duplicating first value to end
-        sides[i] = sides[0];
-        dists[i] = dists[0];
-        in.verts[in.numVerts] = in.verts[0];
-
-        out.numVerts = 0;
-        for (i = 0; i < in.numVerts; i++) {
-            idVec3 p1 = in.verts[i];
-
-            if (sides[i] == SIDE_FRONT) {
-                out.verts[out.numVerts] = p1;
-                out.numVerts++;
-            }
-
-            if (sides[i + 1] == sides[i]) {
-                continue;
-            }
-
-            // generate a split point
-            idVec3 p2 = in.verts[i + 1];
-
-            dot = dists[i] / (dists[i] - dists[i + 1]);
-            for (j = 0; j < 3; j++) {
-                mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)));
-            }
-
-            out.verts[out.numVerts] = mid;
-
-            out.numVerts++;
-        }
-
-        return inNum ^ 1;
-    }
-
-    /*
-     ===================
-     R_ClipTriangleToLight
-
-     Returns false if nothing is left after clipping
-     ===================
-     */
-    static boolean R_ClipTriangleToLight(final idVec3 a, final idVec3 b, final idVec3 c, int planeBits, final idPlane[] frustum/*[6]*/) {
-        int i;
-        clipTri_t[] pingPong = new clipTri_t[2];
-        int p;
-
-        pingPong[0].numVerts = 3;
-        pingPong[0].verts[0] = a;
-        pingPong[0].verts[1] = b;
-        pingPong[0].verts[2] = c;
-
-        p = 0;
-        for (i = 0; i < 6; i++) {
-            if ((planeBits & (1 << i)) != 0) {
-                p = R_ChopWinding(pingPong, p, frustum[i]);
-                if (pingPong[p].numVerts < 1) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /*
-     ====================
-     R_CreateLightTris
-
-     The resulting surface will be a subset of the original triangles,
-     it will never clip triangles, but it may cull on a per-triangle basis.
-     ====================
-     */
-    static srfTriangles_s R_CreateLightTris(final idRenderEntityLocal ent,
-            final srfTriangles_s tri, final idRenderLightLocal light,
-            final idMaterial shader, srfCullInfo_t cullInfo) {
-        int i;
-        int numIndexes;
-        int/*glIndex_t*/[] indexes;
-        srfTriangles_s newTri;
-        int c_backfaced;
-        int c_distance;
-        idBounds bounds = new idBounds();
-        boolean includeBackFaces;
-        int faceNum;
-
-        tr.pc.c_createLightTris++;
-        c_backfaced = 0;
-        c_distance = 0;
-
-        numIndexes = 0;
-//	indexes = null;
-
-        // it is debatable if non-shadowing lights should light back faces. we aren't at the moment
-        if (r_lightAllBackFaces.GetBool() || light.lightShader.LightEffectsBackSides()
-                || shader.ReceivesLightingOnBackSides()
-                || ent.parms.noSelfShadow || ent.parms.noShadow) {
-            includeBackFaces = true;
-        } else {
-            includeBackFaces = false;
-        }
-
-        // allocate a new surface for the lit triangles
-        newTri = R_AllocStaticTriSurf();
-
-        // save a reference to the original surface
-        newTri.ambientSurface = /*const_cast<srfTriangles_s *>*/ (tri);
-
-        // the light surface references the verts of the ambient surface
-        newTri.numVerts = tri.numVerts;
-        R_ReferenceStaticTriSurfVerts(newTri, tri);
-
-        // calculate cull information
-        if (!includeBackFaces) {
-            R_CalcInteractionFacing(ent, tri, light, cullInfo);
-        }
-        R_CalcInteractionCullBits(ent, tri, light, cullInfo);
-
-        // if the surface is completely inside the light frustum
-        if (cullInfo.cullBits == LIGHT_CULL_ALL_FRONT) {
-
-            // if we aren't self shadowing, let back facing triangles get
-            // through so the smooth shaded bump maps light all the way around
-            if (includeBackFaces) {
-
-                // the whole surface is lit so the light surface just references the indexes of the ambient surface
-                R_ReferenceStaticTriSurfIndexes(newTri, tri);
-                numIndexes = tri.numIndexes;
-                bounds = new idBounds(tri.bounds);
-
-            } else {
-
-                // the light tris indexes are going to be a subset of the original indexes so we generally
-                // allocate too much memory here but we decrease the memory block when the number of indexes is known
-                R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes);
-
-                // back face cull the individual triangles
-                indexes = newTri.indexes;
-                final byte[] facing = cullInfo.facing;
-                for (faceNum = i = 0; i < tri.numIndexes; i += 3, faceNum++) {
-                    if (0 == facing[ faceNum]) {
-                        c_backfaced++;
-                        continue;
-                    }
-                    indexes[numIndexes + 0] = tri.indexes[i + 0];
-                    indexes[numIndexes + 1] = tri.indexes[i + 1];
-                    indexes[numIndexes + 2] = tri.indexes[i + 2];
-                    numIndexes += 3;
-                }
-
-                // get bounds for the surface
-                SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), tri.verts, indexes, numIndexes);
-
-                // decrease the size of the memory block to the size of the number of used indexes
-                R_ResizeStaticTriSurfIndexes(newTri, numIndexes);
-            }
-
-        } else {
-
-            // the light tris indexes are going to be a subset of the original indexes so we generally
-            // allocate too much memory here but we decrease the memory block when the number of indexes is known
-            R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes);
-
-            // cull individual triangles
-            indexes = newTri.indexes;
-            final byte[] facing = cullInfo.facing;
-            final byte[] cullBits = cullInfo.cullBits;
-            for (faceNum = i = 0; i < tri.numIndexes; i += 3, faceNum++) {
-                int i1, i2, i3;
-
-                // if we aren't self shadowing, let back facing triangles get
-                // through so the smooth shaded bump maps light all the way around
-                if (!includeBackFaces) {
-                    // back face cull
-                    if (0 == facing[ faceNum]) {
-                        c_backfaced++;
-                        continue;
-                    }
-                }
-
-                i1 = tri.indexes[i + 0];
-                i2 = tri.indexes[i + 1];
-                i3 = tri.indexes[i + 2];
-
-                // fast cull outside the frustum
-                // if all three points are off one plane side, it definately isn't visible
-                if ((cullBits[i1] & cullBits[i2] & cullBits[i3]) != 0) {
-                    c_distance++;
-                    continue;
-                }
-
-                if (r_usePreciseTriangleInteractions.GetBool()) {
-                    // do a precise clipped cull if none of the points is completely inside the frustum
-                    // note that we do not actually use the clipped triangle, which would have Z fighting issues.
-                    if ((cullBits[i1] & cullBits[i2] & cullBits[i3]) != 0) {
-                        int cull = cullBits[i1] | cullBits[i2] | cullBits[i3];
-                        if (!R_ClipTriangleToLight(tri.verts[i1].xyz, tri.verts[i2].xyz, tri.verts[i3].xyz, cull, cullInfo.localClipPlanes)) {
-                            continue;
-                        }
-                    }
-                }
-
-                // add to the list
-                indexes[numIndexes + 0] = i1;
-                indexes[numIndexes + 1] = i2;
-                indexes[numIndexes + 2] = i3;
-                numIndexes += 3;
-            }
-
-            // get bounds for the surface
-            SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), tri.verts, indexes, numIndexes);
-
-            // decrease the size of the memory block to the size of the number of used indexes
-            R_ResizeStaticTriSurfIndexes(newTri, numIndexes);
-        }
-
-        if (0 == numIndexes) {
-            R_ReallyFreeStaticTriSurf(newTri);
-            return null;
-        }
-
-        newTri.numIndexes = numIndexes;
-
-        newTri.bounds.oSet(bounds);
-
-        return newTri;
     }
 
     /*
@@ -1428,79 +1443,5 @@ public class Interaction {
             common.Printf("%5d indexes %5d verts in %5d light tris\n", lightTriIndexes, lightTriVerts, lightTris);
             common.Printf("%5d indexes %5d verts in %5d shadow tris\n", shadowTriIndexes, shadowTriVerts, shadowTris);
         }
-    };
-
-    /*
-     ======================
-     R_PotentiallyInsideInfiniteShadow
-
-     If we know that we are "off to the side" of an infinite shadow volume,
-     we can draw it without caps in zpass mode
-     ======================
-     */
-    static boolean R_PotentiallyInsideInfiniteShadow(final srfTriangles_s occluder, final idVec3 localView, final idVec3 localLight) {
-        idBounds exp = new idBounds();
-
-        // expand the bounds to account for the near clip plane, because the
-        // view could be mathematically outside, but if the near clip plane
-        // chops a volume edge, the zpass rendering would fail.
-        float znear = r_znear.GetFloat();
-        if (tr.viewDef.renderView.cramZNear) {
-            znear *= 0.25f;
-        }
-        float stretch = znear * 2;	// in theory, should vary with FOV
-        exp.oSet(0, 0, occluder.bounds.oGet(0, 0) - stretch);
-        exp.oSet(0, 1, occluder.bounds.oGet(0, 1) - stretch);
-        exp.oSet(0, 2, occluder.bounds.oGet(0, 2) - stretch);
-        exp.oSet(1, 0, occluder.bounds.oGet(1, 0) + stretch);
-        exp.oSet(1, 1, occluder.bounds.oGet(1, 1) + stretch);
-        exp.oSet(1, 2, occluder.bounds.oGet(1, 2) + stretch);
-
-        if (exp.ContainsPoint(localView)) {
-            return true;
-        }
-        if (exp.ContainsPoint(localLight)) {
-            return true;
-        }
-
-        // if the ray from localLight to localView intersects a face of the
-        // expanded bounds, we will be inside the projection
-        idVec3 ray = localView.oMinus(localLight);
-
-        // intersect the ray from the view to the light with the near side of the bounds
-        for (int axis = 0; axis < 3; axis++) {
-            float d, frac;
-            idVec3 hit;
-            final float eza = exp.oGet(0, axis);
-            final float ezo = exp.oGet(1, axis);//eoa
-            final float l_axis = localLight.oGet(axis);
-
-            if (l_axis < eza) {
-                if (localView.oGet(axis) < eza) {
-                    continue;
-                }
-                d = eza - l_axis;
-                frac = d / ray.oGet(axis);
-                hit = localLight.oPlus(ray.oMultiply(frac));
-                hit.oSet(axis, eza);
-            } else if (l_axis > ezo) {
-                if (localView.oGet(axis) > ezo) {
-                    continue;
-                }
-                d = ezo - l_axis;
-                frac = d / ray.oGet(axis);
-                hit = localLight.oPlus(ray.oMultiply(frac));
-                hit.oSet(axis, ezo);
-            } else {
-                continue;
-            }
-
-            if (exp.ContainsPoint(hit)) {
-                return true;
-            }
-        }
-
-        // the view is definitely not inside the projected shadow
-        return false;
     }
 }

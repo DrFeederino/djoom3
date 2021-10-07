@@ -5,19 +5,8 @@ import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import neo.idlib.MapFile.idMapBrush;
-import neo.idlib.MapFile.idMapBrushSide;
-import neo.idlib.MapFile.idMapPrimitive;
-import static neo.idlib.MapFile.idMapPrimitive.TYPE_BRUSH;
-import static neo.idlib.MapFile.idMapPrimitive.TYPE_INVALID;
-import static neo.idlib.MapFile.idMapPrimitive.TYPE_PATCH;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_STRING;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
@@ -25,6 +14,12 @@ import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.idlib.MapFile.idMapPrimitive.TYPE_BRUSH;
+import static neo.idlib.MapFile.idMapPrimitive.TYPE_PATCH;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.TT_STRING;
 
 /**
  *
@@ -44,23 +39,65 @@ public class MapFile {
      ===============================================================================
      */
 
-    public static final int   OLD_MAP_VERSION             = 1;
-    public static final int   CURRENT_MAP_VERSION         = 2;
-    public static final int   DEFAULT_CURVE_SUBDIVISION   = 4;
-    public static final float DEFAULT_CURVE_MAX_ERROR     = 4.0f;
-    public static final float DEFAULT_CURVE_MAX_ERROR_CD  = 24.0f;
-    public static final float DEFAULT_CURVE_MAX_LENGTH    = -1.0f;
+    public static final int CURRENT_MAP_VERSION = 2;
+    public static final float DEFAULT_CURVE_MAX_ERROR = 4.0f;
+    public static final float DEFAULT_CURVE_MAX_ERROR_CD = 24.0f;
+    public static final float DEFAULT_CURVE_MAX_LENGTH = -1.0f;
     public static final float DEFAULT_CURVE_MAX_LENGTH_CD = -1.0f;
+    public static final int DEFAULT_CURVE_SUBDIVISION = 4;
+    public static final int OLD_MAP_VERSION = 1;
+
+    /*
+     =================
+     ComputeAxisBase
+
+     WARNING : special case behaviour of atan2(y,x) <-> atan(y/x) might not be the same everywhere when x == 0
+     rotation by (0,RotY,RotZ) assigns X to normal
+     =================
+     */
+    static void ComputeAxisBase(final idVec3 normal, idVec3 texS, idVec3 texT) {
+        double RotY, RotZ;
+        idVec3 n = new idVec3();
+
+        // do some cleaning
+        n.oSet(0, (idMath.Fabs(normal.oGet(0)) < 1e-6f) ? 0.0f : normal.oGet(0));
+        n.oSet(1, (idMath.Fabs(normal.oGet(1)) < 1e-6f) ? 0.0f : normal.oGet(1));
+        n.oSet(2, (idMath.Fabs(normal.oGet(2)) < 1e-6f) ? 0.0f : normal.oGet(2));
+
+        RotY = -Math.atan2(n.oGet(2), idMath.Sqrt(n.oGet(1) * n.oGet(1) + n.oGet(0) * n.oGet(0)));
+        RotZ = Math.atan2(n.oGet(1), n.oGet(0));
+        // rotate (0,1,0) and (0,0,1) to compute texS and texT
+        texS.oSet(0, (float) -Math.sin(RotZ));
+        texS.oSet(1, (float) Math.cos(RotZ));
+        texS.oSet(2, 0);
+        // the texT vector is along -Z ( T texture coorinates axis )
+        texT.oSet(0, (float) (-Math.sin(RotY) * Math.cos(RotZ)));
+        texT.oSet(1, (float) (-Math.sin(RotY) * Math.sin(RotZ)));
+        texT.oSet(2, (float) -Math.cos(RotY));
+    }
+
+    private static long FloatCRC(float f) {
+        return Integer.toUnsignedLong(Float.floatToIntBits(f));
+    }
+
+    private static int StringCRC(final String str) {
+        int i, crc;
+
+        crc = 0;
+        for (i = 0; i < str.length(); i++) {
+            crc ^= str.charAt(i) << (i & 3);
+        }
+        return crc;
+    }
 
     public static class idMapPrimitive {
 
-        protected int type;
-        //
-        //
-
         //	enum { TYPE_INVALID = -1, TYPE_BRUSH, TYPE_PATCH };
         public static final int TYPE_INVALID = -1, TYPE_BRUSH = 0, TYPE_PATCH = 1;
+        //
+        //
         public idDict epairs;
+        protected int type;
 
         public idMapPrimitive() {
             type = TYPE_INVALID;
@@ -70,15 +107,15 @@ public class MapFile {
         public int GetType() {
             return type;
         }
-    };
+    }
 
     public static class idMapBrushSide {
 //	friend class idMapBrush;
 
-        protected idStr    material;
-        protected idPlane  plane;
+        protected idStr material;
+        protected idVec3 origin;
+        protected idPlane plane;
         protected idVec3[] texMat = new idVec3[2];
-        protected idVec3   origin;
         //
         //
 
@@ -128,35 +165,6 @@ public class MapFile {
                 v[i].oSet(3, texMat[i].oGet(2) + (origin.oMultiply(v[i].ToVec3())));
             }
         }
-    };
-
-    /*
-     =================
-     ComputeAxisBase
-
-     WARNING : special case behaviour of atan2(y,x) <-> atan(y/x) might not be the same everywhere when x == 0
-     rotation by (0,RotY,RotZ) assigns X to normal
-     =================
-     */
-    static void ComputeAxisBase(final idVec3 normal, idVec3 texS, idVec3 texT) {
-        double RotY, RotZ;
-        idVec3 n = new idVec3();
-
-        // do some cleaning
-        n.oSet(0, (idMath.Fabs(normal.oGet(0)) < 1e-6f) ? 0.0f : normal.oGet(0));
-        n.oSet(1, (idMath.Fabs(normal.oGet(1)) < 1e-6f) ? 0.0f : normal.oGet(1));
-        n.oSet(2, (idMath.Fabs(normal.oGet(2)) < 1e-6f) ? 0.0f : normal.oGet(2));
-
-        RotY = -Math.atan2(n.oGet(2), idMath.Sqrt(n.oGet(1) * n.oGet(1) + n.oGet(0) * n.oGet(0)));
-        RotZ = Math.atan2(n.oGet(1), n.oGet(0));
-        // rotate (0,1,0) and (0,0,1) to compute texS and texT
-        texS.oSet(0, (float) -Math.sin(RotZ));
-        texS.oSet(1, (float) Math.cos(RotZ));
-        texS.oSet(2, 0);
-        // the texT vector is along -Z ( T texture coorinates axis )
-        texT.oSet(0, (float) (-Math.sin(RotY) * Math.cos(RotZ)));
-        texT.oSet(1, (float) (-Math.sin(RotY) * Math.sin(RotZ)));
-        texT.oSet(2, (float) -Math.cos(RotY));
     }
 
     public static class idMapBrush extends idMapPrimitive {
@@ -172,7 +180,7 @@ public class MapFile {
         }
 //public							~idMapBrush( void ) { sides.DeleteContents( true ); }
 
-//public	static idMapBrush *		Parse( idLexer &src, const idVec3 &origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
+        //public	static idMapBrush *		Parse( idLexer &src, const idVec3 &origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
         public static idMapBrush Parse(idLexer src, final idVec3 origin, boolean newFormat, float version) throws idException {
             int i;
             idVec3[] planepts = new idVec3[3];
@@ -272,7 +280,7 @@ public class MapFile {
 
                 // we had an implicit 'textures/' in the old format...
                 if (version < 2.0f) {
-                    side.material = new idStr("textures/" + token.toString());
+                    side.material = new idStr("textures/" + token);
                 } else {
                     side.material = new idStr(token);
                 }
@@ -342,7 +350,7 @@ public class MapFile {
                 }
 
                 // we have an implicit 'textures/' in the old format
-                side.material = new idStr("textures/" + token.toString());
+                side.material = new idStr("textures/" + token);
 
                 // read the texture shift, rotate and scale
                 shift[0] = src.ParseInt();
@@ -427,30 +435,25 @@ public class MapFile {
 
             return (int) crc;
         }
-    };
-
-    private static long FloatCRC(float f) {
-        return Integer.toUnsignedLong(Float.floatToIntBits(f));
-    }
-
-    private static int StringCRC(final String str) {
-        int i, crc;
-
-        crc = 0;
-        for (i = 0; i < str.length(); i++) {
-            crc ^= str.charAt(i) << (i & 3);
-        }
-        return crc;
     }
 
     public static class idMapPatch extends idMapPrimitive {
 
-        protected idStr material = new idStr();
-        protected int horzSubdivisions;
-        protected int vertSubdivisions;
+        protected boolean expanded;        // true if vertices are spaced out
         protected boolean explicitSubdivisions;
+        protected int height;            // height of patch
+        protected int horzSubdivisions;
         //
         //
+        protected idStr material = new idStr();
+        protected int maxHeight;        // maximum height allocated for
+        protected int maxWidth;                // maximum width allocated for
+        protected int vertSubdivisions;
+        protected idList<idDrawVert> verts = new idList<>();    // vertices
+        /**
+         * i d S u r f a c e_-_P a t c h
+         */
+        protected int width;            // width of patch
 
         public idMapPatch() {
             type = TYPE_PATCH;
@@ -478,7 +481,7 @@ public class MapFile {
             this.type = mapPrimitive.type;
         }
 
-//public							~idMapPatch( void ) { }
+        //public							~idMapPatch( void ) { }
 //public	static idMapPatch *		Parse( idLexer &src, const idVec3 &origin, bool patchDef3 = true, float version = CURRENT_MAP_VERSION );
         public static idMapPatch Parse(idLexer src, final idVec3 origin, boolean patchDef3, float version) throws idException {
             float[] info = new float[7];
@@ -661,16 +664,6 @@ public class MapFile {
             return crc;
         }
 
-        /**
-         * i d S u r f a c e_-_P a t c h
-         */
-        protected int width;			// width of patch
-        protected int height;			// height of patch
-        protected int maxWidth;		        // maximum width allocated for
-        protected int maxHeight;		// maximum height allocated for
-        protected boolean expanded;		// true if vertices are spaced out
-        protected idList<idDrawVert> verts = new idList<>();	// vertices
-
         public int GetWidth() {
             return width;
         }
@@ -690,7 +683,7 @@ public class MapFile {
             height = patchHeight;
             verts.SetNum(width * height, false);
         }
-    };
+    }
 
     public static class idMapEntity {
 //	friend class			idMapFile;
@@ -883,16 +876,16 @@ public class MapFile {
             primitives.DeleteContents(true);
         }
 
-    };
+    }
 
     public static class idMapFile {
 
-        protected float version;
+        protected idList<idMapEntity> entities;
         protected long fileTime;
         protected int geometryCRC;
-        protected idList<idMapEntity> entities;
-        protected idStr name;
         protected boolean hasPrimitiveData;
+        protected idStr name;
+        protected float version;
 //
 //
 
@@ -1171,5 +1164,6 @@ public class MapFile {
 //                System.out.println(">>"+geometryCRC);
             }
         }
-    };
+    }
+
 }

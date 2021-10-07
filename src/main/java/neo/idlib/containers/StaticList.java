@@ -19,10 +19,10 @@ public class StaticList {
      */
     public static class idStaticList<type> {
 
-        private       int         num;
-        private       type[]      list;
-        private final int         size;
-        private       Class<type> type;
+        private final int size;
+        private type[] list;
+        private int num;
+        private Class<type> type;
         //
         //
 
@@ -52,7 +52,7 @@ public class StaticList {
          Sets the number of elements in the list to 0.  Assumes that type automatically handles freeing up memory.
          ================
          */
-        public void Clear() {										// marks the list as empty.  does not deallocate or intialize data.
+        public void Clear() {                                        // marks the list as empty.  does not deallocate or intialize data.
             num = 0;
         }
 
@@ -63,7 +63,7 @@ public class StaticList {
          Returns the number of elements currently contained in the list.
          ================
          */
-        public int Num() {									// returns number of elements in list
+        public int Num() {                                    // returns number of elements in list
             return num;
         }
 
@@ -74,7 +74,7 @@ public class StaticList {
          Returns the maximum number of elements in the list.
          ================
          */
-        public int Max() {									// returns the maximum number of elements in the list
+        public int Max() {                                    // returns the maximum number of elements in the list
             return size;
         }
 
@@ -85,7 +85,7 @@ public class StaticList {
          Set number of elements in list.
          ================
          */
-        public void SetNum(int newnum) {								// set number of elements in list
+        public void SetNum(int newnum) {                                // set number of elements in list
             assert (newnum >= 0);
             assert (newnum <= size);
             num = newnum;
@@ -135,7 +135,7 @@ public class StaticList {
          FIXME: Create an iterator template for this kind of thing.
          ================
          */
-        public type[] Ptr() {										// returns a pointer to the list
+        public type[] Ptr() {                                        // returns a pointer to the list
             return list;
         }
 //public		const type *		Ptr( void ) const;									// returns a pointer to the list
@@ -147,12 +147,12 @@ public class StaticList {
          Returns a pointer to a new data element at the end of the list.
          ================
          */
-        public type Alloc() {										// returns reference to a new data element at the end of the list.  returns NULL when full.
+        public type Alloc() {                                        // returns reference to a new data element at the end of the list.  returns NULL when full.
             if (num >= size) {
                 return null;
             }
             try {
-                return list[num++] = (type) type.newInstance();//TODO:init value before sending back. EDIT:ugly, but working.
+                return list[num++] = type.newInstance();//TODO:init value before sending back. EDIT:ugly, but working.
             } catch (InstantiationException | IllegalAccessException ex) {
                 Logger.getLogger(StaticList.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -171,7 +171,7 @@ public class StaticList {
         public int Append(final type obj) {// append element
             assert (num < size);
             if (num < size) {
-                list[ num] = obj;
+                list[num] = obj;
                 num++;
                 return num - 1;
             }
@@ -188,7 +188,7 @@ public class StaticList {
          Returns the size of the new combined list
          ================
          */
-        public int Append(final idStaticList<type> other) {		// append list
+        public int Append(final idStaticList<type> other) {        // append list
             int i;
             int n = other.Num();
 
@@ -209,7 +209,7 @@ public class StaticList {
          Adds the data to the list if it doesn't already exist.  Returns the index of the data in the list.
          ================
          */
-        public int AddUnique(final type obj) {						// add unique element
+        public int AddUnique(final type obj) {                        // add unique element
             int index;
 
             index = FindIndex(obj);
@@ -230,7 +230,7 @@ public class StaticList {
          Returns the index of the new element, or -1 when list is full.
          ================
          */
-        public int Insert(final type obj, int index) {				// insert the element at the given index
+        public int Insert(final type obj, int index) {                // insert the element at the given index
             int i;
 
             assert (num < size);
@@ -261,7 +261,7 @@ public class StaticList {
          Searches for the specified data in the list and returns it's index.  Returns -1 if the data is not found.
          ================
          */
-        public int FindIndex(final type obj) {				// find the index for the given element
+        public int FindIndex(final type obj) {                // find the index for the given element
             int i;
 
             for (i = 0; i < num; i++) {
@@ -285,11 +285,11 @@ public class StaticList {
          on non-pointer lists will cause a compiler error.
          ================
          */
-        public int FindNull() {								// find the index for the first NULL pointer in the list
+        public int FindNull() {                                // find the index for the first NULL pointer in the list
             int i;
 
             for (i = 0; i < num; i++) {
-                if (list[ i] == null) {
+                if (list[i] == null) {
                     return i;
                 }
             }
@@ -308,7 +308,7 @@ public class StaticList {
          but remains silent in release builds.
          ================
          */
-        public int IndexOf(final type obj) {					// returns the index for the pointer to an element in the list
+        public int IndexOf(final type obj) {                    // returns the index for the pointer to an element in the list
 //    int index;
 //
 //	index = objptr - list;
@@ -329,7 +329,7 @@ public class StaticList {
          Note that the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        public boolean RemoveIndex(int index) {							// remove the element at the given index
+        public boolean RemoveIndex(int index) {                            // remove the element at the given index
             int i;
 
             assert (index >= 0);
@@ -341,7 +341,7 @@ public class StaticList {
 
             num--;
             for (i = index; i < num; i++) {
-                list[ i] = list[ i + 1];
+                list[i] = list[i + 1];
             }
 
             return true;
@@ -356,7 +356,7 @@ public class StaticList {
          the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        public boolean Remove(final type obj) {							// remove the element
+        public boolean Remove(final type obj) {                            // remove the element
             int index;
 
             index = FindIndex(obj);
@@ -380,7 +380,7 @@ public class StaticList {
          list to NULL.
          ================
          */
-        public void DeleteContents(boolean clear) {						// delete the contents of the list
+        public void DeleteContents(boolean clear) {                        // delete the contents of the list
             int i;
 
             for (i = 0; i < size; i++) {
@@ -396,5 +396,6 @@ public class StaticList {
             }
         }
 
-    };
+    }
+
 }

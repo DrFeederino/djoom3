@@ -1,11 +1,12 @@
 package neo.ui;
 
-import static neo.framework.Common.com_frameTime;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.ui.ListGUI.idListGUI;
 import neo.ui.UserInterface.idUserInterface;
+
+import static neo.framework.Common.com_frameTime;
+import static neo.idlib.Text.Str.va;
 
 /**
  *
@@ -22,11 +23,11 @@ public class ListGUILocal {
      */
     public static class idListGUILocal extends idListGUI {
 
+        private final idList<Integer> m_ids;
+        private final idStr m_name;
         private idUserInterface m_pGUI;
-        private idStr m_name;
-        private int m_water;
-        private idList<Integer> m_ids;
         private boolean m_stateUpdates;
+        private int m_water;
         //
         //
 
@@ -158,5 +159,6 @@ public class ListGUILocal {
             m_water = Num();
             m_pGUI.StateChanged(com_frameTime);
         }
-    };
+    }
+
 }

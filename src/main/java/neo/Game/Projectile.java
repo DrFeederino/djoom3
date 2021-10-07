@@ -1,114 +1,74 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AI.AI.idAI;
 import neo.Game.Actor.idActor;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_Touch;
-import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idEntity;
-import static neo.Game.Game.TEST_PARTICLE_IMPACT;
+import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
-import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_projectileLights;
-import static neo.Game.GameSys.SysCvar.g_testParticle;
-import static neo.Game.GameSys.SysCvar.g_testParticleName;
-import static neo.Game.Game_local.MASK_SHOT_RENDERMODEL;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.MAX_EVENT_PARAM_SIZE;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY2;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ITEM;
-import neo.Game.Game_local.idEntityPtr;
+import neo.Game.Game_local.*;
 import neo.Game.Mover.idDoor;
-import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force_Constant.idForce_Constant;
-import static neo.Game.Physics.Physics_RigidBody.RB_VELOCITY_EXPONENT_BITS;
-import static neo.Game.Physics.Physics_RigidBody.RB_VELOCITY_MANTISSA_BITS;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
-import static neo.Game.Player.PROJECTILE_DAMAGE;
 import neo.Game.Player.idPlayer;
-import static neo.Game.Projectile.idProjectile.projectileState_t.CREATED;
-import static neo.Game.Projectile.idProjectile.projectileState_t.EXPLODED;
-import static neo.Game.Projectile.idProjectile.projectileState_t.FIZZLED;
-import static neo.Game.Projectile.idProjectile.projectileState_t.LAUNCHED;
-import static neo.Game.Projectile.idProjectile.projectileState_t.SPAWNED;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_MOVEABLECLIP;
-import static neo.Renderer.Material.CONTENTS_PROJECTILE;
-import static neo.Renderer.Material.CONTENTS_TRIGGER;
-import static neo.Renderer.Material.SURF_NOIMPACT;
-import neo.Renderer.Material.idMaterial;
-import neo.Renderer.Material.surfTypes_t;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_METAL;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_NONE;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_RICOCHET;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_STONE;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_ALPHA;
-import static neo.Renderer.RenderWorld.SHADERPARM_BEAM_END_X;
-import static neo.Renderer.RenderWorld.SHADERPARM_BEAM_END_Y;
-import static neo.Renderer.RenderWorld.SHADERPARM_BEAM_END_Z;
-import static neo.Renderer.RenderWorld.SHADERPARM_BEAM_WIDTH;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_DIVERSITY;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
+import neo.Renderer.Material.*;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import neo.TempDump.SERiAL;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
+import neo.TempDump.*;
 import neo.framework.DeclParticle.idDeclParticle;
-import static neo.framework.UsercmdGen.USERCMD_HZ;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
-import static neo.idlib.Lib.LittleBitField;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
-import static neo.idlib.math.Angles.getAng_zero;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import static neo.Game.Entity.*;
+import static neo.Game.Game.TEST_PARTICLE_IMPACT;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.*;
+import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
+import static neo.Game.Physics.Physics_RigidBody.RB_VELOCITY_EXPONENT_BITS;
+import static neo.Game.Physics.Physics_RigidBody.RB_VELOCITY_MANTISSA_BITS;
+import static neo.Game.Player.PROJECTILE_DAMAGE;
+import static neo.Game.Projectile.idProjectile.projectileState_t.*;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.Material.surfTypes_t.*;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
+import static neo.framework.UsercmdGen.USERCMD_HZ;
+import static neo.idlib.Lib.LittleBitField;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Angles.getAng_zero;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Math_h.SEC2MS;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -122,19 +82,24 @@ public class Projectile {
 	
      ===============================================================================
      */
-    public static final int        BFG_DAMAGE_FREQUENCY      = 333;
-    public static final float      BOUNCE_SOUND_MIN_VELOCITY = 200.0f;
-    public static final float      BOUNCE_SOUND_MAX_VELOCITY = 400.0f;
+    public static final int BFG_DAMAGE_FREQUENCY = 333;
+    public static final float BOUNCE_SOUND_MAX_VELOCITY = 400.0f;
+    public static final float BOUNCE_SOUND_MIN_VELOCITY = 200.0f;
     //
-    public static final idEventDef EV_Explode                = new idEventDef("<explode>", null);
-    public static final idEventDef EV_Fizzle                 = new idEventDef("<fizzle>", null);
-    public static final idEventDef EV_RadiusDamage           = new idEventDef("<radiusdmg>", "e");
-    public static final idEventDef EV_GetProjectileState     = new idEventDef("getProjectileState", null, 'd');
+    public static final idEventDef EV_Explode = new idEventDef("<explode>", null);
+    public static final idEventDef EV_Fizzle = new idEventDef("<fizzle>", null);
+    public static final idEventDef EV_GetProjectileState = new idEventDef("getProjectileState", null, 'd');
+    public static final idEventDef EV_RadiusDamage = new idEventDef("<radiusdmg>", "e");
     //
-    public static final idEventDef EV_RemoveBeams            = new idEventDef("<removeBeams>", null);
+    public static final idEventDef EV_RemoveBeams = new idEventDef("<removeBeams>", null);
 
     public static class idProjectile extends idEntity {
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        // enum {
+        public static final int EVENT_DAMAGE_EFFECT = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_MAXEVENTS = EVENT_DAMAGE_EFFECT;
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+//
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Explode, (eventCallback_t0<idProjectile>) idProjectile::Event_Explode);
@@ -144,67 +109,32 @@ public class Projectile {
             eventCallbacks.put(EV_GetProjectileState, (eventCallback_t0<idProjectile>) idProjectile::Event_GetProjectileState);
         }
 
-
-        protected idEntityPtr<idEntity> owner;
-//
-
-        public static class projectileFlags_s implements SERiAL {
-
-            public boolean detonate_on_world;//: 1;
-            public boolean detonate_on_actor;//: 1;
-            boolean randomShaderSpin;//: 1;
-            public boolean isTracer;//: 1;
-            public boolean noSplashDamage;//: 1;
-
-            @Override
-            public ByteBuffer AllocBuffer() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public void Read(ByteBuffer buffer) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public ByteBuffer Write() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        };
-        //
-        protected projectileFlags_s   projectileFlags;
-        //
-        protected float               thrust;
-        protected int                 thrust_end;
-        protected float               damagePower;
-        //
-        protected renderLight_s       renderLight;
+        protected float damagePower;
+        protected idVec3 lightColor;
         protected int/*qhandle_t*/    lightDefHandle;                // handle to renderer light def
-        protected idVec3              lightOffset;
-        protected int                 lightStartTime;
-        protected int                 lightEndTime;
-        protected idVec3              lightColor;
-        //
-        protected idForce_Constant    thruster;
+        protected int lightEndTime;
+        protected idVec3 lightOffset;
+        protected int lightStartTime;
+        protected idEntityPtr<idEntity> owner;
         protected idPhysics_RigidBody physicsObj;
         //
-        protected idDeclParticle      smokeFly;
-        protected int                 smokeFlyTime;
-//
-
-        protected enum projectileState_t {
-            // must update these in script/doom_defs.script if changed
-
-            SPAWNED,//= 0,
-            CREATED,//= 1,
-            LAUNCHED,//= 2,
-            FIZZLED,//= 3,
-            EXPLODED,//= 4
-        };
+        protected projectileFlags_s projectileFlags;
+        //
+        protected renderLight_s renderLight;
+        //
+        protected idDeclParticle smokeFly;
+        protected int smokeFlyTime;
         //
         protected projectileState_t state;
         //
-        private   boolean           netSyncPhysics;
+        protected float thrust;
+//
+        protected int thrust_end;
+
+        //
+        protected idForce_Constant thruster;
+        //
+        private boolean netSyncPhysics;
 //
 //
 
@@ -226,14 +156,107 @@ public class Projectile {
             damagePower = 1.0f;
             projectileFlags = new projectileFlags_s();//memset( &projectileFlags, 0, sizeof( projectileFlags ) );
             renderLight = new renderLight_s();//memset( &renderLight, 0, sizeof( renderLight ) );
-            
+
             // note: for net_instanthit projectiles, we will force this back to false at spawn time
             fl.networkSync = true;
 
             netSyncPhysics = false;
-            
+
             physicsObj = new idPhysics_RigidBody();
             thruster = new idForce_Constant();
+        }
+
+        public static idVec3 GetVelocity(final idDict projectile) {
+            idVec3 velocity = new idVec3();
+
+            projectile.GetVector("velocity", "0 0 0", velocity);
+            return velocity;
+        }
+
+        public static idVec3 GetGravity(final idDict projectile) {
+            float gravity;
+
+            gravity = projectile.GetFloat("gravity");
+            return new idVec3(0, 0, -gravity);
+        }
+
+        public static void DefaultDamageEffect(idEntity soundEnt, final idDict projectileDef, final trace_s collision, final idVec3 velocity) {
+            String decal, sound, typeName;
+            surfTypes_t materialType;
+
+            if (collision.c.material != null) {
+                materialType = collision.c.material.GetSurfaceType();
+            } else {
+                materialType = SURFTYPE_METAL;
+            }
+
+            // get material type name
+            typeName = gameLocal.sufaceTypeNames[materialType.ordinal()];
+
+            // play impact sound
+            sound = projectileDef.GetString(va("snd_%s", typeName));
+            if (sound.isEmpty()) {// == '\0' ) {
+                sound = projectileDef.GetString("snd_metal");
+            }
+            if (sound.isEmpty()) {// == '\0' ) {
+                sound = projectileDef.GetString("snd_impact");
+            }
+            if (sound.isEmpty()) {// == '\0' ) {
+                soundEnt.StartSoundShader(declManager.FindSound(sound), SND_CHANNEL_BODY, 0, false, null);
+            }
+
+            // project decal
+            decal = projectileDef.GetString(va("mtr_detonate_%s", typeName));
+            if (decal.isEmpty()) {// == '\0' ) {
+                decal = projectileDef.GetString("mtr_detonate");
+            }
+            if (decal.isEmpty()) {// == '\0' ) {
+                gameLocal.ProjectDecal(collision.c.point, collision.c.normal.oNegative(), 8.0f, true, projectileDef.GetFloat("decal_size", "6.0"), decal);
+            }
+        }
+
+        public static boolean ClientPredictionCollide(idEntity soundEnt, final idDict projectileDef, final trace_s collision, final idVec3 velocity, boolean addDamageEffect) {
+            idEntity ent;
+
+            // remove projectile when a 'noimpact' surface is hit
+            if (collision.c.material != null && (collision.c.material.GetSurfaceFlags() & SURF_NOIMPACT) != 0) {
+                return false;
+            }
+
+            // get the entity the projectile collided with
+            ent = gameLocal.entities[collision.c.entityNum];
+            if (ent == null) {
+                return false;
+            }
+
+            // don't do anything if hitting a noclip player
+            if (ent.IsType(idPlayer.class) && ((idPlayer) ent).noclip) {
+                return false;
+            }
+
+            if (ent.IsType(idActor.class) || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody().IsType(idActor.class))) {
+                if (!projectileDef.GetBool("detonate_on_actor")) {
+                    return false;
+                }
+            } else {
+                if (!projectileDef.GetBool("detonate_on_world")) {
+                    return false;
+                }
+            }
+
+            // if the projectile causes a damage effect
+            if (addDamageEffect && projectileDef.GetBool("impact_damage_effect")) {
+                // if the hit entity does not have a special damage effect
+                if (!ent.spawnArgs.GetBool("bleed")) {
+                    // predict damage effect
+                    DefaultDamageEffect(soundEnt, projectileDef, collision, velocity);
+                }
+            }
+            return true;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -247,7 +270,7 @@ public class Projectile {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             physicsObj.SetSelf(this);
             physicsObj.SetClipModel(new idClipModel(GetPhysics().GetClipModel()), 1.0f);
             physicsObj.SetContents(0);
@@ -433,7 +456,7 @@ public class Projectile {
             projectileFlags.randomShaderSpin = spawnArgs.GetBool("random_shader_spin");
 
             if (mass <= 0) {
-                gameLocal.Error("Invalid mass on '%s'\n", GetEntityDefName());
+                idGameLocal.Error("Invalid mass on '%s'\n", GetEntityDefName());
             }
 
             thrust *= mass;
@@ -655,7 +678,7 @@ public class Projectile {
             }
 
             // get the entity the projectile collided with
-            ent = gameLocal.entities[ collision.c.entityNum];
+            ent = gameLocal.entities[collision.c.entityNum];
             if (ent.equals(owner.GetEntity())) {
                 assert (false);
                 return true;
@@ -893,7 +916,7 @@ public class Projectile {
 
                         gameLocal.SpawnEntityDef(debris, ent, false);
                         if (null == ent[0] || !ent[0].IsType(idDebris.class)) {
-                            gameLocal.Error("'projectile_debris' is not an idDebris");
+                            idGameLocal.Error("'projectile_debris' is not an idDebris");
                         }
 
                         idDebris debris2 = (idDebris) ent[0];
@@ -915,7 +938,7 @@ public class Projectile {
 
                         gameLocal.SpawnEntityDef(debris, ent, false);
                         if (null == ent[0] || !ent[0].IsType(idDebris.class)) {
-                            gameLocal.Error("'projectile_shrapnel' is not an idDebris");
+                            idGameLocal.Error("'projectile_shrapnel' is not an idDebris");
                         }
 
                         idDebris debris2 = (idDebris) ent[0];
@@ -928,6 +951,7 @@ public class Projectile {
             CancelEvents(EV_Explode);
             PostEventMS(EV_Remove, removeTime);
         }
+        // };
 
         public void Fizzle() {
 
@@ -966,99 +990,6 @@ public class Projectile {
 
             CancelEvents(EV_Fizzle);
             PostEventMS(EV_Remove, spawnArgs.GetInt("remove_time", "1500"));
-        }
-
-        public static idVec3 GetVelocity(final idDict projectile) {
-            idVec3 velocity = new idVec3();
-
-            projectile.GetVector("velocity", "0 0 0", velocity);
-            return velocity;
-        }
-
-        public static idVec3 GetGravity(final idDict projectile) {
-            float gravity;
-
-            gravity = projectile.GetFloat("gravity");
-            return new idVec3(0, 0, -gravity);
-        }
-        // enum {
-        public static final int EVENT_DAMAGE_EFFECT = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_MAXEVENTS = EVENT_DAMAGE_EFFECT;
-        // };
-
-        public static void DefaultDamageEffect(idEntity soundEnt, final idDict projectileDef, final trace_s collision, final idVec3 velocity) {
-            String decal, sound, typeName;
-            surfTypes_t materialType;
-
-            if (collision.c.material != null) {
-                materialType = collision.c.material.GetSurfaceType();
-            } else {
-                materialType = SURFTYPE_METAL;
-            }
-
-            // get material type name
-            typeName = gameLocal.sufaceTypeNames[ materialType.ordinal()];
-
-            // play impact sound
-            sound = projectileDef.GetString(va("snd_%s", typeName));
-            if (sound.isEmpty()) {// == '\0' ) {
-                sound = projectileDef.GetString("snd_metal");
-            }
-            if (sound.isEmpty()) {// == '\0' ) {
-                sound = projectileDef.GetString("snd_impact");
-            }
-            if (sound.isEmpty()) {// == '\0' ) {
-                soundEnt.StartSoundShader(declManager.FindSound(sound), SND_CHANNEL_BODY, 0, false, null);
-            }
-
-            // project decal
-            decal = projectileDef.GetString(va("mtr_detonate_%s", typeName));
-            if (decal.isEmpty()) {// == '\0' ) {
-                decal = projectileDef.GetString("mtr_detonate");
-            }
-            if (decal.isEmpty()) {// == '\0' ) {
-                gameLocal.ProjectDecal(collision.c.point, collision.c.normal.oNegative(), 8.0f, true, projectileDef.GetFloat("decal_size", "6.0"), decal);
-            }
-        }
-
-        public static boolean ClientPredictionCollide(idEntity soundEnt, final idDict projectileDef, final trace_s collision, final idVec3 velocity, boolean addDamageEffect) {
-            idEntity ent;
-
-            // remove projectile when a 'noimpact' surface is hit
-            if (collision.c.material != null && (collision.c.material.GetSurfaceFlags() & SURF_NOIMPACT) != 0) {
-                return false;
-            }
-
-            // get the entity the projectile collided with
-            ent = gameLocal.entities[ collision.c.entityNum];
-            if (ent == null) {
-                return false;
-            }
-
-            // don't do anything if hitting a noclip player
-            if (ent.IsType(idPlayer.class) && ((idPlayer) ent).noclip) {
-                return false;
-            }
-
-            if (ent.IsType(idActor.class) || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody().IsType(idActor.class))) {
-                if (!projectileDef.GetBool("detonate_on_actor")) {
-                    return false;
-                }
-            } else {
-                if (!projectileDef.GetBool("detonate_on_world")) {
-                    return false;
-                }
-            }
-
-            // if the projectile causes a damage effect
-            if (addDamageEffect && projectileDef.GetBool("impact_damage_effect")) {
-                // if the hit entity does not have a special damage effect
-                if (!ent.spawnArgs.GetBool("bleed")) {
-                    // predict damage effect
-                    DefaultDamageEffect(soundEnt, projectileDef, collision, velocity);
-                }
-            }
-            return true;
         }
 
         @Override
@@ -1282,11 +1213,41 @@ public class Projectile {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
+        protected enum projectileState_t {
+            // must update these in script/doom_defs.script if changed
+
+            SPAWNED,//= 0,
+            CREATED,//= 1,
+            LAUNCHED,//= 2,
+            FIZZLED,//= 3,
+            EXPLODED,//= 4
         }
 
-    };
+        public static class projectileFlags_s implements SERiAL {
+
+            public boolean detonate_on_actor;//: 1;
+            public boolean detonate_on_world;//: 1;
+            public boolean isTracer;//: 1;
+            public boolean noSplashDamage;//: 1;
+            boolean randomShaderSpin;//: 1;
+
+            @Override
+            public ByteBuffer AllocBuffer() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void Read(ByteBuffer buffer) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public ByteBuffer Write() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        }
+
+    }
 
     /*
      ===============================================================================
@@ -1298,19 +1259,19 @@ public class Projectile {
     public static class idGuidedProjectile extends idProjectile {
         // CLASS_PROTOTYPE( idGuidedProjectile );
 
-        private   idAngles              rndScale;
-        private   idAngles              rndAng;
-        private   idAngles              angles;
-        private   int                   rndUpdateTime;
-        private   float                 turn_max;
-        private   float                 clamp_dist;
-        private   boolean               burstMode;
-        private   boolean               unGuided;
-        private   float                 burstDist;
-        private   float                 burstVelocity;
-        //
-        protected float                 speed;
         protected idEntityPtr<idEntity> enemy;
+        //
+        protected float speed;
+        private idAngles angles;
+        private float burstDist;
+        private boolean burstMode;
+        private float burstVelocity;
+        private float clamp_dist;
+        private final idAngles rndAng;
+        private idAngles rndScale;
+        private int rndUpdateTime;
+        private float turn_max;
+        private boolean unGuided;
         //
         //
 
@@ -1487,7 +1448,7 @@ public class Projectile {
                 out.oSet(GetPhysics().GetOrigin().oPlus(physicsObj.GetLinearVelocity().oMultiply(2.0f)));
             }
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -1499,17 +1460,17 @@ public class Projectile {
     public static class idSoulCubeMissile extends idGuidedProjectile {
         // CLASS_PROTOTYPE ( idSoulCubeMissile );
 
-        private idVec3 startingVelocity;
-        private idVec3 endingVelocity;
         private float accelTime;
-        private int launchTime;
-        private boolean killPhase;
-        private boolean returnPhase;
         private idVec3 destOrg;
+        private idVec3 endingVelocity;
+        private boolean killPhase;
+        private int launchTime;
         private idVec3 orbitOrg;
         private int orbitTime;
-        private int smokeKillTime;
+        private boolean returnPhase;
         private idDeclParticle smokeKill;
+        private int smokeKillTime;
+        private idVec3 startingVelocity;
         //
         //
 
@@ -1677,14 +1638,14 @@ public class Projectile {
                 StartSound("snd_explode", SND_CHANNEL_BODY, 0, false, null);
             }
         }
-    };
+    }
 
     public static class beamTarget_t {
 
-        idEntityPtr<idEntity> target;
-        renderEntity_s renderEntity;
         int/*qhandle_t*/ modelDefHandle;
-    };
+        renderEntity_s renderEntity;
+        idEntityPtr<idEntity> target;
+    }
 
     /*
      ===============================================================================
@@ -1695,17 +1656,18 @@ public class Projectile {
      */
     public static class idBFGProjectile extends idProjectile {
         // CLASS_PROTOTYPE( idBFGProjectile );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idProjectile.getEventCallBacks());
             eventCallbacks.put(EV_RemoveBeams, (eventCallback_t0<idBFGProjectile>) idBFGProjectile::Event_RemoveBeams);
         }
 
-        private idList<beamTarget_t> beamTargets;
-        private renderEntity_s       secondModel;
+        private final idList<beamTarget_t> beamTargets;
+        private idStr damageFreq;
+        private int nextDamageTime;
+        private renderEntity_s secondModel;
         private int/*qhandle_t*/     secondModelDefHandle;
-        private int                  nextDamageTime;
-        private idStr                damageFreq;
         //
         //
 
@@ -1715,6 +1677,10 @@ public class Projectile {
             secondModelDefHandle = -1;
             nextDamageTime = 0;
             damageFreq = new idStr();
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -1776,7 +1742,7 @@ public class Projectile {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             beamTargets.Clear();
             secondModel = new renderEntity_s();//memset( &secondModel, 0, sizeof( secondModel ) );
             secondModelDefHandle = -1;
@@ -1784,10 +1750,10 @@ public class Projectile {
             if (temp != null && !temp.isEmpty()) {
                 secondModel.hModel = renderModelManager.FindModel(temp);
                 secondModel.bounds.oSet(secondModel.hModel.Bounds(secondModel));
-                secondModel.shaderParms[ SHADERPARM_RED]
-                        = secondModel.shaderParms[ SHADERPARM_GREEN]
-                        = secondModel.shaderParms[ SHADERPARM_BLUE]
-                        = secondModel.shaderParms[ SHADERPARM_ALPHA] = 1.0f;
+                secondModel.shaderParms[SHADERPARM_RED]
+                        = secondModel.shaderParms[SHADERPARM_GREEN]
+                        = secondModel.shaderParms[SHADERPARM_BLUE]
+                        = secondModel.shaderParms[SHADERPARM_ALPHA] = 1.0f;
                 secondModel.noSelfShadow = true;
                 secondModel.noShadow = true;
             }
@@ -1807,13 +1773,13 @@ public class Projectile {
                     idPlayer player = (beamTargets.oGet(i).target.GetEntity().IsType(idPlayer.class)) ? (idPlayer) beamTargets.oGet(i).target.GetEntity() : null;
                     idVec3 org = beamTargets.oGet(i).target.GetEntity().GetPhysics().GetAbsBounds().GetCenter();
                     beamTargets.oGet(i).renderEntity.origin.oSet(GetPhysics().GetOrigin());
-                    beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_BEAM_END_X] = org.x;
-                    beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_BEAM_END_Y] = org.y;
-                    beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_BEAM_END_Z] = org.z;
-                    beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_RED]
-                            = beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_GREEN]
-                            = beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_BLUE]
-                            = beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_ALPHA] = 1.0f;
+                    beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BEAM_END_X] = org.x;
+                    beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BEAM_END_Y] = org.y;
+                    beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BEAM_END_Z] = org.z;
+                    beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_RED]
+                            = beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_GREEN]
+                            = beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BLUE]
+                            = beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_ALPHA] = 1.0f;
                     if (gameLocal.time > nextDamageTime) {
                         boolean bfgVision = true;
                         if (damageFreq != null && /*(const char *)*/ !damageFreq.IsEmpty() && beamTargets.oGet(i).target.GetEntity() != null && beamTargets.oGet(i).target.GetEntity().CanDamage(GetPhysics().GetOrigin(), org)) {
@@ -1821,10 +1787,10 @@ public class Projectile {
                             org.Normalize();
                             beamTargets.oGet(i).target.GetEntity().Damage(this, owner.GetEntity(), org, damageFreq.toString(), (damagePower != 0) ? damagePower : 1.0f, INVALID_JOINT);
                         } else {
-                            beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_RED]
-                                    = beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_GREEN]
-                                    = beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_BLUE]
-                                    = beamTargets.oGet(i).renderEntity.shaderParms[ SHADERPARM_ALPHA] = 0.0f;
+                            beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_RED]
+                                    = beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_GREEN]
+                                    = beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BLUE]
+                                    = beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_ALPHA] = 0.0f;
                             bfgVision = false;
                         }
                         if (player != null) {
@@ -1863,7 +1829,7 @@ public class Projectile {
             super.Launch(start, dir, pushVelocity, 0.0f, power, dmgPower);
 
             // dmgPower * radius is the target acquisition area
-            // acquisition should make sure that monsters are not dormant 
+            // acquisition should make sure that monsters are not dormant
             // which will cut down on hitting monsters not actively fighting
             // but saves on the traces making sure they are visible
             // damage is not applied until the projectile explodes
@@ -1887,10 +1853,10 @@ public class Projectile {
             if (temp != null && !temp.isEmpty()) {
                 secondModel.hModel = renderModelManager.FindModel(temp);
                 secondModel.bounds.oSet(secondModel.hModel.Bounds(secondModel));
-                secondModel.shaderParms[ SHADERPARM_RED]
-                        = secondModel.shaderParms[ SHADERPARM_GREEN]
-                        = secondModel.shaderParms[ SHADERPARM_BLUE]
-                        = secondModel.shaderParms[ SHADERPARM_ALPHA] = 1.0f;
+                secondModel.shaderParms[SHADERPARM_RED]
+                        = secondModel.shaderParms[SHADERPARM_GREEN]
+                        = secondModel.shaderParms[SHADERPARM_BLUE]
+                        = secondModel.shaderParms[SHADERPARM_ALPHA] = 1.0f;
                 secondModel.noSelfShadow = true;
                 secondModel.noShadow = true;
                 secondModel.origin.oSet(GetPhysics().GetOrigin());
@@ -1904,7 +1870,7 @@ public class Projectile {
             // get all entities touching the bounds
             numListedEntities = gameLocal.clip.EntitiesTouchingBounds(bounds, CONTENTS_BODY, entityList, MAX_GENTITIES);
             for (int e = 0; e < numListedEntities; e++) {
-                ent = entityList[ e];
+                ent = entityList[e];
                 assert (ent != null);
 
                 if (ent == this || ent == owner.GetEntity() || ent.IsHidden() || !ent.IsActive() || !ent.fl.takedamage || ent.health <= 0 || !ent.IsType(idActor.class)) {
@@ -1924,12 +1890,12 @@ public class Projectile {
                 renderEntity = new renderEntity_s();
                 bt.renderEntity.origin.oSet(GetPhysics().GetOrigin());
                 bt.renderEntity.axis.oSet(GetPhysics().GetAxis());
-                bt.renderEntity.shaderParms[ SHADERPARM_BEAM_WIDTH] = beamWidth;
-                bt.renderEntity.shaderParms[ SHADERPARM_RED] = 1.0f;
-                bt.renderEntity.shaderParms[ SHADERPARM_GREEN] = 1.0f;
-                bt.renderEntity.shaderParms[ SHADERPARM_BLUE] = 1.0f;
-                bt.renderEntity.shaderParms[ SHADERPARM_ALPHA] = 1.0f;
-                bt.renderEntity.shaderParms[ SHADERPARM_DIVERSITY] = gameLocal.random.CRandomFloat() * 0.75f;
+                bt.renderEntity.shaderParms[SHADERPARM_BEAM_WIDTH] = beamWidth;
+                bt.renderEntity.shaderParms[SHADERPARM_RED] = 1.0f;
+                bt.renderEntity.shaderParms[SHADERPARM_GREEN] = 1.0f;
+                bt.renderEntity.shaderParms[SHADERPARM_BLUE] = 1.0f;
+                bt.renderEntity.shaderParms[SHADERPARM_ALPHA] = 1.0f;
+                bt.renderEntity.shaderParms[SHADERPARM_DIVERSITY] = gameLocal.random.CRandomFloat() * 0.75f;
                 bt.renderEntity.hModel = renderModelManager.FindModel("_beam");
                 bt.renderEntity.callback = null;
                 bt.renderEntity.numJoints = 0;
@@ -2048,13 +2014,9 @@ public class Projectile {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
 
 //        private void ApplyDamage();
-    };
+    }
 
     /*
      ===============================================================================
@@ -2065,7 +2027,8 @@ public class Projectile {
      */
     public static class idDebris extends idEntity {
         // CLASS_PROTOTYPE( idDebris );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Explode, (eventCallback_t0<idDebris>) idDebris::Event_Explode);
@@ -2074,10 +2037,10 @@ public class Projectile {
 
 
         private idEntityPtr<idEntity> owner;
-        private idPhysics_RigidBody   physicsObj;
-        private idDeclParticle        smokeFly;
-        private int                   smokeFlyTime;
-        private idSoundShader         sndBounce;
+        private final idPhysics_RigidBody physicsObj;
+        private idDeclParticle smokeFly;
+        private int smokeFlyTime;
+        private idSoundShader sndBounce;
         //
         //
 
@@ -2089,10 +2052,14 @@ public class Projectile {
             sndBounce = null;
         }
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         // ~idDebris();
         // save games
         @Override
-        public void Save(idSaveGame savefile) {					// archives object for save game file 
+        public void Save(idSaveGame savefile) {                    // archives object for save game file
             owner.Save(savefile);
 
             savefile.WriteStaticObject(physicsObj);
@@ -2103,7 +2070,7 @@ public class Projectile {
         }
 
         @Override
-        public void Restore(idRestoreGame savefile) {					// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                    // unarchives object from save game file
             owner.Restore(savefile);
 
             savefile.ReadStaticObject(physicsObj);
@@ -2164,7 +2131,7 @@ public class Projectile {
             randomVelocity = spawnArgs.GetBool("random_velocity");
 
             if (mass <= 0) {
-                gameLocal.Error("Invalid mass on '%s'\n", GetEntityDefName());
+                idGameLocal.Error("Invalid mass on '%s'\n", GetEntityDefName());
             }
 
             if (randomVelocity) {
@@ -2190,7 +2157,7 @@ public class Projectile {
             idTraceModel trm = new idTraceModel();
             spawnArgs.GetString("clipmodel", "", clipModelName);
             if (clipModelName.IsEmpty()) {
-                clipModelName.oSet(spawnArgs.GetString("model"));		// use the visual model
+                clipModelName.oSet(spawnArgs.GetString("model"));        // use the visual model
             }
 
             // load the trace model
@@ -2370,9 +2337,6 @@ public class Projectile {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

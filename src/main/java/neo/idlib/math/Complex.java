@@ -16,8 +16,8 @@ public class Complex {
      */
     static class idComplex {
 
-        public float r;		// real part
-        public float i;		// imaginary part
+        public float i;        // imaginary part
+        public float r;        // real part
 
         public idComplex() {
         }
@@ -27,16 +27,47 @@ public class Complex {
             this.i = i;
         }
 
+        public static idComplex oMultiply(final float a, final idComplex b) {
+            return new idComplex(a * b.r, a * b.i);
+        }
+
+        public static idComplex oDivide(final float a, final idComplex b) {
+            float s, t;
+            if (idMath.Fabs(b.r) >= idMath.Fabs(b.i)) {
+                s = b.i / b.r;
+                t = a / (b.r + s * b.i);
+                return new idComplex(t, -s * t);
+            } else {
+                s = b.r / b.i;
+                t = a / (s * b.r + b.i);
+                return new idComplex(s * t, -t);
+            }
+        }
+
+        public static idComplex oPlus(final float a, final idComplex b) {
+            return new idComplex(a + b.r, b.i);
+        }
+
+        public static idComplex oMinus(final float a, final idComplex b) {
+            return new idComplex(a - b.r, -b.i);
+        }
+//public		float &				operator[]( int index );
+//
+//public		idComplex			operator-() final;
+
         public void Set(final float r, final float i) {
             this.r = r;
             this.i = i;
         }
+//public		idComplex &			operator=( final idComplex &a );
 
         public void Zero() {
             r = i = 0.0f;
         }
+//
+//public		idComplex			operator*( final idComplex &a ) final;
 
-//public	float				operator[]( int index ) final;
+        //public	float				operator[]( int index ) final;
         public float oGet(int index) {
             assert (index >= 0 && index < 2);
             if (0 == index) {
@@ -45,6 +76,7 @@ public class Complex {
                 return i;
             }
         }
+//public		idComplex			operator/( final idComplex &a ) final;
 
         public void oSet(int index, float value) {
             assert (index >= 0 && index < 2);
@@ -54,14 +86,12 @@ public class Complex {
                 i = value;
             }
         }
-//public		float &				operator[]( int index );
-//
-//public		idComplex			operator-() final;
+//public		idComplex			operator+( final idComplex &a ) final;
 
         public idComplex oNegative() {
             return new idComplex(-r, -i);
         }
-//public		idComplex &			operator=( final idComplex &a );
+//public		idComplex			operator-( final idComplex &a ) final;
 
         public idComplex oSet(final idComplex a) {
             r = a.r;
@@ -69,12 +99,12 @@ public class Complex {
             return this;
         }
 //
-//public		idComplex			operator*( final idComplex &a ) final;
+//public		idComplex &			operator*=( final idComplex &a );
 
         public idComplex oMultiply(final idComplex a) {
             return new idComplex(r * a.r - i * a.i, i * a.r + r * a.i);
         }
-//public		idComplex			operator/( final idComplex &a ) final;
+//public		idComplex &			operator/=( final idComplex &a );
 
         public idComplex oDivide(final idComplex a) {
             float s, t;
@@ -88,24 +118,24 @@ public class Complex {
                 return new idComplex((r * s + i) * t, (i * s - r) * t);
             }
         }
-//public		idComplex			operator+( final idComplex &a ) final;
+//public		idComplex &			operator+=( final idComplex &a );
 
         public idComplex oPlus(final idComplex a) {
             return new idComplex(r + a.r, i + a.i);
         }
-//public		idComplex			operator-( final idComplex &a ) final;
+//public		idComplex &			operator-=( final idComplex &a );
 
         public idComplex oMinus(final idComplex a) {
             return new idComplex(r - a.r, i - a.i);
         }
 //
-//public		idComplex &			operator*=( final idComplex &a );
+//public		idComplex			operator*( final float a ) final;
 
         public idComplex oMulSet(final idComplex a) {
             this.Set(r * a.r - i * a.i, i * a.r + r * a.i);
             return this;
         }
-//public		idComplex &			operator/=( final idComplex &a );
+//public		idComplex			operator/( final float a ) final;
 
         public idComplex oDivSet(final idComplex a) {
             float s, t;
@@ -120,14 +150,14 @@ public class Complex {
             }
             return this;
         }
-//public		idComplex &			operator+=( final idComplex &a );
+//public		idComplex			operator+( final float a ) final;
 
         public idComplex oPluSet(final idComplex a) {
             r += a.r;
             i += a.i;
             return this;
         }
-//public		idComplex &			operator-=( final idComplex &a );
+//public		idComplex			operator-( final float a ) final;
 
         public idComplex oMinSet(final idComplex a) {
             r -= a.r;
@@ -135,36 +165,36 @@ public class Complex {
             return this;
         }
 //
-//public		idComplex			operator*( final float a ) final;
+//public		idComplex &			operator*=( final float a );
 
         public idComplex oMultiply(final float a) {
             return new idComplex(r * a, i * a);
         }
-//public		idComplex			operator/( final float a ) final;
+//public		idComplex &			operator/=( final float a );
 
         public idComplex oDivide(final float a) {
             float s = 1.0f / a;
             return new idComplex(r * s, i * s);
         }
-//public		idComplex			operator+( final float a ) final;
+//public		idComplex &			operator+=( final float a );
 
         public idComplex oPlus(final float a) {
             return new idComplex(r + a, i);
         }
-//public		idComplex			operator-( final float a ) final;
+//public		idComplex &			operator-=( final float a );
 
         public idComplex oMinus(final float a) {
             return new idComplex(r - a, i);
         }
 //
-//public		idComplex &			operator*=( final float a );
+//public		friend idComplex	operator*( final float a, final idComplex &b );
 
         public idComplex oMulSet(final float a) {
             r *= a;
             i *= a;
             return this;
         }
-//public		idComplex &			operator/=( final float a );
+//public		friend idComplex	operator/( final float a, final idComplex &b );
 
         public idComplex oDivSet(final float a) {
             float s = 1.0f / a;
@@ -172,47 +202,17 @@ public class Complex {
             i *= s;
             return this;
         }
-//public		idComplex &			operator+=( final float a );
+//public		friend idComplex	operator+( final float a, final idComplex &b );
 
         public idComplex oPluSet(final float a) {
             r += a;
             return this;
         }
-//public		idComplex &			operator-=( final float a );
+//public		friend idComplex	operator-( final float a, final idComplex &b );
 
         public idComplex oMinSet(final float a) {
             r -= a;
             return this;
-        }
-//
-//public		friend idComplex	operator*( final float a, final idComplex &b );
-
-        public static idComplex oMultiply(final float a, final idComplex b) {
-            return new idComplex(a * b.r, a * b.i);
-        }
-//public		friend idComplex	operator/( final float a, final idComplex &b );
-
-        public static idComplex oDivide(final float a, final idComplex b) {
-            float s, t;
-            if (idMath.Fabs(b.r) >= idMath.Fabs(b.i)) {
-                s = b.i / b.r;
-                t = a / (b.r + s * b.i);
-                return new idComplex(t, -s * t);
-            } else {
-                s = b.r / b.i;
-                t = a / (s * b.r + b.i);
-                return new idComplex(s * t, -t);
-            }
-        }
-//public		friend idComplex	operator+( final float a, final idComplex &b );
-
-        public static idComplex oPlus(final float a, final idComplex b) {
-            return new idComplex(a + b.r, b.i);
-        }
-//public		friend idComplex	operator-( final float a, final idComplex &b );
-
-        public static idComplex oMinus(final float a, final idComplex b) {
-            return new idComplex(a - b.r, -b.i);
         }
 //
 
@@ -224,10 +224,7 @@ public class Complex {
             if (idMath.Fabs(r - a.r) > epsilon) {
                 return false;
             }
-            if (idMath.Fabs(i - a.i) > epsilon) {
-                return false;
-            }
-            return true;
+            return !(idMath.Fabs(i - a.i) > epsilon);
         }
 //public		boolean				operator==(	final idComplex &a ) final;						// exact compare, no epsilon
 //public		boolean				operator!=(	final idComplex &a ) final;						// exact compare, no epsilon
@@ -252,10 +249,7 @@ public class Complex {
             if (Float.floatToIntBits(this.r) != Float.floatToIntBits(other.r)) {
                 return false;
             }
-            if (Float.floatToIntBits(this.i) != Float.floatToIntBits(other.i)) {
-                return false;
-            }
-            return true;
+            return Float.floatToIntBits(this.i) == Float.floatToIntBits(other.i);
         }
 
         public idComplex Reciprocal() {
@@ -320,5 +314,6 @@ public class Complex {
 //public		final float *		ToFloatPtr( void ) final;
 //public		float *				ToFloatPtr( void );
 //public		final char *		ToString( int precision = 2 ) final;
-    };
+    }
+
 }

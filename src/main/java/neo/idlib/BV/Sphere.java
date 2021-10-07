@@ -1,16 +1,13 @@
 package neo.idlib.BV;
 
 import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.Objects;
 
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
+import static neo.idlib.math.Plane.*;
 import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
@@ -28,7 +25,7 @@ public class Sphere {
     public static class idSphere {
 
         private idVec3 origin;
-        private float  radius;
+        private float radius;
         //
         //
 
@@ -58,7 +55,7 @@ public class Sphere {
             return new idSphere(origin.oPlus(t), radius);
         }
 
-        public idSphere oPluSet(final idVec3 t) {					// translate the sphere
+        public idSphere oPluSet(final idVec3 t) {                    // translate the sphere
             origin.oPluSet(t);
             return this;
         }
@@ -66,11 +63,11 @@ public class Sphere {
 //public	idSphere &		operator+=( final idSphere &s );
 //
 
-        public boolean Compare(final idSphere a) {							// exact compare, no epsilon
+        public boolean Compare(final idSphere a) {                            // exact compare, no epsilon
             return (origin.Compare(a.origin) && radius == a.radius);
         }
 
-        public boolean Compare(final idSphere a, final float epsilon) {	// compare with epsilon
+        public boolean Compare(final idSphere a, final float epsilon) {    // compare with epsilon
             return (origin.Compare(a.origin, epsilon) && idMath.Fabs(radius - a.radius) <= epsilon);
         }
 //public	boolean			operator==(	final idSphere &a );						// exact compare, no epsilon
@@ -96,43 +93,40 @@ public class Sphere {
             if (!Objects.equals(this.origin, other.origin)) {
                 return false;
             }
-            if (Float.floatToIntBits(this.radius) != Float.floatToIntBits(other.radius)) {
-                return false;
-            }
-            return true;
+            return Float.floatToIntBits(this.radius) == Float.floatToIntBits(other.radius);
         }
 
-        public void Clear() {									// inside out sphere
+        public void Clear() {                                    // inside out sphere
             origin.Zero();
             radius = -1.0f;
         }
 
-        public void Zero() {									// single point at origin
+        public void Zero() {                                    // single point at origin
             origin.Zero();
             radius = 0.0f;
         }
 
-        public void SetOrigin(final idVec3 o) {					// set origin of sphere
+        public void SetOrigin(final idVec3 o) {                    // set origin of sphere
             origin = o;
         }
 
-        public void SetRadius(final float r) {						// set square radius
+        public void SetRadius(final float r) {                        // set square radius
             radius = r;
         }
 
-        public final idVec3 GetOrigin() {						// returns origin of sphere
+        public final idVec3 GetOrigin() {                        // returns origin of sphere
             return origin;
         }
 
-        public float GetRadius() {						// returns sphere radius
+        public float GetRadius() {                        // returns sphere radius
             return radius;
         }
 
-        public boolean IsCleared() {					// returns true if sphere is inside out
+        public boolean IsCleared() {                    // returns true if sphere is inside out
             return (radius < 0.0f);
         }
 
-        public boolean AddPoint(final idVec3 p) {					// add the point, returns true if the sphere expanded 
+        public boolean AddPoint(final idVec3 p) {                    // add the point, returns true if the sphere expanded
             if (radius < 0.0f) {
                 origin = p;
                 radius = 0.0f;
@@ -149,7 +143,7 @@ public class Sphere {
             }
         }
 
-        public boolean AddSphere(final idSphere s) {					// add the sphere, returns true if the sphere expanded
+        public boolean AddSphere(final idSphere s) {                    // add the sphere, returns true if the sphere expanded
             if (radius < 0.0f) {
                 origin = s.origin;
                 radius = s.radius;
@@ -166,11 +160,11 @@ public class Sphere {
             }
         }
 
-        public idSphere Expand(final float d) {					// return bounds expanded in all directions with the given value
+        public idSphere Expand(final float d) {                    // return bounds expanded in all directions with the given value
             return new idSphere(origin, radius + d);
         }
 
-        public idSphere ExpandSelf(final float d) {					// expand bounds in all directions with the given value
+        public idSphere ExpandSelf(final float d) {                    // expand bounds in all directions with the given value
             radius += d;
             return this;
         }
@@ -214,19 +208,13 @@ public class Sphere {
             return PLANESIDE_CROSS;
         }
 
-        public boolean ContainsPoint(final idVec3 p) {			// includes touching
-            if ((p.oMinus(origin)).LengthSqr() > radius * radius) {
-                return false;
-            }
-            return true;
+        public boolean ContainsPoint(final idVec3 p) {            // includes touching
+            return !((p.oMinus(origin)).LengthSqr() > radius * radius);
         }
 
-        public boolean IntersectsSphere(final idSphere s) {	// includes touching
+        public boolean IntersectsSphere(final idSphere s) {    // includes touching
             float r = s.radius + radius;
-            if ((s.origin.oMinus(origin)).LengthSqr() > r * r) {
-                return false;
-            }
-            return true;
+            return !((s.origin.oMinus(origin)).LengthSqr() > r * r);
         }
 
         /*
@@ -344,5 +332,6 @@ public class Sphere {
             min[0] = d - radius;
             max[0] = d + radius;
         }
-    };
+    }
+
 }

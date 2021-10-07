@@ -1,48 +1,14 @@
 package neo.framework;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import neo.Renderer.Material.idMaterial;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.Sound.snd_system.soundSystem;
 import neo.TempDump.CPP_class.Pointer;
-import static neo.TempDump.atobb;
-import static neo.TempDump.bbtocb;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
 import neo.framework.CmdSystem.idCmdSystem;
-import static neo.framework.Common.common;
 import neo.framework.DeclAF.idDeclAF;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
 import neo.framework.DeclFX.idDeclFX;
-import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
-import static neo.framework.DeclManager.declState_t.DS_PARSED;
-import static neo.framework.DeclManager.declState_t.DS_UNPARSED;
-import static neo.framework.DeclManager.declType_t.DECL_AF;
-import static neo.framework.DeclManager.declType_t.DECL_AUDIO;
-import static neo.framework.DeclManager.declType_t.DECL_EMAIL;
-import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
-import static neo.framework.DeclManager.declType_t.DECL_FX;
-import static neo.framework.DeclManager.declType_t.DECL_MAPDEF;
-import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
-import static neo.framework.DeclManager.declType_t.DECL_MAX_TYPES;
-import static neo.framework.DeclManager.declType_t.DECL_MODELEXPORT;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
-import static neo.framework.DeclManager.declType_t.DECL_PDA;
-import static neo.framework.DeclManager.declType_t.DECL_SKIN;
-import static neo.framework.DeclManager.declType_t.DECL_SOUND;
-import static neo.framework.DeclManager.declType_t.DECL_TABLE;
-import static neo.framework.DeclManager.declType_t.DECL_VIDEO;
-
 import neo.framework.DeclPDA.idDeclAudio;
 import neo.framework.DeclPDA.idDeclEmail;
 import neo.framework.DeclPDA.idDeclPDA;
@@ -50,25 +16,36 @@ import neo.framework.DeclPDA.idDeclVideo;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.framework.DeclTable.idDeclTable;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.FileSystem_h.idFileList;
 import neo.framework.File_h.idFile;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.MAX_STRING_CHARS;
-import static neo.idlib.Lib.Max;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static neo.Sound.snd_system.soundSystem;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.CVAR_SYSTEM;
+import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declState_t.*;
+import static neo.framework.DeclManager.declType_t.*;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.MAX_STRING_CHARS;
+import static neo.idlib.Lib.Max;
+import static neo.idlib.Text.Lexer.*;
 import static neo.idlib.hashing.MD5.MD5_BlockChecksum;
 
 /**
@@ -76,12 +53,347 @@ import static neo.idlib.hashing.MD5.MD5_BlockChecksum;
  */
 public class DeclManager {
 
+    //
+    public static final int DECL_LEXER_FLAGS
+            = LEXFL_NOSTRINGCONCAT | // multiple strings seperated by whitespaces are not concatenated
+            LEXFL_NOSTRINGESCAPECHARS | // no escape characters inside strings
+            LEXFL_ALLOWPATHNAMES | // allow path seperators in names
+            LEXFL_ALLOWMULTICHARLITERALS | // allow multi character literals
+            LEXFL_ALLOWBACKSLASHSTRINGCONCAT | // allow multiple strings seperated by '\' to be concatenated
+            LEXFL_NOFATALERRORS;        // just set a flag instead of fatal erroring
+    public static final String[] listDeclStrings = {"current", "all", "ever", null};
+    static final boolean GET_HUFFMAN_FREQUENCIES = false;
+    //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+    /*
+     ====================================================================================
+
+     decl text huffman compression
+
+     ====================================================================================
+     */
+    static final int MAX_HUFFMAN_SYMBOLS = 256;
+    static final boolean USE_COMPRESSED_DECLS = true;
+
+    //
+    // compression ratio = 64%
+    static final int[] huffmanFrequencies = {
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00078fb6, 0x000352a7, 0x00000002, 0x00000001, 0x0002795e, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00049600, 0x000000dd, 0x00018732, 0x0000005a, 0x00000007, 0x00000092, 0x0000000a, 0x00000919,
+            0x00002dcf, 0x00002dda, 0x00004dfc, 0x0000039a, 0x000058be, 0x00002d13, 0x00014d8c, 0x00023c60,
+            0x0002ddb0, 0x0000d1fc, 0x000078c4, 0x00003ec7, 0x00003113, 0x00006b59, 0x00002499, 0x0000184a,
+            0x0000250b, 0x00004e38, 0x000001ca, 0x00000011, 0x00000020, 0x000023da, 0x00000012, 0x00000091,
+            0x0000000b, 0x00000b14, 0x0000035d, 0x0000137e, 0x000020c9, 0x00000e11, 0x000004b4, 0x00000737,
+            0x000006b8, 0x00001110, 0x000006b3, 0x000000fe, 0x00000f02, 0x00000d73, 0x000005f6, 0x00000be4,
+            0x00000d86, 0x0000014d, 0x00000d89, 0x0000129b, 0x00000db3, 0x0000015a, 0x00000167, 0x00000375,
+            0x00000028, 0x00000112, 0x00000018, 0x00000678, 0x0000081a, 0x00000677, 0x00000003, 0x00018112,
+            0x00000001, 0x000441ee, 0x000124b0, 0x0001fa3f, 0x00026125, 0x0005a411, 0x0000e50f, 0x00011820,
+            0x00010f13, 0x0002e723, 0x00003518, 0x00005738, 0x0002cc26, 0x0002a9b7, 0x0002db81, 0x0003b5fa,
+            0x000185d2, 0x00001299, 0x00030773, 0x0003920d, 0x000411cd, 0x00018751, 0x00005fbd, 0x000099b0,
+            0x00009242, 0x00007cf2, 0x00002809, 0x00005a1d, 0x00000001, 0x00005a1d, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+            0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,};
+
+    static huffmanCode_s[] huffmanCodes = new huffmanCode_s[MAX_HUFFMAN_SYMBOLS];
+    static huffmanNode_s huffmanTree = null;
+    static int maxHuffmanBits = 0;
+
+    static int totalCompressedLength = 0;
+
+    static int totalUncompressedLength = 0;
     private static idDeclManagerLocal declManagerLocal = new idDeclManagerLocal();
+
     public static idDeclManager declManager = declManagerLocal;
 
-    static final boolean USE_COMPRESSED_DECLS = true;
-    static final boolean GET_HUFFMAN_FREQUENCIES = false;
+    public static Constructor<idDecl> idDeclAllocator(Class/*<idDecl>*/ theMobRules) {
+        //TODO:use reflection. EDIT:cross fingers.
+        try {
+            return theMobRules.getConstructor();
+        } catch (NoSuchMethodException | SecurityException ex) {
+            Logger.getLogger(DeclManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
+        return null;
+    }
+
+    /*
+     ================
+     ClearHuffmanFrequencies
+     ================
+     */
+    static void ClearHuffmanFrequencies() {
+        int i;
+
+        for (i = 0; i < MAX_HUFFMAN_SYMBOLS; i++) {
+            huffmanFrequencies[i] = 1;
+        }
+    }
+
+    /*
+     ================
+     InsertHuffmanNode
+     ================
+     */
+    static huffmanNode_s InsertHuffmanNode(huffmanNode_s firstNode, huffmanNode_s node) {
+        huffmanNode_s n, lastNode;
+
+        lastNode = null;
+        for (n = firstNode; n != null; n = n.next) {
+            if (node.frequency <= n.frequency) {
+                break;
+            }
+            lastNode = n;
+        }
+        if (lastNode != null) {
+            node.next = lastNode.next;
+            lastNode.next = node;
+        } else {
+            node.next = firstNode;
+            firstNode = node;
+        }
+        return firstNode;
+    }
+
+    /*
+     ================
+     BuildHuffmanCode_r
+     ================
+     */
+    static void BuildHuffmanCode_r(huffmanNode_s node, final huffmanCode_s code, huffmanCode_s[] codes/*[MAX_HUFFMAN_SYMBOLS]*/) {
+        if (node.symbol == -1) {
+            huffmanCode_s newCode = new huffmanCode_s(code);
+            assert (code.numBits < codes[0].bits.length * 8);
+            newCode.numBits++;
+            if (code.numBits > maxHuffmanBits) {
+                maxHuffmanBits = newCode.numBits;
+            }
+            BuildHuffmanCode_r(node.children[0], newCode, codes);
+            newCode.bits[code.numBits >> 5] |= 1 << (code.numBits & 31);
+            BuildHuffmanCode_r(node.children[1], newCode, codes);
+        } else {
+            assert (code.numBits <= codes[0].bits.length * 8);
+            codes[node.symbol] = new huffmanCode_s(code);
+        }
+    }
+
+    /*
+     ================
+     FreeHuffmanTree_r
+     ================
+     */
+    static void FreeHuffmanTree_r(huffmanNode_s node) {
+        if (node.symbol == -1) {
+            FreeHuffmanTree_r(node.children[0]);
+            FreeHuffmanTree_r(node.children[1]);
+        }
+//	delete node;
+    }
+
+    /*
+     ================
+     HuffmanHeight_r
+     ================
+     */
+    static int HuffmanHeight_r(huffmanNode_s node) {
+        if (node == null) {
+            return -1;
+        }
+        int left = HuffmanHeight_r(node.children[0]);
+        int right = HuffmanHeight_r(node.children[1]);
+        if (left > right) {
+            return left + 1;
+        }
+        return right + 1;
+    }
+
+    //
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+
+    /*
+     ================
+     SetupHuffman
+     ================
+     */
+    static void SetupHuffman() {
+        int i, height;
+        huffmanNode_s firstNode, node;
+        huffmanCode_s code;
+
+        firstNode = null;
+        for (i = 0; i < MAX_HUFFMAN_SYMBOLS; i++) {
+            node = new huffmanNode_s();
+            node.symbol = i;
+            node.frequency = huffmanFrequencies[i];
+            node.next = null;
+            node.children[0] = null;
+            node.children[1] = null;
+            firstNode = InsertHuffmanNode(firstNode, node);
+        }
+
+        for (i = 1; i < MAX_HUFFMAN_SYMBOLS; i++) {
+            node = new huffmanNode_s();
+            node.symbol = -1;
+            node.frequency = firstNode.frequency + firstNode.next.frequency;
+            node.next = null;
+            node.children[0] = firstNode;
+            node.children[1] = firstNode.next;
+            firstNode = InsertHuffmanNode(firstNode.next.next, node);
+        }
+
+        maxHuffmanBits = 0;
+        code = new huffmanCode_s();//memset( &code, 0, sizeof( code ) );
+        BuildHuffmanCode_r(firstNode, code, huffmanCodes);
+
+        huffmanTree = firstNode;
+
+        height = HuffmanHeight_r(firstNode);
+        assert (maxHuffmanBits == height);
+    }
+
+    /*
+     ================
+     ShutdownHuffman
+     ================
+     */
+    static void ShutdownHuffman() {
+        if (huffmanTree != null) {
+            FreeHuffmanTree_r(huffmanTree);
+        }
+    }
+
+    /*
+     ================
+     HuffmanCompressText
+     ================
+     */
+    private static int HuffmanCompressText(final String text, int textLength, ByteBuffer compressed, int maxCompressedSize) {
+        int i, j;
+        idBitMsg msg = new idBitMsg();
+
+        totalUncompressedLength += textLength;
+
+        msg.Init(compressed, maxCompressedSize);
+        msg.BeginWriting();
+        for (i = 0; i < textLength; i++) {
+            final huffmanCode_s code = huffmanCodes[text.charAt(i)];
+            for (j = 0; j < (code.numBits >> 5); j++) {
+                msg.WriteBits((int) code.bits[j], 32);
+            }
+            if ((code.numBits & 31) != 0) {
+                msg.WriteBits((int) code.bits[j], code.numBits & 31);
+            }
+        }
+
+        totalCompressedLength += msg.GetSize();
+
+        return msg.GetSize();
+    }
+
+    /*
+     ================
+     HuffmanDecompressText
+     ================
+     */
+    static int HuffmanDecompressText(String[] text, int textLength, final ByteBuffer compressed, int compressedSize) {
+        int i, bit;
+        idBitMsg msg = new idBitMsg();
+        huffmanNode_s node;
+
+        msg.Init(compressed, compressedSize);
+        msg.SetSize(compressedSize);
+        msg.BeginReading();
+        text[0] = "";
+        for (i = 0; i < textLength; i++) {
+            node = huffmanTree;
+            do {
+                bit = msg.ReadBits(1);
+                node = node.children[bit];
+//                System.out.println(bit + ":" + node.symbol);
+            } while (node.symbol == -1);
+            text[0] += (char) node.symbol;
+        }
+//        text[0] += '\0';
+        return msg.GetReadCount();
+    }
+
+    public static void setDeclManager(idDeclManager declManager) {
+        DeclManager.declManager = DeclManager.declManagerLocal = (idDeclManagerLocal) declManager;
+    }
+    public enum declState_t {
+
+        DS_UNPARSED,
+        DS_DEFAULTED, // set if a parse failed due to an error, or the lack of any source
+        DS_PARSED
+    }
     /*
      ===============================================================================
 
@@ -136,29 +448,11 @@ public class DeclManager {
         _15_, _16_, _17_, _18_, _19_, _20_, _21_, _22_, _23_, _24_,
         _25_, _26_, _27_, _28_, _29_, _30_, _31_,
         DECL_MAX_TYPES//32
-    };
-//    
-
-    public enum declState_t {
-
-        DS_UNPARSED,
-        DS_DEFAULTED, // set if a parse failed due to an error, or the lack of any source
-        DS_PARSED
-    };
-//    
-    public static final int DECL_LEXER_FLAGS
-            = LEXFL_NOSTRINGCONCAT | // multiple strings seperated by whitespaces are not concatenated
-            LEXFL_NOSTRINGESCAPECHARS | // no escape characters inside strings
-            LEXFL_ALLOWPATHNAMES | // allow path seperators in names
-            LEXFL_ALLOWMULTICHARLITERALS | // allow multi character literals
-            LEXFL_ALLOWBACKSLASHSTRINGCONCAT | // allow multiple strings seperated by '\' to be concatenated
-            LEXFL_NOFATALERRORS;		// just set a flag instead of fatal erroring
-
-    public static final String[] listDeclStrings = {"current", "all", "ever", null};
+    }
 
     public static abstract class idDeclBase {
 
-// public	abstract 				~idDeclBase() {};
+        // public	abstract 				~idDeclBase() {};
         public abstract String GetName();
 
         public abstract declType_t GetType();
@@ -208,7 +502,7 @@ public class DeclManager {
         protected abstract void List() throws idException;
 
         protected abstract void Print();
-    };
+    }
 
     public static class idDecl {
 
@@ -367,17 +661,6 @@ public class DeclManager {
         public /*abstract*/ void Print() throws idException {
             base.Print();
         }
-    };
-
-    public static Constructor<idDecl> idDeclAllocator(Class/*<idDecl>*/ theMobRules) {
-        //TODO:use reflection. EDIT:cross fingers.
-        try {
-            return theMobRules.getConstructor();
-        } catch (NoSuchMethodException | SecurityException ex) {
-            Logger.getLogger(DeclManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return null;
     }
 
     public static abstract class idDeclManager {
@@ -536,7 +819,7 @@ public class DeclManager {
             return SoundByIndex(index, true);
         }
 
-    };
+    }
 
     public static class idListDecls_f extends cmdFunction_t {
 
@@ -550,7 +833,7 @@ public class DeclManager {
         public void run(idCmdArgs args) throws idException {
             declManager.ListType(args, type);
         }
-    };
+    }
 
     public static class idPrintDecls_f extends cmdFunction_t {
 
@@ -564,47 +847,49 @@ public class DeclManager {
         public void run(idCmdArgs args) throws idException {
             declManager.PrintType(args, type);
         }
-    };
+    }
 
     static class idDeclType {
 
-        public idStr typeName;
-        public declType_t type;
         public Constructor<idDecl> allocator;//(*allocator)( void );
-    };
+        public declType_t type;
+        public idStr typeName;
+    }
 
     static class idDeclFolder {
 
-        public idStr folder;
-        public idStr extension;
         public declType_t defaultType;
-    };
+        public idStr extension;
+        public idStr folder;
+    }
 
     static class idDeclLocal extends idDeclBase {
 
+        private static int DBG_AllocateSelf = 0;
+        private static int recursionLevel;
+        private BigInteger checksum;        // checksum of the decl text
+        private int compressedLength;        // compressed length
+        private declState_t declState;        // decl state
+        private boolean everReferenced;        // set to true if the decl was ever used
+        private int index;            // index in the per-type list
+        //
+        private idStr name;            // name of the decl
+        //
+        private idDeclLocal nextInFile;        // next decl in the decl file
+        //
+        private boolean parsedOutsideLevelLoad;    // these decls will never be purged
+        private boolean redefinedInReload;    // used during file reloading to make sure a decl that has its source removed will be defaulted
+        private boolean referencedThisLevel;    // set to true when the decl is used for the current level
         private idDecl self;
-        //
-        private idStr name;			// name of the decl
-        private ByteBuffer textSource;		// decl text definition
-        private int textLength;			// length of textSource
-        private int compressedLength;		// compressed length
-        private idDeclFile sourceFile;		// source file in which the decl was defined
-        private int sourceTextOffset;		// offset in source file to decl text
-        private int sourceTextLength;		// length of decl text in source file
-        private int sourceLine;			// this is where the actual declaration token starts
-        private BigInteger checksum;		// checksum of the decl text
-        private declType_t type;		// decl type
-        private declState_t declState;		// decl state
-        private int index;			// index in the per-type list
-        //
-        private boolean parsedOutsideLevelLoad;	// these decls will never be purged
-        private boolean everReferenced;		// set to true if the decl was ever used
-        private boolean referencedThisLevel;	// set to true when the decl is used for the current level
-        private boolean redefinedInReload;	// used during file reloading to make sure a decl that has its source removed will be defaulted
-        //
-        private idDeclLocal nextInFile;		// next decl in the decl file
+        private idDeclFile sourceFile;        // source file in which the decl was defined
+        private int sourceLine;            // this is where the actual declaration token starts
+        private int sourceTextLength;        // length of decl text in source file
+        private int sourceTextOffset;        // offset in source file to decl text
+        private int textLength;            // length of textSource
         //
         //
+        private ByteBuffer textSource;        // decl text definition
+        private declType_t type;        // decl type
 
         public idDeclLocal() {
             name = new idStr("unnamed");
@@ -708,7 +993,7 @@ public class DeclManager {
             byte[] buffer;
             idFile file;
 
-            common.Printf("Writing \'%s\' to \'%s\'...\n", GetName(), GetFileName());
+            common.Printf("Writing '%s' to '%s'...\n", GetName(), GetFileName());
 
             if (sourceFile == declManagerLocal.implicitDecls) {
                 common.Warning("Can't save implicit declaration %s.", GetName());
@@ -790,7 +1075,8 @@ public class DeclManager {
         @Override
         public boolean SourceFileChanged() {
             int newLength;
-            /*ID_TIME_T*/ long[] newTimestamp = new long[1];
+            /*ID_TIME_T*/
+            long[] newTimestamp = new long[1];
 
             if (sourceFile.fileSize <= 0) {
                 return false;
@@ -798,13 +1084,8 @@ public class DeclManager {
 
             newLength = fileSystem.ReadFile(GetFileName(), null, newTimestamp);
 
-            if (newLength != sourceFile.fileSize || newTimestamp != sourceFile.timestamp) {
-                return true;
-            }
-
-            return false;
+            return newLength != sourceFile.fileSize || newTimestamp != sourceFile.timestamp;
         }
-        private static int recursionLevel;
 
         @Override
         public void MakeDefault() throws idException {
@@ -879,7 +1160,6 @@ public class DeclManager {
         protected void Print() {
         }
 
-        private static int DBG_AllocateSelf = 0;
         protected void AllocateSelf() {
             if (null == self) {
                 try {
@@ -922,7 +1202,7 @@ public class DeclManager {
             declState = DS_PARSED;
 
             // parse
-            String[] declText = {null};/*(char *) _alloca( ( GetTextLength() + 1 ) * sizeof( char ) )*/;
+            String[] declText = {null};/*(char *) _alloca( ( GetTextLength() + 1 ) * sizeof( char ) )*/
             GetText(declText);
             self.Parse(declText[0], GetTextLength());
 
@@ -982,21 +1262,29 @@ public class DeclManager {
             }
             textLength = length;
         }
-    };
+    }
 
     static class idDeclFile {
 
-        public idStr fileName;
-        public declType_t defaultType;
-        //
-        public /*ID_TIME_T*/ long[] timestamp = new long[1];
         public BigInteger checksum;
+        //
+        public idDeclLocal decls;
+        public declType_t defaultType;
+        public idStr fileName;
         public int fileSize;
         public int numLines;
         //
-        public idDeclLocal decls;
+        public /*ID_TIME_T*/ long[] timestamp = new long[1];
         //
         //
+        /*
+         ================
+         idDeclFile::LoadAndParse
+
+         This is used during both the initial load, and any reloads
+         ================
+         */
+        int c_savedMemory = 0;
 
         public idDeclFile() {
             this.fileName = new idStr("<implicit file>");
@@ -1007,6 +1295,7 @@ public class DeclManager {
             this.numLines = 0;
             this.decls = null;
         }
+//
 
         public idDeclFile(final String fileName, declType_t defaultType) {
             this.fileName = new idStr(fileName);
@@ -1017,7 +1306,6 @@ public class DeclManager {
             this.numLines = 0;
             this.decls = null;
         }
-//
 
         /*
          ================
@@ -1029,7 +1317,8 @@ public class DeclManager {
         public void Reload(boolean force) throws idException {
             // check for an unchanged timestamp
             if (!force && timestamp[0] != 0) {
-                /*ID_TIME_T*/ long[] testTimeStamp = new long[1];
+                /*ID_TIME_T*/
+                long[] testTimeStamp = new long[1];
                 fileSystem.ReadFile(fileName.toString(), null, testTimeStamp);
 
                 if (testTimeStamp == timestamp) {
@@ -1040,15 +1329,6 @@ public class DeclManager {
             // parse the text
             LoadAndParse();
         }
-
-        /*
-         ================
-         idDeclFile::LoadAndParse
-
-         This is used during both the initial load, and any reloads
-         ================
-         */
-        int c_savedMemory = 0;
 
         public BigInteger LoadAndParse() throws idException {
             int i, numTypes;
@@ -1105,7 +1385,7 @@ public class DeclManager {
                 for (i = 0; i < numTypes; i++) {
                     idDeclType typeInfo = declManagerLocal.GetDeclType(i);
                     if (typeInfo != null && typeInfo.typeName.Icmp(token.toString()) == 0) {
-                        identifiedType = (declType_t) typeInfo.type;
+                        identifiedType = typeInfo.type;
                         break;
                     }
                 }
@@ -1221,26 +1501,33 @@ public class DeclManager {
 
             return checksum;
         }
-    };
+    }
 
     static class idDeclManagerLocal extends idDeclManager {
 
-        private idList<idDeclType> declTypes;
-        private idList<idDeclFolder> declFolders;
         //
-        private idList<idDeclFile> loadedFiles;
+        private static final idCVar decl_show = new idCVar("decl_show", "0", CVAR_SYSTEM, "set to 1 to print parses, 2 to also print references", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
+        /*
+         =================
+         idDeclManagerLocal::FindType
+
+         External users will always cause the decl to be parsed before returning
+         =================
+         */static int DEBUG_FindType = 0;
         private final idHashIndex[] hashTables;
         private final idList<idDeclLocal>[] linearLists;
-        private idDeclFile implicitDecls;// this holds all the decls that were created because explicit
         //                               // text definitions were not found. Decls that became default
         //                               // because of a parse error are not in this list.
         private BigInteger checksum;     // checksum of all loaded decl text
-        private int indent;		 // for MediaPrint
+        private final idList<idDeclFolder> declFolders;
+        private final idList<idDeclType> declTypes;
+        private idDeclFile implicitDecls;// this holds all the decls that were created because explicit
+        private int indent;         // for MediaPrint
         private boolean insideLevelLoad;
         //
-        private static final idCVar decl_show = new idCVar("decl_show", "0", CVAR_SYSTEM, "set to 1 to print parses, 2 to also print references", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
         //
         //
+        private final idList<idDeclFile> loadedFiles;
 
         idDeclManagerLocal() {
             this.declTypes = new idList<>();
@@ -1253,6 +1540,28 @@ public class DeclManager {
             for (int d = 0; d < etoi(DECL_MAX_TYPES); d++) {
                 hashTables[d] = new idHashIndex();
                 linearLists[d] = new idList<>();
+            }
+        }
+
+        public static void MakeNameCanonical(final String name, char[] result, int maxLength) {//TODO:maxlength???
+            int i, lastDot;
+
+            lastDot = -1;
+            for (i = 0; i < maxLength && i < name.length(); i++) {
+                int c = name.charAt(i);
+                if (c == '\\') {
+                    result[i] = '/';
+                } else if (c == '.') {
+                    lastDot = i;
+                    result[i] = (char) c;
+                } else {
+                    result[i] = idStr.ToLower((char) c);
+                }
+            }
+            if (lastDot != -1) {
+                result[lastDot] = '\0';
+            } else {
+                result[i] = '\0';
             }
         }
 
@@ -1534,14 +1843,7 @@ public class DeclManager {
             return DECL_MAX_TYPES;
         }
 
-        /*
-         =================
-         idDeclManagerLocal::FindType
-
-         External users will always cause the decl to be parsed before returning
-         =================
-         */static int DEBUG_FindType=0;
-        @Override 
+        @Override
         public idDecl FindType(declType_t type, String name, boolean makeDefault) throws idException {
             idDeclLocal decl;
 
@@ -1656,16 +1958,8 @@ public class DeclManager {
         public void ListType(idCmdArgs args, declType_t type) throws idException {
             boolean all, ever;
 
-            if (0 == idStr.Icmp(args.Argv(1), "all")) {
-                all = true;
-            } else {
-                all = false;
-            }
-            if (0 == idStr.Icmp(args.Argv(1), "ever")) {
-                ever = true;
-            } else {
-                ever = false;
-            }
+            all = 0 == idStr.Icmp(args.Argv(1), "all");
+            ever = 0 == idStr.Icmp(args.Argv(1), "ever");
 
             common.Printf("--------------------\n");
             int printed = 0;
@@ -1883,7 +2177,6 @@ public class DeclManager {
             return true;
         }
 
-
         /*
          ===================
          idDeclManagerLocal::MediaPrint
@@ -1977,34 +2270,12 @@ public class DeclManager {
         public idSoundShader SoundByIndex(int index, boolean forceParse) throws idException {
             return (idSoundShader) DeclByIndex(DECL_SOUND, index, forceParse);
         }
+        /* *******************************************************************/
+        //
 
         @Override
         public idSoundShader SoundByIndex(int index) throws idException {
             return SoundByIndex(index, true);
-        }
-        /* *******************************************************************/
-        //
-
-        public static void MakeNameCanonical(final String name, char[] result, int maxLength) {//TODO:maxlength???
-            int i, lastDot;
-
-            lastDot = -1;
-            for (i = 0; i < maxLength && i < name.length(); i++) {
-                int c = name.charAt(i);
-                if (c == '\\') {
-                    result[i] = '/';
-                } else if (c == '.') {
-                    lastDot = i;
-                    result[i] = (char) c;
-                } else {
-                    result[i] = idStr.ToLower((char) c);
-                }
-            }
-            if (lastDot != -1) {
-                result[lastDot] = '\0';
-            } else {
-                result[i] = '\0';
-            }
         }
 
         /*
@@ -2120,7 +2391,7 @@ public class DeclManager {
                 common.Printf("%d total decls is %d decl files\n", totalDecls, declManagerLocal.loadedFiles.Num());
                 common.Printf("%dKB in text, %dKB in structures\n", totalText >> 10, totalStructs >> 10);
             }
-        };
+        }
 
         /*
          ===================
@@ -2158,7 +2429,7 @@ public class DeclManager {
 
                 soundSystem.SetMute(false);
             }
-        };
+        }
 
         /*
          ===================
@@ -2207,81 +2478,17 @@ public class DeclManager {
                     }
                 }
             }
-        };
-    };
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
+        }
 
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-    /*
-     ====================================================================================
-
-     decl text huffman compression
-
-     ====================================================================================
-     */
-    static final int MAX_HUFFMAN_SYMBOLS = 256;
+    }
 
     static class huffmanNode_s {
 
-        int symbol;
+        huffmanNode_s[] children = new huffmanNode_s[2];
         int frequency;
         huffmanNode_s next;
-        huffmanNode_s[] children = new huffmanNode_s[2];
-    };
+        int symbol;
+    }
 
     static class huffmanCode_s {
 
@@ -2303,243 +2510,6 @@ public class DeclManager {
             this.bits[7] = code.bits[7];
         }
 
-    };
-
-    // compression ratio = 64%
-    static final int huffmanFrequencies[] = {
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00078fb6, 0x000352a7, 0x00000002, 0x00000001, 0x0002795e, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00049600, 0x000000dd, 0x00018732, 0x0000005a, 0x00000007, 0x00000092, 0x0000000a, 0x00000919,
-        0x00002dcf, 0x00002dda, 0x00004dfc, 0x0000039a, 0x000058be, 0x00002d13, 0x00014d8c, 0x00023c60,
-        0x0002ddb0, 0x0000d1fc, 0x000078c4, 0x00003ec7, 0x00003113, 0x00006b59, 0x00002499, 0x0000184a,
-        0x0000250b, 0x00004e38, 0x000001ca, 0x00000011, 0x00000020, 0x000023da, 0x00000012, 0x00000091,
-        0x0000000b, 0x00000b14, 0x0000035d, 0x0000137e, 0x000020c9, 0x00000e11, 0x000004b4, 0x00000737,
-        0x000006b8, 0x00001110, 0x000006b3, 0x000000fe, 0x00000f02, 0x00000d73, 0x000005f6, 0x00000be4,
-        0x00000d86, 0x0000014d, 0x00000d89, 0x0000129b, 0x00000db3, 0x0000015a, 0x00000167, 0x00000375,
-        0x00000028, 0x00000112, 0x00000018, 0x00000678, 0x0000081a, 0x00000677, 0x00000003, 0x00018112,
-        0x00000001, 0x000441ee, 0x000124b0, 0x0001fa3f, 0x00026125, 0x0005a411, 0x0000e50f, 0x00011820,
-        0x00010f13, 0x0002e723, 0x00003518, 0x00005738, 0x0002cc26, 0x0002a9b7, 0x0002db81, 0x0003b5fa,
-        0x000185d2, 0x00001299, 0x00030773, 0x0003920d, 0x000411cd, 0x00018751, 0x00005fbd, 0x000099b0,
-        0x00009242, 0x00007cf2, 0x00002809, 0x00005a1d, 0x00000001, 0x00005a1d, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-        0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,};
-    static huffmanCode_s[] huffmanCodes = new huffmanCode_s[MAX_HUFFMAN_SYMBOLS];
-    static huffmanNode_s huffmanTree = null;
-    static int totalUncompressedLength = 0;
-    static int totalCompressedLength = 0;
-    static int maxHuffmanBits = 0;
-
-    /*
-     ================
-     ClearHuffmanFrequencies
-     ================
-     */
-    static void ClearHuffmanFrequencies() {
-        int i;
-
-        for (i = 0; i < MAX_HUFFMAN_SYMBOLS; i++) {
-            huffmanFrequencies[i] = 1;
-        }
-    }
-
-    /*
-     ================
-     InsertHuffmanNode
-     ================
-     */
-    static huffmanNode_s InsertHuffmanNode(huffmanNode_s firstNode, huffmanNode_s node) {
-        huffmanNode_s n, lastNode;
-
-        lastNode = null;
-        for (n = firstNode; n != null; n = n.next) {
-            if (node.frequency <= n.frequency) {
-                break;
-            }
-            lastNode = n;
-        }
-        if (lastNode != null) {
-            node.next = lastNode.next;
-            lastNode.next = node;
-        } else {
-            node.next = firstNode;
-            firstNode = node;
-        }
-        return firstNode;
-    }
-
-    /*
-     ================
-     BuildHuffmanCode_r
-     ================
-     */
-    static void BuildHuffmanCode_r(huffmanNode_s node, final huffmanCode_s code, huffmanCode_s[] codes/*[MAX_HUFFMAN_SYMBOLS]*/) {
-        if (node.symbol == -1) {
-            huffmanCode_s newCode = new huffmanCode_s(code);
-            assert (code.numBits < codes[0].bits.length * 8);
-            newCode.numBits++;
-            if (code.numBits > maxHuffmanBits) {
-                maxHuffmanBits = newCode.numBits;
-            }
-            BuildHuffmanCode_r(node.children[0], newCode, codes);
-            newCode.bits[code.numBits >> 5] |= 1 << (code.numBits & 31);
-            BuildHuffmanCode_r(node.children[1], newCode, codes);
-        } else {
-            assert (code.numBits <= codes[0].bits.length * 8);
-            codes[node.symbol] = new huffmanCode_s(code);
-        }
-    }
-
-    /*
-     ================
-     FreeHuffmanTree_r
-     ================
-     */
-    static void FreeHuffmanTree_r(huffmanNode_s node) {
-        if (node.symbol == -1) {
-            FreeHuffmanTree_r(node.children[0]);
-            FreeHuffmanTree_r(node.children[1]);
-        }
-//	delete node;
-    }
-
-    /*
-     ================
-     HuffmanHeight_r
-     ================
-     */
-    static int HuffmanHeight_r(huffmanNode_s node) {
-        if (node == null) {
-            return -1;
-        }
-        int left = HuffmanHeight_r(node.children[0]);
-        int right = HuffmanHeight_r(node.children[1]);
-        if (left > right) {
-            return left + 1;
-        }
-        return right + 1;
-    }
-
-    /*
-     ================
-     SetupHuffman
-     ================
-     */
-    static void SetupHuffman() {
-        int i, height;
-        huffmanNode_s firstNode, node;
-        huffmanCode_s code;
-
-        firstNode = null;
-        for (i = 0; i < MAX_HUFFMAN_SYMBOLS; i++) {
-            node = new huffmanNode_s();
-            node.symbol = i;
-            node.frequency = huffmanFrequencies[i];
-            node.next = null;
-            node.children[0] = null;
-            node.children[1] = null;
-            firstNode = InsertHuffmanNode(firstNode, node);
-        }
-
-        for (i = 1; i < MAX_HUFFMAN_SYMBOLS; i++) {
-            node = new huffmanNode_s();
-            node.symbol = -1;
-            node.frequency = firstNode.frequency + firstNode.next.frequency;
-            node.next = null;
-            node.children[0] = firstNode;
-            node.children[1] = firstNode.next;
-            firstNode = InsertHuffmanNode(firstNode.next.next, node);
-        }
-
-        maxHuffmanBits = 0;
-        code = new huffmanCode_s();//memset( &code, 0, sizeof( code ) );
-        BuildHuffmanCode_r(firstNode, code, huffmanCodes);
-
-        huffmanTree = firstNode;
-
-        height = HuffmanHeight_r(firstNode);
-        assert (maxHuffmanBits == height);
-    }
-
-    /*
-     ================
-     ShutdownHuffman
-     ================
-     */
-    static void ShutdownHuffman() {
-        if (huffmanTree != null) {
-            FreeHuffmanTree_r(huffmanTree);
-        }
-    }
-
-    /*
-     ================
-     HuffmanCompressText
-     ================
-     */
-    private static int HuffmanCompressText(final String text, int textLength, ByteBuffer compressed, int maxCompressedSize) {
-        int i, j;
-        idBitMsg msg = new idBitMsg();
-
-        totalUncompressedLength += textLength;
-
-        msg.Init(compressed, maxCompressedSize);
-        msg.BeginWriting();
-        for (i = 0; i < textLength; i++) {
-            final huffmanCode_s code = huffmanCodes[text.charAt(i)];
-            for (j = 0; j < (code.numBits >> 5); j++) {
-                msg.WriteBits((int) code.bits[j], 32);
-            }
-            if ((code.numBits & 31) != 0) {
-                msg.WriteBits((int) code.bits[j], code.numBits & 31);
-            }
-        }
-
-        totalCompressedLength += msg.GetSize();
-
-        return msg.GetSize();
-    }
-
-    /*
-     ================
-     HuffmanDecompressText
-     ================
-     */
-    static int HuffmanDecompressText(String[] text, int textLength, final ByteBuffer compressed, int compressedSize) {
-        int i, bit;
-        idBitMsg msg = new idBitMsg();
-        huffmanNode_s node;
-
-        msg.Init(compressed, compressedSize);
-        msg.SetSize(compressedSize);
-        msg.BeginReading();
-        text[0] = "";
-        for (i = 0; i < textLength; i++) {
-            node = huffmanTree;
-            do {
-                bit = msg.ReadBits(1);
-                node = node.children[bit];
-//                System.out.println(bit + ":" + node.symbol);
-            } while (node.symbol == -1);
-            text[0] += (char) node.symbol;
-        }
-//        text[0] += '\0';
-        return msg.GetReadCount();
     }
 
     /*
@@ -2571,9 +2541,5 @@ public class DeclManager {
             }
             common.Printf("}\n");
         }
-    };
-
-    public static void setDeclManager(idDeclManager declManager) {
-        DeclManager.declManager = DeclManager.declManagerLocal = (idDeclManagerLocal) declManager;
     }
 }

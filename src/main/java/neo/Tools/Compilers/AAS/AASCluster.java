@@ -1,15 +1,10 @@
 package neo.Tools.Compilers.AAS;
 
-import static java.lang.Math.abs;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_CLUSTERPORTAL;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_FLY;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
-import neo.Tools.Compilers.AAS.AASFile.aasArea_s;
-import neo.Tools.Compilers.AAS.AASFile.aasCluster_s;
-import neo.Tools.Compilers.AAS.AASFile.aasFace_s;
-import neo.Tools.Compilers.AAS.AASFile.aasPortal_s;
-import neo.Tools.Compilers.AAS.AASFile.idReachability;
+import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.Tools.Compilers.AAS.AASFile_local.idAASFileLocal;
+
+import static java.lang.Math.abs;
+import static neo.Tools.Compilers.AAS.AASFile.*;
 import static neo.framework.Common.common;
 
 /**
@@ -27,7 +22,7 @@ public class AASCluster {
     static class idAASCluster {
 
         private idAASFileLocal file;
-        private boolean        noFaceFlood;
+        private boolean noFaceFlood;
         //
         //
 
@@ -451,7 +446,7 @@ public class AASCluster {
             return ok;
         }
 
-//        private void ReportEfficiency();
+        //        private void ReportEfficiency();
         private void RemoveInvalidPortals() {
             int i, j, k, face1Num, face2Num, otherAreaNum, numOpenAreas, numInvalidPortals;
             aasFace_s face1, face2;
@@ -466,7 +461,7 @@ public class AASCluster {
                 for (j = 0; j < file.areas.oGet(i).numFaces; j++) {
                     face1Num = file.faceIndex.oGet(file.areas.oGet(i).firstFace + j);
                     face1 = file.faces.oGet(abs(face1Num));
-                    otherAreaNum = face1.areas[ face1Num < 0 ? 1 : 0];
+                    otherAreaNum = face1.areas[face1Num < 0 ? 1 : 0];
 
                     if (0 == otherAreaNum) {
                         continue;
@@ -475,7 +470,7 @@ public class AASCluster {
                     for (k = 0; k < j; k++) {
                         face2Num = file.faceIndex.oGet(file.areas.oGet(i).firstFace + k);
                         face2 = file.faces.oGet(abs(face2Num));
-                        if (otherAreaNum == face2.areas[ face2Num < 0 ? 1 : 0]) {
+                        if (otherAreaNum == face2.areas[face2Num < 0 ? 1 : 0]) {
                             break;
                         }
                     }
@@ -496,5 +491,6 @@ public class AASCluster {
 
             common.Printf("\r%6d invalid portals removed\n", numInvalidPortals);
         }
-    };
+    }
+
 }

@@ -2,9 +2,10 @@ package neo.CM;
 
 import neo.CM.CollisionModel_local.cm_edge_s;
 import neo.CM.CollisionModel_local.cm_vertex_s;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Pluecker.idPluecker;
+
+import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
 
 /**
  *

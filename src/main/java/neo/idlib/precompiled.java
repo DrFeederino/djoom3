@@ -14,9 +14,7 @@ public class precompiled {
 //#ifndef _D3SDK
 //#ifndef GAME_DLL
 
-    public static final int WINVER = 0x501;
-
-//#if 0
+    //#if 0
 //// Dedicated server hits unresolved when trying to link this way now. Likely because of the 2010/Win7 transition? - TTimo
 //
 //#ifdef	ID_DEDICATED
@@ -39,8 +37,7 @@ public class precompiled {
 //#include <mmreg.h>
     public static final int DIRECTINPUT_VERSION = 0x0800;// was 0x0700 with the old mssdk
     public static final int DIRECTSOUND_VERSION = 0x0800;
-
-//#include <dsound.h>
+    //#include <dsound.h>
 //#include <dinput.h>
 //
 //#endif /* !GAME_DLL */
@@ -107,6 +104,7 @@ public class precompiled {
     // materials, sound shaders, and guis. We should unify them.
     public static final int MAX_EXPRESSION_OPS = 4096;
     public static final int MAX_EXPRESSION_REGISTERS = 4096;
+    public static final int WINVER = 0x501;
 //// renderer
 //#include "../renderer/qgl.h"
 //#include "../renderer/Cinematic.h"

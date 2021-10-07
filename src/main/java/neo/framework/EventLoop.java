@@ -1,23 +1,23 @@
 package neo.framework;
 
+import neo.framework.CVarSystem.idCVar;
+import neo.framework.CmdSystem.idCmdSystem;
+import neo.framework.File_h.idFile;
+import neo.framework.KeyInput.idKeyInput;
+import neo.idlib.Lib.idException;
+import neo.sys.sys_public.sysEvent_s;
+
 import java.nio.ByteBuffer;
+
 import static neo.TempDump.bbtoa;
 import static neo.framework.CVarSystem.CVAR_INIT;
 import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import neo.framework.CVarSystem.idCVar;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
 import static neo.framework.CmdSystem.cmdSystem;
-import neo.framework.CmdSystem.idCmdSystem;
 import static neo.framework.Common.common;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.File_h.idFile;
-import neo.framework.KeyInput.idKeyInput;
 import static neo.framework.Session.session;
-import neo.idlib.Lib.idException;
-import static neo.sys.sys_public.sysEventType_t.SE_CONSOLE;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
-import static neo.sys.sys_public.sysEventType_t.SE_NONE;
-import neo.sys.sys_public.sysEvent_s;
+import static neo.sys.sys_public.sysEventType_t.*;
 import static neo.sys.win_main.Sys_GetEvent;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
@@ -35,35 +35,34 @@ public class EventLoop {
      ===============================================================================
      */
 
-    static final int MAX_PUSHED_EVENTS = 64;
-
-    static final idCVar com_journalFile = new idCVar("com_journal", "0", CVAR_INIT | CVAR_SYSTEM, "1 = record journal, 2 = play back journal", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
-
     public static final idEventLoop eventLoop = new idEventLoop();
+    static final int MAX_PUSHED_EVENTS = 64;
+    static final idCVar com_journalFile = new idCVar("com_journal", "0", CVAR_INIT | CVAR_SYSTEM, "1 = record journal, 2 = play back journal", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
 
     public static class idEventLoop {
 
+        //
+        private static final idCVar com_journal = new idCVar("com_journal", "0", CVAR_INIT | CVAR_SYSTEM, "1 = record journal, 2 = play back journal", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
+        static boolean printedWarning;
+        private final sysEvent_s[] com_pushedEvents = new sysEvent_s[MAX_PUSHED_EVENTS];
+        public idFile com_journalDataFile;
         // Journal file.
         public idFile com_journalFile;
-        public idFile com_journalDataFile;
+        //
+        private int com_pushedEventsHead, com_pushedEventsTail;
+        //
+        //
         //
         //
         // all events will have this subtracted from their time
         private int initialTimeOffset;
-        //
-        private int com_pushedEventsHead, com_pushedEventsTail;
-        private final sysEvent_s[] com_pushedEvents = new sysEvent_s[MAX_PUSHED_EVENTS];
-        //
-        private static final idCVar com_journal = new idCVar("com_journal", "0", CVAR_INIT | CVAR_SYSTEM, "1 = record journal, 2 = play back journal", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
-        //
-        //
+//					~idEventLoop( void );
 
         public idEventLoop() {
             com_journalFile = null;
             com_journalDataFile = null;
             initialTimeOffset = 0;
         }
-//					~idEventLoop( void );
 
         public void Init() throws idException {
 
@@ -181,7 +180,7 @@ public class EventLoop {
                 event = ByteBuffer.allocate(sysEvent_s.BYTES);
                 r = com_journalFile.Read(event);
                 ev = new sysEvent_s(event);
-                if (r != ev.BYTES) {
+                if (r != sysEvent_s.BYTES) {
                     common.FatalError("Error reading from journal file");
                 }
                 if (ev.evPtrLength != 0) {
@@ -197,7 +196,7 @@ public class EventLoop {
                 // write the journal value out if needed
                 if (com_journal.GetInteger() == 1) {
                     r = com_journalFile.Write(ev.Write());
-                    if (r != ev.BYTES) {
+                    if (r != sysEvent_s.BYTES) {
                         common.FatalError("Error writing to journal file");
                     }
                     if (ev.evPtrLength != 0) {
@@ -232,7 +231,6 @@ public class EventLoop {
                 ev.evPtr = null;
             }
         }
-        static boolean printedWarning;
 
         private void PushEvent(sysEvent_s event) throws idException {
             sysEvent_s ev;
@@ -259,5 +257,6 @@ public class EventLoop {
             com_pushedEvents[com_pushedEventsHead & (MAX_PUSHED_EVENTS - 1)] = event;
             com_pushedEventsHead++;
         }
-    };
+    }
+
 }

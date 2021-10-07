@@ -1,44 +1,23 @@
 package neo.Renderer;
 
-import static java.lang.Math.log;
+import neo.TempDump.*;
+import neo.framework.File_h.idFile;
+import neo.idlib.containers.List.cmp_t;
+import neo.idlib.math.Math_h.idMath;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
-import neo.Renderer.Model_lwo.lwClip;
-import neo.Renderer.Model_lwo.lwEnvelope;
-import neo.Renderer.Model_lwo.lwGradKey;
-import neo.Renderer.Model_lwo.lwKey;
-import neo.Renderer.Model_lwo.lwLayer;
-import neo.Renderer.Model_lwo.lwNode;
-import neo.Renderer.Model_lwo.lwObject;
-import neo.Renderer.Model_lwo.lwPlugin;
-import neo.Renderer.Model_lwo.lwPoint;
-import neo.Renderer.Model_lwo.lwPointList;
-import neo.Renderer.Model_lwo.lwPolVert;
-import neo.Renderer.Model_lwo.lwPolygon;
-import neo.Renderer.Model_lwo.lwPolygonList;
-import neo.Renderer.Model_lwo.lwSurface;
-import neo.Renderer.Model_lwo.lwTagList;
-import neo.Renderer.Model_lwo.lwTexture;
-import neo.Renderer.Model_lwo.lwVMap;
-import neo.Renderer.Model_lwo.lwVMapPt;
-import static neo.TempDump.NOT;
-import neo.TempDump.NiLLABLE;
-import neo.TempDump.TODO_Exception;
-import static neo.TempDump.bbtocb;
-import static neo.TempDump.btoi;
-import static neo.TempDump.replaceByIndex;
-import static neo.TempDump.strLen;
+
+import static java.lang.Math.log;
+import static neo.TempDump.*;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_CUR;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_SET;
-import neo.framework.File_h.idFile;
 import static neo.idlib.Lib.BigRevBytes;
-import neo.idlib.containers.List.cmp_t;
 import static neo.idlib.math.Math_h.FLOAT_IS_DENORMAL;
-import neo.idlib.math.Math_h.idMath;
 
 /**
  *
@@ -55,965 +34,236 @@ public class Model_lwo {
      ======================================================================
      */
 
+    public static final int BEH_CONSTANT = 1;
+    public static final int BEH_LINEAR = 5;
+    public static final int BEH_OFFSET = 4;
+    public static final int BEH_OSCILLATE = 3;
+    public static final int BEH_REPEAT = 2;
+    public static final int BEH_RESET = 0;
+    /*
+     ======================================================================
+     flen
+
+     This accumulates a count of the number of bytes read.  Callers can set
+     it at the beginning of a sequence of reads and then retrieve it to get
+     the number of bytes actually read.  If one of the I/O functions fails,
+     flen is set to an error code, after which the I/O functions ignore
+     read requests until flen is reset.
+     ====================================================================== */
+    public static final int FLEN_ERROR = -9999;
+    //    public static final int ID_VMAP = ('V' << 24 | 'M' << 16 | 'A' << 8 | 'P');
+    public static final int ID_AAST = ('A' << 24 | 'A' << 16 | 'S' << 8 | 'T');
+    public static final int ID_ADTR = ('A' << 24 | 'D' << 16 | 'T' << 8 | 'R');
+    public static final int ID_ALPH = ('A' << 24 | 'L' << 16 | 'P' << 8 | 'H');
+    public static final int ID_ANIM = ('A' << 24 | 'N' << 16 | 'I' << 8 | 'M');
+    public static final int ID_AVAL = ('A' << 24 | 'V' << 16 | 'A' << 8 | 'L');
+    public static final int ID_AXIS = ('A' << 24 | 'X' << 16 | 'I' << 8 | 'S');
+    public static final int ID_BBOX = ('B' << 24 | 'B' << 16 | 'O' << 8 | 'X');
+    public static final int ID_BEZ2 = ('B' << 24 | 'E' << 16 | 'Z' << 8 | '2');
+    public static final int ID_BEZI = ('B' << 24 | 'E' << 16 | 'Z' << 8 | 'I');
+    public static final int ID_BLOK = ('B' << 24 | 'L' << 16 | 'O' << 8 | 'K');
+    public static final int ID_BONE = ('B' << 24 | 'O' << 16 | 'N' << 8 | 'E');
+    public static final int ID_BRIT = ('B' << 24 | 'R' << 16 | 'I' << 8 | 'T');
+    public static final int ID_BUMP = ('B' << 24 | 'U' << 16 | 'M' << 8 | 'P');
+    public static final int ID_CHAN = ('C' << 24 | 'H' << 16 | 'A' << 8 | 'N');
+    public static final int ID_CLIP = ('C' << 24 | 'L' << 16 | 'I' << 8 | 'P');
+    public static final int ID_CLRF = ('C' << 24 | 'L' << 16 | 'R' << 8 | 'F');
+    public static final int ID_CLRH = ('C' << 24 | 'L' << 16 | 'R' << 8 | 'H');
+    public static final int ID_CNTR = ('C' << 24 | 'N' << 16 | 'T' << 8 | 'R');
+    //
+    /* surfaces */
+    public static final int ID_COLR = ('C' << 24 | 'O' << 16 | 'L' << 8 | 'R');
+    public static final int ID_CONT = ('C' << 24 | 'O' << 16 | 'N' << 8 | 'T');
+    public static final int ID_CSYS = ('C' << 24 | 'S' << 16 | 'Y' << 8 | 'S');
+    public static final int ID_CURV = ('C' << 24 | 'U' << 16 | 'R' << 8 | 'V');
+    public static final int ID_DATA = ('D' << 24 | 'A' << 16 | 'T' << 8 | 'A');
+    public static final int ID_DESC = ('D' << 24 | 'E' << 16 | 'S' << 8 | 'C');
+    public static final int ID_DIFF = ('D' << 24 | 'I' << 16 | 'F' << 8 | 'F');
+    public static final int ID_ENAB = ('E' << 24 | 'N' << 16 | 'A' << 8 | 'B');
+    public static final int ID_ENVL = ('E' << 24 | 'N' << 16 | 'V' << 8 | 'L');
+    public static final int ID_ETPS = ('E' << 24 | 'T' << 16 | 'P' << 8 | 'S');
+    //
+    /* polygon types */
+    public static final int ID_FACE = ('F' << 24 | 'A' << 16 | 'C' << 8 | 'E');
+    public static final int ID_FALL = ('F' << 24 | 'A' << 16 | 'L' << 8 | 'L');
+    public static final int ID_FKEY = ('F' << 24 | 'K' << 16 | 'E' << 8 | 'Y');
+    public static final int ID_FLAG = ('F' << 24 | 'L' << 16 | 'A' << 8 | 'G');
+    //
+    public static final int ID_FORM = ('F' << 24 | 'O' << 16 | 'R' << 8 | 'M');
+    public static final int ID_FTPS = ('F' << 24 | 'T' << 16 | 'P' << 8 | 'S');
+    public static final int ID_FUNC = ('F' << 24 | 'U' << 16 | 'N' << 8 | 'C');
+    public static final int ID_GAMM = ('G' << 24 | 'A' << 16 | 'M' << 8 | 'M');
+    public static final int ID_GLOS = ('G' << 24 | 'L' << 16 | 'O' << 8 | 'S');
+    //
+    /* gradient */
+    public static final int ID_GRAD = ('G' << 24 | 'R' << 16 | 'A' << 8 | 'D');
+    public static final int ID_GREN = ('G' << 24 | 'R' << 16 | 'E' << 8 | 'N');
+    public static final int ID_GRPT = ('G' << 24 | 'R' << 16 | 'P' << 8 | 'T');
+    public static final int ID_GRST = ('G' << 24 | 'R' << 16 | 'S' << 8 | 'T');
+    public static final int ID_GVAL = ('G' << 24 | 'V' << 16 | 'A' << 8 | 'L');
+    public static final int ID_HERM = ('H' << 24 | 'E' << 16 | 'R' << 8 | 'M');
+    public static final int ID_HUE = ('H' << 24 | 'U' << 16 | 'E' << 8 | ' ');
+    public static final int ID_ICON = ('I' << 24 | 'C' << 16 | 'O' << 8 | 'N');
+    public static final int ID_IFLT = ('I' << 24 | 'F' << 16 | 'L' << 8 | 'T');
+    public static final int ID_IKEY = ('I' << 24 | 'K' << 16 | 'E' << 8 | 'Y');
+    public static final int ID_IMAG = ('I' << 24 | 'M' << 16 | 'A' << 8 | 'G');
+    //
+    /* image map */
+    public static final int ID_IMAP = ('I' << 24 | 'M' << 16 | 'A' << 8 | 'P');
+    public static final int ID_INAM = ('I' << 24 | 'N' << 16 | 'A' << 8 | 'M');
+    public static final int ID_ISEQ = ('I' << 24 | 'S' << 16 | 'E' << 8 | 'Q');
+    public static final int ID_ITPS = ('I' << 24 | 'T' << 16 | 'P' << 8 | 'S');
+    public static final int ID_KEY = ('K' << 24 | 'E' << 16 | 'Y' << 8 | ' ');
+    //
+    /* top-level chunks */
+    public static final int ID_LAYR = ('L' << 24 | 'A' << 16 | 'Y' << 8 | 'R');
+    public static final int ID_LINE = ('L' << 24 | 'I' << 16 | 'N' << 8 | 'E');
+    //    public static final int ID_LINE = ('L' << 24 | 'I' << 16 | 'N' << 8 | 'E');
+    public static final int ID_LSIZ = ('L' << 24 | 'S' << 16 | 'I' << 8 | 'Z');
+    public static final int ID_LUMI = ('L' << 24 | 'U' << 16 | 'M' << 8 | 'I');
+    public static final int ID_LWO2 = ('L' << 24 | 'W' << 16 | 'O' << 8 | '2');
+    public static final int ID_LWOB = ('L' << 24 | 'W' << 16 | 'O' << 8 | 'B');
+    public static final int ID_MBAL = ('M' << 24 | 'B' << 16 | 'A' << 8 | 'L');
+    public static final int ID_NAME = ('N' << 24 | 'A' << 16 | 'M' << 8 | 'E');
+    public static final int ID_NEGA = ('N' << 24 | 'E' << 16 | 'G' << 8 | 'A');
+    public static final int ID_OPAC = ('O' << 24 | 'P' << 16 | 'A' << 8 | 'C');
+    public static final int ID_OREF = ('O' << 24 | 'R' << 16 | 'E' << 8 | 'F');
+    //
+    /* polygon tags */
+//    public static final int ID_SURF = ('S' << 24 | 'U' << 16 | 'R' << 8 | 'F');
+    public static final int ID_PART = ('P' << 24 | 'A' << 16 | 'R' << 8 | 'T');
+    public static final int ID_PFLT = ('P' << 24 | 'F' << 16 | 'L' << 8 | 'T');
+    public static final int ID_PIXB = ('P' << 24 | 'I' << 16 | 'X' << 8 | 'B');
+    public static final int ID_PNAM = ('P' << 24 | 'N' << 16 | 'A' << 8 | 'M');
+    public static final int ID_PNTS = ('P' << 24 | 'N' << 16 | 'T' << 8 | 'S');
+    public static final int ID_POLS = ('P' << 24 | 'O' << 16 | 'L' << 8 | 'S');
+    public static final int ID_POST = ('P' << 24 | 'O' << 16 | 'S' << 8 | 'T');
+    //
+    /* envelopes */
+    public static final int ID_PRE = ('P' << 24 | 'R' << 16 | 'E' << 8 | ' ');
+    //
+    /* procedural */
+    public static final int ID_PROC = ('P' << 24 | 'R' << 16 | 'O' << 8 | 'C');
+    public static final int ID_PROJ = ('P' << 24 | 'R' << 16 | 'O' << 8 | 'J');
+    public static final int ID_PTAG = ('P' << 24 | 'T' << 16 | 'A' << 8 | 'G');
+    public static final int ID_PTCH = ('P' << 24 | 'T' << 16 | 'C' << 8 | 'H');
+    public static final int ID_REFL = ('R' << 24 | 'E' << 16 | 'F' << 8 | 'L');
+    public static final int ID_RFOP = ('R' << 24 | 'F' << 16 | 'O' << 8 | 'P');
+    public static final int ID_RIMG = ('R' << 24 | 'I' << 16 | 'M' << 8 | 'G');
+    public static final int ID_RIND = ('R' << 24 | 'I' << 16 | 'N' << 8 | 'D');
+    public static final int ID_ROTA = ('R' << 24 | 'O' << 16 | 'T' << 8 | 'A');
+    public static final int ID_RSAN = ('R' << 24 | 'S' << 16 | 'A' << 8 | 'N');
+    public static final int ID_SATR = ('S' << 24 | 'A' << 16 | 'T' << 8 | 'R');
+    //
+    /* shader */
+    public static final int ID_SHDR = ('S' << 24 | 'H' << 16 | 'D' << 8 | 'R');
+    public static final int ID_SHRP = ('S' << 24 | 'H' << 16 | 'R' << 8 | 'P');
+    public static final int ID_SIDE = ('S' << 24 | 'I' << 16 | 'D' << 8 | 'E');
+    public static final int ID_SIZE = ('S' << 24 | 'I' << 16 | 'Z' << 8 | 'E');
+    public static final int ID_SMAN = ('S' << 24 | 'M' << 16 | 'A' << 8 | 'N');
+    public static final int ID_SMGP = ('S' << 24 | 'M' << 16 | 'G' << 8 | 'P');
+    public static final int ID_SPAN = ('S' << 24 | 'P' << 16 | 'A' << 8 | 'N');
+    public static final int ID_SPEC = ('S' << 24 | 'P' << 16 | 'E' << 8 | 'C');
+    public static final int ID_STCC = ('S' << 24 | 'T' << 16 | 'C' << 8 | 'C');
+    public static final int ID_STCK = ('S' << 24 | 'T' << 16 | 'C' << 8 | 'K');
+    public static final int ID_STEP = ('S' << 24 | 'T' << 16 | 'E' << 8 | 'P');
+    //
+    /* clips */
+    public static final int ID_STIL = ('S' << 24 | 'T' << 16 | 'I' << 8 | 'L');
+    public static final int ID_SURF = ('S' << 24 | 'U' << 16 | 'R' << 8 | 'F');
+    public static final int ID_TAGS = ('T' << 24 | 'A' << 16 | 'G' << 8 | 'S');
+    public static final int ID_TAMP = ('T' << 24 | 'A' << 16 | 'M' << 8 | 'P');
+    public static final int ID_TCB = ('T' << 24 | 'C' << 16 | 'B' << 8 | ' ');
+    public static final int ID_TEXT = ('T' << 24 | 'E' << 16 | 'X' << 8 | 'T');
+    public static final int ID_TIME = ('T' << 24 | 'I' << 16 | 'M' << 8 | 'E');
+    public static final int ID_TIMG = ('T' << 24 | 'I' << 16 | 'M' << 8 | 'G');
+    //
+    /* texture coordinates */
+    public static final int ID_TMAP = ('T' << 24 | 'M' << 16 | 'A' << 8 | 'P');
+    public static final int ID_TRAN = ('T' << 24 | 'R' << 16 | 'A' << 8 | 'N');
+    public static final int ID_TRNL = ('T' << 24 | 'R' << 16 | 'N' << 8 | 'L');
+    public static final int ID_TROP = ('T' << 24 | 'R' << 16 | 'O' << 8 | 'P');
+    //
+    /* texture layer */
+    public static final int ID_TYPE = ('T' << 24 | 'Y' << 16 | 'P' << 8 | 'E');
+    //    public static final int ID_COLR = ('C' << 24 | 'O' << 16 | 'L' << 8 | 'R');
+    public static final int ID_VALU = ('V' << 24 | 'A' << 16 | 'L' << 8 | 'U');
+    public static final int ID_VMAD = ('V' << 24 | 'M' << 16 | 'A' << 8 | 'D');
+
+    public static final int ID_VMAP = ('V' << 24 | 'M' << 16 | 'A' << 8 | 'P');
+
+    public static final int ID_WRAP = ('W' << 24 | 'R' << 16 | 'A' << 8 | 'P');
+
+    public static final int ID_WRPH = ('W' << 24 | 'R' << 16 | 'P' << 8 | 'H');
+
+    public static final int ID_WRPW = ('W' << 24 | 'R' << 16 | 'P' << 8 | 'W');
+    public static final int ID_XREF = ('X' << 24 | 'R' << 16 | 'E' << 8 | 'F');
+    public static final int PROJ_CUBIC = 3;
+    public static final int PROJ_CYLINDRICAL = 1;
+    public static final int PROJ_FRONT = 4;
+    public static final int PROJ_PLANAR = 0;
+    public static final int PROJ_SPHERICAL = 2;
+
+    public static final int WRAP_EDGE = 1;
+
+    public static final int WRAP_MIRROR = 3;
+
+    //
+    public static final int WRAP_NONE = 0;
+
+    public static final int WRAP_REPEAT = 2;
+
+    static final int ID_BTEX = ('B' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+
+    static final int ID_CTEX = ('C' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+
+    static final int ID_DTEX = ('D' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+
+    static final int ID_LTEX = ('L' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+
+    static final int ID_RFLT = ('R' << 24 | 'F' << 16 | 'L' << 8 | 'T');
+
+    static final int ID_RTEX = ('R' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+    static final int ID_SDAT = ('S' << 24 | 'D' << 16 | 'A' << 8 | 'T');
+    /* IDs specific to LWOB */
+    static final int ID_SRFS = ('S' << 24 | 'R' << 16 | 'F' << 8 | 'S');
+    static final int ID_STEX = ('S' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+    //    static final int ID_TAMP = ('T' << 24 | 'A' << 16 | 'M' << 8 | 'P');
+//    static final int ID_TIMG = ('T' << 24 | 'I' << 16 | 'M' << 8 | 'G');
+    static final int ID_TAAS = ('T' << 24 | 'A' << 16 | 'A' << 8 | 'S');
+    static final int ID_TCLR = ('T' << 24 | 'C' << 16 | 'L' << 8 | 'R');
+    static final int ID_TCTR = ('T' << 24 | 'C' << 16 | 'T' << 8 | 'R');
+    static final int ID_TFAL = ('T' << 24 | 'F' << 16 | 'A' << 8 | 'L');
+    static final int ID_TFLG = ('T' << 24 | 'F' << 16 | 'L' << 8 | 'G');
+    static final int ID_TFP0 = ('T' << 24 | 'F' << 16 | 'P' << 8 | '0');
+
+    static final int ID_TFP1 = ('T' << 24 | 'F' << 16 | 'P' << 8 | '1');
+
+    static final int ID_TOPC = ('T' << 24 | 'O' << 16 | 'P' << 8 | 'C');
+
+    static final int ID_TREF = ('T' << 24 | 'R' << 16 | 'E' << 8 | 'F');
+
+    static final int ID_TSIZ = ('T' << 24 | 'S' << 16 | 'I' << 8 | 'Z');
+
+    static final int ID_TTEX = ('T' << 24 | 'T' << 16 | 'E' << 8 | 'X');
+
+    static final int ID_TVAL = ('T' << 24 | 'V' << 16 | 'A' << 8 | 'L');
+
+    static final int ID_TVEL = ('T' << 24 | 'V' << 16 | 'E' << 8 | 'L');
+
+    static final int ID_VDIF = ('V' << 24 | 'D' << 16 | 'I' << 8 | 'F');
+
+    //    static final int ID_FLAG = ('F' << 24 | 'L' << 16 | 'A' << 8 | 'G');
+    static final int ID_VLUM = ('V' << 24 | 'L' << 16 | 'U' << 8 | 'M');
+
+    static final int ID_VSPC = ('V' << 24 | 'S' << 16 | 'P' << 8 | 'C');
+
+    public static int flen;
+
     /* chunk and subchunk IDs */
     public static int LWID_(final char a, final char b, final char c, final char d) {
         return ((a << 24) | (b << 16) | (c << 8) | (d << 0));
     }
-//    
-    public static final int ID_FORM = ('F' << 24 | 'O' << 16 | 'R' << 8 | 'M');
-    public static final int ID_LWO2 = ('L' << 24 | 'W' << 16 | 'O' << 8 | '2');
-    public static final int ID_LWOB = ('L' << 24 | 'W' << 16 | 'O' << 8 | 'B');
-//                                       
-    /* top-level chunks */
-    public static final int ID_LAYR = ('L' << 24 | 'A' << 16 | 'Y' << 8 | 'R');
-    public static final int ID_TAGS = ('T' << 24 | 'A' << 16 | 'G' << 8 | 'S');
-    public static final int ID_PNTS = ('P' << 24 | 'N' << 16 | 'T' << 8 | 'S');
-    public static final int ID_BBOX = ('B' << 24 | 'B' << 16 | 'O' << 8 | 'X');
-    public static final int ID_VMAP = ('V' << 24 | 'M' << 16 | 'A' << 8 | 'P');
-    public static final int ID_VMAD = ('V' << 24 | 'M' << 16 | 'A' << 8 | 'D');
-    public static final int ID_POLS = ('P' << 24 | 'O' << 16 | 'L' << 8 | 'S');
-    public static final int ID_PTAG = ('P' << 24 | 'T' << 16 | 'A' << 8 | 'G');
-    public static final int ID_ENVL = ('E' << 24 | 'N' << 16 | 'V' << 8 | 'L');
-    public static final int ID_CLIP = ('C' << 24 | 'L' << 16 | 'I' << 8 | 'P');
-    public static final int ID_SURF = ('S' << 24 | 'U' << 16 | 'R' << 8 | 'F');
-    public static final int ID_DESC = ('D' << 24 | 'E' << 16 | 'S' << 8 | 'C');
-    public static final int ID_TEXT = ('T' << 24 | 'E' << 16 | 'X' << 8 | 'T');
-    public static final int ID_ICON = ('I' << 24 | 'C' << 16 | 'O' << 8 | 'N');
-//                                      
-    /* polygon types */
-    public static final int ID_FACE = ('F' << 24 | 'A' << 16 | 'C' << 8 | 'E');
-    public static final int ID_CURV = ('C' << 24 | 'U' << 16 | 'R' << 8 | 'V');
-    public static final int ID_PTCH = ('P' << 24 | 'T' << 16 | 'C' << 8 | 'H');
-    public static final int ID_MBAL = ('M' << 24 | 'B' << 16 | 'A' << 8 | 'L');
-    public static final int ID_BONE = ('B' << 24 | 'O' << 16 | 'N' << 8 | 'E');
-//                                      
-    /* polygon tags */
-//    public static final int ID_SURF = ('S' << 24 | 'U' << 16 | 'R' << 8 | 'F');
-    public static final int ID_PART = ('P' << 24 | 'A' << 16 | 'R' << 8 | 'T');
-    public static final int ID_SMGP = ('S' << 24 | 'M' << 16 | 'G' << 8 | 'P');
-//                                     
-    /* envelopes */
-    public static final int ID_PRE = ('P' << 24 | 'R' << 16 | 'E' << 8 | ' ');
-    public static final int ID_POST = ('P' << 24 | 'O' << 16 | 'S' << 8 | 'T');
-    public static final int ID_KEY = ('K' << 24 | 'E' << 16 | 'Y' << 8 | ' ');
-    public static final int ID_SPAN = ('S' << 24 | 'P' << 16 | 'A' << 8 | 'N');
-    public static final int ID_TCB = ('T' << 24 | 'C' << 16 | 'B' << 8 | ' ');
-    public static final int ID_HERM = ('H' << 24 | 'E' << 16 | 'R' << 8 | 'M');
-    public static final int ID_BEZI = ('B' << 24 | 'E' << 16 | 'Z' << 8 | 'I');
-    public static final int ID_BEZ2 = ('B' << 24 | 'E' << 16 | 'Z' << 8 | '2');
-    public static final int ID_LINE = ('L' << 24 | 'I' << 16 | 'N' << 8 | 'E');
-    public static final int ID_STEP = ('S' << 24 | 'T' << 16 | 'E' << 8 | 'P');
-//                                     
-    /* clips */
-    public static final int ID_STIL = ('S' << 24 | 'T' << 16 | 'I' << 8 | 'L');
-    public static final int ID_ISEQ = ('I' << 24 | 'S' << 16 | 'E' << 8 | 'Q');
-    public static final int ID_ANIM = ('A' << 24 | 'N' << 16 | 'I' << 8 | 'M');
-    public static final int ID_XREF = ('X' << 24 | 'R' << 16 | 'E' << 8 | 'F');
-    public static final int ID_STCC = ('S' << 24 | 'T' << 16 | 'C' << 8 | 'C');
-    public static final int ID_TIME = ('T' << 24 | 'I' << 16 | 'M' << 8 | 'E');
-    public static final int ID_CONT = ('C' << 24 | 'O' << 16 | 'N' << 8 | 'T');
-    public static final int ID_BRIT = ('B' << 24 | 'R' << 16 | 'I' << 8 | 'T');
-    public static final int ID_SATR = ('S' << 24 | 'A' << 16 | 'T' << 8 | 'R');
-    public static final int ID_HUE = ('H' << 24 | 'U' << 16 | 'E' << 8 | ' ');
-    public static final int ID_GAMM = ('G' << 24 | 'A' << 16 | 'M' << 8 | 'M');
-    public static final int ID_NEGA = ('N' << 24 | 'E' << 16 | 'G' << 8 | 'A');
-    public static final int ID_IFLT = ('I' << 24 | 'F' << 16 | 'L' << 8 | 'T');
-    public static final int ID_PFLT = ('P' << 24 | 'F' << 16 | 'L' << 8 | 'T');
-//                                    
-    /* surfaces */
-    public static final int ID_COLR = ('C' << 24 | 'O' << 16 | 'L' << 8 | 'R');
-    public static final int ID_LUMI = ('L' << 24 | 'U' << 16 | 'M' << 8 | 'I');
-    public static final int ID_DIFF = ('D' << 24 | 'I' << 16 | 'F' << 8 | 'F');
-    public static final int ID_SPEC = ('S' << 24 | 'P' << 16 | 'E' << 8 | 'C');
-    public static final int ID_GLOS = ('G' << 24 | 'L' << 16 | 'O' << 8 | 'S');
-    public static final int ID_REFL = ('R' << 24 | 'E' << 16 | 'F' << 8 | 'L');
-    public static final int ID_RFOP = ('R' << 24 | 'F' << 16 | 'O' << 8 | 'P');
-    public static final int ID_RIMG = ('R' << 24 | 'I' << 16 | 'M' << 8 | 'G');
-    public static final int ID_RSAN = ('R' << 24 | 'S' << 16 | 'A' << 8 | 'N');
-    public static final int ID_TRAN = ('T' << 24 | 'R' << 16 | 'A' << 8 | 'N');
-    public static final int ID_TROP = ('T' << 24 | 'R' << 16 | 'O' << 8 | 'P');
-    public static final int ID_TIMG = ('T' << 24 | 'I' << 16 | 'M' << 8 | 'G');
-    public static final int ID_RIND = ('R' << 24 | 'I' << 16 | 'N' << 8 | 'D');
-    public static final int ID_TRNL = ('T' << 24 | 'R' << 16 | 'N' << 8 | 'L');
-    public static final int ID_BUMP = ('B' << 24 | 'U' << 16 | 'M' << 8 | 'P');
-    public static final int ID_SMAN = ('S' << 24 | 'M' << 16 | 'A' << 8 | 'N');
-    public static final int ID_SIDE = ('S' << 24 | 'I' << 16 | 'D' << 8 | 'E');
-    public static final int ID_CLRH = ('C' << 24 | 'L' << 16 | 'R' << 8 | 'H');
-    public static final int ID_CLRF = ('C' << 24 | 'L' << 16 | 'R' << 8 | 'F');
-    public static final int ID_ADTR = ('A' << 24 | 'D' << 16 | 'T' << 8 | 'R');
-    public static final int ID_SHRP = ('S' << 24 | 'H' << 16 | 'R' << 8 | 'P');
-//    public static final int ID_LINE = ('L' << 24 | 'I' << 16 | 'N' << 8 | 'E');
-    public static final int ID_LSIZ = ('L' << 24 | 'S' << 16 | 'I' << 8 | 'Z');
-    public static final int ID_ALPH = ('A' << 24 | 'L' << 16 | 'P' << 8 | 'H');
-    public static final int ID_AVAL = ('A' << 24 | 'V' << 16 | 'A' << 8 | 'L');
-    public static final int ID_GVAL = ('G' << 24 | 'V' << 16 | 'A' << 8 | 'L');
-    public static final int ID_BLOK = ('B' << 24 | 'L' << 16 | 'O' << 8 | 'K');
-//                                      
-/* texture layer */
-    public static final int ID_TYPE = ('T' << 24 | 'Y' << 16 | 'P' << 8 | 'E');
-    public static final int ID_CHAN = ('C' << 24 | 'H' << 16 | 'A' << 8 | 'N');
-    public static final int ID_NAME = ('N' << 24 | 'A' << 16 | 'M' << 8 | 'E');
-    public static final int ID_ENAB = ('E' << 24 | 'N' << 16 | 'A' << 8 | 'B');
-    public static final int ID_OPAC = ('O' << 24 | 'P' << 16 | 'A' << 8 | 'C');
-    public static final int ID_FLAG = ('F' << 24 | 'L' << 16 | 'A' << 8 | 'G');
-    public static final int ID_PROJ = ('P' << 24 | 'R' << 16 | 'O' << 8 | 'J');
-    public static final int ID_STCK = ('S' << 24 | 'T' << 16 | 'C' << 8 | 'K');
-    public static final int ID_TAMP = ('T' << 24 | 'A' << 16 | 'M' << 8 | 'P');
-//                                      
-    /* texture coordinates */
-    public static final int ID_TMAP = ('T' << 24 | 'M' << 16 | 'A' << 8 | 'P');
-    public static final int ID_AXIS = ('A' << 24 | 'X' << 16 | 'I' << 8 | 'S');
-    public static final int ID_CNTR = ('C' << 24 | 'N' << 16 | 'T' << 8 | 'R');
-    public static final int ID_SIZE = ('S' << 24 | 'I' << 16 | 'Z' << 8 | 'E');
-    public static final int ID_ROTA = ('R' << 24 | 'O' << 16 | 'T' << 8 | 'A');
-    public static final int ID_OREF = ('O' << 24 | 'R' << 16 | 'E' << 8 | 'F');
-    public static final int ID_FALL = ('F' << 24 | 'A' << 16 | 'L' << 8 | 'L');
-    public static final int ID_CSYS = ('C' << 24 | 'S' << 16 | 'Y' << 8 | 'S');
-//                                      
-    /* image map */
-    public static final int ID_IMAP = ('I' << 24 | 'M' << 16 | 'A' << 8 | 'P');
-    public static final int ID_IMAG = ('I' << 24 | 'M' << 16 | 'A' << 8 | 'G');
-    public static final int ID_WRAP = ('W' << 24 | 'R' << 16 | 'A' << 8 | 'P');
-    public static final int ID_WRPW = ('W' << 24 | 'R' << 16 | 'P' << 8 | 'W');
-    public static final int ID_WRPH = ('W' << 24 | 'R' << 16 | 'P' << 8 | 'H');
-//    public static final int ID_VMAP = ('V' << 24 | 'M' << 16 | 'A' << 8 | 'P');
-    public static final int ID_AAST = ('A' << 24 | 'A' << 16 | 'S' << 8 | 'T');
-    public static final int ID_PIXB = ('P' << 24 | 'I' << 16 | 'X' << 8 | 'B');
-//                                      
-    /* procedural */
-    public static final int ID_PROC = ('P' << 24 | 'R' << 16 | 'O' << 8 | 'C');
-//    public static final int ID_COLR = ('C' << 24 | 'O' << 16 | 'L' << 8 | 'R');
-    public static final int ID_VALU = ('V' << 24 | 'A' << 16 | 'L' << 8 | 'U');
-    public static final int ID_FUNC = ('F' << 24 | 'U' << 16 | 'N' << 8 | 'C');
-    public static final int ID_FTPS = ('F' << 24 | 'T' << 16 | 'P' << 8 | 'S');
-    public static final int ID_ITPS = ('I' << 24 | 'T' << 16 | 'P' << 8 | 'S');
-    public static final int ID_ETPS = ('E' << 24 | 'T' << 16 | 'P' << 8 | 'S');
-//                                      
-    /* gradient */
-    public static final int ID_GRAD = ('G' << 24 | 'R' << 16 | 'A' << 8 | 'D');
-    public static final int ID_GRST = ('G' << 24 | 'R' << 16 | 'S' << 8 | 'T');
-    public static final int ID_GREN = ('G' << 24 | 'R' << 16 | 'E' << 8 | 'N');
-    public static final int ID_PNAM = ('P' << 24 | 'N' << 16 | 'A' << 8 | 'M');
-    public static final int ID_INAM = ('I' << 24 | 'N' << 16 | 'A' << 8 | 'M');
-    public static final int ID_GRPT = ('G' << 24 | 'R' << 16 | 'P' << 8 | 'T');
-    public static final int ID_FKEY = ('F' << 24 | 'K' << 16 | 'E' << 8 | 'Y');
-    public static final int ID_IKEY = ('I' << 24 | 'K' << 16 | 'E' << 8 | 'Y');
-//                                      
-    /* shader */
-    public static final int ID_SHDR = ('S' << 24 | 'H' << 16 | 'D' << 8 | 'R');
-    public static final int ID_DATA = ('D' << 24 | 'A' << 16 | 'T' << 8 | 'A');
-
-    /* generic linked list */
-    static abstract class lwNode implements NiLLABLE<lwNode> {
-
-//        lwNode next, prev;
-        Object data;
-        boolean NULL;
-
-        @Override
-        public lwNode oSet(lwNode node) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public boolean isNULL() {
-            return NULL;
-        }
-
-        static int getPosition(lwNode n) {
-            int position = 0;
-
-            while (n != null) {
-                position++;
-                n = n.getPrev();
-            }
-
-            return position;
-        }
-
-        static lwNode getPosition(lwNode n, int pos) {
-            int position = getPosition(n);
-
-            if (position > pos) {
-                while (position != pos) {
-                    if (null == n) {//TODO:make sure the returning null isn't recast into an int somewhere.
-                        break;
-                    }
-                    position--;
-                    n = n.getPrev();
-                }
-            } else {
-                while (position != pos) {
-                    if (null == n) {
-                        break;
-                    }
-                    position--;
-                    n = n.getNext();
-                }
-            }
-
-            return n;
-        }
-
-        public abstract lwNode getNext();
-
-        public abstract void setNext(lwNode next);
-
-        public abstract lwNode getPrev();
-
-        public abstract void setPrev(lwNode prev);
-    };
-
-
-    /* plug-in reference */
-    static class lwPlugin extends lwNode {
-
-        lwPlugin next, prev;
-        String ord;
-        String name;
-        int flags;
-
-//        Object data;
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwPlugin) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwPlugin) prev;
-        }
-    };
-
-
-    /* envelopes */
-    static class lwKey extends lwNode {
-
-        lwKey next, prev;
-        float value;
-        float time;
-        long shape;               // ID_TCB, ID_BEZ2, etc. 
-        float tension;
-        float continuity;
-        float bias;
-        float[] param = new float[4];
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwKey) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwKey) prev;
-        }
-    };
-
-    static class lwEnvelope extends lwNode {
-
-        lwEnvelope next, prev;
-        int index;
-        int type;
-        String name;
-        lwKey key;                    // linked list of keys 
-        int nkeys;
-        int[] behavior = new int[2];  // pre and post (extrapolation) 
-        lwPlugin cfilter;             // linked list of channel filters 
-        int ncfilters;
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwEnvelope) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwEnvelope) prev;
-        }
-    };
-    public static final int BEH_RESET = 0;
-    public static final int BEH_CONSTANT = 1;
-    public static final int BEH_REPEAT = 2;
-    public static final int BEH_OSCILLATE = 3;
-    public static final int BEH_OFFSET = 4;
-    public static final int BEH_LINEAR = 5;
-
-
-    /* values that can be enveloped */
-    static class lwEParam {
-
-        float val;
-        int eindex;
-    };
-
-    static class lwVParam {
-
-        float[] val = new float[3];
-        int eindex;
-    };
-
-
-    /* clips */
-    static class lwClipStill {
-
-        String name;
-    };
-
-    static class lwClipSeq {
-
-        String prefix;              // filename before sequence digits 
-        String suffix;              // after digits, e.g. extensions 
-        int digits;
-        int flags;
-        int offset;
-        int start;
-        int end;
-    };
-
-    static class lwClipAnim {
-
-        String name;
-        String server;              // anim loader plug-in 
-        Object data;
-    };
-
-    static class lwClipXRef {
-
-        String string;
-        int index;
-        lwClip clip;
-    };
-
-    static class lwClipCycle {
-
-        String name;
-        int lo;
-        int hi;
-    };
-
-    static class lwClip extends lwNode {
-
-        lwClip next, prev;
-        int index;
-        int type;                // ID_STIL, ID_ISEQ, etc. 
-
-        static class Source {
-
-            lwClipStill still = new lwClipStill();
-            lwClipSeq seq = new lwClipSeq();
-            lwClipAnim anim = new lwClipAnim();
-            lwClipXRef xref = new lwClipXRef();
-            lwClipCycle cycle = new lwClipCycle();
-        };
-        Source source = new Source();
-        float start_time;
-        float duration;
-        float frame_rate;
-        lwEParam contrast = new lwEParam();
-        lwEParam brightness = new lwEParam();
-        lwEParam saturation = new lwEParam();
-        lwEParam hue = new lwEParam();
-        lwEParam gamma = new lwEParam();
-        int negative;
-        lwPlugin ifilter;             // linked list of image filters 
-        int nifilters;
-        lwPlugin pfilter;             // linked list of pixel filters 
-        int npfilters;
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwClip) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwClip) prev;
-        }
-    };
-
-    /* textures */
-    static class lwTMap {
-
-        lwVParam size = new lwVParam();
-        lwVParam center = new lwVParam();
-        lwVParam rotate = new lwVParam();
-        lwVParam falloff = new lwVParam();
-        int fall_type;
-        String ref_object;
-        int coord_sys;
-    };
-
-    static class lwImageMap {
-
-        int cindex;
-        int projection;
-        String vmap_name;
-        int axis;
-        int wrapw_type;
-        int wraph_type;
-        lwEParam wrapw = new lwEParam();
-        lwEParam wraph = new lwEParam();
-        float aa_strength;
-        int aas_flags;
-        int pblend;
-        lwEParam stck = new lwEParam();
-        lwEParam amplitude = new lwEParam();
-    };
-    public static final int PROJ_PLANAR = 0;
-    public static final int PROJ_CYLINDRICAL = 1;
-    public static final int PROJ_SPHERICAL = 2;
-    public static final int PROJ_CUBIC = 3;
-    public static final int PROJ_FRONT = 4;
-//
-    public static final int WRAP_NONE = 0;
-    public static final int WRAP_EDGE = 1;
-    public static final int WRAP_REPEAT = 2;
-    public static final int WRAP_MIRROR = 3;
-
-    static class lwProcedural {
-
-        int axis;
-        float[] value = new float[3];
-        String name;
-        Object data;
-    };
-
-    static class lwGradKey {
-
-        lwGradKey next, prev;
-        float value;
-        float[] rgba = new float[4];
-    };
-
-    static class lwGradient {
-
-        String paramname;
-        String itemname;
-        float start;
-        float end;
-        int repeat;
-        lwGradKey[] key;             // array of gradient keys 
-        short[] ikey;                // array of interpolation codes 
-    };
-
-    static class lwTexture extends lwNode {
-
-        lwTexture next, prev;
-        String ord;
-        long type;
-        long chan;
-        lwEParam opacity = new lwEParam();
-        short opac_type;
-        short enabled;
-        short negative;
-        short axis;
-
-        static class Param {
-
-            lwImageMap imap = new lwImageMap();
-            lwProcedural proc = new lwProcedural();
-            lwGradient grad = new lwGradient();
-        };
-        Param param = new Param();
-        lwTMap tmap = new lwTMap();
-
-        public lwTexture() {
-            NULL = true;
-        }
-
-        @Override
-        public lwNode oSet(lwNode node) {
-            lwTexture tempNode = (lwTexture) node;
-
-            NULL = false;
-
-            this.next = tempNode.next;
-            this.prev = tempNode.prev;
-            this.ord = tempNode.ord;
-            this.type = tempNode.type;
-            this.chan = tempNode.chan;
-            this.opac_type = tempNode.opac_type;
-            this.enabled = tempNode.enabled;
-            this.negative = tempNode.negative;
-            this.axis = tempNode.axis;
-
-            return this;
-        }
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwTexture) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwTexture) prev;
-        }
-    };
-
-
-    /* values that can be textured */
-    static class lwTParam {
-
-        float val;
-        int eindex;
-        lwTexture tex = new lwTexture();                 // linked list of texture layers
-    };
-
-    static class lwCParam {
-
-        float[] rgb = new float[3];
-        int eindex;
-        lwTexture tex = new lwTexture();                 // linked list of texture layers
-    };
-
-
-    /* surfaces */
-    static class lwGlow {
-
-        short enabled;
-        short type;
-        lwEParam intensity;
-        lwEParam size;
-    };
-
-    static class lwRMap {
-
-        lwTParam val = new lwTParam();
-        int options;
-        int cindex;
-        float seam_angle;
-    };
-
-    static class lwLine {
-
-        short enabled;
-        int flags;
-        lwEParam size;
-    };
-
-    static class lwSurface extends lwNode {
-
-        lwSurface next, prev;
-        String name;
-        String srcname;
-        lwCParam color = new lwCParam();
-        lwTParam luminosity = new lwTParam();
-        lwTParam diffuse = new lwTParam();
-        lwTParam specularity = new lwTParam();
-        lwTParam glossiness = new lwTParam();
-        lwRMap reflection = new lwRMap();
-        lwRMap transparency = new lwRMap();
-        lwTParam eta = new lwTParam();
-        lwTParam translucency = new lwTParam();
-        lwTParam bump = new lwTParam();
-        float smooth;
-        int sideflags;
-        float alpha;
-        int alpha_mode;
-        lwEParam color_hilite = new lwEParam();
-        lwEParam color_filter = new lwEParam();
-        lwEParam add_trans = new lwEParam();
-        lwEParam dif_sharp = new lwEParam();
-        lwEParam glow = new lwEParam();
-        lwLine line = new lwLine();
-        lwPlugin shader = new lwPlugin();           // linked list of shaders 
-        int nshaders;
-
-        @Override
-        public lwNode oSet(lwNode node) {
-
-            lwSurface surface = (lwSurface) node;
-
-            this.next = surface.next;
-            this.prev = surface.prev;
-            this.name = surface.name;
-            this.srcname = surface.srcname;
-            this.color = surface.color;
-            this.luminosity = surface.luminosity;
-            this.diffuse = surface.diffuse;
-            this.specularity = surface.specularity;
-            this.glossiness = surface.glossiness;
-            this.reflection = surface.reflection;
-            this.transparency = surface.transparency;
-            this.eta = surface.eta;
-            this.translucency = surface.translucency;
-            this.bump = surface.bump;
-            this.smooth = surface.smooth;
-            this.sideflags = surface.sideflags;
-            this.alpha = surface.alpha;
-            this.alpha_mode = surface.alpha_mode;
-            this.color_hilite = surface.color_hilite;
-            this.color_filter = surface.color_filter;
-            this.add_trans = surface.add_trans;
-            this.dif_sharp = surface.dif_sharp;
-            this.glow = surface.glow;
-            this.line = surface.line;
-            this.shader = surface.shader;
-            this.nshaders = surface.nshaders;
-
-            return this;
-        }
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwSurface) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwSurface) prev;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 5;
-            hash = 41 * hash + Objects.hashCode(this.name);
-            return hash;
-        }
-
-        @Override//TODO:make sure the name is enough for equality.
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final lwSurface other = (lwSurface) obj;
-            if (!Objects.equals(this.name, other.name)) {
-                return false;
-            }
-            return true;
-        }
-    };
-
-    /* vertex maps */
-    static class lwVMap extends lwNode {
-
-        lwVMap next, prev;
-        String name;
-        long type;
-        int dim;
-        int nverts;
-        int perpoly;
-        int[] vindex;             // array of point indexes 
-        int[] pindex;             // array of polygon indexes 
-        float[][] val;
-        // added by duffy
-        int offset;
-
-        private void clear() {
-            this.next = null;
-            this.prev = null;
-            this.name = null;
-            this.type = 0;
-            this.dim = 0;
-            this.nverts = 0;
-            this.perpoly = 0;
-            this.vindex = null;
-            this.pindex = null;
-            this.val = null;
-            this.offset = 0;
-        }
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwVMap) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwVMap) prev;
-        }
-    };
-
-    static class lwVMapPt {
-
-        lwVMap vmap;
-        int index;               // vindex or pindex element 
-
-        public lwVMapPt() {
-        }
-
-        static lwVMapPt[] generateArray(final int length) {
-            return Stream.
-                    generate(lwVMapPt::new).
-                    limit(length).
-                    toArray(lwVMapPt[]::new);
-        }
-    };
-
-
-    /* points and polygons */
-    static class lwPoint {
-
-        float[] pos = new float[3];
-        int npols;               // number of polygons sharing the point 
-        int[] pol;               // array of polygon indexes 
-        int nvmaps;
-        lwVMapPt[] vm;           // array of vmap references 
-    };
-
-    static class lwPolVert {
-
-        int index;               // index into the point array 
-        float[] norm = new float[3];
-        int nvmaps;
-        lwVMapPt[] vm;           // array of vmap references 
-    };
-
-    static class lwPolygon {
-
-        lwSurface surf;
-        int part;                // part index 
-        int smoothgrp;           // smoothing group 
-        int flags;
-        long type;
-        float[] norm = new float[3];
-        int nverts;
-        private lwPolVert[] v;   // array of vertex records 
-        private int vOffset;     // the offset from the start of v to point towards.
-
-        public lwPolVert getV(int index) {
-            return v[vOffset + index];
-        }
-
-        public void setV(lwPolVert[] v, int vOffset) {
-            this.v = v;
-            this.vOffset = vOffset;
-        }
-
-    };
-
-    static class lwPointList {
-
-        int count;
-        int offset;              // only used during reading 
-        lwPoint[] pt;            // array of points 
-    };
-
-    static class lwPolygonList {
-
-        int count;
-        int offset;              // only used during reading 
-        int vcount;              // total number of vertices 
-        int voffset;             // only used during reading 
-        lwPolygon[] pol;         // array of polygons 
-    };
-
-
-    /* geometry layers */
-    static class lwLayer extends lwNode {
-
-        lwLayer next, prev;
-        String name;
-        int index;
-        int parent;
-        int flags;
-        float[] pivot = new float[3];
-        float[] bbox = new float[6];
-        lwPointList point = new lwPointList();
-        lwPolygonList polygon = new lwPolygonList();
-        int nvmaps;
-        lwVMap vmap;          // linked list of vmaps 
-
-        @Override
-        public lwNode getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(lwNode next) {
-            this.next = (lwLayer) next;
-        }
-
-        @Override
-        public lwNode getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(lwNode prev) {
-            this.prev = (lwLayer) prev;
-        }
-    };
-
-
-    /* tag strings */
-    static class lwTagList {
-
-        int count;
-        int offset;             // only used during reading 
-        String[] tag;           // array of strings 
-    };
-
-
-    /* an object */
-    static class lwObject {
-
-        long[] timeStamp = {0};
-        lwLayer layer;          // linked list of layers 
-        lwEnvelope env;         // linked list of envelopes 
-        lwClip clip;            // linked list of clips 
-        lwSurface surf;         // linked list of surfaces 
-        final lwTagList taglist = new lwTagList();
-        int nlayers;
-        int nenvs;
-        int nclips;
-        int nsurfs;
-    };
-
-    /*
-     ======================================================================
-
-     Converted from lwobject sample prog from LW 6.5 SDK.
-
-     ======================================================================
-     */
-    static abstract class LW {
-
-        public abstract void run(final Object p);
-    };
-
-    /*
-     ======================================================================
-     lwFreeClip()
-
-     Free memory used by an lwClip.
-     ====================================================================== */
-    @Deprecated
-    public static class lwFreeClip extends LW {
-
-        private static final LW instance = new lwFreeClip();
-
-        private lwFreeClip() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        @Deprecated
-        public void run(Object p) {
-            lwClip clip = (lwClip) p;
-            if (clip != null) {
-//                lwListFree(clip.ifilter, lwFreePlugin.getInstance());
-//                lwListFree(clip.pfilter, lwFreePlugin.getInstance());
-                switch (clip.type) {
-                    case ID_STIL: {
-                        if (clip.source.still.name != null) {
-                            clip.source.still.name = null;
-                        }
-                        break;
-                    }
-                    case ID_ISEQ: {
-                        if (clip.source.seq.suffix != null) {
-                            clip.source.seq.suffix = null;
-                        }
-                        if (clip.source.seq.prefix != null) {
-                            clip.source.seq.prefix = null;
-                        }
-                        break;
-                    }
-                    case ID_ANIM: {
-                        if (clip.source.anim.server != null) {
-                            clip.source.anim.server = null;
-                        }
-                        if (clip.source.anim.name != null) {
-                            clip.source.anim.name = null;
-                        }
-                        break;
-                    }
-                    case ID_XREF: {
-                        if (clip.source.xref.string != null) {
-                            clip.source.xref.string = null;
-                        }
-                        break;
-                    }
-                    case ID_STCC: {
-                        if (clip.source.cycle.name != null) {
-                            clip.source.cycle.name = null;
-                        }
-                        break;
-                    }
-                }
-                clip = null;
-            }
-        }
-    };
-
 
     /*
      ======================================================================
@@ -1225,7 +475,6 @@ public class Model_lwo {
         return null;
     }
 
-
     /*
      ======================================================================
      lwFindClip()
@@ -1244,65 +493,6 @@ public class Model_lwo {
         }
         return clip;
     }
-
-    @Deprecated
-    public static class lwFree extends LW {
-
-        private static final LW instance = new lwFree();
-
-        private lwFree() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object p) {
-//        Mem_Free(ptr);
-        }
-    }
-
-    /*
-     ======================================================================
-     lwFreeEnvelope()
-
-     Free the memory used by an lwEnvelope.
-     ====================================================================== */
-    @Deprecated
-    public static class lwFreeEnvelope extends LW {
-
-        private static final LW instance = new lwFreeEnvelope();
-
-        private lwFreeEnvelope() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object p) {
-            lwEnvelope env = (lwEnvelope) p;
-            if (env != null) {
-                if (env.name != null) {
-                    env.name = null;
-                }
-//                lwListFree(env.key, lwFree.getInstance());
-//                lwListFree(env.cfilter, lwFreePlugin.getInstance());
-                env = null;
-            }
-        }
-    };
-
-    public static class compare_keys implements cmp_t<lwKey> {
-
-        @Override
-        public int compare(final lwKey k1, final lwKey k2) {
-            return k1.time > k2.time ? 1 : k1.time < k2.time ? -1 : 0;
-        }
-    }
-
 
     /*
      ======================================================================
@@ -1461,7 +651,6 @@ public class Model_lwo {
         return null;
     }
 
-
     /*
      ======================================================================
      lwFindEnvelope()
@@ -1480,7 +669,6 @@ public class Model_lwo {
         }
         return env;
     }
-
 
     /*
      ======================================================================
@@ -1512,7 +700,6 @@ public class Model_lwo {
         return v2;
     }
 
-
     /*
      ======================================================================
      hermite()
@@ -1530,7 +717,6 @@ public class Model_lwo {
         h4[0] = t3 - t2;
         h3[0] = h4[0] - t2 + t;
     }
-
 
     /*
      ======================================================================
@@ -1551,7 +737,6 @@ public class Model_lwo {
         return a * t3 + b * t2 + c * t + x0;
     }
 
-
     /*
      ======================================================================
      bez2_time()
@@ -1562,7 +747,7 @@ public class Model_lwo {
      parameter for this curve type.
      ====================================================================== */
     public static float bez2_time(float x0, float x1, float x2, float x3, float time,
-            float[] t0, float[] t1) {
+                                  float[] t0, float[] t1) {
         float v, t;
 
         t = t0[0] + (t1[0] - t0[0]) * 0.5f;
@@ -1578,7 +763,6 @@ public class Model_lwo {
             return t;
         }
     }
-
 
     /*
      ======================================================================
@@ -1606,7 +790,6 @@ public class Model_lwo {
 
         return bezier(key0.value, y, key1.param[1] + key1.value, key1.value, t);
     }
-
 
     /*
      ======================================================================
@@ -1673,7 +856,6 @@ public class Model_lwo {
         return out;
     }
 
-
     /*
      ======================================================================
      incoming()
@@ -1738,7 +920,6 @@ public class Model_lwo {
 
         return in;
     }
-
 
     /*
      ======================================================================
@@ -1890,7 +1071,6 @@ public class Model_lwo {
         }
     }
 
-
     /*
      ======================================================================
      lwListAdd()
@@ -1914,7 +1094,7 @@ public class Model_lwo {
         return list;
     }
 
-//    @Deprecated
+    //    @Deprecated
 //    public static Object lwListAdd(Object list, Object node) {
 //        lwNode head, tail = new lwNode();
 //
@@ -1947,7 +1127,7 @@ public class Model_lwo {
         }
 
         list = vList;
-        item = (lwNode) vItem;
+        item = vItem;
         node = list;
         prev = null;
 
@@ -1973,25 +1153,13 @@ public class Model_lwo {
             node.setPrev(item);
         }
     }
-    /*
-     ======================================================================
-     flen
-
-     This accumulates a count of the number of bytes read.  Callers can set
-     it at the beginning of a sequence of reads and then retrieve it to get
-     the number of bytes actually read.  If one of the I/O functions fails,
-     flen is set to an error code, after which the I/O functions ignore
-     read requests until flen is reset.
-     ====================================================================== */
-    public static final int FLEN_ERROR = -9999;
-    public static int flen;
-
-    public static void set_flen(int i) {
-        flen = i;
-    }
 
     public static int get_flen() {
         return flen;
+    }
+
+    public static void set_flen(int i) {
+        flen = i;
     }
 
     public static byte[] getbytes(idFile fp, int size) {
@@ -2201,7 +1369,7 @@ public class Model_lwo {
         }
 
         pos = fp.Tell();
-        for (i = 1;; i++) {
+        for (i = 1; ; i++) {
             c.clear();
             if (fp.Read(c) == -1) {
                 flen = FLEN_ERROR;
@@ -2381,7 +1549,7 @@ public class Model_lwo {
 
         //   len = strlen( (const char*)buf ) + 1;
         s = new String(bp.array()).substring(pos);
-        len = strLen(s) + 1;//TODO:check 
+        len = strLen(s) + 1;//TODO:check
         if (1 == len) {
             flen += 2;
             bp.position(pos + 2);
@@ -2403,39 +1571,6 @@ public class Model_lwo {
 
     /*
      ======================================================================
-     lwFreeLayer()
-
-     Free memory used by an lwLayer.
-     ====================================================================== */
-    public static class lwFreeLayer extends LW {
-
-        private static final LW instance = new lwFreeLayer();
-
-        private lwFreeLayer() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object p) {
-            lwLayer layer = (lwLayer) p;
-            if (layer != null) {
-                if (layer.name != null) {
-                    layer.name = null;
-                }
-                lwFreePoints(layer.point);
-                lwFreePolygons(layer.polygon);
-//                lwListFree(layer.vmap, lwFreeVMap.getInstance());
-                layer = null;
-            }
-        }
-    };
-
-
-    /*
-     ======================================================================
      lwFreeObject()
 
      Free memory used by an lwObject.
@@ -2451,7 +1586,6 @@ public class Model_lwo {
             object = null;
         }
     }
-
 
     /*
      ======================================================================
@@ -2627,7 +1761,7 @@ public class Model_lwo {
                         break;
 
                     case ID_ENVL:
-                        node = (lwNode) lwGetEnvelope(fp, cksize);
+                        node = lwGetEnvelope(fp, cksize);
                         if (null == node) {
                             break Fail;
                         }
@@ -2636,7 +1770,7 @@ public class Model_lwo {
                         break;
 
                     case ID_CLIP:
-                        node = (lwNode) lwGetClip(fp, cksize);
+                        node = lwGetClip(fp, cksize);
                         if (null == node) {
                             break Fail;
                         }
@@ -2645,7 +1779,7 @@ public class Model_lwo {
                         break;
 
                     case ID_SURF:
-                        node = (lwNode) lwGetSurface(fp, cksize);
+                        node = lwGetSurface(fp, cksize);
                         if (null == node) {
                             break Fail;
                         }
@@ -2719,37 +1853,7 @@ public class Model_lwo {
         return null;
     }
 
-    /* IDs specific to LWOB */
-    static final int ID_SRFS = ('S' << 24 | 'R' << 16 | 'F' << 8 | 'S');
-//    static final int ID_FLAG = ('F' << 24 | 'L' << 16 | 'A' << 8 | 'G');
-    static final int ID_VLUM = ('V' << 24 | 'L' << 16 | 'U' << 8 | 'M');
-    static final int ID_VDIF = ('V' << 24 | 'D' << 16 | 'I' << 8 | 'F');
-    static final int ID_VSPC = ('V' << 24 | 'S' << 16 | 'P' << 8 | 'C');
-    static final int ID_RFLT = ('R' << 24 | 'F' << 16 | 'L' << 8 | 'T');
-    static final int ID_BTEX = ('B' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_CTEX = ('C' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_DTEX = ('D' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_LTEX = ('L' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_RTEX = ('R' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_STEX = ('S' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_TTEX = ('T' << 24 | 'T' << 16 | 'E' << 8 | 'X');
-    static final int ID_TFLG = ('T' << 24 | 'F' << 16 | 'L' << 8 | 'G');
-    static final int ID_TSIZ = ('T' << 24 | 'S' << 16 | 'I' << 8 | 'Z');
-    static final int ID_TCTR = ('T' << 24 | 'C' << 16 | 'T' << 8 | 'R');
-    static final int ID_TFAL = ('T' << 24 | 'F' << 16 | 'A' << 8 | 'L');
-    static final int ID_TVEL = ('T' << 24 | 'V' << 16 | 'E' << 8 | 'L');
-    static final int ID_TCLR = ('T' << 24 | 'C' << 16 | 'L' << 8 | 'R');
-    static final int ID_TVAL = ('T' << 24 | 'V' << 16 | 'A' << 8 | 'L');
-//    static final int ID_TAMP = ('T' << 24 | 'A' << 16 | 'M' << 8 | 'P');
-//    static final int ID_TIMG = ('T' << 24 | 'I' << 16 | 'M' << 8 | 'G');
-    static final int ID_TAAS = ('T' << 24 | 'A' << 16 | 'A' << 8 | 'S');
-    static final int ID_TREF = ('T' << 24 | 'R' << 16 | 'E' << 8 | 'F');
-    static final int ID_TOPC = ('T' << 24 | 'O' << 16 | 'P' << 8 | 'C');
-    static final int ID_SDAT = ('S' << 24 | 'D' << 16 | 'A' << 8 | 'T');
-    static final int ID_TFP0 = ('T' << 24 | 'F' << 16 | 'P' << 8 | '0');
-    static final int ID_TFP1 = ('T' << 24 | 'F' << 16 | 'P' << 8 | '1');
-
-//    static {
+    //    static {
 //        ID_SRFS = LWID_('S', 'R', 'F', 'S');
 ////ID_FLAG= LWID_('F','L','A','G');
 //        ID_VLUM = LWID_('V', 'L', 'U', 'M');
@@ -2819,7 +1923,6 @@ public class Model_lwo {
         return clip.index;
     }
 
-
     /*
      ======================================================================
      add_tvel()
@@ -2827,7 +1930,7 @@ public class Model_lwo {
      Add a triple of envelopes to simulate the old texture velocity
      parameters.
      ====================================================================== */
-    public static int add_tvel(float pos[], float vel[], lwEnvelope elist, int[] nenvs) {
+    public static int add_tvel(float[] pos, float[] vel, lwEnvelope elist, int[] nenvs) {
         lwEnvelope env = null;
         lwKey key0, key1;
         int i;
@@ -2867,7 +1970,6 @@ public class Model_lwo {
         nenvs[0] += 3;
         return env.index - 2;
     }
-
 
     /*
      ======================================================================
@@ -2912,7 +2014,6 @@ public class Model_lwo {
 
         return tex;
     }
-
 
     /*
      ======================================================================
@@ -3039,13 +2140,13 @@ public class Model_lwo {
 
                     case ID_RIMG:
                         s[0] = getS0(fp);
-                         {
-                            int[] nclips = {obj.nclips};
-                            surf.reflection.cindex = add_clip(s, obj.clip, nclips);
-                            obj.nclips = nclips[0];
-                        }
-                        surf.reflection.options = 3;
-                        break;
+                    {
+                        int[] nclips = {obj.nclips};
+                        surf.reflection.cindex = add_clip(s, obj.clip, nclips);
+                        obj.nclips = nclips[0];
+                    }
+                    surf.reflection.options = 3;
+                    break;
 
                     case ID_RSAN:
                         surf.reflection.seam_angle = getF4(fp);
@@ -3157,12 +2258,12 @@ public class Model_lwo {
                         for (i = 0; i < 3; i++) {
                             v[i] = getF4(fp);
                         }
-                         {
-                            int[] nenvs = {obj.nenvs};
-                            tex.tmap.center.eindex = add_tvel(tex.tmap.center.val, v, obj.env, nenvs);
-                            obj.nenvs = nenvs[0];
-                        }
-                        break;
+                    {
+                        int[] nenvs = {obj.nenvs};
+                        tex.tmap.center.eindex = add_tvel(tex.tmap.center.val, v, obj.env, nenvs);
+                        obj.nenvs = nenvs[0];
+                    }
+                    break;
 
                     case ID_TCLR:
                         if (tex.type == ID_PROC) {
@@ -3184,12 +2285,12 @@ public class Model_lwo {
 
                     case ID_TIMG:
                         s[0] = getS0(fp);
-                         {
-                            int[] nClips = {obj.nclips};
-                            tex.param.imap.cindex = add_clip(s, obj.clip, nClips);
-                            obj.nclips = nClips[0];
-                        }
-                        break;
+                    {
+                        int[] nClips = {obj.nclips};
+                        tex.param.imap.cindex = add_clip(s, obj.clip, nClips);
+                        obj.nclips = nClips[0];
+                    }
+                    break;
 
                     case ID_TAAS:
                         tex.param.imap.aa_strength = getF4(fp);
@@ -3269,7 +2370,6 @@ public class Model_lwo {
         return null;
     }
 
-
     /*
      ======================================================================
      lwGetPolygons5()
@@ -3309,7 +2409,7 @@ public class Model_lwo {
                 buf.position(buf.position() + 2 * nv);
                 i = sgetI2(buf);
                 if (i < 0) {
-                    buf.position(buf.position() + 2);      // detail polygons 
+                    buf.position(buf.position() + 2);      // detail polygons
                 }
             }
 
@@ -3358,7 +2458,6 @@ public class Model_lwo {
         lwFreePolygons(plist);
         return false;
     }
-
 
     /*
      ======================================================================
@@ -3463,7 +2562,7 @@ public class Model_lwo {
                         break;
 
                     case ID_SURF:
-                        node = (lwNode) lwGetSurface5(fp, cksize, object);
+                        node = lwGetSurface5(fp, cksize, object);
                         if (null == node) {
                             break Fail;
                         }
@@ -3546,7 +2645,6 @@ public class Model_lwo {
         }
     }
 
-
     /*
      ======================================================================
      lwFreePolygons()
@@ -3576,7 +2674,6 @@ public class Model_lwo {
 //            memset(plist, 0, sizeof(lwPolygonList));
         }
     }
-
 
     /*
      ======================================================================
@@ -3631,7 +2728,6 @@ public class Model_lwo {
         return true;
     }
 
-
     /*
      ======================================================================
      lwGetBoundingBox()
@@ -3665,7 +2761,6 @@ public class Model_lwo {
             }
         }
     }
-
 
     /*
      ======================================================================
@@ -3721,7 +2816,6 @@ public class Model_lwo {
 
         return true;
     }
-
 
     /*
      ======================================================================
@@ -3811,7 +2905,6 @@ public class Model_lwo {
         return false;
     }
 
-
     /*
      ======================================================================
      lwGetPolyNormals()
@@ -3846,7 +2939,6 @@ public class Model_lwo {
             normalize(polygon.pol[i].norm);
         }
     }
-
 
     /*
      ======================================================================
@@ -3889,7 +2981,6 @@ public class Model_lwo {
 
         return true;
     }
-
 
     /*
      ======================================================================
@@ -3952,7 +3043,6 @@ public class Model_lwo {
         return true;
     }
 
-
     /*
      ======================================================================
      lwGetVertNormals()
@@ -4007,7 +3097,6 @@ public class Model_lwo {
         }
     }
 
-
     /*
      ======================================================================
      lwFreeTags()
@@ -4029,7 +3118,6 @@ public class Model_lwo {
 //            memset(tlist, 0, sizeof(lwTagList));
         }
     }
-
 
     /*
      ======================================================================
@@ -4077,7 +3165,6 @@ public class Model_lwo {
 
         return true;
     }
-
 
     /*
      ======================================================================
@@ -4129,154 +3216,6 @@ public class Model_lwo {
 
         return true;
     }
-
-
-    /*
-     ======================================================================
-     lwFreePlugin()
-
-     Free the memory used by an lwPlugin.
-     ====================================================================== */
-    public static class lwFreePlugin extends LW {
-
-        private static final LW instance = new lwFreePlugin();
-
-        private lwFreePlugin() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object o) {
-            throw new TODO_Exception();
-//            lwPlugin p = (lwPlugin) o;
-//            if (p != null) {
-//                if (p.ord != null) {
-//                    Mem_Free(p.ord);
-//                }
-//                if (p.name != null) {
-//                    Mem_Free(p.name);
-//                }
-//                if (p.data != null) {
-//                    Mem_Free(p.data);
-//                }
-//                Mem_Free(p);
-//            }
-        }
-    };
-
-
-    /*
-     ======================================================================
-     lwFreeTexture()
-
-     Free the memory used by an lwTexture.
-     ====================================================================== */
-    public static class lwFreeTexture extends LW {
-
-        private static final LW instance = new lwFreeTexture();
-
-        private lwFreeTexture() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object p) {
-            lwTexture t = (lwTexture) p;
-            if (t != null) {
-                if (t.ord != null) {
-//                    Mem_Free(t.ord);
-                    t.ord = null;
-                }
-                switch ((int) t.type) {
-                    case ID_IMAP:
-                        if (t.param.imap.vmap_name != null) {
-//                            Mem_Free(t.param.imap.vmap_name);
-                            t.param.imap.vmap_name = null;
-                        }
-                        break;
-                    case ID_PROC:
-                        if (t.param.proc.name != null) {
-//                            Mem_Free(t.param.proc.name);
-                            t.param.proc.name = null;
-                        }
-                        if (t.param.proc.data != null) {
-//                            Mem_Free(t.param.proc.data);
-                            t.param.proc.data = null;
-                        }
-                        break;
-                    case ID_GRAD:
-                        if (t.param.grad.key != null) {
-//                            Mem_Free(t.param.grad.key);
-                            t.param.grad.key = null;
-                        }
-                        if (t.param.grad.ikey != null) {
-//                            Mem_Free(t.param.grad.ikey);
-                            t.param.grad.ikey = null;
-                        }
-                        break;
-                }
-                if (t.tmap.ref_object != null) {
-//                    Mem_Free(t.tmap.ref_object);
-                    t.tmap.ref_object = null;
-                }
-                t = null;
-            }
-        }
-    };
-
-
-    /*
-     ======================================================================
-     lwFreeSurface()
-
-     Free the memory used by an lwSurface.
-     ====================================================================== */
-    public static class lwFreeSurface extends LW {
-
-        private static final LW instance = new lwFreeSurface();
-
-        private lwFreeSurface() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object p) {
-            lwSurface surf = (lwSurface) p;
-            if (surf != null) {
-                if (surf.name != null) {
-                    surf.name = null;
-                }
-                if (surf.srcname != null) {
-                    surf.srcname = null;
-                }
-//
-//                lwListFree(surf.shader, lwFreePlugin.getInstance());
-//
-//                lwListFree(surf.color.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.luminosity.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.diffuse.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.specularity.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.glossiness.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.reflection.val.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.transparency.val.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.eta.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.translucency.tex, lwFreeTexture.getInstance());
-//                lwListFree(surf.bump.tex, lwFreeTexture.getInstance());
-//
-                surf = null;
-            }
-        }
-    };
-
 
     /*
      ======================================================================
@@ -4366,7 +3305,6 @@ public class Model_lwo {
         set_flen(fp.Tell() - pos);
         return 1;
     }
-
 
     /*
      ======================================================================
@@ -4461,7 +3399,6 @@ public class Model_lwo {
         set_flen(fp.Tell() - pos);
         return 1;
     }
-
 
     /*
      ======================================================================
@@ -4575,7 +3512,6 @@ public class Model_lwo {
         return 1;
     }
 
-
     /*
      ======================================================================
      lwGetProcedural()
@@ -4657,7 +3593,6 @@ public class Model_lwo {
         set_flen(fp.Tell() - pos);
         return 1;
     }
-
 
     /*
      ======================================================================
@@ -4766,7 +3701,6 @@ public class Model_lwo {
         return 1;
     }
 
-
     /*
      ======================================================================
      lwGetTexture()
@@ -4819,7 +3753,6 @@ public class Model_lwo {
         set_flen(bloksz);
         return tex;
     }
-
 
     /*
      ======================================================================
@@ -4919,31 +3852,6 @@ public class Model_lwo {
         return null;
     }
 
-
-    /*
-     ======================================================================
-     compare_textures()
-     compare_shaders()
-
-     Callbacks for the lwListInsert() function, which is called to add
-     textures to surface channels and shaders to surfaces.
-     ====================================================================== */
-    public static class compare_textures implements cmp_t<lwTexture> {
-
-        @Override
-        public int compare(final lwTexture a, final lwTexture b) {
-            return a.ord.compareTo(b.ord);
-        }
-    }
-
-    public static class compare_shaders implements cmp_t<lwPlugin> {
-
-        @Override
-        public int compare(final lwPlugin a, final lwPlugin b) {
-            return a.ord.compareTo(b.ord);
-        }
-    }
-
     /*
      ======================================================================
      add_texture()
@@ -4993,7 +3901,6 @@ public class Model_lwo {
         return 1;
     }
 
-
     /*
      ======================================================================
      lwDefaultSurface()
@@ -5019,7 +3926,6 @@ public class Model_lwo {
 
         return surf;
     }
-
 
     /*
      ======================================================================
@@ -5270,68 +4176,26 @@ public class Model_lwo {
         return null;
     }
 
-    public static float dot(float a[], float b[]) {
+    public static float dot(float[] a, float[] b) {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
     }
 
-    public static void cross(float a[], float b[], float c[]) {
+    public static void cross(float[] a, float[] b, float[] c) {
         c[0] = a[1] * b[2] - a[2] * b[1];
         c[1] = a[2] * b[0] - a[0] * b[2];
         c[2] = a[0] * b[1] - a[1] * b[0];
     }
 
-    public static void normalize(float v[]) {
+    public static void normalize(float[] v) {
         float r;
 
-        r = (float) idMath.Sqrt(dot(v, v));
+        r = idMath.Sqrt(dot(v, v));
         if (r > 0) {
             v[0] /= r;
             v[1] /= r;
             v[2] /= r;
         }
     }
-
-    /*
-     ======================================================================
-     lwFreeVMap()
-
-     Free memory used by an lwVMap.
-     ====================================================================== */
-    public static class lwFreeVMap extends LW {
-
-        private static final LW instance = new lwFreeVMap();
-
-        private lwFreeVMap() {
-        }
-
-        public static LW getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(Object p) {
-            lwVMap vmap = (lwVMap) p;
-            if (vmap != null) {
-                if (vmap.name != null) {
-                    vmap.name = null;
-                }
-                if (vmap.vindex != null) {
-                    vmap.vindex = null;
-                }
-                if (vmap.pindex != null) {
-                    vmap.pindex = null;
-                }
-                if (vmap.val != null) {
-//                    if (vmap.val[0] != 0f) {
-//                        Mem_Free(vmap.val[0]);
-//                    }
-                    vmap.val = null;
-                }
-                vmap.clear();
-            }
-        }
-    };
-
 
     /*
      ======================================================================
@@ -5436,7 +4300,6 @@ public class Model_lwo {
         return null;
     }
 
-
     /*
      ======================================================================
      lwGetPointVMaps()
@@ -5488,7 +4351,6 @@ public class Model_lwo {
 
         return true;
     }
-
 
     /*
      ======================================================================
@@ -5552,5 +4414,1087 @@ public class Model_lwo {
         }
 
         return true;
+    }
+
+    /* generic linked list */
+    static abstract class lwNode implements NiLLABLE<lwNode> {
+
+        boolean NULL;
+        //        lwNode next, prev;
+        Object data;
+
+        static int getPosition(lwNode n) {
+            int position = 0;
+
+            while (n != null) {
+                position++;
+                n = n.getPrev();
+            }
+
+            return position;
+        }
+
+        static lwNode getPosition(lwNode n, int pos) {
+            int position = getPosition(n);
+
+            if (position > pos) {
+                while (position != pos) {
+                    if (null == n) {//TODO:make sure the returning null isn't recast into an int somewhere.
+                        break;
+                    }
+                    position--;
+                    n = n.getPrev();
+                }
+            } else {
+                while (position != pos) {
+                    if (null == n) {
+                        break;
+                    }
+                    position--;
+                    n = n.getNext();
+                }
+            }
+
+            return n;
+        }
+
+        @Override
+        public lwNode oSet(lwNode node) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public boolean isNULL() {
+            return NULL;
+        }
+
+        public abstract lwNode getNext();
+
+        public abstract void setNext(lwNode next);
+
+        public abstract lwNode getPrev();
+
+        public abstract void setPrev(lwNode prev);
+    }
+
+    /* plug-in reference */
+    static class lwPlugin extends lwNode {
+
+        int flags;
+        String name;
+        lwPlugin next, prev;
+        String ord;
+
+        //        Object data;
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwPlugin) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwPlugin) prev;
+        }
+    }
+
+    /* envelopes */
+    static class lwKey extends lwNode {
+
+        float bias;
+        float continuity;
+        lwKey next, prev;
+        float[] param = new float[4];
+        long shape;               // ID_TCB, ID_BEZ2, etc.
+        float tension;
+        float time;
+        float value;
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwKey) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwKey) prev;
+        }
+    }
+
+    static class lwEnvelope extends lwNode {
+
+        int[] behavior = new int[2];  // pre and post (extrapolation)
+        lwPlugin cfilter;             // linked list of channel filters
+        int index;
+        lwKey key;                    // linked list of keys
+        String name;
+        int ncfilters;
+        lwEnvelope next, prev;
+        int nkeys;
+        int type;
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwEnvelope) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwEnvelope) prev;
+        }
+    }
+
+    /* values that can be enveloped */
+    static class lwEParam {
+
+        int eindex;
+        float val;
+    }
+
+    static class lwVParam {
+
+        int eindex;
+        float[] val = new float[3];
+    }
+
+    /* clips */
+    static class lwClipStill {
+
+        String name;
+    }
+
+    static class lwClipSeq {
+
+        int digits;
+        int end;
+        int flags;
+        int offset;
+        String prefix;              // filename before sequence digits
+        int start;
+        String suffix;              // after digits, e.g. extensions
+    }
+
+    static class lwClipAnim {
+
+        Object data;
+        String name;
+        String server;              // anim loader plug-in
+    }
+
+    static class lwClipXRef {
+
+        lwClip clip;
+        int index;
+        String string;
+    }
+
+    static class lwClipCycle {
+
+        int hi;
+        int lo;
+        String name;
+    }
+
+    static class lwClip extends lwNode {
+
+        lwEParam brightness = new lwEParam();
+        lwEParam contrast = new lwEParam();
+        float duration;
+        float frame_rate;
+
+        lwEParam gamma = new lwEParam();
+        lwEParam hue = new lwEParam();
+        lwPlugin ifilter;             // linked list of image filters
+        int index;
+        int negative;
+        lwClip next, prev;
+        int nifilters;
+        int npfilters;
+        lwPlugin pfilter;             // linked list of pixel filters
+        lwEParam saturation = new lwEParam();
+        Source source = new Source();
+        float start_time;
+        int type;                // ID_STIL, ID_ISEQ, etc.
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwClip) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwClip) prev;
+        }
+
+        static class Source {
+
+            lwClipAnim anim = new lwClipAnim();
+            lwClipCycle cycle = new lwClipCycle();
+            lwClipSeq seq = new lwClipSeq();
+            lwClipStill still = new lwClipStill();
+            lwClipXRef xref = new lwClipXRef();
+        }
+    }
+
+    /* textures */
+    static class lwTMap {
+
+        lwVParam center = new lwVParam();
+        int coord_sys;
+        int fall_type;
+        lwVParam falloff = new lwVParam();
+        String ref_object;
+        lwVParam rotate = new lwVParam();
+        lwVParam size = new lwVParam();
+    }
+
+    static class lwImageMap {
+
+        float aa_strength;
+        int aas_flags;
+        lwEParam amplitude = new lwEParam();
+        int axis;
+        int cindex;
+        int pblend;
+        int projection;
+        lwEParam stck = new lwEParam();
+        String vmap_name;
+        lwEParam wraph = new lwEParam();
+        int wraph_type;
+        lwEParam wrapw = new lwEParam();
+        int wrapw_type;
+    }
+
+    static class lwProcedural {
+
+        int axis;
+        Object data;
+        String name;
+        float[] value = new float[3];
+    }
+
+    static class lwGradKey {
+
+        lwGradKey next, prev;
+        float[] rgba = new float[4];
+        float value;
+    }
+
+    static class lwGradient {
+
+        float end;
+        short[] ikey;                // array of interpolation codes
+        String itemname;
+        lwGradKey[] key;             // array of gradient keys
+        String paramname;
+        int repeat;
+        float start;
+    }
+
+    static class lwTexture extends lwNode {
+
+        short axis;
+        long chan;
+        short enabled;
+        short negative;
+        lwTexture next, prev;
+        short opac_type;
+        lwEParam opacity = new lwEParam();
+        String ord;
+        Param param = new Param();
+        lwTMap tmap = new lwTMap();
+
+        long type;
+        public lwTexture() {
+            NULL = true;
+        }
+
+        @Override
+        public lwNode oSet(lwNode node) {
+            lwTexture tempNode = (lwTexture) node;
+
+            NULL = false;
+
+            this.next = tempNode.next;
+            this.prev = tempNode.prev;
+            this.ord = tempNode.ord;
+            this.type = tempNode.type;
+            this.chan = tempNode.chan;
+            this.opac_type = tempNode.opac_type;
+            this.enabled = tempNode.enabled;
+            this.negative = tempNode.negative;
+            this.axis = tempNode.axis;
+
+            return this;
+        }
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwTexture) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwTexture) prev;
+        }
+
+        static class Param {
+
+            lwGradient grad = new lwGradient();
+            lwImageMap imap = new lwImageMap();
+            lwProcedural proc = new lwProcedural();
+        }
+    }
+
+    /* values that can be textured */
+    static class lwTParam {
+
+        int eindex;
+        lwTexture tex = new lwTexture();                 // linked list of texture layers
+        float val;
+    }
+
+    static class lwCParam {
+
+        int eindex;
+        float[] rgb = new float[3];
+        lwTexture tex = new lwTexture();                 // linked list of texture layers
+    }
+
+    /* surfaces */
+    static class lwGlow {
+
+        short enabled;
+        lwEParam intensity;
+        lwEParam size;
+        short type;
+    }
+
+    static class lwRMap {
+
+        int cindex;
+        int options;
+        float seam_angle;
+        lwTParam val = new lwTParam();
+    }
+
+    static class lwLine {
+
+        short enabled;
+        int flags;
+        lwEParam size;
+    }
+
+    static class lwSurface extends lwNode {
+
+        lwEParam add_trans = new lwEParam();
+        float alpha;
+        int alpha_mode;
+        lwTParam bump = new lwTParam();
+        lwCParam color = new lwCParam();
+        lwEParam color_filter = new lwEParam();
+        lwEParam color_hilite = new lwEParam();
+        lwEParam dif_sharp = new lwEParam();
+        lwTParam diffuse = new lwTParam();
+        lwTParam eta = new lwTParam();
+        lwTParam glossiness = new lwTParam();
+        lwEParam glow = new lwEParam();
+        lwLine line = new lwLine();
+        lwTParam luminosity = new lwTParam();
+        String name;
+        lwSurface next, prev;
+        int nshaders;
+        lwRMap reflection = new lwRMap();
+        lwPlugin shader = new lwPlugin();           // linked list of shaders
+        int sideflags;
+        float smooth;
+        lwTParam specularity = new lwTParam();
+        String srcname;
+        lwTParam translucency = new lwTParam();
+        lwRMap transparency = new lwRMap();
+
+        @Override
+        public lwNode oSet(lwNode node) {
+
+            lwSurface surface = (lwSurface) node;
+
+            this.next = surface.next;
+            this.prev = surface.prev;
+            this.name = surface.name;
+            this.srcname = surface.srcname;
+            this.color = surface.color;
+            this.luminosity = surface.luminosity;
+            this.diffuse = surface.diffuse;
+            this.specularity = surface.specularity;
+            this.glossiness = surface.glossiness;
+            this.reflection = surface.reflection;
+            this.transparency = surface.transparency;
+            this.eta = surface.eta;
+            this.translucency = surface.translucency;
+            this.bump = surface.bump;
+            this.smooth = surface.smooth;
+            this.sideflags = surface.sideflags;
+            this.alpha = surface.alpha;
+            this.alpha_mode = surface.alpha_mode;
+            this.color_hilite = surface.color_hilite;
+            this.color_filter = surface.color_filter;
+            this.add_trans = surface.add_trans;
+            this.dif_sharp = surface.dif_sharp;
+            this.glow = surface.glow;
+            this.line = surface.line;
+            this.shader = surface.shader;
+            this.nshaders = surface.nshaders;
+
+            return this;
+        }
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwSurface) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwSurface) prev;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 5;
+            hash = 41 * hash + Objects.hashCode(this.name);
+            return hash;
+        }
+
+        @Override//TODO:make sure the name is enough for equality.
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final lwSurface other = (lwSurface) obj;
+            return Objects.equals(this.name, other.name);
+        }
+    }
+
+    /* vertex maps */
+    static class lwVMap extends lwNode {
+
+        int dim;
+        String name;
+        lwVMap next, prev;
+        int nverts;
+        // added by duffy
+        int offset;
+        int perpoly;
+        int[] pindex;             // array of polygon indexes
+        long type;
+        float[][] val;
+        int[] vindex;             // array of point indexes
+
+        private void clear() {
+            this.next = null;
+            this.prev = null;
+            this.name = null;
+            this.type = 0;
+            this.dim = 0;
+            this.nverts = 0;
+            this.perpoly = 0;
+            this.vindex = null;
+            this.pindex = null;
+            this.val = null;
+            this.offset = 0;
+        }
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwVMap) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwVMap) prev;
+        }
+    }
+
+    static class lwVMapPt {
+
+        int index;               // vindex or pindex element
+        lwVMap vmap;
+
+        public lwVMapPt() {
+        }
+
+        static lwVMapPt[] generateArray(final int length) {
+            return Stream.
+                    generate(lwVMapPt::new).
+                    limit(length).
+                    toArray(lwVMapPt[]::new);
+        }
+    }
+
+    /* points and polygons */
+    static class lwPoint {
+
+        int npols;               // number of polygons sharing the point
+        int nvmaps;
+        int[] pol;               // array of polygon indexes
+        float[] pos = new float[3];
+        lwVMapPt[] vm;           // array of vmap references
+    }
+
+    static class lwPolVert {
+
+        int index;               // index into the point array
+        float[] norm = new float[3];
+        int nvmaps;
+        lwVMapPt[] vm;           // array of vmap references
+    }
+
+    static class lwPolygon {
+
+        int flags;
+        float[] norm = new float[3];
+        int nverts;
+        int part;                // part index
+        int smoothgrp;           // smoothing group
+        lwSurface surf;
+        long type;
+        private lwPolVert[] v;   // array of vertex records
+        private int vOffset;     // the offset from the start of v to point towards.
+
+        public lwPolVert getV(int index) {
+            return v[vOffset + index];
+        }
+
+        public void setV(lwPolVert[] v, int vOffset) {
+            this.v = v;
+            this.vOffset = vOffset;
+        }
+
+    }
+
+    static class lwPointList {
+
+        int count;
+        int offset;              // only used during reading
+        lwPoint[] pt;            // array of points
+    }
+
+    static class lwPolygonList {
+
+        int count;
+        int offset;              // only used during reading
+        lwPolygon[] pol;         // array of polygons
+        int vcount;              // total number of vertices
+        int voffset;             // only used during reading
+    }
+
+    /* geometry layers */
+    static class lwLayer extends lwNode {
+
+        float[] bbox = new float[6];
+        int flags;
+        int index;
+        String name;
+        lwLayer next, prev;
+        int nvmaps;
+        int parent;
+        float[] pivot = new float[3];
+        lwPointList point = new lwPointList();
+        lwPolygonList polygon = new lwPolygonList();
+        lwVMap vmap;          // linked list of vmaps
+
+        @Override
+        public lwNode getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(lwNode next) {
+            this.next = (lwLayer) next;
+        }
+
+        @Override
+        public lwNode getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(lwNode prev) {
+            this.prev = (lwLayer) prev;
+        }
+    }
+
+    /* tag strings */
+    static class lwTagList {
+
+        int count;
+        int offset;             // only used during reading
+        String[] tag;           // array of strings
+    }
+
+    /* an object */
+    static class lwObject {
+
+        final lwTagList taglist = new lwTagList();
+        lwClip clip;            // linked list of clips
+        lwEnvelope env;         // linked list of envelopes
+        lwLayer layer;          // linked list of layers
+        int nclips;
+        int nenvs;
+        int nlayers;
+        int nsurfs;
+        lwSurface surf;         // linked list of surfaces
+        long[] timeStamp = {0};
+    }
+
+    /*
+     ======================================================================
+
+     Converted from lwobject sample prog from LW 6.5 SDK.
+
+     ======================================================================
+     */
+    static abstract class LW {
+
+        public abstract void run(final Object p);
+    }
+
+    /*
+     ======================================================================
+     lwFreeClip()
+
+     Free memory used by an lwClip.
+     ====================================================================== */
+    @Deprecated
+    public static class lwFreeClip extends LW {
+
+        private static final LW instance = new lwFreeClip();
+
+        private lwFreeClip() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        @Deprecated
+        public void run(Object p) {
+            lwClip clip = (lwClip) p;
+            if (clip != null) {
+//                lwListFree(clip.ifilter, lwFreePlugin.getInstance());
+//                lwListFree(clip.pfilter, lwFreePlugin.getInstance());
+                switch (clip.type) {
+                    case ID_STIL: {
+                        if (clip.source.still.name != null) {
+                            clip.source.still.name = null;
+                        }
+                        break;
+                    }
+                    case ID_ISEQ: {
+                        if (clip.source.seq.suffix != null) {
+                            clip.source.seq.suffix = null;
+                        }
+                        if (clip.source.seq.prefix != null) {
+                            clip.source.seq.prefix = null;
+                        }
+                        break;
+                    }
+                    case ID_ANIM: {
+                        if (clip.source.anim.server != null) {
+                            clip.source.anim.server = null;
+                        }
+                        if (clip.source.anim.name != null) {
+                            clip.source.anim.name = null;
+                        }
+                        break;
+                    }
+                    case ID_XREF: {
+                        if (clip.source.xref.string != null) {
+                            clip.source.xref.string = null;
+                        }
+                        break;
+                    }
+                    case ID_STCC: {
+                        if (clip.source.cycle.name != null) {
+                            clip.source.cycle.name = null;
+                        }
+                        break;
+                    }
+                }
+                clip = null;
+            }
+        }
+    }
+
+    @Deprecated
+    public static class lwFree extends LW {
+
+        private static final LW instance = new lwFree();
+
+        private lwFree() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object p) {
+//        Mem_Free(ptr);
+        }
+    }
+
+    /*
+     ======================================================================
+     lwFreeEnvelope()
+
+     Free the memory used by an lwEnvelope.
+     ====================================================================== */
+    @Deprecated
+    public static class lwFreeEnvelope extends LW {
+
+        private static final LW instance = new lwFreeEnvelope();
+
+        private lwFreeEnvelope() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object p) {
+            lwEnvelope env = (lwEnvelope) p;
+            if (env != null) {
+                if (env.name != null) {
+                    env.name = null;
+                }
+//                lwListFree(env.key, lwFree.getInstance());
+//                lwListFree(env.cfilter, lwFreePlugin.getInstance());
+                env = null;
+            }
+        }
+    }
+
+    public static class compare_keys implements cmp_t<lwKey> {
+
+        @Override
+        public int compare(final lwKey k1, final lwKey k2) {
+            return k1.time > k2.time ? 1 : k1.time < k2.time ? -1 : 0;
+        }
+    }
+
+    /*
+     ======================================================================
+     lwFreeLayer()
+
+     Free memory used by an lwLayer.
+     ====================================================================== */
+    public static class lwFreeLayer extends LW {
+
+        private static final LW instance = new lwFreeLayer();
+
+        private lwFreeLayer() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object p) {
+            lwLayer layer = (lwLayer) p;
+            if (layer != null) {
+                if (layer.name != null) {
+                    layer.name = null;
+                }
+                lwFreePoints(layer.point);
+                lwFreePolygons(layer.polygon);
+//                lwListFree(layer.vmap, lwFreeVMap.getInstance());
+                layer = null;
+            }
+        }
+    }
+
+    /*
+     ======================================================================
+     lwFreePlugin()
+
+     Free the memory used by an lwPlugin.
+     ====================================================================== */
+    public static class lwFreePlugin extends LW {
+
+        private static final LW instance = new lwFreePlugin();
+
+        private lwFreePlugin() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object o) {
+            throw new TODO_Exception();
+//            lwPlugin p = (lwPlugin) o;
+//            if (p != null) {
+//                if (p.ord != null) {
+//                    Mem_Free(p.ord);
+//                }
+//                if (p.name != null) {
+//                    Mem_Free(p.name);
+//                }
+//                if (p.data != null) {
+//                    Mem_Free(p.data);
+//                }
+//                Mem_Free(p);
+//            }
+        }
+    }
+
+    /*
+     ======================================================================
+     lwFreeTexture()
+
+     Free the memory used by an lwTexture.
+     ====================================================================== */
+    public static class lwFreeTexture extends LW {
+
+        private static final LW instance = new lwFreeTexture();
+
+        private lwFreeTexture() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object p) {
+            lwTexture t = (lwTexture) p;
+            if (t != null) {
+                if (t.ord != null) {
+//                    Mem_Free(t.ord);
+                    t.ord = null;
+                }
+                switch ((int) t.type) {
+                    case ID_IMAP:
+                        if (t.param.imap.vmap_name != null) {
+//                            Mem_Free(t.param.imap.vmap_name);
+                            t.param.imap.vmap_name = null;
+                        }
+                        break;
+                    case ID_PROC:
+                        if (t.param.proc.name != null) {
+//                            Mem_Free(t.param.proc.name);
+                            t.param.proc.name = null;
+                        }
+                        if (t.param.proc.data != null) {
+//                            Mem_Free(t.param.proc.data);
+                            t.param.proc.data = null;
+                        }
+                        break;
+                    case ID_GRAD:
+                        if (t.param.grad.key != null) {
+//                            Mem_Free(t.param.grad.key);
+                            t.param.grad.key = null;
+                        }
+                        if (t.param.grad.ikey != null) {
+//                            Mem_Free(t.param.grad.ikey);
+                            t.param.grad.ikey = null;
+                        }
+                        break;
+                }
+                if (t.tmap.ref_object != null) {
+//                    Mem_Free(t.tmap.ref_object);
+                    t.tmap.ref_object = null;
+                }
+                t = null;
+            }
+        }
+    }
+
+    /*
+     ======================================================================
+     lwFreeSurface()
+
+     Free the memory used by an lwSurface.
+     ====================================================================== */
+    public static class lwFreeSurface extends LW {
+
+        private static final LW instance = new lwFreeSurface();
+
+        private lwFreeSurface() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object p) {
+            lwSurface surf = (lwSurface) p;
+            if (surf != null) {
+                if (surf.name != null) {
+                    surf.name = null;
+                }
+                if (surf.srcname != null) {
+                    surf.srcname = null;
+                }
+//
+//                lwListFree(surf.shader, lwFreePlugin.getInstance());
+//
+//                lwListFree(surf.color.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.luminosity.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.diffuse.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.specularity.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.glossiness.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.reflection.val.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.transparency.val.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.eta.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.translucency.tex, lwFreeTexture.getInstance());
+//                lwListFree(surf.bump.tex, lwFreeTexture.getInstance());
+//
+                surf = null;
+            }
+        }
+    }
+
+    /*
+     ======================================================================
+     compare_textures()
+     compare_shaders()
+
+     Callbacks for the lwListInsert() function, which is called to add
+     textures to surface channels and shaders to surfaces.
+     ====================================================================== */
+    public static class compare_textures implements cmp_t<lwTexture> {
+
+        @Override
+        public int compare(final lwTexture a, final lwTexture b) {
+            return a.ord.compareTo(b.ord);
+        }
+    }
+
+    public static class compare_shaders implements cmp_t<lwPlugin> {
+
+        @Override
+        public int compare(final lwPlugin a, final lwPlugin b) {
+            return a.ord.compareTo(b.ord);
+        }
+    }
+
+    /*
+     ======================================================================
+     lwFreeVMap()
+
+     Free memory used by an lwVMap.
+     ====================================================================== */
+    public static class lwFreeVMap extends LW {
+
+        private static final LW instance = new lwFreeVMap();
+
+        private lwFreeVMap() {
+        }
+
+        public static LW getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(Object p) {
+            lwVMap vmap = (lwVMap) p;
+            if (vmap != null) {
+                if (vmap.name != null) {
+                    vmap.name = null;
+                }
+                if (vmap.vindex != null) {
+                    vmap.vindex = null;
+                }
+                if (vmap.pindex != null) {
+                    vmap.pindex = null;
+                }
+                if (vmap.val != null) {
+//                    if (vmap.val[0] != 0f) {
+//                        Mem_Free(vmap.val[0]);
+//                    }
+                    vmap.val = null;
+                }
+                vmap.clear();
+            }
+        }
     }
 }

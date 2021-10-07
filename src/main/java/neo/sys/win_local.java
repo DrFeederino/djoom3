@@ -1,15 +1,13 @@
 package neo.sys;
 
+import neo.framework.CVarSystem.*;
+
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_INIT;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import neo.framework.CVarSystem.idCVar;
+
+import static neo.framework.CVarSystem.*;
 import static neo.sys.sys_public.MAX_CRITICAL_SECTIONS;
 
 /**
@@ -17,13 +15,15 @@ import static neo.sys.sys_public.MAX_CRITICAL_SECTIONS;
  */
 public abstract class win_local {
 
+    public static Win32Vars_t win32 = new Win32Vars_t();
+
     /*
      ===========================================================================
 
      Doom 3 GPL Source Code
-     Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+     Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-     This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+     This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
      Doom 3 Source Code is free software: you can redistribute it and/or modify
      it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ public abstract class win_local {
 //public	PFNWGLDESTROYPBUFFERARBPROC	wglDestroyPbufferARB;
 //public	PFNWGLQUERYPBUFFERARBPROC	wglQueryPbufferARB;
 //
-//// WGL_ARB_render_texture 
+//// WGL_ARB_render_texture
 //public	PFNWGLBINDTEXIMAGEARBPROC		wglBindTexImageARB;
 //public	PFNWGLRELEASETEXIMAGEARBPROC	wglReleaseTexImageARB;
 //public	PFNWGLSETPBUFFERATTRIBARBPROC	wglSetPbufferAttribARB;
@@ -115,55 +115,41 @@ public abstract class win_local {
 //	HINSTANCE		hInstance;
 //
 
-        boolean activeApp;		// changed with WM_ACTIVATE messages
-        boolean mouseReleased;		// when the game has the console down or is doing a long operation
-        boolean movingWindow;		// inhibit mouse grab when dragging the window
-        boolean mouseGrabbed;		// current state of grab and hide
-//
-//	OSVERSIONINFOEX	osversion;
-//
-        int/*cpuid_t*/ cpuid;
-//
-        // when we get a windows message, we store the time off so keyboard processing
-        // can know the exact time of an event (not really needed now that we use async direct input)
-        int sysMsgTime;
-//
-        boolean windowClassRegistered;
-//
-//	WNDPROC			wndproc;
-//
-//	HDC				hDC;							// handle to device context
-//	HGLRC			hGLRC;						// handle to GL rendering context
-//	PIXELFORMATDESCRIPTOR pfd;		
-        int pixelformat;
-//
-//	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library
-//
-        int desktopBitsPixel;
-        int desktopWidth, desktopHeight;
-        //
-        boolean cdsFullscreen;
+        static final idCVar in_mouse = new idCVar("in_mouse", "1", CVAR_SYSTEM | CVAR_BOOL, "enable mouse input");
         //
 //	FILE			*log_fp;
 //
 //	unsigned short	oldHardwareGamma[3][256];
         // desktop gamma is saved here for restoration at exit
 //
-        static final idCVar sys_arch                   = new idCVar("sys_arch", "", CVAR_SYSTEM | CVAR_INIT, "");
-        static final idCVar sys_cpustring              = new idCVar("sys_cpustring", "detect", CVAR_SYSTEM | CVAR_INIT, "");
-        static final idCVar in_mouse                   = new idCVar("in_mouse", "1", CVAR_SYSTEM | CVAR_BOOL, "enable mouse input");
-        static final idCVar win_allowAltTab            = new idCVar("win_allowAltTab", "0", CVAR_SYSTEM | CVAR_BOOL, "allow Alt-Tab when fullscreen");
-        static final idCVar win_notaskkeys             = new idCVar("win_notaskkeys", "0", CVAR_SYSTEM | CVAR_INTEGER, "disable windows task keys");
-        static final idCVar win_username               = new idCVar("win_username", "", CVAR_SYSTEM | CVAR_INIT, "windows user name");
-        static final idCVar win_xpos                   = new idCVar("win_xpos", "3", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "horizontal position of window");            // archived X coordinate of window position
-        static final idCVar win_ypos                   = new idCVar("win_ypos", "22", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "vertical position of window");            // archived Y coordinate of window position
-        static final idCVar win_outputDebugString      = new idCVar("win_outputDebugString", "1", CVAR_SYSTEM | CVAR_BOOL, "");
-        static final idCVar win_outputEditString       = new idCVar("win_outputEditString", "1", CVAR_SYSTEM | CVAR_BOOL, "");
-        static final idCVar win_viewlog                = new idCVar("win_viewlog", "0", CVAR_SYSTEM | CVAR_INTEGER, "");
-        static final idCVar win_timerUpdate            = new idCVar("win_timerUpdate", "0", CVAR_SYSTEM | CVAR_BOOL, "allows the game to be updated while dragging the window");
+        static final idCVar sys_arch = new idCVar("sys_arch", "", CVAR_SYSTEM | CVAR_INIT, "");
+        static final idCVar sys_cpustring = new idCVar("sys_cpustring", "detect", CVAR_SYSTEM | CVAR_INIT, "");
+        static final idCVar win_allowAltTab = new idCVar("win_allowAltTab", "0", CVAR_SYSTEM | CVAR_BOOL, "allow Alt-Tab when fullscreen");
         static final idCVar win_allowMultipleInstances = new idCVar("win_allowMultipleInstances", "0", CVAR_SYSTEM | CVAR_BOOL, "allow multiple instances running concurrently");
+        static final idCVar win_notaskkeys = new idCVar("win_notaskkeys", "0", CVAR_SYSTEM | CVAR_INTEGER, "disable windows task keys");
+        static final idCVar win_outputDebugString = new idCVar("win_outputDebugString", "1", CVAR_SYSTEM | CVAR_BOOL, "");
+        static final idCVar win_outputEditString = new idCVar("win_outputEditString", "1", CVAR_SYSTEM | CVAR_BOOL, "");
+        static final idCVar win_timerUpdate = new idCVar("win_timerUpdate", "0", CVAR_SYSTEM | CVAR_BOOL, "allows the game to be updated while dragging the window");
+        static final idCVar win_username = new idCVar("win_username", "", CVAR_SYSTEM | CVAR_INIT, "windows user name");
+        static final idCVar win_viewlog = new idCVar("win_viewlog", "0", CVAR_SYSTEM | CVAR_INTEGER, "");
+        static final idCVar win_xpos = new idCVar("win_xpos", "3", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "horizontal position of window");            // archived X coordinate of window position
+        static final idCVar win_ypos = new idCVar("win_ypos", "22", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "vertical position of window");            // archived Y coordinate of window position
+        boolean activeApp;        // changed with WM_ACTIVATE messages
+        //
+        boolean cdsFullscreen;
+        //
+//	OSVERSIONINFOEX	osversion;
+//
+        int/*cpuid_t*/ cpuid;
         //
         Lock/*CRITICAL_SECTION*/[] criticalSections = new ReentrantLock[MAX_CRITICAL_SECTIONS];
+        //
+//	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library
+//
+        int desktopBitsPixel;
+        int desktopWidth, desktopHeight;
+        @Deprecated
+        KeyListener/*LPDIRECTINPUTDEVICE8*/   g_pKeyboard;
         //	HANDLE			backgroundDownloadSemaphore;
 //
 //	HINSTANCE		hInstDI;			// direct input
@@ -171,22 +157,32 @@ public abstract class win_local {
 //	LPDIRECTINPUT8			g_pdi;
         @Deprecated
         MouseListener/*LPDIRECTINPUTDEVICE8*/ g_pMouse;
-        @Deprecated
-        KeyListener/*LPDIRECTINPUTDEVICE8*/   g_pKeyboard;
+        boolean mouseGrabbed;        // current state of grab and hide
+        boolean mouseReleased;        // when the game has the console down or is doing a long operation
+        boolean movingWindow;        // inhibit mouse grab when dragging the window
+        //
+//	WNDPROC			wndproc;
+//
+//	HDC				hDC;							// handle to device context
+//	HGLRC			hGLRC;						// handle to GL rendering context
+//	PIXELFORMATDESCRIPTOR pfd;
+        int pixelformat;
         //
 //	HANDLE			renderCommandsEvent;
 //	HANDLE			renderCompletedEvent;
 //	HANDLE			renderActiveEvent;
         Thread/*HANDLE*/ renderThreadHandle;
+        //
+        // when we get a windows message, we store the time off so keyboard processing
+        // can know the exact time of an event (not really needed now that we use async direct input)
+        int sysMsgTime;
         //	unsigned long	renderThreadId;
 //	void			(*glimpRenderThread)( void );
 //	void			*smpData;
         int wglErrors;
+        //
+        boolean windowClassRegistered;
         // SMP acceleration vars
     }
-
-    ;
-
-    public static Win32Vars_t win32 = new Win32Vars_t();
 
 }

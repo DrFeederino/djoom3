@@ -1,10 +1,11 @@
 package neo.idlib.math;
 
-import java.nio.ByteBuffer;
 import neo.TempDump;
 import neo.TempDump.SERiAL;
 import neo.idlib.math.Extrapolate.idExtrapolate;
 import neo.idlib.math.Math_h.idMath;
+
+import java.nio.ByteBuffer;
 
 /**
  *
@@ -20,12 +21,12 @@ public class Interpolate {
      */
     public static class idInterpolate<type> {
 
-        private float startTime;
-        private float duration;
-        private type startValue;
-        private type endValue;
         private float currentTime;
         private type currentValue;
+        private float duration;
+        private type endValue;
+        private float startTime;
+        private type startValue;
         //
         //
 
@@ -74,12 +75,12 @@ public class Interpolate {
                     if (currentValue instanceof Integer) {
                         final int e = (Integer) this.endValue;
                         final int s = (Integer) this.startValue;
-                        currentValue = (type) (Integer) (int) (s + (e - s) * ((float) deltaTime / duration));
+                        currentValue = (type) (Integer) (int) (s + (e - s) * (deltaTime / duration));
                     }
                     if (currentValue instanceof Float) {
                         final float e = (Float) this.endValue;
                         final float s = (Float) this.startValue;
-                        currentValue = (type) (Float) (s + (e - s) * ((float) deltaTime / duration));
+                        currentValue = (type) (Float) (s + (e - s) * (deltaTime / duration));
                     }
                 }
             }
@@ -109,7 +110,7 @@ public class Interpolate {
         public type GetEndValue() {
             return endValue;
         }
-    };
+    }
 
     /*
      ==============================================================================================
@@ -121,13 +122,13 @@ public class Interpolate {
      */
     public static class idInterpolateAccelDecelLinear<type> implements SERiAL {
 
-        private float startTime;
         private float accelTime;
-        private float linearTime;
         private float decelTime;
-        private type startValue;
         private type endValue;
-        private idExtrapolate<type> extrapolate;
+        private final idExtrapolate<type> extrapolate;
+        private float linearTime;
+        private float startTime;
+        private type startValue;
         //
         //
 
@@ -156,14 +157,14 @@ public class Interpolate {
                 this.decelTime = duration - this.accelTime;
             }
             this.linearTime = duration - this.accelTime - this.decelTime;
-            speed = (type) _Multiply(_Minus(endValue, startValue), (1000.0f / (this.linearTime + (this.accelTime + this.decelTime) * 0.5f)));
+            speed = _Multiply(_Minus(endValue, startValue), (1000.0f / (this.linearTime + (this.accelTime + this.decelTime) * 0.5f)));
 
             if (0.0f != this.accelTime) {
-                extrapolate.Init(startTime, this.accelTime, startValue, (type) _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_ACCELLINEAR);
+                extrapolate.Init(startTime, this.accelTime, startValue, _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_ACCELLINEAR);
             } else if (0.0f != this.linearTime) {
-                extrapolate.Init(startTime, this.linearTime, startValue, (type) _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_LINEAR);
+                extrapolate.Init(startTime, this.linearTime, startValue, _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_LINEAR);
             } else {
-                extrapolate.Init(startTime, this.decelTime, startValue, (type) _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_DECELLINEAR);
+                extrapolate.Init(startTime, this.decelTime, startValue, _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_DECELLINEAR);
             }
         }
 
@@ -238,11 +239,11 @@ public class Interpolate {
                 }
             } else if (deltaTime < accelTime + linearTime) {
                 if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_LINEAR) {
-                    extrapolate.Init(startTime + accelTime, linearTime, (type) _Plus(startValue, _Multiply(extrapolate.GetSpeed(), (accelTime * 0.001f * 0.5f))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_LINEAR);
+                    extrapolate.Init(startTime + accelTime, linearTime, _Plus(startValue, _Multiply(extrapolate.GetSpeed(), (accelTime * 0.001f * 0.5f))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_LINEAR);
                 }
             } else {
                 if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_DECELLINEAR) {
-                    extrapolate.Init(startTime + accelTime + linearTime, decelTime, (type) _Minus(endValue, _Multiply(extrapolate.GetSpeed(), (decelTime * 0.001f * 0.5f))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_DECELLINEAR);
+                    extrapolate.Init(startTime + accelTime + linearTime, decelTime, _Minus(endValue, _Multiply(extrapolate.GetSpeed(), (decelTime * 0.001f * 0.5f))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_DECELLINEAR);
                 }
             }
         }
@@ -301,7 +302,7 @@ public class Interpolate {
 
             return (type) Float.valueOf((Float) t1 - (Float) t2);
         }
-    };
+    }
 
     /*
      ==============================================================================================
@@ -313,13 +314,13 @@ public class Interpolate {
      */
     class idInterpolateAccelDecelSine<type> {
 
-        private float startTime;
         private float accelTime;
-        private float linearTime;
         private float decelTime;
-        private type startValue;
         private type endValue;
         private idExtrapolate<type> extrapolate;
+        private float linearTime;
+        private float startTime;
+        private type startValue;
         //
         //
 
@@ -347,14 +348,14 @@ public class Interpolate {
                 this.decelTime = duration - this.accelTime;
             }
             this.linearTime = duration - this.accelTime - this.decelTime;
-            speed = (type) _Multiply(_Minus(endValue, startValue), (1000.0f / (this.linearTime + (this.accelTime + this.decelTime) * idMath.SQRT_1OVER2)));
+            speed = _Multiply(_Minus(endValue, startValue), (1000.0f / (this.linearTime + (this.accelTime + this.decelTime) * idMath.SQRT_1OVER2)));
 
             if (0 != this.accelTime) {
-                extrapolate.Init(startTime, this.accelTime, startValue, (type) _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_ACCELSINE);
+                extrapolate.Init(startTime, this.accelTime, startValue, _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_ACCELSINE);
             } else if (0 != this.linearTime) {
-                extrapolate.Init(startTime, this.linearTime, startValue, (type) _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_LINEAR);
+                extrapolate.Init(startTime, this.linearTime, startValue, _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_LINEAR);
             } else {
-                extrapolate.Init(startTime, this.decelTime, startValue, (type) _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_DECELSINE);
+                extrapolate.Init(startTime, this.decelTime, startValue, _Minus(startValue, startValue), speed, Extrapolate.EXTRAPOLATION_DECELSINE);
             }
         }
 
@@ -429,12 +430,12 @@ public class Interpolate {
                 }
             } else if (deltaTime < accelTime + linearTime) {
                 if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_LINEAR) {
-                    extrapolate.Init(startTime + accelTime, linearTime, (type) _Plus(startValue, _Plus(extrapolate.GetSpeed(), (accelTime * 0.001f * idMath.SQRT_1OVER2))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_LINEAR);
+                    extrapolate.Init(startTime + accelTime, linearTime, _Plus(startValue, _Plus(extrapolate.GetSpeed(), (accelTime * 0.001f * idMath.SQRT_1OVER2))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_LINEAR);
 
                 }
             } else {
                 if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_DECELSINE) {
-                    extrapolate.Init(startTime + accelTime + linearTime, decelTime, (type) _Plus(endValue, _Minus(extrapolate.GetSpeed(), (decelTime * 0.001f * idMath.SQRT_1OVER2))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_DECELSINE);
+                    extrapolate.Init(startTime + accelTime + linearTime, decelTime, _Plus(endValue, _Minus(extrapolate.GetSpeed(), (decelTime * 0.001f * idMath.SQRT_1OVER2))), extrapolate.GetBaseSpeed(), extrapolate.GetSpeed(), Extrapolate.EXTRAPOLATION_DECELSINE);
                 }
             }
         }
@@ -478,5 +479,6 @@ public class Interpolate {
 
             return (type) Float.valueOf((Float) t1 - (Float) t2);
         }
-    };
+    }
+
 }

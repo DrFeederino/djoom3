@@ -1,20 +1,16 @@
 package neo.idlib.Text;
 
-import java.util.Arrays;
 import neo.idlib.Lib;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWIPADDRESSES;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import static neo.idlib.Text.Lexer.LEXFL_NOWARNINGS;
-import static neo.idlib.Text.Lexer.LEXFL_ONLYSTRINGS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Token.TT_NUMBER;
 import neo.idlib.Text.Token.idToken;
+
+import java.util.Arrays;
+
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Token.TT_NUMBER;
 import static neo.idlib.math.Lcp.clam;
 import static neo.idlib.math.Lcp.unClam;
 
@@ -35,9 +31,9 @@ public class CmdArgs {
         private static final int MAX_COMMAND_ARGS = 64;
         private static final int MAX_COMMAND_STRING = 2 * Lib.MAX_STRING_CHARS;
         //
-        private int argc;							// number of arguments
-        private char[] argv = new char[MAX_COMMAND_ARGS];			// points into tokenized
-        private char[] tokenized = new char[MAX_COMMAND_STRING];		// will have 0 bytes inserted
+        private int argc;                            // number of arguments
+        private final char[] argv = new char[MAX_COMMAND_ARGS];            // points into tokenized
+        private final char[] tokenized = new char[MAX_COMMAND_STRING];        // will have 0 bytes inserted
         //
         //
 
@@ -150,18 +146,18 @@ public class CmdArgs {
             }
 
             lex.LoadMemory(text, text.length(), "idCmdSystemLocal::TokenizeString");
-            lex.SetFlags((int) (LEXFL_NOERRORS
+            lex.SetFlags(LEXFL_NOERRORS
                     | LEXFL_NOWARNINGS
                     | LEXFL_NOSTRINGCONCAT
                     | LEXFL_ALLOWPATHNAMES
                     | LEXFL_NOSTRINGESCAPECHARS
-                    | LEXFL_ALLOWIPADDRESSES | (keepAsStrings ? LEXFL_ONLYSTRINGS : 0)));
+                    | LEXFL_ALLOWIPADDRESSES | (keepAsStrings ? LEXFL_ONLYSTRINGS : 0));
 
             totalLen = 0;
 
             while (true) {
                 if (argc == MAX_COMMAND_ARGS) {
-                    return;			// this is usually something malicious
+                    return;            // this is usually something malicious
                 }
 
                 if (!lex.ReadToken(token)) {
@@ -190,7 +186,7 @@ public class CmdArgs {
                 len = token.Length();
 
                 if (totalLen + len + 1 > tokenized.length) {
-                    return;			// this is usually something malicious
+                    return;            // this is usually something malicious
                 }
 
                 // regular token
@@ -228,5 +224,6 @@ public class CmdArgs {
             _argc[0] = argc;
             return argv;
         }
-    };
+    }
+
 }

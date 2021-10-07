@@ -1,7 +1,5 @@
 package neo.Game.GameSys;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import neo.CM.CollisionModel.contactInfo_t;
 import neo.CM.CollisionModel.contactType_t;
 import neo.CM.CollisionModel.trace_s;
@@ -10,28 +8,17 @@ import neo.Game.Entity.idEntity;
 import neo.Game.Game.refSound_t;
 import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.Class.idTypeInfo;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameSoundWorld;
+import neo.Game.Game_local;
 import neo.Game.Physics.Clip.idClipModel;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderLight_s;
 import neo.Renderer.RenderWorld.renderView_s;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.TempDump.SERiAL;
 import neo.TempDump.TODO_Exception;
-import static neo.TempDump.atobb;
-import static neo.framework.BuildVersion.BUILD_NUMBER;
 import neo.framework.DeclFX.idDeclFX;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_FX;
-import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.framework.File_h.idFile;
@@ -39,24 +26,30 @@ import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.LittleRevBytes;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.geometry.TraceModel.MAX_TRACEMODEL_EDGES;
-import static neo.idlib.geometry.TraceModel.MAX_TRACEMODEL_POLYEDGES;
-import static neo.idlib.geometry.TraceModel.MAX_TRACEMODEL_POLYS;
-import static neo.idlib.geometry.TraceModel.MAX_TRACEMODEL_VERTS;
-import neo.idlib.geometry.TraceModel.idTraceModel;
-import neo.idlib.geometry.TraceModel.traceModel_t;
+import neo.idlib.geometry.TraceModel.*;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Vector.idVec2;
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
-import neo.idlib.math.Vector.idVec5;
-import neo.idlib.math.Vector.idVec6;
+import neo.idlib.math.Vector.*;
 import neo.ui.UserInterface.idUserInterface;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameSoundWorld;
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
+import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
+import static neo.TempDump.atobb;
+import static neo.framework.BuildVersion.BUILD_NUMBER;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.*;
+import static neo.idlib.Lib.LittleRevBytes;
+import static neo.idlib.geometry.TraceModel.*;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -94,9 +87,9 @@ public class SaveGame {
 
     public static class idSaveGame {
 
-        private idFile          file;
+        private final idFile file;
         //
-        private idList<idClass> objects;
+        private final idList<idClass> objects;
         //
         //
 
@@ -157,7 +150,7 @@ public class SaveGame {
         }
 
         public void WriteJoint(final int/*jointHandle_t*/ value) {
-            file.WriteInt((int) value);
+            file.WriteInt(value);
         }
 
         public void WriteShort(final short value) {
@@ -349,7 +342,7 @@ public class SaveGame {
                 WriteString(name);
                 WriteBool(unique);
                 if (ui.WriteToSaveGame(file) == false) {
-                    gameLocal.Error("idSaveGame::WriteUserInterface: ui failed to write properly\n");
+                    Game_local.idGameLocal.Error("idSaveGame::WriteUserInterface: ui failed to write properly\n");
                 }
             }
         }
@@ -384,11 +377,11 @@ public class SaveGame {
             }
 
             for (i = 0; i < MAX_ENTITY_SHADER_PARMS; i++) {
-                WriteFloat(renderEntity.shaderParms[ i]);
+                WriteFloat(renderEntity.shaderParms[i]);
             }
 
             for (i = 0; i < MAX_RENDERENTITY_GUI; i++) {
-                WriteUserInterface(renderEntity.gui[ i], renderEntity.gui[ i] != null ? renderEntity.gui[ i].IsUniqued() : false);
+                WriteUserInterface(renderEntity.gui[i], renderEntity.gui[i] != null && renderEntity.gui[i].IsUniqued());
             }
 
             WriteFloat(renderEntity.modelDepthHack);
@@ -430,7 +423,7 @@ public class SaveGame {
             WriteMaterial(renderLight.shader);
 
             for (i = 0; i < MAX_ENTITY_SHADER_PARMS; i++) {
-                WriteFloat(renderLight.shaderParms[ i]);
+                WriteFloat(renderLight.shaderParms[i]);
             }
 
             if (renderLight.referenceSound != null) {
@@ -479,7 +472,7 @@ public class SaveGame {
             WriteInt(view.time);
 
             for (i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++) {
-                WriteFloat(view.shaderParms[ i]);
+                WriteFloat(view.shaderParms[i]);
             }
         }
 
@@ -587,7 +580,7 @@ public class SaveGame {
         private void CallSave_r(final java.lang.Class/*idTypeInfo*/ cls, final idClass obj) {
             throw new TODO_Exception();
         }
-    };
+    }
 
     /* **********************************************************************
 
@@ -598,7 +591,7 @@ public class SaveGame {
 
         private int buildNumber;
         //
-        private idFile file;
+        private final idFile file;
         //
         private idList<idClass> objects;
         //
@@ -620,7 +613,7 @@ public class SaveGame {
             // create all the objects
             objects.SetNum(num[0] + 1);
 //            memset(objects.Ptr(), 0, sizeof(objects[ 0]) * objects.Num());
-            Arrays.fill(objects.Ptr(), 0, objects.Num(), 0);
+            Arrays.fill(objects.getList(), 0, objects.Num(), 0);
 
             for (i = 1; i < objects.Num(); i++) {
                 ReadString(className);
@@ -1215,5 +1208,6 @@ public class SaveGame {
             throw new TODO_Exception();
         }
 
-    };
+    }
+
 }

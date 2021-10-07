@@ -1,109 +1,94 @@
 package neo.ui;
 
-import static neo.Renderer.Material.MF_DEFAULTED;
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.KeyInput.K_CTRL;
-import static neo.framework.KeyInput.K_DOWNARROW;
-import static neo.framework.KeyInput.K_ENTER;
-import static neo.framework.KeyInput.K_KP_ENTER;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.KeyInput.K_MOUSE2;
-import static neo.framework.KeyInput.K_MWHEELDOWN;
-import static neo.framework.KeyInput.K_MWHEELUP;
-import static neo.framework.KeyInput.K_PGDN;
-import static neo.framework.KeyInput.K_PGUP;
-import static neo.framework.KeyInput.K_UPARROW;
-import neo.framework.KeyInput.idKeyInput;
-import static neo.idlib.Lib.idLib.sys;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
+import neo.framework.KeyInput.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
-import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_CENTER;
-import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_LEFT;
-import static neo.ui.DeviceContext.idDeviceContext.ALIGN.ALIGN_RIGHT;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.SliderWindow.idSliderWindow;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.MAX_LIST_ITEMS;
-import static neo.ui.Window.WIN_CANFOCUS;
-import static neo.ui.Window.WIN_FOCUS;
-import neo.ui.Window.idWindow;
-import static neo.ui.Window.idWindow.ON.ON_ENTER;
+import neo.ui.Window.*;
 import neo.ui.Winvar.idWinVar;
+
+import static neo.Renderer.Material.MF_DEFAULTED;
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.etoi;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.KeyInput.*;
+import static neo.idlib.Lib.idLib.sys;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.ui.DeviceContext.idDeviceContext.ALIGN.*;
+import static neo.ui.Window.*;
+import static neo.ui.Window.idWindow.ON.ON_ENTER;
 
 /**
  *
  */
 public class ListWindow {
 
-    // Number of pixels above the text that the rect starts
-    static final int pixelOffset = 3;
-//    
-    // number of pixels between columns
-    static final int tabBorder = 4;
-//    
-    // Time in milliseconds between clicks to register as a double-click
-    static final int doubleClickSpeed = 300;
-//    
+    public static final int TAB_TYPE_ICON = 1;
+    //
     // enum {
     public static final int TAB_TYPE_TEXT = 0;
-    public static final int TAB_TYPE_ICON = 1;
+    //
+    // Time in milliseconds between clicks to register as a double-click
+    static final int doubleClickSpeed = 300;
+    // Number of pixels above the text that the rect starts
+    static final int pixelOffset = 3;
+    //
+    // number of pixels between columns
+    static final int tabBorder = 4;
 // };
 
     public static class idTabRect {
 
-        int x;
-        int w;
         int align;
-        int valign;
-        int type;
         idVec2 iconSize = new idVec2();
         float iconVOffset;
-    };
+        int type;
+        int valign;
+        int w;
+        int x;
+    }
 
     public static class idListWindow extends idWindow {
 
-        private idList<idTabRect> tabInfo = new idList<>();
-        private int top;
-        private float sizeBias;
-        private boolean horizontal;
-        private idStr tabStopStr = new idStr();
-        private idStr tabAlignStr = new idStr();
-        private idStr tabVAlignStr = new idStr();
-        private idStr tabTypeStr = new idStr();
-        private idStr tabIconSizeStr = new idStr();
-        private idStr tabIconVOffsetStr = new idStr();
-        private idHashTable< idMaterial> iconMaterials = new idHashTable<>();
-        private boolean multipleSel;
-        //
-        private idStrList listItems = new idStrList();
-        private idSliderWindow scroller;
-        private idList<Integer> currentSel = new idList<>();
-        private idStr listName = new idStr();
         //
         private int clickTime;
+        private final idList<Integer> currentSel = new idList<>();
+        private boolean horizontal;
+        private final idHashTable<idMaterial> iconMaterials = new idHashTable<>();
+        //
+        private final idStrList listItems = new idStrList();
+        private final idStr listName = new idStr();
+        private boolean multipleSel;
+        private idSliderWindow scroller;
+        private float sizeBias;
+        private final idStr tabAlignStr = new idStr();
+        private final idStr tabIconSizeStr = new idStr();
+        private final idStr tabIconVOffsetStr = new idStr();
+        private final idList<idTabRect> tabInfo = new idList<>();
+        private final idStr tabStopStr = new idStr();
+        private final idStr tabTypeStr = new idStr();
+        private final idStr tabVAlignStr = new idStr();
+        private int top;
+        private final idStr typed = new idStr();
         //
         private int typedTime;
-        private idStr typed = new idStr();
         //
         //
 
@@ -329,7 +314,7 @@ public class ListWindow {
                     idVec2 size = new idVec2();
                     size.x = Integer.parseInt(tok.toString());
 
-                    src.ReadToken(tok);	//","
+                    src.ReadToken(tok);    //","
                     src.ReadToken(tok);
 
                     size.y = Integer.parseInt(tok.toString());
@@ -614,7 +599,7 @@ public class ListWindow {
 
                 ParseString(src, matName);
                 mat = declManager.FindMaterial(matName);
-                mat.SetImageClassifications(1);	// just for resource tracking
+                mat.SetImageClassifications(1);    // just for resource tracking
                 if (mat != null && !mat.TestMaterialFlag(MF_DEFAULTED)) {
                     mat.SetSort(SS_GUI);
                 }
@@ -700,5 +685,6 @@ public class ListWindow {
                 currentSel.RemoveIndex(cur);
             }
         }
-    };
+    }
+
 }

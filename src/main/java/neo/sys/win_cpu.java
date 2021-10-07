@@ -1,51 +1,38 @@
 package neo.sys;
 
+import neo.TempDump.TODO_Exception;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static neo.TempDump.NOT;
-import neo.TempDump.TODO_Exception;
 
+import static neo.TempDump.NOT;
 import static neo.TempDump.atoi;
 import static neo.framework.BuildDefines._WIN32;
-import static neo.sys.sys_public.CPUID_3DNOW;
-import static neo.sys.sys_public.CPUID_AMD;
-import static neo.sys.sys_public.CPUID_CMOV;
-import static neo.sys.sys_public.CPUID_DAZ;
-import static neo.sys.sys_public.CPUID_FTZ;
-import static neo.sys.sys_public.CPUID_HTT;
-import static neo.sys.sys_public.CPUID_INTEL;
-import static neo.sys.sys_public.CPUID_MMX;
-import static neo.sys.sys_public.CPUID_SSE;
-import static neo.sys.sys_public.CPUID_SSE2;
-import static neo.sys.sys_public.CPUID_SSE3;
-import static neo.sys.sys_public.CPUID_UNSUPPORTED;
+import static neo.sys.sys_public.*;
 
 /**
  *
  */
 public class win_cpu {
 
+    static final int HT_CANNOT_DETECT = 4;
+    static final int HT_DISABLED = 2;
+    static final int HT_ENABLED = 1;
+    static final int HT_NOT_CAPABLE = 0;
+    static final int HT_SUPPORTED_NOT_ENABLED = 3;
+    //                                                  // processors per physical processor when execute cpuid with 
+    //                                                  // eax set to 1
+    static final int INITIAL_APIC_ID_BITS = 0xFF000000; // EBX[31:24] Bits 24-31 (8 bits) return the 8-bit unique
+    //                                                  // initial APIC ID for the processor this code is running on.
+    //                                                  // Default value = 0xff if HT is not supported
+    static final int NUM_LOGICAL_BITS = 0x00FF0000;     // EBX[23:16] Bit 16-23 in ebx contains the number of logical
     static final int _REG_EAX = 0;
     static final int _REG_EBX = 1;
     static final int _REG_ECX = 2;
     static final int _REG_EDX = 3;
-
-    static final int NUM_LOGICAL_BITS = 0x00FF0000;     // EBX[23:16] Bit 16-23 in ebx contains the number of logical
-    //                                                  // processors per physical processor when execute cpuid with 
-    //                                                  // eax set to 1
-
-    static final int INITIAL_APIC_ID_BITS = 0xFF000000; // EBX[31:24] Bits 24-31 (8 bits) return the 8-bit unique 
-    //                                                  // initial APIC ID for the processor this code is running on.
-    //                                                  // Default value = 0xff if HT is not supported
-
-    static final int HT_NOT_CAPABLE           = 0;
-    static final int HT_ENABLED               = 1;
-    static final int HT_DISABLED              = 2;
-    static final int HT_SUPPORTED_NOT_ENABLED = 3;
-    static final int HT_CANNOT_DETECT         = 4;
 
 
     /*
@@ -55,6 +42,56 @@ public class win_cpu {
 
      ==============================================================
      */
+    static final String[] precisionControlField = {
+            "Single Precision (24-bits)",
+            "Reserved",
+            "Double Precision (53-bits)",
+            "Double Extended Precision (64-bits)"
+    };
+    static final String[] roundingControlField = {
+            "Round to nearest",
+            "Round down",
+            "Round up",
+            "Round toward zero"
+    };
+    static final bitFlag_s[] statusWordFlags = {
+            new bitFlag_s("Invalid operation", 0),
+            new bitFlag_s("Denormalized operand", 1),
+            new bitFlag_s("Divide-by-zero", 2),
+            new bitFlag_s("Numeric overflow", 3),
+            new bitFlag_s("Numeric underflow", 4),
+            new bitFlag_s("Inexact result (precision)", 5),
+            new bitFlag_s("Stack fault", 6),
+            new bitFlag_s("Error summary status", 7),
+            new bitFlag_s("FPU busy", 15),
+            new bitFlag_s("", 0)
+    };
+
+
+    /*
+     ==============================================================
+
+     CPU
+
+     ==============================================================
+     */
+    static bitFlag_s[] controlWordFlags = {
+            new bitFlag_s("Invalid operation", 0),
+            new bitFlag_s("Denormalized operand", 1),
+            new bitFlag_s("Divide-by-zero", 2),
+            new bitFlag_s("Numeric overflow", 3),
+            new bitFlag_s("Numeric underflow", 4),
+            new bitFlag_s("Inexact result (precision)", 5),
+            new bitFlag_s("Infinity control", 12),
+            new bitFlag_s("", 0)
+    };
+    static char[] fpuString = new char[2048];
+    /*
+     ================
+     Sys_ClockTicksPerSecond
+     ================
+     */
+    private static double ticks = 0;//TODO:make final.
 
     /*
      ================
@@ -89,13 +126,6 @@ public class win_cpu {
 //#endif
     }
 
-    /*
-     ================
-     Sys_ClockTicksPerSecond
-     ================
-     */
-    private static double ticks = 0;//TODO:make final.
-
     public static double Sys_ClockTicksPerSecond() {
 
 //#if 0
@@ -123,15 +153,6 @@ public class win_cpu {
         return ticks;
     }
 
-
-    /*
-     ==============================================================
-
-     CPU
-
-     ==============================================================
-     */
-
     /*
      ================
      HasCPUID
@@ -147,7 +168,7 @@ public class win_cpu {
         }
 
         throw new TODO_Exception();
-//	__asm 
+//	__asm
 //	{
 //		pushfd						// save eflags
 //		pop		eax
@@ -202,7 +223,6 @@ public class win_cpu {
 //	regs[_REG_ECX] = regECX;
 //	regs[_REG_EDX] = regEDX;
     }
-
 
     /*
      ================
@@ -429,7 +449,7 @@ public class win_cpu {
 //
 //	// Number of physical processors in a non-Intel system
 //	// or in a 32-bit Intel system with Hyper-Threading technology disabled
-//	physicalNum = info.dwNumberOfProcessors;  
+//	physicalNum = info.dwNumberOfProcessors;
 //
 //	unsigned char HT_Enabled = 0;
 //
@@ -441,7 +461,7 @@ public class win_cpu {
 //		DWORD  dwSystemAffinity;
 //		DWORD  dwAffinityMask;
 //
-//		// Calculate the appropriate  shifts and mask based on the 
+//		// Calculate the appropriate  shifts and mask based on the
 //		// number of logical processors.
 //
 //		unsigned char i = 1, PHY_ID_MASK  = 0xFF, PHY_ID_SHIFT = 0;
@@ -451,7 +471,7 @@ public class win_cpu {
 // 			PHY_ID_MASK  <<= 1;
 //			PHY_ID_SHIFT++;
 //		}
-//		
+//
 //		hCurrentProcessHandle = GetCurrentProcess();
 //		GetProcessAffinityMask( hCurrentProcessHandle, &dwProcessAffinity, &dwSystemAffinity );
 //
@@ -483,10 +503,10 @@ public class win_cpu {
 //			}
 //			dwAffinityMask = dwAffinityMask << 1;
 //		}
-//	        
+//
 //		// Reset the processor affinity
 //		SetProcessAffinityMask( hCurrentProcessHandle, dwProcessAffinity );
-//	    
+//
 //		if ( logicalNum == 1 ) {  // Normal P4 : HT is disabled in hardware
 //			statusFlag = HT_DISABLED;
 //		} else {
@@ -500,7 +520,7 @@ public class win_cpu {
 //		}
 //	}
 //	return statusFlag;
-    }
+    }    static byte[] fpuState = new byte[128], statePtr = fpuState;
 
     /*
      ================
@@ -630,63 +650,6 @@ public class win_cpu {
 
         return flags;
     }
-
-
-    /*
-     ===============================================================================
-
-     FPU
-
-     ===============================================================================
-     */
-    static class bitFlag_s {
-
-        String name;
-        int bit;
-
-        public bitFlag_s(String name, int bit) {
-            this.name = name;
-            this.bit = bit;
-        }
-
-    };
-
-    static byte[] fpuState = new byte[128], statePtr = fpuState;
-    static char[] fpuString = new char[2048];
-    static bitFlag_s[] controlWordFlags = {
-        new bitFlag_s("Invalid operation", 0),
-        new bitFlag_s("Denormalized operand", 1),
-        new bitFlag_s("Divide-by-zero", 2),
-        new bitFlag_s("Numeric overflow", 3),
-        new bitFlag_s("Numeric underflow", 4),
-        new bitFlag_s("Inexact result (precision)", 5),
-        new bitFlag_s("Infinity control", 12),
-        new bitFlag_s("", 0)
-    };
-    static final String[] precisionControlField = {
-        "Single Precision (24-bits)",
-        "Reserved",
-        "Double Precision (53-bits)",
-        "Double Extended Precision (64-bits)"
-    };
-    static final String[] roundingControlField = {
-        "Round to nearest",
-        "Round down",
-        "Round up",
-        "Round toward zero"
-    };
-    static final bitFlag_s[] statusWordFlags = {
-        new bitFlag_s("Invalid operation", 0),
-        new bitFlag_s("Denormalized operand", 1),
-        new bitFlag_s("Divide-by-zero", 2),
-        new bitFlag_s("Numeric overflow", 3),
-        new bitFlag_s("Numeric underflow", 4),
-        new bitFlag_s("Inexact result (precision)", 5),
-        new bitFlag_s("Stack fault", 6),
-        new bitFlag_s("Error summary status", 7),
-        new bitFlag_s("FPU busy", 15),
-        new bitFlag_s("", 0)
-    };
 
     /*
      ===============
@@ -1020,5 +983,26 @@ public class win_cpu {
 
         return result;
     }
+
+    /*
+     ===============================================================================
+
+     FPU
+
+     ===============================================================================
+     */
+    static class bitFlag_s {
+
+        int bit;
+        String name;
+
+        public bitFlag_s(String name, int bit) {
+            this.name = name;
+            this.bit = bit;
+        }
+
+    }
+
+
 
 }

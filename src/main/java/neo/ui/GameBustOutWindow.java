@@ -1,78 +1,83 @@
 package neo.ui;
 
-import java.nio.ByteBuffer;
-import static neo.Renderer.Image_files.R_LoadImage;
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.File_h.idFile;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.Session.session;
-import static neo.idlib.Lib.colorWhite;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
-import neo.ui.GameBustOutWindow.BOBrick;
-import neo.ui.GameBustOutWindow.BOEntity;
-import static neo.ui.GameBustOutWindow.collideDir_t.COLLIDE_DOWN;
-import static neo.ui.GameBustOutWindow.collideDir_t.COLLIDE_LEFT;
-import static neo.ui.GameBustOutWindow.collideDir_t.COLLIDE_NONE;
-import static neo.ui.GameBustOutWindow.collideDir_t.COLLIDE_RIGHT;
-import static neo.ui.GameBustOutWindow.collideDir_t.COLLIDE_UP;
-import static neo.ui.GameBustOutWindow.powerupType_t.POWERUP_BIGPADDLE;
-import static neo.ui.GameBustOutWindow.powerupType_t.POWERUP_MULTIBALL;
-import static neo.ui.GameBustOutWindow.powerupType_t.POWERUP_NONE;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
 import neo.ui.Window.idWindow;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinVar;
 
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.Image_files.R_LoadImage;
+import static neo.Renderer.Material.SS_GUI;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.KeyInput.K_MOUSE1;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.colorWhite;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.DEG2RAD;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.ui.GameBustOutWindow.collideDir_t.*;
+import static neo.ui.GameBustOutWindow.powerupType_t.*;
+
 /**
  *
  */
 public class GameBustOutWindow {
 
+    public static final float BALL_MAXSPEED = 450.f;
     public static final float BALL_RADIUS = 12.f;
     public static final float BALL_SPEED = 250.f;
-    public static final float BALL_MAXSPEED = 450.f;
+    //
+    public static final int BOARD_ROWS = 12;
 //
+    //
     public static final int S_UNIQUE_CHANNEL = 6;
-//
+
+    public enum collideDir_t {
+
+        COLLIDE_NONE,// = 0,
+        COLLIDE_DOWN,
+        COLLIDE_UP,
+        COLLIDE_LEFT,
+        COLLIDE_RIGHT
+    }
 
     public enum powerupType_t {
 
         POWERUP_NONE,//= 0,
         POWERUP_BIGPADDLE,
         POWERUP_MULTIBALL
-    };
+    }
 
     static class BOEntity {
 
-        public boolean visible;
-//
-        public idStr materialName;
-        public idMaterial material;
-        public float width, height;
         public idVec4 color;
-        public idVec2 position;
-        public idVec2 velocity;
-//
-        public powerupType_t powerup;
-//
-        public boolean removed;
         public boolean fadeOut;
-//
+        //
         public idGameBustOutWindow game;
+        public idMaterial material;
+        //
+        public idStr materialName;
+        public idVec2 position;
+        //
+        public powerupType_t powerup;
+        //
+        public boolean removed;
+        public idVec2 velocity;
+        public boolean visible;
+        public float width, height;
         //
 
         public BOEntity(idGameBustOutWindow _game) {
@@ -175,19 +180,10 @@ public class GameBustOutWindow {
 
         public void Draw(idDeviceContext dc) {
             if (visible) {
-                dc.DrawMaterialRotated(position.x, position.y, width, height, material, color, 1.0f, 1.0f, (float) DEG2RAD(0.f));
+                dc.DrawMaterialRotated(position.x, position.y, width, height, material, color, 1.0f, 1.0f, DEG2RAD(0.f));
             }
         }
-    };
-
-    public enum collideDir_t {
-
-        COLLIDE_NONE,// = 0,
-        COLLIDE_DOWN,
-        COLLIDE_UP,
-        COLLIDE_LEFT,
-        COLLIDE_RIGHT
-    };
+    }
 
     /*
      *****************************************************************************
@@ -196,16 +192,16 @@ public class GameBustOutWindow {
      */
     static class BOBrick {
 
+        //
+        public BOEntity ent;
+        public float height;
+        //
+        public boolean isBroken;
+        public powerupType_t powerup;
+        public float width;
         public float x;
         public float y;
-        public float width;
-        public float height;
-        public powerupType_t powerup;
-//        
-        public boolean isBroken;
-//        
-        public BOEntity ent;
-//        
+//
 
         public BOBrick() {
             ent = null;
@@ -388,9 +384,7 @@ public class GameBustOutWindow {
 
             return result;
         }
-    };
-//    
-    public static final int BOARD_ROWS = 12;
+    }
 //    
 
     /*
@@ -400,41 +394,45 @@ public class GameBustOutWindow {
      */
     public static class idGameBustOutWindow extends idWindow {
 
+        private static int bounceChannel = 1;
+        //
+        public idList<BOEntity> entities;
+        private boolean ballHitCeiling;
+        //
+        private float ballSpeed;
+        //
+        private idList<BOEntity> balls;
+        private int ballsInPlay;
+        private int ballsRemaining;
+        //
+        private int bigPaddleTime;
+        private final idList<BOBrick>[] board = new idList[BOARD_ROWS];
+        private boolean boardDataLoaded;
+        private int currentLevel;
+        private boolean gameOver;
+        private int gameScore;
         private idWinBool gamerunning;
-        private idWinBool onFire;
+        private byte[] levelBoardData;
+        private int nextBallScore;
+        //
+        private int numBricks;
+        //
+        private int numLevels;
         private idWinBool onContinue;
+        private idWinBool onFire;
         private idWinBool onNewGame;
         private idWinBool onNewLevel;
         //
-        private float timeSlice;
-        private boolean gameOver;
-        //
-        private int numLevels;
-        private byte[] levelBoardData;
-        private boolean boardDataLoaded;
-        //
-        private int numBricks;
-        private int currentLevel;
-        //
-        private boolean updateScore;
-        private int gameScore;
-        private int nextBallScore;
-        //
-        private int bigPaddleTime;
+        private BOBrick paddle;
         private float paddleVelocity;
-        //
-        private float ballSpeed;
-        private int ballsRemaining;
-        private int ballsInPlay;
-        private boolean ballHitCeiling;
-        //
-        private idList<BOEntity> balls;
         private idList<BOEntity> powerUps;
         //
-        private BOBrick paddle;
-        private idList<BOBrick>[] board = new idList[BOARD_ROWS];
         //
         //
+        private float timeSlice;
+        //
+        private boolean updateScore;
+//	// ~idGameBustOutWindow();
 
         public idGameBustOutWindow(idUserInterfaceLocal gui) {
             super(gui);
@@ -448,7 +446,6 @@ public class GameBustOutWindow {
             this.gui = gui;
             CommonInit();
         }
-//	// ~idGameBustOutWindow();
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -651,6 +648,7 @@ public class GameBustOutWindow {
         public String Activate(boolean activate) {
             return "";
         }
+//        
 
         @Override
         public idWinVar GetWinVarByName(final String _name, boolean winLookup /*= false*/, drawWin_t[] owner /*= NULL*/) {
@@ -674,9 +672,6 @@ public class GameBustOutWindow {
 
             return super.GetWinVarByName(_name, winLookup, owner);
         }
-//        
-        public idList<BOEntity> entities;
-//        
 
         private void CommonInit() {
             BOEntity ent;
@@ -995,7 +990,6 @@ public class GameBustOutWindow {
 
             paddleVelocity = (paddle.x - oldPos);
         }
-        private static int bounceChannel = 1;
 
         private void UpdateBall() {
             int ballnum, i, j;
@@ -1264,5 +1258,6 @@ public class GameBustOutWindow {
 
             return super.ParseInternalVar(_name, src);
         }
-    };
+    }
+
 }

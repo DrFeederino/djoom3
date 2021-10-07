@@ -1,57 +1,96 @@
 package neo.sys;
 
+import neo.TempDump.TODO_Exception;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.idCmdSystem;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Str.idStr;
+import neo.sys.sys_public.idSys;
+import neo.sys.sys_public.sysEvent_s;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import neo.TempDump.TODO_Exception;
+
 import static neo.TempDump.btoi;
 import static neo.framework.BuildDefines._WIN32;
 import static neo.framework.BuildDefines.__linux__;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
-import neo.framework.CmdSystem.idCmdSystem;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.KeyInput.K_MOUSE1;
-import neo.idlib.Lib.idException;
-import neo.idlib.Text.Str.idStr;
 import static neo.sys.sys_public.CPUSTRING;
-import neo.sys.sys_public.idSys;
 import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import static neo.sys.sys_public.sysEventType_t.SE_MOUSE;
-import neo.sys.sys_public.sysEvent_s;
-import static neo.sys.win_cpu.Sys_ClockTicksPerSecond;
-import static neo.sys.win_cpu.Sys_FPU_EnableExceptions;
-import static neo.sys.win_cpu.Sys_FPU_GetState;
-import static neo.sys.win_cpu.Sys_FPU_SetDAZ;
-import static neo.sys.win_cpu.Sys_FPU_SetFTZ;
-import static neo.sys.win_cpu.Sys_FPU_StackIsEmpty;
-import static neo.sys.win_cpu.Sys_GetClockTicks;
-import static neo.sys.win_main.Sys_DLL_GetProcAddress;
-import static neo.sys.win_main.Sys_DLL_Load;
-import static neo.sys.win_main.Sys_DLL_Unload;
-import static neo.sys.win_main.Sys_DebugVPrintf;
-import static neo.sys.win_main.Sys_GetProcessorId;
-import static neo.sys.win_main.Sys_GetProcessorString;
-import static neo.sys.win_shared.Sys_GetCallStack;
-import static neo.sys.win_shared.Sys_GetCallStackCurStr;
-import static neo.sys.win_shared.Sys_GetCallStackStr;
-import static neo.sys.win_shared.Sys_LockMemory;
-import static neo.sys.win_shared.Sys_ShutdownSymbols;
-import static neo.sys.win_shared.Sys_UnlockMemory;
+import static neo.sys.win_cpu.*;
+import static neo.sys.win_main.*;
+import static neo.sys.win_shared.*;
 
 /**
  *
  */
 public class sys_local {
 
-    static idSysLocal sysLocal = new idSysLocal();
-
     static final String[] sysLanguageNames = {
-        "english", "spanish", "italian", "german", "french", "russian",
-        "polish", "korean", "japanese", "chinese", null
+            "english", "spanish", "italian", "german", "french", "russian",
+            "polish", "korean", "japanese", "chinese", null
     };
-//
+    //
     static final idCVar sys_lang = new idCVar("sys_lang", "english", CVAR_SYSTEM | CVAR_ARCHIVE, "", sysLanguageNames, new idCmdSystem.ArgCompletion_String(sysLanguageNames));
+    static idSysLocal sysLocal = new idSysLocal();
+    /*
+     =================
+     Sys_TimeStampToStr
+     =================
+     */
+    static String timeString;//= new char[MAX_STRING_CHARS];
+
+    public static String Sys_TimeStampToStr(long/*ID_TIME_T*/ timeStamp) {
+//        timeString[0] = '\0';
+
+//        tm time = localtime(timeStamp);
+        final Date time = new Date();
+        String out;
+
+        idStr lang = new idStr(cvarSystem.GetCVarString("sys_lang"));
+        if (lang.Icmp("english") == 0) {
+            // english gets "month/day/year  hour:min" + "am" or "pm"
+            out = new SimpleDateFormat("MM/dd/yyyy\thh:mmaa").format(time).toLowerCase();
+//            out.oSet(va("%02d", time.tm_mon + 1));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%02d", time.tm_mday));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%d", time.tm_year + 1900));
+//            out.oPluSet("\t");
+//            if (time.tm_hour > 12) {
+//                out.oPluSet(va("%02d", time.tm_hour - 12));
+//            } else if (time.tm_hour == 0) {
+//                out.oPluSet("12");
+//            } else {
+//                out.oPluSet(va("%02d", time.tm_hour));
+//            }
+//            out.oPluSet(":");
+//            out.oPluSet(va("%02d", time.tm_min));
+//            if (time.tm_hour >= 12) {
+//                out.oPluSet("pm");
+//            } else {
+//                out.oPluSet("am");
+//            }
+        } else {
+            // europeans get "day/month/year  24hour:min"
+            out = new SimpleDateFormat("dd/MM/yyyy\tHH:mm").format(time);
+//            out.oSet(va("%02d", time.tm_mday));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%02d", time.tm_mon + 1));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%d", time.tm_year + 1900));
+//            out.oPluSet("\t");
+//            out.oPluSet(va("%02d", time.tm_hour));
+//            out.oPluSet(":");
+//            out.oPluSet(va("%02d", time.tm_min));
+        }
+//        idStr.Copynz(timeString, out, sizeof(timeString));
+//
+
+        return timeString = out;
+    }
 
     /*
      ==============================================================
@@ -61,6 +100,8 @@ public class sys_local {
      ==============================================================
      */
     static class idSysLocal extends idSys {
+
+        static boolean doexit_spamguard = false;
 
         @Override
         public void DebugPrintf(final String fmt, Object... arg) {
@@ -198,7 +239,6 @@ public class sys_local {
             ev.evPtr = null;
             return ev;
         }
-        static boolean doexit_spamguard = false;
 
         @Override
         public void OpenURL(String url, boolean doExit) {
@@ -249,61 +289,5 @@ public class sys_local {
 //                cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "quit\n");
 //            }
         }
-    };
-    /*
-     =================
-     Sys_TimeStampToStr
-     =================
-     */
-    static String timeString;//= new char[MAX_STRING_CHARS];
-
-    public static String Sys_TimeStampToStr(long/*ID_TIME_T*/ timeStamp) {
-//        timeString[0] = '\0';
-
-//        tm time = localtime(timeStamp);
-        final Date time = new Date();
-        String out;
-
-        idStr lang = new idStr(cvarSystem.GetCVarString("sys_lang"));
-        if (lang.Icmp("english") == 0) {
-            // english gets "month/day/year  hour:min" + "am" or "pm"
-            out = new SimpleDateFormat("MM/dd/yyyy\thh:mmaa").format(time).toLowerCase();
-//            out.oSet(va("%02d", time.tm_mon + 1));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%02d", time.tm_mday));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%d", time.tm_year + 1900));
-//            out.oPluSet("\t");
-//            if (time.tm_hour > 12) {
-//                out.oPluSet(va("%02d", time.tm_hour - 12));
-//            } else if (time.tm_hour == 0) {
-//                out.oPluSet("12");
-//            } else {
-//                out.oPluSet(va("%02d", time.tm_hour));
-//            }
-//            out.oPluSet(":");
-//            out.oPluSet(va("%02d", time.tm_min));
-//            if (time.tm_hour >= 12) {
-//                out.oPluSet("pm");
-//            } else {
-//                out.oPluSet("am");
-//            }
-        } else {
-            // europeans get "day/month/year  24hour:min"
-            out = new SimpleDateFormat("dd/MM/yyyy\tHH:mm").format(time);
-//            out.oSet(va("%02d", time.tm_mday));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%02d", time.tm_mon + 1));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%d", time.tm_year + 1900));
-//            out.oPluSet("\t");
-//            out.oPluSet(va("%02d", time.tm_hour));
-//            out.oPluSet(":");
-//            out.oPluSet(va("%02d", time.tm_min));
-        }
-//        idStr.Copynz(timeString, out, sizeof(timeString));
-//        
-
-        return timeString = out;
     }
 }

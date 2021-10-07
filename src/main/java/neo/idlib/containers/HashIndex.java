@@ -1,15 +1,17 @@
 package neo.idlib.containers;
 
-import java.util.Arrays;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
 
 /**
  *
  */
 public class HashIndex {
 
+    static final int DEFAULT_HASH_GRANULARITY = 1024;
     /*
      ===============================================================================
 
@@ -19,24 +21,27 @@ public class HashIndex {
      ===============================================================================
      */
     static final int DEFAULT_HASH_SIZE = 1024;
-    static final int DEFAULT_HASH_GRANULARITY = 1024;
 
     public static class idHashIndex {
 
-        private int hashSize;
-        private int[] hash;
-        private int indexSize;
-        private int[] indexChain;
-        private int granularity;
-        private int hashMask;
-        private int lookupMask;
         //
         private static final int[] INVALID_INDEX = {-1};
         //
         //
         private static int DBG_counter = 0;
         private final int DBG_count;
-
+        private int bla = Integer.MIN_VALUE;
+        private int bla2 = Integer.MIN_VALUE;//TODO:remove the "bla's".
+        private int bla3 = Integer.MIN_VALUE;
+        private int bla4 = Integer.MIN_VALUE;
+        private int bla5 = Integer.MIN_VALUE;
+        private int granularity;
+        private int[] hash;
+        private int hashMask;
+        private int hashSize;
+        private int[] indexChain;
+        private int indexSize;
+        private int lookupMask;
         public idHashIndex() {
             DBG_count = DBG_counter++;
             Init(DEFAULT_HASH_SIZE, DEFAULT_HASH_SIZE);
@@ -46,21 +51,14 @@ public class HashIndex {
             DBG_count = DBG_counter++;
             Init(initialHashSize, initialIndexSize);
         }
-//	public				~idHashIndex( void );
-//
 
-        // returns total size of allocated memory
         public /*size_t*/ int Allocated() {
             return hashSize + indexSize;
         }
 
-        // returns total size of allocated memory including size of hash index type
         public /*size_t*/ int Size() {
             return Allocated();
         }
-
-        private int bla4 = Integer.MIN_VALUE;
-        private int bla5 = Integer.MIN_VALUE;
 
         public idHashIndex oSet(final idHashIndex other) {
             granularity = other.granularity;
@@ -86,9 +84,7 @@ public class HashIndex {
                     indexSize = other.indexSize;
                     indexChain = new int[indexSize];
                 }
-//		memcpy( hash, other.hash, hashSize * sizeof( hash[0] ) );
                 System.arraycopy(other.hash, 0, hash, 0, hashSize);
-//		memcpy( indexChain, other.indexChain, indexSize * sizeof( indexChain[0] ) );
                 System.arraycopy(other.indexChain, 0, indexChain, 0, indexSize);
             }
 
@@ -222,7 +218,6 @@ public class HashIndex {
             bla3 = hashSize = newHashSize;
             indexSize = newIndexSize;
         }
-        private int bla3 = Integer.MIN_VALUE;
 
         // free allocated memory
         public void Free() {
@@ -362,8 +357,6 @@ public class HashIndex {
             bla2 = hashMask = hashSize - 1;
             lookupMask = 0;
         }
-        private int bla = Integer.MIN_VALUE;
-        private int bla2 = Integer.MIN_VALUE;//TODO:remove the "bla's".
 
         private void Allocate(final int newHashSize, final int newIndexSize) {
             assert (idMath.IsPowerOfTwo(newHashSize));
@@ -380,5 +373,6 @@ public class HashIndex {
             hashMask = hashSize - 1;
             lookupMask = -1;
         }
-    };
+    }
+
 }

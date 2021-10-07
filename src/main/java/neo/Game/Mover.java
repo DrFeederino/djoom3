@@ -1,58 +1,46 @@
 package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_Touch;
-import static neo.Game.Entity.TH_PHYSICS;
-import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idEntity;
-import static neo.Game.Entity.signalNum_t.SIG_MOVER_1TO2;
-import static neo.Game.Entity.signalNum_t.SIG_MOVER_2TO1;
-import static neo.Game.Entity.signalNum_t.SIG_MOVER_POS1;
-import static neo.Game.Entity.signalNum_t.SIG_MOVER_POS2;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.eventCallback_t3;
-import neo.Game.GameSys.Class.eventCallback_t5;
-import neo.Game.GameSys.Class.idClass;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.Entity.*;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_debugMover;
-import static neo.Game.GameSys.SysCvar.g_gravity;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY2;
-import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
-import neo.Game.Game_local.idEntityPtr;
-import static neo.Game.Mover.idElevator.elevatorState_t.IDLE;
-import static neo.Game.Mover.idElevator.elevatorState_t.INIT;
-import static neo.Game.Mover.idElevator.elevatorState_t.WAITING_ON_DOORS;
-import static neo.Game.Mover.idMover.moveStage_t.ACCELERATION_STAGE;
-import static neo.Game.Mover.idMover.moveStage_t.DECELERATION_STAGE;
-import static neo.Game.Mover.idMover.moveStage_t.FINISHED_STAGE;
-import static neo.Game.Mover.idMover.moveStage_t.LINEAR_STAGE;
-import static neo.Game.Mover.idMover.moverCommand_t.MOVER_MOVING;
-import static neo.Game.Mover.idMover.moverCommand_t.MOVER_NONE;
-import static neo.Game.Mover.idMover.moverCommand_t.MOVER_ROTATING;
-import static neo.Game.Mover.idMover.moverCommand_t.MOVER_SPLINE;
-import static neo.Game.Mover.moverState_t.MOVER_1TO2;
-import static neo.Game.Mover.moverState_t.MOVER_2TO1;
-import static neo.Game.Mover.moverState_t.MOVER_POS1;
-import static neo.Game.Mover.moverState_t.MOVER_POS2;
+import neo.Game.Game_local.*;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
 import neo.Game.Player.idPlayer;
 import neo.Game.Script.Script_Thread.idThread;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.BitMsg.idBitMsgDelta;
+import neo.idlib.Dict_h.idKeyValue;
+import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.List.idList;
+import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.geometry.TraceModel.idTraceModel;
+import neo.idlib.math.Angles.idAngles;
+import neo.idlib.math.Curve.idCurve_Spline;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static neo.Game.Entity.*;
+import static neo.Game.Entity.signalNum_t.*;
+import static neo.Game.GameSys.SysCvar.g_debugMover;
+import static neo.Game.GameSys.SysCvar.g_gravity;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.*;
+import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
+import static neo.Game.Mover.idElevator.elevatorState_t.*;
+import static neo.Game.Mover.idMover.moveStage_t.*;
+import static neo.Game.Mover.idMover.moverCommand_t.*;
+import static neo.Game.Mover.moverState_t.*;
 import static neo.Game.Player.EV_SpectatorTouch;
 import static neo.Game.Script.Script_Thread.EV_Thread_SetCallback;
 import static neo.Game.Sound.SSF_NO_OCCLUSION;
@@ -63,48 +51,78 @@ import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 import static neo.Renderer.RenderWorld.SHADERPARM_MODE;
 import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_ALL;
 import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_NONE;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
+import static neo.TempDump.*;
 import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_CLUSTERPORTAL;
 import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_OBSTACLE;
 import static neo.framework.UsercmdGen.USERCMD_MSEC;
-import neo.idlib.BV.Bounds.idBounds;
-import neo.idlib.BitMsg.idBitMsgDelta;
-import neo.idlib.Dict_h.idKeyValue;
 import static neo.idlib.Lib.idLib.common;
-import neo.idlib.Text.Lexer.idLexer;
-import neo.idlib.Text.Str.idStr;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
-import neo.idlib.geometry.TraceModel.idTraceModel;
 import static neo.idlib.math.Angles.getAng_zero;
-import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Curve.idCurve_Spline;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_ACCELLINEAR;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_DECELLINEAR;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_DECELSINE;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_LINEAR;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_NONE;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_NOSTOP;
+import static neo.idlib.math.Extrapolate.*;
 import static neo.idlib.math.Math_h.SEC2MS;
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Matrix.idMat3;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
  */
 public class Mover {
 
+    public static final idEventDef EV_AccelSound = new idEventDef("accelSound", "s");
+    public static final idEventDef EV_AccelTime = new idEventDef("accelTime", "f");
+    public static final idEventDef EV_Bob = new idEventDef("bob", "ffv");
+    public static final idEventDef EV_DecelSound = new idEventDef("decelSound", "s");
+    public static final idEventDef EV_DecelTime = new idEventDef("decelTime", "f");
+    public static final idEventDef EV_DisableSplineAngles = new idEventDef("disableSplineAngles", null);
+    public static final idEventDef EV_Door_Close = new idEventDef("close", null);
+    public static final idEventDef EV_Door_IsLocked = new idEventDef("isLocked", null, 'f');
+    public static final idEventDef EV_Door_IsOpen = new idEventDef("isOpen", null, 'f');
+    public static final idEventDef EV_Door_Lock = new idEventDef("lock", "d");
+    public static final idEventDef EV_Door_Open = new idEventDef("open", null);
+    public static final idEventDef EV_Door_SpawnDoorTrigger = new idEventDef("<spawnDoorTrigger>", null);
+    public static final idEventDef EV_Door_SpawnSoundTrigger = new idEventDef("<spawnSoundTrigger>", null);
+    //
+    public static final idEventDef EV_Door_StartOpen = new idEventDef("<startOpen>", null);
+    public static final idEventDef EV_EnableSplineAngles = new idEventDef("enableSplineAngles", null);
+    public static final idEventDef EV_FindGuiTargets = new idEventDef("<FindGuiTargets>", null);
+    public static final idEventDef EV_GotoFloor = new idEventDef("gotoFloor", "d");
+    public static final idEventDef EV_IsMoving = new idEventDef("isMoving", null, 'd');
+    public static final idEventDef EV_IsRotating = new idEventDef("isRotating", null, 'd');
+    public static final idEventDef EV_Move = new idEventDef("move", "ff");
+    public static final idEventDef EV_MoveAccelerateTo = new idEventDef("accelTo", "ff");
+    public static final idEventDef EV_MoveDecelerateTo = new idEventDef("decelTo", "ff");
+    public static final idEventDef EV_MoveSound = new idEventDef("moveSound", "s");
+    public static final idEventDef EV_MoveTo = new idEventDef("moveTo", "e");
+    public static final idEventDef EV_MoveToPos = new idEventDef("moveToPos", "v");
+    public static final idEventDef EV_Mover_ClosePortal = new idEventDef("closePortal");
+    public static final idEventDef EV_Mover_Disable = new idEventDef("disable", null);
+    public static final idEventDef EV_Mover_Enable = new idEventDef("enable", null);
+    public static final idEventDef EV_Mover_InitGuiTargets = new idEventDef("<initguitargets>", null);
+    public static final idEventDef EV_Mover_MatchTeam = new idEventDef("<matchteam>", "dd");
+    public static final idEventDef EV_Mover_OpenPortal = new idEventDef("openPortal");
+    //
+    public static final idEventDef EV_Mover_ReturnToPos1 = new idEventDef("<returntopos1>", null);
+    public static final idEventDef EV_PartBlocked = new idEventDef("<partblocked>", "e");
+    //
+    public static final idEventDef EV_PostArrival = new idEventDef("postArrival", null);
+    public static final idEventDef EV_PostRestore = new idEventDef("<postrestore>", "ddddd");
+    public static final idEventDef EV_ReachedAng = new idEventDef("<reachedang>", null);
+    public static final idEventDef EV_ReachedPos = new idEventDef("<reachedpos>", null);
+    public static final idEventDef EV_RemoveInitialSplineAngles = new idEventDef("removeInitialSplineAngles", null);
+    public static final idEventDef EV_Rotate = new idEventDef("rotate", "v");
+    public static final idEventDef EV_RotateDownTo = new idEventDef("rotateDownTo", "df");
+    public static final idEventDef EV_RotateOnce = new idEventDef("rotateOnce", "v");
+    public static final idEventDef EV_RotateTo = new idEventDef("rotateTo", "v");
+    public static final idEventDef EV_RotateUpTo = new idEventDef("rotateUpTo", "df");
+    public static final idEventDef EV_Speed = new idEventDef("speed", "f");
+    public static final idEventDef EV_StartSpline = new idEventDef("startSpline", "e");
+    public static final idEventDef EV_StopMoving = new idEventDef("stopMoving", null);
+    public static final idEventDef EV_StopRotating = new idEventDef("stopRotating", null);
+    public static final idEventDef EV_StopSpline = new idEventDef("stopSpline", null);
+    public static final idEventDef EV_Sway = new idEventDef("sway", "ffv");
+    public static final idEventDef EV_TeamBlocked = new idEventDef("<teamblocked>", "ee");
+    public static final idEventDef EV_Time = new idEventDef("time", "f");
     /*
      ===============================================================================
 
@@ -112,70 +130,31 @@ public class Mover {
 
      ===============================================================================
      */
-// a mover will update any gui entities in it's target list with 
+// a mover will update any gui entities in it's target list with
 // a key/val pair of "mover" "state" from below.. guis can represent
 // realtime info like this
 // binary only
     public static final String[] guiBinaryMoverStates = {
-        "1", // pos 1
-        "2", // pos 2
-        "3", // moving 1 to 2
-        "4" // moving 2 to 1
+            "1", // pos 1
+            "2", // pos 2
+            "3", // moving 1 to 2
+            "4" // moving 2 to 1
     };
-    public static final idEventDef EV_FindGuiTargets            = new idEventDef("<FindGuiTargets>", null);
-    public static final idEventDef EV_TeamBlocked               = new idEventDef("<teamblocked>", "ee");
-    public static final idEventDef EV_PartBlocked               = new idEventDef("<partblocked>", "e");
-    public static final idEventDef EV_ReachedPos                = new idEventDef("<reachedpos>", null);
-    public static final idEventDef EV_ReachedAng                = new idEventDef("<reachedang>", null);
-    public static final idEventDef EV_PostRestore               = new idEventDef("<postrestore>", "ddddd");
-    public static final idEventDef EV_StopMoving                = new idEventDef("stopMoving", null);
-    public static final idEventDef EV_StopRotating              = new idEventDef("stopRotating", null);
-    public static final idEventDef EV_Speed                     = new idEventDef("speed", "f");
-    public static final idEventDef EV_Time                      = new idEventDef("time", "f");
-    public static final idEventDef EV_AccelTime                 = new idEventDef("accelTime", "f");
-    public static final idEventDef EV_DecelTime                 = new idEventDef("decelTime", "f");
-    public static final idEventDef EV_MoveTo                    = new idEventDef("moveTo", "e");
-    public static final idEventDef EV_MoveToPos                 = new idEventDef("moveToPos", "v");
-    public static final idEventDef EV_Move                      = new idEventDef("move", "ff");
-    public static final idEventDef EV_MoveAccelerateTo          = new idEventDef("accelTo", "ff");
-    public static final idEventDef EV_MoveDecelerateTo          = new idEventDef("decelTo", "ff");
-    public static final idEventDef EV_RotateDownTo              = new idEventDef("rotateDownTo", "df");
-    public static final idEventDef EV_RotateUpTo                = new idEventDef("rotateUpTo", "df");
-    public static final idEventDef EV_RotateTo                  = new idEventDef("rotateTo", "v");
-    public static final idEventDef EV_Rotate                    = new idEventDef("rotate", "v");
-    public static final idEventDef EV_RotateOnce                = new idEventDef("rotateOnce", "v");
-    public static final idEventDef EV_Bob                       = new idEventDef("bob", "ffv");
-    public static final idEventDef EV_Sway                      = new idEventDef("sway", "ffv");
-    public static final idEventDef EV_Mover_OpenPortal          = new idEventDef("openPortal");
-    public static final idEventDef EV_Mover_ClosePortal         = new idEventDef("closePortal");
-    public static final idEventDef EV_AccelSound                = new idEventDef("accelSound", "s");
-    public static final idEventDef EV_DecelSound                = new idEventDef("decelSound", "s");
-    public static final idEventDef EV_MoveSound                 = new idEventDef("moveSound", "s");
-    public static final idEventDef EV_Mover_InitGuiTargets      = new idEventDef("<initguitargets>", null);
-    public static final idEventDef EV_EnableSplineAngles        = new idEventDef("enableSplineAngles", null);
-    public static final idEventDef EV_DisableSplineAngles       = new idEventDef("disableSplineAngles", null);
-    public static final idEventDef EV_RemoveInitialSplineAngles = new idEventDef("removeInitialSplineAngles", null);
-    public static final idEventDef EV_StartSpline               = new idEventDef("startSpline", "e");
-    public static final idEventDef EV_StopSpline                = new idEventDef("stopSpline", null);
-    public static final idEventDef EV_IsMoving                  = new idEventDef("isMoving", null, 'd');
-    public static final idEventDef EV_IsRotating                = new idEventDef("isRotating", null, 'd');
-    //
-    public static final idEventDef EV_PostArrival               = new idEventDef("postArrival", null);
-    public static final idEventDef EV_GotoFloor                 = new idEventDef("gotoFloor", "d");
-    //
-    public static final idEventDef EV_Mover_ReturnToPos1        = new idEventDef("<returntopos1>", null);
-    public static final idEventDef EV_Mover_MatchTeam           = new idEventDef("<matchteam>", "dd");
-    public static final idEventDef EV_Mover_Enable              = new idEventDef("enable", null);
-    public static final idEventDef EV_Mover_Disable             = new idEventDef("disable", null);
-    //    
-    public static final idEventDef EV_Door_StartOpen            = new idEventDef("<startOpen>", null);
-    public static final idEventDef EV_Door_SpawnDoorTrigger     = new idEventDef("<spawnDoorTrigger>", null);
-    public static final idEventDef EV_Door_SpawnSoundTrigger    = new idEventDef("<spawnSoundTrigger>", null);
-    public static final idEventDef EV_Door_Open                 = new idEventDef("open", null);
-    public static final idEventDef EV_Door_Close                = new idEventDef("close", null);
-    public static final idEventDef EV_Door_Lock                 = new idEventDef("lock", "d");
-    public static final idEventDef EV_Door_IsOpen               = new idEventDef("isOpen", null, 'f');
-    public static final idEventDef EV_Door_IsLocked             = new idEventDef("isLocked", null, 'f');
+
+    /*
+     ===============================================================================
+
+     Binary movers.
+
+     ===============================================================================
+     */
+    public enum moverState_t {
+
+        MOVER_POS1,
+        MOVER_POS2,
+        MOVER_1TO2,
+        MOVER_2TO1
+    }
 
     /*
      ===============================================================================
@@ -185,9 +164,26 @@ public class Mover {
      ===============================================================================
      */
     public static class idMover extends idEntity {
+        protected static final int DIR_BACK = -6;
+        protected static final int DIR_DOWN = -2;
+        protected static final int DIR_FORWARD = -5;
+        protected static final int DIR_LEFT = -3;
+        protected static final int DIR_REL_BACK = -12;
+        protected static final int DIR_REL_DOWN = -8;
+        protected static final int DIR_REL_FORWARD = -11;
+        protected static final int DIR_REL_LEFT = -9;
+        protected static final int DIR_REL_RIGHT = -10;
+        protected static final int DIR_REL_UP = -7;
+        protected static final int DIR_RIGHT = -4;
+        //
+        // mover directions.  make sure to change script/doom_defs.script if you add any, or change their order
+        //
+        // typedef enum {
+        protected static final int DIR_UP = -1;
         // CLASS_PROTOTYPE( idMover );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
-        static{
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
+        static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_FindGuiTargets, (eventCallback_t0<idMover>) idMover::Event_FindGuiTargets);
             eventCallbacks.put(EV_Thread_SetCallback, (eventCallback_t0<idMover>) idMover::Event_SetCallback);
@@ -230,98 +226,33 @@ public class Mover {
             eventCallbacks.put(EV_IsRotating, (eventCallback_t0<idMover>) idMover::Event_IsRotating);
         }
 
-
-        protected moveState_t move;
-        //
-        private rotationState_t rot;
-        //
-        private int move_thread;
-        private int rotate_thread;
-        private idAngles dest_angles;
-        private idAngles angle_delta;
-        private idVec3 dest_position;
-        private idVec3 move_delta;
-        private float move_speed;
-        private int move_time;
-        private int deceltime;
-        private int acceltime;
-        private boolean stopRotation;
-        private boolean useSplineAngles;
-        private idEntityPtr<idEntity> splineEnt;
-        private moverCommand_t lastCommand;
-        private float damage;
-        //
-        private int/*qhandle_t*/ areaPortal;		// 0 = no portal
         //
         private final idList<idEntityPtr<idEntity>> guiTargets = (idList<idEntityPtr<idEntity>>) new idList<>(new idEntityPtr<>().getClass());
-
-        @Override
-        public idClass CreateInstance() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        //
-        //
-        protected enum moveStage_t {
-
-            ACCELERATION_STAGE,
-            LINEAR_STAGE,
-            DECELERATION_STAGE,
-            FINISHED_STAGE
-        };
-
-        protected enum moverCommand_t {
-
-            MOVER_NONE,
-            MOVER_ROTATING,
-            MOVER_MOVING,
-            MOVER_SPLINE
-        };
-        //
-        // mover directions.  make sure to change script/doom_defs.script if you add any, or change their order
-        //
-        // typedef enum {
-        protected static final int DIR_UP = -1;
-        protected static final int DIR_DOWN = -2;
-        protected static final int DIR_LEFT = -3;
-        protected static final int DIR_RIGHT = -4;
-        protected static final int DIR_FORWARD = -5;
-        protected static final int DIR_BACK = -6;
-        protected static final int DIR_REL_UP = -7;
-        protected static final int DIR_REL_DOWN = -8;
-        protected static final int DIR_REL_LEFT = -9;
-        protected static final int DIR_REL_RIGHT = -10;
-        protected static final int DIR_REL_FORWARD = -11;
-        protected static final int DIR_REL_BACK = -12;
-        // } moverDir_t;
-
-        protected static class moveState_t {
-
-            moveStage_t stage;
-            int acceleration;
-            int movetime;
-            int deceleration;
-            idVec3 dir;
-        };
-
-        protected static class rotationState_t {
-
-            moveStage_t stage;
-            int acceleration;
-            int movetime;
-            int deceleration;
-            idAngles rot;
-        };
+        protected moveState_t move;
         //
         protected idPhysics_Parametric physicsObj;
+        private int acceltime;
+        private idAngles angle_delta;
         //
-        //
+        private int/*qhandle_t*/ areaPortal;        // 0 = no portal
+        private float damage;
+        private int deceltime;
+        private idAngles dest_angles;
+        private idVec3 dest_position;
 
+        private moverCommand_t lastCommand;
+
+        private idVec3 move_delta;
+        private float move_speed;
+        //
+        private int move_thread;
+        private int move_time;
+        //
+        private final rotationState_t rot;
+        private int rotate_thread;
+        private idEntityPtr<idEntity> splineEnt;
+        private boolean stopRotation;
+        private boolean useSplineAngles;
         public idMover() {
 //	memset( &move, 0, sizeof( move ) );
             move = new moveState_t();
@@ -346,10 +277,25 @@ public class Mover {
             physicsObj = new idPhysics_Parametric();
         }
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
+        @Override
+        public idClass CreateInstance() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        // } moverDir_t;
+
+        @Override
+        public java.lang.Class /*idTypeInfo*/ GetType() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             float[] damage = {0};
 
             move_thread = 0;
@@ -359,7 +305,7 @@ public class Mover {
 
             acceltime = (int) (1000 * spawnArgs.GetFloat("accel_time", "0"));
             deceltime = (int) (1000 * spawnArgs.GetFloat("decel_time", "0"));
-            move_time = (int) (1000 * spawnArgs.GetFloat("move_time", "1"));	// safe default value
+            move_time = (int) (1000 * spawnArgs.GetFloat("move_time", "1"));    // safe default value
             move_speed = spawnArgs.GetFloat("move_speed", "0");
 
             spawnArgs.GetFloat("damage", "0", damage);
@@ -464,6 +410,8 @@ public class Mover {
                 savefile.WriteBool(false);
             }
         }
+        //
+        //
 
         @Override
         public void Restore(idRestoreGame savefile) {
@@ -595,7 +543,6 @@ public class Mover {
             gameLocal.SetPortalState(areaPortal, (open ? PS_BLOCK_NONE : PS_BLOCK_ALL).ordinal());
         }
 
-
         /*
          ================
          idMover::Event_OpenPortal
@@ -712,9 +659,9 @@ public class Mover {
                 idEntity ent = guiTargets.oGet(i).GetEntity();
                 if (ent != null) {
                     for (int j = 0; j < MAX_RENDERENTITY_GUI; j++) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[ j] != null) {
-                            ent.GetRenderEntity().gui[ j].SetStateString(key, val);
-                            ent.GetRenderEntity().gui[ j].StateChanged(gameLocal.time, true);
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
+                            ent.GetRenderEntity().gui[j].SetStateString(key, val);
+                            ent.GetRenderEntity().gui[j].StateChanged(gameLocal.time, true);
                         }
                     }
                     ent.UpdateVisuals();
@@ -967,7 +914,7 @@ public class Mover {
             }
         }
 
-//        private idCurve_Spline<idVec3> GetSpline(idEntity splineEntity);
+        //        private idCurve_Spline<idVec3> GetSpline(idEntity splineEntity);
         private void Event_SetCallback() {
             if ((lastCommand.equals(MOVER_ROTATING)) && 0 == rotate_thread) {
                 lastCommand = MOVER_NONE;
@@ -1104,16 +1051,16 @@ public class Mover {
 
         private void Event_SetMoveSpeed(idEventArg<Float> speed) {
             if (speed.value <= 0) {
-                gameLocal.Error("Cannot set speed less than or equal to 0.");
+                idGameLocal.Error("Cannot set speed less than or equal to 0.");
             }
 
             move_speed = speed.value;
-            move_time = 0;			// move_time is calculated for each move when move_speed is non-0
+            move_time = 0;            // move_time is calculated for each move when move_speed is non-0
         }
 
         private void Event_SetMoveTime(idEventArg<Float> time) {
             if (time.value <= 0) {
-                gameLocal.Error("Cannot set time less than or equal to 0.");
+                idGameLocal.Error("Cannot set time less than or equal to 0.");
             }
 
             move_speed = 0;
@@ -1122,7 +1069,7 @@ public class Mover {
 
         private void Event_SetDecelerationTime(idEventArg<Float> time) {
             if (time.value < 0) {
-                gameLocal.Error("Cannot set deceleration time less than 0.");
+                idGameLocal.Error("Cannot set deceleration time less than 0.");
             }
 
             deceltime = (int) SEC2MS(time.value);
@@ -1130,7 +1077,7 @@ public class Mover {
 
         private void Event_SetAccellerationTime(idEventArg<Float> time) {
             if (time.value < 0) {
-                gameLocal.Error("Cannot set acceleration time less than 0.");
+                idGameLocal.Error("Cannot set acceleration time less than 0.");
             }
 
             acceltime = (int) SEC2MS(time.value);
@@ -1167,7 +1114,7 @@ public class Mover {
             int at;
 
             if (time.value < 0) {
-                gameLocal.Error("idMover::Event_MoveAccelerateTo: cannot set acceleration time less than 0.");
+                idGameLocal.Error("idMover::Event_MoveAccelerateTo: cannot set acceleration time less than 0.");
             }
 
             dir = physicsObj.GetLinearVelocity();
@@ -1175,7 +1122,7 @@ public class Mover {
 
             // if not moving already
             if (v == 0.0f) {
-                gameLocal.Error("idMover::Event_MoveAccelerateTo: not moving.");
+                idGameLocal.Error("idMover::Event_MoveAccelerateTo: not moving.");
             }
 
             // if already moving faster than the desired speed
@@ -1205,7 +1152,7 @@ public class Mover {
             int dt;
 
             if (time.value < 0) {
-                gameLocal.Error("idMover::Event_MoveDecelerateTo: cannot set deceleration time less than 0.");
+                idGameLocal.Error("idMover::Event_MoveDecelerateTo: cannot set deceleration time less than 0.");
             }
 
             dir = physicsObj.GetLinearVelocity();
@@ -1213,7 +1160,7 @@ public class Mover {
 
             // if not moving already
             if (v == 0.0f) {
-                gameLocal.Error("idMover::Event_MoveDecelerateTo: not moving.");
+                idGameLocal.Error("idMover::Event_MoveDecelerateTo: not moving.");
             }
 
             // if already moving slower than the desired speed
@@ -1242,7 +1189,7 @@ public class Mover {
             idAngles ang = new idAngles();
 
             if ((axis < 0) || (axis > 2)) {
-                gameLocal.Error("Invalid axis");
+                idGameLocal.Error("Invalid axis");
             }
 
             physicsObj.GetLocalAngles(ang);
@@ -1260,7 +1207,7 @@ public class Mover {
             idAngles ang = new idAngles();
 
             if ((axis < 0) || (axis > 2)) {
-                gameLocal.Error("Invalid axis");
+                idGameLocal.Error("Invalid axis");
             }
 
             physicsObj.GetLocalAngles(ang);
@@ -1430,19 +1377,11 @@ public class Mover {
         }
 
         private void Event_IsMoving() {
-            if (physicsObj.GetLinearExtrapolationType() == EXTRAPOLATION_NONE) {
-                idThread.ReturnInt(false);
-            } else {
-                idThread.ReturnInt(true);
-            }
+            idThread.ReturnInt(physicsObj.GetLinearExtrapolationType() != EXTRAPOLATION_NONE);
         }
 
         private void Event_IsRotating() {
-            if (physicsObj.GetAngularExtrapolationType() == EXTRAPOLATION_NONE) {
-                idThread.ReturnInt(false);
-            } else {
-                idThread.ReturnInt(true);
-            }
+            idThread.ReturnInt(physicsObj.GetAngularExtrapolationType() != EXTRAPOLATION_NONE);
         }
 
         @Override
@@ -1450,11 +1389,43 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
+        //
+        //
+        protected enum moveStage_t {
+
+            ACCELERATION_STAGE,
+            LINEAR_STAGE,
+            DECELERATION_STAGE,
+            FINISHED_STAGE
         }
 
-    };
+        protected enum moverCommand_t {
+
+            MOVER_NONE,
+            MOVER_ROTATING,
+            MOVER_MOVING,
+            MOVER_SPLINE
+        }
+
+        protected static class moveState_t {
+
+            int acceleration;
+            int deceleration;
+            idVec3 dir;
+            int movetime;
+            moveStage_t stage;
+        }
+
+        protected static class rotationState_t {
+
+            int acceleration;
+            int deceleration;
+            int movetime;
+            idAngles rot;
+            moveStage_t stage;
+        }
+
+    }
 
     /*
      ===============================================================================
@@ -1478,14 +1449,14 @@ public class Mover {
         public java.lang.Class /*idTypeInfo*/ GetType() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     public static class floorInfo_s {
 
-        idVec3 pos;
         idStr door;
         int floor;
-    };
+        idVec3 pos;
+    }
 
     /*
      ===============================================================================
@@ -1496,7 +1467,8 @@ public class Mover {
      */
     public static class idElevator extends idMover {
         // CLASS_PROTOTYPE( idElevator );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idMover.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idElevator>) idElevator::Event_Activate);
@@ -1507,25 +1479,17 @@ public class Mover {
             eventCallbacks.put(EV_Touch, (eventCallback_t2<idElevator>) idElevator::Event_Touch);
         }
 
-        protected enum elevatorState_t {
+        private boolean controlsDisabled;
 
-            INIT,
-            IDLE,
-            WAITING_ON_DOORS
-        };
+        private int currentFloor;
+        private final idList<floorInfo_s> floorInfo;
+        private int lastFloor;
+        private int lastTouchTime;
+        private int pendingFloor;
+        private int returnFloor;
+        private float returnTime;
         //
         private elevatorState_t state;
-        private idList<floorInfo_s> floorInfo;
-        private int currentFloor;
-        private int pendingFloor;
-        private int lastFloor;
-        private boolean controlsDisabled;
-        private float returnTime;
-        private int returnFloor;
-        private int lastTouchTime;
-        //
-        //
-
         public idElevator() {
             state = INIT;
             floorInfo = new idList<>();
@@ -1536,6 +1500,12 @@ public class Mover {
             lastTouchTime = 0;
             returnFloor = 0;
             returnTime = 0;
+        }
+        //
+        //
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -1694,9 +1664,9 @@ public class Mover {
                 idEntity ent = gameLocal.FindEntity(kv.GetValue().toString());
                 if (ent != null) {
                     for (int j = 0; j < MAX_RENDERENTITY_GUI; j++) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[ j] != null) {
-                            ent.GetRenderEntity().gui[ j].SetStateString("floor", va("%d", currentFloor));
-                            ent.GetRenderEntity().gui[ j].StateChanged(gameLocal.time, true);
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
+                            ent.GetRenderEntity().gui[j].SetStateString("floor", va("%d", currentFloor));
+                            ent.GetRenderEntity().gui[j].StateChanged(gameLocal.time, true);
                         }
                     }
                     ent.UpdateVisuals();
@@ -1720,9 +1690,9 @@ public class Mover {
                 idEntity ent = gameLocal.FindEntity(kv.GetValue().toString());
                 if (ent != null) {
                     for (int j = 0; j < MAX_RENDERENTITY_GUI; j++) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[ j] != null) {
-                            ent.GetRenderEntity().gui[ j].SetStateString("floor", "");
-                            ent.GetRenderEntity().gui[ j].StateChanged(gameLocal.time, true);
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
+                            ent.GetRenderEntity().gui[j].SetStateString("floor", "");
+                            ent.GetRenderEntity().gui[j].StateChanged(gameLocal.time, true);
                         }
                     }
                     ent.UpdateVisuals();
@@ -1922,27 +1892,14 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
+        protected enum elevatorState_t {
+
+            INIT,
+            IDLE,
+            WAITING_ON_DOORS
         }
 
-    };
-
-    /*
-     ===============================================================================
-
-     Binary movers.
-
-     ===============================================================================
-     */
-    public enum moverState_t {
-
-        MOVER_POS1,
-        MOVER_POS2,
-        MOVER_1TO2,
-        MOVER_2TO1
-    };
-
+    }
 
     /*
      ===============================================================================
@@ -1956,7 +1913,8 @@ public class Mover {
      */
     public static class idMover_Binary extends idEntity {
         // CLASS_PROTOTYPE( idMover_Binary );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_FindGuiTargets, (eventCallback_t0<idMover_Binary>) idMover_Binary::Event_FindGuiTargets);
@@ -1972,32 +1930,32 @@ public class Mover {
             eventCallbacks.put(EV_Mover_InitGuiTargets, (eventCallback_t0<idMover_Binary>) idMover_Binary::Event_InitGuiTargets);
         }
 
-        protected idVec3                        pos1;
-        protected idVec3                        pos2;
-        protected moverState_t                  moverState;
-        protected idMover_Binary                moveMaster;
-        protected idMover_Binary                activateChain;
-        protected int                           soundPos1;
-        protected int                           sound1to2;
-        protected int                           sound2to1;
-        protected int                           soundPos2;
-        protected int                           soundLoop;
-        protected float                         wait;
-        protected float                         damage;
-        protected int                           duration;
-        protected int                           accelTime;
-        protected int                           decelTime;
-        protected idEntityPtr<idEntity>         activatedBy;
-        protected int                           stateStartTime;
-        protected idStr                         team;
-        protected boolean                       enabled;
-        protected int                           move_thread;
-        protected int                           updateStatus;        // 1 = lock behaviour, 2 = open close status
-        protected idStrList                     buddies;
-        protected idPhysics_Parametric          physicsObj;
+        protected int accelTime;
+        protected idMover_Binary activateChain;
+        protected idEntityPtr<idEntity> activatedBy;
         protected int/*qhandle_t*/              areaPortal;          // 0 = no portal
-        protected boolean                       blocked;
+        protected boolean blocked;
+        protected idStrList buddies;
+        protected float damage;
+        protected int decelTime;
+        protected int duration;
+        protected boolean enabled;
         protected idList<idEntityPtr<idEntity>> guiTargets;
+        protected idMover_Binary moveMaster;
+        protected int move_thread;
+        protected moverState_t moverState;
+        protected idPhysics_Parametric physicsObj;
+        protected idVec3 pos1;
+        protected idVec3 pos2;
+        protected int sound1to2;
+        protected int sound2to1;
+        protected int soundLoop;
+        protected int soundPos1;
+        protected int soundPos2;
+        protected int stateStartTime;
+        protected idStr team;
+        protected int updateStatus;        // 1 = lock behaviour, 2 = open close status
+        protected float wait;
         //
         //
 
@@ -2031,6 +1989,30 @@ public class Mover {
             guiTargets = new idList(idEntityPtr.class);
         }
 
+        /*
+         ===============
+         idMover_Binary::GetMovedir
+
+         The editor only specifies a single value for angles (yaw),
+         but we have special constants to generate an up or down direction.
+         Angles will be cleared, because it is being used to represent a direction
+         instead of an orientation.
+         ===============
+         */
+        protected static void GetMovedir(float dir, idVec3 movedir) {
+            if (dir == -1) {
+                movedir.Set(0, 0, 1);
+            } else if (dir == -2) {
+                movedir.Set(0, 0, -1);
+            } else {
+                movedir.oSet(new idAngles(0, dir, 0).ToForward());
+            }
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         // ~idMover_Binary();
         /*
          ================
@@ -2045,7 +2027,7 @@ public class Mover {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             idEntity ent;
             String[] temp = {null};
 
@@ -2498,7 +2480,7 @@ public class Mover {
          ================
          idMover_Binary::BindTeam
 
-         All entities in a mover team will be bound 
+         All entities in a mover team will be bound
          ================
          */
         public void BindTeam(idEntity bindTo) {
@@ -2560,7 +2542,6 @@ public class Mover {
             assert (areaPortal != 0);
             gameLocal.SetPortalState(areaPortal, (open ? PS_BLOCK_NONE : PS_BLOCK_ALL).ordinal());
         }
-
 
         /*
          ================
@@ -2672,9 +2653,9 @@ public class Mover {
                 idEntity ent = guiTargets.oGet(i).GetEntity();
                 if (ent != null) {
                     for (int j = 0; j < MAX_RENDERENTITY_GUI; j++) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[ j] != null) {
-                            ent.GetRenderEntity().gui[ j].SetStateString(key, val);
-                            ent.GetRenderEntity().gui[ j].StateChanged(gameLocal.time, true);
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
+                            ent.GetRenderEntity().gui[j].SetStateString(key, val);
+                            ent.GetRenderEntity().gui[j].StateChanged(gameLocal.time, true);
                         }
                     }
                     ent.UpdateVisuals();
@@ -2747,7 +2728,7 @@ public class Mover {
 
                 SetBlocked(false);
             } else {
-                gameLocal.Error("Event_Reached_BinaryMover: bad moverState");
+                idGameLocal.Error("Event_Reached_BinaryMover: bad moverState");
             }
         }
 
@@ -2802,7 +2783,6 @@ public class Mover {
             }
         }
 
-
         /*
          ================
          idMover_Binary::Event_ClosePortal
@@ -2832,26 +2812,6 @@ public class Mover {
             }
         }
 
-        /*
-         ===============
-         idMover_Binary::GetMovedir
-
-         The editor only specifies a single value for angles (yaw),
-         but we have special constants to generate an up or down direction.
-         Angles will be cleared, because it is being used to represent a direction
-         instead of an orientation.
-         ===============
-         */
-        protected static void GetMovedir(float dir, idVec3 movedir) {
-            if (dir == -1) {
-                movedir.Set(0, 0, 1);
-            } else if (dir == -2) {
-                movedir.Set(0, 0, -1);
-            } else {
-                movedir.oSet(new idAngles(0, dir, 0).ToForward());
-            }
-        }
-
         @Override
         public idClass CreateInstance() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -2867,11 +2827,7 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -2884,7 +2840,8 @@ public class Mover {
      ===============================================================================
      */
     public static class idDoor extends idMover_Binary {
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idMover_Binary.getEventCallBacks());
             eventCallbacks.put(EV_TeamBlocked, (eventCallback_t2<idDoor>) idDoor::Event_TeamBlocked);
@@ -2905,25 +2862,25 @@ public class Mover {
             eventCallbacks.put(EV_Mover_ClosePortal, (eventCallback_t0<idDoor>) idDoor::Event_ClosePortal);
         }
 
-        private float       triggersize;
-        private boolean     crusher;
-        private boolean     noTouch;
-        private boolean     aas_area_closed;
-        private idStr       buddyStr;
-        private idClipModel trigger;
+        private boolean aas_area_closed;
+        private final idStr buddyStr;
+        private idDoor companionDoor;
+        private boolean crusher;
+        private idMat3 localTriggerAxis;
+        private idVec3 localTriggerOrigin;
+        private int nextSndTriggerTime;
+        private boolean noTouch;
+        private int normalAxisIndex;        // door faces X or Y for spectator teleports
+        private int removeItem;
+        private final idStr requires;
         private idClipModel sndTrigger;
-        private int         nextSndTriggerTime;
-        private idVec3      localTriggerOrigin;
-        private idMat3      localTriggerAxis;
-        private idStr       requires;
-        private int         removeItem;
-        private idStr       syncLock;
-        private int         normalAxisIndex;        // door faces X or Y for spectator teleports
-        private idDoor      companionDoor;
+        private final idStr syncLock;
+        private idClipModel trigger;
+        private float triggersize;
         //
         //
 
-// public:
+        // public:
         // CLASS_PROTOTYPE( idDoor );
         public idDoor() {
             triggersize = 1.0f;
@@ -2944,10 +2901,14 @@ public class Mover {
         }
         // ~idDoor( void );
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             idVec3 abs_movedir = new idVec3();
             float distance;
             idVec3 size;
@@ -3336,8 +3297,8 @@ public class Mover {
                 }
             }
             normalAxisIndex = best;
-            bounds.oGet(0).oMinSet(best, size);;
-            bounds.oGet(1).oPluSet(best, size);;
+            bounds.oGet(0).oMinSet(best, size);
+            bounds.oGet(1).oPluSet(best, size);
             bounds.oMinSet(GetPhysics().GetOrigin());
         }
 
@@ -3370,7 +3331,7 @@ public class Mover {
             SetBlocked(true);
 
             if (crusher) {
-                return;		// crushers don't reverse
+                return;        // crushers don't reverse
             }
 
             // reverse direction
@@ -3443,7 +3404,7 @@ public class Mover {
 
             ActivateTargets(activator.value);
 
-            renderEntity.shaderParms[ SHADERPARM_MODE] = 1;
+            renderEntity.shaderParms[SHADERPARM_MODE] = 1;
             UpdateVisuals();
 
             Use_BinaryMover(activator.value);
@@ -3658,11 +3619,7 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -3673,7 +3630,8 @@ public class Mover {
      */
     public static class idPlat extends idMover_Binary {
         // CLASS_PROTOTYPE( idPlat );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idMover_Binary.getEventCallBacks());
             eventCallbacks.put(EV_Touch, (eventCallback_t2<idPlat>) idPlat::Event_Touch);
@@ -3681,9 +3639,9 @@ public class Mover {
             eventCallbacks.put(EV_PartBlocked, (eventCallback_t1<idPlat>) idPlat::Event_PartBlocked);
         }
 
-        private idClipModel trigger;
-        private idVec3 localTriggerOrigin;
         private idMat3 localTriggerAxis;
+        private idVec3 localTriggerOrigin;
+        private idClipModel trigger;
         //
         //
 
@@ -3693,6 +3651,10 @@ public class Mover {
             localTriggerAxis.Identity();
         }
         // ~idPlat( void );
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         @Override
         public void Spawn() {
@@ -3852,11 +3814,7 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -3874,15 +3832,16 @@ public class Mover {
      */
     public static class idMover_Periodic extends idEntity {
         // CLASS_PROTOTYPE( idMover_Periodic );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_TeamBlocked, (eventCallback_t2<idMover_Periodic>) idMover_Periodic::Event_TeamBlocked);
             eventCallbacks.put(EV_PartBlocked, (eventCallback_t1<idMover_Periodic>) idMover_Periodic::Event_PartBlocked);
         }
 
-        protected idPhysics_Parametric physicsObj;
         protected float[] damage = {0};
+        protected idPhysics_Parametric physicsObj;
         //
         //
 
@@ -3890,6 +3849,10 @@ public class Mover {
             damage[0] = 0;
             physicsObj = new idPhysics_Parametric();
             fl.neverDormant = false;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -3966,11 +3929,7 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -3981,18 +3940,23 @@ public class Mover {
      */
     public static class idRotater extends idMover_Periodic {
         // CLASS_PROTOTYPE( idRotater );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idMover_Periodic.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idRotater>) idRotater::Event_Activate);
         }
 
-        private idEntityPtr<idEntity> activatedBy;
+        private final idEntityPtr<idEntity> activatedBy;
         //
         //
 
         public idRotater() {
             this.activatedBy = new idEntityPtr<>().oSet(this);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -4062,11 +4026,7 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -4117,7 +4077,7 @@ public class Mover {
             physicsObj.SetLinearExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (phase[0] * 1000), (int) (speed[0] * 500), GetPhysics().GetOrigin(), delta.oMultiply(2.0f), getVec3_origin());
             SetPhysics(physicsObj);
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -4129,7 +4089,7 @@ public class Mover {
     public static class idPendulum extends idMover_Periodic {
         // CLASS_PROTOTYPE( idPendulum );
 
-//        public idPendulum() {//TODO:remove default constructor override
+        //        public idPendulum() {//TODO:remove default constructor override
 //        }
         @Override
         public void Spawn() {
@@ -4145,7 +4105,7 @@ public class Mover {
 
             if (spawnArgs.GetFloat("freq", "", freq)) {
                 if (freq[0] <= 0.0f) {
-                    gameLocal.Error("Invalid frequency on entity '%s'", GetName());
+                    idGameLocal.Error("Invalid frequency on entity '%s'", GetName());
                 }
             } else {
                 // find pendulum length
@@ -4169,7 +4129,7 @@ public class Mover {
             physicsObj.SetAngularExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (phase[0] * 1000), (int) (500 / freq[0]), GetPhysics().GetAxis().ToAngles(), new idAngles(0, 0, speed[0] * 2.0f), getAng_zero());
             SetPhysics(physicsObj);
         }
-    };
+    }
 
 
     /*
@@ -4181,13 +4141,18 @@ public class Mover {
      */
     public static class idRiser extends idMover_Periodic {
         // CLASS_PROTOTYPE( idRiser );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idMover_Periodic.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idRiser>) idRiser::Event_Activate);
         }
 
-//public	idRiser( ){}
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
+        //public	idRiser( ){}
         @Override
         public void Spawn() {
             physicsObj.SetSelf(this);
@@ -4231,9 +4196,6 @@ public class Mover {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

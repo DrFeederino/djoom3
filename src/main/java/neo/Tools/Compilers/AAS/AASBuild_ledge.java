@@ -4,10 +4,11 @@ import neo.Tools.Compilers.AAS.BrushBSP.idBrushBSPNode;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Plane.ON_EPSILON;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.idlib.math.Plane.ON_EPSILON;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -23,13 +24,13 @@ public class AASBuild_ledge {
     //===============================================================
     static class idLedge {
 
-        public idVec3         start;
-        public idVec3         end;
+        public idVec3 end;
         public idBrushBSPNode node;
-        public int            numExpandedPlanes;
-        public int            numSplitPlanes;
-        public int            numPlanes;
+        public int numExpandedPlanes;
+        public int numPlanes;
+        public int numSplitPlanes;
         public idPlane[] planes = new idPlane[8];
+        public idVec3 start;
         //
         //
 
@@ -157,5 +158,6 @@ public class AASBuild_ledge {
         public boolean PointBetweenBounds(final idVec3 v) {
             return (planes[2].Distance(v) < LEDGE_EPSILON) && (planes[3].Distance(v) < LEDGE_EPSILON);
         }
-    };
+    }
+
 }

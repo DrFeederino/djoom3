@@ -1,33 +1,9 @@
 package neo;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.FloatBuffer;
-import java.nio.LongBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.IntStream;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import com.rits.cloning.Cloner;
 import neo.Game.Entity.idEntity;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
-import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 import neo.Renderer.RenderWorld.deferredEntityCallback_t;
 import neo.Renderer.RenderWorld.renderView_s;
 import neo.Sound.sound.idSoundEmitter;
@@ -45,22 +21,36 @@ import neo.ui.UserInterface.idUserInterface;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.FloatBuffer;
+import java.nio.LongBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.IntStream;
+
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
+import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
+
 /**
  *
  */
 public class TempDump {//TODO:rename/refactor to ToolBox or something
 
-    public static abstract class void_callback<type> {
-
-        public abstract void run(type... objects) throws idException;
-    }
-
-    public static abstract class argCompletion_t<E> {
-        //TODO
-//    public abstract void run(type... objects);
-
-        public abstract void load(final idCmdArgs args, void_callback<String> callback);
-    }
+    private static final Map<String, Integer> CALL_STACK_MAP = new HashMap<>();
+    private static final Cloner CLONER = Cloner.standard();
 
     /**
      * Our humble java implementation of the C++ strlen function, with NULL
@@ -161,7 +151,6 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
     }
 
     /**
-     *
      * @param unknownArray our unknown array.
      * @return -1 for <b>NULL</b> objects or <b>non-arrays</b> and the array's
      * dimensions for actual arrays.
@@ -204,10 +193,9 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
     }
 
     /**
-     *
      * @param character character to insert.
-     * @param index position at which the character is inserted.
-     * @param string the input string
+     * @param index     position at which the character is inserted.
+     * @param string    the input string
      * @return substring before <b>index</b> + character + substring after
      * <b>index</b>.
      */
@@ -260,7 +248,6 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
     }
 
     /**
-     *
      * @param number
      * @return
      */
@@ -274,7 +261,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
     /**
      * Enum TO Int
-     *
+     * <p>
      * ORDINALS!! mine arch enemy!!
      */
     public static int etoi(Enum enumeration) {
@@ -317,8 +304,10 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         return IntStream.range(0, a.length).map(i -> Float.floatToIntBits(a[i])).toArray();
     }
 
-    /** FloatBuffer to Float Array */
-    public static float[] fbtofa(final FloatBuffer fb){
+    /**
+     * FloatBuffer to Float Array
+     */
+    public static float[] fbtofa(final FloatBuffer fb) {
         float[] fa = new float[fb.capacity()];
         fb.duplicate().get(fa);
 
@@ -401,7 +390,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         }
 
 //        return ByteBuffer.wrap(ascii.getBytes());
-        return Charset.forName("UTF-8").encode(ascii);
+        return StandardCharsets.UTF_8.encode(ascii);
     }
 
     public static ByteBuffer atobb(idStr ascii) {
@@ -431,7 +420,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         buffer = ByteBuffer.allocate(arrau.length * 2);
         buffer.asShortBuffer().put(arrau);
 
-        return (ByteBuffer) buffer.flip();
+        return buffer.flip();
     }
 
     public static CharBuffer atocb(String ascii) {
@@ -447,7 +436,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
 //        buffer.rewind();
 //        return Charset.forName("UTF-8").decode(buffer);
-        return Charset.forName("ISO-8859-1").decode(buffer);
+        return StandardCharsets.ISO_8859_1.decode(buffer);
     }
 
     public static String bbtoa(final ByteBuffer buffer) {
@@ -461,7 +450,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             return null;
         }
 
-        return (ByteBuffer) BufferUtils.createByteBuffer(bytes.length).put(bytes).flip();
+        return BufferUtils.createByteBuffer(bytes.length).put(bytes).flip();
     }
 
     /**
@@ -580,7 +569,6 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         }
         System.out.printf("------------------------------\n");
     }
-    private static final Map<String, Integer> CALL_STACK_MAP = new HashMap<>();
 
     public static void countCallStack() {
 
@@ -618,13 +606,12 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         }
     }
 
-    private static final Cloner CLONER = Cloner.standard();
-
-    /** shallow clone */
-    public static <T>T clone(T obj){
+    /**
+     * shallow clone
+     */
+    public static <T> T clone(T obj) {
         return CLONER.shallowClone(obj);
     }
-
 
     @Deprecated
     public static <T> T[] allocArray(Class<T> clazz, int length) {
@@ -633,7 +620,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
         for (int a = 0; a < length; a++) {
             try {
-                array[a] = (T) clazz.getConstructor().newInstance();
+                array[a] = clazz.getConstructor().newInstance();
             } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new TODO_Exception();//missing default constructor
             }
@@ -644,31 +631,12 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
     /**
      *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
      */
     @Deprecated
-    public static interface SERiAL extends Serializable {//TODO:remove Serializable
+    public interface SERiAL extends Serializable {//TODO:remove Serializable
 
-        public static final int SIZE = Integer.MIN_VALUE;
-        public static final int BYTES = SIZE / Byte.SIZE;
+        int SIZE = Integer.MIN_VALUE;
+        int BYTES = SIZE / Byte.SIZE;
 
         /**
          * Prepares an <b>empty</b> ByteBuffer representation of the class for
@@ -676,7 +644,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
          *
          * @return
          */
-        public ByteBuffer AllocBuffer();
+        ByteBuffer AllocBuffer();
 
         /**
          * Reads the ByteBuffer and converts and sets its values to the current
@@ -684,66 +652,41 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
          *
          * @param buffer
          */
-        public void Read(final ByteBuffer buffer);
+        void Read(final ByteBuffer buffer);
 
         /**
          * Prepares a ByteBuffer representation of the class for writing.
          *
          * @return
          */
-        public ByteBuffer Write();
-    };
+        ByteBuffer Write();
+    }
+
 
     /**
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
      *
      */
-    public static interface NiLLABLE<type> {
+    public interface NiLLABLE<type> {
 
-        public type oSet(type node);
+        type oSet(type node);
 
-        public boolean isNULL();
+        boolean isNULL();
 
-    };
+    }
+
+    public static abstract class void_callback<type> {
+
+        public abstract void run(type... objects) throws idException;
+    }
+
+    public static abstract class argCompletion_t<E> {
+        //TODO
+//    public abstract void run(type... objects);
+
+        public abstract void load(final idCmdArgs args, void_callback<String> callback);
+    }
 
     /**
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
      *
      */
 
@@ -752,33 +695,14 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
         /**
          *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         *
          */
         private final static String GET_DIMENSION = "GetDimension";
-        private final static String ZERO = "Zero";
         private final static String O_GET = "oGet";
-        private final static String O_SET = "oSet";
+        private final static String O_MINUS = "oMinus";
         private final static String O_MULTIPLY = "oMultiply";
         private final static String O_PLUS = "oPlus";
-        private final static String O_MINUS = "oMinus";
+        private final static String O_SET = "oSet";
+        private final static String ZERO = "Zero";
 
         public static int GetDimension(Object object) {
             final Class clazz = object.getClass();
@@ -950,27 +874,27 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
         public static class renderViewShadow {
 
-            public int[] viewID = {0};
-            //
-            public int[] x = {0}, y = {0}, width = {0}, height = {0};
-            //
-            public float[] fov_x = {0}, fov_y = {0};
-            public idVec3 vieworg = new idVec3();
-            public idMat3 viewaxis = new idMat3();
             //
             public boolean[] cramZNear = {false};
             public boolean[] forceUpdate = {false};
             //
-            public int[] time = {0};
-            public float[][] shaderParms = new float[MAX_GLOBAL_SHADER_PARMS][];
+            public float[] fov_x = {0}, fov_y = {0};
             public idMaterial globalMaterial = new idMaterial();
-        };
+            public float[][] shaderParms = new float[MAX_GLOBAL_SHADER_PARMS][];
+            //
+            public int[] time = {0};
+            public int[] viewID = {0};
+            public idMat3 viewaxis = new idMat3();
+            public idVec3 vieworg = new idVec3();
+            //
+            public int[] x = {0}, y = {0}, width = {0}, height = {0};
+        }
 
         public static class renderEntityShadow {
 
-            public idRenderModel hModel;
             //
-            public int[] entityNum = {0};
+            public int[] allowSurfaceInViewID = {0};
+            public idMat3 axis;
             public int[] bodyId = {0};
             //      
             public idBounds bounds;
@@ -978,75 +902,76 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             //
             public ByteBuffer callbackData;
             //
-            public int[] suppressSurfaceInViewID = {0};
-            public int[] suppressShadowInViewID = {0};
-            //
-            public int[] suppressShadowInLightID = {0};
-            //
-            public int[] allowSurfaceInViewID = {0};
-            //
-            public idVec3 origin;
-            public idMat3 axis;
-            //
             public idMaterial customShader;
-            public idMaterial referenceShader;
             public idDeclSkin customSkin;
-            public idSoundEmitter referenceSound;
-            public float[][] shaderParms = new float[MAX_ENTITY_SHADER_PARMS][];
-            // 
+            //
+            public int[] entityNum = {0};
+            //
+            public int[] forceUpdate = {0};
+            //
             public idUserInterface[] gui = new idUserInterface[MAX_RENDERENTITY_GUI];
-            //
-            public renderView_s remoteRenderView;
-            //
-            public int[] numJoints = {0};
+            public idRenderModel hModel;
             public idJointMat[] joints;
             //
             public float[] modelDepthHack = {0};
             //
+            public boolean[] noDynamicInteractions = {false};
+            //
             public boolean[] noSelfShadow = {false};
             public boolean[] noShadow = {false};
             //
-            public boolean[] noDynamicInteractions = {false};
+            public int[] numJoints = {0};
+            //
+            public idVec3 origin;
+            public idMaterial referenceShader;
+            public idSoundEmitter referenceSound;
+            //
+            public renderView_s remoteRenderView;
+            public float[][] shaderParms = new float[MAX_ENTITY_SHADER_PARMS][];
+            //
+            public int[] suppressShadowInLightID = {0};
+            public int[] suppressShadowInViewID = {0};
+            //
+            public int[] suppressSurfaceInViewID = {0};
+            public int[] timeGroup = {0};
             //
             public boolean[] weaponDepthHack = {false};
-            // 
-            public int[] forceUpdate = {0};
-            public int[] timeGroup = {0};
             public int[] xrayIndex = {0};
-        };
+        }
 
         public static class renderLightShadow {
 
-            public idMat3 axis;
-            public idVec3 origin;
-            //
-            public int[] suppressLightInViewID = {0};
             //
             public int[] allowLightInViewID = {0};
+            public idMat3 axis;
+            public idVec3 end;
+            public idVec3 lightCenter;
+            //
+            public int[] lightId = {0};
+            public idVec3 lightRadius;
             //
             public boolean[] noShadows = {false};
             public boolean[] noSpecular = {false};
+            public idVec3 origin;
+            public boolean[] parallel = {false};
             //
             public boolean[] pointLight = {false};
-            public boolean[] parallel = {false};
-            public idVec3 lightRadius;
-            public idVec3 lightCenter;
-            //
-            public idVec3 target;
-            public idVec3 right;
-            public idVec3 up;
-            public idVec3 start;
-            public idVec3 end;
             //
             public idRenderModel prelightModel;
-            //
-            public int[] lightId = {0};
+            public idSoundEmitter referenceSound;
+            public idVec3 right;
             //
             //
             public idMaterial shader;
             public float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];
-            public idSoundEmitter referenceSound;
-        };
+            public idVec3 start;
+            //
+            public int[] suppressLightInViewID = {0};
+            //
+            public idVec3 target;
+            public idVec3 up;
+        }
+
     }
 
     /**
@@ -1057,34 +982,45 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
 
         public static final class Pointer {
 
-            /** A 32bit C++ pointer is 32bits wide, duh! */
+            /**
+             * A 32bit C++ pointer is 32bits wide, duh!
+             */
             public static final transient int SIZE = 32;
         }
 
         public static final class Bool {
 
-            /** A C++ bool is 8bits. */
+            /**
+             * A C++ bool is 8bits.
+             */
             public static final transient int SIZE = Byte.SIZE;
         }
 
         public static final class Char {
 
-            /** A C++ char is also 8bits wide. */
+            /**
+             * A C++ char is also 8bits wide.
+             */
             public static final transient int SIZE = Byte.SIZE;
         }
 
         public static final class Enum {
 
-            /** A C++ enum is as big as an int. */
-            public static final transient int SIZE = Integer.SIZE;
-
-            /** A C++ long is 4 bytes. */
+            /**
+             * A C++ long is 4 bytes.
+             */
             public static final transient int Long = Integer.SIZE;
+            /**
+             * A C++ enum is as big as an int.
+             */
+            public static final transient int SIZE = Integer.SIZE;
         }
 
         public static final class Long {
 
-            /** A C++ long is 4 bytes. */
+            /**
+             * A C++ long is 4 bytes.
+             */
             public static final transient int SIZE = Integer.SIZE;
         }
     }
@@ -1098,10 +1034,10 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             printStackTrace();
             System.err.println(
                     "Woe to you, Oh Earth and Sea, for the Devil sends the\n"
-                    + "beast with wrath, because he knows the time is short...\n"
-                    + "Let him who hath understanding reckon the number of the beast,\n"
-                    + "for it is a human number,\n"
-                    + "its numbers, is");
+                            + "beast with wrath, because he knows the time is short...\n"
+                            + "Let him who hath understanding reckon the number of the beast,\n"
+                            + "for it is a human number,\n"
+                            + "its numbers, is");
             System.exit(666);
         }
     }
@@ -1112,12 +1048,12 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             printStackTrace();
             System.err.println(
                     "DARKNESS!!\n"
-                    + "Imprisoning me\n"
-                    + "All that I see\n"
-                    + "Absolute horror\n"
-                    + "I cannot live..."
-                    + "I cannot die..."
-                    + "body my holding cell!");
+                            + "Imprisoning me\n"
+                            + "All that I see\n"
+                            + "Absolute horror\n"
+                            + "I cannot live..."
+                            + "I cannot die..."
+                            + "body my holding cell!");
             System.exit(666);
         }
     }

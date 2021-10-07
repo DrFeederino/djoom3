@@ -11,41 +11,23 @@ import neo.Renderer.Model_local.idRenderModelStatic;
 import neo.Renderer.RenderSystem_init;
 import neo.Renderer.VertexCache.idVertexCache;
 import neo.Sound.snd_system;
-import static neo.TempDump.atof;
-import static neo.TempDump.atoi;
-import static neo.TempDump.btoi;
-import neo.TempDump.void_callback;
+import neo.TempDump.*;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
 import neo.framework.Async.ServerScan;
-import static neo.framework.CVarSystem.idCVarSystemLocal.show.SHOW_DESCRIPTION;
-import static neo.framework.CVarSystem.idCVarSystemLocal.show.SHOW_FLAGS;
-import static neo.framework.CVarSystem.idCVarSystemLocal.show.SHOW_TYPE;
-import static neo.framework.CVarSystem.idCVarSystemLocal.show.SHOW_VALUE;
-import neo.framework.CVarSystem.idInternalCVar;
-import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
 import neo.framework.CmdSystem.argCompletion_t;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
 import neo.framework.CmdSystem.idCmdSystem;
 import neo.framework.DemoFile.idDemoFile;
 import neo.framework.EventLoop.idEventLoop;
 import neo.framework.FileSystem_h.idFileSystemLocal;
 import neo.framework.File_h.idFile;
-import static neo.framework.Session.session;
 import neo.framework.Session_local.idSessionLocal;
 import neo.framework.UsercmdGen.idUsercmdGenLocal;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.BIT;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Lib.idLib.common;
-import static neo.idlib.Text.Str.S_COLOR_CYAN;
-import static neo.idlib.Text.Str.S_COLOR_GREEN;
-import static neo.idlib.Text.Str.S_COLOR_RED;
-import static neo.idlib.Text.Str.S_COLOR_WHITE;
-import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
+import neo.idlib.Text.Str.*;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
@@ -57,14 +39,20 @@ import neo.ui.DeviceContext;
 import neo.ui.GameBearShootWindow;
 import neo.ui.Window.idWindow;
 
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.idCVarSystemLocal.show.*;
+import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.*;
+
 //	CVar Registration
 //
 //	Each DLL using CVars has to declare a private copy of the static variable
 //	idCVar::staticVars like this: idCVar * idCVar::staticVars = NULL;
 public class CVarSystem {
-
-    private static idCVarSystemLocal localCVarSystem = new idCVarSystemLocal();
-    public static  idCVarSystem      cvarSystem      = localCVarSystem;
 
     /*
      ===============================================================================
@@ -115,27 +103,37 @@ public class CVarSystem {
 
      ===============================================================================
      */
-    public static final int CVAR_ALL         = -1;        // all flags
-    public static final int CVAR_BOOL        = BIT(0);    // variable is a boolean
-    public static final int CVAR_INTEGER     = BIT(1);    // variable is an longeger
-    public static final int CVAR_FLOAT       = BIT(2);    // variable is a float
-    public static final int CVAR_SYSTEM      = BIT(3);    // system variable
-    public static final int CVAR_RENDERER    = BIT(4);    // renderer variable
-    public static final int CVAR_SOUND       = BIT(5);    // sound variable
-    public static final int CVAR_GUI         = BIT(6);    // gui variable
-    public static final int CVAR_GAME        = BIT(7);    // game variable
-    public static final int CVAR_TOOL        = BIT(8);    // tool variable
-    public static final int CVAR_USERINFO    = BIT(9);    // sent to servers; available to menu
-    public static final int CVAR_SERVERINFO  = BIT(10);   // sent from servers; available to menu
+    public static final int CVAR_ALL = -1;        // all flags
+    public static final int CVAR_ARCHIVE = BIT(17);   // set to cause it to be saved to a config file
+    public static final int CVAR_BOOL = BIT(0);    // variable is a boolean
+    public static final int CVAR_CHEAT = BIT(13);   // variable is considered a cheat
+    public static final int CVAR_FLOAT = BIT(2);    // variable is a float
+    public static final int CVAR_GAME = BIT(7);    // game variable
+    public static final int CVAR_GUI = BIT(6);    // gui variable
+    public static final int CVAR_INIT = BIT(15);   // can only be set from the command-line
+    public static final int CVAR_INTEGER = BIT(1);    // variable is an longeger
+    public static final int CVAR_MODIFIED = BIT(18);   // set when the variable is modified
     public static final int CVAR_NETWORKSYNC = BIT(11);   // cvar is synced from the server to clients
-    public static final int CVAR_STATIC      = BIT(12);   // statically declared; not user created
-    public static final int CVAR_CHEAT       = BIT(13);   // variable is considered a cheat
-    public static final int CVAR_NOCHEAT     = BIT(14);   // variable is not considered a cheat
-    public static final int CVAR_INIT        = BIT(15);   // can only be set from the command-line
-    public static final int CVAR_ROM         = BIT(16);   // display only; cannot be set by user at all
-    public static final int CVAR_ARCHIVE     = BIT(17);   // set to cause it to be saved to a config file
-    public static final int CVAR_MODIFIED    = BIT(18);   // set when the variable is modified
-    
+    public static final int CVAR_NOCHEAT = BIT(14);   // variable is not considered a cheat
+    public static final int CVAR_RENDERER = BIT(4);    // renderer variable
+    public static final int CVAR_ROM = BIT(16);   // display only; cannot be set by user at all
+    public static final int CVAR_SERVERINFO = BIT(10);   // sent from servers; available to menu
+    public static final int CVAR_SOUND = BIT(5);    // sound variable
+    public static final int CVAR_STATIC = BIT(12);   // statically declared; not user created
+    public static final int CVAR_SYSTEM = BIT(3);    // system variable
+    public static final int CVAR_TOOL = BIT(8);    // tool variable
+    public static final int CVAR_USERINFO = BIT(9);    // sent to servers; available to menu
+    private static final String FORMAT_STRING = "%-32s ";
+    //
+    //
+    private static final int NUM_COLUMNS = 77;        // 78 - 1, or (80 x 2 - 2) / 2 - 2
+    private static final int NUM_NAME_CHARS = 33;
+    private static final int NUM_DESCRIPTION_CHARS = (NUM_COLUMNS - NUM_NAME_CHARS);
+
+    private static idCVarSystemLocal localCVarSystem = new idCVarSystemLocal();
+
+    public static idCVarSystem cvarSystem = localCVarSystem;
+
     static {
         /**
          * CVARS eager init: </br>
@@ -161,7 +159,8 @@ public class CVarSystem {
         final idVertexCache vertex = new idVertexCache();
         final snd_system snd = new snd_system();
         final sys_local sys = new sys_local();
-        final win_local wub = new win_local(){};
+        final win_local wub = new win_local() {
+        };
         final win_net net = new win_net();
         final DeviceContext context = new DeviceContext();
         final GameBearShootWindow bear = new GameBearShootWindow();
@@ -170,10 +169,37 @@ public class CVarSystem {
         final Game_local game = new Game_local();
         final Game_network network = new Game_network();
         final Lcp lcp = new Lcp();
-        
+
         final EventLoop event = new EventLoop();
         final idEventLoop loop = new idEventLoop();
         final DeclManager decl = new DeclManager();
+    }
+
+    static String CreateColumn(final String textString, int columnWidth, final String indent, idStr string) {
+        int i, lastLine;
+        char[] text = textString.toCharArray();
+
+        string.Clear();
+        for (lastLine = i = 0; /*text[i] != '\0'*/ i < text.length; i++) {
+            if (i - lastLine >= columnWidth || text[i] == '\n') {
+                while (i > 0 && text[i] > ' ' && text[i] != '/' && text[i] != ',' && text[i] != '\\') {
+                    i--;
+                }
+                while (lastLine < i) {
+                    string.Append(text[lastLine++]);
+                }
+                string.Append(indent);
+                lastLine++;
+            }
+        }
+        while (lastLine < i) {
+            string.Append(text[lastLine++]);
+        }
+        return string.toString();
+    }
+
+    public static void setCvarSystem(idCVarSystem cvarSystem) {
+        CVarSystem.cvarSystem = CVarSystem.localCVarSystem = (idCVarSystemLocal) cvarSystem;
     }
 
     /*
@@ -185,21 +211,21 @@ public class CVarSystem {
      */
     public static class idCVar {
 
-        protected String          name;               // name
-        protected String          value;              // value
-        protected String          description;        // description
-        protected int             flags;              // CVAR_? flags
-        protected float           valueMin;           // minimum value
-        protected float           valueMax;           // maximum value
-        protected String[]        valueStrings;       // valid value strings
-        protected argCompletion_t valueCompletion;    // value auto-completion function
-        protected int             integerValue;       // atoi( string )
-        protected float           floatValue;         // atof( value )
-        protected idCVar          internalVar;        // internal cvar
-        protected idCVar          next;               // next statically declared cvar
-        //
-        private static       idCVar staticVars         = null;
         private static final idCVar ID_CVAR_0xFFFFFFFF = new idCVar();
+        //
+        private static idCVar staticVars = null;
+        protected String description;        // description
+        protected int flags;              // CVAR_? flags
+        protected float floatValue;         // atof( value )
+        protected int integerValue;       // atoi( string )
+        protected idCVar internalVar;        // internal cvar
+        protected String name;               // name
+        protected idCVar next;               // next statically declared cvar
+        protected String value;              // value
+        protected argCompletion_t valueCompletion;    // value auto-completion function
+        protected float valueMax;           // maximum value
+        protected float valueMin;           // minimum value
+        protected String[] valueStrings;       // valid value strings
         //
         //
 
@@ -241,6 +267,27 @@ public class CVarSystem {
 //
 //public	virtual					~idCVar( void ) {}
 //
+
+        /*
+         ===============================================================================
+
+         CVar Registration
+
+         Each DLL using CVars has to declare a private copy of the static variable
+         idCVar::staticVars like this: idCVar * idCVar::staticVars = NULL;
+         Furthermore idCVar::RegisterStaticVars() has to be called after the
+         cvarSystem pointer is set when the DLL is first initialized.
+
+         ===============================================================================
+         */
+        public static void RegisterStaticVars() {
+            if (staticVars != ID_CVAR_0xFFFFFFFF) {
+                for (idCVar cvar = staticVars; cvar != null; cvar = cvar.next) {
+                    cvarSystem.Register(cvar);
+                }
+                staticVars = ID_CVAR_0xFFFFFFFF;
+            }
+        }
 
         public String GetName() {
             return internalVar.name;
@@ -287,7 +334,7 @@ public class CVarSystem {
         }
 
         public boolean GetBool() {
-            return (internalVar.integerValue != 0);
+            return (!"0".equalsIgnoreCase(value));
         }
 
         public int GetInteger() {
@@ -317,28 +364,6 @@ public class CVarSystem {
         public void SetInternalVar(idCVar cvar) {
             internalVar = cvar;
         }
-
-        /*
-         ===============================================================================
-
-         CVar Registration
-
-         Each DLL using CVars has to declare a private copy of the static variable
-         idCVar::staticVars like this: idCVar * idCVar::staticVars = NULL;
-         Furthermore idCVar::RegisterStaticVars() has to be called after the
-         cvarSystem pointer is set when the DLL is first initialized.
-
-         ===============================================================================
-         */
-        public static void RegisterStaticVars() {
-            if (staticVars != ID_CVAR_0xFFFFFFFF) {
-                for (idCVar cvar = staticVars; cvar != null; cvar = cvar.next) {
-                    cvarSystem.Register(cvar);
-                }
-                staticVars = ID_CVAR_0xFFFFFFFF;
-            }
-        }
-
 
         /*
          ===============================================================================
@@ -386,18 +411,18 @@ public class CVarSystem {
         protected void InternalSetFloat(final float newValue) {
         }
 
-    };
+    }
 
     /**
      * ===============================================================================
-     *
+     * <p>
      * idCVarSystem
-     *
+     * <p>
      * ===============================================================================
      */
     public static abstract class idCVarSystem {
 
-//	public abstract					~idCVarSystem( ) {}
+        //	public abstract					~idCVarSystem( ) {}
         public abstract void Init() throws idException;
 
         public abstract void Shutdown();
@@ -466,15 +491,15 @@ public class CVarSystem {
         public abstract idDict MoveCVarsToDict(int flags) throws idException;
 
         public abstract void SetCVarsFromDict(final idDict dict) throws idException;
-    };
+    }
 
     public static class idInternalCVar extends idCVar {
         // friend class idCVarSystemLocal;
 
-        private idStr nameString;			// name
-        private idStr resetString;			// resetting will change to this value
-        private idStr valueString;			// value
-        private idStr descriptionString;	// description
+        private idStr descriptionString;    // description
+        private idStr nameString;            // name
+        private idStr resetString;            // resetting will change to this value
+        private idStr valueString;            // value
         //
         //
 
@@ -674,7 +699,7 @@ public class CVarSystem {
                 // common.Printf( "%s is a synced over the network and cannot be changed on a multiplayer client.\n", nameString.c_str() );
 // #if ID_ALLOW_CHEATS
                 // common.Printf( "ID_ALLOW_CHEATS override!\n" );
-// #else				
+// #else
                 // return;
 // #endif
 //		}
@@ -683,7 +708,7 @@ public class CVarSystem {
                     common.Printf("%s cannot be changed in multiplayer.\n", nameString);
 // #if ID_ALLOW_CHEATS
                     // common.Printf( "ID_ALLOW_CHEATS override!\n" );
-// #else				
+// #else
                     return;
 // #endif
                 }
@@ -746,7 +771,7 @@ public class CVarSystem {
         protected void InternalSetFloat(final float newValue) throws idException {
             Set(Float.toString(newValue), true, false);
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -757,12 +782,12 @@ public class CVarSystem {
      */
     static class idCVarSystemLocal extends idCVarSystem {
 
-        private boolean                initialized;
-        private idList<idInternalCVar> cvars;
-        private idHashIndex            cvarHash;
-        private int                    modifiedFlags;
         // use a static dictionary to MoveCVarsToDict can be used from game
-        private static idDict moveCVarsToDict = new idDict();
+        private static final idDict moveCVarsToDict = new idDict();
+        private final idHashIndex cvarHash;
+        private final idList<idInternalCVar> cvars;
+        private boolean initialized;
+        private int modifiedFlags;
         //
         //
 
@@ -775,6 +800,154 @@ public class CVarSystem {
 //
 //public						~idCVarSystemLocal() {}
 //
+
+        static void ListByFlags(idCmdArgs args, long /*cvarFlags_t*/ flags) throws idException {
+            int i, argNum;
+            idStr match, indent = new idStr(), str = new idStr();
+            String string;
+            idInternalCVar cvar;
+            idList<idInternalCVar> cvarList = new idList<>();
+
+            argNum = 1;
+            show show = SHOW_VALUE;
+
+            if (idStr.Icmp(args.Argv(argNum), "-") == 0 || idStr.Icmp(args.Argv(argNum), "/") == 0) {
+                if (idStr.Icmp(args.Argv(argNum + 1), "help") == 0 || idStr.Icmp(args.Argv(argNum + 1), "?") == 0) {
+                    argNum = 3;
+                    show = SHOW_DESCRIPTION;
+                } else if (idStr.Icmp(args.Argv(argNum + 1), "type") == 0 || idStr.Icmp(args.Argv(argNum + 1), "range") == 0) {
+                    argNum = 3;
+                    show = SHOW_TYPE;
+                } else if (idStr.Icmp(args.Argv(argNum + 1), "flags") == 0) {
+                    argNum = 3;
+                    show = SHOW_FLAGS;
+                }
+            }
+
+            if (args.Argc() > argNum) {
+                match = new idStr(args.Args(argNum, -1));
+                match.Replace(" ", "");
+            } else {
+                match = new idStr();
+            }
+
+            for (i = 0; i < localCVarSystem.cvars.Num(); i++) {
+                cvar = localCVarSystem.cvars.oGet(i);
+
+                if (0 == (cvar.GetFlags() & flags)) {
+                    continue;
+                }
+
+                if (match.Length() != 0 && !cvar.nameString.Filter(match.toString(), false)) {
+                    continue;
+                }
+
+                cvarList.Append(cvar);
+            }
+
+            cvarList.Sort();
+
+            switch (show) {
+                case SHOW_VALUE: {
+                    for (i = 0; i < cvarList.Num(); i++) {
+                        cvar = cvarList.oGet(i);
+                        common.Printf(FORMAT_STRING + S_COLOR_WHITE + "\"%s\"\n", cvar.nameString, cvar.valueString);
+                    }
+                    break;
+                }
+                case SHOW_DESCRIPTION: {
+                    indent.Fill(' ', NUM_NAME_CHARS);
+                    indent.Insert("\n", 0);
+
+                    for (i = 0; i < cvarList.Num(); i++) {
+                        cvar = cvarList.oGet(i);
+                        common.Printf(FORMAT_STRING + S_COLOR_WHITE + "%s\n", cvar.nameString, CreateColumn(cvar.GetDescription(), NUM_DESCRIPTION_CHARS, indent.toString(), str));
+                    }
+                    break;
+                }
+                case SHOW_TYPE: {
+                    for (i = 0; i < cvarList.Num(); i++) {
+                        cvar = cvarList.oGet(i);
+                        if ((cvar.GetFlags() & CVAR_BOOL) != 0) {
+                            common.Printf(FORMAT_STRING + S_COLOR_CYAN + "bool\n", cvar.GetName());
+                        } else if ((cvar.GetFlags() & CVAR_INTEGER) != 0) {
+                            if (cvar.GetMinValue() < cvar.GetMaxValue()) {
+                                common.Printf(FORMAT_STRING + S_COLOR_GREEN + "int " + S_COLOR_WHITE + "[%d, %d]\n", cvar.GetName(), (int) cvar.GetMinValue(), (int) cvar.GetMaxValue());
+                            } else {
+                                common.Printf(FORMAT_STRING + S_COLOR_GREEN + "int\n", cvar.GetName());
+                            }
+                        } else if ((cvar.GetFlags() & CVAR_FLOAT) != 0) {
+                            if (cvar.GetMinValue() < cvar.GetMaxValue()) {
+                                common.Printf(FORMAT_STRING + S_COLOR_RED + "float " + S_COLOR_WHITE + "[%s, %s]\n", cvar.GetName(), new idStr(cvar.GetMinValue()).toString(), new idStr(cvar.GetMaxValue()).toString());
+                            } else {
+                                common.Printf(FORMAT_STRING + S_COLOR_RED + "float\n", cvar.GetName());
+                            }
+                        } else if (cvar.GetValueStrings() != null) {
+                            common.Printf(FORMAT_STRING + S_COLOR_WHITE + "string " + S_COLOR_WHITE + "[", cvar.GetName());
+                            for (int j = 0; cvar.GetValueStrings()[j] != null; j++) {
+                                if (j != 0) {
+                                    common.Printf(S_COLOR_WHITE + ", %s", cvar.GetValueStrings()[j]);
+                                } else {
+                                    common.Printf(S_COLOR_WHITE + "%s", cvar.GetValueStrings()[j]);
+                                }
+                            }
+                            common.Printf(S_COLOR_WHITE + "]\n");
+                        } else {
+                            common.Printf(FORMAT_STRING + S_COLOR_WHITE + "string\n", cvar.GetName());
+                        }
+                    }
+                    break;
+                }
+                case SHOW_FLAGS: {
+                    for (i = 0; i < cvarList.Num(); i++) {
+                        cvar = cvarList.oGet(i);
+                        common.Printf(FORMAT_STRING, cvar.GetName());
+                        string = "";
+                        if ((cvar.GetFlags() & CVAR_BOOL) != 0) {
+                            string += S_COLOR_CYAN + "B ";
+                        } else if ((cvar.GetFlags() & CVAR_INTEGER) != 0) {
+                            string += S_COLOR_GREEN + "I ";
+                        } else if ((cvar.GetFlags() & CVAR_FLOAT) != 0) {
+                            string += S_COLOR_RED + "F ";
+                        } else {
+                            string += S_COLOR_WHITE + "S ";
+                        }
+                        if ((cvar.GetFlags() & CVAR_SYSTEM) != 0) {
+                            string += S_COLOR_WHITE + "SYS  ";
+                        } else if ((cvar.GetFlags() & CVAR_RENDERER) != 0) {
+                            string += S_COLOR_WHITE + "RNDR ";
+                        } else if ((cvar.GetFlags() & CVAR_SOUND) != 0) {
+                            string += S_COLOR_WHITE + "SND  ";
+                        } else if ((cvar.GetFlags() & CVAR_GUI) != 0) {
+                            string += S_COLOR_WHITE + "GUI  ";
+                        } else if ((cvar.GetFlags() & CVAR_GAME) != 0) {
+                            string += S_COLOR_WHITE + "GAME ";
+                        } else if ((cvar.GetFlags() & CVAR_TOOL) != 0) {
+                            string += S_COLOR_WHITE + "TOOL ";
+                        } else {
+                            string += S_COLOR_WHITE + "     ";
+                        }
+                        string += ((cvar.GetFlags() & CVAR_USERINFO) != 0) ? "UI " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_SERVERINFO) != 0) ? "SI " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_STATIC) != 0) ? "ST " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_CHEAT) != 0) ? "CH " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_INIT) != 0) ? "IN " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_ROM) != 0) ? "RO " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_ARCHIVE) != 0) ? "AR " : "   ";
+                        string += ((cvar.GetFlags() & CVAR_MODIFIED) != 0) ? "MO " : "   ";
+                        string += "\n";
+                        common.Printf(string);
+                    }
+                    break;
+                }
+            }
+
+            common.Printf("\n%d cvars listed\n\n", cvarList.Num());
+            common.Printf("listCvar [search string]          = list cvar values\n"
+                    + "listCvar -help [search string]    = list cvar descriptions\n"
+                    + "listCvar -type [search string]    = list cvar types\n"
+                    + "listCvar -flags [search string]   = list cvar flags\n");
+        }
 
         @Override
         public void Init() throws idException {
@@ -836,12 +1009,12 @@ public class CVarSystem {
         public void SetCVarString(final String name, final String value/*, int flags = 0*/) {
             SetCVarString(name, value, 0);
         }
+        //public	 void			SetCVarBool( final String name, const boolean value/*, int flags = 0*/);
 
         @Override
         public void SetCVarString(final String name, final String value, int flags) {
             SetInternal(name, value, flags);
         }
-        //public	 void			SetCVarBool( final String name, const boolean value/*, int flags = 0*/);
 
         @Override
         public void SetCVarBool(final String name, final boolean value) {
@@ -1021,6 +1194,8 @@ public class CVarSystem {
             }
             return new idDict(moveCVarsToDict);
         }
+//
+//public	void					RegisterInternal( idCVar cvar );
 
         @Override
         public void SetCVarsFromDict(final idDict dict) throws idException {
@@ -1034,8 +1209,6 @@ public class CVarSystem {
                 }
             }
         }
-//
-//public	void					RegisterInternal( idCVar cvar );
 
         public idInternalCVar FindInternal(final String name) {
             int hash = cvarHash.GenerateKey(name, false);
@@ -1062,6 +1235,14 @@ public class CVarSystem {
                 hash = cvarHash.GenerateKey(internal.nameString.c_str(), false);
                 cvarHash.Add(hash, cvars.Append(internal));
             }
+        }
+
+        enum show {
+
+            SHOW_VALUE,
+            SHOW_DESCRIPTION,
+            SHOW_TYPE,
+            SHOW_FLAGS
         }
 
         /*
@@ -1132,7 +1313,7 @@ public class CVarSystem {
                     cvar.Set(new idStr(current).toString(), false, false);
                 }
             }
-        };
+        }
 
         static class Set_f extends cmdFunction_t {
 
@@ -1149,7 +1330,7 @@ public class CVarSystem {
                 str = args.Args(2, args.Argc() - 1);
                 localCVarSystem.SetCVarString(args.Argv(1), str);
             }
-        };
+        }
 
         static class SetS_f extends cmdFunction_t {
 
@@ -1170,7 +1351,7 @@ public class CVarSystem {
                 }
                 cvar.flags |= CVAR_SERVERINFO | CVAR_ARCHIVE;
             }
-        };
+        }
 
         static class SetU_f extends cmdFunction_t {
 
@@ -1191,7 +1372,7 @@ public class CVarSystem {
                 }
                 cvar.flags |= CVAR_USERINFO | CVAR_ARCHIVE;
             }
-        };
+        }
 
         static class SetT_f extends cmdFunction_t {
 
@@ -1212,7 +1393,7 @@ public class CVarSystem {
                 }
                 cvar.flags |= CVAR_TOOL;
             }
-        };
+        }
 
         static class SetA_f extends cmdFunction_t {
 
@@ -1237,7 +1418,7 @@ public class CVarSystem {
                 // to be saved
 //	cvar->flags |= CVAR_ARCHIVE;
             }
-        };
+        }
 
         static class Reset_f extends cmdFunction_t {
 
@@ -1262,162 +1443,6 @@ public class CVarSystem {
 
                 cvar.Reset();
             }
-        };
-
-        static enum show {
-
-            SHOW_VALUE,
-            SHOW_DESCRIPTION,
-            SHOW_TYPE,
-            SHOW_FLAGS
-        };
-
-        static void ListByFlags(idCmdArgs args, long /*cvarFlags_t*/ flags) throws idException {
-            int i, argNum;
-            idStr match, indent = new idStr(), str = new idStr();
-            String string;
-            idInternalCVar cvar;
-            idList<idInternalCVar> cvarList = new idList<>();
-
-            argNum = 1;
-            show show = SHOW_VALUE;
-
-            if (idStr.Icmp(args.Argv(argNum), "-") == 0 || idStr.Icmp(args.Argv(argNum), "/") == 0) {
-                if (idStr.Icmp(args.Argv(argNum + 1), "help") == 0 || idStr.Icmp(args.Argv(argNum + 1), "?") == 0) {
-                    argNum = 3;
-                    show = SHOW_DESCRIPTION;
-                } else if (idStr.Icmp(args.Argv(argNum + 1), "type") == 0 || idStr.Icmp(args.Argv(argNum + 1), "range") == 0) {
-                    argNum = 3;
-                    show = SHOW_TYPE;
-                } else if (idStr.Icmp(args.Argv(argNum + 1), "flags") == 0) {
-                    argNum = 3;
-                    show = SHOW_FLAGS;
-                }
-            }
-
-            if (args.Argc() > argNum) {
-                match = new idStr(args.Args(argNum, -1));
-                match.Replace(" ", "");
-            } else {
-                match = new idStr();
-            }
-
-            for (i = 0; i < localCVarSystem.cvars.Num(); i++) {
-                cvar = localCVarSystem.cvars.oGet(i);
-
-                if (0 == (cvar.GetFlags() & flags)) {
-                    continue;
-                }
-
-                if (match.Length() != 0 && !cvar.nameString.Filter(match.toString(), false)) {
-                    continue;
-                }
-
-                cvarList.Append(cvar);
-            }
-
-            cvarList.Sort();
-
-            switch (show) {
-                case SHOW_VALUE: {
-                    for (i = 0; i < cvarList.Num(); i++) {
-                        cvar = cvarList.oGet(i);
-                        common.Printf(FORMAT_STRING + S_COLOR_WHITE + "\"%s\"\n", cvar.nameString, cvar.valueString);
-                    }
-                    break;
-                }
-                case SHOW_DESCRIPTION: {
-                    indent.Fill(' ', NUM_NAME_CHARS);
-                    indent.Insert("\n", 0);
-
-                    for (i = 0; i < cvarList.Num(); i++) {
-                        cvar = cvarList.oGet(i);
-                        common.Printf(FORMAT_STRING + S_COLOR_WHITE + "%s\n", cvar.nameString, CreateColumn(cvar.GetDescription(), NUM_DESCRIPTION_CHARS, indent.toString(), str));
-                    }
-                    break;
-                }
-                case SHOW_TYPE: {
-                    for (i = 0; i < cvarList.Num(); i++) {
-                        cvar = cvarList.oGet(i);
-                        if ((cvar.GetFlags() & CVAR_BOOL) != 0) {
-                            common.Printf(FORMAT_STRING + S_COLOR_CYAN + "bool\n", cvar.GetName());
-                        } else if ((cvar.GetFlags() & CVAR_INTEGER) != 0) {
-                            if (cvar.GetMinValue() < cvar.GetMaxValue()) {
-                                common.Printf(FORMAT_STRING + S_COLOR_GREEN + "int " + S_COLOR_WHITE + "[%d, %d]\n", cvar.GetName(), (int) cvar.GetMinValue(), (int) cvar.GetMaxValue());
-                            } else {
-                                common.Printf(FORMAT_STRING + S_COLOR_GREEN + "int\n", cvar.GetName());
-                            }
-                        } else if ((cvar.GetFlags() & CVAR_FLOAT) != 0) {
-                            if (cvar.GetMinValue() < cvar.GetMaxValue()) {
-                                common.Printf(FORMAT_STRING + S_COLOR_RED + "float " + S_COLOR_WHITE + "[%s, %s]\n", cvar.GetName(), new idStr(cvar.GetMinValue()).toString(), new idStr(cvar.GetMaxValue()).toString());
-                            } else {
-                                common.Printf(FORMAT_STRING + S_COLOR_RED + "float\n", cvar.GetName());
-                            }
-                        } else if (cvar.GetValueStrings() != null) {
-                            common.Printf(FORMAT_STRING + S_COLOR_WHITE + "string " + S_COLOR_WHITE + "[", cvar.GetName());
-                            for (int j = 0; cvar.GetValueStrings()[j] != null; j++) {
-                                if (j != 0) {
-                                    common.Printf(S_COLOR_WHITE + ", %s", cvar.GetValueStrings()[j]);
-                                } else {
-                                    common.Printf(S_COLOR_WHITE + "%s", cvar.GetValueStrings()[j]);
-                                }
-                            }
-                            common.Printf(S_COLOR_WHITE + "]\n");
-                        } else {
-                            common.Printf(FORMAT_STRING + S_COLOR_WHITE + "string\n", cvar.GetName());
-                        }
-                    }
-                    break;
-                }
-                case SHOW_FLAGS: {
-                    for (i = 0; i < cvarList.Num(); i++) {
-                        cvar = cvarList.oGet(i);
-                        common.Printf(FORMAT_STRING, cvar.GetName());
-                        string = "";
-                        if ((cvar.GetFlags() & CVAR_BOOL) != 0) {
-                            string += S_COLOR_CYAN + "B ";
-                        } else if ((cvar.GetFlags() & CVAR_INTEGER) != 0) {
-                            string += S_COLOR_GREEN + "I ";
-                        } else if ((cvar.GetFlags() & CVAR_FLOAT) != 0) {
-                            string += S_COLOR_RED + "F ";
-                        } else {
-                            string += S_COLOR_WHITE + "S ";
-                        }
-                        if ((cvar.GetFlags() & CVAR_SYSTEM) != 0) {
-                            string += S_COLOR_WHITE + "SYS  ";
-                        } else if ((cvar.GetFlags() & CVAR_RENDERER) != 0) {
-                            string += S_COLOR_WHITE + "RNDR ";
-                        } else if ((cvar.GetFlags() & CVAR_SOUND) != 0) {
-                            string += S_COLOR_WHITE + "SND  ";
-                        } else if ((cvar.GetFlags() & CVAR_GUI) != 0) {
-                            string += S_COLOR_WHITE + "GUI  ";
-                        } else if ((cvar.GetFlags() & CVAR_GAME) != 0) {
-                            string += S_COLOR_WHITE + "GAME ";
-                        } else if ((cvar.GetFlags() & CVAR_TOOL) != 0) {
-                            string += S_COLOR_WHITE + "TOOL ";
-                        } else {
-                            string += S_COLOR_WHITE + "     ";
-                        }
-                        string += ((cvar.GetFlags() & CVAR_USERINFO) != 0) ? "UI " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_SERVERINFO) != 0) ? "SI " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_STATIC) != 0) ? "ST " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_CHEAT) != 0) ? "CH " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_INIT) != 0) ? "IN " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_ROM) != 0) ? "RO " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_ARCHIVE) != 0) ? "AR " : "   ";
-                        string += ((cvar.GetFlags() & CVAR_MODIFIED) != 0) ? "MO " : "   ";
-                        string += "\n";
-                        common.Printf(string);
-                    }
-                    break;
-                }
-            }
-
-            common.Printf("\n%d cvars listed\n\n", cvarList.Num());
-            common.Printf("listCvar [search string]          = list cvar values\n"
-                    + "listCvar -help [search string]    = list cvar descriptions\n"
-                    + "listCvar -type [search string]    = list cvar types\n"
-                    + "listCvar -flags [search string]   = list cvar flags\n");
         }
 
         static class List_f extends cmdFunction_t {
@@ -1432,7 +1457,7 @@ public class CVarSystem {
             public void run(idCmdArgs args) throws idException {
                 ListByFlags(args, CVAR_ALL);
             }
-        };
+        }
 
         static class Restart_f extends cmdFunction_t {
 
@@ -1469,36 +1494,8 @@ public class CVarSystem {
                 }
 
             }
-        };
-    };
-    //    
-    //
-    private static final int    NUM_COLUMNS           = 77;        // 78 - 1, or (80 x 2 - 2) / 2 - 2
-    private static final int    NUM_NAME_CHARS        = 33;
-    private static final int    NUM_DESCRIPTION_CHARS = (NUM_COLUMNS - NUM_NAME_CHARS);
-    private static final String FORMAT_STRING         = "%-32s ";
-
-    static String CreateColumn(final String textString, int columnWidth, final String indent, idStr string) {
-        int i, lastLine;
-        char[] text = textString.toCharArray();
-
-        string.Clear();
-        for (lastLine = i = 0; /*text[i] != '\0'*/ i < text.length; i++) {
-            if (i - lastLine >= columnWidth || text[i] == '\n') {
-                while (i > 0 && text[i] > ' ' && text[i] != '/' && text[i] != ',' && text[i] != '\\') {
-                    i--;
-                }
-                while (lastLine < i) {
-                    string.Append(text[lastLine++]);
-                }
-                string.Append(indent);
-                lastLine++;
-            }
         }
-        while (lastLine < i) {
-            string.Append(text[lastLine++]);
-        }
-        return string.toString();
+
     }
 
     /*
@@ -1513,9 +1510,5 @@ public class CVarSystem {
         public int compare(idInternalCVar a, idInternalCVar b) {
             return idStr.Icmp(a.GetName(), b.GetName());
         }
-    }
-
-    public static void setCvarSystem(idCVarSystem cvarSystem) {
-        CVarSystem.cvarSystem = CVarSystem.localCVarSystem = (idCVarSystemLocal) cvarSystem;
     }
 }

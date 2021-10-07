@@ -9,10 +9,10 @@ import static neo.framework.Common.common;
 public class NSBitmapImageRep {
 
     //    static class NSBitmapImageRep {
-    private byte[]            bmap;
-    private int               width;
-    private int               height;
+    private byte[] bmap;
+    private int height;
     private long/*ID_TIME_T*/ timestamp;
+    private int width;
     //
     //
 

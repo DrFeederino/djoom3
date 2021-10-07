@@ -1,13 +1,13 @@
 package neo.idlib.math.Matrix;
 
-import java.util.Arrays;
-
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Matrix.idMat0.MATRIX_EPSILON;
-import static neo.idlib.math.Matrix.idMat0.MATRIX_INVERSE_EPSILON;
-
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec6;
+
+import java.util.Arrays;
+
+import static neo.idlib.math.Matrix.idMat0.MATRIX_EPSILON;
+import static neo.idlib.math.Matrix.idMat0.MATRIX_INVERSE_EPSILON;
 
 //===============================================================
 //
@@ -15,17 +15,8 @@ import neo.idlib.math.Vector.idVec6;
 //
 //===============================================================
 public class idMat6 {
-    private static final idMat6 mat6_zero = new idMat6(new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0));
     private static final idMat6 mat6_identity = new idMat6(new idVec6(1, 0, 0, 0, 0, 0), new idVec6(0, 1, 0, 0, 0, 0), new idVec6(0, 0, 1, 0, 0, 0), new idVec6(0, 0, 0, 1, 0, 0), new idVec6(0, 0, 0, 0, 1, 0), new idVec6(0, 0, 0, 0, 0, 1));
-
-    public static idMat6 getMat6_zero() {
-        return new idMat6(mat6_zero);
-    }
-
-    public static idMat6 getMat6_identity() {
-        return new idMat6(mat6_identity);
-    }
-    
+    private static final idMat6 mat6_zero = new idMat6(new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0), new idVec6(0, 0, 0, 0, 0, 0));
     private final idVec6[] mat = {new idVec6(), new idVec6(), new idVec6(), new idVec6(), new idVec6(), new idVec6()};
 
     public idMat6() {
@@ -49,7 +40,7 @@ public class idMat6 {
         mat[5].oSet(new idVec6(m2.mat[2].x, m2.mat[2].y, m2.mat[2].z, m3.mat[2].x, m3.mat[2].y, m3.mat[2].z));
     }
 
-    public idMat6(final float src[][]) {
+    public idMat6(final float[][] src) {
 //	memcpy( mat, src, 6 * 6 * sizeof( float ) );
         mat[0].oSet(new idVec6(src[0][0], src[0][1], src[0][2], src[0][3], src[0][4], src[0][5]));
         mat[1].oSet(new idVec6(src[1][0], src[1][1], src[1][2], src[1][3], src[1][4], src[1][5]));
@@ -63,7 +54,32 @@ public class idMat6 {
         this.oSet(m);
     }
 
-//public	const idVec6 &	operator[]( int index ) const;
+    public static idMat6 getMat6_zero() {
+        return new idMat6(mat6_zero);
+    }
+
+    public static idMat6 getMat6_identity() {
+        return new idMat6(mat6_identity);
+    }
+
+    //public	friend idMat6	operator*( const float a, const idMat6 &mat );
+    public static idMat6 oMultiply(final float a, final idMat6 mat) {
+        return mat.oMultiply(a);
+    }
+//public	idVec6			operator*( const idVec6 &vec ) const;
+
+    public static idVec6 oMultiply(final idVec6 vec, final idMat6 mat) {
+        return mat.oMultiply(vec);
+    }
+//public	idMat6			operator*( const idMat6 &a ) const;
+
+    public static idVec6 oMulSet(idVec6 vec, final idMat6 mat) {
+        vec = mat.oMultiply(vec);
+        return vec;
+    }
+//public	idMat6			operator+( const idMat6 &a ) const;
+
+    //public	const idVec6 &	operator[]( int index ) const;
 //public	idVec6 &		operator[]( int index );
 //public	idMat6			operator*( const float a ) const;
     public idMat6 oMultiply(final float a) {
@@ -75,7 +91,6 @@ public class idMat6 {
                 new idVec6(mat[4].p[0] * a, mat[4].p[1] * a, mat[4].p[2] * a, mat[4].p[3] * a, mat[4].p[4] * a, mat[4].p[5] * a),
                 new idVec6(mat[5].p[0] * a, mat[5].p[1] * a, mat[5].p[2] * a, mat[5].p[3] * a, mat[5].p[4] * a, mat[5].p[5] * a));
     }
-//public	idVec6			operator*( const idVec6 &vec ) const;
 
     public idVec6 oMultiply(final idVec6 vec) {
         return new idVec6(
@@ -86,7 +101,7 @@ public class idMat6 {
                 mat[4].p[0] * vec.p[0] + mat[4].p[1] * vec.p[1] + mat[4].p[2] * vec.p[2] + mat[4].p[3] * vec.p[3] + mat[4].p[4] * vec.p[4] + mat[4].p[5] * vec.p[5],
                 mat[5].p[0] * vec.p[0] + mat[5].p[1] * vec.p[1] + mat[5].p[2] * vec.p[2] + mat[5].p[3] * vec.p[3] + mat[5].p[4] * vec.p[4] + mat[5].p[5] * vec.p[5]);
     }
-//public	idMat6			operator*( const idMat6 &a ) const;
+//public	idMat6 &		operator*=( const float a );
 
     public idMat6 oMultiply(final idMat6 a) {
         int i, j;
@@ -100,19 +115,19 @@ public class idMat6 {
 
         for (i = 0; i < 6; i++) {
             for (j = 0; j < 6; j++) {
-                dst.mat[i].p[i] = m1Ptr[0] * m2Ptr[ 0 * 6 + j]
-                        + m1Ptr[1] * m2Ptr[ 1 * 6 + j]
-                        + m1Ptr[2] * m2Ptr[ 2 * 6 + j]
-                        + m1Ptr[3] * m2Ptr[ 3 * 6 + j]
-                        + m1Ptr[4] * m2Ptr[ 4 * 6 + j]
-                        + m1Ptr[5] * m2Ptr[ 5 * 6 + j];
+                dst.mat[i].p[i] = m1Ptr[0] * m2Ptr[0 * 6 + j]
+                        + m1Ptr[1] * m2Ptr[1 * 6 + j]
+                        + m1Ptr[2] * m2Ptr[2 * 6 + j]
+                        + m1Ptr[3] * m2Ptr[3 * 6 + j]
+                        + m1Ptr[4] * m2Ptr[4 * 6 + j]
+                        + m1Ptr[5] * m2Ptr[5 * 6 + j];
 //			dstPtr++;
             }
 //		m1Ptr += 6;
         }
         return dst;
     }
-//public	idMat6			operator+( const idMat6 &a ) const;
+//public	idMat6 &		operator*=( const idMat6 &a );
 
     public idMat6 oPlus(final idMat6 a) {
         return new idMat6(
@@ -123,8 +138,9 @@ public class idMat6 {
                 new idVec6(mat[4].p[0] + a.mat[4].p[0], mat[4].p[1] + a.mat[4].p[1], mat[4].p[2] + a.mat[4].p[2], mat[4].p[3] + a.mat[4].p[3], mat[4].p[4] + a.mat[4].p[4], mat[4].p[5] + a.mat[4].p[5]),
                 new idVec6(mat[5].p[0] + a.mat[5].p[0], mat[5].p[1] + a.mat[5].p[1], mat[5].p[2] + a.mat[5].p[2], mat[5].p[3] + a.mat[5].p[3], mat[5].p[4] + a.mat[5].p[4], mat[5].p[5] + a.mat[5].p[5]));
     }
+//public	idMat6 &		operator+=( const idMat6 &a );
 
-//public	idMat6			operator-( const idMat6 &a ) const;
+    //public	idMat6			operator-( const idMat6 &a ) const;
     public idMat6 oMinus(final idMat6 a) {
         return new idMat6(
                 new idVec6(mat[0].p[0] - a.mat[0].p[0], mat[0].p[1] - a.mat[0].p[1], mat[0].p[2] - a.mat[0].p[2], mat[0].p[3] - a.mat[0].p[3], mat[0].p[4] - a.mat[0].p[4], mat[0].p[5] - a.mat[0].p[5]),
@@ -134,7 +150,7 @@ public class idMat6 {
                 new idVec6(mat[4].p[0] - a.mat[4].p[0], mat[4].p[1] - a.mat[4].p[1], mat[4].p[2] - a.mat[4].p[2], mat[4].p[3] - a.mat[4].p[3], mat[4].p[4] - a.mat[4].p[4], mat[4].p[5] - a.mat[4].p[5]),
                 new idVec6(mat[5].p[0] - a.mat[5].p[0], mat[5].p[1] - a.mat[5].p[1], mat[5].p[2] - a.mat[5].p[2], mat[5].p[3] - a.mat[5].p[3], mat[5].p[4] - a.mat[5].p[4], mat[5].p[5] - a.mat[5].p[5]));
     }
-//public	idMat6 &		operator*=( const float a );
+//public	idMat6 &		operator-=( const idMat6 &a );
 
     public idMat6 oMulSet(final float a) {
         mat[0].p[0] *= a;
@@ -175,13 +191,12 @@ public class idMat6 {
         mat[5].p[5] *= a;
         return this;
     }
-//public	idMat6 &		operator*=( const idMat6 &a );
 
     public idMat6 oMulSet(final idMat6 a) {
         this.oSet(this.oMultiply(a));
         return this;
     }
-//public	idMat6 &		operator+=( const idMat6 &a );
+//public	friend idVec6	operator*( const idVec6 &vec, const idMat6 &mat );
 
     public idMat6 oPluSet(final idMat6 a) {
         mat[0].p[0] += a.mat[0].p[0];
@@ -222,7 +237,7 @@ public class idMat6 {
         mat[5].p[5] += a.mat[5].p[5];
         return this;
     }
-//public	idMat6 &		operator-=( const idMat6 &a );
+//public	friend idVec6 &	operator*=( idVec6 &vec, const idMat6 &mat );
 
     public idMat6 oMinSet(final idMat6 a) {
         mat[0].p[0] -= a.mat[0].p[0];
@@ -262,22 +277,6 @@ public class idMat6 {
         mat[5].p[4] -= a.mat[5].p[4];
         mat[5].p[5] -= a.mat[5].p[5];
         return this;
-    }
-
-//public	friend idMat6	operator*( const float a, const idMat6 &mat );
-    public static idMat6 oMultiply(final float a, final idMat6 mat) {
-        return mat.oMultiply(a);
-    }
-//public	friend idVec6	operator*( const idVec6 &vec, const idMat6 &mat );
-
-    public static idVec6 oMultiply(final idVec6 vec, final idMat6 mat) {
-        return mat.oMultiply(vec);
-    }
-//public	friend idVec6 &	operator*=( idVec6 &vec, const idMat6 &mat );
-
-    public static idVec6 oMulSet(idVec6 vec, final idMat6 mat) {
-        vec = mat.oMultiply(vec);
-        return vec;
     }
 
     public boolean Compare(final idMat6 a) {// exact compare, no epsilon
@@ -326,10 +325,7 @@ public class idMat6 {
             return false;
         }
         final idMat6 other = (idMat6) obj;
-        if (!Arrays.deepEquals(this.mat, other.mat)) {
-            return false;
-        }
-        return true;
+        return Arrays.deepEquals(this.mat, other.mat);
     }
 
     public void Zero() {
@@ -468,7 +464,7 @@ public class idMat6 {
 
         for (i = 0; i < 6; i++) {
             for (j = 0; j < 6; j++) {
-                transpose.mat[ i].p[ j] = this.mat[ j].p[ i];
+                transpose.mat[i].p[j] = this.mat[j].p[i];
             }
         }
         return transpose;
@@ -480,9 +476,9 @@ public class idMat6 {
 
         for (i = 0; i < 6; i++) {
             for (j = i + 1; j < 6; j++) {
-                temp = mat[ i].p[ j];
-                mat[ i].p[ j] = mat[ j].p[ i];
-                mat[ j].p[ i] = temp;
+                temp = mat[i].p[j];
+                mat[i].p[j] = mat[j].p[i];
+                mat[j].p[i] = temp;
             }
         }
         return this;
@@ -997,4 +993,4 @@ public class idMat6 {
         return temp;
     }
 
-};
+}

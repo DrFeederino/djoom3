@@ -1,134 +1,52 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.stream.Stream;
-
 import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.SysCvar.g_balanceTDM;
-import static neo.Game.GameSys.SysCvar.g_voteFlags;
-import static neo.Game.GameSys.SysCvar.si_fragLimit;
-import static neo.Game.GameSys.SysCvar.si_gameType;
-import static neo.Game.GameSys.SysCvar.si_gameTypeArgs;
-import static neo.Game.GameSys.SysCvar.si_map;
-import static neo.Game.GameSys.SysCvar.si_spectators;
-import static neo.Game.GameSys.SysCvar.si_timeLimit;
-import static neo.Game.GameSys.SysCvar.ui_skinArgs;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_CALLVOTE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_CASTVOTE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_CHAT;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_DB;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_DROPWEAPON;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_RESTART;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_SERVERINFO;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_SOUND_EVENT;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_SOUND_INDEX;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_STARTSTATE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_STARTVOTE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_TOURNEYLINE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_UPDATEVOTE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_VCHAT;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_WARMUPTIME;
-import static neo.Game.Game_local.MAX_CLIENTS;
-import static neo.Game.Game_local.MAX_GAME_MESSAGE_SIZE;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundWorld;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_DM;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_LASTMAN;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_SP;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_TDM;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_TOURNEY;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.COUNTDOWN;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.GAMEON;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.GAMEREVIEW;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.INACTIVE;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.NEXTGAME;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.SUDDENDEATH;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.WARMUP;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_DIED;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_FORCEREADY;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_FRAGLIMIT;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_HOLYSHIT;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_JOINEDSPEC;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_JOINTEAM;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_KILLED;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_KILLEDTEAM;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_SUDDENDEATH;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_SUICIDE;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_TELEFRAGGED;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_TIMELIMIT;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.MSG_VOTE;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_COUNT;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_FRAGLIMIT;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_GAMETYPE;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_KICK;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_MAP;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_NEXTMAP;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_NONE;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_RESTART;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_SPECTATORS;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.VOTE_TIMELIMIT;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_result_t.VOTE_ABORTED;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_result_t.VOTE_FAILED;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_result_t.VOTE_PASSED;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_result_t.VOTE_RESET;
-import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_result_t.VOTE_UPDATE;
-import static neo.Game.MultiplayerGame.playerVote_t.PLAYER_VOTE_NO;
-import static neo.Game.MultiplayerGame.playerVote_t.PLAYER_VOTE_NONE;
-import static neo.Game.MultiplayerGame.playerVote_t.PLAYER_VOTE_WAIT;
-import static neo.Game.MultiplayerGame.playerVote_t.PLAYER_VOTE_YES;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_COUNT;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_FIGHT;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_ONE;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_SUDDENDEATH;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_THREE;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_TWO;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_VOTE;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_VOTE_FAILED;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_VOTE_PASSED;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_YOULOSE;
-import static neo.Game.MultiplayerGame.snd_evt_t.SND_YOUWIN;
 import neo.Game.Player.idPlayer;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.TempDump;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atoi;
-import static neo.TempDump.btoi;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itob;
-import static neo.framework.Async.NetworkSystem.networkSystem;
-import static neo.framework.BuildDefines._DEBUG;
-import static neo.framework.BuildDefines.__linux__;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_GAME;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_SOUND;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.MAX_STRING_CHARS;
-import static neo.idlib.Lib.Min;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
-import static neo.ui.GameSSDWindow.MAX_POWERUPS;
 import neo.ui.ListGUI.idListGUI;
 import neo.ui.UserInterface.idUserInterface;
+
+import java.nio.ByteBuffer;
+import java.util.stream.Stream;
+
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Game.MultiplayerGame.gameType_t.*;
+import static neo.Game.MultiplayerGame.idMultiplayerGame.gameState_t.*;
+import static neo.Game.MultiplayerGame.idMultiplayerGame.msg_evt_t.*;
+import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_flags_t.*;
+import static neo.Game.MultiplayerGame.idMultiplayerGame.vote_result_t.*;
+import static neo.Game.MultiplayerGame.playerVote_t.*;
+import static neo.Game.MultiplayerGame.snd_evt_t.*;
+import static neo.TempDump.*;
+import static neo.framework.Async.NetworkSystem.networkSystem;
+import static neo.framework.BuildDefines._DEBUG;
+import static neo.framework.BuildDefines.__linux__;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_SOUND;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.MAX_STRING_CHARS;
+import static neo.idlib.Lib.Min;
+import static neo.idlib.Text.Str.va;
+import static neo.ui.GameSSDWindow.MAX_POWERUPS;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -136,6 +54,22 @@ import static neo.ui.UserInterface.uiManager;
  */
 public class MultiplayerGame {
 
+    public static final int CHAT_FADE_TIME = 400;
+
+    public static final int FRAGLIMIT_DELAY = 2000;
+
+    // could be a problem if players manage to go down sudden deaths till this .. oh well
+    public static final int LASTMAN_NOLIVES = -20;
+
+    public static final int MP_PLAYER_MAXFRAGS = 100;
+    public static final int MP_PLAYER_MAXPING = 999;
+    public static final int MP_PLAYER_MAXWINS = 100;
+    //
+    public static final int MP_PLAYER_MINFRAGS = -100;
+    //
+    public static final int NUM_CHAT_NOTIFY = 5;
+    //
+    public static final idCVar g_spectatorChat = new idCVar("g_spectatorChat", "0", CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "let spectators talk to everyone during game");
     /*
      ===============================================================================
 
@@ -150,46 +84,16 @@ public class MultiplayerGame {
         GAME_TOURNEY,
         GAME_TDM,
         GAME_LASTMAN
-    };
+    }
+//
 
     public enum playerVote_t {
 
         PLAYER_VOTE_NONE,
         PLAYER_VOTE_NO,
         PLAYER_VOTE_YES,
-        PLAYER_VOTE_WAIT	// mark a player allowed to vote
-    };
-
-    public static class mpPlayerState_s {
-
-        int ping;			// player ping
-        int fragCount;		// kills
-        int teamFragCount;	// team kills
-        int wins;			// wins
-        playerVote_t vote;			// player's vote
-        boolean scoreBoardUp;	// toggle based on player scoreboard button, used to activate de-activate the scoreboard gui
-        boolean ingame;
-    };
-//    
-    public static final int NUM_CHAT_NOTIFY = 5;
-    public static final int CHAT_FADE_TIME = 400;
-    public static final int FRAGLIMIT_DELAY = 2000;
-//
-    public static final int MP_PLAYER_MINFRAGS = -100;
-    public static final int MP_PLAYER_MAXFRAGS = 100;
-    public static final int MP_PLAYER_MAXWINS = 100;
-    public static final int MP_PLAYER_MAXPING = 999;
-//
-
-    public static class mpChatLine_s {
-
-        idStr line;
-        short fade;			// starts high and decreases, line is removed once reached 0
-
-        public mpChatLine_s() {
-            line  = new idStr();
-        }
-    };
+        PLAYER_VOTE_WAIT    // mark a player allowed to vote
+    }
 
     public enum snd_evt_t {
 
@@ -204,80 +108,151 @@ public class MultiplayerGame {
         SND_ONE,
         SND_SUDDENDEATH,
         SND_COUNT
-    };
-    // could be a problem if players manage to go down sudden deaths till this .. oh well
-    public static final int LASTMAN_NOLIVES = -20;
-//
-    public static final idCVar g_spectatorChat = new idCVar("g_spectatorChat", "0", CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "let spectators talk to everyone during game");
+    }
+
+    public static class mpPlayerState_s {
+
+        int fragCount;        // kills
+        boolean ingame;
+        int ping;            // player ping
+        boolean scoreBoardUp;    // toggle based on player scoreboard button, used to activate de-activate the scoreboard gui
+        int teamFragCount;    // team kills
+        playerVote_t vote;            // player's vote
+        int wins;            // wins
+    }
+
+    public static class mpChatLine_s {
+
+        short fade;            // starts high and decreases, line is removed once reached 0
+        idStr line;
+
+        public mpChatLine_s() {
+            line = new idStr();
+        }
+    }
 //
 
     public static class idMultiplayerGame {
 
+        public static final int ASYNC_PLAYER_FRAG_BITS = -idMath.BitsForInteger(MP_PLAYER_MAXFRAGS - MP_PLAYER_MINFRAGS);    // player can have negative frags
+        public static final int ASYNC_PLAYER_PING_BITS = idMath.BitsForInteger(MP_PLAYER_MAXPING);
+        public static final int ASYNC_PLAYER_WINS_BITS = idMath.BitsForInteger(MP_PLAYER_MAXWINS);
+        // handy verbose
+        public static final String[] GameStateStrings = {//new String[STATE_COUNT];
+                "INACTIVE",
+                "WARMUP",
+                "COUNTDOWN",
+                "GAMEON",
+                "SUDDENDEATH",
+                "GAMEREVIEW",
+                "NEXTGAME"
+        };
+        // global sounds transmitted by index - 0 .. SND_COUNT
+        // sounds in this list get precached on MP start
+        public static final String[] GlobalSoundStrings = {//new String[ SND_COUNT ];
+                "sound/feedback/voc_youwin.wav",
+                "sound/feedback/voc_youlose.wav",
+                "sound/feedback/fight.wav",
+                "sound/feedback/vote_now.wav",
+                "sound/feedback/vote_passed.wav",
+                "sound/feedback/vote_failed.wav",
+                "sound/feedback/three.wav",
+                "sound/feedback/two.wav",
+                "sound/feedback/one.wav",
+                "sound/feedback/sudden_death.wav",};
+        //
+//
+        private static final String[] MPGuis = {
+                "guis/mphud.gui",
+                "guis/mpmain.gui",
+                "guis/mpmsgmode.gui",
+                "guis/netmenu.gui",
+                null
+        };
+        private static final int[] ThrottleDelay = {
+                8,
+                5,
+                5
+        };
+        private static final String[] ThrottleVars = {
+                "ui_spectate",
+                "ui_ready",
+                "ui_team",
+                null
+        };
+        private static final String[] ThrottleVarsInEnglish = {
+                "#str_06738",
+                "#str_06737",
+                "#str_01991",
+                null
+        };
+        //	private static final char []buff = new char[16];
+        private static String buff;
+        private boolean bCurrentMenuMsg;    // send menu state updates to server
+        private boolean chatDataUpdated;
+        //
+        // chat data
+        private final mpChatLine_s[] chatHistory = TempDump.allocArray(mpChatLine_s.class, NUM_CHAT_NOTIFY);
+        private int chatHistoryIndex;
+        private int chatHistorySize;        // 0 <= x < NUM_CHAT_NOTIFY
+        private int currentMenu;        // 0 - none, 1 - mainGui, 2 - msgmodeGui
+        //
+        // tourney
+        private final int[] currentTourneyPlayer = new int[2];// our current set of players
+        private int fragLimitTimeout;
         // state vars
-        private gameState_t gameState;		// what state the current game is in
-        private gameState_t nextState;		// state to switch to when nextStateSwitch is hit
+        private gameState_t gameState;        // what state the current game is in
+        private idUserInterface guiChat;    // chat text
+        private final int[] kickVoteMap = new int[MAX_CLIENTS];
+        private int lastChatLineTime;
+        //
+        private gameType_t lastGameType;    // for restarts
+        private int lastWinner;                // plays again
+        private idUserInterface mainGui;    // ready / nick / votes etc.
+        private idListGUI mapList;
+        private int matchStartedTime;        // time current match started
+        private idUserInterface msgmodeGui;    // message mode
+        private int nextMenu;            // if 0, will do mainGui
+        private gameState_t nextState;        // state to switch to when nextStateSwitch is hit
+        //
+        // time related
+        private int nextStateSwitch;            // time next state switch
+        private float noVotes;                  // and for no votes
+        //
+        // rankings are used by UpdateScoreboard and UpdateHud
+        private int numRankedPlayers;        // ranked players, others may be empty slots or spectators
+        private boolean one, two, three;    // keeps count down voice from repeating
         private int pingUpdateTime;             // time to update ping
         //
         private mpPlayerState_s[] playerState = new mpPlayerState_s[MAX_CLIENTS];
         //
+        private boolean pureReady;        // defaults to false, set to true once server game is running with pure checksums
+        private final idPlayer[] rankedPlayers = new idPlayer[MAX_CLIENTS];
+        //
+        // guis
+        private idUserInterface scoreBoard;    // scoreboard
+        private idUserInterface spectateGui;    // spectate info
+        private int startFragLimit;        // synchronize to clients in initial state, set on -> GAMEON
+        //
+        private int[] switchThrottle = new int[3];
+        //
+        //
+        private int voiceChatThrottle;
+        //
         // keep track of clients which are willingly in spectator mode
         //
         // vote vars
-        private vote_flags_t vote;		// active vote or VOTE_NONE
-        private int voteTimeOut;                // when the current vote expires
+        private vote_flags_t vote;        // active vote or VOTE_NONE
         private int voteExecTime;               // delay between vote passed msg and execute
-        private float yesVotes;                 // counter for yes votes
-        private float noVotes;                  // and for no votes
-        private idStr voteValue;		// the data voted upon ( server )
-        private idStr voteString;		// the vote string ( client )
-        private boolean voted;			// hide vote box ( client )
-        private int[] kickVoteMap = new int[MAX_CLIENTS];
-        //
-        // time related
-        private int nextStateSwitch;            // time next state switch
+        private idStr voteString;        // the vote string ( client )
+        private int voteTimeOut;                // when the current vote expires
+        private idStr voteValue;        // the data voted upon ( server )
+        private boolean voted;            // hide vote box ( client )
         private int warmupEndTime;              // warmup till..
-        private int matchStartedTime;		// time current match started
-        //
-        // tourney
-        private int[] currentTourneyPlayer = new int[2];// our current set of players
-        private int lastWinner;				// plays again
         //
         // warmup
-        private idStr warmupText;		// text shown in warmup area of screen
-        private boolean one, two, three;	// keeps count down voice from repeating
-        //
-        // guis
-        private idUserInterface scoreBoard;	// scoreboard
-        private idUserInterface spectateGui;	// spectate info
-        private idUserInterface guiChat;	// chat text
-        private idUserInterface mainGui;	// ready / nick / votes etc.
-        private idListGUI mapList;
-        private idUserInterface msgmodeGui;	// message mode
-        private int currentMenu;		// 0 - none, 1 - mainGui, 2 - msgmodeGui
-        private int nextMenu;			// if 0, will do mainGui
-        private boolean bCurrentMenuMsg;	// send menu state updates to server
-        //
-        // chat data
-        private mpChatLine_s[] chatHistory = TempDump.allocArray(mpChatLine_s.class, NUM_CHAT_NOTIFY);
-        private int chatHistoryIndex;
-        private int chatHistorySize;		// 0 <= x < NUM_CHAT_NOTIFY
-        private boolean chatDataUpdated;
-        private int lastChatLineTime;
-        //
-        // rankings are used by UpdateScoreboard and UpdateHud
-        private int numRankedPlayers;		// ranked players, others may be empty slots or spectators
-        private idPlayer[] rankedPlayers = new idPlayer[MAX_CLIENTS];
-        //
-        private boolean pureReady;		// defaults to false, set to true once server game is running with pure checksums
-        private int fragLimitTimeout;
-        //
-        private int[] switchThrottle = new int[3];
-        private int voiceChatThrottle;
-        //
-        private gameType_t lastGameType;	// for restarts
-        private int startFragLimit;		// synchronize to clients in initial state, set on -> GAMEON
-        //
-        //
+        private idStr warmupText;        // text shown in warmup area of screen
+        private float yesVotes;                 // counter for yes votes
 
         public idMultiplayerGame() {
             scoreBoard = null;
@@ -288,6 +263,24 @@ public class MultiplayerGame {
             msgmodeGui = null;
             lastGameType = GAME_SP;
             Clear();
+        }
+
+        /*
+         ================
+         idMultiplayerGame::Vote_f
+         FIXME: voting from console
+         ================
+         */
+        public static void Vote_f(final idCmdArgs args) {
+        }
+
+        /*
+         ================
+         idMultiplayerGame::CallVote_f
+         FIXME: voting from console
+         ================
+         */
+        public static void CallVote_f(final idCmdArgs args) {
         }
 
         public void Shutdown() {
@@ -319,11 +312,11 @@ public class MultiplayerGame {
         // setup local data for a new player
         public void SpawnPlayer(int clientNum) {
 
-            boolean ingame = playerState[ clientNum].ingame;
+            boolean ingame = playerState[clientNum].ingame;
 
             playerState = Stream.generate(mpPlayerState_s::new).limit(playerState.length).toArray(mpPlayerState_s[]::new);
             if (!gameLocal.isClient) {
-                idPlayer p = (idPlayer) gameLocal.entities[ clientNum];
+                idPlayer p = (idPlayer) gameLocal.entities[clientNum];
                 p.spawnedTime = gameLocal.time;
                 if (gameLocal.gameType == GAME_TDM) {
                     SwitchToTeam(clientNum, -1, p.team);
@@ -332,7 +325,7 @@ public class MultiplayerGame {
                 if (gameLocal.gameType == GAME_TOURNEY && gameState == GAMEON) {
                     p.tourneyRank++;
                 }
-                playerState[ clientNum].ingame = ingame;
+                playerState[clientNum].ingame = ingame;
             }
         }
 
@@ -393,7 +386,7 @@ public class MultiplayerGame {
                         }
                         // put everyone back in from endgame spectate
                         for (i = 0; i < gameLocal.numClients; i++) {
-                            idEntity ent = gameLocal.entities[ i];
+                            idEntity ent = gameLocal.entities[i];
                             if (ent != null && ent.IsType(idPlayer.class)) {
                                 if (!((idPlayer) ent).wantSpectate) {
                                     CheckRespawns((idPlayer) ent);
@@ -481,7 +474,7 @@ public class MultiplayerGame {
             }
         }
 
-        // draws mp hud, scoredboard, etc.. 
+        // draws mp hud, scoredboard, etc..
         public boolean Draw(int clientNum) {
             idPlayer player, viewPlayer;
 
@@ -489,20 +482,20 @@ public class MultiplayerGame {
             // icons and which might not be thinking because they weren't in
             // the last snapshot.
             for (int i = 0; i < gameLocal.numClients; i++) {
-                player = (idPlayer) gameLocal.entities[ i];
+                player = (idPlayer) gameLocal.entities[i];
                 if (player != null && !player.NeedsIcon()) {
                     player.HidePlayerIcons();
                 }
             }
 
-            player = viewPlayer = (idPlayer) gameLocal.entities[ clientNum];
+            player = viewPlayer = (idPlayer) gameLocal.entities[clientNum];
 
             if (player == null) {
                 return false;
             }
 
             if (player.spectating) {
-                viewPlayer = (idPlayer) gameLocal.entities[ player.spectator];
+                viewPlayer = (idPlayer) gameLocal.entities[player.spectator];
                 if (viewPlayer == null) {
                     return false;
                 }
@@ -558,33 +551,33 @@ public class MultiplayerGame {
                     int ispecline = 0;
                     if (gameLocal.gameType == GAME_TOURNEY) {
                         if (!player.wantSpectate) {
-                            spectatetext[ 0] = common.GetLanguageDict().GetString("#str_04246");
+                            spectatetext[0] = common.GetLanguageDict().GetString("#str_04246");
                             switch (player.tourneyLine) {
                                 case 0:
-                                    spectatetext[ 0] += common.GetLanguageDict().GetString("#str_07003");
+                                    spectatetext[0] += common.GetLanguageDict().GetString("#str_07003");
                                     break;
                                 case 1:
-                                    spectatetext[ 0] += common.GetLanguageDict().GetString("#str_07004");
+                                    spectatetext[0] += common.GetLanguageDict().GetString("#str_07004");
                                     break;
                                 case 2:
-                                    spectatetext[ 0] += common.GetLanguageDict().GetString("#str_07005");
+                                    spectatetext[0] += common.GetLanguageDict().GetString("#str_07005");
                                     break;
                                 default:
-                                    spectatetext[ 0] += va(common.GetLanguageDict().GetString("#str_07006"), player.tourneyLine);
+                                    spectatetext[0] += va(common.GetLanguageDict().GetString("#str_07006"), player.tourneyLine);
                                     break;
                             }
                             ispecline++;
                         }
                     } else if (gameLocal.gameType == GAME_LASTMAN) {
                         if (!player.wantSpectate) {
-                            spectatetext[ 0] = common.GetLanguageDict().GetString("#str_07007");
+                            spectatetext[0] = common.GetLanguageDict().GetString("#str_07007");
                             ispecline++;
                         }
                     }
                     if (player.spectator != player.entityNumber) {
-                        spectatetext[ ispecline] = va(common.GetLanguageDict().GetString("#str_07008"), viewPlayer.GetUserInfo().GetString("ui_name"));
+                        spectatetext[ispecline] = va(common.GetLanguageDict().GetString("#str_07008"), viewPlayer.GetUserInfo().GetString("ui_name"));
                     } else if (0 == ispecline) {
-                        spectatetext[ 0] = common.GetLanguageDict().GetString("#str_04246");
+                        spectatetext[0] = common.GetLanguageDict().GetString("#str_04246");
                     }
                     spectateGui.SetStateString("spectatetext0", spectatetext[0]);
                     spectateGui.SetStateString("spectatetext1", spectatetext[1]);
@@ -604,7 +597,7 @@ public class MultiplayerGame {
 
         // updates a player vote
         public void PlayerVote(int clientNum, playerVote_t vote) {
-            playerState[ clientNum].vote = vote;
+            playerState[clientNum].vote = vote;
         }
 
         // updates frag counts and potentially ends the match in sudden death
@@ -615,7 +608,7 @@ public class MultiplayerGame {
 
             if (killer != null) {
                 if (gameLocal.gameType == GAME_LASTMAN) {
-                    playerState[ dead.entityNumber].fragCount--;
+                    playerState[dead.entityNumber].fragCount--;
                 } else if (gameLocal.gameType == GAME_TDM) {
                     if (killer == dead || killer.team == dead.team) {
                         // suicide or teamkill
@@ -624,7 +617,7 @@ public class MultiplayerGame {
                         TeamScore(killer.entityNumber, killer.team, +1);
                     }
                 } else {
-                    playerState[ killer.entityNumber].fragCount += (killer == dead) ? -1 : 1;
+                    playerState[killer.entityNumber].fragCount += (killer == dead) ? -1 : 1;
                 }
             }
 
@@ -640,7 +633,7 @@ public class MultiplayerGame {
                 }
             } else {
                 PrintMessageEvent(-1, MSG_DIED, dead.entityNumber);
-                playerState[ dead.entityNumber].fragCount--;
+                playerState[dead.entityNumber].fragCount--;
             }
         }
 
@@ -655,8 +648,8 @@ public class MultiplayerGame {
 
             gameLocal.Printf("%s\n", temp.toString());
 
-            chatHistory[ chatHistoryIndex % NUM_CHAT_NOTIFY].line = temp;
-            chatHistory[ chatHistoryIndex % NUM_CHAT_NOTIFY].fade = 6;
+            chatHistory[chatHistoryIndex % NUM_CHAT_NOTIFY].line = temp;
+            chatHistory[chatHistoryIndex % NUM_CHAT_NOTIFY].fade = 6;
 
             chatHistoryIndex++;
             if (chatHistorySize < NUM_CHAT_NOTIFY) {
@@ -723,7 +716,7 @@ public class MultiplayerGame {
                 cvarSystem.SetCVarBool("ui_chat", true);
             }
             nextMenu = 0;
-            gameLocal.sessionCommand.oSet("");	// in case we used "game_startMenu" to trigger the menu
+            gameLocal.sessionCommand.oSet("");    // in case we used "game_startMenu" to trigger the menu
             if (currentMenu == 1) {
                 UpdateMainGui();
 
@@ -754,7 +747,7 @@ public class MultiplayerGame {
                             kickList += ";";
                         }
                         kickList += va("\"%d - %s\"", i, gameLocal.userInfo[i].GetString("ui_name"));
-                        kickVoteMap[ j] = i;
+                        kickVoteMap[j] = i;
                         j++;
                     }
                 }
@@ -792,7 +785,7 @@ public class MultiplayerGame {
 
             args.TokenizeString(_menuCommand, false);
 
-            for (icmd = 0; icmd < args.Argc();) {
+            for (icmd = 0; icmd < args.Argc(); ) {
                 final String cmd = args.Argv(icmd++);
 
                 if (0 == idStr.Icmp(cmd, ";")) {
@@ -895,7 +888,7 @@ public class MultiplayerGame {
                     } else {
                         voteValue = mainGui.State().GetString("str_voteValue");
                         if (voteIndex == VOTE_KICK) {
-                            vote_clientNum = kickVoteMap[ Integer.parseInt(voteValue)];
+                            vote_clientNum = kickVoteMap[Integer.parseInt(voteValue)];
                             ClientCallVote(voteIndex, va("%d", vote_clientNum));
                         } else {
                             ClientCallVote(voteIndex, voteValue);
@@ -947,7 +940,7 @@ public class MultiplayerGame {
                             boolean isMP = false;
                             int igt = GAME_SP.ordinal() + 1;
                             while (si_gameTypeArgs[igt] != null) {
-                                if (dict.GetBool(si_gameTypeArgs[ igt])) {
+                                if (dict.GetBool(si_gameTypeArgs[igt])) {
                                     isMP = true;
                                     break;
                                 }
@@ -1009,17 +1002,14 @@ public class MultiplayerGame {
             }
             mainGui.SetStateInt(va("skin%d", skinId), 1);
         }
-        public static final int ASYNC_PLAYER_FRAG_BITS = -idMath.BitsForInteger(MP_PLAYER_MAXFRAGS - MP_PLAYER_MINFRAGS);	// player can have negative frags
-        public static final int ASYNC_PLAYER_WINS_BITS = idMath.BitsForInteger(MP_PLAYER_MAXWINS);
-        public static final int ASYNC_PLAYER_PING_BITS = idMath.BitsForInteger(MP_PLAYER_MAXPING);
 
         public void WriteToSnapshot(idBitMsgDelta msg) {
             int i;
             int value;
 
             msg.WriteByte(etoi(gameState));
-            msg.WriteShort(currentTourneyPlayer[ 0]);
-            msg.WriteShort(currentTourneyPlayer[ 1]);
+            msg.WriteShort(currentTourneyPlayer[0]);
+            msg.WriteShort(currentTourneyPlayer[1]);
             for (i = 0; i < MAX_CLIENTS; i++) {
                 // clamp all values to min/max possible value that we can send over
                 value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[i].fragCount);
@@ -1040,18 +1030,18 @@ public class MultiplayerGame {
 
             newState = gameState_t.values()[msg.ReadByte()];
             if (newState != gameState) {
-                gameLocal.DPrintf("%s . %s\n", GameStateStrings[ gameState.ordinal()], GameStateStrings[ newState.ordinal()]);
+                gameLocal.DPrintf("%s . %s\n", GameStateStrings[gameState.ordinal()], GameStateStrings[newState.ordinal()]);
                 gameState = newState;
                 // these could be gathered in a BGNewState() kind of thing, as we have to do them in NewState as well
                 if (gameState == GAMEON) {
                     matchStartedTime = gameLocal.time;
                     cvarSystem.SetCVarString("ui_ready", "Not Ready");
-                    switchThrottle[ 1] = 0;	// passby the throttle
+                    switchThrottle[1] = 0;    // passby the throttle
                     startFragLimit = gameLocal.serverInfo.GetInt("si_fragLimit");
                 }
             }
-            currentTourneyPlayer[ 0] = msg.ReadShort();
-            currentTourneyPlayer[ 1] = msg.ReadShort();
+            currentTourneyPlayer[0] = msg.ReadShort();
+            currentTourneyPlayer[1] = msg.ReadShort();
             for (i = 0; i < MAX_CLIENTS; i++) {
                 playerState[i].fragCount = msg.ReadBits(ASYNC_PLAYER_FRAG_BITS);
                 playerState[i].teamFragCount = msg.ReadBits(ASYNC_PLAYER_FRAG_BITS);
@@ -1061,45 +1051,9 @@ public class MultiplayerGame {
             }
         }
 
-        // game state
-        public enum gameState_t {
-
-            INACTIVE,//= 0,						// not running
-            WARMUP, // warming up
-            COUNTDOWN, // post warmup pre-game
-            GAMEON, // game is on
-            SUDDENDEATH, // game is on but in sudden death, first frag wins
-            GAMEREVIEW, // game is over, scoreboard is up. we wait si_gameReviewPause seconds (which has a min value)
-            NEXTGAME,
-            STATE_COUNT
-        };
-        // handy verbose
-        public static final String[] GameStateStrings = {//new String[STATE_COUNT];
-            "INACTIVE",
-            "WARMUP",
-            "COUNTDOWN",
-            "GAMEON",
-            "SUDDENDEATH",
-            "GAMEREVIEW",
-            "NEXTGAME"
-        };
-
         public gameState_t GetGameState() {
             return gameState;
         }
-        // global sounds transmitted by index - 0 .. SND_COUNT
-        // sounds in this list get precached on MP start
-        public static final String[] GlobalSoundStrings = {//new String[ SND_COUNT ];
-            "sound/feedback/voc_youwin.wav",
-            "sound/feedback/voc_youlose.wav",
-            "sound/feedback/fight.wav",
-            "sound/feedback/vote_now.wav",
-            "sound/feedback/vote_passed.wav",
-            "sound/feedback/vote_failed.wav",
-            "sound/feedback/three.wav",
-            "sound/feedback/two.wav",
-            "sound/feedback/one.wav",
-            "sound/feedback/sudden_death.wav",};
 
         public void PlayGlobalSound(int to, snd_evt_t evt, final String shader /*= NULL*/) {
             idSoundShader shaderDecl;
@@ -1137,48 +1091,27 @@ public class MultiplayerGame {
             PlayGlobalSound(to, evt, null);
         }
 
-        // more compact than a chat line
-        public enum msg_evt_t {
-
-            MSG_SUICIDE,// = 0,
-            MSG_KILLED,
-            MSG_KILLEDTEAM,
-            MSG_DIED,
-            MSG_VOTE,
-            MSG_VOTEPASSED,
-            MSG_VOTEFAILED,
-            MSG_SUDDENDEATH,
-            MSG_FORCEREADY,
-            MSG_JOINEDSPEC,
-            MSG_TIMELIMIT,
-            MSG_FRAGLIMIT,
-            MSG_TELEFRAGGED,
-            MSG_JOINTEAM,
-            MSG_HOLYSHIT,
-            MSG_COUNT
-        };
-
         public void PrintMessageEvent(int to, msg_evt_t evt, int parm1 /*= -1*/, int parm2 /*= -1*/) {
             switch (evt) {
                 case MSG_SUICIDE:
                     assert (parm1 >= 0);
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04293"), gameLocal.userInfo[ parm1].GetString("ui_name"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04293"), gameLocal.userInfo[parm1].GetString("ui_name"));
                     break;
                 case MSG_KILLED:
                     assert (parm1 >= 0 && parm2 >= 0);
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04292"), gameLocal.userInfo[ parm1].GetString("ui_name"), gameLocal.userInfo[ parm2].GetString("ui_name"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04292"), gameLocal.userInfo[parm1].GetString("ui_name"), gameLocal.userInfo[parm2].GetString("ui_name"));
                     break;
                 case MSG_KILLEDTEAM:
                     assert (parm1 >= 0 && parm2 >= 0);
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04291"), gameLocal.userInfo[ parm1].GetString("ui_name"), gameLocal.userInfo[ parm2].GetString("ui_name"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04291"), gameLocal.userInfo[parm1].GetString("ui_name"), gameLocal.userInfo[parm2].GetString("ui_name"));
                     break;
                 case MSG_TELEFRAGGED:
                     assert (parm1 >= 0 && parm2 >= 0);
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04290"), gameLocal.userInfo[ parm1].GetString("ui_name"), gameLocal.userInfo[ parm2].GetString("ui_name"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04290"), gameLocal.userInfo[parm1].GetString("ui_name"), gameLocal.userInfo[parm2].GetString("ui_name"));
                     break;
                 case MSG_DIED:
                     assert (parm1 >= 0);
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04289"), gameLocal.userInfo[ parm1].GetString("ui_name"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04289"), gameLocal.userInfo[parm1].GetString("ui_name"));
                     break;
                 case MSG_VOTE:
                     AddChatLine(common.GetLanguageDict().GetString("#str_04288"));
@@ -1187,28 +1120,28 @@ public class MultiplayerGame {
                     AddChatLine(common.GetLanguageDict().GetString("#str_04287"));
                     break;
                 case MSG_FORCEREADY:
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04286"), gameLocal.userInfo[ parm1].GetString("ui_name"));
-                    if (gameLocal.entities[ parm1] != null && gameLocal.entities[ parm1].IsType(idPlayer.class)) {
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04286"), gameLocal.userInfo[parm1].GetString("ui_name"));
+                    if (gameLocal.entities[parm1] != null && gameLocal.entities[parm1].IsType(idPlayer.class)) {
                         ((idPlayer) gameLocal.entities[parm1]).forcedReady = true;
                     }
                     break;
                 case MSG_JOINEDSPEC:
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04285"), gameLocal.userInfo[ parm1].GetString("ui_name"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04285"), gameLocal.userInfo[parm1].GetString("ui_name"));
                     break;
                 case MSG_TIMELIMIT:
                     AddChatLine(common.GetLanguageDict().GetString("#str_04284"));
                     break;
                 case MSG_FRAGLIMIT:
                     if (gameLocal.gameType == GAME_LASTMAN) {
-                        AddChatLine(common.GetLanguageDict().GetString("#str_04283"), gameLocal.userInfo[ parm1].GetString("ui_name"));
+                        AddChatLine(common.GetLanguageDict().GetString("#str_04283"), gameLocal.userInfo[parm1].GetString("ui_name"));
                     } else if (gameLocal.gameType == GAME_TDM) {
-                        AddChatLine(common.GetLanguageDict().GetString("#str_04282"), gameLocal.userInfo[ parm1].GetString("ui_team"));
+                        AddChatLine(common.GetLanguageDict().GetString("#str_04282"), gameLocal.userInfo[parm1].GetString("ui_team"));
                     } else {
-                        AddChatLine(common.GetLanguageDict().GetString("#str_04281"), gameLocal.userInfo[ parm1].GetString("ui_name"));
+                        AddChatLine(common.GetLanguageDict().GetString("#str_04281"), gameLocal.userInfo[parm1].GetString("ui_name"));
                     }
                     break;
                 case MSG_JOINTEAM:
-                    AddChatLine(common.GetLanguageDict().GetString("#str_04280"), gameLocal.userInfo[ parm1].GetString("ui_name"), parm2 != 0 ? common.GetLanguageDict().GetString("#str_02500") : common.GetLanguageDict().GetString("#str_02499"));
+                    AddChatLine(common.GetLanguageDict().GetString("#str_04280"), gameLocal.userInfo[parm1].GetString("ui_name"), parm2 != 0 ? common.GetLanguageDict().GetString("#str_02500") : common.GetLanguageDict().GetString("#str_02499"));
                     break;
                 case MSG_HOLYSHIT:
                     AddChatLine(common.GetLanguageDict().GetString("#str_06732"));
@@ -1245,149 +1178,11 @@ public class MultiplayerGame {
             CheckAbortGame();
         }
 
-        public static class ForceReady_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new ForceReady_f();
-
-            private ForceReady_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (!gameLocal.isMultiplayer || gameLocal.isClient) {
-                    common.Printf("forceReady: multiplayer server only\n");
-                    return;
-                }
-                gameLocal.mpGame.ForceReady();
-            }
-        };
-
-        public static class DropWeapon_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new DropWeapon_f();
-
-            private DropWeapon_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (!gameLocal.isMultiplayer) {
-                    common.Printf("clientDropWeapon: only valid in multiplayer\n");
-                    return;
-                }
-                idBitMsg outMsg = new idBitMsg();
-                ByteBuffer msgBuf = ByteBuffer.allocate(128);
-                outMsg.Init(msgBuf, msgBuf.capacity());
-                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_DROPWEAPON);
-                networkSystem.ClientSendReliableMessage(outMsg);
-            }
-        };
-
-        public static class MessageMode_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new MessageMode_f();
-
-            private MessageMode_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                gameLocal.mpGame.MessageMode(args);
-            }
-        };
-
-        public static class VoiceChat_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new VoiceChat_f();
-
-            private VoiceChat_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                gameLocal.mpGame.VoiceChat(args, false);
-            }
-        };
-
-        public static class VoiceChatTeam_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new VoiceChatTeam_f();
-
-            private VoiceChatTeam_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                gameLocal.mpGame.VoiceChat(args, true);
-            }
-        };
-
-        public enum vote_flags_t {
-
-            VOTE_RESTART,//= 0,
-            VOTE_TIMELIMIT,
-            VOTE_FRAGLIMIT,
-            VOTE_GAMETYPE,
-            VOTE_KICK,
-            VOTE_MAP,
-            VOTE_SPECTATORS,
-            VOTE_NEXTMAP,
-            VOTE_COUNT,
-            VOTE_NONE
-        };
-
-        public enum vote_result_t {
-
-            VOTE_UPDATE,
-            VOTE_FAILED,
-            VOTE_PASSED, // passed, but no reset yet
-            VOTE_ABORTED,
-            VOTE_RESET		// tell clients to reset vote state
-        };
-
-        /*
-         ================
-         idMultiplayerGame::Vote_f
-         FIXME: voting from console
-         ================
-         */
-        public static void Vote_f(final idCmdArgs args) {
-        }
-
-        /*
-         ================
-         idMultiplayerGame::CallVote_f
-         FIXME: voting from console
-         ================
-         */
-        public static void CallVote_f(final idCmdArgs args) {
-        }
-
         public void ClientCallVote(vote_flags_t voteIndex, final String voteValue) {
             idBitMsg outMsg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE);
 
-            // send 
+            // send
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE);
             outMsg.WriteByte(GAME_RELIABLE_MESSAGE_CALLVOTE);
             outMsg.WriteByte(etoi(voteIndex));
@@ -1544,13 +1339,9 @@ public class MultiplayerGame {
             }
 
             voteString.oSet(_voteString);
-            AddChatLine(va(common.GetLanguageDict().GetString("#str_04279"), gameLocal.userInfo[ clientNum].GetString("ui_name")));
+            AddChatLine(va(common.GetLanguageDict().GetString("#str_04279"), gameLocal.userInfo[clientNum].GetString("ui_name")));
             gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[etoi(SND_VOTE)]);
-            if (clientNum == gameLocal.localClientNum) {
-                voted = true;
-            } else {
-                voted = false;
-            }
+            voted = clientNum == gameLocal.localClientNum;
             if (gameLocal.isClient) {
                 // the the vote value to something so the vote line is displayed
                 vote = VOTE_RESTART;
@@ -1572,8 +1363,8 @@ public class MultiplayerGame {
             voteTimeOut = gameLocal.time + 20000;
             // mark players allowed to vote - only current ingame players, players joining during vote will be ignored
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (gameLocal.entities[ i] != null && gameLocal.entities[ i].IsType(idPlayer.class)) {
-                    playerState[ i].vote = (i == clientNum) ? PLAYER_VOTE_YES : PLAYER_VOTE_WAIT;
+                if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idPlayer.class)) {
+                    playerState[i].vote = (i == clientNum) ? PLAYER_VOTE_YES : PLAYER_VOTE_WAIT;
                 } else {
                     playerState[i].vote = PLAYER_VOTE_NONE;
                 }
@@ -1601,14 +1392,14 @@ public class MultiplayerGame {
             switch (status) {
                 case VOTE_FAILED:
                     AddChatLine(common.GetLanguageDict().GetString("#str_04278"));
-                    gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[ etoi(SND_VOTE_FAILED)]);
+                    gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[etoi(SND_VOTE_FAILED)]);
                     if (gameLocal.isClient) {
                         vote = VOTE_NONE;
                     }
                     break;
                 case VOTE_PASSED:
                     AddChatLine(common.GetLanguageDict().GetString("#str_04277"));
-                    gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[ etoi(SND_VOTE_PASSED)]);
+                    gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[etoi(SND_VOTE_PASSED)]);
                     break;
                 case VOTE_RESET:
                     if (gameLocal.isClient) {
@@ -1652,17 +1443,17 @@ public class MultiplayerGame {
                 common.DPrintf("client %d: cast vote while no vote in progress\n", clientNum);
                 return;
             }
-            if (playerState[ clientNum].vote != PLAYER_VOTE_WAIT) {
+            if (playerState[clientNum].vote != PLAYER_VOTE_WAIT) {
                 gameLocal.ServerSendChatMessage(clientNum, "server", common.GetLanguageDict().GetString("#str_04274"));
-                common.DPrintf("client %d: cast vote - vote %d != PLAYER_VOTE_WAIT\n", clientNum, playerState[ clientNum].vote);
+                common.DPrintf("client %d: cast vote - vote %d != PLAYER_VOTE_WAIT\n", clientNum, playerState[clientNum].vote);
                 return;
             }
 
             if (castVote) {
-                playerState[ clientNum].vote = PLAYER_VOTE_YES;
+                playerState[clientNum].vote = PLAYER_VOTE_YES;
                 yesVotes++;
             } else {
-                playerState[ clientNum].vote = PLAYER_VOTE_NO;
+                playerState[clientNum].vote = PLAYER_VOTE_NO;
                 noVotes++;
             }
 
@@ -1724,7 +1515,7 @@ public class MultiplayerGame {
         }
 
         public void WantKilled(int clientNum) {
-            idEntity ent = gameLocal.entities[ clientNum];
+            idEntity ent = gameLocal.entities[clientNum];
             if (ent != null && ent.IsType(idPlayer.class)) {
                 ((idPlayer) ent).Kill(false, false);
             }
@@ -1735,10 +1526,10 @@ public class MultiplayerGame {
             int c = 0;
 
             if (teamcounts != null) {
-                teamcounts[ 0] = teamcounts[ 1] = 0;
+                teamcounts[0] = teamcounts[1] = 0;
             }
             for (int i = 0; i < gameLocal.numClients; i++) {
-                idEntity ent = gameLocal.entities[ i];
+                idEntity ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
@@ -1747,7 +1538,7 @@ public class MultiplayerGame {
                     c++;
                 }
                 if (teamcounts != null && CanPlay(p)) {
-                    teamcounts[ p.team]++;
+                    teamcounts[p.team]++;
                 }
             }
             return c;
@@ -1755,7 +1546,7 @@ public class MultiplayerGame {
 
         public void DropWeapon(int clientNum) {
             assert (!gameLocal.isClient);
-            idEntity ent = gameLocal.entities[ clientNum];
+            idEntity ent = gameLocal.entities[clientNum];
             if (null == ent || !ent.IsType(idPlayer.class)) {
                 return;
             }
@@ -1773,8 +1564,8 @@ public class MultiplayerGame {
             }
             if (g_balanceTDM.GetBool() && lastGameType != GAME_TDM && gameLocal.gameType == GAME_TDM) {
                 for (clientNum = 0; clientNum < gameLocal.numClients; clientNum++) {
-                    if (gameLocal.entities[ clientNum] != null && gameLocal.entities[ clientNum].IsType(idPlayer.class)) {
-                        if (((idPlayer) gameLocal.entities[ clientNum]).BalanceTDM()) {
+                    if (gameLocal.entities[clientNum] != null && gameLocal.entities[clientNum].IsType(idPlayer.class)) {
+                        if (((idPlayer) gameLocal.entities[clientNum]).BalanceTDM()) {
                             // core is in charge of syncing down userinfo changes
                             // it will also call back game through SetUserInfo with the current info for update
                             cmdSystem.BufferCommandText(CMD_EXEC_NOW, va("updateUI %d\n", clientNum));
@@ -1784,7 +1575,6 @@ public class MultiplayerGame {
             }
             lastGameType = gameLocal.gameType;
         }
-        // called by idPlayer whenever it detects a team change (init or switch)
 
         public void SwitchToTeam(int clientNum, int oldteam, int newteam) {
             idEntity ent;
@@ -1802,19 +1592,19 @@ public class MultiplayerGame {
                 if (i == clientNum) {
                     continue;
                 }
-                ent = gameLocal.entities[ i];
+                ent = gameLocal.entities[i];
                 if (ent != null && ent.IsType(idPlayer.class) && ((idPlayer) ent).team == newteam) {
-                    playerState[ clientNum].teamFragCount = playerState[ i].teamFragCount;
+                    playerState[clientNum].teamFragCount = playerState[i].teamFragCount;
                     break;
                 }
             }
             if (i == gameLocal.numClients) {
                 // alone on this team
-                playerState[ clientNum].teamFragCount = 0;
+                playerState[clientNum].teamFragCount = 0;
             }
             if (gameState == GAMEON && oldteam != -1) {
                 // when changing teams during game, kill and respawn
-                idPlayer p = (idPlayer) gameLocal.entities[ clientNum];
+                idPlayer p = (idPlayer) gameLocal.entities[clientNum];
                 if (p.IsInTeleport()) {
                     p.ServerSendEvent(idPlayer.EVENT_ABORT_TELEPORTER, null, false, -1);
                     p.SetPrivateCameraView(null);
@@ -1841,7 +1631,7 @@ public class MultiplayerGame {
             assert (!gameLocal.isClient);
 
             if (clientNum >= 0) {
-                p = (idPlayer) gameLocal.entities[ clientNum];
+                p = (idPlayer) gameLocal.entities[clientNum];
                 if (!(p != null && p.IsType(idPlayer.class))) {
                     return;
                 }
@@ -1885,7 +1675,7 @@ public class MultiplayerGame {
                 }
             } else {
                 for (i = 0; i < gameLocal.numClients; i++) {
-                    ent = gameLocal.entities[ i];
+                    ent = gameLocal.entities[i];
                     if (null == ent || !ent.IsType(idPlayer.class)) {
                         continue;
                     }
@@ -1920,7 +1710,7 @@ public class MultiplayerGame {
             String text_key;
             idPlayer p;
 
-            p = (idPlayer) gameLocal.entities[ clientNum];
+            p = (idPlayer) gameLocal.entities[clientNum];
             if (!(p != null && p.IsType(idPlayer.class))) {
                 return;
             }
@@ -1941,7 +1731,7 @@ public class MultiplayerGame {
                 return;
             }
             snd_key = keyval.GetKey();
-            name = gameLocal.userInfo[ clientNum].GetString("ui_name");
+            name = gameLocal.userInfo[clientNum].GetString("ui_name");
             text_key = String.format("txt_%s", snd_key.Right(snd_key.Length() - 4).toString());
             if (team || gameState == COUNTDOWN || gameState == GAMEREVIEW) {
                 ProcessChatMessage(clientNum, team, name, spawnArgs.GetString(text_key), spawnArgs.GetString(snd_key.toString()));
@@ -1950,6 +1740,7 @@ public class MultiplayerGame {
                 ProcessChatMessage(clientNum, team, name, spawnArgs.GetString(text_key), null);
             }
         }
+        // called by idPlayer whenever it detects a team change (init or switch)
 
         public void Precache() {
             int i;
@@ -1958,7 +1749,7 @@ public class MultiplayerGame {
             if (!gameLocal.isMultiplayer) {
                 return;
             }
-            gameLocal.FindEntityDefDict("player_doommarine", false);;
+            gameLocal.FindEntityDefDict("player_doommarine", false);
 
             // skins
             idStr str = new idStr(cvarSystem.GetCVarString("mod_validSkins"));
@@ -1980,13 +1771,13 @@ public class MultiplayerGame {
             }
             // MP game sounds
             for (i = 0; i < SND_COUNT.ordinal(); i++) {
-                f = fileSystem.OpenFileRead(GlobalSoundStrings[ i]);
+                f = fileSystem.OpenFileRead(GlobalSoundStrings[i]);
                 fileSystem.CloseFile(f);
             }
             // MP guis. just make sure we hit all of them
             i = 0;
-            while (MPGuis[ i] != null) {
-                uiManager.FindGui(MPGuis[ i], true);
+            while (MPGuis[i] != null) {
+                uiManager.FindGui(MPGuis[i], true);
                 i++;
             }
         }
@@ -1998,14 +1789,14 @@ public class MultiplayerGame {
             assert (gameLocal.localClientNum >= 0);
 
             i = 0;
-            while (ThrottleVars[ i] != null) {
-                if (idStr.Icmp(gameLocal.userInfo[ gameLocal.localClientNum].GetString(ThrottleVars[ i]),
-                        cvarSystem.GetCVarString(ThrottleVars[ i])) != 0) {
-                    if (gameLocal.realClientTime < switchThrottle[ i]) {
-                        AddChatLine(common.GetLanguageDict().GetString("#str_04299"), common.GetLanguageDict().GetString(ThrottleVarsInEnglish[ i]), (switchThrottle[ i] - gameLocal.time) / 1000 + 1);
-                        cvarSystem.SetCVarString(ThrottleVars[ i], gameLocal.userInfo[ gameLocal.localClientNum].GetString(ThrottleVars[ i]));
+            while (ThrottleVars[i] != null) {
+                if (idStr.Icmp(gameLocal.userInfo[gameLocal.localClientNum].GetString(ThrottleVars[i]),
+                        cvarSystem.GetCVarString(ThrottleVars[i])) != 0) {
+                    if (gameLocal.realClientTime < switchThrottle[i]) {
+                        AddChatLine(common.GetLanguageDict().GetString("#str_04299"), common.GetLanguageDict().GetString(ThrottleVarsInEnglish[i]), (switchThrottle[i] - gameLocal.time) / 1000 + 1);
+                        cvarSystem.SetCVarString(ThrottleVars[i], gameLocal.userInfo[gameLocal.localClientNum].GetString(ThrottleVars[i]));
                     } else {
-                        switchThrottle[ i] = gameLocal.time + ThrottleDelay[ i] * 1000;
+                        switchThrottle[i] = gameLocal.time + ThrottleDelay[i] * 1000;
                     }
                 }
                 i++;
@@ -2061,17 +1852,17 @@ public class MultiplayerGame {
         public void EnterGame(int clientNum) {
             assert (!gameLocal.isClient);
 
-            if (!playerState[ clientNum].ingame) {
-                playerState[ clientNum].ingame = true;
+            if (!playerState[clientNum].ingame) {
+                playerState[clientNum].ingame = true;
                 if (gameLocal.isMultiplayer) {
                     // can't use PrintMessageEvent as clients don't know the nickname yet
-                    gameLocal.ServerSendChatMessage(-1, common.GetLanguageDict().GetString("#str_02047"), va(common.GetLanguageDict().GetString("#str_07177"), gameLocal.userInfo[ clientNum].GetString("ui_name")));
+                    gameLocal.ServerSendChatMessage(-1, common.GetLanguageDict().GetString("#str_02047"), va(common.GetLanguageDict().GetString("#str_07177"), gameLocal.userInfo[clientNum].GetString("ui_name")));
                 }
             }
         }
 
         public boolean CanPlay(idPlayer p) {
-            return !p.wantSpectate && playerState[ p.entityNumber].ingame;
+            return !p.wantSpectate && playerState[p.entityNumber].ingame;
         }
 
         public boolean IsInGame(int clientNum) {
@@ -2079,7 +1870,7 @@ public class MultiplayerGame {
         }
 
         public boolean WantRespawn(idPlayer p) {
-            return p.forceRespawn && !p.wantSpectate && playerState[ p.entityNumber].ingame;
+            return p.forceRespawn && !p.wantSpectate && playerState[p.entityNumber].ingame;
         }
 
         public void ServerWriteInitialReliableMessages(int clientNum) {
@@ -2097,7 +1888,7 @@ public class MultiplayerGame {
             outMsg.WriteShort(startFragLimit);
             // send the powerup states and the spectate states
             for (i = 0; i < gameLocal.numClients; i++) {
-                ent = gameLocal.entities[ i];
+                ent = gameLocal.entities[i];
                 if (i != clientNum && ent != null && ent.IsType(idPlayer.class)) {
                     outMsg.WriteShort(i);
                     outMsg.WriteShort(((idPlayer) ent).inventory.powerups);
@@ -2130,15 +1921,15 @@ public class MultiplayerGame {
             matchStartedTime = msg.ReadLong();
             startFragLimit = msg.ReadShort();
             while ((client = msg.ReadShort()) != MAX_CLIENTS) {
-                assert (gameLocal.entities[ client] != null && gameLocal.entities[ client].IsType(idPlayer.class));
+                assert (gameLocal.entities[client] != null && gameLocal.entities[client].IsType(idPlayer.class));
                 powerup = msg.ReadShort();
                 for (i = 0; i < MAX_POWERUPS; i++) {
                     if ((powerup & (1 << i)) != 0) {
-                        ((idPlayer) gameLocal.entities[ client]).GivePowerUp(i, 0);
+                        ((idPlayer) gameLocal.entities[client]).GivePowerUp(i, 0);
                     }
                 }
                 boolean spectate = (msg.ReadBits(1) != 0);
-                ((idPlayer) gameLocal.entities[ client]).Spectate(spectate);
+                ((idPlayer) gameLocal.entities[client]).Spectate(spectate);
             }
         }
 
@@ -2167,44 +1958,18 @@ public class MultiplayerGame {
             }
 
             // find which team this player is on
-            ent = gameLocal.entities[ clientNum];
+            ent = gameLocal.entities[clientNum];
             if (ent != null && ent.IsType(idPlayer.class)) {
                 team = ((idPlayer) ent).team;
             } else {
                 return;
             }
 
-            idStr.snPrintf(data, len, "team=%d score=%ld tks=%ld", team, playerState[ clientNum].fragCount, playerState[ clientNum].teamFragCount);
+            idStr.snPrintf(data, len, "team=%d score=%ld tks=%ld", team, playerState[clientNum].fragCount, playerState[clientNum].teamFragCount);
 
             return;
 
         }
-//
-//
-        private static final String[] MPGuis = {
-            "guis/mphud.gui",
-            "guis/mpmain.gui",
-            "guis/mpmsgmode.gui",
-            "guis/netmenu.gui",
-            null
-        };
-        private static final String[] ThrottleVars = {
-            "ui_spectate",
-            "ui_ready",
-            "ui_team",
-            null
-        };
-        private static final String[] ThrottleVarsInEnglish = {
-            "#str_06738",
-            "#str_06737",
-            "#str_01991",
-            null
-        };
-        private static final int[] ThrottleDelay = {
-            8,
-            5,
-            5
-        };
 
         private void UpdatePlayerRanks() {
             int i, j, k;
@@ -2216,7 +1981,7 @@ public class MultiplayerGame {
             numRankedPlayers = 0;
 
             for (i = 0; i < gameLocal.numClients; i++) {
-                ent = gameLocal.entities[ i];
+                ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
@@ -2225,41 +1990,41 @@ public class MultiplayerGame {
                     continue;
                 }
                 if (gameLocal.gameType == GAME_TOURNEY) {
-                    if (i != currentTourneyPlayer[ 0] && i != currentTourneyPlayer[ 1]) {
+                    if (i != currentTourneyPlayer[0] && i != currentTourneyPlayer[1]) {
                         continue;
                     }
                 }
-                if (gameLocal.gameType == GAME_LASTMAN && playerState[ i].fragCount == LASTMAN_NOLIVES) {
+                if (gameLocal.gameType == GAME_LASTMAN && playerState[i].fragCount == LASTMAN_NOLIVES) {
                     continue;
                 }
                 for (j = 0; j < numRankedPlayers; j++) {
                     boolean insert = false;
                     if (gameLocal.gameType == GAME_TDM) {
-                        if (player.team != players[ j].team) {
-                            if (playerState[ i].teamFragCount > playerState[ players[ j].entityNumber].teamFragCount) {
+                        if (player.team != players[j].team) {
+                            if (playerState[i].teamFragCount > playerState[players[j].entityNumber].teamFragCount) {
                                 // team scores
                                 insert = true;
-                            } else if (playerState[ i].teamFragCount == playerState[ players[ j].entityNumber].teamFragCount && player.team < players[ j].team) {
+                            } else if (playerState[i].teamFragCount == playerState[players[j].entityNumber].teamFragCount && player.team < players[j].team) {
                                 // at equal scores, sort by team number
                                 insert = true;
                             }
-                        } else if (playerState[ i].fragCount > playerState[ players[ j].entityNumber].fragCount) {
+                        } else if (playerState[i].fragCount > playerState[players[j].entityNumber].fragCount) {
                             // in the same team, sort by frag count
                             insert = true;
                         }
                     } else {
-                        insert = (playerState[ i].fragCount > playerState[ players[ j].entityNumber].fragCount);
+                        insert = (playerState[i].fragCount > playerState[players[j].entityNumber].fragCount);
                     }
                     if (insert) {
                         for (k = numRankedPlayers; k > j; k--) {
-                            players[ k] = players[ k - 1];
+                            players[k] = players[k - 1];
                         }
-                        players[ j] = player;
+                        players[j] = player;
                         break;
                     }
                 }
                 if (j == numRankedPlayers) {
-                    players[ numRankedPlayers] = player;
+                    players[numRankedPlayers] = player;
                 }
                 numRankedPlayers++;
             }
@@ -2291,26 +2056,26 @@ public class MultiplayerGame {
                 for (i = 0; i < numRankedPlayers; i++) {
                     // ranked player
                     iline++;
-                    scoreBoard.SetStateString(va("player%d", iline), rankedPlayers[ i].GetUserInfo().GetString("ui_name"));
+                    scoreBoard.SetStateString(va("player%d", iline), rankedPlayers[i].GetUserInfo().GetString("ui_name"));
                     if (gameLocal.gameType == GAME_TDM) {
-                        value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[ rankedPlayers[ i].entityNumber].fragCount);
+                        value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[rankedPlayers[i].entityNumber].fragCount);
                         scoreBoard.SetStateInt(va("player%d_tdm_score", iline), value);
-                        value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[ rankedPlayers[ i].entityNumber].teamFragCount);
+                        value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[rankedPlayers[i].entityNumber].teamFragCount);
                         scoreBoard.SetStateString(va("player%d_tdm_tscore", iline), va("/ %d", value));
                         scoreBoard.SetStateString(va("player%d_score", iline), "");
                     } else {
-                        value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[ rankedPlayers[ i].entityNumber].fragCount);
+                        value = idMath.ClampInt(MP_PLAYER_MINFRAGS, MP_PLAYER_MAXFRAGS, playerState[rankedPlayers[i].entityNumber].fragCount);
                         scoreBoard.SetStateInt(va("player%d_score", iline), value);
                         scoreBoard.SetStateString(va("player%d_tdm_tscore", iline), "");
                         scoreBoard.SetStateString(va("player%d_tdm_score", iline), "");
                     }
-                    value = idMath.ClampInt(0, MP_PLAYER_MAXWINS, playerState[ rankedPlayers[ i].entityNumber].wins);
+                    value = idMath.ClampInt(0, MP_PLAYER_MAXWINS, playerState[rankedPlayers[i].entityNumber].wins);
                     scoreBoard.SetStateInt(va("player%d_wins", iline), value);
-                    scoreBoard.SetStateInt(va("player%d_ping", iline), playerState[ rankedPlayers[ i].entityNumber].ping);
+                    scoreBoard.SetStateInt(va("player%d_ping", iline), playerState[rankedPlayers[i].entityNumber].ping);
                     // set the color band
                     scoreBoard.SetStateInt(va("rank%d", iline), 1);
-                    UpdateRankColor(scoreBoard, "rank%d_color%d", iline, rankedPlayers[ i].colorBar);
-                    if (rankedPlayers[ i] == player) {
+                    UpdateRankColor(scoreBoard, "rank%d_color%d", iline, rankedPlayers[i].colorBar);
+                    if (rankedPlayers[i] == player) {
                         // highlight who we are
                         scoreBoard.SetStateInt("rank_self", iline);
                     }
@@ -2322,14 +2087,14 @@ public class MultiplayerGame {
             // NOTE: in tourney, shows spectators according to their playing rank order?
             for (k = 0; k < (gameState == WARMUP ? 2 : 1); k++) {
                 for (i = 0; i < MAX_CLIENTS; i++) {
-                    ent = gameLocal.entities[ i];
+                    ent = gameLocal.entities[i];
                     if (null == ent || !ent.IsType(idPlayer.class)) {
                         continue;
                     }
                     if (gameState != WARMUP) {
                         // check he's not covered by ranks already
                         for (j = 0; j < numRankedPlayers; j++) {
-                            if (ent.equals(rankedPlayers[ j])) {
+                            if (ent.equals(rankedPlayers[j])) {
                                 break;
                             }
                         }
@@ -2348,13 +2113,13 @@ public class MultiplayerGame {
                     }
 
                     iline++;
-                    if (!playerState[ i].ingame) {
+                    if (!playerState[i].ingame) {
                         scoreBoard.SetStateString(va("player%d", iline), common.GetLanguageDict().GetString("#str_04244"));
                         scoreBoard.SetStateString(va("player%d_score", iline), common.GetLanguageDict().GetString("#str_04245"));
                         // no color band
                         scoreBoard.SetStateInt(va("rank%d", iline), 0);
                     } else {
-                        scoreBoard.SetStateString(va("player%d", iline), gameLocal.userInfo[ i].GetString("ui_name"));
+                        scoreBoard.SetStateString(va("player%d", iline), gameLocal.userInfo[i].GetString("ui_name"));
                         if (gameState == WARMUP) {
                             if (p.spectating) {
                                 scoreBoard.SetStateString(va("player%d_score", iline), common.GetLanguageDict().GetString("#str_04246"));
@@ -2367,7 +2132,7 @@ public class MultiplayerGame {
                                 UpdateRankColor(scoreBoard, "rank%d_color%d", iline, p.colorBar);
                             }
                         } else {
-                            if (gameLocal.gameType == GAME_LASTMAN && playerState[ i].fragCount == LASTMAN_NOLIVES) {
+                            if (gameLocal.gameType == GAME_LASTMAN && playerState[i].fragCount == LASTMAN_NOLIVES) {
                                 scoreBoard.SetStateString(va("player%d_score", iline), common.GetLanguageDict().GetString("#str_06736"));
                                 // set the color band
                                 scoreBoard.SetStateInt(va("rank%d", iline), 1);
@@ -2382,7 +2147,7 @@ public class MultiplayerGame {
                     scoreBoard.SetStateString(va("player%d_tdm_tscore", iline), "");
                     scoreBoard.SetStateString(va("player%d_tdm_score", iline), "");
                     scoreBoard.SetStateString(va("player%d_wins", iline), "");
-                    scoreBoard.SetStateInt(va("player%d_ping", iline), playerState[ i].ping);
+                    scoreBoard.SetStateInt(va("player%d_ping", iline), playerState[i].ping);
                     if (i == player.entityNumber) {
                         // highlight who we are
                         scoreBoard.SetStateInt("rank_self", iline);
@@ -2439,7 +2204,7 @@ public class MultiplayerGame {
                 scoreBoard.SetStateInt(va("rank%d", i + 1), 0);
                 scoreBoard.SetStateInt("rank_self", 0);
 
-                idPlayer player = (idPlayer) gameLocal.entities[ i];
+                idPlayer player = (idPlayer) gameLocal.entities[i];
                 if (null == player || null == player.hud) {
                     continue;
                 }
@@ -2453,15 +2218,15 @@ public class MultiplayerGame {
 
         private void DrawScoreBoard(idPlayer player) {
             if (player.scoreBoardOpen || gameState == GAMEREVIEW) {
-                if (!playerState[ player.entityNumber].scoreBoardUp) {
+                if (!playerState[player.entityNumber].scoreBoardUp) {
                     scoreBoard.Activate(true, gameLocal.time);
-                    playerState[ player.entityNumber].scoreBoardUp = true;
+                    playerState[player.entityNumber].scoreBoardUp = true;
                 }
                 UpdateScoreboard(scoreBoard, player);
             } else {
-                if (playerState[ player.entityNumber].scoreBoardUp) {
+                if (playerState[player.entityNumber].scoreBoardUp) {
                     scoreBoard.Activate(false, gameLocal.time);
-                    playerState[ player.entityNumber].scoreBoardUp = false;
+                    playerState[player.entityNumber].scoreBoardUp = false;
                 }
             }
         }
@@ -2494,13 +2259,13 @@ public class MultiplayerGame {
             if (gameState == GAMEON) {
                 for (i = 0; i < numRankedPlayers; i++) {
                     if (gameLocal.gameType == GAME_TDM) {
-                        hud.SetStateInt(va("player%d_score", i + 1), playerState[ rankedPlayers[ i].entityNumber].teamFragCount);
+                        hud.SetStateInt(va("player%d_score", i + 1), playerState[rankedPlayers[i].entityNumber].teamFragCount);
                     } else {
-                        hud.SetStateInt(va("player%d_score", i + 1), playerState[ rankedPlayers[ i].entityNumber].fragCount);
+                        hud.SetStateInt(va("player%d_score", i + 1), playerState[rankedPlayers[i].entityNumber].fragCount);
                     }
                     hud.SetStateInt(va("rank%d", i + 1), 1);
-                    UpdateRankColor(hud, "rank%d_color%d", i + 1, rankedPlayers[ i].colorBar);
-                    if (rankedPlayers[ i] == player) {
+                    UpdateRankColor(hud, "rank%d_color%d", i + 1, rankedPlayers[i].colorBar);
+                    if (rankedPlayers[i] == player) {
                         hud.SetStateInt("rank_self", i + 1);
                     }
                 }
@@ -2536,11 +2301,11 @@ public class MultiplayerGame {
             // count voting players
             numVoters = 0;
             for (i = 0; i < gameLocal.numClients; i++) {
-                idEntity ent = gameLocal.entities[ i];
+                idEntity ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
-                if (playerState[ i].vote != PLAYER_VOTE_NONE) {
+                if (playerState[i].vote != PLAYER_VOTE_NONE) {
                     numVoters++;
                 }
             }
@@ -2573,7 +2338,7 @@ public class MultiplayerGame {
             }
 
             if (gameLocal.gameType == GAME_TDM) {
-                if (0 == team[ 0] || 0 == team[ 1]) {
+                if (0 == team[0] || 0 == team[1]) {
                     return false;
                 }
             }
@@ -2583,10 +2348,10 @@ public class MultiplayerGame {
             }
 
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (gameLocal.gameType == GAME_TOURNEY && i != currentTourneyPlayer[ 0] && i != currentTourneyPlayer[ 1]) {
+                if (gameLocal.gameType == GAME_TOURNEY && i != currentTourneyPlayer[0] && i != currentTourneyPlayer[1]) {
                     continue;
                 }
-                ent = gameLocal.entities[ i];
+                ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
@@ -2594,7 +2359,7 @@ public class MultiplayerGame {
                 if (CanPlay(p) && !p.IsReady()) {
                     return false;
                 }
-                team[ p.team]++;
+                team[p.team]++;
             }
 
             return true;
@@ -2623,9 +2388,9 @@ public class MultiplayerGame {
 
             if (gameLocal.gameType == GAME_LASTMAN) {
                 // we have a leader, check if any other players have frags left
-                assert (!((idPlayer) leader).lastManOver);
+                assert (!leader.lastManOver);
                 for (i = 0; i < gameLocal.numClients; i++) {
-                    idEntity ent = gameLocal.entities[ i];
+                    idEntity ent = gameLocal.entities[i];
                     if (null == ent || !ent.IsType(idPlayer.class)) {
                         continue;
                     }
@@ -2635,18 +2400,18 @@ public class MultiplayerGame {
                     if (ent.equals(leader)) {
                         continue;
                     }
-                    if (playerState[ ent.entityNumber].fragCount > 0) {
+                    if (playerState[ent.entityNumber].fragCount > 0) {
                         return null;
                     }
                 }
                 // there is a leader, his score may even be negative, but no one else has frags left or is !lastManOver
                 return leader;
             } else if (gameLocal.gameType == GAME_TDM) {
-                if (playerState[ leader.entityNumber].teamFragCount >= fragLimit) {
+                if (playerState[leader.entityNumber].teamFragCount >= fragLimit) {
                     return leader;
                 }
             } else {
-                if (playerState[ leader.entityNumber].fragCount >= fragLimit) {
+                if (playerState[leader.entityNumber].fragCount >= fragLimit) {
                     return leader;
                 }
             }
@@ -2672,14 +2437,14 @@ public class MultiplayerGame {
             boolean[] teamLead/*[ 2 ]*/ = {false, false};
 
             for (i = 0; i < gameLocal.numClients; i++) {
-                ent = gameLocal.entities[ i];
+                ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
                 if (!CanPlay((idPlayer) ent)) {
                     continue;
                 }
-                if (gameLocal.gameType == GAME_TOURNEY && ent.entityNumber != currentTourneyPlayer[ 0] && ent.entityNumber != currentTourneyPlayer[ 1]) {
+                if (gameLocal.gameType == GAME_TOURNEY && ent.entityNumber != currentTourneyPlayer[0] && ent.entityNumber != currentTourneyPlayer[1]) {
                     continue;
                 }
                 if (((idPlayer) ent).lastManOver) {
@@ -2691,11 +2456,11 @@ public class MultiplayerGame {
                     high = fragc;
                 }
 
-                frags[ i] = fragc;
+                frags[i] = fragc;
             }
 
             for (i = 0; i < gameLocal.numClients; i++) {
-                ent = gameLocal.entities[ i];
+                ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
@@ -2705,7 +2470,7 @@ public class MultiplayerGame {
                 if (!CanPlay(p)) {
                     continue;
                 }
-                if (gameLocal.gameType == GAME_TOURNEY && ent.entityNumber != currentTourneyPlayer[ 0] && ent.entityNumber != currentTourneyPlayer[ 1]) {
+                if (gameLocal.gameType == GAME_TOURNEY && ent.entityNumber != currentTourneyPlayer[0] && ent.entityNumber != currentTourneyPlayer[1]) {
                     continue;
                 }
                 if (p.lastManOver) {
@@ -2715,12 +2480,12 @@ public class MultiplayerGame {
                     continue;
                 }
 
-                if (frags[ i] >= high) {
+                if (frags[i] >= high) {
                     leader = p;
                     count++;
                     p.SetLeader(true);
                     if (gameLocal.gameType == GAME_TDM) {
-                        teamLead[ p.team] = true;
+                        teamLead[p.team] = true;
                     }
                 }
             }
@@ -2733,7 +2498,7 @@ public class MultiplayerGame {
                     return leader;
                 }
             } else {
-                if (teamLead[ 0] && teamLead[ 1]) {
+                if (teamLead[0] && teamLead[1]) {
                     // even game in team play
                     return null;
                 }
@@ -2744,9 +2509,7 @@ public class MultiplayerGame {
         boolean TimeLimitHit() {
             int timeLimit = gameLocal.serverInfo.GetInt("si_timeLimit");
             if (timeLimit != 0) {
-                if (gameLocal.time >= matchStartedTime + timeLimit * 60000) {
-                    return true;
-                }
+                return gameLocal.time >= matchStartedTime + timeLimit * 60000;
             }
             return false;
         }
@@ -2771,20 +2534,20 @@ public class MultiplayerGame {
                     matchStartedTime = gameLocal.time;
                     fragLimitTimeout = 0;
                     for (i = 0; i < gameLocal.numClients; i++) {
-                        idEntity ent = gameLocal.entities[ i];
+                        idEntity ent = gameLocal.entities[i];
                         if (null == ent || !ent.IsType(idPlayer.class)) {
                             continue;
                         }
                         idPlayer p = (idPlayer) ent;
                         p.SetLeader(false); // don't carry the flag from previous games
-                        if (gameLocal.gameType == GAME_TOURNEY && currentTourneyPlayer[ 0] != i && currentTourneyPlayer[ 1] != i) {
+                        if (gameLocal.gameType == GAME_TOURNEY && currentTourneyPlayer[0] != i && currentTourneyPlayer[1] != i) {
                             p.ServerSpectate(true);
                             p.tourneyRank++;
                         } else {
                             int fragLimit = gameLocal.serverInfo.GetInt("si_fragLimit");
                             int startingCount = (gameLocal.gameType == GAME_LASTMAN) ? fragLimit : 0;
-                            playerState[ i].fragCount = startingCount;
-                            playerState[ i].teamFragCount = startingCount;
+                            playerState[i].fragCount = startingCount;
+                            playerState[i].teamFragCount = startingCount;
                             if (!((idPlayer) ent).wantSpectate) {
                                 ((idPlayer) ent).ServerSpectate(false);
                                 if (gameLocal.gameType == GAME_TOURNEY) {
@@ -2792,19 +2555,15 @@ public class MultiplayerGame {
                                 }
                             }
                         }
-                        if (CanPlay(p)) {
-                            p.lastManPresent = true;
-                        } else {
-                            p.lastManPresent = false;
-                        }
+                        p.lastManPresent = CanPlay(p);
                     }
                     cvarSystem.SetCVarString("ui_ready", "Not Ready");
-                    switchThrottle[ 1] = 0;	// passby the throttle
+                    switchThrottle[1] = 0;    // passby the throttle
                     startFragLimit = gameLocal.serverInfo.GetInt("si_fragLimit");
                     break;
                 }
                 case GAMEREVIEW: {
-                    nextState = INACTIVE;	// used to abort a game. cancel out any upcoming state change
+                    nextState = INACTIVE;    // used to abort a game. cancel out any upcoming state change
                     // set all players not ready and spectating
                     for (i = 0; i < gameLocal.numClients; i++) {
                         idEntity ent = gameLocal.entities[i];
@@ -2850,30 +2609,30 @@ public class MultiplayerGame {
             if (winner != null) {
                 // run back through and update win/loss count
                 for (int i = 0; i < gameLocal.numClients; i++) {
-                    idEntity ent = gameLocal.entities[ i];
+                    idEntity ent = gameLocal.entities[i];
                     if (null == ent || !ent.IsType(idPlayer.class)) {
                         continue;
                     }
                     idPlayer player = (idPlayer) ent;
                     if (gameLocal.gameType == GAME_TDM) {
                         if (player == winner || (player != winner && player.team == winner.team)) {
-                            playerState[ i].wins++;
+                            playerState[i].wins++;
                             PlayGlobalSound(player.entityNumber, SND_YOUWIN);
                         } else {
                             PlayGlobalSound(player.entityNumber, SND_YOULOSE);
                         }
                     } else if (gameLocal.gameType == GAME_LASTMAN) {
                         if (player == winner) {
-                            playerState[ i].wins++;
+                            playerState[i].wins++;
                             PlayGlobalSound(player.entityNumber, SND_YOUWIN);
                         } else if (!player.wantSpectate) {
                             PlayGlobalSound(player.entityNumber, SND_YOULOSE);
                         }
                     } else if (gameLocal.gameType == GAME_TOURNEY) {
                         if (player == winner) {
-                            playerState[ i].wins++;
+                            playerState[i].wins++;
                             PlayGlobalSound(player.entityNumber, SND_YOUWIN);
-                        } else if (i == currentTourneyPlayer[ 0] || i == currentTourneyPlayer[ 1]) {
+                        } else if (i == currentTourneyPlayer[0] || i == currentTourneyPlayer[1]) {
                             PlayGlobalSound(player.entityNumber, SND_YOULOSE);
                         }
                     } else {
@@ -2907,17 +2666,17 @@ public class MultiplayerGame {
 
             // fill up the slots based on tourney ranks
             for (i = 0; i < 2; i++) {
-                if (currentTourneyPlayer[ i] != -1) {
+                if (currentTourneyPlayer[i] != -1) {
                     continue;
                 }
                 rankmax = -1;
                 rankmaxindex = -1;
                 for (j = 0; j < gameLocal.numClients; j++) {
-                    ent = gameLocal.entities[ j];
+                    ent = gameLocal.entities[j];
                     if (null == ent || !ent.IsType(idPlayer.class)) {
                         continue;
                     }
-                    if (currentTourneyPlayer[ 0] == j || currentTourneyPlayer[ 1] == j) {
+                    if (currentTourneyPlayer[0] == j || currentTourneyPlayer[1] == j) {
                         continue;
                     }
                     p = (idPlayer) ent;
@@ -2928,7 +2687,7 @@ public class MultiplayerGame {
                         // when ranks are equal, use time in game
                         if (p.tourneyRank == rankmax) {
                             assert (rankmaxindex >= 0);
-                            if (p.spawnedTime > ((idPlayer) gameLocal.entities[ rankmaxindex]).spawnedTime) {
+                            if (p.spawnedTime > ((idPlayer) gameLocal.entities[rankmaxindex]).spawnedTime) {
                                 continue;
                             }
                         }
@@ -2936,7 +2695,7 @@ public class MultiplayerGame {
                         rankmaxindex = j;
                     }
                 }
-                currentTourneyPlayer[ i] = rankmaxindex; // may be -1 if we found nothing
+                currentTourneyPlayer[i] = rankmaxindex; // may be -1 if we found nothing
             }
         }
 
@@ -2945,25 +2704,25 @@ public class MultiplayerGame {
             idEntity ent;
             idPlayer player;
 
-            currentTourneyPlayer[ 0] = -1;
-            currentTourneyPlayer[ 1] = -1;
+            currentTourneyPlayer[0] = -1;
+            currentTourneyPlayer[1] = -1;
             // if any, winner from last round will play again
             if (lastWinner != -1) {
                 idEntity ent2 = gameLocal.entities[lastWinner];
                 if (ent2 != null && ent2.IsType(idPlayer.class)) {
-                    currentTourneyPlayer[ 0] = lastWinner;
+                    currentTourneyPlayer[0] = lastWinner;
                 }
             }
             FillTourneySlots();
             // force selected players in/out of the game and update the ranks
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (currentTourneyPlayer[ 0] == i || currentTourneyPlayer[ 1] == i) {
-                    player = (idPlayer) gameLocal.entities[ i];
+                if (currentTourneyPlayer[0] == i || currentTourneyPlayer[1] == i) {
+                    player = (idPlayer) gameLocal.entities[i];
                     player.ServerSpectate(false);
                 } else {
-                    ent = gameLocal.entities[ i];
+                    ent = gameLocal.entities[i];
                     if (ent != null && ent.IsType(idPlayer.class)) {
-                        player = (idPlayer) gameLocal.entities[ i];
+                        player = (idPlayer) gameLocal.entities[i];
                         player.ServerSpectate(true);
                     }
                 }
@@ -2993,10 +2752,10 @@ public class MultiplayerGame {
                 max = -1;
                 imax = -1;
                 for (i = 0; i < gameLocal.numClients; i++) {
-                    if (currentTourneyPlayer[ 0] == i || currentTourneyPlayer[ 1] == i) {
+                    if (currentTourneyPlayer[0] == i || currentTourneyPlayer[1] == i) {
                         continue;
                     }
-                    p = (idPlayer) gameLocal.entities[ i];
+                    p = (idPlayer) gameLocal.entities[i];
                     if (null == p || p.wantSpectate) {
                         continue;
                     }
@@ -3019,8 +2778,6 @@ public class MultiplayerGame {
                 globalmax = max;
             }
         }
-//	private static final char []buff = new char[16];
-        private static String buff;
 
         private String GameTime() {
             int m, s, t, ms;
@@ -3067,8 +2824,8 @@ public class MultiplayerGame {
             voteExecTime = 0;
             nextStateSwitch = 0;
             matchStartedTime = 0;
-            currentTourneyPlayer[ 0] = -1;
-            currentTourneyPlayer[ 1] = -1;
+            currentTourneyPlayer[0] = -1;
+            currentTourneyPlayer[1] = -1;
             one = two = three = false;
             playerState = Stream.generate(mpPlayerState_s::new).limit(playerState.length).toArray(mpPlayerState_s[]::new);
             lastWinner = -1;
@@ -3090,7 +2847,7 @@ public class MultiplayerGame {
             switchThrottle = new int[switchThrottle.length];
             voiceChatThrottle = 0;
             for (i = 0; i < NUM_CHAT_NOTIFY; i++) {
-                chatHistory[ i].line.Clear();
+                chatHistory[i].line.Clear();
             }
             warmupText = new idStr();
             voteValue = new idStr();
@@ -3102,7 +2859,7 @@ public class MultiplayerGame {
             int[] team = new int[2];
             int clients = NumActualClients(false, team);
             if (gameLocal.gameType == GAME_TDM) {
-                return clients >= 2 && team[ 0] != 0 && team[ 1] != 0;
+                return clients >= 2 && team[0] != 0 && team[1] != 0;
             } else {
                 return clients >= 2;
             }
@@ -3120,8 +2877,8 @@ public class MultiplayerGame {
                 if (gameLocal.time - lastChatLineTime > CHAT_FADE_TIME) {
                     if (chatHistorySize > 0) {
                         for (i = chatHistoryIndex - chatHistorySize; i < chatHistoryIndex; i++) {
-                            chatHistory[ i % NUM_CHAT_NOTIFY].fade--;
-                            if (chatHistory[ i % NUM_CHAT_NOTIFY].fade < 0) {
+                            chatHistory[i % NUM_CHAT_NOTIFY].fade--;
+                            if (chatHistory[i % NUM_CHAT_NOTIFY].fade < 0) {
                                 chatHistorySize--; // this assumes the removals are always at the beginning
                             }
                         }
@@ -3135,7 +2892,7 @@ public class MultiplayerGame {
                     while (i < chatHistoryIndex) {
                         guiChat.SetStateString(va("chat%d", j), chatHistory[i % NUM_CHAT_NOTIFY].line.toString());
                         // don't set alpha above 4, the gui only knows that
-                        guiChat.SetStateInt(va("alpha%d", j), Min(4, (int) chatHistory[i % NUM_CHAT_NOTIFY].fade));
+                        guiChat.SetStateInt(va("alpha%d", j), Min(4, chatHistory[i % NUM_CHAT_NOTIFY].fade));
                         j++;
                         i++;
                     }
@@ -3155,7 +2912,7 @@ public class MultiplayerGame {
         // and for a spectator who want back in the game (see param)
         private void CheckRespawns(idPlayer spectator /*= NULL*/) {
             for (int i = 0; i < gameLocal.numClients; i++) {
-                idEntity ent = gameLocal.entities[ i];
+                idEntity ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
@@ -3169,9 +2926,7 @@ public class MultiplayerGame {
                         if (0 == fragLimitTimeout) {
                             if (gameLocal.gameType == GAME_TDM || p.IsLeader()) {
                                 if (_DEBUG) {
-                                    if (gameLocal.gameType == GAME_TOURNEY) {
-                                        assert (p.entityNumber == currentTourneyPlayer[ 0] || p.entityNumber == currentTourneyPlayer[ 1]);
-                                    }
+                                    assert gameLocal.gameType != GAME_TOURNEY || (p.entityNumber == currentTourneyPlayer[0] || p.entityNumber == currentTourneyPlayer[1]);
                                 }
                                 p.ServerSpectate(false);
                             } else if (!p.IsLeader()) {
@@ -3187,14 +2942,14 @@ public class MultiplayerGame {
                                 p.ServerSpectate(false);
                             }
                         } else if (gameLocal.gameType == GAME_TOURNEY) {
-                            if (i == currentTourneyPlayer[ 0] || i == currentTourneyPlayer[ 1]) {
+                            if (i == currentTourneyPlayer[0] || i == currentTourneyPlayer[1]) {
                                 if (gameState == WARMUP || gameState == COUNTDOWN || gameState == GAMEON) {
                                     p.ServerSpectate(false);
                                 }
                             } else if (gameState == WARMUP) {
                                 // make sure empty tourney slots get filled first
                                 FillTourneySlots();
-                                if (i == currentTourneyPlayer[ 0] || i == currentTourneyPlayer[ 1]) {
+                                if (i == currentTourneyPlayer[0] || i == currentTourneyPlayer[1]) {
                                     p.ServerSpectate(false);
                                 }
                             }
@@ -3202,7 +2957,7 @@ public class MultiplayerGame {
                             if (gameState == WARMUP || gameState == COUNTDOWN) {
                                 p.ServerSpectate(false);
                             } else if (gameState == GAMEON || gameState == SUDDENDEATH) {
-                                if (gameState == GAMEON && playerState[ i].fragCount > 0 && p.lastManPresent) {
+                                if (gameState == GAMEON && playerState[i].fragCount > 0 && p.lastManPresent) {
                                     assert (!p.lastManOver);
                                     p.ServerSpectate(false);
                                 } else if (p.lastManPlayAgain && p.lastManPresent) {
@@ -3219,7 +2974,7 @@ public class MultiplayerGame {
                                         p.lastManOver = true;
                                         // clients don't have access to lastManOver
                                         // so set the fragCount to something silly ( used in scoreboard and player ranking )
-                                        playerState[ i].fragCount = LASTMAN_NOLIVES;
+                                        playerState[i].fragCount = LASTMAN_NOLIVES;
                                         p.ServerSpectate(true);
 
                                         //Check for a situation where the last two player dies at the same time and don't
@@ -3228,13 +2983,13 @@ public class MultiplayerGame {
                                         {
                                             int j;
                                             for (j = 0; j < gameLocal.numClients; j++) {
-                                                if (null == gameLocal.entities[ j]) {
+                                                if (null == gameLocal.entities[j]) {
                                                     continue;
                                                 }
-                                                if (!CanPlay((idPlayer) gameLocal.entities[ j])) {
+                                                if (!CanPlay((idPlayer) gameLocal.entities[j])) {
                                                     continue;
                                                 }
-                                                if (!((idPlayer) gameLocal.entities[ j]).lastManOver) {
+                                                if (!((idPlayer) gameLocal.entities[j]).lastManOver) {
                                                     break;
                                                 }
                                             }
@@ -3250,7 +3005,7 @@ public class MultiplayerGame {
                         }
                     }
                 } else if (p.wantSpectate && !p.spectating) {
-                    playerState[ i].fragCount = 0; // whenever you willingly go spectate during game, your score resets
+                    playerState[i].fragCount = 0; // whenever you willingly go spectate during game, your score resets
                     p.ServerSpectate(true);
                     UpdateTourneyLine();
                     CheckAbortGame();
@@ -3265,7 +3020,7 @@ public class MultiplayerGame {
         private void ForceReady() {
 
             for (int i = 0; i < gameLocal.numClients; i++) {
-                idEntity ent = gameLocal.entities[ i];
+                idEntity ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
@@ -3283,8 +3038,8 @@ public class MultiplayerGame {
             if (gameLocal.gameType == GAME_TOURNEY && gameState == WARMUP) {
                 // if a tourney player joined spectators, let someone else have his spot
                 for (i = 0; i < 2; i++) {
-                    if (NOT(gameLocal.entities[ currentTourneyPlayer[i]]) || ((idPlayer) gameLocal.entities[ currentTourneyPlayer[ i]]).spectating) {
-                        currentTourneyPlayer[ i] = -1;
+                    if (NOT(gameLocal.entities[currentTourneyPlayer[i]]) || ((idPlayer) gameLocal.entities[currentTourneyPlayer[i]]).spectating) {
+                        currentTourneyPlayer[i] = -1;
                     }
                 }
             }
@@ -3295,7 +3050,7 @@ public class MultiplayerGame {
             switch (gameLocal.gameType) {
                 case GAME_TOURNEY:
                     for (i = 0; i < 2; i++) {
-                        if (NOT(gameLocal.entities[ currentTourneyPlayer[i]]) || ((idPlayer) gameLocal.entities[ currentTourneyPlayer[ i]]).spectating) {
+                        if (NOT(gameLocal.entities[currentTourneyPlayer[i]]) || ((idPlayer) gameLocal.entities[currentTourneyPlayer[i]]).spectating) {
                             NewState(GAMEREVIEW);
                             return;
                         }
@@ -3335,7 +3090,7 @@ public class MultiplayerGame {
         }
 
         private void DisableMenu() {
-            gameLocal.sessionCommand.oSet("");	// in case we used "game_startMenu" to trigger the menu
+            gameLocal.sessionCommand.oSet("");    // in case we used "game_startMenu" to trigger the menu
             if (currentMenu == 1) {
                 mainGui.Activate(false, gameLocal.time);
             } else if (currentMenu == 2) {
@@ -3357,18 +3112,17 @@ public class MultiplayerGame {
             fileSystem.FindMapScreenshot(dict != null ? dict.GetString("path") : "", screenshot, MAX_STRING_CHARS);
             mainGui.SetStateString("current_levelshot", screenshot[0]);
         }
-        // scores in TDM
 
         private void TeamScore(int entityNumber, int team, int delta) {
-            playerState[ entityNumber].fragCount += delta;
+            playerState[entityNumber].fragCount += delta;
             for (int i = 0; i < gameLocal.numClients; i++) {
-                idEntity ent = gameLocal.entities[ i];
+                idEntity ent = gameLocal.entities[i];
                 if (null == ent || !ent.IsType(idPlayer.class)) {
                     continue;
                 }
                 idPlayer player = (idPlayer) ent;
                 if (player.team == team) {
-                    playerState[ player.entityNumber].teamFragCount += delta;
+                    playerState[player.entityNumber].teamFragCount += delta;
                 }
             }
         }
@@ -3421,8 +3175,8 @@ public class MultiplayerGame {
         private void DumpTourneyLine() {
             int i;
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (gameLocal.entities[ i] != null && gameLocal.entities[ i].IsType(idPlayer.class)) {
-                    common.Printf("client %d: rank %d\n", i, ((idPlayer) gameLocal.entities[ i]).tourneyRank);
+                if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idPlayer.class)) {
+                    common.Printf("client %d: rank %d\n", i, ((idPlayer) gameLocal.entities[i]).tourneyRank);
                 }
             }
         }
@@ -3442,17 +3196,173 @@ public class MultiplayerGame {
             }
 
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (null == gameLocal.entities[ i] || !gameLocal.entities[ i].IsType(idPlayer.class)) {
+                if (null == gameLocal.entities[i] || !gameLocal.entities[i].IsType(idPlayer.class)) {
                     continue;
                 }
-                if (!CanPlay((idPlayer) gameLocal.entities[ i])) {
+                if (!CanPlay((idPlayer) gameLocal.entities[i])) {
                     continue;
                 }
-                if (((idPlayer) gameLocal.entities[ i]).lastManOver) {
+                if (((idPlayer) gameLocal.entities[i]).lastManOver) {
                     continue;
                 }
-                ((idPlayer) gameLocal.entities[ i]).lastManPlayAgain = true;
+                ((idPlayer) gameLocal.entities[i]).lastManPlayAgain = true;
             }
         }
-    };
+
+        // game state
+        public enum gameState_t {
+
+            INACTIVE,//= 0,						// not running
+            WARMUP, // warming up
+            COUNTDOWN, // post warmup pre-game
+            GAMEON, // game is on
+            SUDDENDEATH, // game is on but in sudden death, first frag wins
+            GAMEREVIEW, // game is over, scoreboard is up. we wait si_gameReviewPause seconds (which has a min value)
+            NEXTGAME,
+            STATE_COUNT
+        }
+
+        // more compact than a chat line
+        public enum msg_evt_t {
+
+            MSG_SUICIDE,// = 0,
+            MSG_KILLED,
+            MSG_KILLEDTEAM,
+            MSG_DIED,
+            MSG_VOTE,
+            MSG_VOTEPASSED,
+            MSG_VOTEFAILED,
+            MSG_SUDDENDEATH,
+            MSG_FORCEREADY,
+            MSG_JOINEDSPEC,
+            MSG_TIMELIMIT,
+            MSG_FRAGLIMIT,
+            MSG_TELEFRAGGED,
+            MSG_JOINTEAM,
+            MSG_HOLYSHIT,
+            MSG_COUNT
+        }
+
+        public enum vote_flags_t {
+
+            VOTE_RESTART,//= 0,
+            VOTE_TIMELIMIT,
+            VOTE_FRAGLIMIT,
+            VOTE_GAMETYPE,
+            VOTE_KICK,
+            VOTE_MAP,
+            VOTE_SPECTATORS,
+            VOTE_NEXTMAP,
+            VOTE_COUNT,
+            VOTE_NONE
+        }
+
+        public enum vote_result_t {
+
+            VOTE_UPDATE,
+            VOTE_FAILED,
+            VOTE_PASSED, // passed, but no reset yet
+            VOTE_ABORTED,
+            VOTE_RESET        // tell clients to reset vote state
+        }
+
+        public static class ForceReady_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new ForceReady_f();
+
+            private ForceReady_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (!gameLocal.isMultiplayer || gameLocal.isClient) {
+                    common.Printf("forceReady: multiplayer server only\n");
+                    return;
+                }
+                gameLocal.mpGame.ForceReady();
+            }
+        }
+        // scores in TDM
+
+        public static class DropWeapon_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new DropWeapon_f();
+
+            private DropWeapon_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (!gameLocal.isMultiplayer) {
+                    common.Printf("clientDropWeapon: only valid in multiplayer\n");
+                    return;
+                }
+                idBitMsg outMsg = new idBitMsg();
+                ByteBuffer msgBuf = ByteBuffer.allocate(128);
+                outMsg.Init(msgBuf, msgBuf.capacity());
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_DROPWEAPON);
+                networkSystem.ClientSendReliableMessage(outMsg);
+            }
+        }
+
+        public static class MessageMode_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new MessageMode_f();
+
+            private MessageMode_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                gameLocal.mpGame.MessageMode(args);
+            }
+        }
+
+        public static class VoiceChat_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new VoiceChat_f();
+
+            private VoiceChat_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                gameLocal.mpGame.VoiceChat(args, false);
+            }
+        }
+
+        public static class VoiceChatTeam_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new VoiceChatTeam_f();
+
+            private VoiceChatTeam_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                gameLocal.mpGame.VoiceChat(args, true);
+            }
+        }
+    }
+
 }

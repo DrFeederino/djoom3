@@ -1,43 +1,29 @@
 package neo.Tools.Compilers.DMap;
 
-import static java.lang.Math.floor;
 import neo.Game.GameEdit;
-import static neo.Renderer.Material.CONTENTS_AREAPORTAL;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
-import static neo.Renderer.tr_lightrun.R_DeriveLightData;
-import static neo.Renderer.tr_lightrun.R_FreeLightDefDerivedData;
-import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.mapLight_t;
-import neo.Tools.Compilers.DMap.dmap.mapTri_s;
-import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
-import neo.Tools.Compilers.DMap.dmap.primitive_s;
-import neo.Tools.Compilers.DMap.dmap.side_s;
-import neo.Tools.Compilers.DMap.dmap.uArea_t;
-import neo.Tools.Compilers.DMap.dmap.uBrush_t;
-import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import static neo.Tools.Compilers.DMap.facebsp.FreeTree;
-import static neo.Tools.Compilers.DMap.tritools.AllocTri;
-import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
-import static neo.Tools.Compilers.DMap.ubrush.CopyBrush;
-import static neo.Tools.Compilers.DMap.ubrush.CreateBrushWindings;
-import static neo.Tools.Compilers.DMap.ubrush.c_active_brushes;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
+import neo.Tools.Compilers.DMap.dmap.*;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.MapFile.DEFAULT_CURVE_MAX_ERROR;
-import static neo.idlib.MapFile.DEFAULT_CURVE_MAX_LENGTH;
-import neo.idlib.MapFile.idMapBrush;
-import neo.idlib.MapFile.idMapBrushSide;
-import neo.idlib.MapFile.idMapEntity;
-import neo.idlib.MapFile.idMapFile;
-import neo.idlib.MapFile.idMapPatch;
-import neo.idlib.MapFile.idMapPrimitive;
+import neo.idlib.MapFile.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.Surface.idSurface;
 import neo.idlib.geometry.Surface_Patch.idSurface_Patch;
 import neo.idlib.math.Plane.idPlane;
+
+import static java.lang.Math.floor;
+import static neo.Renderer.Material.CONTENTS_AREAPORTAL;
+import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
+import static neo.Renderer.tr_lightrun.R_DeriveLightData;
+import static neo.Renderer.tr_lightrun.R_FreeLightDefDerivedData;
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.DMap.dmap.*;
+import static neo.Tools.Compilers.DMap.facebsp.FreeTree;
+import static neo.Tools.Compilers.DMap.tritools.AllocTri;
+import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
+import static neo.Tools.Compilers.DMap.ubrush.*;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.MapFile.*;
 import static neo.idlib.math.Vector.DotProduct;
 
 /**
@@ -45,39 +31,38 @@ import static neo.idlib.math.Vector.DotProduct;
  */
 public class map {
 
+    static final float DIST_EPSILON = 0.01f;
     /*
 
      After parsing, there will be a list of entities that each has
      a list of primitives.
-  
+
      Primitives are either brushes, triangle soups, or model references.
 
      Curves are tesselated to triangle soups at load time, but model
-     references are 
-     Brushes will have 
-  
+     references are
+     Brushes will have
+
      brushes, each of which has a side definition.
 
      */
     //
     // private declarations
     //
-    static final int   MAX_BUILD_SIDES = 300;
-    //
-    static int       entityPrimitive;        // to track editor brush numbers
-    static int       c_numMapPatches;
-    static int       c_areaportals;
-    //
-    static uEntity_t uEntity;
-    //
-    // brushes are parsed into a temporary array of sides,
-    // which will have duplicates removed before the final brush is allocated
-    static uBrush_t  buildBrush;
+    static final int MAX_BUILD_SIDES = 300;
     //
     //
     static final float NORMAL_EPSILON = 0.00001f;
-    static final float DIST_EPSILON   = 0.01f;
-
+    //
+    // brushes are parsed into a temporary array of sides,
+    // which will have duplicates removed before the final brush is allocated
+    static uBrush_t buildBrush;
+    static int c_areaportals;
+    static int c_numMapPatches;
+    //
+    static int entityPrimitive;        // to track editor brush numbers
+    //
+    static uEntity_t uEntity;
 
     /*
      ===========

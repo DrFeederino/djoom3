@@ -1,89 +1,49 @@
 package neo.Sound;
 
-import static java.lang.Math.pow;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import neo.Renderer.Cinematic.cinData_t;
 import neo.Renderer.RenderWorld.idRenderWorld;
 import neo.Sound.snd_cache.idSoundCache;
 import neo.Sound.snd_cache.idSoundSample;
 import neo.Sound.snd_efxfile.idEFXFile;
-import neo.Sound.snd_emitter.SoundFX;
-import neo.Sound.snd_emitter.SoundFX_Comb;
-import neo.Sound.snd_emitter.SoundFX_Lowpass;
-import neo.Sound.snd_emitter.idSoundChannel;
-import neo.Sound.snd_emitter.idSoundEmitterLocal;
-import static neo.Sound.snd_local.PRIMARYFREQ;
-import static neo.Sound.snd_local.ROOM_SLICES_IN_BUFFER;
-import static neo.Sound.snd_local.SND_EPSILON;
-import static neo.Sound.snd_local.SOUND_MAX_CHANNELS;
-import static neo.Sound.snd_local.WAVE_FORMAT_TAG_OGG;
-import neo.Sound.snd_local.idAudioHardware;
-import neo.Sound.snd_local.idSampleDecoder;
-import neo.Sound.snd_local.waveformatex_s;
-import static neo.Sound.snd_shader.SSF_LOOPING;
+import neo.Sound.snd_emitter.*;
+import neo.Sound.snd_local.*;
 import neo.Sound.snd_world.idSoundWorldLocal;
 import neo.Sound.snd_world.s_stats;
 import neo.Sound.sound.idSoundSystem;
 import neo.Sound.sound.idSoundWorld;
 import neo.Sound.sound.soundDecoderInfo_t;
-import static neo.TempDump.NOT;
-import static neo.framework.BuildDefines.ID_DEDICATED;
-import static neo.framework.BuildDefines.ID_OPENAL;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_FLOAT;
-import static neo.framework.CVarSystem.CVAR_INIT;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_NOCHEAT;
-import static neo.framework.CVarSystem.CVAR_ROM;
-import static neo.framework.CVarSystem.CVAR_SOUND;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_CHEAT;
-import static neo.framework.CmdSystem.CMD_FL_SOUND;
-import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import neo.framework.CmdSystem.idCmdSystem;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.*;
 import neo.framework.Common.MemInfo_t;
-import static neo.framework.Common.common;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Simd.MIXBUFFER_SAMPLES;
-import static neo.idlib.math.Simd.SIMDProcessor;
-import static neo.sys.win_main.Sys_EnterCriticalSection;
-import static neo.sys.win_main.Sys_LeaveCriticalSection;
-import static neo.sys.win_main.Sys_Printf;
-import static neo.sys.win_main.Sys_Sleep;
-import static neo.sys.win_shared.Sys_Milliseconds;
-import static neo.sys.win_snd.Sys_FreeOpenAL;
-import static neo.sys.win_snd.Sys_LoadOpenAL;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
 import org.lwjgl.openal.ALCapabilities;
 
-import static org.lwjgl.openal.AL10.AL_BUFFER;
-import static org.lwjgl.openal.AL10.AL_NO_ERROR;
-import static org.lwjgl.openal.AL10.AL_ROLLOFF_FACTOR;
-import static org.lwjgl.openal.AL10.alDeleteSources;
-import static org.lwjgl.openal.AL10.alGenSources;
-import static org.lwjgl.openal.AL10.alGetError;
-import static org.lwjgl.openal.AL10.alIsExtensionPresent;
-import static org.lwjgl.openal.AL10.alSourceStop;
-import static org.lwjgl.openal.AL10.alSourcef;
-import static org.lwjgl.openal.AL10.alSourcei;
-import static org.lwjgl.openal.ALC10.ALC_DEVICE_SPECIFIER;
-import static org.lwjgl.openal.ALC10.alcCloseDevice;
-import static org.lwjgl.openal.ALC10.alcCreateContext;
-import static org.lwjgl.openal.ALC10.alcDestroyContext;
-import static org.lwjgl.openal.ALC10.alcGetString;
-import static org.lwjgl.openal.ALC10.alcMakeContextCurrent;
-import static org.lwjgl.openal.ALC10.alcOpenDevice;
-import static org.lwjgl.openal.ALC10.alcProcessContext;
-import static org.lwjgl.openal.ALC10.alcSuspendContext;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static java.lang.Math.pow;
+import static neo.Sound.snd_local.*;
+import static neo.Sound.snd_shader.SSF_LOOPING;
+import static neo.TempDump.NOT;
+import static neo.framework.BuildDefines.ID_DEDICATED;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Simd.MIXBUFFER_SAMPLES;
+import static neo.idlib.math.Simd.SIMDProcessor;
+import static neo.sys.win_main.*;
+import static neo.sys.win_shared.Sys_Milliseconds;
+import static neo.sys.win_snd.Sys_FreeOpenAL;
+import static neo.sys.win_snd.Sys_LoadOpenAL;
+import static org.lwjgl.openal.AL10.*;
+import static org.lwjgl.openal.ALC10.*;
 
 /**
  *
@@ -92,6 +52,10 @@ public class snd_system {
 
     static idSoundSystemLocal soundSystemLocal = new idSoundSystemLocal();
     public static idSoundSystem soundSystem = soundSystemLocal;
+
+    public static void setSoundSystem(idSoundSystem soundSystem) {
+        snd_system.soundSystem = snd_system.soundSystemLocal = (idSoundSystemLocal) soundSystem;
+    }
 
     /*
      ===================================================================================
@@ -102,63 +66,62 @@ public class snd_system {
      */
     static class openalSource_t {
 
-        int/*ALuint*/ handle;
-        int            startTime;
         idSoundChannel chan;
-        boolean        inUse;
-        boolean        looping;
-        boolean        stereo;
+        int/*ALuint*/ handle;
+        boolean inUse;
+        boolean looping;
+        int startTime;
+        boolean stereo;
     }
 
     public static class idSoundSystemLocal extends neo.Sound.sound.idSoundSystem {
 
-        public              idAudioHardware   snd_audio_hw;
-        public              idSoundCache      soundCache;
+        public static final idCVar s_clipVolumes = new idCVar("s_clipVolumes", "1", CVAR_SOUND | CVAR_BOOL, "");
+        public static final idCVar s_constantAmplitude = new idCVar("s_constantAmplitude", "-1", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_decompressionLimit = new idCVar("s_decompressionLimit", "6", CVAR_SOUND | CVAR_INTEGER | CVAR_ARCHIVE, "specifies maximum uncompressed sample length in seconds");
+        public static final idCVar s_doorDistanceAdd = new idCVar("s_doorDistanceAdd", "150", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "reduce sound volume with this distance when going through a door");
+        public static final idCVar s_dotbias2 = new idCVar("s_dotbias2", "1.1", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_dotbias6 = new idCVar("s_dotbias6", "0.8", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_drawSounds = new idCVar("s_drawSounds", "0", CVAR_SOUND | CVAR_INTEGER, "", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
+        public static final idCVar s_enviroSuitCutoffFreq = new idCVar("s_enviroSuitCutoffFreq", "2000", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_enviroSuitCutoffQ = new idCVar("s_enviroSuitCutoffQ", "2", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_enviroSuitVolumeScale = new idCVar("s_enviroSuitVolumeScale", "0.9", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_force22kHz = new idCVar("s_force22kHz", "0", CVAR_SOUND | CVAR_BOOL, "");
+        public static final idCVar s_globalFraction = new idCVar("s_globalFraction", "0.8", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "volume to all speakers when not spatialized");
         //
-        public              idSoundWorldLocal currentSoundWorld;    // the one to mix each async tic
-        //
-        public              int               olddwCurrentWritePos; // statistics
-        public              int               buffers;              // statistics
-        public              int               CurrentSoundTime;     // set by the async thread and only used by the main thread
-        //
-        public /*unsigned*/ int               nextWriteBlock;
-        //
-        public float[] realAccum = new float[6 * MIXBUFFER_SAMPLES + 16];
-        public float[] finalMixBuffer;                              // points inside realAccum at a 16 byte aligned boundary
-        //
-        public boolean isInitialized;
-        public boolean muted;
-        public boolean shutdown;
-        //
-        public s_stats soundStats    = new s_stats();               // NOTE: updated throughout the code, not displayed anywhere
-        //
-        public int[]   meterTops     = new int[256];
-        public int[]   meterTopsTime = new int[256];
-        //
-        public int/*dword*/[] graph;
-        //
-        public float[] volumesDB = new float[1200];                 // dB to float volume conversion
-        //
-        public idList<SoundFX> fxList;
-        //
-        public long       openalDevice;
-        public long      openalContext;
-        public int/*ALsizei*/  openalSourceCount;
-        public openalSource_t[] openalSources = new openalSource_t[256];
-//        public boolean alEAXSet;
-//        public boolean alEAXGet;
-//        public boolean alEAXSetBufferMode;
-//        public boolean alEAXGetBufferMode;
-        public idEFXFile EFXDatabase = new idEFXFile();
-        public boolean efxloaded;
-        // latches
-        public static boolean useOpenAL;
-        public static boolean useEAXReverb = false;
-        // mark available during initialization, or through an explicit test
-        public static int     EAXAvailable = -1;
+        public static final idCVar s_libOpenAL = new idCVar("s_libOpenAL", "openal32.dll", CVAR_SOUND | CVAR_ARCHIVE, "OpenAL DLL name/path");
+        public static final idCVar s_maxSoundsPerShader = new idCVar("s_maxSoundsPerShader", "0", CVAR_SOUND | CVAR_ARCHIVE, "", 0, 10, new idCmdSystem.ArgCompletion_Integer(0, 10));
+        public static final idCVar s_meterTopTime = new idCVar("s_meterTopTime", "2000", CVAR_SOUND | CVAR_ARCHIVE | CVAR_INTEGER, "");
+        public static final idCVar s_minVolume2 = new idCVar("s_minVolume2", "0.25", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_minVolume6 = new idCVar("s_minVolume6", "0", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_muteEAXReverb = new idCVar("s_muteEAXReverb", "0", CVAR_SOUND | CVAR_BOOL, "mute eax reverb");
         //
         //
         public static final idCVar s_noSound;
+        public static final idCVar s_numberOfSpeakers = new idCVar("s_numberOfSpeakers", "2", CVAR_SOUND | CVAR_ARCHIVE, "number of speakers");
+        public static final idCVar s_playDefaultSound = new idCVar("s_playDefaultSound", "1", CVAR_SOUND | CVAR_ARCHIVE | CVAR_BOOL, "play a beep for missing sounds");
+        public static final idCVar s_quadraticFalloff = new idCVar("s_quadraticFalloff", "1", CVAR_SOUND | CVAR_BOOL, "");
+        public static final idCVar s_realTimeDecoding = new idCVar("s_realTimeDecoding", "1", CVAR_SOUND | CVAR_BOOL | CVAR_INIT, "");
+        public static final idCVar s_reverbFeedback = new idCVar("s_reverbFeedback", "0.333", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_reverbTime = new idCVar("s_reverbTime", "1000", CVAR_SOUND | CVAR_FLOAT, "");
+        public static final idCVar s_reverse = new idCVar("s_reverse", "0", CVAR_SOUND | CVAR_ARCHIVE | CVAR_BOOL, "");
+        public static final idCVar s_showLevelMeter = new idCVar("s_showLevelMeter", "0", CVAR_SOUND | CVAR_BOOL, "");
+        public static final idCVar s_showStartSound = new idCVar("s_showStartSound", "0", CVAR_SOUND | CVAR_BOOL, "");
+        public static final idCVar s_singleEmitter = new idCVar("s_singleEmitter", "0", CVAR_SOUND | CVAR_INTEGER, "mute all sounds but this emitter");
+        public static final idCVar s_skipHelltimeFX = new idCVar("s_skipHelltimeFX", "0", CVAR_SOUND | CVAR_BOOL, "");
+        //
+        public static final idCVar s_slowAttenuate = new idCVar("s_slowAttenuate", "1", CVAR_SOUND | CVAR_BOOL, "slowmo sounds attenuate over shorted distance");
+        public static final idCVar s_spatializationDecay = new idCVar("s_spatializationDecay", "2", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "");
+        public static final idCVar s_subFraction = new idCVar("s_subFraction", "0.75", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "volume to subwoofer in 5.1");
+        public static final idCVar s_useEAXReverb = new idCVar("s_useEAXReverb", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ARCHIVE, "use EAX reverb");
+        public static final idCVar s_useOcclusion = new idCVar("s_useOcclusion", "1", CVAR_SOUND | CVAR_BOOL, "");
+        public static final idCVar s_useOpenAL = new idCVar("s_useOpenAL", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ARCHIVE, "use OpenAL");
+        public static final idCVar s_volume = new idCVar("s_volume_dB", "0", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "volume in dB");
+        // mark available during initialization, or through an explicit test
+        public static int EAXAvailable = -1;
+        public static boolean useEAXReverb = true;
+        // latches
+        public static boolean useOpenAL = true;
 
         static {
             if (ID_DEDICATED) {
@@ -168,63 +131,62 @@ public class snd_system {
             }
         }
 
-        public static final idCVar s_quadraticFalloff      = new idCVar("s_quadraticFalloff", "1", CVAR_SOUND | CVAR_BOOL, "");
-        public static final idCVar s_drawSounds            = new idCVar("s_drawSounds", "0", CVAR_SOUND | CVAR_INTEGER, "", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
-        public static final idCVar s_showStartSound        = new idCVar("s_showStartSound", "0", CVAR_SOUND | CVAR_BOOL, "");
-        public static final idCVar s_useOcclusion          = new idCVar("s_useOcclusion", "1", CVAR_SOUND | CVAR_BOOL, "");
-        public static final idCVar s_maxSoundsPerShader    = new idCVar("s_maxSoundsPerShader", "0", CVAR_SOUND | CVAR_ARCHIVE, "", 0, 10, new idCmdSystem.ArgCompletion_Integer(0, 10));
-        public static final idCVar s_showLevelMeter        = new idCVar("s_showLevelMeter", "0", CVAR_SOUND | CVAR_BOOL, "");
-        public static final idCVar s_constantAmplitude     = new idCVar("s_constantAmplitude", "-1", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_minVolume6            = new idCVar("s_minVolume6", "0", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_dotbias6              = new idCVar("s_dotbias6", "0.8", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_minVolume2            = new idCVar("s_minVolume2", "0.25", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_dotbias2              = new idCVar("s_dotbias2", "1.1", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_spatializationDecay   = new idCVar("s_spatializationDecay", "2", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "");
-        public static final idCVar s_reverse               = new idCVar("s_reverse", "0", CVAR_SOUND | CVAR_ARCHIVE | CVAR_BOOL, "");
-        public static final idCVar s_meterTopTime          = new idCVar("s_meterTopTime", "2000", CVAR_SOUND | CVAR_ARCHIVE | CVAR_INTEGER, "");
-        public static final idCVar s_volume                = new idCVar("s_volume_dB", "0", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "volume in dB");
-        public static final idCVar s_playDefaultSound      = new idCVar("s_playDefaultSound", "1", CVAR_SOUND | CVAR_ARCHIVE | CVAR_BOOL, "play a beep for missing sounds");
-        public static final idCVar s_subFraction           = new idCVar("s_subFraction", "0.75", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "volume to subwoofer in 5.1");
-        public static final idCVar s_globalFraction        = new idCVar("s_globalFraction", "0.8", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "volume to all speakers when not spatialized");
-        public static final idCVar s_doorDistanceAdd       = new idCVar("s_doorDistanceAdd", "150", CVAR_SOUND | CVAR_ARCHIVE | CVAR_FLOAT, "reduce sound volume with this distance when going through a door");
-        public static final idCVar s_singleEmitter         = new idCVar("s_singleEmitter", "0", CVAR_SOUND | CVAR_INTEGER, "mute all sounds but this emitter");
-        public static final idCVar s_numberOfSpeakers      = new idCVar("s_numberOfSpeakers", "2", CVAR_SOUND | CVAR_ARCHIVE, "number of speakers");
-        public static final idCVar s_force22kHz            = new idCVar("s_force22kHz", "0", CVAR_SOUND | CVAR_BOOL, "");
-        public static final idCVar s_clipVolumes           = new idCVar("s_clipVolumes", "1", CVAR_SOUND | CVAR_BOOL, "");
-        public static final idCVar s_realTimeDecoding      = new idCVar("s_realTimeDecoding", "1", CVAR_SOUND | CVAR_BOOL | CVAR_INIT, "");
+        public int CurrentSoundTime;     // set by the async thread and only used by the main thread
+        //        public boolean alEAXSet;
+//        public boolean alEAXGet;
+//        public boolean alEAXSetBufferMode;
+//        public boolean alEAXGetBufferMode;
+        public idEFXFile EFXDatabase = new idEFXFile();
+        public int buffers;              // statistics
         //
-        public static final idCVar s_slowAttenuate         = new idCVar("s_slowAttenuate", "1", CVAR_SOUND | CVAR_BOOL, "slowmo sounds attenuate over shorted distance");
-        public static final idCVar s_enviroSuitCutoffFreq  = new idCVar("s_enviroSuitCutoffFreq", "2000", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_enviroSuitCutoffQ     = new idCVar("s_enviroSuitCutoffQ", "2", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_reverbTime            = new idCVar("s_reverbTime", "1000", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_reverbFeedback        = new idCVar("s_reverbFeedback", "0.333", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_enviroSuitVolumeScale = new idCVar("s_enviroSuitVolumeScale", "0.9", CVAR_SOUND | CVAR_FLOAT, "");
-        public static final idCVar s_skipHelltimeFX        = new idCVar("s_skipHelltimeFX", "0", CVAR_SOUND | CVAR_BOOL, "");
+        public idSoundWorldLocal currentSoundWorld;    // the one to mix each async tic
+        public boolean efxloaded;
+        public float[] finalMixBuffer;                              // points inside realAccum at a 16 byte aligned boundary
         //
-        public static final idCVar s_libOpenAL;
-        public static final idCVar s_useOpenAL;
-        public static final idCVar s_useEAXReverb;
-        public static final idCVar s_muteEAXReverb;
-        public static final idCVar s_decompressionLimit;
+        public idList<SoundFX> fxList;
+        //
+        public int/*dword*/[] graph;
+        //
+        public boolean isInitialized;
+        //
+        public int[] meterTops = new int[256];
+        public int[] meterTopsTime = new int[256];
+        public boolean muted;
+        //
+        public /*unsigned*/ int nextWriteBlock;
+        //
+        public int olddwCurrentWritePos; // statistics
+        public long openalContext;
+        //
+        public long openalDevice;
+        public int/*ALsizei*/  openalSourceCount;
+        public openalSource_t[] openalSources = new openalSource_t[256];
+        //
+        public float[] realAccum = new float[6 * MIXBUFFER_SAMPLES + 16];
+        public boolean shutdown;
+        public idAudioHardware snd_audio_hw;
+        public idSoundCache soundCache;
+        //
+        public s_stats soundStats = new s_stats();               // NOTE: updated throughout the code, not displayed anywhere
+        //
+        public float[] volumesDB = new float[1200];                 // dB to float volume conversion
 
-        static {
-            if (ID_OPENAL) {//TODO: turn on the rest of our openAL extensions.
-                // off by default. OpenAL DLL gets loaded on-demand. EDIT: not anymore.
-                s_libOpenAL = new idCVar("s_libOpenAL", "openal32.dll", CVAR_SOUND | CVAR_ARCHIVE, "OpenAL DLL name/path");
-                s_useOpenAL = new idCVar("s_useOpenAL", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ARCHIVE, "use OpenAL");
-                s_useEAXReverb = new idCVar("s_useEAXReverb", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ARCHIVE, "use EAX reverb");
-                s_muteEAXReverb = new idCVar("s_muteEAXReverb", "0", CVAR_SOUND | CVAR_BOOL, "mute eax reverb");
-                s_decompressionLimit = new idCVar("s_decompressionLimit", "6", CVAR_SOUND | CVAR_INTEGER | CVAR_ARCHIVE, "specifies maximum uncompressed sample length in seconds");
-            } else {
-                s_libOpenAL = new idCVar("s_libOpenAL", "openal32.dll", CVAR_SOUND | CVAR_ARCHIVE, "OpenAL is not supported in this build");
-                s_useOpenAL = new idCVar("s_useOpenAL", "0", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "OpenAL is not supported in this build");
-                s_useEAXReverb = new idCVar("s_useEAXReverb", "0", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "EAX not available in this build");
-                s_muteEAXReverb = new idCVar("s_muteEAXReverb", "0", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "mute eax reverb");
-                s_decompressionLimit = new idCVar("s_decompressionLimit", "6", CVAR_SOUND | CVAR_INTEGER | CVAR_ROM, "specifies maximum uncompressed sample length in seconds");
-            }
-        }
-        //
-        //
+//        static {
+//            if (ID_OPENAL) {//TODO: turn on the rest of our openAL extensions.
+//                // off by default. OpenAL DLL gets loaded on-demand. EDIT: not anymore.
+//                //s_libOpenAL = new idCVar("s_libOpenAL", "openal32.dll", CVAR_SOUND | CVAR_ARCHIVE, "OpenAL DLL name/path");
+//                s_useOpenAL = new idCVar("s_useOpenAL", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ARCHIVE, "use OpenAL");
+//                s_useEAXReverb = new idCVar("s_useEAXReverb", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ARCHIVE, "use EAX reverb");
+//                s_muteEAXReverb = new idCVar("s_muteEAXReverb", "0", CVAR_SOUND | CVAR_BOOL, "mute eax reverb");
+//                s_decompressionLimit = new idCVar("s_decompressionLimit", "6", CVAR_SOUND | CVAR_INTEGER | CVAR_ARCHIVE, "specifies maximum uncompressed sample length in seconds");
+//            } else {
+//                s_libOpenAL = new idCVar("s_libOpenAL", "openal32.dll", CVAR_SOUND | CVAR_ARCHIVE, "OpenAL is not supported in this build");
+//                s_useOpenAL = new idCVar("s_useOpenAL", "0", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "OpenAL is not supported in this build");
+//                s_useEAXReverb = new idCVar("s_useEAXReverb", "0", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "EAX not available in this build");
+//                s_muteEAXReverb = new idCVar("s_muteEAXReverb", "0", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "mute eax reverb");
+//                s_decompressionLimit = new idCVar("s_decompressionLimit", "6", CVAR_SOUND | CVAR_INTEGER | CVAR_ROM, "specifies maximum uncompressed sample length in seconds");
+//            }
+//        }
 
         public idSoundSystemLocal() {
             isInitialized = false;
@@ -256,9 +218,7 @@ public class snd_system {
 
             nextWriteBlock = 0xffffffff;
 
-//            memset(meterTops, 0, sizeof(meterTops));
             meterTops = new int[meterTops.length];
-//            memset(meterTopsTime, 0, sizeof(meterTopsTime));
             meterTopsTime = new int[meterTopsTime.length];
 
             for (int i = -600; i < 600; i++) {
@@ -289,14 +249,14 @@ public class snd_system {
                     openalContext = alcCreateContext(openalDevice, (int[]) null);
 
                     alcMakeContextCurrent(openalContext);
-                    
+
                     ALCCapabilities alcCapabilities = ALC.createCapabilities(openalDevice);
                     ALCapabilities alCapabilities = AL.createCapabilities(alcCapabilities);
                     common.Printf("Done.\n");
 
                     // try to obtain EAX extensions
                     if (idSoundSystemLocal.s_useEAXReverb.GetBool() && alIsExtensionPresent(/*ID_ALCHAR*/"EAX4.0")) {
-                        idSoundSystemLocal.s_useOpenAL.SetBool(true);	// EAX presence causes AL enable
+                        idSoundSystemLocal.s_useOpenAL.SetBool(true);    // EAX presence causes AL enable
 //                        alEAXSet = true;//(EAXSet) alGetProcAddress(/*ID_ALCHAR*/"EAXSet");
 //                        alEAXGet = true;//(EAXGet) alGetProcAddress(/*ID_ALCHAR*/"EAXGet");
                         common.Printf("OpenAL: found EAX 4.0 extension\n");
@@ -463,8 +423,8 @@ public class snd_system {
                 return false;
             }
 
-            shutdown = true;		// don't do anything at AsyncUpdate() time
-            Sys_Sleep(100);		// sleep long enough to make sure any async sound talking to hardware has returned
+            shutdown = true;        // don't do anything at AsyncUpdate() time
+            Sys_Sleep(100);        // sleep long enough to make sure any async sound talking to hardware has returned
 
             common.Printf("Shutting down sound hardware\n");
 
@@ -497,7 +457,6 @@ public class snd_system {
 
             if (!useOpenAL) {
                 if (!snd_audio_hw.Initialize()) {
-//			delete snd_audio_hw;
                     snd_audio_hw = null;
                     return false;
                 }
@@ -505,7 +464,7 @@ public class snd_system {
                 if (snd_audio_hw.GetNumberOfSpeakers() == 0) {
                     return false;
                 }
-                // put the real number in there
+
                 s_numberOfSpeakers.SetInteger(snd_audio_hw.GetNumberOfSpeakers());
             }
 
@@ -577,7 +536,7 @@ public class snd_system {
             int newPosition = nextWriteBlock * MIXBUFFER_SAMPLES;
 
             if (newPosition < olddwCurrentWritePos) {
-                buffers++;					// buffer wrapped
+                buffers++;                    // buffer wrapped
             }
 
             // nextWriteSample is in multi-channel samples inside the buffer
@@ -765,7 +724,7 @@ public class snd_system {
                 graph = new int[256 * 128 * 4];// Mem_Alloc(256 * 128 * 4);
             }
 //	memset( graph, 0, 256*128 * 4 );
-            float[] accum = finalMixBuffer;	// unfortunately, these are already clamped
+            float[] accum = finalMixBuffer;    // unfortunately, these are already clamped
             int time = Sys_Milliseconds();
 
             int numSpeakers = snd_audio_hw.GetNumberOfSpeakers();
@@ -780,7 +739,7 @@ public class snd_system {
                         }
                     }
 
-                    meter /= 256;		// 32768 becomes 128
+                    meter /= 256;        // 32768 becomes 128
                     if (meter > 128) {
                         meter = 128;
                     }
@@ -870,7 +829,7 @@ public class snd_system {
                             fmeter = 1.0f;
                         }
                         int meter = (int) (fmeter * 63.0f);
-                        graph[ (meter + 64) * 256 + xx] = colors[j];
+                        graph[(meter + 64) * 256 + xx] = colors[j];
 
                         if (meter < 0) {
                             meter = -meter;
@@ -890,7 +849,7 @@ public class snd_system {
                 for (i = 0; i < 256; i++) {
                     int meter = meterTops[i];
                     for (int y = -meter; y < meter; y++) {
-                        graph[ (y + 64) * 256 + i] = colors[j];
+                        graph[(y + 64) * 256 + i] = colors[j];
                     }
                 }
             }
@@ -1071,14 +1030,14 @@ public class snd_system {
                 return CurrentSoundTime;
             } else {
                 // NOTE: this would overflow 31bits within about 1h20 ( not that important since we get a snd_audio_hw right away pbly )
-                //return ( ( Sys_Milliseconds()*441 ) / 10 ) * 4; 
+                //return ( ( Sys_Milliseconds()*441 ) / 10 ) * 4;
                 return idMath.FtoiFast(Sys_Milliseconds() * 176.4f);
             }
         }
 
         public float dB2Scale(final float val) {
             if (val == 0.0f) {
-                return 1.0f;				// most common
+                return 1.0f;                // most common
             } else if (val <= -60.0f) {
                 return 0.0f;
             } else if (val >= 60.0f) {
@@ -1216,7 +1175,7 @@ public class snd_system {
 
             if (iUnused != -1) {
                 index = iUnused;
-            } else if (iOldestZeroVolSingleShot != - 1) {
+            } else if (iOldestZeroVolSingleShot != -1) {
                 index = iOldestZeroVolSingleShot;
             } else if (iOldestZeroVolLooping != -1) {
                 index = iOldestZeroVolLooping;
@@ -1274,7 +1233,7 @@ public class snd_system {
                 }
             }
         }
-    };
+    }
 
     /*
      ===============
@@ -1295,16 +1254,13 @@ public class snd_system {
             if (NOT(soundSystemLocal.soundCache)) {
                 return;
             }
-            boolean force = false;
-            if (args.Argc() == 2) {
-                force = true;
-            }
+            boolean force = args.Argc() == 2;
             soundSystem.SetMute(true);
             soundSystemLocal.soundCache.ReloadSounds(force);
             soundSystem.SetMute(false);
             common.Printf("sound: changed sounds reloaded\n");
         }
-    };
+    }
 
     /*
      ===============
@@ -1371,7 +1327,7 @@ public class snd_system {
 //	common.Printf( "%8d kB total OpenAL audio memory used\n", ( alGetInteger( alGetEnumValue( "AL_EAX_RAM_SIZE" ) ) - alGetInteger( alGetEnumValue( "AL_EAX_RAM_FREE" ) ) ) >> 10 );
 //#endif
         }
-    };
+    }
 
     /*
      ===============
@@ -1467,7 +1423,7 @@ public class snd_system {
             common.Printf("%d active decoders\n", numActiveDecoders);
             common.Printf("%d kB decoder memory in %d blocks\n", idSampleDecoder.GetUsedBlockMemory() >> 10, idSampleDecoder.GetNumUsedBlocks());
         }
-    };
+    }
 
     /*
      ===============
@@ -1493,7 +1449,7 @@ public class snd_system {
                 soundSystemLocal.currentSoundWorld.PlayShaderDirectly(args.Argv(1));
             }
         }
-    };
+    }
 
     /*
      ===============
@@ -1518,9 +1474,5 @@ public class snd_system {
             soundSystemLocal.InitHW();
             soundSystem.SetMute(false);
         }
-    };
-
-    public static void setSoundSystem(idSoundSystem soundSystem) {
-        snd_system.soundSystem = snd_system.soundSystemLocal = (idSoundSystemLocal) soundSystem;
     }
 }

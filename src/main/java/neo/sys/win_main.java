@@ -1,6 +1,20 @@
 package neo.sys;
 
-import java.awt.Toolkit;
+import neo.TempDump.*;
+import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
+import neo.framework.CVarSystem.idCVar;
+import neo.framework.CmdSystem.*;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.StrList.idStrList;
+import neo.sys.RC.CreateResourceIDs_f;
+import neo.sys.sys_public.*;
+import neo.sys.win_local.Win32Vars_t;
+
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -18,115 +32,27 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static neo.TempDump.NOT;
-
-import neo.TempDump.TODO_Exception;
-
-import static neo.TempDump.atobb;
-import static neo.TempDump.ctos;
-import static neo.TempDump.fopenOptions;
-import static neo.Tools.edit_public.AFEditorRun;
-import static neo.Tools.edit_public.DeclBrowserRun;
-import static neo.Tools.edit_public.GUIEditorRun;
-import static neo.Tools.edit_public.LightEditorRun;
-import static neo.Tools.edit_public.MaterialEditorRun;
-import static neo.Tools.edit_public.PDAEditorRun;
-import static neo.Tools.edit_public.ParticleEditorRun;
-import static neo.Tools.edit_public.RadiantRun;
-import static neo.Tools.edit_public.ScriptEditorRun;
-import static neo.Tools.edit_public.SoundEditorRun;
-
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-
+import static neo.TempDump.*;
+import static neo.Tools.edit_public.*;
 import static neo.framework.BuildDefines.ID_ALLOW_TOOLS;
 import static neo.framework.CVarSystem.CVAR_SYSTEM;
-
-import neo.framework.CVarSystem.idCVar;
-
-import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
-import static neo.framework.CmdSystem.CMD_FL_TOOL;
-
-import neo.framework.CmdSystem.cmdFunction_t;
-
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.EDITOR_AF;
-import static neo.framework.Common.EDITOR_DECL;
-import static neo.framework.Common.EDITOR_GUI;
-import static neo.framework.Common.EDITOR_LIGHT;
-import static neo.framework.Common.EDITOR_MATERIAL;
-import static neo.framework.Common.EDITOR_PARTICLE;
-import static neo.framework.Common.EDITOR_PDA;
-import static neo.framework.Common.EDITOR_RADIANT;
-import static neo.framework.Common.EDITOR_SCRIPT;
-import static neo.framework.Common.EDITOR_SOUND;
-import static neo.framework.Common.com_editors;
-import static neo.framework.Common.com_skipRenderer;
-import static neo.framework.Common.common;
-
-import neo.idlib.CmdArgs.idCmdArgs;
-
+import static neo.framework.CmdSystem.*;
+import static neo.framework.Common.*;
 import static neo.idlib.Lib.MAX_STRING_CHARS;
-
-import neo.idlib.Lib.idException;
-
 import static neo.idlib.Lib.idLib.cvarSystem;
-
-import neo.idlib.Text.Lexer.idLexer;
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
-import neo.sys.RC.CreateResourceIDs_f;
-
-import static neo.sys.sys_public.CPUID_3DNOW;
-import static neo.sys.sys_public.CPUID_AMD;
-import static neo.sys.sys_public.CPUID_GENERIC;
-import static neo.sys.sys_public.CPUID_HTT;
-import static neo.sys.sys_public.CPUID_INTEL;
-import static neo.sys.sys_public.CPUID_MMX;
-import static neo.sys.sys_public.CPUID_NONE;
-import static neo.sys.sys_public.CPUID_SSE;
-import static neo.sys.sys_public.CPUID_SSE2;
-import static neo.sys.sys_public.CPUID_SSE3;
-import static neo.sys.sys_public.CPUID_UNSUPPORTED;
-import static neo.sys.sys_public.CRITICAL_SECTION_ZERO;
-import static neo.sys.sys_public.MAX_CRITICAL_SECTIONS;
-import static neo.sys.sys_public.MAX_THREADS;
-import static neo.sys.sys_public.TRIGGER_EVENT_ZERO;
-
-import neo.sys.sys_public.sysEventType_t;
-
+import static neo.sys.sys_public.*;
 import static neo.sys.sys_public.sysEventType_t.SE_CONSOLE;
-
-import neo.sys.sys_public.sysEvent_s;
-import neo.sys.sys_public.sysMemoryStats_s;
-import neo.sys.sys_public.xthreadInfo;
-import neo.sys.sys_public.xthreadPriority;
-
 import static neo.sys.sys_public.xthreadPriority.THREAD_ABOVE_NORMAL;
 import static neo.sys.sys_public.xthreadPriority.THREAD_HIGHEST;
-
-import neo.sys.sys_public.xthread_t;
-
 import static neo.sys.win_cpu.Sys_ClockTicksPerSecond;
 import static neo.sys.win_cpu.Sys_GetCPUId;
 import static neo.sys.win_glimp.GLimp_Shutdown;
 import static neo.sys.win_input.Sys_InitInput;
 import static neo.sys.win_input.Sys_ShutdownInput;
-
-import neo.sys.win_local.Win32Vars_t;
-
 import static neo.sys.win_local.Win32Vars_t.win_viewlog;
 import static neo.sys.win_local.win32;
-import static neo.sys.win_shared.Sys_GetCurrentUser;
-import static neo.sys.win_shared.Sys_GetSystemRam;
-import static neo.sys.win_shared.Sys_GetVideoRam;
-import static neo.sys.win_shared.Sys_Milliseconds;
-import static neo.sys.win_syscon.Conbuf_AppendText;
-import static neo.sys.win_syscon.Sys_ConsoleInput;
-import static neo.sys.win_syscon.Sys_CreateConsole;
-import static neo.sys.win_syscon.Sys_DestroyConsole;
-import static neo.sys.win_syscon.Sys_ShowConsole;
-import static neo.sys.win_syscon.Win_SetErrorText;
+import static neo.sys.win_shared.*;
+import static neo.sys.win_syscon.*;
 
 /**
  *
@@ -137,25 +63,80 @@ public class win_main {//TODO: rename to plain "main" or something.
 
     static final int MAXPRINTMSG = 4096;
 
-    static final int MAX_QUED_EVENTS  = 256;
+    static final int MAX_QUED_EVENTS = 256;
     static final int MASK_QUED_EVENTS = (MAX_QUED_EVENTS - 1);
 
-    static final int OSR2_BUILD_NUMBER  = 1111;
+    static final int OSR2_BUILD_NUMBER = 1111;
+    /*
+     *
+     *
+     *
+     *                    _
+     *                   (_)
+     *  _ __ ___    __ _  _  _ __
+     * | '_ ` _ \  / _` || || '_ \
+     * | | | | | || (_| || || | | |
+     * |_| |_| |_| \__,_||_||_| |_|
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     */
+//    static final int TEST_FPU_EXCEPTIONS
+//            /*	=FPU_EXCEPTION_INVALID_OPERATION |		*/
+//            /*	FPU_EXCEPTION_DENORMALIZED_OPERAND |	*/
+//            /*	FPU_EXCEPTION_DIVIDE_BY_ZERO |			*/
+//            /*	FPU_EXCEPTION_NUMERIC_OVERFLOW |		*/
+//            /*	FPU_EXCEPTION_NUMERIC_UNDERFLOW |		*/
+//            /*	FPU_EXCEPTION_INEXACT_RESULT |			*/
+//            = 0;
+    static final boolean SET_THREAD_AFFINITY = false;
     static final int WIN98_BUILD_NUMBER = 1998;
-
     static final StringBuilder sys_cmdline = new StringBuilder(MAX_STRING_CHARS);
-
-    static        xthreadInfo                         threadInfo;
-    public static ScheduledExecutorService /*HANDLE*/ hTimer;
-
-    static /*unsigned*/ int debug_total_alloc         = 0;
-    static /*unsigned*/ int debug_total_alloc_count   = 0;
-    static /*unsigned*/ int debug_current_alloc       = 0;
-    static /*unsigned*/ int debug_current_alloc_count = 0;
-    static /*unsigned*/ int debug_frame_alloc         = 0;
-    static /*unsigned*/ int debug_frame_alloc_count   = 0;
-
     static final idCVar sys_showMallocs = new idCVar("sys_showMallocs", "0", CVAR_SYSTEM, "");
+    public static ScheduledExecutorService /*HANDLE*/ hTimer;
+    static /*unsigned*/ int debug_current_alloc = 0;
+    static /*unsigned*/ int debug_current_alloc_count = 0;
+    static /*unsigned*/ int debug_frame_alloc = 0;
+    static /*unsigned*/ int debug_frame_alloc_count = 0;
+    static /*unsigned*/ int debug_total_alloc = 0;
+    static /*unsigned*/ int debug_total_alloc_count = 0;
+    static int eventHead = 0;
+    /*
+     ========================================================================
+
+     EVENT LOOP
+
+     ========================================================================
+     */
+    static sysEvent_s[] eventQue = new sysEvent_s[MAX_QUED_EVENTS];
+    static int eventTail = 0;
+    /*
+     ====================
+     clrstk
+
+     I tried to get the run time to call this at every function entry, but
+     ====================
+     */
+    static int parmBytes;
+    static xthreadInfo threadInfo;
+    /*
+     ==============
+     Sys_StartAsyncThread
+
+     Start the thread that will call idCommon::Async()
+     ==============
+     */private static int count = 0;
+    /*
+     ================
+     Sys_GenerateEvents
+     ================
+     */
+    private static boolean entered = false;
 
     /*
      ================
@@ -234,7 +215,6 @@ public class win_main {//TODO: rename to plain "main" or something.
 //	return "main";
     }
 
-
     /*
      ==================
      Sys_EnterCriticalSection
@@ -284,7 +264,6 @@ public class win_main {//TODO: rename to plain "main" or something.
     public static void Sys_WaitForEvent() {
         Sys_WaitForEvent(TRIGGER_EVENT_ZERO);
     }
-
 
     /*
      ==================
@@ -390,7 +369,6 @@ public class win_main {//TODO: rename to plain "main" or something.
         System.exit(0);//ExitProcess(0);
     }
 
-
     /*
      ==============
      Sys_Printf
@@ -401,7 +379,7 @@ public class win_main {//TODO: rename to plain "main" or something.
         msg.append(String.format(fmt, arg));
 
         if (Win32Vars_t.win_outputDebugString.GetBool()) {
-            System.out.print(msg.toString());//OutputDebugString(msg);
+            System.out.print(msg);//OutputDebugString(msg);
         }
         if (Win32Vars_t.win_outputEditString.GetBool()) {
             Conbuf_AppendText(msg.toString());
@@ -507,6 +485,14 @@ public class win_main {//TODO: rename to plain "main" or something.
     }
 
     /*
+     ========================================================================
+
+     DLL Loading
+
+     ========================================================================
+     */
+
+    /*
      ==============
      Sys_DefaultBasePath
      ==============
@@ -523,7 +509,6 @@ public class win_main {//TODO: rename to plain "main" or something.
     public static String Sys_DefaultSavePath() {
         return cvarSystem.GetCVarString("fs_basepath");
     }
-
 
     /*
      ==============
@@ -577,7 +562,6 @@ public class win_main {//TODO: rename to plain "main" or something.
         return list.Num();
     }
 
-
     /*
      ================
      Sys_GetClipboardData
@@ -597,7 +581,7 @@ public class win_main {//TODO: rename to plain "main" or something.
 //				data = (char *)Mem_Alloc( GlobalSize( hClipboardData ) + 1 );
 //				strcpy( data, cliptext );
 //				GlobalUnlock( hClipboardData );
-//				
+//
 //				strtok( data, "\n\r\b" );
 //			}
 //		}
@@ -653,11 +637,11 @@ public class win_main {//TODO: rename to plain "main" or something.
     }
 
     /*
-     ========================================================================
+     =============
+     Sys_PumpEvents
 
-     DLL Loading
-
-     ========================================================================
+     This allows windows to be moved during renderbump
+     =============
      */
 
     /*
@@ -689,7 +673,7 @@ public class win_main {//TODO: rename to plain "main" or something.
      */
     public static Object Sys_DLL_GetProcAddress(int dllHandle, final String procName) {
         throw new TODO_Exception();
-//	return GetProcAddress( (HINSTANCE)dllHandle, procName ); 
+//	return GetProcAddress( (HINSTANCE)dllHandle, procName );
     }
 
     /*
@@ -712,22 +696,11 @@ public class win_main {//TODO: rename to plain "main" or something.
 //			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
 //			(LPTSTR) &lpMsgBuf,
 //			0,
-//			NULL 
+//			NULL
 //		);
 //		Sys_Error( "Sys_DLL_Unload: FreeLibrary failed - %s (%d)", lpMsgBuf, lastError );
 //	}
     }
-
-    /*
-     ========================================================================
-
-     EVENT LOOP
-
-     ========================================================================
-     */
-    static sysEvent_s[] eventQue  = new sysEvent_s[MAX_QUED_EVENTS];
-    static int          eventHead = 0;
-    static int          eventTail = 0;
 
     /*
      ================
@@ -760,14 +733,6 @@ public class win_main {//TODO: rename to plain "main" or something.
         ev.evPtr = ptr;
     }
 
-    /*
-     =============
-     Sys_PumpEvents
-
-     This allows windows to be moved during renderbump
-     =============
-     */
-
     /**
      * @deprecated not needed for java
      */
@@ -784,29 +749,24 @@ public class win_main {//TODO: rename to plain "main" or something.
 //
 //		// save the msg time, because wndprocs don't have access to the timestamp
 //		if ( win32.sysMsgTime && win32.sysMsgTime > (int)msg.time ) {
-//			// don't ever let the event times run backwards	
+//			// don't ever let the event times run backwards
 ////			common->Printf( "Sys_PumpEvents: win32.sysMsgTime (%i) > msg.time (%i)\n", win32.sysMsgTime, msg.time );
 //		} else {
 //			win32.sysMsgTime = msg.time;
 //		}
 //
 //#ifdef ID_ALLOW_TOOLS
-//		if ( GUIEditorHandleMessage ( &msg ) ) {	
+//		if ( GUIEditorHandleMessage ( &msg ) ) {
 //			continue;
 //		}
 //#endif
-// 
+//
 //		TranslateMessage (&msg);
 //      	DispatchMessage (&msg);
 //	}
     }
 
-    /*
-     ================
-     Sys_GenerateEvents
-     ================
-     */
-    private static boolean entered = false;
+//================================================================
 
     public static void Sys_GenerateEvents() {
 
@@ -858,89 +818,13 @@ public class win_main {//TODO: rename to plain "main" or something.
             return eventQue[(eventTail - 1) & MASK_QUED_EVENTS];
         }
 
-        // return the empty event 
+        // return the empty event
 //	memset( &ev, 0, sizeof( ev ) );
         ev = new sysEvent_s();
 
         return ev;
     }
 
-//================================================================
-
-    /*
-     =================
-     Sys_In_Restart_f
-
-     Restart the input subsystem
-     =================
-     */
-    public static class Sys_In_Restart_f extends cmdFunction_t {
-
-        public static final cmdFunction_t INSTANCE = new Sys_In_Restart_f();
-
-        private Sys_In_Restart_f() {
-        }
-
-        @Override
-        public void run(idCmdArgs args) throws idException {
-            Sys_ShutdownInput();
-            Sys_InitInput();
-        }
-    }
-
-
-    /*
-     ==================
-     Sys_AsyncThread
-     ==================
-     */
-    static class Sys_AsyncThread extends xthread_t {
-
-        int wakeNumber;
-        int startTime;
-
-        @Override
-        public void run() {
-
-            System.out.println("Blaaaaaaaaaaaaaaaaaa!");
-//            startTime = Sys_Milliseconds();
-//            wakeNumber = 0;
-//
-//            while (true) {
-//#ifdef WIN32	
-//		// this will trigger 60 times a second
-//		int r = WaitForSingleObject( hTimer, 100 );
-//		if ( r != WAIT_OBJECT_0 ) {
-//			OutputDebugString( "idPacketServer::PacketServerInterrupt: bad wait return" );
-//		}
-//#endif
-//
-//#if 0
-//		wakeNumber++;
-//		int		msec = Sys_Milliseconds();
-//		int		deltaTime = msec - startTime;
-//		startTime = msec;
-//
-//		char	str[1024];
-//		sprintf( str, "%i ", deltaTime );
-//		OutputDebugString( str );
-//#endif
-//
-//
-            common.Async();
-//            }
-        }
-    }
-
-    ;
-
-    /*
-     ==============
-     Sys_StartAsyncThread
-
-     Start the thread that will call idCommon::Async()
-     ==============
-     */private static int count = 0;
     public static void Sys_StartAsyncThread() {
 
         // create an auto-reset event that happens 60 times a second
@@ -962,7 +846,7 @@ public class win_main {//TODO: rename to plain "main" or something.
 //        }
 
 //        hTimer.scheduleAtFixedRate(threadInfo.threadHandle, 0, USERCMD_MSEC, TimeUnit.MILLISECONDS);
-        hTimer.scheduleAtFixedRate((Runnable) () -> {//TODO:debug the line above.(info.threadHandle.start();??)
+        hTimer.scheduleAtFixedRate(() -> {//TODO:debug the line above.(info.threadHandle.start();??)
 //                if (!DEBUG) {//TODO:Session_local.java::742
             common.Async();
 //                }
@@ -1537,15 +1421,6 @@ public class win_main {//TODO: rename to plain "main" or something.
 //	return 0;
 //}
 
-    /*
-     ====================
-     clrstk
-
-     I tried to get the run time to call this at every function entry, but
-     ====================
-     */
-    static int parmBytes;
-
     public static /*__declspec( naked )*/ void clrstk() {
         throw new TODO_Exception();
 //	// eax = bytes to add to stack
@@ -1557,7 +1432,7 @@ public class win_main {//TODO: rename to plain "main" or something.
 //        xchg    eax,esp
 //        mov     eax,dword ptr [eax]		; copy the return address
 //        push    eax
-//        
+//
 //        ; clear to zero
 //        push	edi
 //        push	ecx
@@ -1570,7 +1445,7 @@ public class win_main {//TODO: rename to plain "main" or something.
 //        rep	stosd
 //        pop		ecx
 //        pop		edi
-//        
+//
 //        ret
 //	}
     }
@@ -1610,35 +1485,6 @@ public class win_main {//TODO: rename to plain "main" or something.
 
         return FileChannel.open(tmp.toPath(), fopenOptions("wb+"));
     }
-
-    /*
-     *
-     *
-     *
-     *                    _        
-     *                   (_)       
-     *  _ __ ___    __ _  _  _ __  
-     * | '_ ` _ \  / _` || || '_ \ 
-     * | | | | | || (_| || || | | |
-     * |_| |_| |_| \__,_||_||_| |_|
-     *                      
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     */
-//    static final int TEST_FPU_EXCEPTIONS
-//            /*	=FPU_EXCEPTION_INVALID_OPERATION |		*/
-//            /*	FPU_EXCEPTION_DENORMALIZED_OPERAND |	*/
-//            /*	FPU_EXCEPTION_DIVIDE_BY_ZERO |			*/
-//            /*	FPU_EXCEPTION_NUMERIC_OVERFLOW |		*/
-//            /*	FPU_EXCEPTION_NUMERIC_UNDERFLOW |		*/
-//            /*	FPU_EXCEPTION_INEXACT_RESULT |			*/
-//            = 0;
-    static final boolean SET_THREAD_AFFINITY = false;
 
     public static void main(String[] lpCmdLine) {//cmd arguments need to be escaped and surrounded by quotes to preserve spacing.
         // TODO: check if any of the disabled commands below can be salvaged for java.
@@ -1784,6 +1630,70 @@ public class win_main {//TODO: rename to plain "main" or something.
 
         // never gets here
 //	return 0;
+    }
+
+    /*
+     =================
+     Sys_In_Restart_f
+
+     Restart the input subsystem
+     =================
+     */
+    public static class Sys_In_Restart_f extends cmdFunction_t {
+
+        public static final cmdFunction_t INSTANCE = new Sys_In_Restart_f();
+
+        private Sys_In_Restart_f() {
+        }
+
+        @Override
+        public void run(idCmdArgs args) throws idException {
+            Sys_ShutdownInput();
+            Sys_InitInput();
+        }
+    }
+
+    /*
+     ==================
+     Sys_AsyncThread
+     ==================
+     */
+    static class Sys_AsyncThread extends xthread_t {
+
+        int startTime;
+        int wakeNumber;
+
+        @Override
+        public void run() {
+
+            System.out.println("Blaaaaaaaaaaaaaaaaaa!");
+//            startTime = Sys_Milliseconds();
+//            wakeNumber = 0;
+//
+//            while (true) {
+//#ifdef WIN32
+//		// this will trigger 60 times a second
+//		int r = WaitForSingleObject( hTimer, 100 );
+//		if ( r != WAIT_OBJECT_0 ) {
+//			OutputDebugString( "idPacketServer::PacketServerInterrupt: bad wait return" );
+//		}
+//#endif
+//
+//#if 0
+//		wakeNumber++;
+//		int		msec = Sys_Milliseconds();
+//		int		deltaTime = msec - startTime;
+//		startTime = msec;
+//
+//		char	str[1024];
+//		sprintf( str, "%i ", deltaTime );
+//		OutputDebugString( str );
+//#endif
+//
+//
+            common.Async();
+//            }
+        }
     }
 
 }

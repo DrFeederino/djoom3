@@ -1,99 +1,198 @@
 package neo.Game.Script;
 
-import static neo.Game.Game.SCRIPT_DEFAULTDEFS;
-import static neo.Game.GameSys.Event.D_EVENT_ENTITY;
-import static neo.Game.GameSys.Event.D_EVENT_ENTITY_NULL;
-import static neo.Game.GameSys.Event.D_EVENT_FLOAT;
-import static neo.Game.GameSys.Event.D_EVENT_INTEGER;
-import static neo.Game.GameSys.Event.D_EVENT_STRING;
-import static neo.Game.GameSys.Event.D_EVENT_TRACE;
-import static neo.Game.GameSys.Event.D_EVENT_VECTOR;
-import static neo.Game.GameSys.Event.D_EVENT_VOID;
-import neo.Game.GameSys.Event.idEventDef;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Script.Script_Program.def_argsize;
-import static neo.Game.Script.Script_Program.def_boolean;
-import static neo.Game.Script.Script_Program.def_entity;
-import static neo.Game.Script.Script_Program.def_field;
-import static neo.Game.Script.Script_Program.def_float;
-import static neo.Game.Script.Script_Program.def_function;
-import static neo.Game.Script.Script_Program.def_jumpoffset;
-import static neo.Game.Script.Script_Program.def_namespace;
-import static neo.Game.Script.Script_Program.def_object;
-import static neo.Game.Script.Script_Program.def_pointer;
-import static neo.Game.Script.Script_Program.def_string;
-import static neo.Game.Script.Script_Program.def_vector;
-import static neo.Game.Script.Script_Program.def_void;
-import static neo.Game.Script.Script_Program.ev_argsize;
-import static neo.Game.Script.Script_Program.ev_boolean;
-import static neo.Game.Script.Script_Program.ev_entity;
-import static neo.Game.Script.Script_Program.ev_error;
-import static neo.Game.Script.Script_Program.ev_field;
-import static neo.Game.Script.Script_Program.ev_float;
-import static neo.Game.Script.Script_Program.ev_function;
-import static neo.Game.Script.Script_Program.ev_jumpoffset;
-import static neo.Game.Script.Script_Program.ev_namespace;
-import static neo.Game.Script.Script_Program.ev_object;
-import static neo.Game.Script.Script_Program.ev_pointer;
-import static neo.Game.Script.Script_Program.ev_string;
-import static neo.Game.Script.Script_Program.ev_vector;
-import static neo.Game.Script.Script_Program.ev_virtualfunction;
-import static neo.Game.Script.Script_Program.ev_void;
-import neo.Game.Script.Script_Program.eval_s;
-import neo.Game.Script.Script_Program.function_t;
-import neo.Game.Script.Script_Program.idCompileError;
-import neo.Game.Script.Script_Program.idTypeDef;
-import neo.Game.Script.Script_Program.idVarDef;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.initializedConstant;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.uninitialized;
-import neo.Game.Script.Script_Program.statement_s;
-import static neo.Game.Script.Script_Program.type_argsize;
-import static neo.Game.Script.Script_Program.type_boolean;
-import static neo.Game.Script.Script_Program.type_entity;
-import static neo.Game.Script.Script_Program.type_float;
-import static neo.Game.Script.Script_Program.type_function;
-import static neo.Game.Script.Script_Program.type_jumpoffset;
-import static neo.Game.Script.Script_Program.type_namespace;
-import static neo.Game.Script.Script_Program.type_object;
-import static neo.Game.Script.Script_Program.type_pointer;
-import static neo.Game.Script.Script_Program.type_scriptevent;
-import static neo.Game.Script.Script_Program.type_string;
-import static neo.Game.Script.Script_Program.type_vector;
-import static neo.Game.Script.Script_Program.type_virtualfunction;
-import static neo.Game.Script.Script_Program.type_void;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.itob;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_NOERRORS;
-import static neo.idlib.Text.Lexer.P_PRECOMP;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.Game.GameSys.Event.*;
+import neo.Game.Script.Script_Program.*;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_LITERAL;
-import static neo.idlib.Text.Token.TT_NAME;
-import static neo.idlib.Text.Token.TT_NUMBER;
-import static neo.idlib.Text.Token.TT_PUNCTUATION;
-import static neo.idlib.Text.Token.TT_STRING;
-import neo.idlib.Text.Token.idToken;
+import neo.idlib.Text.Token.*;
 import neo.idlib.Timer.idTimer;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.Game.SCRIPT_DEFAULTDEFS;
+import static neo.Game.GameSys.Event.*;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Script.Script_Program.*;
+import static neo.Game.Script.Script_Program.idVarDef.initialized_t.initializedConstant;
+import static neo.Game.Script.Script_Program.idVarDef.initialized_t.uninitialized;
+import static neo.TempDump.*;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.*;
 
 /**
  *
  */
 public class Script_Compiler {
 
+    //};
+//
+//
+    static final int FUNCTION_PRIORITY = 2;
+    static final int INT_PRIORITY = 2;
+
+    static final int NOT_PRIORITY = 5;
+    //
+    static final int NUM_OPCODES = 123;
+    //
+    static final int OP_ADDRESS = 45;
+    static final int OP_ADD_F = 12;
+    static final int OP_ADD_FS = 15;
+    static final int OP_ADD_S = 14;
+    static final int OP_ADD_SF = 16;
+    static final int OP_ADD_SV = 18;
+    static final int OP_ADD_V = 13;
+    static final int OP_ADD_VS = 17;
+    //
+    static final int OP_AND = 111;
+    static final int OP_AND_BOOLBOOL = 114;
+    static final int OP_AND_BOOLF = 112;
+    static final int OP_AND_FBOOL = 113;
+    //
+    static final int OP_BITAND = 119;
+    static final int OP_BITOR = 120;
+    //
+    static final int OP_BREAK = 121;            // placeholder op.  not used in final code
+    //
+    static final int OP_CALL = 96;
+    static final int OP_COMP_F = 5;
+    static final int OP_CONTINUE = 122;        // placeholder op.  not used in final code
+    static final int OP_DIV_F = 10;
+    static final int OP_EQ_E = 24;
+    static final int OP_EQ_EO = 25;
+    //
+    static final int OP_EQ_F = 21;
+    static final int OP_EQ_OE = 26;
+    static final int OP_EQ_OO = 27;
+    static final int OP_EQ_S = 23;
+    static final int OP_EQ_V = 22;
+    //
+    static final int OP_EVENTCALL = 46;
+    static final int OP_GE = 36;
+    //
+    static final int OP_GOTO = 110;
+    static final int OP_GT = 38;
+    static final int OP_IF = 94;
+    static final int OP_IFNOT = 95;
+    static final int OP_INDIRECT_BOOL = 43;
+    static final int OP_INDIRECT_ENT = 42;
+    //
+    static final int OP_INDIRECT_F = 39;
+    static final int OP_INDIRECT_OBJ = 44;
+    static final int OP_INDIRECT_S = 41;
+    static final int OP_INDIRECT_V = 40;
+    //
+    static final int OP_INT_F = 93;
+    //
+    static final int OP_LE = 35;
+    static final int OP_LT = 37;
+    static final int OP_MOD_F = 11;
+    //
+    static final int OP_MUL_F = 6;
+    static final int OP_MUL_FV = 8;
+    static final int OP_MUL_V = 7;
+    static final int OP_MUL_VF = 9;
+    //
+    static final int OP_NEG_F = 91;
+    static final int OP_NEG_V = 92;
+    static final int OP_NE_E = 31;
+    static final int OP_NE_EO = 32;
+    //
+    static final int OP_NE_F = 28;
+    static final int OP_NE_OE = 33;
+    static final int OP_NE_OO = 34;
+    static final int OP_NE_S = 30;
+    static final int OP_NE_V = 29;
+    //
+    static final int OP_NOT_BOOL = 86;
+    static final int OP_NOT_ENT = 90;
+    static final int OP_NOT_F = 87;
+    static final int OP_NOT_S = 89;
+    static final int OP_NOT_V = 88;
+    static final int OP_OBJECTCALL = 47;
+    static final int OP_OBJTHREAD = 98;
+    static final int OP_OR = 115;
+    static final int OP_OR_BOOLBOOL = 118;
+    static final int OP_OR_BOOLF = 116;
+    static final int OP_OR_FBOOL = 117;
+    static final int OP_PUSH_BTOF = 106;
+    static final int OP_PUSH_BTOS = 109;
+    static final int OP_PUSH_ENT = 102;
+    //
+    static final int OP_PUSH_F = 99;
+    static final int OP_PUSH_FTOB = 107;
+    static final int OP_PUSH_FTOS = 105;
+    static final int OP_PUSH_OBJ = 103;
+    static final int OP_PUSH_OBJENT = 104;
+    static final int OP_PUSH_S = 101;
+    static final int OP_PUSH_V = 100;
+    static final int OP_PUSH_VTOS = 108;
+    // These opcodes are no longer necessary:
+// OP_PUSH_OBJ:
+// OP_PUSH_OBJENT:
+//enum {
+    static final int OP_RETURN = 0;
+    static final int OP_STOREP_BOOL = 67;
+    static final int OP_STOREP_BOOLTOF = 74;
+    static final int OP_STOREP_BTOS = 71;
+    static final int OP_STOREP_ENT = 65;
+    //
+    static final int OP_STOREP_F = 62;
+    static final int OP_STOREP_FLD = 66;
+    static final int OP_STOREP_FTOBOOL = 73;
+    //
+    static final int OP_STOREP_FTOS = 70;
+    static final int OP_STOREP_OBJ = 68;
+    static final int OP_STOREP_OBJENT = 69;
+    static final int OP_STOREP_S = 64;
+    static final int OP_STOREP_V = 63;
+    static final int OP_STOREP_VTOS = 72;
+    static final int OP_STORE_BOOL = 53;
+    static final int OP_STORE_BOOLTOF = 61;
+    static final int OP_STORE_BTOS = 58;
+    static final int OP_STORE_ENT = 52;
+    static final int OP_STORE_ENTOBJ = 56;
+    //
+    static final int OP_STORE_F = 49;
+    static final int OP_STORE_FTOBOOL = 60;
+    //
+    static final int OP_STORE_FTOS = 57;
+    static final int OP_STORE_OBJ = 55;
+    static final int OP_STORE_OBJENT = 54;
+    static final int OP_STORE_S = 51;
+    static final int OP_STORE_V = 50;
+    static final int OP_STORE_VTOS = 59;
+    static final int OP_SUB_F = 19;
+    static final int OP_SUB_V = 20;
+    static final int OP_SYSCALL = 48;
+    static final int OP_THREAD = 97;
+    static final int OP_UADD_F = 80;
+    static final int OP_UADD_V = 81;
+    static final int OP_UAND_F = 84;
+    static final int OP_UDECP_F = 4;
+    static final int OP_UDEC_F = 3;
+    static final int OP_UDIV_F = 77;
+    static final int OP_UDIV_V = 78;
+    static final int OP_UINCP_F = 2;
+    //
+    static final int OP_UINC_F = 1;
+    static final int OP_UMOD_F = 79;
+    //
+    static final int OP_UMUL_F = 75;
+    static final int OP_UMUL_V = 76;
+    static final int OP_UOR_F = 85;
+    static final int OP_USUB_F = 82;
+    static final int OP_USUB_V = 83;
     static final String RESULT_STRING = "<RESULT>";
+    static final int TILDE_PRIORITY = 5;
+    static final int TOP_PRIORITY = 7;
 
     static class opcode_s {
 
-        String   name;
-        String   opname;
-        int      priority;
-        boolean  rightAssociative;
+        String name;
+        String opname;
+        int priority;
+        boolean rightAssociative;
         idVarDef type_a;
         idVarDef type_b;
         idVarDef type_c;
@@ -107,354 +206,247 @@ public class Script_Compiler {
             this.type_b = type_b;
             this.type_c = type_c;
         }
-    };
-    // These opcodes are no longer necessary:
-// OP_PUSH_OBJ:
-// OP_PUSH_OBJENT:
-//enum {
-    static final int OP_RETURN         = 0;
-    //
-    static final int OP_UINC_F         = 1;
-    static final int OP_UINCP_F        = 2;
-    static final int OP_UDEC_F         = 3;
-    static final int OP_UDECP_F        = 4;
-    static final int OP_COMP_F         = 5;
-    //
-    static final int OP_MUL_F          = 6;
-    static final int OP_MUL_V          = 7;
-    static final int OP_MUL_FV         = 8;
-    static final int OP_MUL_VF         = 9;
-    static final int OP_DIV_F          = 10;
-    static final int OP_MOD_F          = 11;
-    static final int OP_ADD_F          = 12;
-    static final int OP_ADD_V          = 13;
-    static final int OP_ADD_S          = 14;
-    static final int OP_ADD_FS         = 15;
-    static final int OP_ADD_SF         = 16;
-    static final int OP_ADD_VS         = 17;
-    static final int OP_ADD_SV         = 18;
-    static final int OP_SUB_F          = 19;
-    static final int OP_SUB_V          = 20;
-    //
-    static final int OP_EQ_F           = 21;
-    static final int OP_EQ_V           = 22;
-    static final int OP_EQ_S           = 23;
-    static final int OP_EQ_E           = 24;
-    static final int OP_EQ_EO          = 25;
-    static final int OP_EQ_OE          = 26;
-    static final int OP_EQ_OO          = 27;
-    //
-    static final int OP_NE_F           = 28;
-    static final int OP_NE_V           = 29;
-    static final int OP_NE_S           = 30;
-    static final int OP_NE_E           = 31;
-    static final int OP_NE_EO          = 32;
-    static final int OP_NE_OE          = 33;
-    static final int OP_NE_OO          = 34;
-    //
-    static final int OP_LE             = 35;
-    static final int OP_GE             = 36;
-    static final int OP_LT             = 37;
-    static final int OP_GT             = 38;
-    //
-    static final int OP_INDIRECT_F     = 39;
-    static final int OP_INDIRECT_V     = 40;
-    static final int OP_INDIRECT_S     = 41;
-    static final int OP_INDIRECT_ENT   = 42;
-    static final int OP_INDIRECT_BOOL  = 43;
-    static final int OP_INDIRECT_OBJ   = 44;
-    //
-    static final int OP_ADDRESS        = 45;
-    //
-    static final int OP_EVENTCALL      = 46;
-    static final int OP_OBJECTCALL     = 47;
-    static final int OP_SYSCALL        = 48;
-    //
-    static final int OP_STORE_F        = 49;
-    static final int OP_STORE_V        = 50;
-    static final int OP_STORE_S        = 51;
-    static final int OP_STORE_ENT      = 52;
-    static final int OP_STORE_BOOL     = 53;
-    static final int OP_STORE_OBJENT   = 54;
-    static final int OP_STORE_OBJ      = 55;
-    static final int OP_STORE_ENTOBJ   = 56;
-    //
-    static final int OP_STORE_FTOS     = 57;
-    static final int OP_STORE_BTOS     = 58;
-    static final int OP_STORE_VTOS     = 59;
-    static final int OP_STORE_FTOBOOL  = 60;
-    static final int OP_STORE_BOOLTOF  = 61;
-    //
-    static final int OP_STOREP_F       = 62;
-    static final int OP_STOREP_V       = 63;
-    static final int OP_STOREP_S       = 64;
-    static final int OP_STOREP_ENT     = 65;
-    static final int OP_STOREP_FLD     = 66;
-    static final int OP_STOREP_BOOL    = 67;
-    static final int OP_STOREP_OBJ     = 68;
-    static final int OP_STOREP_OBJENT  = 69;
-    //
-    static final int OP_STOREP_FTOS    = 70;
-    static final int OP_STOREP_BTOS    = 71;
-    static final int OP_STOREP_VTOS    = 72;
-    static final int OP_STOREP_FTOBOOL = 73;
-    static final int OP_STOREP_BOOLTOF = 74;
-    //
-    static final int OP_UMUL_F         = 75;
-    static final int OP_UMUL_V         = 76;
-    static final int OP_UDIV_F         = 77;
-    static final int OP_UDIV_V         = 78;
-    static final int OP_UMOD_F         = 79;
-    static final int OP_UADD_F         = 80;
-    static final int OP_UADD_V         = 81;
-    static final int OP_USUB_F         = 82;
-    static final int OP_USUB_V         = 83;
-    static final int OP_UAND_F         = 84;
-    static final int OP_UOR_F          = 85;
-    //
-    static final int OP_NOT_BOOL       = 86;
-    static final int OP_NOT_F          = 87;
-    static final int OP_NOT_V          = 88;
-    static final int OP_NOT_S          = 89;
-    static final int OP_NOT_ENT        = 90;
-    //
-    static final int OP_NEG_F          = 91;
-    static final int OP_NEG_V          = 92;
-    //
-    static final int OP_INT_F          = 93;
-    static final int OP_IF             = 94;
-    static final int OP_IFNOT          = 95;
-    //
-    static final int OP_CALL           = 96;
-    static final int OP_THREAD         = 97;
-    static final int OP_OBJTHREAD      = 98;
-    //
-    static final int OP_PUSH_F         = 99;
-    static final int OP_PUSH_V         = 100;
-    static final int OP_PUSH_S         = 101;
-    static final int OP_PUSH_ENT       = 102;
-    static final int OP_PUSH_OBJ       = 103;
-    static final int OP_PUSH_OBJENT    = 104;
-    static final int OP_PUSH_FTOS      = 105;
-    static final int OP_PUSH_BTOF      = 106;
-    static final int OP_PUSH_FTOB      = 107;
-    static final int OP_PUSH_VTOS      = 108;
-    static final int OP_PUSH_BTOS      = 109;
-    //
-    static final int OP_GOTO           = 110;
-    //
-    static final int OP_AND            = 111;
-    static final int OP_AND_BOOLF      = 112;
-    static final int OP_AND_FBOOL      = 113;
-    static final int OP_AND_BOOLBOOL   = 114;
-    static final int OP_OR             = 115;
-    static final int OP_OR_BOOLF       = 116;
-    static final int OP_OR_FBOOL       = 117;
-    static final int OP_OR_BOOLBOOL    = 118;
-    //
-    static final int OP_BITAND         = 119;
-    static final int OP_BITOR          = 120;
-    //
-    static final int OP_BREAK          = 121;            // placeholder op.  not used in final code
-    static final int OP_CONTINUE       = 122;        // placeholder op.  not used in final code
-    //
-    static final int NUM_OPCODES       = 123;
-    //};
-//    
-//    
-    static final int FUNCTION_PRIORITY = 2;
-    static final int INT_PRIORITY      = 2;
-    static final int NOT_PRIORITY      = 5;
-    static final int TILDE_PRIORITY    = 5;
-    static final int TOP_PRIORITY      = 7;
+    }
 //    
 
     static class idCompiler {
 
-        private static boolean[] punctuationValid = new boolean[256];
-        private static final String[] punctuation = {
-            "+=", "-=", "*=", "/=", "%=", "&=", "|=", "++", "--",
-            "&&", "||", "<=", ">=", "==", "!=", "::", ";", ",",
-            "~", "!", "*", "/", "%", "(", ")", "-", "+",
-            "=", "[", "]", ".", "<", ">", "&", "|", ":", null
-        };
-        //
-        private final        idParser  parser           = new idParser();
-        private idParser parserPtr;
-        private idToken token = new idToken();
-        //
-        private idTypeDef immediateType;
-        private eval_s    immediate;
-        //
-        private boolean   eof;
-        private boolean   console;
-        private boolean   callthread;
-        private int       braceDepth;
-        private int       loopDepth;
-        private int       currentLineNumber;
-        private int       currentFileNumber;
-        private int       errorCount;
-        //
-        private idVarDef  scope;                // the function being parsed, or NULL
-        private idVarDef  basetype;            // for accessing fields
         //
         public static final opcode_s[] opcodes = {
-            new opcode_s("<RETURN>", "RETURN", -1, false, def_void, def_void, def_void),
-            //
-            new opcode_s("++", "UINC_F", 1, true, def_float, def_void, def_void),
-            new opcode_s("++", "UINCP_F", 1, true, def_object, def_field, def_float),
-            new opcode_s("--", "UDEC_F", 1, true, def_float, def_void, def_void),
-            new opcode_s("--", "UDECP_F", 1, true, def_object, def_field, def_float),
-            //
-            new opcode_s("~", "COMP_F", -1, false, def_float, def_void, def_float),
-            //
-            new opcode_s("*", "MUL_F", 3, false, def_float, def_float, def_float),
-            new opcode_s("*", "MUL_V", 3, false, def_vector, def_vector, def_float),
-            new opcode_s("*", "MUL_FV", 3, false, def_float, def_vector, def_vector),
-            new opcode_s("*", "MUL_VF", 3, false, def_vector, def_float, def_vector),
-            //
-            new opcode_s("/", "DIV", 3, false, def_float, def_float, def_float),
-            new opcode_s("%", "MOD_F", 3, false, def_float, def_float, def_float),
-            //
-            new opcode_s("+", "ADD_F", 4, false, def_float, def_float, def_float),
-            new opcode_s("+", "ADD_V", 4, false, def_vector, def_vector, def_vector),
-            new opcode_s("+", "ADD_S", 4, false, def_string, def_string, def_string),
-            new opcode_s("+", "ADD_FS", 4, false, def_float, def_string, def_string),
-            new opcode_s("+", "ADD_SF", 4, false, def_string, def_float, def_string),
-            new opcode_s("+", "ADD_VS", 4, false, def_vector, def_string, def_string),
-            new opcode_s("+", "ADD_SV", 4, false, def_string, def_vector, def_string),
-            //
-            new opcode_s("-", "SUB_F", 4, false, def_float, def_float, def_float),
-            new opcode_s("-", "SUB_V", 4, false, def_vector, def_vector, def_vector),
-            //
-            new opcode_s("==", "EQ_F", 5, false, def_float, def_float, def_float),
-            new opcode_s("==", "EQ_V", 5, false, def_vector, def_vector, def_float),
-            new opcode_s("==", "EQ_S", 5, false, def_string, def_string, def_float),
-            new opcode_s("==", "EQ_E", 5, false, def_entity, def_entity, def_float),
-            new opcode_s("==", "EQ_EO", 5, false, def_entity, def_object, def_float),
-            new opcode_s("==", "EQ_OE", 5, false, def_object, def_entity, def_float),
-            new opcode_s("==", "EQ_OO", 5, false, def_object, def_object, def_float),
-            //
-            new opcode_s("!=", "NE_F", 5, false, def_float, def_float, def_float),
-            new opcode_s("!=", "NE_V", 5, false, def_vector, def_vector, def_float),
-            new opcode_s("!=", "NE_S", 5, false, def_string, def_string, def_float),
-            new opcode_s("!=", "NE_E", 5, false, def_entity, def_entity, def_float),
-            new opcode_s("!=", "NE_EO", 5, false, def_entity, def_object, def_float),
-            new opcode_s("!=", "NE_OE", 5, false, def_object, def_entity, def_float),
-            new opcode_s("!=", "NE_OO", 5, false, def_object, def_object, def_float),
-            //
-            new opcode_s("<=", "LE", 5, false, def_float, def_float, def_float),
-            new opcode_s(">=", "GE", 5, false, def_float, def_float, def_float),
-            new opcode_s("<", "LT", 5, false, def_float, def_float, def_float),
-            new opcode_s(">", "GT", 5, false, def_float, def_float, def_float),
-            //
-            new opcode_s(".", "INDIRECT_F", 1, false, def_object, def_field, def_float),
-            new opcode_s(".", "INDIRECT_V", 1, false, def_object, def_field, def_vector),
-            new opcode_s(".", "INDIRECT_S", 1, false, def_object, def_field, def_string),
-            new opcode_s(".", "INDIRECT_E", 1, false, def_object, def_field, def_entity),
-            new opcode_s(".", "INDIRECT_BOOL", 1, false, def_object, def_field, def_boolean),
-            new opcode_s(".", "INDIRECT_OBJ", 1, false, def_object, def_field, def_object),
-            //
-            new opcode_s(".", "ADDRESS", 1, false, def_entity, def_field, def_pointer),
-            //
-            new opcode_s(".", "EVENTCALL", 2, false, def_entity, def_function, def_void),
-            new opcode_s(".", "OBJECTCALL", 2, false, def_object, def_function, def_void),
-            new opcode_s(".", "SYSCALL", 2, false, def_void, def_function, def_void),
-            //
-            new opcode_s("=", "STORE_F", 6, true, def_float, def_float, def_float),
-            new opcode_s("=", "STORE_V", 6, true, def_vector, def_vector, def_vector),
-            new opcode_s("=", "STORE_S", 6, true, def_string, def_string, def_string),
-            new opcode_s("=", "STORE_ENT", 6, true, def_entity, def_entity, def_entity),
-            new opcode_s("=", "STORE_BOOL", 6, true, def_boolean, def_boolean, def_boolean),
-            new opcode_s("=", "STORE_OBJENT", 6, true, def_object, def_entity, def_object),
-            new opcode_s("=", "STORE_OBJ", 6, true, def_object, def_object, def_object),
-            new opcode_s("=", "STORE_OBJENT", 6, true, def_entity, def_object, def_object),
-            //
-            new opcode_s("=", "STORE_FTOS", 6, true, def_string, def_float, def_string),
-            new opcode_s("=", "STORE_BTOS", 6, true, def_string, def_boolean, def_string),
-            new opcode_s("=", "STORE_VTOS", 6, true, def_string, def_vector, def_string),
-            new opcode_s("=", "STORE_FTOBOOL", 6, true, def_boolean, def_float, def_boolean),
-            new opcode_s("=", "STORE_BOOLTOF", 6, true, def_float, def_boolean, def_float),
-            //
-            new opcode_s("=", "STOREP_F", 6, true, def_pointer, def_float, def_float),
-            new opcode_s("=", "STOREP_V", 6, true, def_pointer, def_vector, def_vector),
-            new opcode_s("=", "STOREP_S", 6, true, def_pointer, def_string, def_string),
-            new opcode_s("=", "STOREP_ENT", 6, true, def_pointer, def_entity, def_entity),
-            new opcode_s("=", "STOREP_FLD", 6, true, def_pointer, def_field, def_field),
-            new opcode_s("=", "STOREP_BOOL", 6, true, def_pointer, def_boolean, def_boolean),
-            new opcode_s("=", "STOREP_OBJ", 6, true, def_pointer, def_object, def_object),
-            new opcode_s("=", "STOREP_OBJENT", 6, true, def_pointer, def_object, def_object),
-            //
-            new opcode_s("<=>", "STOREP_FTOS", 6, true, def_pointer, def_float, def_string),
-            new opcode_s("<=>", "STOREP_BTOS", 6, true, def_pointer, def_boolean, def_string),
-            new opcode_s("<=>", "STOREP_VTOS", 6, true, def_pointer, def_vector, def_string),
-            new opcode_s("<=>", "STOREP_FTOBOOL", 6, true, def_pointer, def_float, def_boolean),
-            new opcode_s("<=>", "STOREP_BOOLTOF", 6, true, def_pointer, def_boolean, def_float),
-            //
-            new opcode_s("*=", "UMUL_F", 6, true, def_float, def_float, def_void),
-            new opcode_s("*=", "UMUL_V", 6, true, def_vector, def_float, def_void),
-            new opcode_s("/=", "UDIV_F", 6, true, def_float, def_float, def_void),
-            new opcode_s("/=", "UDIV_V", 6, true, def_vector, def_float, def_void),
-            new opcode_s("%=", "UMOD_F", 6, true, def_float, def_float, def_void),
-            new opcode_s("+=", "UADD_F", 6, true, def_float, def_float, def_void),
-            new opcode_s("+=", "UADD_V", 6, true, def_vector, def_vector, def_void),
-            new opcode_s("-=", "USUB_F", 6, true, def_float, def_float, def_void),
-            new opcode_s("-=", "USUB_V", 6, true, def_vector, def_vector, def_void),
-            new opcode_s("&=", "UAND_F", 6, true, def_float, def_float, def_void),
-            new opcode_s("|=", "UOR_F", 6, true, def_float, def_float, def_void),
-            //
-            new opcode_s("!", "NOT_BOOL", -1, false, def_boolean, def_void, def_float),
-            new opcode_s("!", "NOT_F", -1, false, def_float, def_void, def_float),
-            new opcode_s("!", "NOT_V", -1, false, def_vector, def_void, def_float),
-            new opcode_s("!", "NOT_S", -1, false, def_vector, def_void, def_float),
-            new opcode_s("!", "NOT_ENT", -1, false, def_entity, def_void, def_float),
-            //
-            new opcode_s("<NEG_F>", "NEG_F", -1, false, def_float, def_void, def_float),
-            new opcode_s("<NEG_V>", "NEG_V", -1, false, def_vector, def_void, def_vector),
-            //
-            new opcode_s("int", "INT_F", -1, false, def_float, def_void, def_float),
-            //
-            new opcode_s("<IF>", "IF", -1, false, def_float, def_jumpoffset, def_void),
-            new opcode_s("<IFNOT>", "IFNOT", -1, false, def_float, def_jumpoffset, def_void),
-            //
-            // calls returns REG_RETURN
-            new opcode_s("<CALL>", "CALL", -1, false, def_function, def_argsize, def_void),
-            new opcode_s("<THREAD>", "THREAD", -1, false, def_function, def_argsize, def_void),
-            new opcode_s("<THREAD>", "OBJTHREAD", -1, false, def_function, def_argsize, def_void),
-            //
-            new opcode_s("<PUSH>", "PUSH_F", -1, false, def_float, def_float, def_void),
-            new opcode_s("<PUSH>", "PUSH_V", -1, false, def_vector, def_vector, def_void),
-            new opcode_s("<PUSH>", "PUSH_S", -1, false, def_string, def_string, def_void),
-            new opcode_s("<PUSH>", "PUSH_ENT", -1, false, def_entity, def_entity, def_void),
-            new opcode_s("<PUSH>", "PUSH_OBJ", -1, false, def_object, def_object, def_void),
-            new opcode_s("<PUSH>", "PUSH_OBJENT", -1, false, def_entity, def_object, def_void),
-            new opcode_s("<PUSH>", "PUSH_FTOS", -1, false, def_string, def_float, def_void),
-            new opcode_s("<PUSH>", "PUSH_BTOF", -1, false, def_float, def_boolean, def_void),
-            new opcode_s("<PUSH>", "PUSH_FTOB", -1, false, def_boolean, def_float, def_void),
-            new opcode_s("<PUSH>", "PUSH_VTOS", -1, false, def_string, def_vector, def_void),
-            new opcode_s("<PUSH>", "PUSH_BTOS", -1, false, def_string, def_boolean, def_void),
-            //
-            new opcode_s("<GOTO>", "GOTO", -1, false, def_jumpoffset, def_void, def_void),
-            //
-            new opcode_s("&&", "AND", 7, false, def_float, def_float, def_float),
-            new opcode_s("&&", "AND_BOOLF", 7, false, def_boolean, def_float, def_float),
-            new opcode_s("&&", "AND_FBOOL", 7, false, def_float, def_boolean, def_float),
-            new opcode_s("&&", "AND_BOOLBOOL", 7, false, def_boolean, def_boolean, def_float),
-            new opcode_s("||", "OR", 7, false, def_float, def_float, def_float),
-            new opcode_s("||", "OR_BOOLF", 7, false, def_boolean, def_float, def_float),
-            new opcode_s("||", "OR_FBOOL", 7, false, def_float, def_boolean, def_float),
-            new opcode_s("||", "OR_BOOLBOOL", 7, false, def_boolean, def_boolean, def_float),
-            //
-            new opcode_s("&", "BITAND", 3, false, def_float, def_float, def_float),
-            new opcode_s("|", "BITOR", 3, false, def_float, def_float, def_float),
-            //
-            new opcode_s("<BREAK>", "BREAK", -1, false, def_float, def_void, def_void),
-            new opcode_s("<CONTINUE>", "CONTINUE", -1, false, def_float, def_void, def_void),
-            //
-            null
+                new opcode_s("<RETURN>", "RETURN", -1, false, def_void, def_void, def_void),
+                //
+                new opcode_s("++", "UINC_F", 1, true, def_float, def_void, def_void),
+                new opcode_s("++", "UINCP_F", 1, true, def_object, def_field, def_float),
+                new opcode_s("--", "UDEC_F", 1, true, def_float, def_void, def_void),
+                new opcode_s("--", "UDECP_F", 1, true, def_object, def_field, def_float),
+                //
+                new opcode_s("~", "COMP_F", -1, false, def_float, def_void, def_float),
+                //
+                new opcode_s("*", "MUL_F", 3, false, def_float, def_float, def_float),
+                new opcode_s("*", "MUL_V", 3, false, def_vector, def_vector, def_float),
+                new opcode_s("*", "MUL_FV", 3, false, def_float, def_vector, def_vector),
+                new opcode_s("*", "MUL_VF", 3, false, def_vector, def_float, def_vector),
+                //
+                new opcode_s("/", "DIV", 3, false, def_float, def_float, def_float),
+                new opcode_s("%", "MOD_F", 3, false, def_float, def_float, def_float),
+                //
+                new opcode_s("+", "ADD_F", 4, false, def_float, def_float, def_float),
+                new opcode_s("+", "ADD_V", 4, false, def_vector, def_vector, def_vector),
+                new opcode_s("+", "ADD_S", 4, false, def_string, def_string, def_string),
+                new opcode_s("+", "ADD_FS", 4, false, def_float, def_string, def_string),
+                new opcode_s("+", "ADD_SF", 4, false, def_string, def_float, def_string),
+                new opcode_s("+", "ADD_VS", 4, false, def_vector, def_string, def_string),
+                new opcode_s("+", "ADD_SV", 4, false, def_string, def_vector, def_string),
+                //
+                new opcode_s("-", "SUB_F", 4, false, def_float, def_float, def_float),
+                new opcode_s("-", "SUB_V", 4, false, def_vector, def_vector, def_vector),
+                //
+                new opcode_s("==", "EQ_F", 5, false, def_float, def_float, def_float),
+                new opcode_s("==", "EQ_V", 5, false, def_vector, def_vector, def_float),
+                new opcode_s("==", "EQ_S", 5, false, def_string, def_string, def_float),
+                new opcode_s("==", "EQ_E", 5, false, def_entity, def_entity, def_float),
+                new opcode_s("==", "EQ_EO", 5, false, def_entity, def_object, def_float),
+                new opcode_s("==", "EQ_OE", 5, false, def_object, def_entity, def_float),
+                new opcode_s("==", "EQ_OO", 5, false, def_object, def_object, def_float),
+                //
+                new opcode_s("!=", "NE_F", 5, false, def_float, def_float, def_float),
+                new opcode_s("!=", "NE_V", 5, false, def_vector, def_vector, def_float),
+                new opcode_s("!=", "NE_S", 5, false, def_string, def_string, def_float),
+                new opcode_s("!=", "NE_E", 5, false, def_entity, def_entity, def_float),
+                new opcode_s("!=", "NE_EO", 5, false, def_entity, def_object, def_float),
+                new opcode_s("!=", "NE_OE", 5, false, def_object, def_entity, def_float),
+                new opcode_s("!=", "NE_OO", 5, false, def_object, def_object, def_float),
+                //
+                new opcode_s("<=", "LE", 5, false, def_float, def_float, def_float),
+                new opcode_s(">=", "GE", 5, false, def_float, def_float, def_float),
+                new opcode_s("<", "LT", 5, false, def_float, def_float, def_float),
+                new opcode_s(">", "GT", 5, false, def_float, def_float, def_float),
+                //
+                new opcode_s(".", "INDIRECT_F", 1, false, def_object, def_field, def_float),
+                new opcode_s(".", "INDIRECT_V", 1, false, def_object, def_field, def_vector),
+                new opcode_s(".", "INDIRECT_S", 1, false, def_object, def_field, def_string),
+                new opcode_s(".", "INDIRECT_E", 1, false, def_object, def_field, def_entity),
+                new opcode_s(".", "INDIRECT_BOOL", 1, false, def_object, def_field, def_boolean),
+                new opcode_s(".", "INDIRECT_OBJ", 1, false, def_object, def_field, def_object),
+                //
+                new opcode_s(".", "ADDRESS", 1, false, def_entity, def_field, def_pointer),
+                //
+                new opcode_s(".", "EVENTCALL", 2, false, def_entity, def_function, def_void),
+                new opcode_s(".", "OBJECTCALL", 2, false, def_object, def_function, def_void),
+                new opcode_s(".", "SYSCALL", 2, false, def_void, def_function, def_void),
+                //
+                new opcode_s("=", "STORE_F", 6, true, def_float, def_float, def_float),
+                new opcode_s("=", "STORE_V", 6, true, def_vector, def_vector, def_vector),
+                new opcode_s("=", "STORE_S", 6, true, def_string, def_string, def_string),
+                new opcode_s("=", "STORE_ENT", 6, true, def_entity, def_entity, def_entity),
+                new opcode_s("=", "STORE_BOOL", 6, true, def_boolean, def_boolean, def_boolean),
+                new opcode_s("=", "STORE_OBJENT", 6, true, def_object, def_entity, def_object),
+                new opcode_s("=", "STORE_OBJ", 6, true, def_object, def_object, def_object),
+                new opcode_s("=", "STORE_OBJENT", 6, true, def_entity, def_object, def_object),
+                //
+                new opcode_s("=", "STORE_FTOS", 6, true, def_string, def_float, def_string),
+                new opcode_s("=", "STORE_BTOS", 6, true, def_string, def_boolean, def_string),
+                new opcode_s("=", "STORE_VTOS", 6, true, def_string, def_vector, def_string),
+                new opcode_s("=", "STORE_FTOBOOL", 6, true, def_boolean, def_float, def_boolean),
+                new opcode_s("=", "STORE_BOOLTOF", 6, true, def_float, def_boolean, def_float),
+                //
+                new opcode_s("=", "STOREP_F", 6, true, def_pointer, def_float, def_float),
+                new opcode_s("=", "STOREP_V", 6, true, def_pointer, def_vector, def_vector),
+                new opcode_s("=", "STOREP_S", 6, true, def_pointer, def_string, def_string),
+                new opcode_s("=", "STOREP_ENT", 6, true, def_pointer, def_entity, def_entity),
+                new opcode_s("=", "STOREP_FLD", 6, true, def_pointer, def_field, def_field),
+                new opcode_s("=", "STOREP_BOOL", 6, true, def_pointer, def_boolean, def_boolean),
+                new opcode_s("=", "STOREP_OBJ", 6, true, def_pointer, def_object, def_object),
+                new opcode_s("=", "STOREP_OBJENT", 6, true, def_pointer, def_object, def_object),
+                //
+                new opcode_s("<=>", "STOREP_FTOS", 6, true, def_pointer, def_float, def_string),
+                new opcode_s("<=>", "STOREP_BTOS", 6, true, def_pointer, def_boolean, def_string),
+                new opcode_s("<=>", "STOREP_VTOS", 6, true, def_pointer, def_vector, def_string),
+                new opcode_s("<=>", "STOREP_FTOBOOL", 6, true, def_pointer, def_float, def_boolean),
+                new opcode_s("<=>", "STOREP_BOOLTOF", 6, true, def_pointer, def_boolean, def_float),
+                //
+                new opcode_s("*=", "UMUL_F", 6, true, def_float, def_float, def_void),
+                new opcode_s("*=", "UMUL_V", 6, true, def_vector, def_float, def_void),
+                new opcode_s("/=", "UDIV_F", 6, true, def_float, def_float, def_void),
+                new opcode_s("/=", "UDIV_V", 6, true, def_vector, def_float, def_void),
+                new opcode_s("%=", "UMOD_F", 6, true, def_float, def_float, def_void),
+                new opcode_s("+=", "UADD_F", 6, true, def_float, def_float, def_void),
+                new opcode_s("+=", "UADD_V", 6, true, def_vector, def_vector, def_void),
+                new opcode_s("-=", "USUB_F", 6, true, def_float, def_float, def_void),
+                new opcode_s("-=", "USUB_V", 6, true, def_vector, def_vector, def_void),
+                new opcode_s("&=", "UAND_F", 6, true, def_float, def_float, def_void),
+                new opcode_s("|=", "UOR_F", 6, true, def_float, def_float, def_void),
+                //
+                new opcode_s("!", "NOT_BOOL", -1, false, def_boolean, def_void, def_float),
+                new opcode_s("!", "NOT_F", -1, false, def_float, def_void, def_float),
+                new opcode_s("!", "NOT_V", -1, false, def_vector, def_void, def_float),
+                new opcode_s("!", "NOT_S", -1, false, def_vector, def_void, def_float),
+                new opcode_s("!", "NOT_ENT", -1, false, def_entity, def_void, def_float),
+                //
+                new opcode_s("<NEG_F>", "NEG_F", -1, false, def_float, def_void, def_float),
+                new opcode_s("<NEG_V>", "NEG_V", -1, false, def_vector, def_void, def_vector),
+                //
+                new opcode_s("int", "INT_F", -1, false, def_float, def_void, def_float),
+                //
+                new opcode_s("<IF>", "IF", -1, false, def_float, def_jumpoffset, def_void),
+                new opcode_s("<IFNOT>", "IFNOT", -1, false, def_float, def_jumpoffset, def_void),
+                //
+                // calls returns REG_RETURN
+                new opcode_s("<CALL>", "CALL", -1, false, def_function, def_argsize, def_void),
+                new opcode_s("<THREAD>", "THREAD", -1, false, def_function, def_argsize, def_void),
+                new opcode_s("<THREAD>", "OBJTHREAD", -1, false, def_function, def_argsize, def_void),
+                //
+                new opcode_s("<PUSH>", "PUSH_F", -1, false, def_float, def_float, def_void),
+                new opcode_s("<PUSH>", "PUSH_V", -1, false, def_vector, def_vector, def_void),
+                new opcode_s("<PUSH>", "PUSH_S", -1, false, def_string, def_string, def_void),
+                new opcode_s("<PUSH>", "PUSH_ENT", -1, false, def_entity, def_entity, def_void),
+                new opcode_s("<PUSH>", "PUSH_OBJ", -1, false, def_object, def_object, def_void),
+                new opcode_s("<PUSH>", "PUSH_OBJENT", -1, false, def_entity, def_object, def_void),
+                new opcode_s("<PUSH>", "PUSH_FTOS", -1, false, def_string, def_float, def_void),
+                new opcode_s("<PUSH>", "PUSH_BTOF", -1, false, def_float, def_boolean, def_void),
+                new opcode_s("<PUSH>", "PUSH_FTOB", -1, false, def_boolean, def_float, def_void),
+                new opcode_s("<PUSH>", "PUSH_VTOS", -1, false, def_string, def_vector, def_void),
+                new opcode_s("<PUSH>", "PUSH_BTOS", -1, false, def_string, def_boolean, def_void),
+                //
+                new opcode_s("<GOTO>", "GOTO", -1, false, def_jumpoffset, def_void, def_void),
+                //
+                new opcode_s("&&", "AND", 7, false, def_float, def_float, def_float),
+                new opcode_s("&&", "AND_BOOLF", 7, false, def_boolean, def_float, def_float),
+                new opcode_s("&&", "AND_FBOOL", 7, false, def_float, def_boolean, def_float),
+                new opcode_s("&&", "AND_BOOLBOOL", 7, false, def_boolean, def_boolean, def_float),
+                new opcode_s("||", "OR", 7, false, def_float, def_float, def_float),
+                new opcode_s("||", "OR_BOOLF", 7, false, def_boolean, def_float, def_float),
+                new opcode_s("||", "OR_FBOOL", 7, false, def_float, def_boolean, def_float),
+                new opcode_s("||", "OR_BOOLBOOL", 7, false, def_boolean, def_boolean, def_float),
+                //
+                new opcode_s("&", "BITAND", 3, false, def_float, def_float, def_float),
+                new opcode_s("|", "BITOR", 3, false, def_float, def_float, def_float),
+                //
+                new opcode_s("<BREAK>", "BREAK", -1, false, def_float, def_void, def_void),
+                new opcode_s("<CONTINUE>", "CONTINUE", -1, false, def_float, def_void, def_void),
+                //
+                null
         };
+        private static final String[] punctuation = {
+                "+=", "-=", "*=", "/=", "%=", "&=", "|=", "++", "--",
+                "&&", "||", "<=", ">=", "==", "!=", "::", ";", ",",
+                "~", "!", "*", "/", "%", "(", ")", "-", "+",
+                "=", "[", "]", ".", "<", ">", "&", "|", ":", null
+        };
+        static int bla = 0;
+        /*
+         ==============
+         idCompiler::NextToken
+
+         Sets token, immediateType, and possibly immediate
+         ==============
+         */
+        static int bla2 = 0;
+        static int blaaaa = 0;
+        private static int DBG_GetExpression = 0;
+        /*
+         ============
+         idCompiler::ParseValue
+
+         Returns the def for the current token
+         ============
+         */            private static int DBG_ParseValue = 0;
+        private static boolean[] punctuationValid = new boolean[256];
+        //
+        private final idParser parser = new idParser();
+        private idVarDef basetype;            // for accessing fields
+        private int braceDepth;
+        private boolean callthread;
+        private boolean console;
+        private int currentFileNumber;
+        private int currentLineNumber;
+        //
+        private boolean eof;
+        private final int errorCount;
+        private eval_s immediate;
 //
 //
+        //
+        private idTypeDef immediateType;
+        private int loopDepth;
+        private idParser parserPtr;
+        //
+        private idVarDef scope;                // the function being parsed, or NULL
+        private final idToken token = new idToken();
+
+        public idCompiler() {
+            int ptr;
+            int id;
+
+            // make sure we have the right # of opcodes in the table
+//	assert( ( sizeof( opcodes ) / sizeof( opcodes[ 0 ] ) ) == ( NUM_OPCODES + 1 ) );
+            assert (opcodes.length == (NUM_OPCODES + 1));
+
+            eof = true;
+            parserPtr = parser;
+
+            callthread = false;
+            loopDepth = 0;
+            eof = false;
+            braceDepth = 0;
+            immediateType = null;
+            basetype = null;
+            currentLineNumber = 0;
+            currentFileNumber = 0;
+            errorCount = 0;
+            console = false;
+            scope = def_namespace;
+
+//	memset( &immediate, 0, sizeof( immediate ) );
+//	memset( punctuationValid, 0, sizeof( punctuationValid ) );
+            punctuationValid = new boolean[punctuationValid.length];
+            for (ptr = 0; punctuation[ptr] != null; ptr++) {
+                id = parserPtr.GetPunctuationId(punctuation[ptr]);
+                if ((id >= 0) && (id < 256)) {
+                    punctuationValid[id] = true;
+                }
+            }
+        }
 
         private float Divide(float numerator, float denominator) {
             if (denominator == 0) {
@@ -693,7 +685,7 @@ public class Script_Compiler {
                     type = null;
                     break;
             }
-            
+
             if (type == type_vector) {
                 c = new eval_s(vec_c.ToFloatPtr());
             } else if (type == type_float) {
@@ -780,7 +772,7 @@ public class Script_Compiler {
          ============
          */
         private idVarDef EmitOpcode(int op, idVarDef var_a, idVarDef var_b) {
-            return EmitOpcode(opcodes[ op], var_a, var_b);
+            return EmitOpcode(opcodes[op], var_a, var_b);
         }
 
         /*
@@ -796,7 +788,7 @@ public class Script_Compiler {
             int op_ptr;
 
             out = null;
-            for (op = opcodes[ op_ptr = OP_PUSH_F]; op.name != null && op.name.equals("<PUSH>"); op = opcodes[ ++op_ptr]) {
+            for (op = opcodes[op_ptr = OP_PUSH_F]; op.name != null && op.name.equals("<PUSH>"); op = opcodes[++op_ptr]) {
                 if ((funcArg.Type() == op.type_a.Type()) && (expression.Type() == op.type_b.Type())) {
                     out = op;
                     break;
@@ -808,7 +800,7 @@ public class Script_Compiler {
                     return false;
                 }
 
-                out = opcodes[ OP_PUSH_ENT];
+                out = opcodes[OP_PUSH_ENT];
             }
 
             EmitOpcode(out, expression, null);
@@ -816,23 +808,14 @@ public class Script_Compiler {
             return true;
         }
 
-        /*
-         ==============
-         idCompiler::NextToken
-
-         Sets token, immediateType, and possibly immediate
-         ==============
-         */
-        static int bla2 = 0;
-
         private void NextToken() {
             int i;
 
             // reset our type
             immediateType = null;
 
-            // Save the token's line number and filename since when we emit opcodes the current 
-            // token is always the next one to be read 
+            // Save the token's line number and filename since when we emit opcodes the current
+            // token is always the next one to be read
             currentLineNumber = token.line;
             currentFileNumber = gameLocal.program.GetFilenum(parserPtr.GetFileName().toString());
 
@@ -910,7 +893,7 @@ public class Script_Compiler {
                         return;
                     }
 
-                    if (punctuationValid[ token.subtype]) {
+                    if (punctuationValid[token.subtype]) {
                         return;
                     }
 
@@ -924,6 +907,13 @@ public class Script_Compiler {
                     Error("Unknown token '%s'", token);
             }
         }
+        /*
+         ============
+         idCompiler::CheckType
+
+         Parses a variable type, including functions types
+         ============
+         */
 
         /*
          =============
@@ -1006,13 +996,6 @@ public class Script_Compiler {
                 NextToken();
             } while (!eof);
         }
-        /*
-         ============
-         idCompiler::CheckType
-
-         Parses a variable type, including functions types
-         ============
-         */
 
         private idTypeDef CheckType() {
             idTypeDef type;
@@ -1277,7 +1260,6 @@ public class Script_Compiler {
 
             return def;
         }
-        static int blaaaa = 0;
 
         private idVarDef EmitFunctionParms(int op, idVarDef func, int startarg, int startsize, idVarDef object) {
             idVarDef e;
@@ -1486,8 +1468,6 @@ public class Script_Compiler {
             return EmitFunctionParms(OP_SYSCALL, funcDef, 0, 0, null);
         }
 
-        static int bla = 0;
-
         private idVarDef LookupDef(final String name, final idVarDef baseobj) {
             idVarDef def;
             idVarDef field;
@@ -1528,7 +1508,7 @@ public class Script_Compiler {
                         if (field.Type() == ev_function) {
                             type_c = field.TypeDef().ReturnType().Type();
                         } else {
-                            type_c = field.TypeDef().FieldType().Type();	// field access gets type from field
+                            type_c = field.TypeDef().FieldType().Type();    // field access gets type from field
                             if (CheckToken("++")) {
                                 if (type_c != ev_float) {
                                     Error("Invalid type for ++");
@@ -1576,14 +1556,8 @@ public class Script_Compiler {
             return def;
         }
 
-        /*
-         ============
-         idCompiler::ParseValue
-
-         Returns the def for the current token
-         ============
-         */            private static int DBG_ParseValue = 0;
-        private idVarDef ParseValue() {           DBG_ParseValue++;
+        private idVarDef ParseValue() {
+            DBG_ParseValue++;
             idVarDef def;
             idVarDef namespaceDef;
             idStr name = new idStr();
@@ -1773,8 +1747,8 @@ public class Script_Compiler {
             return type1 == type2;
         }
 
-        private static int DBG_GetExpression = 0;
-        private idVarDef GetExpression(int priority) {DBG_GetExpression++;
+        private idVarDef GetExpression(int priority) {
+            DBG_GetExpression++;
             opcode_s op;
             opcode_s oldop;
             idVarDef e;
@@ -1806,8 +1780,8 @@ public class Script_Compiler {
                 }
 
                 for (op = opcodes[op_i = 0];
-                        op_i < opcodes.length && op != null && op.name != null;
-                        op = opcodes[++op_i]) {
+                     op_i < opcodes.length && op != null && op.name != null;
+                     op = opcodes[++op_i]) {
                     if ((op.priority == priority) && CheckToken(op.name)) {
                         break;
                     }
@@ -1924,16 +1898,16 @@ public class Script_Compiler {
                                 op = opcodes[op_i = OP_STOREP_BOOLTOF];
                             } else if ((op_i == OP_STOREP_F) && (e.TypeDef().PointerType().Type() == ev_string)) {
                                 // copy from float to string pointer
-                                op = opcodes[ op_i = OP_STOREP_FTOS];
+                                op = opcodes[op_i = OP_STOREP_FTOS];
                             } else if ((op_i == OP_STOREP_BOOL) && (e.TypeDef().PointerType().Type() == ev_string)) {
                                 // copy from boolean to string pointer
-                                op = opcodes[ op_i = OP_STOREP_BTOS];
+                                op = opcodes[op_i = OP_STOREP_BTOS];
                             } else if ((op_i == OP_STOREP_V) && (e.TypeDef().PointerType().Type() == ev_string)) {
                                 // copy from vector to string pointer
-                                op = opcodes[ op_i = OP_STOREP_VTOS];
+                                op = opcodes[op_i = OP_STOREP_VTOS];
                             } else if ((op_i == OP_STOREP_ENT) && (e.TypeDef().PointerType().Type() == ev_object)) {
                                 // store an entity into an object pointer
-                                op = opcodes[ op_i = OP_STOREP_OBJENT];
+                                op = opcodes[op_i = OP_STOREP_OBJENT];
                             } else {
                                 Error("type mismatch for '%s'", op.name);
                             }
@@ -2517,7 +2491,7 @@ public class Script_Compiler {
                     idVarDef selfDef = gameLocal.program.GetDef(type.GetParmType(0), type.GetParmName(0), def);
                     assert (selfDef != null);
                     EmitPush(selfDef, selfDef.TypeDef());
-                    EmitOpcode(opcodes[ OP_CALL], constructorFunc.def, null);
+                    EmitOpcode(opcodes[OP_CALL], constructorFunc.def, null);
                 }
             }
 
@@ -2786,7 +2760,7 @@ public class Script_Compiler {
                 scope = oldscope;
             } else if (type == type_object) {
                 ParseObjectDef(name.toString());
-            } else if (CheckToken("(")) {		// check for a function prototype or declaraction
+            } else if (CheckToken("(")) {        // check for a function prototype or declaraction
                 ParseFunctionDef(type, name.toString());
             } else {
                 ParseVariableDef(type, name.toString());
@@ -2825,40 +2799,6 @@ public class Script_Compiler {
             }
 
             scope = oldscope;
-        }
-
-        public idCompiler() {
-            int ptr;
-            int id;
-
-            // make sure we have the right # of opcodes in the table
-//	assert( ( sizeof( opcodes ) / sizeof( opcodes[ 0 ] ) ) == ( NUM_OPCODES + 1 ) );
-            assert (opcodes.length == (NUM_OPCODES + 1));
-
-            eof = true;
-            parserPtr = parser;
-
-            callthread = false;
-            loopDepth = 0;
-            eof = false;
-            braceDepth = 0;
-            immediateType = null;
-            basetype = null;
-            currentLineNumber = 0;
-            currentFileNumber = 0;
-            errorCount = 0;
-            console = false;
-            scope = def_namespace;
-
-//	memset( &immediate, 0, sizeof( immediate ) );
-//	memset( punctuationValid, 0, sizeof( punctuationValid ) );
-            punctuationValid = new boolean[punctuationValid.length];
-            for (ptr = 0; punctuation[ptr] != null; ptr++) {
-                id = parserPtr.GetPunctuationId(punctuation[ptr]);
-                if ((id >= 0) && (id < 256)) {
-                    punctuationValid[ id] = true;
-                }
-            }
         }
 
         /*
@@ -2942,5 +2882,6 @@ public class Script_Compiler {
                 gameLocal.Printf("Compiled '%s': %.1f ms\n", filename, compile_time.Milliseconds());
             }
         }
-    };
+    }
+
 }

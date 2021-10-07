@@ -1,80 +1,42 @@
 package neo.framework.Async;
 
-import static java.lang.Math.random;
+import neo.Game.Game.allowReply_t;
+import neo.Game.Game.gameReturn_t;
+import neo.TempDump.*;
+import neo.framework.Async.AsyncNetwork.*;
+import neo.framework.Async.MsgChannel.*;
+import neo.framework.FileSystem_h.findFile_t;
+import neo.framework.UsercmdGen.usercmd_t;
+import neo.idlib.BitMsg.idBitMsg;
+import neo.idlib.Dict_h.idDict;
+import neo.idlib.Lib.*;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.math.Math_h.idMath;
+import neo.sys.sys_public.idPort;
+import neo.sys.sys_public.netadr_t;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import neo.Game.Game.allowReply_t;
+
+import static java.lang.Math.random;
 import static neo.Game.Game.allowReply_t.ALLOW_YES;
-import neo.Game.Game.gameReturn_t;
 import static neo.Game.Game_local.game;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.sizeof;
-import static neo.TempDump.strLen;
-import neo.TempDump.void_callback;
-import static neo.framework.Async.AsyncNetwork.ASYNC_PROTOCOL_MINOR;
-import static neo.framework.Async.AsyncNetwork.ASYNC_PROTOCOL_VERSION;
-import neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE;
-import neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE;
-import static neo.framework.Async.AsyncNetwork.GAME_INIT_ID_MAP_LOAD;
-import static neo.framework.Async.AsyncNetwork.MAX_ASYNC_CLIENTS;
-import static neo.framework.Async.AsyncNetwork.MAX_MASTER_SERVERS;
-import static neo.framework.Async.AsyncNetwork.MAX_USERCMD_BACKUP;
-import static neo.framework.Async.AsyncNetwork.MAX_USERCMD_RELAY;
-import static neo.framework.Async.AsyncNetwork.SERVER_DL.SERVER_DL_LIST;
-import static neo.framework.Async.AsyncNetwork.SERVER_DL.SERVER_DL_NONE;
-import static neo.framework.Async.AsyncNetwork.SERVER_DL.SERVER_DL_REDIRECT;
-import static neo.framework.Async.AsyncNetwork.SERVER_PAK.SERVER_PAK_END;
-import static neo.framework.Async.AsyncNetwork.SERVER_PAK.SERVER_PAK_NO;
-import static neo.framework.Async.AsyncNetwork.SERVER_PAK.SERVER_PAK_YES;
-import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_BADCHALLENGE;
-import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_BADPROTOCOL;
-import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_GAMEDENY;
-import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_MISC;
-import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.SERVER_PRINT_RCON;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_APPLYSNAPSHOT;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_CLIENTINFO;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_DISCONNECT;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_ENTERGAME;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PRINT;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PURE;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_RELOAD;
-import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_SYNCEDCVARS;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_EMPTY;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_GAMEINIT;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_PING;
-import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_SNAPSHOT;
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import static neo.framework.Async.AsyncServer.authReplyMsg_t.AUTH_REPLY_MAXSTATES;
-import static neo.framework.Async.AsyncServer.authReplyMsg_t.AUTH_REPLY_PRINT;
-import static neo.framework.Async.AsyncServer.authReplyMsg_t.AUTH_REPLY_UNKNOWN;
-import static neo.framework.Async.AsyncServer.authReplyMsg_t.AUTH_REPLY_WAITING;
-import static neo.framework.Async.AsyncServer.authReply_t.AUTH_DENY;
-import static neo.framework.Async.AsyncServer.authReply_t.AUTH_MAXSTATES;
-import static neo.framework.Async.AsyncServer.authReply_t.AUTH_NONE;
-import static neo.framework.Async.AsyncServer.authReply_t.AUTH_OK;
-import static neo.framework.Async.AsyncServer.authState_t.CDK_OK;
-import static neo.framework.Async.AsyncServer.authState_t.CDK_ONLYLAN;
-import static neo.framework.Async.AsyncServer.authState_t.CDK_PUREOK;
-import static neo.framework.Async.AsyncServer.authState_t.CDK_PUREWAIT;
-import static neo.framework.Async.AsyncServer.authState_t.CDK_WAIT;
-import static neo.framework.Async.AsyncServer.serverClientState_t.SCS_CONNECTED;
-import static neo.framework.Async.AsyncServer.serverClientState_t.SCS_FREE;
-import static neo.framework.Async.AsyncServer.serverClientState_t.SCS_INGAME;
-import static neo.framework.Async.AsyncServer.serverClientState_t.SCS_PUREWAIT;
-import static neo.framework.Async.AsyncServer.serverClientState_t.SCS_ZOMBIE;
-import static neo.framework.Async.MsgChannel.CONNECTIONLESS_MESSAGE_ID;
-import static neo.framework.Async.MsgChannel.CONNECTIONLESS_MESSAGE_ID_MASK;
-import static neo.framework.Async.MsgChannel.MAX_MESSAGE_SIZE;
-import neo.framework.Async.MsgChannel.idMsgChannel;
+import static neo.TempDump.*;
+import static neo.framework.Async.AsyncNetwork.*;
+import static neo.framework.Async.AsyncNetwork.SERVER_DL.*;
+import static neo.framework.Async.AsyncNetwork.SERVER_PAK.*;
+import static neo.framework.Async.AsyncNetwork.SERVER_PRINT.*;
+import static neo.framework.Async.AsyncNetwork.SERVER_RELIABLE.*;
+import static neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE.*;
+import static neo.framework.Async.AsyncServer.authReplyMsg_t.*;
+import static neo.framework.Async.AsyncServer.authReply_t.*;
+import static neo.framework.Async.AsyncServer.authState_t.*;
+import static neo.framework.Async.AsyncServer.serverClientState_t.*;
+import static neo.framework.Async.MsgChannel.*;
 import static neo.framework.BuildDefines.ID_CLIENTINFO_TAGS;
-import static neo.framework.CVarSystem.CVAR_CHEAT;
-import static neo.framework.CVarSystem.CVAR_NETWORKSYNC;
-import static neo.framework.CVarSystem.CVAR_USERINFO;
-import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
 import static neo.framework.CmdSystem.cmdSystem;
@@ -83,40 +45,30 @@ import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.FileSystem_h.MAX_PURE_PAKS;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.FileSystem_h.findFile_t;
-import static neo.framework.Licensee.ASYNC_PROTOCOL_MAJOR;
-import static neo.framework.Licensee.NUM_SERVER_PORTS;
-import static neo.framework.Licensee.PORT_SERVER;
+import static neo.framework.Licensee.*;
 import static neo.framework.Session.msgBoxType_t.MSG_OK;
 import static neo.framework.Session.sessLocal;
 import static neo.framework.Session.session;
 import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import static neo.framework.UsercmdGen.usercmdGen;
-import neo.framework.UsercmdGen.usercmd_t;
-import neo.idlib.BitMsg.idBitMsg;
-import neo.idlib.Dict_h.idDict;
-
-import static neo.idlib.Lib.MAX_STRING_CHARS;
-import static neo.idlib.Lib.Max;
-import static neo.idlib.Lib.Min;
-import neo.idlib.Lib.idException;
-import neo.idlib.Text.Str.idStr;
+import static neo.idlib.Lib.*;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.containers.StrList.idStrList;
-import neo.idlib.math.Math_h.idMath;
-import neo.sys.sys_public.idPort;
-import neo.sys.sys_public.netadr_t;
 import static neo.sys.sys_public.netadrtype_t.NA_BAD;
 import static neo.sys.win_main.Sys_Sleep;
-import static neo.sys.win_net.Sys_CompareNetAdrBase;
-import static neo.sys.win_net.Sys_IsLANAddress;
-import static neo.sys.win_net.Sys_NetAdrToString;
+import static neo.sys.win_net.*;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
  *
  */
 public class AsyncServer {
+
+    //
+    // if we don't hear from authorize server, assume it is down
+    static final int AUTHORIZE_TIMEOUT = 5000;
+    static final int EMPTY_RESEND_TIME = 500;
+    //
+    static final int HEARTBEAT_MSEC = 5 * 60 * 1000;
 
     /*
      ===============================================================================
@@ -127,117 +79,18 @@ public class AsyncServer {
      */
     // MAX_CHALLENGES is made large to prevent a denial of service attack that could cycle
     // all of them out before legitimate users connected
-    static final int MAX_CHALLENGES    = 1024;
+    static final int MAX_CHALLENGES = 1024;
+
     //
-    // if we don't hear from authorize server, assume it is down
-    static final int AUTHORIZE_TIMEOUT = 5000;
+    static final int MIN_RECONNECT_TIME = 2000;
 
-    // states for the server's authorization process
-    enum authState_t {
+    static final int NOINPUT_IDLE_TIME = 30000;
 
-        CDK_WAIT, // we are waiting for a confirm/deny from auth
-        // this is subject to timeout if we don't hear from auth
-        // or a permanent wait if auth said so
-        CDK_OK,
-        CDK_ONLYLAN,
-        CDK_PUREWAIT,
-        CDK_PUREOK,
-        CDK_MAXSTATES
-    };
+    static final int PING_RESEND_TIME = 500;
 
-    // states from the auth server, while the client is in CDK_WAIT
-    enum authReply_t {
-
-        AUTH_NONE, // no reply yet
-        AUTH_OK, // this client is good
-        AUTH_WAIT, // wait - keep sending me srvAuth though
-        AUTH_DENY, // denied - don't send me anything about this client anymore
-        AUTH_MAXSTATES
-    };
-
-    // message from auth to be forwarded back to the client
-    // some are locally hardcoded to save space, auth has the possibility to send a custom reply
-    enum authReplyMsg_t {
-
-        AUTH_REPLY_WAITING, // waiting on an initial reply from auth
-        AUTH_REPLY_UNKNOWN, // client unknown to auth
-        AUTH_REPLY_DENIED, // access denied
-        AUTH_REPLY_PRINT, // custom message
-        AUTH_REPLY_SRVWAIT, // auth server replied and tells us he's working on it
-        AUTH_REPLY_MAXSTATES
-    };
-
-    static class challenge_s {
-
-        netadr_t       address;        // client address
-        int            clientId;       // client identification
-        int            challenge;      // challenge code
-        int            time;           // time the challenge was created
-        int            pingTime;       // time the challenge response was sent to client
-        boolean        connected;      // true if the client is connected
-        authState_t    authState;      // local state regarding the client
-        authReply_t    authReply;      // cd key check replies
-        authReplyMsg_t authReplyMsg;   // default auth messages
-        idStr          authReplyPrint; // custom msg
-        char[] guid = new char[12];    // guid
-        int OS;
-
-        challenge_s() {
-            this.authReplyPrint = new idStr();
-        }
-    } /*challenge_t*/
-
-    ;
-
-    enum serverClientState_t {
-
-        SCS_FREE, // can be reused for a new connection
-        SCS_ZOMBIE, // client has been disconnected, but don't reuse connection for a couple seconds
-        SCS_PUREWAIT, // client needs to update it's pure checksums before we can go further
-        SCS_CONNECTED, // client is connected
-        SCS_INGAME            // client is in the game
-    };
-
-    static class serverClient_s {
-
-        int                 OS;
-        int                 clientId;
-        serverClientState_t clientState;
-        int                 clientPrediction;
-        int                 clientAheadTime;
-        int                 clientRate;
-        int                 clientPing;
-        int                 gameInitSequence;
-        int                 gameFrame;
-        int                 gameTime;
-        idMsgChannel channel = new idMsgChannel();
-        int lastConnectTime;
-        int lastEmptyTime;
-        int lastPingTime;
-        int lastSnapshotTime;
-        int lastPacketTime;
-        int lastInputTime;
-        int snapshotSequence;
-        int acknowledgeSnapshotSequence;
-        int numDuplicatedUsercmds;
-        char[] guid = new char[12];     // Even Balance - M. Quinn
-
-        boolean isClientConnected() {
-            return etoi(clientState) < etoi(SCS_CONNECTED);
-        }
-    }/* serverClient_t*/
-
-    ;
-    //
-    static final int      MIN_RECONNECT_TIME = 2000;
-    static final int      EMPTY_RESEND_TIME  = 500;
-    static final int      PING_RESEND_TIME   = 500;
-    static final int      NOINPUT_IDLE_TIME  = 30000;
-    //
-    static final int      HEARTBEAT_MSEC     = 5 * 60 * 1000;
     //
     // must be kept in sync with authReplyMsg_t
-    static final String[] authReplyMsg       = {
+    static final String[] authReplyMsg = {
             //	"Waiting for authorization",
             "#str_07204",
             //	"Client unknown to auth",
@@ -249,52 +102,142 @@ public class AsyncServer {
             //	"Authorize Server - Waiting for client"
             "#str_07208"
     };
-    static final String[] authReplyStr       = {
+
+    static final String[] authReplyStr = {
             "AUTH_NONE",
             "AUTH_OK",
             "AUTH_WAIT",
             "AUTH_DENY"
     };
+    // message from auth to be forwarded back to the client
+    // some are locally hardcoded to save space, auth has the possibility to send a custom reply
+    enum authReplyMsg_t {
+
+        AUTH_REPLY_WAITING, // waiting on an initial reply from auth
+        AUTH_REPLY_UNKNOWN, // client unknown to auth
+        AUTH_REPLY_DENIED, // access denied
+        AUTH_REPLY_PRINT, // custom message
+        AUTH_REPLY_SRVWAIT, // auth server replied and tells us he's working on it
+        AUTH_REPLY_MAXSTATES
+    }
+    // states from the auth server, while the client is in CDK_WAIT
+    enum authReply_t {
+
+        AUTH_NONE, // no reply yet
+        AUTH_OK, // this client is good
+        AUTH_WAIT, // wait - keep sending me srvAuth though
+        AUTH_DENY, // denied - don't send me anything about this client anymore
+        AUTH_MAXSTATES
+    }
+    // states for the server's authorization process
+    enum authState_t {
+
+        CDK_WAIT, // we are waiting for a confirm/deny from auth
+        // this is subject to timeout if we don't hear from auth
+        // or a permanent wait if auth said so
+        CDK_OK,
+        CDK_ONLYLAN,
+        CDK_PUREWAIT,
+        CDK_PUREOK,
+        CDK_MAXSTATES
+    }
+    enum serverClientState_t {
+
+        SCS_FREE, // can be reused for a new connection
+        SCS_ZOMBIE, // client has been disconnected, but don't reuse connection for a couple seconds
+        SCS_PUREWAIT, // client needs to update it's pure checksums before we can go further
+        SCS_CONNECTED, // client is connected
+        SCS_INGAME            // client is in the game
+    }
+
+    static class challenge_s {
+
+        int OS;
+        netadr_t address;        // client address
+        authReply_t authReply;      // cd key check replies
+        authReplyMsg_t authReplyMsg;   // default auth messages
+        idStr authReplyPrint; // custom msg
+        authState_t authState;      // local state regarding the client
+        int challenge;      // challenge code
+        int clientId;       // client identification
+        boolean connected;      // true if the client is connected
+        char[] guid = new char[12];    // guid
+        int pingTime;       // time the challenge response was sent to client
+        int time;           // time the challenge was created
+
+        challenge_s() {
+            this.authReplyPrint = new idStr();
+        }
+    } /*challenge_t*/
+
+    static class serverClient_s {
+
+        int OS;
+        int acknowledgeSnapshotSequence;
+        idMsgChannel channel = new idMsgChannel();
+        int clientAheadTime;
+        int clientId;
+        int clientPing;
+        int clientPrediction;
+        int clientRate;
+        serverClientState_t clientState;
+        int gameFrame;
+        int gameInitSequence;
+        int gameTime;
+        char[] guid = new char[12];     // Even Balance - M. Quinn
+        int lastConnectTime;
+        int lastEmptyTime;
+        int lastInputTime;
+        int lastPacketTime;
+        int lastPingTime;
+        int lastSnapshotTime;
+        int numDuplicatedUsercmds;
+        int snapshotSequence;
+
+        boolean isClientConnected() {
+            return etoi(clientState) < etoi(SCS_CONNECTED);
+        }
+    }/* serverClient_t*/
 
     public static class idAsyncServer {
 
-        private boolean    active;                                                    // true if server is active
-        private int        realTime;                                                  // absolute time
-        //
-        private int        serverTime;                                                // local server time
-        private idPort     serverPort;                                                // UDP port
-        private int        serverId;                                                  // server identification
-        private BigInteger serverDataChecksum;                                        // checksum of the data used by the server
-        private int        localClientNum;                                            // local client on listen server
-        //
-        private challenge_s[]    challenges = new challenge_s[MAX_CHALLENGES];        // to prevent invalid IPs from connecting
-        private serverClient_s[] clients    = new serverClient_s[MAX_ASYNC_CLIENTS];  // clients
-        private usercmd_t[][]    userCmds   = new usercmd_t[MAX_USERCMD_BACKUP][MAX_ASYNC_CLIENTS];
-        //
-        private int      gameInitId;                                                  // game initialization identification
-        private int      gameFrame;                                                   // local game frame
-        private int      gameTime;                                                    // local game time
-        private int      gameTimeResidual;                                            // left over time from previous frame
-        //
-        private netadr_t rconAddress;
-        //	
-        private int      nextHeartbeatTime;
-        private int      nextAsyncStatsTime;
-        //
-        private boolean  serverReloadingEngine;                                       // flip-flop to not loop over when net_serverReloadEngine is on
-        //
-        private boolean  noRconOutput;                                                // for default rcon response when command is silent
-        //
-        private int      lastAuthTime;                                                // global for auth server timeout
         //
         // track the max outgoing rate over the last few secs to watch for spikes
         // dependent on net_serverSnapshotDelay. 50ms, for a 3 seconds backlog -> 60 samples
-        private static final int   stats_numsamples = 60;
-        private              int[] stats_outrate    = new int[stats_numsamples];
-        private int stats_current;
+        private static final int stats_numsamples = 60;
+        private boolean active;                                                    // true if server is active
+        //
+        private final challenge_s[] challenges = new challenge_s[MAX_CHALLENGES];        // to prevent invalid IPs from connecting
+        private final serverClient_s[] clients = new serverClient_s[MAX_ASYNC_CLIENTS];  // clients
+        private int gameFrame;                                                   // local game frame
+        //
+        private int gameInitId;                                                  // game initialization identification
+        private int gameTime;                                                    // local game time
+        private int gameTimeResidual;                                            // left over time from previous frame
+        //
+        private int lastAuthTime;                                                // global for auth server timeout
+        private int localClientNum;                                            // local client on listen server
+        private int nextAsyncStatsTime;
+        //
+        private int nextHeartbeatTime;
+        //
+        private boolean noRconOutput;                                                // for default rcon response when command is silent
+        //
+        private netadr_t rconAddress;
+        private int realTime;                                                  // absolute time
+        private BigInteger serverDataChecksum;                                        // checksum of the data used by the server
+        private int serverId;                                                  // server identification
+        private final idPort serverPort;                                                // UDP port
+        //
+        private boolean serverReloadingEngine;                                       // flip-flop to not loop over when net_serverReloadEngine is on
+        //
+        private int serverTime;                                                // local server time
         private int stats_average_sum;
+        private int stats_current;
         private int stats_max;
         private int stats_max_index;
+        private final int[] stats_outrate = new int[stats_numsamples];
+        private usercmd_t[][] userCmds = new usercmd_t[MAX_USERCMD_BACKUP][MAX_ASYNC_CLIENTS];
         //
         //
 
@@ -532,7 +475,7 @@ public class AsyncServer {
             serverTime = 0;
 
             // initialize game id and time
-            gameInitId ^= Sys_Milliseconds();	// NOTE: make sure the gameInitId is always a positive number because negative numbers have special meaning
+            gameInitId ^= Sys_Milliseconds();    // NOTE: make sure the gameInitId is always a positive number because negative numbers have special meaning
             gameFrame = 0;
             gameTime = 0;
             gameTimeResidual = 0;
@@ -794,7 +737,7 @@ public class AsyncServer {
                         msg.SetSize(size[0]);
                         msg.BeginReading();
                         if (ProcessMessage(from[0], msg)) {
-                            return;	// return because rcon was used
+                            return;    // return because rcon was used
                         }
                     }
 
@@ -1084,7 +1027,7 @@ public class AsyncServer {
             return returnString;
         }
 
-//
+        //
         public void PacifierUpdate() {
             int i;
 
@@ -1125,7 +1068,7 @@ public class AsyncServer {
             SendUserInfoBroadcast(clientNum, info, true);
         }
 
-//
+        //
         public void UpdateAsyncStatsAvg() {
             stats_average_sum -= stats_outrate[stats_current];
             stats_outrate[stats_current] = idAsyncNetwork.server.GetOutgoingRate();
@@ -1237,7 +1180,7 @@ public class AsyncServer {
             int i;
 
             // clear the user info
-            sessLocal.mapSpawnData.userInfo[clientNum].Clear();	// always start with a clean base
+            sessLocal.mapSpawnData.userInfo[clientNum].Clear();    // always start with a clean base
 
             // clear the server client
             serverClient_s client = clients[clientNum];
@@ -1616,7 +1559,8 @@ public class AsyncServer {
 
             // write the latest user commands from the other clients in the PVS to the snapshot
             for (last = null, i = 0; i < MAX_ASYNC_CLIENTS; i++) {
-                /*serverClient_t*/ client = clients[i];
+                /*serverClient_t*/
+                client = clients[i];
 
                 if (client.clientState == SCS_FREE || i == clientNum) {
                     continue;
@@ -1939,7 +1883,7 @@ public class AsyncServer {
                         break; // will continue with the connecting process
                     }
                     String msg2,
-                     l_msg;
+                            l_msg;
                     if (challenges[ichallenge].authReplyMsg != AUTH_REPLY_PRINT) {
                         msg2 = authReplyMsg[challenges[ichallenge].authReplyMsg.ordinal()];
                     } else {
@@ -2267,7 +2211,7 @@ public class AsyncServer {
 
                 // make sure it is a valid, in sequence packet
                 if (!client.channel.Process(from, serverTime, msg, sequence)) {
-                    return false;		// out of order, duplicated, fragment, etc.
+                    return false;        // out of order, duplicated, fragment, etc.
                 }
 
                 // zombie clients still need to do the channel processing to make sure they don't
@@ -2374,7 +2318,7 @@ public class AsyncServer {
             }
         }
 
-        private boolean SendPureServerMessage(final netadr_t to, int OS) {										// returns false if no pure paks on the list
+        private boolean SendPureServerMessage(final netadr_t to, int OS) {                                        // returns false if no pure paks on the list
             idBitMsg outMsg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             int[] serverChecksums = new int[MAX_PURE_PAKS];
@@ -2432,7 +2376,7 @@ public class AsyncServer {
             challenges[iclient].authState = CDK_PUREOK; // next connect message will get the client through completely
         }
 
-        private int ValidateChallenge(final netadr_t from, int challenge, int clientId) {	// returns -1 if validate failed
+        private int ValidateChallenge(final netadr_t from, int challenge, int clientId) {    // returns -1 if validate failed
             int i;
             for (i = 0; i < MAX_ASYNC_CLIENTS; i++) {
                 final serverClient_s client = clients[i];
@@ -2576,7 +2520,7 @@ public class AsyncServer {
             return true;
         }
 
-        private void SendReliableMessage(int clientNum, final idBitMsg msg) {				// checks for overflow and disconnects the faulty client
+        private void SendReliableMessage(int clientNum, final idBitMsg msg) {                // checks for overflow and disconnects the faulty client
             if (clientNum == localClientNum) {
                 return;
             }
@@ -2609,16 +2553,16 @@ public class AsyncServer {
             int challenge, clientId, iclient, numPaks, i;
             int dlGamePak;
             int dlPakChecksum;
-            int[] dlSize = new int[MAX_PURE_PAKS];	// sizes
-            idStrList pakNames = new idStrList();	// relative path
-            idStrList pakURLs = new idStrList();	// game URLs
+            int[] dlSize = new int[MAX_PURE_PAKS];    // sizes
+            idStrList pakNames = new idStrList();    // relative path
+            idStrList pakURLs = new idStrList();    // game URLs
             char[] pakbuf = new char[MAX_STRING_CHARS];
             idStr paklist = new idStr();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             ByteBuffer tmpBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             idBitMsg outMsg = new idBitMsg(), tmpMsg = new idBitMsg();
             int dlRequest;
-            int voidSlots = 0;				// to count and verbose the right number of paks requested for downloads
+            int voidSlots = 0;                // to count and verbose the right number of paks requested for downloads
 
             challenge = msg.ReadLong();
             clientId = msg.ReadShort();
@@ -2758,7 +2702,7 @@ public class AsyncServer {
                 serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize());
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2777,6 +2721,6 @@ public class AsyncServer {
         public void run(String... objects) throws idException {
             idAsyncNetwork.server.RemoteConsoleOutput(objects[0]);
         }
-    };
+    }
 
 }

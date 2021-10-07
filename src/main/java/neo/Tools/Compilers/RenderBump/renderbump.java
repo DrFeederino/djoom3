@@ -1,53 +1,11 @@
 package neo.Tools.Compilers.RenderBump;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
-import static java.lang.Math.sqrt;
-import java.nio.ByteBuffer;
-import static neo.Renderer.Image_files.R_WriteTGA;
-import static neo.Renderer.Image_process.R_MipMap;
-import static neo.Renderer.Image_process.R_VerticalFlip;
-import static neo.Renderer.Material.SURF_NULLNORMAL;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglClear;
-import static neo.Renderer.qgl.qglClearColor;
-import static neo.Renderer.qgl.qglColor3f;
-import static neo.Renderer.qgl.qglColor3ubv;
-import static neo.Renderer.qgl.qglColor3usv;
-import static neo.Renderer.qgl.qglCullFace;
-import static neo.Renderer.qgl.qglDepthFunc;
-import static neo.Renderer.qgl.qglDepthMask;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglFlush;
-import static neo.Renderer.qgl.qglLoadIdentity;
-import static neo.Renderer.qgl.qglMatrixMode;
-import static neo.Renderer.qgl.qglOrtho;
-import static neo.Renderer.qgl.qglReadPixels;
-import static neo.Renderer.qgl.qglVertex3f;
-import static neo.Renderer.qgl.qglViewport;
-import static neo.Renderer.tr_local.glConfig;
-import static neo.Renderer.tr_local.tr;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_BoundTriSurf;
-import static neo.Renderer.tr_trisurf.R_DeriveFacePlanes;
-import static neo.TempDump.NOT;
 import neo.TempDump.TODO_Exception;
-import static neo.TempDump.itob;
 import neo.Tools.Compilers.DMap.dmap.Dmap_f;
-import neo.Tools.Compilers.RenderBump.renderbump.binLink_t;
-import neo.Tools.Compilers.RenderBump.renderbump.renderBump_t;
-import neo.Tools.Compilers.RenderBump.renderbump.triHash_t;
-import neo.Tools.Compilers.RenderBump.renderbump.triLink_t;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
@@ -56,35 +14,50 @@ import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.DotProduct;
-import static neo.idlib.math.Vector.VectorSubtract;
-import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.*;
+import org.lwjgl.BufferUtils;
+
+import java.nio.ByteBuffer;
+
+import static java.lang.Math.*;
+import static neo.Renderer.Image_files.R_WriteTGA;
+import static neo.Renderer.Image_process.R_MipMap;
+import static neo.Renderer.Image_process.R_VerticalFlip;
+import static neo.Renderer.Material.SURF_NULLNORMAL;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_local.glConfig;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.itob;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Vector.*;
 import static neo.sys.win_glimp.GLimp_SwapBuffers;
 import static neo.sys.win_shared.Sys_Milliseconds;
-import org.lwjgl.BufferUtils;
-import static org.lwjgl.opengl.GL11.GL_ALPHA_TEST;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FRONT;
-import static org.lwjgl.opengl.GL11.GL_LEQUAL;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
-import static org.lwjgl.opengl.GL11.GL_SCISSOR_TEST;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
  */
 public class renderbump {
+
+    //
+    static final double DEFAULT_TRACE_FRACTION = 0.05;
+    /*
+     =================
+     TraceToMeshFace
+
+     Returns the distance from the point to the intersection, or DIST_NO_INTERSECTION
+     =================
+     */
+    static final float DIST_NO_INTERSECTION = -999999999.0f;
+    static final int HASH_AXIS_BINS = 100;
+    //
+    static final int INITIAL_TRI_TO_LINK_EXPANSION = 16;// can grow as needed
+    static final int MAX_LINKS_PER_BLOCK = 0x100000;
+
+    static final int MAX_LINK_BLOCKS = 0x100;
 
     /*
 
@@ -103,63 +76,15 @@ public class renderbump {
 
 
      */
-    static final int    MAX_QPATH                     = 256;
+    static final int MAX_QPATH = 256;
+    static final int RAY_STEPS = 100;
+    private static final boolean SKIP_MIRRORS = false;//TODO:set default value
+
     //
-    static final double DEFAULT_TRACE_FRACTION        = 0.05;
-    //
-    static final int    INITIAL_TRI_TO_LINK_EXPANSION = 16;// can grow as needed
-    static final int    HASH_AXIS_BINS                = 100;
+    static int oldWidth, oldHeight;
 
-    static class triLink_t {
-
-        int faceNum;
-        int nextLink;
-    };
-
-    static class binLink_t {
-
-        int triLink;
-        int rayNumber;        // don't need to test again if still on same ray
-    };
-    static final int MAX_LINKS_PER_BLOCK = 0x100000;
-    static final int MAX_LINK_BLOCKS     = 0x100;
-
-    static class triHash_t {
-
-        idBounds bounds;
-        float[] binSize = new float[3];
-        int numLinkBlocks;
-        triLink_t[][]   linkBlocks = new triLink_t[MAX_LINK_BLOCKS][];
-        binLink_t[][][] binLinks   = new binLink_t[HASH_AXIS_BINS][HASH_AXIS_BINS][HASH_AXIS_BINS];
-
-        private void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    static class renderBump_t {
-
-        char[] outputName = new char[MAX_QPATH];
-        char[] highName   = new char[MAX_QPATH];
-        ByteBuffer localPic;
-        ByteBuffer globalPic;
-        ByteBuffer colorPic;
-        float[]    edgeDistances;        // starts out -1 for untraced, for each texel, 0 = true interior, >0 = off-edge rasterization
-        int        width, height;
-        int            antiAlias;
-        int            outline;
-        boolean        saveGlobalMap;
-        boolean        saveColorMap;
-        float          traceFrac;
-        float          traceDist;
-        srfTriangles_s mesh;            // high poly mesh
-        idRenderModel  highModel;
-        triHash_t      hash;
-    };
+    static int rayNumber;        // for avoiding retests of bins and faces
     static float traceFraction;
-    static int   rayNumber;        // for avoiding retests of bins and faces
-    //
-    static int   oldWidth, oldHeight;
 
     /*
      ===============
@@ -280,7 +205,7 @@ public class renderbump {
                 }
 
                 if (normal.Normalize() < 0.5) {
-                    continue;	// no valid samples
+                    continue;    // no valid samples
                 }
 
                 data.put(out + 0, (byte) (128 + 127 * normal.oGet(0)));
@@ -420,11 +345,11 @@ public class renderbump {
             // determine which hash bins the triangle will need to be in
             triBounds.Clear();
             for (j = 0; j < 3; j++) {
-                triBounds.AddPoint(highMesh.verts[ highMesh.indexes[i + j]].xyz);
+                triBounds.AddPoint(highMesh.verts[highMesh.indexes[i + j]].xyz);
             }
             for (j = 0; j < 3; j++) {
                 iBounds[0][j] = (int) ((triBounds.oGet(0, j) - hash.bounds.oGet(0, j)) / hash.binSize[j]);
-                iBounds[0][j] -= 0.001;	// epsilon
+                iBounds[0][j] -= 0.001;    // epsilon
                 if (iBounds[0][j] < 0) {
                     iBounds[0][j] = 0;
                 } else if (iBounds[0][j] >= HASH_AXIS_BINS) {
@@ -432,7 +357,7 @@ public class renderbump {
                 }
 
                 iBounds[1][j] = (int) ((triBounds.oGet(1, j) - hash.bounds.oGet(0, j)) / hash.binSize[j]);
-                iBounds[0][j] += 0.001;	// epsilon
+                iBounds[0][j] += 0.001;    // epsilon
                 if (iBounds[1][j] < 0) {
                     iBounds[1][j] = 0;
                 } else if (iBounds[1][j] >= HASH_AXIS_BINS) {
@@ -450,7 +375,7 @@ public class renderbump {
                             maxLinks = hash.numLinkBlocks * MAX_LINKS_PER_BLOCK;
                         }
 
-                        triLink_t link = hash.linkBlocks[ numLinks / MAX_LINKS_PER_BLOCK][ numLinks % MAX_LINKS_PER_BLOCK];//TODO:pointer??
+                        triLink_t link = hash.linkBlocks[numLinks / MAX_LINKS_PER_BLOCK][numLinks % MAX_LINKS_PER_BLOCK];//TODO:pointer??
                         link.faceNum = i / 3;
                         link.nextLink = hash.binLinks[j][k][l].triLink;
                         hash.binLinks[j][k][l].triLink = numLinks;
@@ -464,17 +389,9 @@ public class renderbump {
 
         return hash;
     }
-    /*
-     =================
-     TraceToMeshFace
-
-     Returns the distance from the point to the intersection, or DIST_NO_INTERSECTION
-     =================
-     */
-    static final float DIST_NO_INTERSECTION = -999999999.0f;
 
     static float TraceToMeshFace(final srfTriangles_s highMesh, int faceNum, float minDist, float maxDist,
-            final idVec3 point, final idVec3 normal, idVec3 sampledNormal, byte[] sampledColor/*[4]*/) {
+                                 final idVec3 point, final idVec3 normal, idVec3 sampledNormal, byte[] sampledColor/*[4]*/) {
         int j;
         float dist;
         final idVec3[] v = new idVec3[3];
@@ -486,9 +403,9 @@ public class renderbump {
         float[] bary = new float[3];
         idVec3 testVert;
 
-        v[0] = highMesh.verts[ highMesh.indexes[ faceNum * 3 + 0]].xyz;
-        v[1] = highMesh.verts[ highMesh.indexes[ faceNum * 3 + 1]].xyz;
-        v[2] = highMesh.verts[ highMesh.indexes[ faceNum * 3 + 2]].xyz;
+        v[0] = highMesh.verts[highMesh.indexes[faceNum * 3 + 0]].xyz;
+        v[1] = highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz;
+        v[2] = highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz;
 
         plane = highMesh.facePlanes[faceNum];
 
@@ -553,7 +470,7 @@ public class renderbump {
         // triangularly interpolate the normals to the sample point
         sampledNormal.oSet(getVec3_origin());
         for (j = 0; j < 3; j++) {
-            sampledNormal.oPluSet(highMesh.verts[ highMesh.indexes[ faceNum * 3 + j]].normal.oMultiply(bary[j]));
+            sampledNormal.oPluSet(highMesh.verts[highMesh.indexes[faceNum * 3 + j]].normal.oMultiply(bary[j]));
         }
         sampledNormal.Normalize();
 
@@ -561,19 +478,18 @@ public class renderbump {
         for (int i = 0; i < 4; i++) {
             float color = 0.0f;
             for (j = 0; j < 3; j++) {
-                color += bary[j] * highMesh.verts[ highMesh.indexes[ faceNum * 3 + j]].color[i];
+                color += bary[j] * highMesh.verts[highMesh.indexes[faceNum * 3 + j]].color[i];
             }
             sampledColor[i] = (byte) color;
         }
         return dist;
     }
-    static final int RAY_STEPS = 100;
 
     /*
      ================
      SampleHighMesh
 
-     Find the best surface normal in the high poly mesh 
+     Find the best surface normal in the high poly mesh
      for a ray coming from the surface of the low poly mesh
 
      Returns false if the trace doesn't hit anything
@@ -628,13 +544,13 @@ public class renderbump {
             // FIXME: casting away const
             bl = rb.hash.binLinks[block[0]][block[1]][block[2]];
             if (bl.rayNumber == rayNumber) {
-                continue;		// already tested this block
+                continue;        // already tested this block
             }
             bl.rayNumber = rayNumber;
             linkNum = bl.triLink;
             triLink_t link;
             for (; linkNum != -1; linkNum = link.nextLink) {
-                link = rb.hash.linkBlocks[ linkNum / MAX_LINKS_PER_BLOCK][ linkNum % MAX_LINKS_PER_BLOCK];
+                link = rb.hash.linkBlocks[linkNum / MAX_LINKS_PER_BLOCK][linkNum % MAX_LINKS_PER_BLOCK];
 
                 faceNum = link.faceNum;
                 dist = TraceToMeshFace(rb.mesh, faceNum,
@@ -649,7 +565,7 @@ public class renderbump {
             }
         }
 
-        return (boolean) (bestDist > -rb.traceDist);
+        return bestDist > -rb.traceDist;
     }
 
     /*
@@ -681,7 +597,6 @@ public class renderbump {
             return area;
         }
     }
-    private static final boolean SKIP_MIRRORS = false;//TODO:set default value
 
     /*
      ================
@@ -711,12 +626,12 @@ public class renderbump {
         // this is a brain-dead rasterizer, but compared to the ray trace,
         // nothing we do here is going to matter performance-wise
         // adjust for resolution and texel centers
-        verts[0][0] = lowMesh.verts[ lowMesh.indexes[lowFaceNum * 3 + 0]].st.oGet(0) * rbs[0].width - 0.5f;
-        verts[1][0] = lowMesh.verts[ lowMesh.indexes[lowFaceNum * 3 + 1]].st.oGet(0) * rbs[0].width - 0.5f;
-        verts[2][0] = lowMesh.verts[ lowMesh.indexes[lowFaceNum * 3 + 2]].st.oGet(0) * rbs[0].width - 0.5f;
-        verts[0][1] = lowMesh.verts[ lowMesh.indexes[lowFaceNum * 3 + 0]].st.oGet(1) * rbs[0].width - 0.5f;
-        verts[1][1] = lowMesh.verts[ lowMesh.indexes[lowFaceNum * 3 + 1]].st.oGet(1) * rbs[0].width - 0.5f;
-        verts[2][1] = lowMesh.verts[ lowMesh.indexes[lowFaceNum * 3 + 2]].st.oGet(1) * rbs[0].width - 0.5f;
+        verts[0][0] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.oGet(0) * rbs[0].width - 0.5f;
+        verts[1][0] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.oGet(0) * rbs[0].width - 0.5f;
+        verts[2][0] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.oGet(0) * rbs[0].width - 0.5f;
+        verts[0][1] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.oGet(1) * rbs[0].width - 0.5f;
+        verts[1][1] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.oGet(1) * rbs[0].width - 0.5f;
+        verts[2][1] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.oGet(1) * rbs[0].width - 0.5f;
 
         // find the texcoord bounding box
         bounds[0][0] = 99999;
@@ -818,7 +733,7 @@ public class renderbump {
 
                 totalArea = bary[0] + bary[1] + bary[2];
                 if (totalArea < 0.99 || totalArea > 1.01) {
-                    continue;	// should never happen
+                    continue;    // should never happen
                 }
 
                 // calculate the interpolated xyz, normal, and tangents of this sample
@@ -1047,7 +962,6 @@ public class renderbump {
 //        lowMeshNormals = null;//Mem_Free(lowMeshNormals);
     }
 
-
     /*
      ==============
      WriteRenderBump
@@ -1199,7 +1113,7 @@ public class renderbump {
             rb.localPic.put(i + 0, (byte) 128);
             rb.localPic.put(i + 1, (byte) 128);
             rb.localPic.put(i + 2, (byte) 128);
-            rb.localPic.put(i + 3, (byte) 0);	// the artists use this for masking traced pixels sometimes
+            rb.localPic.put(i + 3, (byte) 0);    // the artists use this for masking traced pixels sometimes
 
             rb.globalPic.put(i + 0, (byte) 128);
             rb.globalPic.put(i + 1, (byte) 128);
@@ -1211,9 +1125,54 @@ public class renderbump {
             rb.colorPic.put(i + 2, (byte) 128);
             rb.colorPic.put(i + 3, (byte) 0);
 
-            rb.edgeDistances[i / 4] = -1;	// not traced yet
+            rb.edgeDistances[i / 4] = -1;    // not traced yet
         }
 
+    }
+
+    static class triLink_t {
+
+        int faceNum;
+        int nextLink;
+    }
+
+    static class binLink_t {
+
+        int rayNumber;        // don't need to test again if still on same ray
+        int triLink;
+    }
+
+    static class triHash_t {
+
+        binLink_t[][][] binLinks = new binLink_t[HASH_AXIS_BINS][HASH_AXIS_BINS][HASH_AXIS_BINS];
+        float[] binSize = new float[3];
+        idBounds bounds;
+        triLink_t[][] linkBlocks = new triLink_t[MAX_LINK_BLOCKS][];
+        int numLinkBlocks;
+
+        private void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    static class renderBump_t {
+
+        int antiAlias;
+        ByteBuffer colorPic;
+        float[] edgeDistances;        // starts out -1 for untraced, for each texel, 0 = true interior, >0 = off-edge rasterization
+        ByteBuffer globalPic;
+        triHash_t hash;
+        idRenderModel highModel;
+        char[] highName = new char[MAX_QPATH];
+        ByteBuffer localPic;
+        srfTriangles_s mesh;            // high poly mesh
+        int outline;
+        char[] outputName = new char[MAX_QPATH];
+        boolean saveColorMap;
+        boolean saveGlobalMap;
+        float traceDist;
+        float traceFrac;
+        int width, height;
     }
 
     /*
@@ -1577,9 +1536,9 @@ public class renderbump {
                                     v2 = mesh.indexes[j + 1];
                                     v3 = mesh.indexes[j + 2];
 
-                                    a2 = mesh.verts[ v1].xyz;
-                                    b2 = mesh.verts[ v2].xyz;
-                                    c2 = mesh.verts[ v3].xyz;
+                                    a2 = mesh.verts[v1].xyz;
+                                    b2 = mesh.verts[v2].xyz;
+                                    c2 = mesh.verts[v3].xyz;
 
                                     plane.FromPoints(a2, b2, c2);
 

@@ -1,22 +1,11 @@
 package neo.Renderer;
 
-import neo.Renderer.GuiModel.guiModelSurface_t;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderSystem.R_AddDrawViewCmd;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
 import neo.Renderer.RenderWorld.renderEntity_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.tr_light.R_AddDrawSurf;
 import neo.Renderer.tr_local.drawSurf_s;
-import static neo.Renderer.tr_local.glConfig;
-import static neo.Renderer.tr_local.tr;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.Renderer.tr_local.viewEntity_s;
-import static neo.Renderer.tr_main.myGlMultMatrix;
-import static neo.TempDump.NOT;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.DemoFile.idDemoFile;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
@@ -25,6 +14,15 @@ import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec5;
 
+import static neo.Renderer.RenderSystem.*;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.tr_light.R_AddDrawSurf;
+import static neo.Renderer.tr_local.glConfig;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_main.myGlMultMatrix;
+import static neo.TempDump.NOT;
+import static neo.framework.DeclManager.declManager;
+
 /**
  *
  */
@@ -32,30 +30,33 @@ public class GuiModel {
 
     static class guiModelSurface_t {
 
-        idMaterial material;
         final float[] color = new float[4];
-        int firstVert;
-        int numVerts;
         int firstIndex;
+        int firstVert;
+        idMaterial material;
         int numIndexes;
-    };
+        int numVerts;
+    }
 
     public static class idGuiModel {
 
-        private guiModelSurface_t surf;
+        public static boolean bla;
+        static int bla555 = 0;
+        static int bla99 = 0;
+        private static int clear = 0, setColor = 0, setColorTotal = 0, drawStretchPic = 0, bla4 = 0;
+        //
+        //
+        private final idList</*glIndex_t*/Integer> indexes;
         //
         private final idList<guiModelSurface_t> surfaces;
-        private final idList</*glIndex_t*/Integer> indexes;
         private final idList<idDrawVert> verts;
-        //
-        //
+        private guiModelSurface_t surf;
 
         public idGuiModel() {
             surfaces = new idList<>();
             indexes = new idList<>(1000);//.SetGranularity(1000);
             verts = new idList<>(1000);//.SetGranularity(1000);
         }
-
 
         /*
          ================
@@ -229,16 +230,16 @@ public class GuiModel {
             viewDef.floatTime = tr.frameShaderTime;
 
             // qglOrtho( 0, 640, 480, 0, 0, 1 );		// always assume 640x480 virtual coordinates
-            viewDef.projectionMatrix[ 0] = +2.0f / 640.0f;
-            viewDef.projectionMatrix[ 5] = -2.0f / 480.0f;
+            viewDef.projectionMatrix[0] = +2.0f / 640.0f;
+            viewDef.projectionMatrix[5] = -2.0f / 480.0f;
             viewDef.projectionMatrix[10] = -2.0f / 1.0f;
             viewDef.projectionMatrix[12] = -1.0f;
             viewDef.projectionMatrix[13] = +1.0f;
             viewDef.projectionMatrix[14] = -1.0f;
             viewDef.projectionMatrix[15] = +1.0f;
 
-            viewDef.worldSpace.modelViewMatrix[ 0] = 1.0f;
-            viewDef.worldSpace.modelViewMatrix[ 5] = 1.0f;
+            viewDef.worldSpace.modelViewMatrix[0] = 1.0f;
+            viewDef.worldSpace.modelViewMatrix[5] = 1.0f;
             viewDef.worldSpace.modelViewMatrix[10] = 1.0f;
             viewDef.worldSpace.modelViewMatrix[15] = 1.0f;
 
@@ -271,7 +272,7 @@ public class GuiModel {
             }
             if (r == surf.color[0] && g == surf.color[1]
                     && b == surf.color[2] && a == surf.color[3]) {
-                return;	// no change
+                return;    // no change
             }
 
             if (surf.numVerts != 0) {
@@ -289,11 +290,9 @@ public class GuiModel {
             surf.color[2] = b;
             surf.color[3] = a;
         }
-        public static boolean bla;
-        private static int clear = 0, setColor = 0, setColorTotal = 0, drawStretchPic = 0, bla4 = 0;
 
         public void DrawStretchPic(final idDrawVert[] dVerts, final /*glIndex_t*/ int[] dIndexes, int vertCount, final int indexCount, final idMaterial hShader,
-                final boolean clip /*= true*/, final float min_x /*= 0.0f*/, final float min_y /*= 0.0f*/, final float max_x /*= 640.0f*/, final float max_y /*= 480.0f*/) {
+                                   final boolean clip /*= true*/, final float min_x /*= 0.0f*/, final float min_y /*= 0.0f*/, final float max_x /*= 640.0f*/, final float max_y /*= 480.0f*/) {
 //            TempDump.printCallStack(bla4+"");
             bla4++;
             if (!glConfig.isInitialized) {
@@ -314,7 +313,7 @@ public class GuiModel {
 //                    System.out.printf("~~ %d %d\n", Window.idWindow.bla1, Window.idWindow.bla2);
 //                    }
                 }
-                hShader.EnsureNotPurged();	// in case it was a gui item started before a level change
+                hShader.EnsureNotPurged();    // in case it was a gui item started before a level change
                 surf.material = hShader;
 //                TempDump.printCallStack(bla4 + "");
             }
@@ -385,21 +384,21 @@ public class GuiModel {
             } else {
                 drawStretchPic++;
 //                if (dVerts[0].xyz.x == 212) {
-                    int numVerts = verts.Num();
-                    int numIndexes = indexes.Num();
+                int numVerts = verts.Num();
+                int numIndexes = indexes.Num();
 
-                    verts.AssureSize(numVerts + vertCount);
-                    indexes.AssureSize(numIndexes + indexCount);
+                verts.AssureSize(numVerts + vertCount);
+                indexes.AssureSize(numIndexes + indexCount);
 
-                    surf.numVerts += vertCount;
-                    surf.numIndexes += indexCount;
+                surf.numVerts += vertCount;
+                surf.numIndexes += indexCount;
 
-                    for (int i = 0; i < indexCount; i++) {
-                        indexes.oSet(numIndexes + i, numVerts + dIndexes[i] - surf.firstVert);
-                    }
+                for (int i = 0; i < indexCount; i++) {
+                    indexes.oSet(numIndexes + i, numVerts + dIndexes[i] - surf.firstVert);
+                }
 
-    //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
-                    System.arraycopy(dVerts, 0, verts.Ptr(), numVerts, vertCount);//no need to memcpy here. dVerts has no back references. 
+                //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
+                System.arraycopy(dVerts, 0, verts.getList(), numVerts, vertCount);//no need to memcpy here. dVerts has no back references.
 //                }
             }
         }
@@ -413,11 +412,12 @@ public class GuiModel {
          */
         public void DrawStretchPic(float x, float y, float w, float h, float s1, float t1, float s2, float t2, final idMaterial hShader) {
             idDrawVert[] verts = {
-                new idDrawVert(),
-                new idDrawVert(),
-                new idDrawVert(),
-                new idDrawVert()};
-            /*glIndex_t*/ int[] indexes = new int[6];
+                    new idDrawVert(),
+                    new idDrawVert(),
+                    new idDrawVert(),
+                    new idDrawVert()};
+            /*glIndex_t*/
+            int[] indexes = new int[6];
 
             if (!glConfig.isInitialized) {
                 return;
@@ -448,7 +448,7 @@ public class GuiModel {
             }
 
             if (w <= 0 || h <= 0) {
-                return;		// completely clipped away
+                return;        // completely clipped away
             }
 
             indexes[0] = 3;
@@ -517,7 +517,6 @@ public class GuiModel {
             this.DrawStretchPic(verts/*[0]*/, indexes/*[0]*/, 4, 6, hShader, false, 0.0f, 0.0f, 640.0f, 480.0f);
             bla99++;
         }
-        static int bla99 = 0;
 
         /*
          =============
@@ -528,7 +527,8 @@ public class GuiModel {
          */
         public void DrawStretchTri(idVec2 p1, idVec2 p2, idVec2 p3, idVec2 t1, idVec2 t2, idVec2 t3, final idMaterial material) {
             idDrawVert[] tempVerts = new idDrawVert[3];
-            /*glIndex_t*/ int[] tempIndexes = new int[3];
+            /*glIndex_t*/
+            int[] tempIndexes = new int[3];
             int vertCount = 3;
             int indexCount = 3;
 
@@ -595,7 +595,7 @@ public class GuiModel {
                     }
                 }
                 /*const_cast<idMaterial *>*/
-                (material).EnsureNotPurged();	// in case it was a gui item started before a level change
+                (material).EnsureNotPurged();    // in case it was a gui item started before a level change
                 surf.material = material;
             }
 
@@ -613,7 +613,7 @@ public class GuiModel {
             }
 
 //            memcpy(verts[numVerts], tempVerts, vertCount * sizeof(verts[0]));
-            System.arraycopy(tempVerts, 0, verts.Ptr(), numVerts, vertCount);
+            System.arraycopy(tempVerts, 0, verts.getList(), numVerts, vertCount);
         }
 
         //---------------------------
@@ -647,13 +647,12 @@ public class GuiModel {
             int bla3 = drawStretchPic;
             bla555++;
         }
-        static int bla555 = 0;
 
         private void EmitSurface(guiModelSurface_t surf, float[] modelMatrix/*[16]*/, float[] modelViewMatrix/*[16]*/, boolean depthHack) {
             srfTriangles_s tri;
 
             if (surf.numVerts == 0) {
-                return;		// nothing in the surface
+                return;        // nothing in the surface
             }
 
             // copy verts and indexes
@@ -701,5 +700,6 @@ public class GuiModel {
             // add the surface, which might recursively create another gui
             R_AddDrawSurf(tri, guiSpace, renderEntity, surf.material, tr.viewDef.scissor);
         }
-    };
+    }
+
 }

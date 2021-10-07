@@ -3,28 +3,35 @@ package neo.idlib.geometry;
 import neo.TempDump;
 import neo.TempDump.NiLLABLE;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.MAX_WORLD_COORD;
-import static neo.idlib.Lib.MAX_WORLD_SIZE;
-import static neo.idlib.Lib.MIN_WORLD_COORD;
 import neo.idlib.math.Math_h;
-import static neo.idlib.math.Math_h.FLOATSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_CROSS;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
-import static neo.idlib.Lib.idLib;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Pluecker.idPluecker;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
+
+import static neo.idlib.Lib.*;
+import static neo.idlib.math.Math_h.FLOATSIGNBITNOTSET;
+import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
+import static neo.idlib.math.Plane.*;
 
 /**
  *
  */
 public class Winding {
+
+    /*
+     ===============================================================================
+
+     idFixedWinding is a fixed buffer size winding not using
+     memory allocations.
+
+     When an operation would overflow the fixed buffer a warning
+     is printed and the operation is safely cancelled.
+
+     ===============================================================================
+     */
+    public static final int MAX_POINTS_ON_WINDING = 64;
 
     /*
      ===============================================================================
@@ -35,12 +42,17 @@ public class Winding {
      */
     public static class idWinding implements NiLLABLE<idWinding> {
 
-        protected int      numPoints;    // number of points
+        static final float CONTINUOUS_EPSILON = 0.005f;
+        //
+        private static final float EDGE_LENGTH = 0.2f;
+        //
+        private static final float WCONVEX_EPSILON = 0.2f;
+        protected int allocedSize;
+        //
+        //
+        protected int numPoints;    // number of points
         protected idVec5[] p;            // pointer to point data
-        protected int      allocedSize;
-        private boolean    NULL = true;  // used to identify whether any value was assigned. used in combination with idWinding.Split(....);
-        //
-        //
+        private boolean NULL = true;  // used to identify whether any value was assigned. used in combination with idWinding.Split(....);
 
         public idWinding() {
             numPoints = allocedSize = 0;
@@ -98,7 +110,17 @@ public class Winding {
             numPoints = winding.GetNumPoints();
         }
 
-//public				~idWinding();
+        public static float TriangleArea(final idVec3 a, final idVec3 b, final idVec3 c) {
+            idVec3 v1, v2;
+            idVec3 cross;
+
+            v1 = b.oMinus(a);
+            v2 = c.oMinus(a);
+            cross = v1.Cross(v2);
+            return 0.5f * cross.Length();
+        }
+
+        //public				~idWinding();
 //
         @Override
         public idWinding oSet(final idWinding winding) {
@@ -116,9 +138,9 @@ public class Winding {
             return this;
         }
 
-//public	final idVec5 	operator[]( final int index ) ;
+        //public	final idVec5 	operator[]( final int index ) ;
         public idVec5 oGet(final int index) {
-            return p[ index];
+            return p[index];
         }
 
         public float oGet(final int index, final int index2) {
@@ -267,7 +289,7 @@ public class Winding {
                 return SIDE_FRONT;
             }
 
-            maxpts = numPoints + 4;	// cant use counts[0]+2 because of fp grouping errors
+            maxpts = numPoints + 4;    // cant use counts[0]+2 because of fp grouping errors
 
             front.oSet(f = new idWinding(maxpts));
             back.oSet(b = new idWinding(maxpts));
@@ -339,7 +361,7 @@ public class Winding {
             }
 
             if (f.numPoints > maxpts || b.numPoints > maxpts) {
-		idLib.common.FatalError( "idWinding::Split: points exceeded estimate." );
+                idLib.common.FatalError("idWinding::Split: points exceeded estimate.");
             }
 
             return SIDE_CROSS;
@@ -402,7 +424,7 @@ public class Winding {
                 return this;
             }
 
-            maxpts = numPoints + 4;		// cant use counts[0]+2 because of fp grouping errors
+            maxpts = numPoints + 4;        // cant use counts[0]+2 because of fp grouping errors
 
             newPoints = new idVec5[maxpts];
             newNumPoints = 0;
@@ -411,7 +433,7 @@ public class Winding {
                 p1 = p[i];
 
                 if (newNumPoints + 1 > maxpts) {
-                    return this;		// can't split -- fall back to original
+                    return this;        // can't split -- fall back to original
                 }
 
                 if (sides[i] == SIDE_ON) {
@@ -430,7 +452,7 @@ public class Winding {
                 }
 
                 if (newNumPoints + 1 > maxpts) {
-                    return this;		// can't split -- fall back to original
+                    return this;        // can't split -- fall back to original
                 }
 
                 // generate a split point
@@ -521,7 +543,7 @@ public class Winding {
                 return true;
             }
 
-            maxpts = numPoints + 4;		// cant use counts[0]+2 because of fp grouping errors
+            maxpts = numPoints + 4;        // cant use counts[0]+2 because of fp grouping errors
 
             newPoints = idVec5.generateArray(maxpts);
             newNumPoints = 0;
@@ -530,7 +552,7 @@ public class Winding {
                 p1 = p[i];
 
                 if (newNumPoints + 1 > maxpts) {
-                    return true;		// can't split -- fall back to original
+                    return true;        // can't split -- fall back to original
                 }
 
                 if (sides[i] == SIDE_ON) {
@@ -549,7 +571,7 @@ public class Winding {
                 }
 
                 if (newNumPoints + 1 > maxpts) {
-                    return true;		// can't split -- fall back to original
+                    return true;        // can't split -- fall back to original
                 }
 
                 // generate a split point
@@ -583,7 +605,7 @@ public class Winding {
             return true;
         }
 
-//
+        //
         // returns a copy of the winding
         public idWinding Copy() {
             idWinding w;
@@ -601,7 +623,7 @@ public class Winding {
             w = new idWinding(numPoints);
             w.numPoints = numPoints;
             for (i = 0; i < numPoints; i++) {
-                w.p[ numPoints - i - 1] = p[i];
+                w.p[numPoints - i - 1] = p[i];
             }
             return w;
         }
@@ -795,7 +817,7 @@ public class Winding {
 
                 // calculate hull edge vectors
                 for (j = 0; j < this.numPoints; j++) {
-                    dir = this.p[ (j + 1) % this.numPoints].ToVec3().oMinus(this.p[ j].ToVec3());
+                    dir = this.p[(j + 1) % this.numPoints].ToVec3().oMinus(this.p[j].ToVec3());
                     dir.Normalize();
                     hullDirs[j] = normal.Cross(dir);
                 }
@@ -808,11 +830,7 @@ public class Winding {
                     if (d >= epsilon) {
                         outside = true;
                     }
-                    if (d >= -epsilon) {
-                        hullSide[j] = true;
-                    } else {
-                        hullSide[j] = false;
-                    }
+                    hullSide[j] = d >= -epsilon;
                 }
 
                 // if the point is effectively inside, do nothing
@@ -822,7 +840,7 @@ public class Winding {
 
                 // find the back side to front side transition
                 for (j = 0; j < this.numPoints; j++) {
-                    if (!hullSide[ j] && hullSide[ (j + 1) % this.numPoints]) {
+                    if (!hullSide[j] && hullSide[(j + 1) % this.numPoints]) {
                         break;
                     }
                 }
@@ -837,10 +855,10 @@ public class Winding {
                 // copy over all points that aren't double fronts
                 j = (j + 1) % this.numPoints;
                 for (k = 0; k < this.numPoints; k++) {
-                    if (hullSide[ (j + k) % this.numPoints] && hullSide[ (j + k + 1) % this.numPoints]) {
+                    if (hullSide[(j + k) % this.numPoints] && hullSide[(j + k + 1) % this.numPoints]) {
                         continue;
                     }
-                    newHullPoints[numNewHullPoints] = this.p[ (j + k + 1) % this.numPoints];
+                    newHullPoints[numNewHullPoints] = this.p[(j + k + 1) % this.numPoints];
                     numNewHullPoints++;
                 }
 
@@ -926,11 +944,7 @@ public class Winding {
                 if (d >= epsilon) {
                     outside = true;
                 }
-                if (d >= -epsilon) {
-                    hullSide[j] = true;
-                } else {
-                    hullSide[j] = false;
-                }
+                hullSide[j] = d >= -epsilon;
             }
 
             // if the point is effectively inside, do nothing
@@ -940,7 +954,7 @@ public class Winding {
 
             // find the back side to front side transition
             for (j = 0; j < numPoints; j++) {
-                if (!hullSide[ j] && hullSide[ (j + 1) % numPoints]) {
+                if (!hullSide[j] && hullSide[(j + 1) % numPoints]) {
                     break;
                 }
             }
@@ -957,10 +971,10 @@ public class Winding {
             // copy over all points that aren't double fronts
             j = (j + 1) % numPoints;
             for (k = 0; k < numPoints; k++) {
-                if (hullSide[ (j + k) % numPoints] && hullSide[ (j + k + 1) % numPoints]) {
+                if (hullSide[(j + k) % numPoints] && hullSide[(j + k + 1) % numPoints]) {
                     continue;
                 }
-                hullPoints[numHullPoints] = p[ (j + k + 1) % numPoints];
+                hullPoints[numHullPoints] = p[(j + k + 1) % numPoints];
                 numHullPoints++;
             }
 
@@ -971,7 +985,6 @@ public class Winding {
 //	memcpy( p, hullPoints, numHullPoints * sizeof(idVec5) );
             System.arraycopy(hullPoints, 0, this.p, 0, numHullPoints);
         }
-        static final float CONTINUOUS_EPSILON = 0.005f;
 
         public idWinding TryMerge(final idWinding w, final idVec3 planenormal) {
             return TryMerge(w, planenormal, 0);
@@ -992,8 +1005,8 @@ public class Winding {
             f2 = new idWinding(w);
             //
             // find a idLib::common edge
-            //	
-            p1 = p2 = null;	// stop compiler warning
+            //
+            p1 = p2 = null;    // stop compiler warning
             j = 0;
 
             for (i = 0; i < f1.numPoints; i++) {
@@ -1020,7 +1033,7 @@ public class Winding {
             }
 
             if (i == f1.numPoints) {
-                return null;			// no matching edges
+                return null;            // no matching edges
             }
 
             //
@@ -1036,7 +1049,7 @@ public class Winding {
             delta = back.oMinus(p1);
             dot = delta.oMultiply(normal);
             if (dot > CONTINUOUS_EPSILON) {
-                return null;			// not a convex polygon
+                return null;            // not a convex polygon
             }
 
             keep1 = (dot < -CONTINUOUS_EPSILON);
@@ -1050,7 +1063,7 @@ public class Winding {
             delta = back.oMinus(p2);
             dot = delta.oMultiply(normal);
             if (dot > CONTINUOUS_EPSILON) {
-                return null;			// not a convex polygon
+                return null;            // not a convex polygon
             }
 
             keep2 = (dot < -CONTINUOUS_EPSILON);
@@ -1141,7 +1154,7 @@ public class Winding {
 
                 if (dir.Length() < ON_EPSILON) {
                     if (print) {
-				        idLib.common.Printf("idWinding::Check: edge %d is degenerate.", i);
+                        idLib.common.Printf("idWinding::Check: edge %d is degenerate.", i);
                     }
                     return false;
                 }
@@ -1212,7 +1225,7 @@ public class Winding {
             return idMath.Sqrt(radius);
         }
 
-        public void GetPlane(idVec3 normal, float[]dist) {
+        public void GetPlane(idVec3 normal, float[] dist) {
             idVec3 v1, v2, center;
 
             if (numPoints < 3) {
@@ -1273,8 +1286,6 @@ public class Winding {
                 }
             }
         }
-//
-        private static final float EDGE_LENGTH = 0.2f;
 
         public boolean IsTiny() {
             int i;
@@ -1295,7 +1306,7 @@ public class Winding {
             return true;
         }
 
-        public boolean IsHuge() {	// base winding for a plane is typically huge
+        public boolean IsHuge() {    // base winding for a plane is typically huge
             int i, j;
 
             for (i = 0; i < numPoints; i++) {
@@ -1382,8 +1393,6 @@ public class Winding {
             }
             return SIDE_ON;
         }
-//
-        private static final float WCONVEX_EPSILON = 0.2f;
 
         public boolean PlanesConcave(final idWinding w2, final idVec3 normal1, final idVec3 normal2, float dist1, float dist2) {
             int i;
@@ -1460,7 +1469,7 @@ public class Winding {
             return PointInside(windingPlane.Normal(), mid, 0.0f);
         }
 
-        public boolean RayIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 dir, float scale[]) {
+        public boolean RayIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 dir, float[] scale) {
             return RayIntersection(windingPlane, start, dir, scale, false);
         }
 
@@ -1487,16 +1496,6 @@ public class Winding {
             return false;
         }
 
-        public static float TriangleArea(final idVec3 a, final idVec3 b, final idVec3 c) {
-            idVec3 v1, v2;
-            idVec3 cross;
-
-            v1 = b.oMinus(a);
-            v2 = c.oMinus(a);
-            cross = v1.Cross(v2);
-            return 0.5f * cross.Length();
-        }
-
         protected boolean EnsureAlloced(int n) {
             return EnsureAlloced(n, false);
         }
@@ -1516,7 +1515,7 @@ public class Winding {
             idVec5[] oldP;
 
             oldP = p;
-            n = (n + 3) & ~3;	// align up to multiple of four
+            n = (n + 3) & ~3;    // align up to multiple of four
             p = TempDump.allocArray(idVec5.class, n);
             if (oldP != null && keep) {
 //			memcpy( p, oldP, numPoints * sizeof(p[0]) );
@@ -1531,21 +1530,11 @@ public class Winding {
         public boolean isNULL() {
             return NULL;
         }
-    };
-    /*
-     ===============================================================================
-
-     idFixedWinding is a fixed buffer size winding not using
-     memory allocations.
-
-     When an operation would overflow the fixed buffer a warning
-     is printed and the operation is safely cancelled.
-
-     ===============================================================================
-     */
-    public static final int MAX_POINTS_ON_WINDING = 64;
+    }
 
     public static class idFixedWinding extends idWinding {
+
+        protected idVec5[] data = new idVec5[MAX_POINTS_ON_WINDING];    // point data
 
         public idFixedWinding() {
             numPoints = 0;
@@ -1604,6 +1593,8 @@ public class Winding {
             }
             numPoints = winding.GetNumPoints();
         }
+//public	virtual			~idFixedWinding( void );
+//
 
         public idFixedWinding(final idFixedWinding winding) {
             int i;
@@ -1619,8 +1610,6 @@ public class Winding {
             }
             numPoints = winding.GetNumPoints();
         }
-//public	virtual			~idFixedWinding( void );
-//
 
         @Override
         public idFixedWinding oSet(final idWinding winding) {
@@ -1695,10 +1684,10 @@ public class Winding {
                 p1 = p[i];
 
                 if (!out.EnsureAlloced(out.numPoints + 1, true)) {
-                    return SIDE_FRONT;		// can't split -- fall back to original
+                    return SIDE_FRONT;        // can't split -- fall back to original
                 }
                 if (!back.EnsureAlloced(back.numPoints + 1, true)) {
-                    return SIDE_FRONT;		// can't split -- fall back to original
+                    return SIDE_FRONT;        // can't split -- fall back to original
                 }
 
                 if (sides[i] == SIDE_ON) {
@@ -1723,11 +1712,11 @@ public class Winding {
                 }
 
                 if (!out.EnsureAlloced(out.numPoints + 1, true)) {
-                    return SIDE_FRONT;		// can't split -- fall back to original
+                    return SIDE_FRONT;        // can't split -- fall back to original
                 }
 
                 if (!back.EnsureAlloced(back.numPoints + 1, true)) {
-                    return SIDE_FRONT;		// can't split -- fall back to original
+                    return SIDE_FRONT;        // can't split -- fall back to original
                 }
 
                 // generate a split point
@@ -1764,7 +1753,6 @@ public class Winding {
 
             return SIDE_CROSS;
         }
-        protected idVec5[] data = new idVec5[MAX_POINTS_ON_WINDING];	// point data
 
         @Override
         protected boolean ReAllocate(int n) {
@@ -1782,5 +1770,6 @@ public class Winding {
             }
             return true;
         }
-    };
+    }
+
 }

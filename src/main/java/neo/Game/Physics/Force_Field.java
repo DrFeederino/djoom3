@@ -3,26 +3,42 @@ package neo.Game.Physics;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
+import neo.Game.Game_local;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force.idForce;
-import static neo.Game.Physics.Force_Field.forceFieldApplyType.FORCEFIELD_APPLY_FORCE;
-import static neo.Game.Physics.Force_Field.forceFieldType.FORCEFIELD_EXPLOSION;
-import static neo.Game.Physics.Force_Field.forceFieldType.FORCEFIELD_IMPLOSION;
-import static neo.Game.Physics.Force_Field.forceFieldType.FORCEFIELD_UNIFORM;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_Monster.idPhysics_Monster;
 import neo.Game.Physics.Physics_Player.idPhysics_Player;
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.Game_local.MAX_GENTITIES;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Physics.Force_Field.forceFieldApplyType.FORCEFIELD_APPLY_FORCE;
+import static neo.Game.Physics.Force_Field.forceFieldType.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.etoi;
 
 /**
  *
  */
 public class Force_Field {
+
+    public enum forceFieldApplyType {
+
+        FORCEFIELD_APPLY_FORCE,
+        FORCEFIELD_APPLY_VELOCITY,
+        FORCEFIELD_APPLY_IMPULSE;
+
+        public static forceFieldApplyType oGet(final int index) {
+
+            if (index > values().length) {
+                return values()[0];
+            } else {
+                return values()[index];
+            }
+        }
+    }
 
     /*
      ===============================================================================
@@ -45,38 +61,33 @@ public class Force_Field {
                 return values()[index];
             }
         }
-    };
-
-    public enum forceFieldApplyType {
-
-        FORCEFIELD_APPLY_FORCE,
-        FORCEFIELD_APPLY_VELOCITY,
-        FORCEFIELD_APPLY_IMPULSE;
-
-        public static forceFieldApplyType oGet(final int index) {
-
-            if (index > values().length) {
-                return values()[0];
-            } else {
-                return values()[index];
-            }
-        }
-    };
+    }
 
     public static class idForce_Field extends idForce {
 //	CLASS_PROTOTYPE( idForce_Field );
 
+        private forceFieldApplyType applyType;
+        private idClipModel clipModel;
+        private idVec3 dir;
+        private float magnitude;
+        private boolean monsterOnly;
+        private boolean playerOnly;
+        private float randomTorque;
         // force properties
         private forceFieldType type;
-        private forceFieldApplyType applyType;
-        private float magnitude;
-        private idVec3 dir;
-        private float randomTorque;
-        private boolean playerOnly;
-        private boolean monsterOnly;
-        private idClipModel clipModel;
         //
         //
+
+        public idForce_Field() {
+            type = FORCEFIELD_UNIFORM;
+            applyType = FORCEFIELD_APPLY_FORCE;
+            magnitude = 0.0f;
+            dir = new idVec3(0, 0, 1);
+            randomTorque = 0.0f;
+            playerOnly = false;
+            monsterOnly = false;
+            clipModel = null;
+        }
 
         @Override
         public void Save(idSaveGame savefile) {
@@ -102,18 +113,7 @@ public class Force_Field {
             savefile.ReadClipModel(clipModel);
         }
 
-        public idForce_Field() {
-            type = FORCEFIELD_UNIFORM;
-            applyType = FORCEFIELD_APPLY_FORCE;
-            magnitude = 0.0f;
-            dir = new idVec3(0, 0, 1);
-            randomTorque = 0.0f;
-            playerOnly = false;
-            monsterOnly = false;
-            clipModel = null;
-        }
-
-//	virtual				~idForce_Field( void );
+        //	virtual				~idForce_Field( void );
         // uniform constant force
         public void Uniform(final idVec3 force) {
             dir = force;
@@ -176,7 +176,7 @@ public class Force_Field {
             numClipModels = gameLocal.clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, MAX_GENTITIES);
 
             for (i = 0; i < numClipModels; i++) {
-                cm = clipModelList[ i];
+                cm = clipModelList[i];
 
                 if (!cm.IsTraceModel()) {
                     continue;
@@ -220,7 +220,7 @@ public class Force_Field {
                         break;
                     }
                     default: {
-                        gameLocal.Error("idForce_Field: invalid type");
+                        Game_local.idGameLocal.Error("idForce_Field: invalid type");
                         break;
                     }
                 }
@@ -260,11 +260,12 @@ public class Force_Field {
                         break;
                     }
                     default: {
-                        gameLocal.Error("idForce_Field: invalid apply type");
+                        Game_local.idGameLocal.Error("idForce_Field: invalid apply type");
                         break;
                     }
                 }
             }
         }
-    };
+    }
+
 }

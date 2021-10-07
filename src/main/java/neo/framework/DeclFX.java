@@ -1,20 +1,5 @@
 package neo.framework;
 
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.framework.Common.common;
-import static neo.framework.DeclFX.fx_enum.FX_ATTACHENTITY;
-import static neo.framework.DeclFX.fx_enum.FX_ATTACHLIGHT;
-import static neo.framework.DeclFX.fx_enum.FX_DECAL;
-import static neo.framework.DeclFX.fx_enum.FX_LAUNCH;
-import static neo.framework.DeclFX.fx_enum.FX_LIGHT;
-import static neo.framework.DeclFX.fx_enum.FX_MODEL;
-import static neo.framework.DeclFX.fx_enum.FX_PARTICLE;
-import static neo.framework.DeclFX.fx_enum.FX_SHAKE;
-import static neo.framework.DeclFX.fx_enum.FX_SHOCKWAVE;
-import static neo.framework.DeclFX.fx_enum.FX_SOUND;
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
 import neo.framework.DeclManager.idDecl;
 import neo.idlib.Lib;
 import neo.idlib.Lib.idException;
@@ -26,6 +11,13 @@ import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.framework.Common.common;
+import static neo.framework.DeclFX.fx_enum.*;
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
 
 /**
  *
@@ -51,54 +43,59 @@ public class DeclFX {
         FX_ATTACHENTITY,
         FX_LAUNCH,
         FX_SHOCKWAVE
-    };
+    }
 
     //
     // single fx structure
     //
     public static class idFXSingleAction {
 
-        public fx_enum type;
-        public int sibling;
+        public idMat3 axis;
+        public boolean bindParticles;
         //
         public idStr data;
-        public idStr name;
-        public idStr fire;
         //
         public float delay;
         public float duration;
-        public float restart;
-        public float size;
+        public boolean explicitAxis;
         public float fadeInTime;
         public float fadeOutTime;
-        public float shakeTime;
-        public float shakeAmplitude;
-        public float shakeDistance;
-        public float shakeImpulse;
-        public float lightRadius;
-        public float rotate;
-        public float random1;
-        public float random2;
+        public idStr fire;
         //
         public idVec3 lightColor;
+        public float lightRadius;
+        public idStr name;
+        public boolean noshadows;
         public idVec3 offset;
-        public idMat3 axis;
-        //
-        public boolean soundStarted;
-        public boolean shakeStarted;
+        public boolean particleTrackVelocity;
+        public float random1;
+        public float random2;
+        public float restart;
+        public float rotate;
+        public float shakeAmplitude;
+        public float shakeDistance;
         public boolean shakeFalloff;
         public boolean shakeIgnoreMaster;
-        public boolean bindParticles;
-        public boolean explicitAxis;
-        public boolean noshadows;
-        public boolean particleTrackVelocity;
+        public float shakeImpulse;
+        public boolean shakeStarted;
+        public float shakeTime;
+        public int sibling;
+        public float size;
+        //
+        public boolean soundStarted;
         public boolean trackOrigin;
-    };
+        public fx_enum type;
+    }
 
     //
     // grouped fx structures
     //
     public static class idDeclFX extends idDecl {
+
+        //
+//
+        public idList<idFXSingleAction> events = new idList<>();
+        public idStr joint = new idStr();
 
         @Override
         public long Size() {
@@ -211,10 +208,6 @@ public class DeclFX {
             common.Printf("%s, %d stages\n", GetName(), events.Num());
         }
 //
-//
-        public idList<idFXSingleAction> events = new idList<>();
-        public idStr joint = new idStr();
-//
 
         private void ParseSingleFXAction(idLexer src, idFXSingleAction FXAction) throws Lib.idException {
             idToken token = new idToken();
@@ -298,7 +291,7 @@ public class DeclFX {
                     FXAction.random1 = src.ParseFloat();
                     src.ExpectTokenString(",");
                     FXAction.random2 = src.ParseFloat();
-                    FXAction.delay = 0.0f;		// check random
+                    FXAction.delay = 0.0f;        // check random
                     continue;
                 }
 
@@ -466,7 +459,7 @@ public class DeclFX {
                     continue;
                 }
 
-                if (0 == token.Icmp("particle")) {	// FIXME: now the same as model
+                if (0 == token.Icmp("particle")) {    // FIXME: now the same as model
                     src.ReadToken(token);
                     FXAction.data.oSet(token);
                     FXAction.type = FX_PARTICLE;
@@ -524,5 +517,6 @@ public class DeclFX {
         public void oSet(idDeclFX idDeclFX) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-    };
+    }
+
 }

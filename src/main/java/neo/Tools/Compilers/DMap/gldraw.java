@@ -1,45 +1,26 @@
 package neo.Tools.Compilers.DMap;
 
-import static neo.Renderer.qgl.qglVertex3fv;
-import static neo.Renderer.tr_backend.RB_SetGL2D;
 import neo.TempDump.TODO_Exception;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
 import neo.Tools.Compilers.DMap.dmap.mapTri_s;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Vector.idVec3;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FILL;
-import static org.lwjgl.opengl.GL11.GL_FRONT;
-import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
-import static org.lwjgl.opengl.GL11.GL_LINES;
-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_POLYGON;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.opengl.GL11.glColor3f;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glDrawBuffer;
-import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glFlush;
-import static org.lwjgl.opengl.GL11.glLoadIdentity;
-import static org.lwjgl.opengl.GL11.glMatrixMode;
-import static org.lwjgl.opengl.GL11.glOrtho;
-import static org.lwjgl.opengl.GL11.glPolygonMode;
-import static org.lwjgl.opengl.GL11.glVertex3f;
+
+import static neo.Renderer.qgl.qglVertex3fv;
+import static neo.Renderer.tr_backend.RB_SetGL2D;
+import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
  */
 public class gldraw {
 
+    //============================================================
+    static final int GLSERV_PORT = 25001;
     static final int WIN_SIZE = 1024;
+    static int draw_socket;
+    //
+    static boolean wins_init;
 
     static void Draw_ClearWindow() {
 
@@ -213,11 +194,6 @@ public class gldraw {
         glEnd();
         glFlush();
     }
-//============================================================
-    static final int GLSERV_PORT = 25001;
-//
-    static boolean wins_init;
-    static int draw_socket;
 
     static void GLS_BeginScene() {
         throw new TODO_Exception();

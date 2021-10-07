@@ -1,44 +1,33 @@
 package neo.Renderer;
 
-import static neo.Renderer.Image.globalImages;
-import static neo.Renderer.Material.SS_SUBVIEW;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
 import neo.Renderer.Material.textureStage_t;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem_init.r_skipSubviews;
 import neo.Renderer.RenderWorld.renderView_s;
 import neo.Renderer.tr_local.drawSurf_s;
 import neo.Renderer.tr_local.idScreenRect;
-import static neo.Renderer.tr_local.tr;
 import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.Renderer.tr_main.R_GlobalToNormalizedDeviceCoordinates;
-import static neo.Renderer.tr_main.R_LocalPlaneToGlobal;
-import static neo.Renderer.tr_main.R_LocalPointToGlobal;
-import static neo.Renderer.tr_main.R_RenderView;
-import static neo.Renderer.tr_main.R_TransformModelToClip;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.Material.SS_SUBVIEW;
+import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
+import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
+import static neo.Renderer.RenderSystem_init.r_skipSubviews;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_main.*;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class tr_subview {
-
-    static class orientation_t {
-
-        idVec3 origin = new idVec3();
-        idMat3 axis   = new idMat3();
-    };
-
 
     /*
      =================
@@ -102,7 +91,7 @@ public class tr_subview {
      Check the surface for visibility on a per-triangle basis
      for cases when it is going to be VERY expensive to draw (subviews)
 
-     If not culled, also returns the bounding box of the surface in 
+     If not culled, also returns the bounding box of the surface in
      Normalized Device Coordinates, so it can be used to crop the scissor rect.
 
      OPTIMIZE: we could also take exact portal passing into consideration
@@ -121,7 +110,7 @@ public class tr_subview {
         tri = drawSurf.geo;
 
         pointOr = 0;
-        pointAnd = (int) ~0;
+        pointAnd = ~0;
 
         // get an exact bounds of the triangles for scissor cropping
         ndcBounds.Clear();
@@ -204,11 +193,7 @@ public class tr_subview {
         }
 
         // if we don't enclose any area, return
-        if (ndcBounds.IsCleared()) {
-            return true;
-        }
-
-        return false;
+        return ndcBounds.IsCleared();
     }
 
     /*
@@ -223,7 +208,7 @@ public class tr_subview {
 
         // copy the viewport size from the original
         parms = new viewDef_s(tr.viewDef);//        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
-        parms.renderView.viewID = 0;	// clear to allow player bodies to show up, and suppress view weapons
+        parms.renderView.viewID = 0;    // clear to allow player bodies to show up, and suppress view weapons
 
         parms.isSubview = true;
         parms.isMirror = true;
@@ -278,7 +263,7 @@ public class tr_subview {
         // copy the viewport size from the original
 //	parms = (viewDef_s )R_FrameAlloc( sizeof( parms ) );
         parms = tr.viewDef;
-        parms.renderView.viewID = 0;	// clear to allow player bodies to show up, and suppress view weapons
+        parms.renderView.viewID = 0;    // clear to allow player bodies to show up, and suppress view weapons
 
         parms.isSubview = true;
         parms.isXraySubview = true;
@@ -311,8 +296,8 @@ public class tr_subview {
         parms.isSubview = true;
         parms.isMirror = false;
 
-        parms.renderView = (renderView_s) surf.space.entityDef.parms.remoteRenderView;
-        parms.renderView.viewID = 0;	// clear to allow player bodies to show up, and suppress view weapons
+        parms.renderView = surf.space.entityDef.parms.remoteRenderView;
+        parms.renderView.viewID = 0;    // clear to allow player bodies to show up, and suppress view weapons
         parms.initialViewAreaOrigin.oSet(parms.renderView.vieworg);
 
         tr.CropRenderSize(stage.width, stage.height, true);
@@ -577,5 +562,11 @@ public class tr_subview {
         }
 
         return subviews;
+    }
+
+    static class orientation_t {
+
+        idMat3 axis = new idMat3();
+        idVec3 origin = new idVec3();
     }
 }

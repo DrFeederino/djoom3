@@ -5,55 +5,38 @@
  */
 package neo.Game.Script;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_disasm;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Script.Script_Compiler.OP_RETURN;
-import static neo.Game.Script.Script_Compiler.RESULT_STRING;
+import neo.Game.Game_local;
 import neo.Game.Script.Script_Compiler.idCompiler;
 import neo.Game.Script.Script_Compiler.opcode_s;
-import static neo.Game.Script.Script_Program.MAX_FUNCS;
-import static neo.Game.Script.Script_Program.MAX_GLOBALS;
-import static neo.Game.Script.Script_Program.MAX_STATEMENTS;
-import static neo.Game.Script.Script_Program.def_namespace;
-import static neo.Game.Script.Script_Program.def_object;
-import static neo.Game.Script.Script_Program.ev_field;
-import static neo.Game.Script.Script_Program.ev_function;
-import static neo.Game.Script.Script_Program.ev_namespace;
-import static neo.Game.Script.Script_Program.ev_vector;
-import neo.Game.Script.Script_Program.function_t;
-import neo.Game.Script.Script_Program.idCompileError;
-import neo.Game.Script.Script_Program.idTypeDef;
-import neo.Game.Script.Script_Program.idVarDef;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.stackVariable;
-import neo.Game.Script.Script_Program.idVarDefName;
-import neo.Game.Script.Script_Program.statement_s;
-import static neo.Game.Script.Script_Program.type_entity;
-import static neo.Game.Script.Script_Program.type_float;
-import static neo.Game.Script.Script_Program.type_object;
-import static neo.Game.Script.Script_Program.type_string;
-import static neo.Game.Script.Script_Program.type_vector;
-import static neo.Game.Script.Script_Program.type_void;
-import neo.Game.Script.Script_Program.varEval_s;
+import neo.Game.Script.Script_Program.*;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.FileSystem_h.fsMode_t.FS_WRITE;
 import neo.framework.File_h.idFile;
-import static neo.idlib.Lib.idLib.fileSystem;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StaticList.idStaticList;
 import neo.idlib.containers.StrList.idStrList;
-import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 import neo.idlib.math.Vector.idVec3;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.Game.GameSys.SysCvar.g_disasm;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Script.Script_Compiler.OP_RETURN;
+import static neo.Game.Script.Script_Compiler.RESULT_STRING;
+import static neo.Game.Script.Script_Program.*;
+import static neo.Game.Script.Script_Program.idVarDef.initialized_t.stackVariable;
+import static neo.TempDump.indexOf;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.FileSystem_h.fsMode_t.FS_WRITE;
+import static neo.idlib.Lib.idLib.fileSystem;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 
 /* **********************************************************************
 
@@ -67,33 +50,36 @@ import neo.idlib.math.Vector.idVec3;
  ***********************************************************************/
 public final class idProgram {
     public static final int BYTES = Integer.BYTES * 20;//TODO:
-
-    private idStrList fileList = new idStrList();
-    private idStr     filename = new idStr();
+    //
+    public idVarDef returnDef;
+    public idVarDef returnStringDef;
+    private final idStrList fileList = new idStrList();
+    private final idStr filename = new idStr();
     private int filenum;
+    private final idStaticList<function_t> functions = new idStaticList<>(MAX_FUNCS, function_t.class);
     //
     private int numVariables;
-    private byte[]                    variables        = new byte[MAX_GLOBALS];
-    private idStaticList<Byte>        variableDefaults = new idStaticList<>(MAX_GLOBALS);
-    private idStaticList<function_t>  functions        = new idStaticList<>(MAX_FUNCS, function_t.class);
-    private idStaticList<statement_s> statements       = new idStaticList<>(MAX_STATEMENTS, statement_s.class);
-    private idList<idTypeDef>         types            = new idList<>();
-    private idList<idVarDefName>      varDefNames      = new idList<>();
-    private idHashIndex               varDefNameHash   = new idHashIndex();
-    private idList<idVarDef>          varDefs          = new idList<>();
+    private final idStaticList<statement_s> statements = new idStaticList<>(MAX_STATEMENTS, statement_s.class);
     //
     private idVarDef sysDef;
+    private int top_defs;
+    private int top_files;
     //
-    private int      top_functions;
-    private int      top_statements;
-    private int      top_types;
-    private int      top_defs;
-    private int      top_files;
-    //
-    public  idVarDef returnDef;
-    public  idVarDef returnStringDef;
+    private int top_functions;
+    private int top_statements;
+    private int top_types;
+    private final idList<idTypeDef> types = new idList<>();
+    private final idHashIndex varDefNameHash = new idHashIndex();
+    private final idList<idVarDefName> varDefNames = new idList<>();
+    private final idList<idVarDef> varDefs = new idList<>();
+    private final idStaticList<Byte> variableDefaults = new idStaticList<>(MAX_GLOBALS);
+    private byte[] variables = new byte[MAX_GLOBALS];
 //
 //
+
+    public idProgram() {
+        FreeData();
+    }
 
     /*
      ==============
@@ -149,10 +135,6 @@ public final class idProgram {
         gameLocal.Printf(" Static data: %d bytes\n", idProgram.BYTES);
         gameLocal.Printf("   Allocated: %d bytes\n", memallocated);
         gameLocal.Printf(" Thread size: %d bytes\n\n", idThread.BYTES);
-    }
-
-    public idProgram() {
-        FreeData();
     }
     // ~idProgram();
 
@@ -227,17 +209,17 @@ public final class idProgram {
 
         class statementBlock_t {
 
-            int/*unsigned short*/ op;
             int a;
             int b;
             int c;
-            int lineNumber;
             int file;
+            int lineNumber;
+            int/*unsigned short*/ op;
 
             int[] toArray() {
                 return new int[]{op, a, b, c, lineNumber, file};
             }
-        };
+        }
 
         statementBlock_t[] statementList = new statementBlock_t[statements.Num()];
         int[] statementIntArray = new int[statements.Num() * 6];
@@ -333,7 +315,7 @@ public final class idProgram {
         // reset the variables to their default values
         numVariables = variableDefaults.Num();
         for (i = 0; i < numVariables; i++) {
-            variables[ i] = variableDefaults.oGet(i);
+            variables[i] = variableDefaults.oGet(i);
         }
     }
 
@@ -364,9 +346,9 @@ public final class idProgram {
                 gameLocal.Printf("%s\n", err.error);
                 return false;
             } else {
-                gameLocal.Error("%s\n", err.error);
+                Game_local.idGameLocal.Error("%s\n", err.error);
             }
-        };
+        }
 
         if (!console) {
             CompileStats();
@@ -385,7 +367,7 @@ public final class idProgram {
         }
 
         if (!result) {
-            gameLocal.Error("Compile failed.");
+            Game_local.idGameLocal.Error("Compile failed.");
         }
 
         return FindFunction(functionName);
@@ -396,7 +378,7 @@ public final class idProgram {
         boolean result;
 
         if (fileSystem.ReadFile(filename, src, null) < 0) {
-            gameLocal.Error("Couldn't load %s\n", filename);
+            Game_local.idGameLocal.Error("Couldn't load %s\n", filename);
         }
 
         result = CompileText(filename, new String(src[0].array()), false);
@@ -408,7 +390,7 @@ public final class idProgram {
         }
 
         if (!result) {
-            gameLocal.Error("Compile failed in file %s.", filename);
+            Game_local.idGameLocal.Error("Compile failed in file %s.", filename);
         }
     }
 
@@ -445,7 +427,7 @@ public final class idProgram {
             // define the sys object
             sysDef = AllocDef(type_void, "sys", def_namespace, true);
         } catch (idCompileError err) {
-            gameLocal.Error("%s", err.error);
+            Game_local.idGameLocal.Error("%s", err.error);
         }
     }
 
@@ -478,7 +460,7 @@ public final class idProgram {
         statement_s statement;
 
         statement = statements.oGet(instructionPointer);
-        op = idCompiler.opcodes[ statement.op];
+        op = idCompiler.opcodes[statement.op];
         file.Printf("%20s(%d):\t%6d: %15s\t", fileList.oGet(statement.file), statement.linenumber, instructionPointer, op.opname);
 
         if (statement.a != null) {
@@ -902,7 +884,7 @@ public final class idProgram {
      Returns >0 if function found.
      ================
      */
-    public function_t FindFunction(final String name) {				// returns NULL if function not found
+    public function_t FindFunction(final String name) {                // returns NULL if function not found
         int start;
         int pos;
         idVarDef namespaceDef;
@@ -960,7 +942,7 @@ public final class idProgram {
      Returns >0 if function found.
      ================
      */
-    public function_t FindFunction(final String name, final idTypeDef type) {	// returns NULL if function not found
+    public function_t FindFunction(final String name, final idTypeDef type) {    // returns NULL if function not found
         idVarDef tdef;
         idVarDef def;
 
@@ -1076,4 +1058,4 @@ public final class idProgram {
     public int NumFilenames() {
         return fileList.Num();
     }
-};
+}

@@ -1,9 +1,5 @@
 package neo.idlib.math;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.stream.Stream;
-
 import neo.TempDump;
 import neo.TempDump.SERiAL;
 import neo.idlib.Text.Str.idStr;
@@ -17,6 +13,10 @@ import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Rotation.idRotation;
 import org.lwjgl.BufferUtils;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
@@ -24,15 +24,15 @@ import static neo.idlib.math.Simd.SIMDProcessor;
  */
 public class Vector {
 
-    private static final idVec2 vec2_origin   = new idVec2(0.0f, 0.0f);
-    private static final idVec3 vec3_origin   = new idVec3(0.0f, 0.0f, 0.0f);
-    private static final idVec3 vec3_zero     = vec3_origin;
-    private static final idVec4 vec4_origin   = new idVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    private static final idVec4 vec4_zero     = vec4_origin;
-    private static final idVec5 vec5_origin   = new idVec5(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    private static final idVec6 vec6_origin   = new idVec6(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    private static final idVec6 vec6_zero     = vec6_origin;
+    private static final idVec2 vec2_origin = new idVec2(0.0f, 0.0f);
+    private static final idVec3 vec3_origin = new idVec3(0.0f, 0.0f, 0.0f);
+    private static final idVec3 vec3_zero = vec3_origin;
+    private static final idVec4 vec4_origin = new idVec4(0.0f, 0.0f, 0.0f, 0.0f);
+    private static final idVec4 vec4_zero = vec4_origin;
+    private static final idVec5 vec5_origin = new idVec5(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     private static final idVec6 vec6_infinity = new idVec6(idMath.INFINITY, idMath.INFINITY, idMath.INFINITY, idMath.INFINITY, idMath.INFINITY, idMath.INFINITY);
+    private static final idVec6 vec6_origin = new idVec6(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    private static final idVec6 vec6_zero = vec6_origin;
 
     @Deprecated
     public static float RAD2DEG(double a) {
@@ -79,8 +79,113 @@ public class Vector {
         return new idVec6(vec6_infinity.p);
     }
 
+    /*
+     ===============================================================================
+
+     Old 3D vector macros, should no longer be used.
+
+     ===============================================================================
+     */
+    public static double DotProduct(double[] a, double[] b) {
+        return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+    }
+
+    public static float DotProduct(float[] a, float[] b) {
+        return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+    }
+
+    public static float DotProduct(idVec3 a, idVec3 b) {
+        return (a.oGet(0) * b.oGet(0)
+                + a.oGet(1) * b.oGet(1)
+                + a.oGet(2) * b.oGet(2));
+    }
+
+    public static float DotProduct(idVec3 a, idVec4 b) {
+        return DotProduct(a, b.ToVec3());
+    }
+
+    public static float DotProduct(idVec3 a, idVec5 b) {
+        return DotProduct(a, b.ToVec3());
+    }
+
+    public static float DotProduct(idPlane a, idPlane b) {
+        return (a.oGet(0) * b.oGet(0)
+                + a.oGet(1) * b.oGet(1)
+                + a.oGet(2) * b.oGet(2));
+    }
+
+    public static double[] VectorSubtract(double[] a, double[] b, double[] c) {
+        c[0] = a[0] - b[0];
+        c[1] = a[1] - b[1];
+        c[2] = a[2] - b[2];
+        return c;
+    }
+
+    public static float[] VectorSubtract(float[] a, float[] b, float[] c) {
+        c[0] = a[0] - b[0];
+        c[1] = a[1] - b[1];
+        c[2] = a[2] - b[2];
+        return c;
+    }
+
+    public static float[] VectorSubtract(final idVec3 a, final idVec3 b, float[] c) {
+        c[0] = a.oGet(0) - b.oGet(0);
+        c[1] = a.oGet(1) - b.oGet(1);
+        c[2] = a.oGet(2) - b.oGet(2);
+        return c;
+    }
+
+    public static idVec3 VectorSubtract(final idVec3 a, final idVec3 b, idVec3 c) {
+        c.oSet(0, a.oGet(0) - b.oGet(0));
+        c.oSet(1, a.oGet(1) - b.oGet(1));
+        c.oSet(2, a.oGet(2) - b.oGet(2));
+        return c;
+    }
+
+    static void VectorAdd(double[] a, double[] b, Double[] c) {
+        c[0] = a[0] + b[0];
+        c[1] = a[1] + b[1];
+        c[2] = a[2] + b[2];
+    }
+
+    static void VectorScale(double[] v, double s, Double[] o) {
+        o[0] = v[0] * s;
+        o[1] = v[1] * s;
+        o[2] = v[2] * s;
+    }
+
+    public static void VectorMA(double[] v, double s, double[] b, Double[] o) {
+        o[0] = v[0] + b[0] * s;
+        o[1] = v[1] + b[1] * s;
+        o[2] = v[2] + b[2] * s;
+    }
+
+    public static void VectorMA(final idVec3 v, final float s, final idVec3 b, idVec3 o) {
+        o.oSet(0, v.oGet(0) + b.oGet(0) * s);
+        o.oSet(1, v.oGet(1) + b.oGet(1) * s);
+        o.oSet(2, v.oGet(2) + b.oGet(2) * s);
+    }
+
+    static void VectorCopy(double[] a, Double[] b) {
+        b[0] = a[0];
+        b[1] = a[1];
+        b[2] = a[2];
+    }
+
+    public static void VectorCopy(idVec3 a, idVec3 b) {
+        b.oSet(a);
+    }
+
+    public static void VectorCopy(idVec3 a, idVec5 b) {
+        b.oSet(a);
+    }
+
+    public static void VectorCopy(idVec5 a, idVec3 b) {
+        b.oSet(a.ToVec3());
+    }
+
     public interface idVec<type extends Vector.idVec> {
-        //reflection was too slow. 
+        //reflection was too slow.
         //never thought I would say this, but thank God for type erasure.
 
         default float oGet(final int index) {
@@ -136,7 +241,7 @@ public class Vector {
     //===============================================================
     public static class idVec2 implements idVec<idVec2>, SERiAL {
 
-        public static final transient int SIZE  = 2 * Float.SIZE;
+        public static final transient int SIZE = 2 * Float.SIZE;
         public static final transient int BYTES = SIZE / Byte.SIZE;
 
         public float x;
@@ -153,6 +258,13 @@ public class Vector {
         public idVec2(final idVec2 v) {
             this.x = v.x;
             this.y = v.y;
+        }
+
+        public static idVec2[] generateArray(final int length) {
+            return Stream.
+                    generate(idVec2::new).
+                    limit(length).
+                    toArray(idVec2[]::new);
         }
 
         public void Set(final float x, final float y) {
@@ -174,6 +286,7 @@ public class Vector {
                 return x = value;
             }
         }
+//public	float &			operator[]( int index );
 
         public float oPluSet(final int index, final float value) {
             if (index == 1) {
@@ -182,7 +295,7 @@ public class Vector {
                 return x += value;
             }
         }
-//public	float &			operator[]( int index );
+//public	idVec2			operator-() const;
 
         @Override
         public float oGet(final int index) {//TODO:rename you lazy sod
@@ -191,20 +304,19 @@ public class Vector {
             }
             return x;
         }
-//public	idVec2			operator-() const;
 
         //public	float			operator*( const idVec2 &a ) const;
         @Override
         public float oMultiply(final idVec2 a) {
             return this.x * a.x + this.y * a.y;
         }
+//public	idVec2			operator/( const float a ) const;
 
         //public	idVec2			operator*( const float a ) const;
         @Override
         public idVec2 oMultiply(final float a) {
             return new idVec2(this.x * a, this.y * a);
         }
-//public	idVec2			operator/( const float a ) const;
 
         @Override
         public idVec2 oDivide(final float a) {
@@ -231,6 +343,9 @@ public class Vector {
             this.y += a.y;
             return this;
         }
+//public	idVec2 &		operator/=( const idVec2 &a );
+//public	idVec2 &		operator/=( const float a );
+//public	idVec2 &		operator*=( const float a );
 
         //public	idVec2 &		operator-=( const idVec2 &a );
         public idVec2 oMinSet(final idVec2 a) {
@@ -238,9 +353,6 @@ public class Vector {
             this.y -= a.y;
             return this;
         }
-//public	idVec2 &		operator/=( const idVec2 &a );
-//public	idVec2 &		operator/=( const float a );
-//public	idVec2 &		operator*=( const float a );
 
         public idVec2 oMulSet(final float a) {
             this.x *= a;
@@ -259,23 +371,19 @@ public class Vector {
         public boolean Compare(final idVec2 a) {// exact compare, no epsilon
             return ((x == a.x) && (y == a.y));
         }
+//public	bool			operator==(	const idVec2 &a ) const;						// exact compare, no epsilon
+//public	bool			operator!=(	const idVec2 &a ) const;						// exact compare, no epsilon
 
         public boolean Compare(final idVec2 a, final float epsilon) {// compare with epsilon
             if (idMath.Fabs(x - a.x) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(y - a.y) > epsilon) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(y - a.y) > epsilon);
         }
-//public	bool			operator==(	const idVec2 &a ) const;						// exact compare, no epsilon
-//public	bool			operator!=(	const idVec2 &a ) const;						// exact compare, no epsilon
 
         public float Length() {
-            return (float) idMath.Sqrt(x * x + y * y);
+            return idMath.Sqrt(x * x + y * y);
         }
 
         public float LengthFast() {
@@ -355,11 +463,11 @@ public class Vector {
         public int GetDimension() {
             return 2;
         }
+//public	float *			ToFloatPtr( void );
 
         public float[] ToFloatPtr() {
             return new float[]{x, y};
         }
-//public	float *			ToFloatPtr( void );
 
         public String ToString() {
             return ToString(2);
@@ -405,13 +513,6 @@ public class Vector {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-
-        public static idVec2[] generateArray(final int length) {
-            return Stream.
-                    generate(idVec2::new).
-                    limit(length).
-                    toArray(idVec2[]::new);
-        }
     }
 
     //===============================================================
@@ -421,9 +522,17 @@ public class Vector {
     //===============================================================
     public static class idVec3 implements idVec<idVec3>, SERiAL {
 
-        public static final transient int SIZE  = 3 * Float.SIZE;
+        public static final transient int SIZE = 3 * Float.SIZE;
         public static final transient int BYTES = SIZE / Byte.SIZE;
+        /*
+         =============
+         SLerp
 
+         Spherical linear interpolation from v1 to v2.
+         Vectors are expected to be normalized.
+         =============
+         */
+        private static final double LERP_DELTA = 1e-6;
         public float x;
         public float y;
         public float z;
@@ -451,6 +560,28 @@ public class Vector {
 
         public idVec3(final float[] xyz) {
             this(xyz, 0);
+        }
+
+        //public	friend idVec3	operator*( final  float a, final  idVec3 b );
+        public static idVec3 oMultiply(final float a, final idVec3 b) {
+            return new idVec3(b.x * a, b.y * a, b.z * a);
+        }
+
+        public static idVec3[] generateArray(final int length) {
+            return Stream.
+                    generate(idVec3::new).
+                    limit(length).
+                    toArray(idVec3[]::new);
+        }
+
+        public static ByteBuffer toByteBuffer(idVec3[] vecs) {
+            ByteBuffer data = BufferUtils.createByteBuffer(idVec3.BYTES * vecs.length);
+
+            for (idVec3 vec : vecs) {
+                data.put(vec.Write().rewind());
+            }
+
+            return data.flip();
         }
 
         public void Set(final float x, final float y, final float z) {
@@ -569,15 +700,12 @@ public class Vector {
             this.oSet(idMat3.oMulSet(this, mat));
             return this;
         }
+//public	boolean			operator==(	final  idVec3 &a ) final ;						// exact compare, no epsilon
+//public	boolean			operator!=(	final  idVec3 &a ) final ;						// exact compare, no epsilon
 
         public idVec3 oMulSet(final idRotation rotation) {
             this.oSet(rotation.oMultiply(this));
             return this;
-        }
-
-        //public	friend idVec3	operator*( final  float a, final  idVec3 b );
-        public static idVec3 oMultiply(final float a, final idVec3 b) {
-            return new idVec3(b.x * a, b.y * a, b.z * a);
         }
 
         public boolean Compare(final idVec3 a) {// exact compare, no epsilon
@@ -593,14 +721,8 @@ public class Vector {
                 return false;
             }
 
-            if (idMath.Fabs(z - a.z) > epsilon) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(z - a.z) > epsilon);
         }
-//public	boolean			operator==(	final  idVec3 &a ) final ;						// exact compare, no epsilon
-//public	boolean			operator!=(	final  idVec3 &a ) final ;						// exact compare, no epsilon
 
         //private idVec3  multiply(float a){
 //    return new idVec3( this.x * a, this.y * a, this.z * a );
@@ -830,7 +952,7 @@ public class Vector {
                     pitch = 270.0f;
                 }
             } else {
-                forward = (float) idMath.Sqrt(x * x + y * y);
+                forward = idMath.Sqrt(x * x + y * y);
                 pitch = RAD2DEG(Math.atan2(z, forward));
                 if (pitch < 0.0f) {
                     pitch += 360.0f;
@@ -867,6 +989,7 @@ public class Vector {
 
             return new idAngles(-pitch, yaw, 0.0f);
         }
+//public	idVec2 &		ToVec2( void );
 
         public idPolar3 ToPolar() {
             float forward;
@@ -894,6 +1017,7 @@ public class Vector {
             }
             return new idPolar3(idMath.Sqrt(x * x + y * y + z * z), yaw, -pitch);
         }
+//public	float *			ToFloatPtr( void );
 
         // vector should be normalized
         public idMat3 ToMat3() {
@@ -924,12 +1048,10 @@ public class Vector {
 //	return *reinterpret_cast<const idVec2 *>(this);
             return new idVec2(x, y);
         }
-//public	idVec2 &		ToVec2( void );
 
         public float[] ToFloatPtr() {
             return new float[]{x, y, z};
         }
-//public	float *			ToFloatPtr( void );
 
         public final String ToString() {
             return ToString(2);
@@ -989,6 +1111,13 @@ public class Vector {
         public void ProjectOntoPlane(final idVec3 normal) {
             ProjectOntoPlane(normal, 1.0f);
         }
+        /*
+         =============
+         ProjectSelfOntoSphere
+
+         Projects the z component onto a sphere.
+         =============
+         */
 
         public void ProjectOntoPlane(final idVec3 normal, final float overBounce) {
             float backoff;
@@ -1025,13 +1154,6 @@ public class Vector {
             this.oMinSet(cross);//(*this) -= cross;
             return true;
         }
-        /*
-         =============
-         ProjectSelfOntoSphere
-
-         Projects the z component onto a sphere.
-         =============
-         */
 
         public void ProjectSelfOntoSphere(final float radius) {
             float rsqr = radius * radius;
@@ -1059,16 +1181,6 @@ public class Vector {
                 this.oSet((v2.oMinus(v1)).oMultiply(l).oPlus(v1));//(*this) = v1 + l * ( v2 - v1 );
             }
         }
-
-        /*
-         =============
-         SLerp
-
-         Spherical linear interpolation from v1 to v2.
-         Vectors are expected to be normalized.
-         =============
-         */
-        private static final double LERP_DELTA = 1e-6;
 
         public void SLerp(final idVec3 v1, final idVec3 v2, final float t) {
             float omega, cosom, sinom, scale0, scale1;
@@ -1192,13 +1304,6 @@ public class Vector {
             return (this.x == other.x) && (this.y == other.y) && (this.z == other.z);
         }
 
-        public static idVec3[] generateArray(final int length) {
-            return Stream.
-                    generate(idVec3::new).
-                    limit(length).
-                    toArray(idVec3[]::new);
-        }
-
         public void ToVec2_oPluSet(idVec2 v) {
             this.x += v.x;
             this.y += v.y;
@@ -1225,16 +1330,6 @@ public class Vector {
             v.NormalizeFast();
             this.oSet(v);
         }
-
-        public static ByteBuffer toByteBuffer(idVec3[] vecs) {
-            ByteBuffer data = BufferUtils.createByteBuffer(idVec3.BYTES * vecs.length);
-
-            for (idVec3 vec : vecs) {
-                data.put((ByteBuffer) vec.Write().rewind());
-            }
-
-            return (ByteBuffer) data.flip();
-        }
     }
 
     //===============================================================
@@ -1244,16 +1339,14 @@ public class Vector {
     //===============================================================
     public static class idVec4 implements idVec<idVec4>, SERiAL {
 
-        public static final transient int SIZE  = 4 * Float.SIZE;
+        public static final transient int SIZE = 4 * Float.SIZE;
         public static final transient int BYTES = SIZE / Byte.SIZE;
-
+        private static int DBG_counter = 0;
+        private final int DBG_count = DBG_counter++;
+        public float w;
         public float x;
         public float y;
         public float z;
-        public float w;
-
-        private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
 
         public idVec4() {
         }
@@ -1270,6 +1363,23 @@ public class Vector {
             this.y = y;
             this.z = z;
             this.w = w;
+        }
+
+        public static idVec4[] generateArray(final int length) {
+            return Stream.
+                    generate(idVec4::new).
+                    limit(length).
+                    toArray(idVec4[]::new);
+        }
+
+        public static ByteBuffer toByteBuffer(idVec4[] vecs) {
+            ByteBuffer data = BufferUtils.createByteBuffer(idVec4.BYTES * vecs.length);
+
+            for (idVec4 vec : vecs) {
+                data.put(vec.Write().rewind());
+            }
+
+            return data.flip();
         }
 
         public void Set(final float x, final float y, final float z, final float w) {
@@ -1291,6 +1401,7 @@ public class Vector {
         public float oMultiply(final idVec4 a) {
             return x * a.x + y * a.y + z * a.z + w * a.w;
         }
+//public	idVec4			operator/( final  float a ) final ;
 
         @Override
         public idVec4 oMultiply(final float a) {
@@ -1300,7 +1411,6 @@ public class Vector {
         public idVec4 oMultiply(final Float a) {//for our reflection method
             return oMultiply(a.floatValue());
         }
-//public	idVec4			operator/( final  float a ) final ;
 
         @Override
         public idVec4 oPlus(final idVec4 a) {
@@ -1315,9 +1425,10 @@ public class Vector {
         public idVec4 oNegative() {
             return new idVec4(-this.x, -this.y, -this.z, -this.w);
         }
+//public	idVec4 &		operator+=( final  idVec4 &a );
 
         //public	idVec4			operator-( final  idVec4 &a ) final ;
-        public void oMinSet(final int i, final float value) {//TODO:rename you lazy ass          
+        public void oMinSet(final int i, final float value) {//TODO:rename you lazy ass
             switch (i) {
                 default:
                     x -= value;
@@ -1334,7 +1445,7 @@ public class Vector {
             }
         }
 
-        public void oMulSet(final int i, final float value) {//TODO:rename you lazy ass          
+        public void oMulSet(final int i, final float value) {//TODO:rename you lazy ass
             switch (i) {
                 default:
                     x *= value;
@@ -1350,7 +1461,6 @@ public class Vector {
                     break;
             }
         }
-//public	idVec4 &		operator+=( final  idVec4 &a );
 
         @Override
         public idVec4 oPluSet(final idVec4 a) {
@@ -1360,6 +1470,8 @@ public class Vector {
             this.w += a.w;
             return this;
         }
+//public	bool			operator==(	final  idVec4 &a ) final ;						// exact compare, no epsilon
+//public	bool			operator!=(	final  idVec4 &a ) final ;						// exact compare, no epsilon
 
         //public	idVec4 &		operator-=( final  idVec4 &a );
 //public	idVec4 &		operator/=( final  idVec4 &a );
@@ -1384,14 +1496,8 @@ public class Vector {
                 return false;
             }
 
-            if (idMath.Fabs(w - a.w) > epsilon) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(w - a.w) > epsilon);
         }
-//public	bool			operator==(	final  idVec4 &a ) final ;						// exact compare, no epsilon
-//public	bool			operator!=(	final  idVec4 &a ) final ;						// exact compare, no epsilon
 
         public float Length() {
             return idMath.Sqrt(x * x + y * y + z * z + w * w);
@@ -1424,30 +1530,30 @@ public class Vector {
             w *= invLength;
             return invLength * sqrLength;
         }
+//public	idVec2 &		ToVec2( void );
 
         @Override
         public final int GetDimension() {
             return 4;
         }
+//public	idVec3 &		ToVec3( void );
 
         @Deprecated
         public final idVec2 ToVec2() {
 //	return *reinterpret_cast<const idVec2 *>(this);
             return new idVec2(x, y);
         }
-//public	idVec2 &		ToVec2( void );
+//public	float *			ToFloatPtr( void );
 
         @Deprecated
         public final idVec3 ToVec3() {
 //	return *reinterpret_cast<const idVec3 *>(this);
             return new idVec3(x, y, z);
         }
-//public	idVec3 &		ToVec3( void );
 
         public final float[] ToFloatPtr() {
             return new float[]{x, y, z, w};//TODO:put shit in array si we can referef it
         }
-//public	float *			ToFloatPtr( void );
 
         public final String ToString() {
             return ToString(2);
@@ -1508,7 +1614,7 @@ public class Vector {
         }
 
         @Override
-        public float oGet(final int i) {//TODO:rename you lazy ass          
+        public float oGet(final int i) {//TODO:rename you lazy ass
             switch (i) {
                 default:
                     return x;
@@ -1522,7 +1628,7 @@ public class Vector {
         }
 
         @Override
-        public float oSet(final int i, final float value) {//TODO:rename you lazy ass          
+        public float oSet(final int i, final float value) {//TODO:rename you lazy ass
             switch (i) {
                 default:
                     return x = value;
@@ -1574,23 +1680,6 @@ public class Vector {
         public idVec4 oDivide(float a) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-
-        public static idVec4[] generateArray(final int length) {
-            return Stream.
-                    generate(idVec4::new).
-                    limit(length).
-                    toArray(idVec4[]::new);
-        }
-
-        public static ByteBuffer toByteBuffer(idVec4[] vecs) {
-            ByteBuffer data = BufferUtils.createByteBuffer(idVec4.BYTES * vecs.length);
-
-            for (idVec4 vec : vecs) {
-                data.put((ByteBuffer) vec.Write().rewind());
-            }
-
-            return (ByteBuffer) data.flip();
-        }
     }
 
     //===============================================================
@@ -1600,14 +1689,13 @@ public class Vector {
     //===============================================================
     public static class idVec5 implements idVec<idVec5>, SERiAL {
 
-        public static final transient int SIZE  = 5 * Float.SIZE;
+        public static final transient int SIZE = 5 * Float.SIZE;
         public static final transient int BYTES = SIZE / Byte.SIZE;
-
+        public float s;
+        public float t;
         public float x;
         public float y;
         public float z;
-        public float s;
-        public float t;
 
         public idVec5() {
         }
@@ -1645,9 +1733,16 @@ public class Vector {
             this.t = a.t;
         }
 
+        public static idVec5[] generateArray(final int length) {
+            return Stream.
+                    generate(idVec5::new).
+                    limit(length).
+                    toArray(idVec5[]::new);
+        }
+
         //public	float			operator[]( int index ) final ;
         @Override
-        public float oGet(final int i) {//TODO:rename you lazy sod          
+        public float oGet(final int i) {//TODO:rename you lazy sod
             switch (i) {
                 default:
                     return x;
@@ -1687,6 +1782,8 @@ public class Vector {
             this.t = a.t;
             return this;
         }
+//public	float &			operator[]( int index );
+//public	idVec5 &		operator=( final  idVec3 &a );
 
         public idVec5 oSet(final idVec3 a) {
             this.x = a.x;
@@ -1694,8 +1791,6 @@ public class Vector {
             this.z = a.z;
             return this;
         }
-//public	float &			operator[]( int index );
-//public	idVec5 &		operator=( final  idVec3 &a );
 
         @Override
         public final int GetDimension() {
@@ -1706,12 +1801,12 @@ public class Vector {
 //	return *reinterpret_cast<const idVec3 *>(this);
             return new idVec3(x, y, z);
         }
+//public	float *			ToFloatPtr( void );
 
         //public	idVec3 &		ToVec3( void );
         public final float[] ToFloatPtr() {
             return new float[]{x, y, z};//TODO:array!?
         }
-//public	float *			ToFloatPtr( void );
 
         public final String ToString() {
             return ToString(2);
@@ -1770,13 +1865,6 @@ public class Vector {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        public static idVec5[] generateArray(final int length) {
-            return Stream.
-                    generate(idVec5::new).
-                    limit(length).
-                    toArray(idVec5[]::new);
-        }
-
         public void ToVec3_oMulSet(final idMat3 axis) {
             this.oSet(ToVec3().oMulSet(axis));
         }
@@ -1793,17 +1881,14 @@ public class Vector {
     //===============================================================
     public static class idVec6 implements idVec<idVec6>, SERiAL {
 
-        public static final transient int SIZE  = 6 * Float.SIZE;
+        public static final transient int SIZE = 6 * Float.SIZE;
         public static final transient int BYTES = SIZE / Byte.SIZE;
-
-        public float p[] = new float[6];
-
         private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
-        //
-        //
-
         private static int DBG_idVec6 = 0;
+        private final int DBG_count = DBG_counter++;
+        //
+        //
+        public float[] p = new float[6];
 
         public idVec6() {
             DBG_idVec6++;
@@ -1878,7 +1963,7 @@ public class Vector {
             return this;
         }
 //public 	idVec6 &		operator-=( final  idVec6 &a );
-// 
+//
 //public 	friend idVec6	operator*( final  float a, final  idVec6 b );
 
         public boolean Compare(final idVec6 a) {// exact compare, no epsilon
@@ -1907,11 +1992,7 @@ public class Vector {
                 return false;
             }
 
-            if (idMath.Fabs(p[5] - a.p[5]) > epsilon) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(p[5] - a.p[5]) > epsilon);
         }
 //public 	bool			operator==(	final  idVec6 &a ) final ;						// exact compare, no epsilon
 //public 	bool			operator!=(	final  idVec6 &a ) final ;						// exact compare, no epsilon
@@ -1957,7 +2038,9 @@ public class Vector {
             return 6;
         }
 
-        /** @deprecated returns readonly vector */
+        /**
+         * @deprecated returns readonly vector
+         */
         @Deprecated
         public final idVec3 SubVec3(int index) {
 //	return *reinterpret_cast<const idVec3 *>(p + index * 3);
@@ -2097,42 +2180,15 @@ public class Vector {
         // friend class idMatX;
 
         static final int VECX_MAX_TEMP = 1024;
-
-        private int     size;                    // size of the vector
-        private int     alloced;                 // if -1 p points to data set with SetData
-        public  float[] p;                       // memory the vector is stored
-
-        private static float[] temp    = new float[VECX_MAX_TEMP + 4];    // used to store intermediate results
-        private static float[] tempPtr = temp;                            // pointer to 16 byte aligned temporary memory
-        private static int     tempIndex;                                     // index into memory pool, wraps around
-        //
-        //
-
-        static int VECX_QUAD(int x) {
-            return ((x + 3) & ~3);
-        }
-
-        @Deprecated
-        void VECX_CLEAREND() {//TODO:is this function need for Java?
-            int s = size;
-////            while (s < ((s + 3) & ~3)) {
-            while (s < p.length) {
-                p[s++] = 0.0f;
-            }
-        }
-
-        @Deprecated
-        public static float[] VECX_ALLOCA(int n) {
-//    ( (float *) _alloca16( VECX_QUAD( n ) ) )
-//            float[] temp = new float[VECX_QUAD(n)];
-//            Arrays.fill(temp, -107374176);
-//
-//            return temp;
-
-            return new float[VECX_QUAD(n)];
-        }
-
+        private static final float[] temp = new float[VECX_MAX_TEMP + 4];    // used to store intermediate results
+        private static final float[] tempPtr = temp;                            // pointer to 16 byte aligned temporary memory
+        private static int tempIndex;                                     // index into memory pool, wraps around
+        public float[] p;                       // memory the vector is stored
         boolean VECX_SIMD;
+        private int alloced;                 // if -1 p points to data set with SetData
+        //
+        //
+        private int size;                    // size of the vector
 
         public idVecX() {
             size = alloced = 0;
@@ -2149,6 +2205,30 @@ public class Vector {
             size = alloced = 0;
             p = null;
             SetData(length, data);
+        }
+
+        static int VECX_QUAD(int x) {
+            return ((x + 3) & ~3);
+        }
+
+        @Deprecated
+        public static float[] VECX_ALLOCA(int n) {
+//    ( (float *) _alloca16( VECX_QUAD( n ) ) )
+//            float[] temp = new float[VECX_QUAD(n)];
+//            Arrays.fill(temp, -107374176);
+//
+//            return temp;
+
+            return new float[VECX_QUAD(n)];
+        }
+
+        @Deprecated
+        void VECX_CLEAREND() {//TODO:is this function need for Java?
+            int s = size;
+////            while (s < ((s + 3) & ~3)) {
+            while (s < p.length) {
+                p[s++] = 0.0f;
+            }
         }
 //public					~idVecX( void );
 
@@ -2479,7 +2559,9 @@ public class Vector {
             return size;
         }
 
-        /** @deprecated readonly */
+        /**
+         * @deprecated readonly
+         */
         @Deprecated
         public idVec3 SubVec3(int index) {
             assert (index >= 0 && index * 3 + 3 <= size);
@@ -2488,7 +2570,9 @@ public class Vector {
         }
 //public	idVec3 &		SubVec3( int index );
 
-        /** @deprecated readonly */
+        /**
+         * @deprecated readonly
+         */
         @Deprecated
         public idVec6 SubVec6(int index) {
             assert (index >= 0 && index * 6 + 6 <= size);
@@ -2595,110 +2679,5 @@ public class Vector {
             idMath.SinCos(theta, st, ct);
             return new idVec3(cp[0] * radius * ct[0], cp[0] * radius * st[0], radius * sp[0]);
         }
-    }
-
-    /*
-     ===============================================================================
-
-     Old 3D vector macros, should no longer be used.
-
-     ===============================================================================
-     */
-    public static double DotProduct(double[] a, double[] b) {
-        return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-    }
-
-    public static float DotProduct(float[] a, float[] b) {
-        return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-    }
-
-    public static float DotProduct(idVec3 a, idVec3 b) {
-        return (a.oGet(0) * b.oGet(0)
-                + a.oGet(1) * b.oGet(1)
-                + a.oGet(2) * b.oGet(2));
-    }
-
-    public static float DotProduct(idVec3 a, idVec4 b) {
-        return DotProduct(a, b.ToVec3());
-    }
-
-    public static float DotProduct(idVec3 a, idVec5 b) {
-        return DotProduct(a, b.ToVec3());
-    }
-
-    public static float DotProduct(idPlane a, idPlane b) {
-        return (a.oGet(0) * b.oGet(0)
-                + a.oGet(1) * b.oGet(1)
-                + a.oGet(2) * b.oGet(2));
-    }
-
-    public static double[] VectorSubtract(double[] a, double[] b, double[] c) {
-        c[0] = a[0] - b[0];
-        c[1] = a[1] - b[1];
-        c[2] = a[2] - b[2];
-        return c;
-    }
-
-    public static float[] VectorSubtract(float[] a, float[] b, float[] c) {
-        c[0] = a[0] - b[0];
-        c[1] = a[1] - b[1];
-        c[2] = a[2] - b[2];
-        return c;
-    }
-
-    public static float[] VectorSubtract(final idVec3 a, final idVec3 b, float[] c) {
-        c[0] = a.oGet(0) - b.oGet(0);
-        c[1] = a.oGet(1) - b.oGet(1);
-        c[2] = a.oGet(2) - b.oGet(2);
-        return c;
-    }
-
-    public static idVec3 VectorSubtract(final idVec3 a, final idVec3 b, idVec3 c) {
-        c.oSet(0, a.oGet(0) - b.oGet(0));
-        c.oSet(1, a.oGet(1) - b.oGet(1));
-        c.oSet(2, a.oGet(2) - b.oGet(2));
-        return c;
-    }
-
-    static void VectorAdd(double[] a, double[] b, Double[] c) {
-        c[0] = a[0] + b[0];
-        c[1] = a[1] + b[1];
-        c[2] = a[2] + b[2];
-    }
-
-    static void VectorScale(double[] v, double s, Double[] o) {
-        o[0] = v[0] * s;
-        o[1] = v[1] * s;
-        o[2] = v[2] * s;
-    }
-
-    public static void VectorMA(double[] v, double s, double[] b, Double[] o) {
-        o[0] = v[0] + b[0] * s;
-        o[1] = v[1] + b[1] * s;
-        o[2] = v[2] + b[2] * s;
-    }
-
-    public static void VectorMA(final idVec3 v, final float s, final idVec3 b, idVec3 o) {
-        o.oSet(0, v.oGet(0) + b.oGet(0) * s);
-        o.oSet(1, v.oGet(1) + b.oGet(1) * s);
-        o.oSet(2, v.oGet(2) + b.oGet(2) * s);
-    }
-
-    static void VectorCopy(double[] a, Double[] b) {
-        b[0] = a[0];
-        b[1] = a[1];
-        b[2] = a[2];
-    }
-
-    public static void VectorCopy(idVec3 a, idVec3 b) {
-        b.oSet(a);
-    }
-
-    public static void VectorCopy(idVec3 a, idVec5 b) {
-        b.oSet(a);
-    }
-
-    public static void VectorCopy(idVec5 a, idVec3 b) {
-        b.oSet(a.ToVec3());
     }
 }

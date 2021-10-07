@@ -1,26 +1,8 @@
 package neo.framework;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static neo.Game.GameSys.SysCvar.__DATE__;
-import static neo.Game.Game_local.game;
 import neo.Renderer.GuiModel;
-import static neo.Renderer.Image.globalImages;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem.SMALLCHAR_WIDTH;
-import static neo.Renderer.RenderSystem.renderSystem;
-import static neo.Sound.snd_system.soundSystem;
 import neo.Sound.sound.idSoundWorld;
-import static neo.TempDump.NOT;
-import neo.TempDump.TODO_Exception;
-import static neo.TempDump.bbtocb;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import neo.TempDump.void_callback;
+import neo.TempDump.*;
 import neo.Tools.Compilers.AAS.AASBuild.RunAASDir_f;
 import neo.Tools.Compilers.AAS.AASBuild.RunAAS_f;
 import neo.Tools.Compilers.AAS.AASBuild.RunReach_f;
@@ -28,141 +10,74 @@ import neo.Tools.Compilers.DMap.dmap.Dmap_f;
 import neo.Tools.Compilers.RenderBump.renderbump.RenderBumpFlat_f;
 import neo.Tools.Compilers.RenderBump.renderbump.RenderBump_f;
 import neo.Tools.Compilers.RoqVQ.Roq.RoQFileEncode_f;
-import static neo.Tools.edit_public.AFEditorInit;
-import static neo.Tools.edit_public.DeclBrowserInit;
-import static neo.Tools.edit_public.GUIEditorInit;
-import static neo.Tools.edit_public.LightEditorInit;
-import static neo.Tools.edit_public.MaterialEditorInit;
-import static neo.Tools.edit_public.PDAEditorInit;
-import static neo.Tools.edit_public.ParticleEditorInit;
-import static neo.Tools.edit_public.RadiantInit;
-import static neo.Tools.edit_public.ScriptEditorInit;
-import static neo.Tools.edit_public.SoundEditorInit;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import static neo.framework.BuildDefines.ID_ALLOW_TOOLS;
-import static neo.framework.BuildDefines.ID_DEDICATED;
-import static neo.framework.BuildDefines.ID_DEMO_BUILD;
-import static neo.framework.BuildDefines.ID_ENFORCE_KEY;
-import static neo.framework.BuildDefines.MACOS_X;
-import static neo.framework.BuildDefines._DEBUG;
-import static neo.framework.BuildDefines._WIN32;
-import static neo.framework.BuildDefines.__linux__;
-import static neo.framework.BuildVersion.BUILD_NUMBER;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_FLOAT;
-import static neo.framework.CVarSystem.CVAR_INIT;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_NOCHEAT;
-import static neo.framework.CVarSystem.CVAR_ROM;
-import static neo.framework.CVarSystem.CVAR_SERVERINFO;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_CHEAT;
-import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
-import static neo.framework.CmdSystem.CMD_FL_TOOL;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
-import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import neo.framework.CmdSystem.idCmdSystem;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.*;
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Integer;
-import neo.framework.Common.Com_Crash_f;
-import neo.framework.Common.Com_EditAFs_f;
-import neo.framework.Common.Com_EditDecls_f;
-import neo.framework.Common.Com_EditGUIs_f;
-import neo.framework.Common.Com_EditLights_f;
-import neo.framework.Common.Com_EditPDAs_f;
-import neo.framework.Common.Com_EditParticles_f;
-import neo.framework.Common.Com_EditScripts_f;
-import neo.framework.Common.Com_EditSounds_f;
-import neo.framework.Common.Com_Editor_f;
-import neo.framework.Common.Com_Error_f;
-import neo.framework.Common.Com_ExecMachineSpec_f;
-import neo.framework.Common.Com_FinishBuild_f;
-import neo.framework.Common.Com_Freeze_f;
-import neo.framework.Common.Com_LocalizeGuiParmsTest_f;
-import neo.framework.Common.Com_LocalizeGuis_f;
-import neo.framework.Common.Com_LocalizeMapsTest_f;
-import neo.framework.Common.Com_LocalizeMaps_f;
-import neo.framework.Common.Com_MaterialEditor_f;
-import neo.framework.Common.Com_Quit_f;
-import neo.framework.Common.Com_ReloadEngine_f;
-import neo.framework.Common.Com_ScriptDebugger_f;
-import neo.framework.Common.Com_SetMachineSpec_f;
-import neo.framework.Common.Com_StartBuild_f;
-import neo.framework.Common.Com_WriteConfig_f;
-import neo.framework.Common.PrintMemInfo_f;
-import static neo.framework.Common.errorParm_t.ERP_DISCONNECT;
-import static neo.framework.Common.errorParm_t.ERP_DROP;
-import static neo.framework.Common.errorParm_t.ERP_FATAL;
 import neo.framework.Compressor.idCompressor;
-import static neo.framework.Console.console;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.EventLoop.eventLoop;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.FileSystem_h.idFileList;
 import neo.framework.File_h.idFile;
 import neo.framework.File_h.idFile_Memory;
 import neo.framework.KeyInput.idKeyInput;
-import static neo.framework.Licensee.CONFIG_FILE;
-import static neo.framework.Licensee.CONFIG_SPEC;
-import static neo.framework.Licensee.ENGINE_VERSION;
-import static neo.framework.Licensee.GAME_NAME;
-import static neo.framework.Session.session;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
-import static neo.framework.UsercmdGen.usercmdGen;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.LangDict.idLangDict;
 import neo.idlib.LangDict.idLangKeyValue;
-import static neo.idlib.Lib.BIT;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Base64.idBase64;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import neo.idlib.Text.Lexer.idLexer;
-import static neo.idlib.Text.Str.S_COLOR_RED;
-import static neo.idlib.Text.Str.S_COLOR_YELLOW;
-import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_STRING;
+import neo.idlib.Text.Lexer.*;
+import neo.idlib.Text.Str.*;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.math.Simd.idSIMD;
 import neo.idlib.math.Vector.idVec4;
 import neo.sys.sys_public;
-import static neo.sys.sys_public.BUILD_STRING;
-import static neo.sys.sys_public.CPUID_AMD;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static neo.Game.GameSys.SysCvar.__DATE__;
+import static neo.Game.Game_local.game;
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.RenderSystem.*;
+import static neo.Sound.snd_system.soundSystem;
+import static neo.TempDump.*;
+import static neo.Tools.edit_public.*;
+import static neo.framework.BuildDefines.*;
+import static neo.framework.BuildVersion.BUILD_NUMBER;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.*;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.Common.errorParm_t.*;
+import static neo.framework.Console.console;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.EventLoop.eventLoop;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Licensee.*;
+import static neo.framework.Session.session;
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.framework.UsercmdGen.usercmdGen;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.*;
+import static neo.idlib.Text.Token.TT_STRING;
 import static neo.sys.sys_public.Sys_ListFiles;
+import static neo.sys.sys_public.*;
 import static neo.sys.win_cpu.Sys_ClockTicksPerSecond;
 import static neo.sys.win_input.Sys_GrabMouseCursor;
 import static neo.sys.win_input.Sys_InitScanTable;
-import static neo.sys.win_main.DEBUG;
-import static neo.sys.win_main.Sys_AlreadyRunning;
-import static neo.sys.win_main.Sys_DoPreferences;
-import static neo.sys.win_main.Sys_EnterCriticalSection;
-import static neo.sys.win_main.Sys_Error;
-import static neo.sys.win_main.Sys_GenerateEvents;
-import static neo.sys.win_main.Sys_GetProcessorId;
-import static neo.sys.win_main.Sys_Init;
-import static neo.sys.win_main.Sys_LeaveCriticalSection;
-import static neo.sys.win_main.Sys_Printf;
-import static neo.sys.win_main.Sys_Quit;
-import static neo.sys.win_main.Sys_SetClipboardData;
-import static neo.sys.win_main.Sys_SetFatalError;
+import static neo.sys.win_main.*;
 import static neo.sys.win_net.Sys_InitNetworking;
-import static neo.sys.win_shared.Sys_GetSystemRam;
-import static neo.sys.win_shared.Sys_GetVideoRam;
-import static neo.sys.win_shared.Sys_Milliseconds;
+import static neo.sys.win_shared.*;
 import static neo.sys.win_syscon.Sys_ShowConsole;
 import static neo.ui.UserInterface.uiManager;
 
@@ -171,51 +86,328 @@ import static neo.ui.UserInterface.uiManager;
  */
 public class Common {
 
-    public static final int EDITOR_NONE = 0;
-    public static final int EDITOR_RADIANT = BIT(1);
-    public static final int EDITOR_GUI = BIT(2);
-    public static final int EDITOR_DEBUGGER = BIT(3);
-    public static final int EDITOR_SCRIPT = BIT(4);
-    public static final int EDITOR_LIGHT = BIT(5);
-    public static final int EDITOR_SOUND = BIT(6);
-    public static final int EDITOR_DECL = BIT(7);
+    public static final String ASYNCSOUND_INFO = "0: mix sound inline, 1: memory mapped async mix, 2: callback mixing, 3: write async mix";
+    public static final String DMAP_DONE = "DMAPDone";
+    //
+//#ifdef _WIN32
+    public static final String DMAP_MSGID = "DMAPOutput";
+    public static final int EDITOR_AAS = BIT(11);
     public static final int EDITOR_AF = BIT(8);
+    public static final int EDITOR_DEBUGGER = BIT(3);
+    public static final int EDITOR_DECL = BIT(7);
+    public static final int EDITOR_GUI = BIT(2);
+    public static final int EDITOR_LIGHT = BIT(5);
+    public static final int EDITOR_MATERIAL = BIT(12);
+    public static final int EDITOR_NONE = 0;
     public static final int EDITOR_PARTICLE = BIT(9);
     public static final int EDITOR_PDA = BIT(10);
-    public static final int EDITOR_AAS = BIT(11);
-    public static final int EDITOR_MATERIAL = BIT(12);
-    //    
-    //    
+    public static final int EDITOR_RADIANT = BIT(1);
+    public static final int EDITOR_SCRIPT = BIT(4);
+    public static final int EDITOR_SOUND = BIT(6);
+    //
+    //
     public static final String STRTABLE_ID = "#str_";
     public static final int STRTABLE_ID_LENGTH = STRTABLE_ID.length();//5
+    public static final idCVar com_allowConsole = new idCVar("com_allowConsole", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key");
+
+    public static final idCVar com_asyncInput = new idCVar("com_asyncInput", "0", CVAR_BOOL | CVAR_SYSTEM, "sample input from the async thread");
+
+    //
+    public static final idCVar com_asyncSound = (MACOS_X ? new idCVar("com_asyncSound", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO)
+            : (__linux__ ? new idCVar("com_asyncSound", "3", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO)
+            : new idCVar("com_asyncSound", "1", CVAR_INTEGER | CVAR_SYSTEM, ASYNCSOUND_INFO, 0, 1)));
+    public static final idCVar com_developer = new idCVar("developer", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "developer mode");
+    //
+    public static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "force generic platform independent SIMD");
+
+    public static final idCVar com_logFile = new idCVar("logFile", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, new ArgCompletion_Integer(0, 2));
+    public static final idCVar com_logFileName = new idCVar("logFileName", "qconsole.log", CVAR_SYSTEM | CVAR_NOCHEAT, "name of log file, if empty, qconsole.log will be used");
+
+    public static final idCVar com_machineSpec = new idCVar("com_machineSpec", "-1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality");
+    public static final idCVar com_makingBuild = new idCVar("com_makingBuild", "0", CVAR_BOOL | CVAR_SYSTEM, "1 when making a build");
+    public static final idCVar com_memoryMarker = new idCVar("com_memoryMarker", "-1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_INIT, "used as a marker for memory stats");
+    public static final idCVar com_preciseTic = new idCVar("com_preciseTic", "1", CVAR_BOOL | CVAR_SYSTEM, "run one game tick every async thread update");
+    //
+    public static final idCVar com_product_lang_ext = new idCVar("com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files.");
+    public static final idCVar com_purgeAll = new idCVar("com_purgeAll", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_SYSTEM, "purge everything between level loads");
+    public static final idCVar com_showAsyncStats = new idCVar("com_showAsyncStats", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show async network stats");
+    public static final idCVar com_showFPS = new idCVar("com_showFPS", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second");
+    public static final idCVar com_showMemoryUsage = new idCVar("com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage");
+    public static final idCVar com_showSoundDecoders = new idCVar("com_showSoundDecoders", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show sound decoders");
+    public static final idCVar com_skipRenderer = new idCVar("com_skipRenderer", "0", CVAR_BOOL | CVAR_SYSTEM, "skip the renderer completely");
+    public static final idCVar com_speeds = new idCVar("com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings");
+    public static final idCVar com_timescale = new idCVar("timescale", "1", CVAR_SYSTEM | CVAR_FLOAT, "scales the time", 0.1f, 10.0f);
+    public static final idCVar com_timestampPrints = new idCVar("com_timestampPrints", "0", CVAR_SYSTEM, "print time with each console print, 1 = msec, 2 = sec", 0, 2, new ArgCompletion_Integer(0, 2));
+    public static final idCVar com_updateLoadSize = new idCVar("com_updateLoadSize", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "update the load size after loading a map");
+    public static final idCVar com_videoRam = new idCVar("com_videoRam", "64", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "holds the last amount of detected video ram");
+    static final String BUILD_DEBUG = _DEBUG ? "-debug" : "";
+    static final boolean ID_WRITE_VERSION = false;
+    static final int MAX_PRINT_MSG_SIZE = 4096;
+    static final int MAX_WARNING_LIST = 256;
+    static final version_s version = new version_s();
+    //
+//
+//
+    public static final idCVar com_version = new idCVar("si_version", version.string, CVAR_SYSTEM | CVAR_ROM | CVAR_SERVERINFO, "engine version");
+    public static boolean com_editorActive;     // true if an editor has focus
+    public static int com_editors;          // currently opened editor(s)
+    public static int com_frameNumber;      // variable frame number
+    public static volatile int com_frameTime;        // time for the current frame in milliseconds
+    public static long/*HWND*/ com_hwndMsg = 0;
+    public static boolean com_outputMsg = false;
+    public static volatile int com_ticNumber;        // 60 hz tics
+    public static int time_backend;         // renderSystem backend time
+    public static int time_frontend;        // renderSystem frontend time
+    public static int time_gameDraw;
+    //
+//
+    // com_speeds times
+    public static int time_gameFrame;
+    static long com_msgID = -1;
     //
     private static idCommonLocal commonLocal = new idCommonLocal();
     public static /*final*/ idCommon common = commonLocal;
-    static final boolean ID_WRITE_VERSION = false;
+
+    static void LoadMapLocalizeData(ListHash listHash) {
+        throw new TODO_Exception();
+//        String fileName = "map_localize.cfg";
+//        Object[] buffer = {null};
+//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
+//
+//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
+//            src.LoadMemory(buffer, strlen(buffer), fileName);
+//            if (src.IsLoaded()) {
+//                String classname;
+//                idToken token = new idToken();
+//
+//                while (src.ReadToken(token)) {
+//                    classname = token.toString();
+//                    src.ExpectTokenString("{");
+//
+//                    idStrList list = new idStrList();
+//                    while (src.ReadToken(token)) {
+//                        if (token.equals("}")) {
+//                            break;
+//                        }
+//                        list.Append(token);
+//                    }
+//
+//                    listHash.Set(classname, list);
+//                }
+//            }
+//            fileSystem.FreeFile(buffer);
+//        }
+    }
+
+    static void LoadGuiParmExcludeList(idStrList list) {
+        throw new TODO_Exception();
+//        String fileName = "guiparm_exclude.cfg";
+//        Object[] buffer = {null};
+//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
+//
+//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
+//            src.LoadMemory(buffer, strlen(buffer), fileName);
+//            if (src.IsLoaded()) {
+////			idStr classname;
+//                idToken token = new idToken();
+//
+//                while (src.ReadToken(token)) {
+//                    list.Append(token);
+//                }
+//            }
+//            fileSystem.FreeFile(buffer);
+//        }
+    }
+
+    static boolean TestMapVal(idStr str) {
+        //Already Localized?
+        return str.Find("#str_") == -1;
+    }
+
+    static boolean TestMapVal(String str) {
+        return str.contains("#str_");
+    }
+//#endif
+
+    static boolean TestGuiParm(final String parm, final String value, idStrList excludeList) {
+
+        idStr testVal = new idStr(value);
+
+        //Already Localized?
+        if (testVal.Find("#str_") != -1) {
+            return false;
+        }
+
+        //Numeric
+        if (testVal.IsNumeric()) {
+            return false;
+        }
+
+        //Contains ::
+        if (testVal.Find("::") != -1) {
+            return false;
+        }
+
+        //Contains /
+        if (testVal.Find("/") != -1) {
+            return false;
+        }
+
+        return excludeList.Find(testVal) == 0;
+    }
+
+    //
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+//    
+    //============================================================================
+
+    static boolean TestGuiParm(final idStr parm, final idStr value, idStrList excludeList) {
+        return TestGuiParm(parm.toString(), value.toString(), excludeList);
+    }
+
+    static void GetFileList(final String dir, final String ext, idStrList list) {
+
+        //Recurse Subdirectories
+        idStrList dirList = new idStrList();
+        Sys_ListFiles(dir, "/", dirList);
+        for (int i = 0; i < dirList.Num(); i++) {
+            if (dirList.oGet(i).equals(".") || dirList.oGet(i).equals("..")) {
+                continue;
+            }
+            String fullName = va("%s/%s", dir, dirList.oGet(i));
+            GetFileList(fullName, ext, list);
+        }
+
+        idStrList fileList = new idStrList();
+        Sys_ListFiles(dir, ext, fileList);
+        for (int i = 0; i < fileList.Num(); i++) {
+            idStr fullName = new idStr(va("%s/%s", dir, fileList.oGet(i)));
+            list.Append(fullName);
+        }
+    }
+
+    static int LocalizeMap(final String mapName, idLangDict langDict, ListHash listHash, idStrList excludeList, boolean writeFile) {
+        throw new TODO_Exception();
+//	common.Printf("Localizing Map '%s'\n", mapName);
+//
+//	int strCount = 0;
+//
+//	idMapFile map = new idMapFile();
+//	if ( map.Parse(mapName, false, false ) ) {
+//		int count = map.GetNumEntities();
+//		for ( int j = 0; j < count; j++ ) {
+//			idMapEntity ent = map.GetEntity( j );
+//			if ( ent !=null) {
+//
+//				String className = ent.epairs.GetString("classname");
+//
+//				//Hack: for info_location
+//				boolean hasLocation = false;
+//
+//				idStrList []list={null};
+//				listHash.Get(className, list);
+//				if(list[0]!=null) {
+//
+//					for(int k = 0; k < list[0].Num(); k++) {
+//
+//						String val = ent.epairs.GetString(list[0].oGet(k).toString(), "");
+//
+//						if(val.Length() && className == "info_location" && (*list[0])[k] == "location") {
+//							hasLocation = true;
+//						}
+//
+//						if(val.Length() && TestMapVal(val)) {
+//
+//							if(!hasLocation || (*list[0])[k] == "location") {
+//								//Localize it!!!
+//								strCount++;
+//								ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
+//							}
+//						}
+//					}
+//				}
+//
+//				listHash.Get("all", &list[0]);
+//				if(list[0]) {
+//					for(int k = 0; k < list[0].Num(); k++) {
+//						idStr val = ent.epairs.GetString((*list[0])[k], "");
+//						if(val.Length() && TestMapVal(val)) {
+//							//Localize it!!!
+//							strCount++;
+//							ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
+//						}
+//					}
+//				}
+//
+//				//Localize the gui_parms
+//				const idKeyValue* kv = ent.epairs.MatchPrefix("gui_parm");
+//				while( kv ) {
+//					if(TestGuiParm(kv.GetKey(), kv.GetValue(), excludeList)) {
+//						//Localize It!
+//						strCount++;
+//						ent.epairs.Set( kv.GetKey(), langDict.AddString( kv.GetValue() ) );
+//					}
+//					kv = ent.epairs.MatchPrefix( "gui_parm", kv );
+//				}
+//			}
+//		}
+//		if(writeFile && strCount > 0)  {
+//			//Before we write the map file lets make a backup of the original
+//			idStr file =  fileSystem.RelativePathToOSPath(mapName);
+//			idStr bak = file.Left(file.Length() - 4);
+//			bak.Append(".bak_loc");
+//			fileSystem.CopyFile( file, bak );
+//
+//			map.Write( mapName, ".map" );
+//		}
+//	}
+//
+//	common.Printf("Count: %d\n", strCount);
+//	return strCount;
+    }
+
+    public static void setCommon(idCommon common) {
+        Common.common = Common.commonLocal = (idCommonLocal) common;
+    }
+
+
+    enum errorParm_t {
+
+        ERP_NONE,
+        ERP_FATAL, // exit the entire game with a popup window
+        ERP_DROP, // print to console and disconnect from game
+        ERP_DISCONNECT                    // don't kill server
+    }
 
     public static class MemInfo_t {
 
-        public idStr filebase;
-//
-        public int total;
         public int assetTotals;
-//  
-        // memory manager totals
-        public int memoryManagerTotal;
-//        
+        public idStr filebase;
+        //
         // subsystem totals
         public int gameSubsystemTotal;
-        public int renderSubsystemTotal;
-//        
+        //
         // asset totals
         public int imageAssetsTotal;
+        //
+        // memory manager totals
+        public int memoryManagerTotal;
         public int modelAssetsTotal;
+        public int renderSubsystemTotal;
         public int soundAssetsTotal;
-    };
+        //
+        public int total;
+    }
 
     public static abstract class idCommon {
 
-//	public abstract						~idCommon( ) {}
+        //	public abstract						~idCommon( ) {}
         // Initialize everything.
         // if the OS allows, pass argc/argv directly (without executable name)
         // otherwise pass the command line in a single string (without executable name)
@@ -311,129 +503,60 @@ public class Common {
 
         // Directly sample a keystate.
         public abstract int KeyState(int key);
-    };
-    static final int MAX_PRINT_MSG_SIZE = 4096;
-    static final int MAX_WARNING_LIST = 256;
-
-    enum errorParm_t {
-
-        ERP_NONE,
-        ERP_FATAL, // exit the entire game with a popup window
-        ERP_DROP, // print to console and disconnect from game
-        ERP_DISCONNECT					// don't kill server
-    };
-    static final String BUILD_DEBUG = _DEBUG ? "-debug" : "";
+    }
 
     static class version_s {
 
-//        char[] string = new char[256];
+        //        char[] string = new char[256];
         final String string;
 
         version_s() {
             string = String.format("%s.%d%s %s %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_DEBUG, BUILD_STRING, __DATE__/*, __TIME__*/);
         }
-    };
-    static final version_s version = new version_s();
-//
-//    
-//    
-    public static final idCVar com_version = new idCVar("si_version", version.string, CVAR_SYSTEM | CVAR_ROM | CVAR_SERVERINFO, "engine version");
-    public static final idCVar com_skipRenderer = new idCVar("com_skipRenderer", "0", CVAR_BOOL | CVAR_SYSTEM, "skip the renderer completely");
-    public static final idCVar com_machineSpec = new idCVar("com_machineSpec", "-1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality");
-    public static final idCVar com_purgeAll = new idCVar("com_purgeAll", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_SYSTEM, "purge everything between level loads");
-    public static final idCVar com_memoryMarker = new idCVar("com_memoryMarker", "-1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_INIT, "used as a marker for memory stats");
-    public static final idCVar com_preciseTic = new idCVar("com_preciseTic", "1", CVAR_BOOL | CVAR_SYSTEM, "run one game tick every async thread update");
-    public static final idCVar com_asyncInput = new idCVar("com_asyncInput", "0", CVAR_BOOL | CVAR_SYSTEM, "sample input from the async thread");
-    public static final String ASYNCSOUND_INFO = "0: mix sound inline, 1: memory mapped async mix, 2: callback mixing, 3: write async mix";
-//
-    public static final idCVar com_asyncSound = (MACOS_X ? new idCVar("com_asyncSound", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO)
-            : (__linux__ ? new idCVar("com_asyncSound", "3", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO)
-                    : new idCVar("com_asyncSound", "1", CVAR_INTEGER | CVAR_SYSTEM, ASYNCSOUND_INFO, 0, 1)));
-//
-    public static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "force generic platform independent SIMD");
-    public static final idCVar com_developer = new idCVar("developer", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "developer mode");
-    public static final idCVar com_allowConsole = new idCVar("com_allowConsole", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key");
-    public static final idCVar com_speeds = new idCVar("com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings");
-    public static final idCVar com_showFPS = new idCVar("com_showFPS", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second");
-    public static final idCVar com_showMemoryUsage = new idCVar("com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage");
-    public static final idCVar com_showAsyncStats = new idCVar("com_showAsyncStats", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show async network stats");
-    public static final idCVar com_showSoundDecoders = new idCVar("com_showSoundDecoders", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show sound decoders");
-    public static final idCVar com_timestampPrints = new idCVar("com_timestampPrints", "0", CVAR_SYSTEM, "print time with each console print, 1 = msec, 2 = sec", 0, 2, new ArgCompletion_Integer(0, 2));
-    public static final idCVar com_timescale = new idCVar("timescale", "1", CVAR_SYSTEM | CVAR_FLOAT, "scales the time", 0.1f, 10.0f);
-    public static final idCVar com_logFile = new idCVar("logFile", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, new ArgCompletion_Integer(0, 2));
-    public static final idCVar com_logFileName = new idCVar("logFileName", "qconsole.log", CVAR_SYSTEM | CVAR_NOCHEAT, "name of log file, if empty, qconsole.log will be used");
-    public static final idCVar com_makingBuild = new idCVar("com_makingBuild", "0", CVAR_BOOL | CVAR_SYSTEM, "1 when making a build");
-    public static final idCVar com_updateLoadSize = new idCVar("com_updateLoadSize", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "update the load size after loading a map");
-    public static final idCVar com_videoRam = new idCVar("com_videoRam", "64", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "holds the last amount of detected video ram");
-//
-    public static final idCVar com_product_lang_ext = new idCVar("com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files.");
-//
-//
-    // com_speeds times
-    public static          int     time_gameFrame;
-    public static          int     time_gameDraw;
-    public static          int     time_frontend;        // renderSystem frontend time
-    public static          int     time_backend;         // renderSystem backend time
-    public static volatile int     com_frameTime;        // time for the current frame in milliseconds
-    public static          int     com_frameNumber;      // variable frame number
-    public static volatile int     com_ticNumber;        // 60 hz tics
-    public static          int     com_editors;          // currently opened editor(s)
-    public static          boolean com_editorActive;     // true if an editor has focus
-//    
-//#ifdef _WIN32
-    public static final String       DMAP_MSGID    = "DMAPOutput";
-    public static final String       DMAP_DONE     = "DMAPDone";
-    public static       long/*HWND*/ com_hwndMsg   = 0;
-    public static       boolean      com_outputMsg = false;
-           static       long         com_msgID     = -1;
-//#endif
+    }
 
     public static class idCommonLocal extends idCommon {
 
-        private boolean com_fullyInitialized;
-        private boolean com_refreshOnPrint;		// update the screen every print for dmap
-        private int com_errorEntered;                   // 0, ERP_DROP, etc
-        private boolean com_shuttingDown;
-//
-        private idFile logFile;
-//
-        private String[] errorMessage = {null};//new char[MAX_PRINT_MSG_SIZE];
-//
-        private StringBuilder rd_buffer;
-        private int rd_buffersize;
-        private void_callback<String> rd_flush/*)( const char *buffer )*/;
-        private idStr warningCaption;
-        private idStrList warningList;
-        private idStrList errorList;
-//
-        private int gameDLL;
-//
-        private idLangDict languageDict;
-//#ifdef ID_WRITE_VERSION
+        //
+        final static int MAX_CONSOLE_LINES = 32;
+        private static final int MAX_ASYNC_STATS = 1024;
+        static float DEBUG_fraction = 0;
+        static int errorCount;
+        static int lastErrorTime;
+        static boolean logFileFailed = false, recursing;
+        private static int lastTime;
+        private final asyncStats_t[] com_asyncStats;    // indexed by com_ticNumber
+        idCmdArgs[] com_consoleLines;
+        int com_numConsoleLines;
+        //#ifdef ID_WRITE_VERSION
         idCompressor config_compressor;
+        private int com_errorEntered;                   // 0, ERP_DROP, etc
+        private boolean com_fullyInitialized;
+        private boolean com_refreshOnPrint;        // update the screen every print for dmap
+        private boolean com_shuttingDown;
 //#endif
 //        private static final Lock SINGLE_ASYNC_TIC_LOCK = new ReentrantLock();//TODO:collect the locks into a single bundle.
         //
         //
+        private final idStrList errorList;
 
-        class asyncStats_t {
-
-            int milliseconds;                           // should always be incremeting by 60hz
-            int deltaMsec;				// should always be 16
-            int timeConsumed;                           // msec spent in Com_AsyncThread()
-            int clientPacketsReceived;
-            int serverPacketsReceived;
-            int mostRecentServerPacketSequence;
-        };
-        private static final int MAX_ASYNC_STATS = 1024;
-        private final asyncStats_t[] com_asyncStats;	// indexed by com_ticNumber
-        private int prevAsyncMsec;
+        //
+        private final String[] errorMessage = {null};//new char[MAX_PRINT_MSG_SIZE];
+        //
+        private final int gameDLL;
+        //
+        private final idLangDict languageDict;
         private int lastTicMsec;
         //
-        final static int MAX_CONSOLE_LINES = 32;
-        int com_numConsoleLines;
-        idCmdArgs[] com_consoleLines;
+        private idFile logFile;
+        private int prevAsyncMsec;
         //
+        private StringBuilder rd_buffer;
+        //
+        private int rd_buffersize;
+        private void_callback<String> rd_flush/*)( const char *buffer )*/;
+        private idStr warningCaption;
+        private final idStrList warningList;
 
         public idCommonLocal() {
             com_fullyInitialized = false;
@@ -637,7 +760,22 @@ public class Common {
         public boolean IsInitialized() {
             return com_fullyInitialized;
         }
-        private static int lastTime;
+        /*
+         ============================================================================
+
+         COMMAND LINE FUNCTIONS
+
+         + characters separate the commandLine string into multiple console
+         command lines.
+
+         All of these are valid:
+
+         doom +set test blah +map test
+         doom set test blah+map test
+         doom set test blah + map test
+
+         ============================================================================
+         */
 
         @Override
         public void Frame() {
@@ -700,14 +838,14 @@ public class Common {
 //                    FatalError("idCommon::Frame: the FPU stack is not empty at the end of the frame\n");
 //                }
             } catch (idException ex) {
-                return;			// an ERP_DROP was thrown
+                return;            // an ERP_DROP was thrown
             }
         }
 
         @Override
         public void GUIFrame(boolean execCmd, boolean network) throws idException {
             Sys_GenerateEvents();
-            eventLoop.RunEventLoop(execCmd);	// and execute any commands
+            eventLoop.RunEventLoop(execCmd);    // and execute any commands
             com_frameTime = com_ticNumber * USERCMD_MSEC;
             if (network) {
                 idAsyncNetwork.RunFrame();
@@ -775,23 +913,6 @@ public class Common {
             }
 //            System.out.println("<<<<<<<"+System.nanoTime());
         }
-        /*
-         ============================================================================
-
-         COMMAND LINE FUNCTIONS
-
-         + characters separate the commandLine string into multiple console
-         command lines.
-
-         All of these are valid:
-
-         doom +set test blah +map test
-         doom set test blah+map test
-         doom set test blah + map test
-
-         ============================================================================
-         */
-
 
         /*
          ==================
@@ -857,7 +978,8 @@ public class Common {
 
          Activates or Deactivates a tool
          ==================
-         */ @Override
+         */
+        @Override
         public void ActivateTool(boolean active) {
             com_editorActive = active;
             Sys_GrabMouseCursor(!active);
@@ -952,7 +1074,6 @@ public class Common {
             VPrintf(fmt, args);
 //	va_end( argptr );
         }
-        static boolean logFileFailed = false, recursing;
 
         /*
          ==================
@@ -1050,7 +1171,7 @@ public class Common {
                 }
                 if (logFile != null) {
                     logFile.WriteString(msg[0]);
-                    logFile.Flush();	// ForceFlush doesn't help a whole lot
+                    logFile.Flush();    // ForceFlush doesn't help a whole lot
                 }
             }
 
@@ -1098,7 +1219,7 @@ public class Common {
             String[] msg = {null};//new char[MAX_PRINT_MSG_SIZE];
 
             if (!cvarSystem.IsInitialized() || !com_developer.GetBool()) {
-                return;			// don't confuse non-developers with techie stuff...
+                return;            // don't confuse non-developers with techie stuff...
             }
 
 //	va_start( argptr, fmt );
@@ -1152,7 +1273,7 @@ public class Common {
             String[] msg = {null};//new char[MAX_PRINT_MSG_SIZE];
 
             if (!com_developer.GetBool()) {
-                return;			// don't confuse non-developers with techie stuff...
+                return;            // don't confuse non-developers with techie stuff...
             }
 
 //	va_start( argptr, fmt );
@@ -1193,8 +1314,6 @@ public class Common {
             warningCaption = new idStr(reason);
             warningList.Clear();
         }
-        static int lastErrorTime;
-        static int errorCount;
 
         @Override
         public void Error(final String fmt, Object... args) throws idException {
@@ -1337,8 +1456,8 @@ public class Common {
             return languageDict;
         }
 //
-//        
-//        
+//
+//
 
         /*
          ===============
@@ -1362,15 +1481,16 @@ public class Common {
             return idKeyInput.BindingFromKey(key);
         }
 //
-//        
-//        
+//
+//
 
         /*
          ===============
          ButtonState()
          Returns the state of the button
          ===============
-         */ @Override
+         */
+        @Override
         public int ButtonState(int key) {
             return usercmdGen.ButtonState(key);
         }
@@ -1498,7 +1618,7 @@ public class Common {
 
             // have to do this twice.. first one sets the correct r_mode for the renderer init
             // this time around the backend is all setup correct.. a bit fugly but do not want
-            // to mess with all the gl init at this point.. an old vid card will never qualify for 
+            // to mess with all the gl init at this point.. an old vid card will never qualify for
             if (sysDetect) {
                 SetMachineSpec();
                 Com_ExecMachineSpec_f.getInstance().run(args);
@@ -1573,7 +1693,7 @@ public class Common {
 
             idStrList langList = langFiles.GetList();
 
-            StartupVariable("sys_lang", false);	// let it be set on the command line - this is needed because this init happens very early
+            StartupVariable("sys_lang", false);    // let it be set on the command line - this is needed because this init happens very early
             idStr langName = new idStr(cvarSystem.GetCVarString("sys_lang"));
 
             //Loop through the list and filter
@@ -1756,7 +1876,7 @@ public class Common {
             renderSystem.GetCardCaps(oldCard, nv10or20);
 
             Printf("Detected\n \t%d x %.2f GHz CPU\n\t%d MB of System memory\n\t%d MB"
-                    + " of Video memory on %s\n\n", cores, ghz, sysRam, vidRam,
+                            + " of Video memory on %s\n\n", cores, ghz, sysRam, vidRam,
                     (oldCard[0]) ? "a less than optimal video architecture"
                             : "an optimal video architecture");
 
@@ -2087,7 +2207,6 @@ public class Common {
                 Sys_LeaveCriticalSection();
             }
         }
-        static float DEBUG_fraction = 0;
 
         private void LoadGameDLL() throws idException {
 //            if (__DOOM_DLL__) {
@@ -2197,18 +2316,17 @@ public class Common {
                 }
             }
         }
-    };
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-//    
-    //============================================================================
 
+        class asyncStats_t {
+
+            int clientPacketsReceived;
+            int deltaMsec;                // should always be 16
+            int milliseconds;                           // should always be incremeting by 60hz
+            int mostRecentServerPacketSequence;
+            int serverPacketsReceived;
+            int timeConsumed;                           // msec spent in Com_AsyncThread()
+        }
+    }
 
     /*
      ==================
@@ -2229,7 +2347,7 @@ public class Common {
         public void run(idCmdArgs args) {
             RadiantInit();
         }
-    };
+    }
 
     /*
      =============
@@ -2252,7 +2370,7 @@ public class Common {
                 // DebuggerClientLaunch();
             }
         }
-    };
+    }
 
     /*
      =============
@@ -2271,7 +2389,7 @@ public class Common {
         public void run(idCmdArgs args) {
             GUIEditorInit();
         }
-    };
+    }
 
     /*
      =============
@@ -2292,8 +2410,7 @@ public class Common {
             soundSystem.SetMute(true);
             MaterialEditorInit();
         }
-    };
-
+    }
 
     /*
      ============
@@ -2316,8 +2433,8 @@ public class Common {
 
             mi.filebase = new idStr(session.GetCurrentMapName());
 
-            renderSystem.PrintMemInfo(mi);			// textures and models
-            soundSystem.PrintMemInfo(mi);			// sounds
+            renderSystem.PrintMemInfo(mi);            // textures and models
+            soundSystem.PrintMemInfo(mi);            // sounds
 
             common.Printf(" Used image memory: %s bytes\n", idStr.FormatNumber(mi.imageAssetsTotal));
             mi.assetTotals += mi.imageAssetsTotal;
@@ -2343,8 +2460,7 @@ public class Common {
 
             fileSystem.CloseFile(f);
         }
-    };
-
+    }
 
     /*
      ==================
@@ -2364,7 +2480,7 @@ public class Common {
             LightEditorInit(null);
             cvarSystem.SetCVarInteger("g_editEntityMode", 1);
         }
-    };
+    }
 
     /*
      ==================
@@ -2384,7 +2500,7 @@ public class Common {
             SoundEditorInit(null);
             cvarSystem.SetCVarInteger("g_editEntityMode", 2);
         }
-    };
+    }
 
     /*
      ==================
@@ -2441,7 +2557,7 @@ public class Common {
         public void run(idCmdArgs args) {
             ParticleEditorInit(null);
         }
-    };
+    }
 
     /*
      ==================
@@ -2460,7 +2576,7 @@ public class Common {
         public void run(idCmdArgs args) {
             ScriptEditorInit(null);
         }
-    };
+    }
 
     /*
      ==================
@@ -2479,8 +2595,7 @@ public class Common {
         public void run(idCmdArgs args) {
             PDAEditorInit(null);
         }
-    };
-
+    }
 
     /*
      ==================
@@ -2510,7 +2625,7 @@ public class Common {
                 commonLocal.Error("Testing drop error");
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2553,7 +2668,7 @@ public class Common {
                 }
             }
         }
-    };
+    }
 
     /*
      =================
@@ -2579,7 +2694,7 @@ public class Common {
 
 //	* ( int * ) 0 = 0x12345678;//not needed for java
         }
-    };
+    }
 
     /*
      =================
@@ -2598,7 +2713,7 @@ public class Common {
         public void run(idCmdArgs args) {
             commonLocal.Quit();
         }
-    };
+    }
 
     /*
      ===============
@@ -2629,7 +2744,7 @@ public class Common {
             commonLocal.Printf("Writing %s.\n", filename);
             commonLocal.WriteConfigToFile(filename.toString());
         }
-    };
+    }
 
     /*
      =================
@@ -2648,7 +2763,7 @@ public class Common {
         public void run(idCmdArgs args) throws idException {
             commonLocal.SetMachineSpec();
         }
-    };
+    }
 
     /*
      =================
@@ -2807,7 +2922,7 @@ public class Common {
 //	}
 //}
         }
-    };
+    }
 
     /*
      =================
@@ -2851,7 +2966,7 @@ public class Common {
                 }
             }
         }
-    };
+    }
 
     static class ListHash extends idHashTable<idStrList> {
 
@@ -2935,7 +3050,7 @@ public class Common {
                 strTable.Save(filename);
             }
         }
-    };
+    }
 
     /*
      =================
@@ -2995,7 +3110,7 @@ public class Common {
             }
             strTable.Save(filename);
         }
-    };
+    }
 
     static class Com_LocalizeGuiParmsTest_f extends cmdFunction_t {
 
@@ -3051,7 +3166,7 @@ public class Common {
 
             common.SetRefreshOnPrint(false);
         }
-    };
+    }
 
     static class Com_LocalizeMapsTest_f extends cmdFunction_t {
 
@@ -3142,7 +3257,7 @@ public class Common {
 
             common.SetRefreshOnPrint(false);
         }
-    };
+    }
 
     /*
      =================
@@ -3161,7 +3276,7 @@ public class Common {
         public void run(idCmdArgs args) {
             globalImages.StartBuild();
         }
-    };
+    }
 
     /*
      =================
@@ -3183,7 +3298,7 @@ public class Common {
             }
             globalImages.FinishBuild((args.Argc() > 1));
         }
-    };
+    }
 
     /*
      ==============
@@ -3220,7 +3335,7 @@ public class Common {
             common.Printf("  g_mapCycle       - name of .scriptcfg file for cycling maps.\n");
             common.Printf("See mapcycle.scriptcfg for an example of a mapcyle script.\n\n");
         }
-    };
+    }
 
     /*
      =================
@@ -3239,209 +3354,5 @@ public class Common {
         public void run(idCmdArgs args) throws idException {
             commonLocal.InitLanguageDict();
         }
-    };
-
-    static void LoadMapLocalizeData(ListHash listHash) {
-        throw new TODO_Exception();
-//        String fileName = "map_localize.cfg";
-//        Object[] buffer = {null};
-//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
-//
-//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
-//            src.LoadMemory(buffer, strlen(buffer), fileName);
-//            if (src.IsLoaded()) {
-//                String classname;
-//                idToken token = new idToken();
-//
-//                while (src.ReadToken(token)) {
-//                    classname = token.toString();
-//                    src.ExpectTokenString("{");
-//
-//                    idStrList list = new idStrList();
-//                    while (src.ReadToken(token)) {
-//                        if (token.equals("}")) {
-//                            break;
-//                        }
-//                        list.Append(token);
-//                    }
-//
-//                    listHash.Set(classname, list);
-//                }
-//            }
-//            fileSystem.FreeFile(buffer);
-//        }
-    }
-
-    static void LoadGuiParmExcludeList(idStrList list) {
-        throw new TODO_Exception();
-//        String fileName = "guiparm_exclude.cfg";
-//        Object[] buffer = {null};
-//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
-//
-//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
-//            src.LoadMemory(buffer, strlen(buffer), fileName);
-//            if (src.IsLoaded()) {
-////			idStr classname;
-//                idToken token = new idToken();
-//
-//                while (src.ReadToken(token)) {
-//                    list.Append(token);
-//                }
-//            }
-//            fileSystem.FreeFile(buffer);
-//        }
-    }
-
-    static boolean TestMapVal(idStr str) {
-        //Already Localized?
-        if (str.Find("#str_") != -1) {
-            return false;
-        }
-
-        return true;
-    }
-
-    static boolean TestMapVal(String str) {
-        return str.contains("#str_");
-    }
-
-    static boolean TestGuiParm(final String parm, final String value, idStrList excludeList) {
-
-        idStr testVal = new idStr(value);
-
-        //Already Localized?
-        if (testVal.Find("#str_") != -1) {
-            return false;
-        }
-
-        //Numeric
-        if (testVal.IsNumeric()) {
-            return false;
-        }
-
-        //Contains ::
-        if (testVal.Find("::") != -1) {
-            return false;
-        }
-
-        //Contains /
-        if (testVal.Find("/") != -1) {
-            return false;
-        }
-
-        if (excludeList.Find(testVal) != 0) {
-            return false;
-        }
-
-        return true;
-    }
-
-    static boolean TestGuiParm(final idStr parm, final idStr value, idStrList excludeList) {
-        return TestGuiParm(parm.toString(), value.toString(), excludeList);
-    }
-
-    static void GetFileList(final String dir, final String ext, idStrList list) {
-
-        //Recurse Subdirectories
-        idStrList dirList = new idStrList();
-        Sys_ListFiles(dir, "/", dirList);
-        for (int i = 0; i < dirList.Num(); i++) {
-            if (dirList.oGet(i).equals(".") || dirList.oGet(i).equals("..")) {
-                continue;
-            }
-            String fullName = va("%s/%s", dir, dirList.oGet(i));
-            GetFileList(fullName, ext, list);
-        }
-
-        idStrList fileList = new idStrList();
-        Sys_ListFiles(dir, ext, fileList);
-        for (int i = 0; i < fileList.Num(); i++) {
-            idStr fullName = new idStr(va("%s/%s", dir, fileList.oGet(i)));
-            list.Append(fullName);
-        }
-    }
-
-    static int LocalizeMap(final String mapName, idLangDict langDict, ListHash listHash, idStrList excludeList, boolean writeFile) {
-        throw new TODO_Exception();
-//	common.Printf("Localizing Map '%s'\n", mapName);
-//
-//	int strCount = 0;
-//	
-//	idMapFile map = new idMapFile();
-//	if ( map.Parse(mapName, false, false ) ) {
-//		int count = map.GetNumEntities();
-//		for ( int j = 0; j < count; j++ ) {
-//			idMapEntity ent = map.GetEntity( j );
-//			if ( ent !=null) {
-//
-//				String className = ent.epairs.GetString("classname");
-//
-//				//Hack: for info_location
-//				boolean hasLocation = false;
-//
-//				idStrList []list={null};
-//				listHash.Get(className, list);
-//				if(list[0]!=null) {
-//
-//					for(int k = 0; k < list[0].Num(); k++) {
-//
-//						String val = ent.epairs.GetString(list[0].oGet(k).toString(), "");
-//						
-//						if(val.Length() && className == "info_location" && (*list[0])[k] == "location") {
-//							hasLocation = true;
-//						}
-//
-//						if(val.Length() && TestMapVal(val)) {
-//							
-//							if(!hasLocation || (*list[0])[k] == "location") {
-//								//Localize it!!!
-//								strCount++;
-//								ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
-//							}
-//						}
-//					}
-//				}
-//
-//				listHash.Get("all", &list[0]);
-//				if(list[0]) {
-//					for(int k = 0; k < list[0].Num(); k++) {
-//						idStr val = ent.epairs.GetString((*list[0])[k], "");
-//						if(val.Length() && TestMapVal(val)) {
-//							//Localize it!!!
-//							strCount++;
-//							ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
-//						}
-//					}
-//				}
-//
-//				//Localize the gui_parms
-//				const idKeyValue* kv = ent.epairs.MatchPrefix("gui_parm");
-//				while( kv ) {
-//					if(TestGuiParm(kv.GetKey(), kv.GetValue(), excludeList)) {
-//						//Localize It!
-//						strCount++;
-//						ent.epairs.Set( kv.GetKey(), langDict.AddString( kv.GetValue() ) );
-//					}
-//					kv = ent.epairs.MatchPrefix( "gui_parm", kv );
-//				}
-//			}
-//		}
-//		if(writeFile && strCount > 0)  {
-//			//Before we write the map file lets make a backup of the original
-//			idStr file =  fileSystem.RelativePathToOSPath(mapName);
-//			idStr bak = file.Left(file.Length() - 4);
-//			bak.Append(".bak_loc");
-//			fileSystem.CopyFile( file, bak );
-//			
-//			map.Write( mapName, ".map" );
-//		}
-//	}
-//
-//	common.Printf("Count: %d\n", strCount);
-//	return strCount;
-    }
-
-    public static void setCommon(idCommon common) {
-        Common.common = Common.commonLocal = (idCommonLocal) common;
     }
 }

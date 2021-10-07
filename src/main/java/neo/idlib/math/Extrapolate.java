@@ -11,13 +11,13 @@ import neo.idlib.math.Vector.idVec4;
  */
 public class Extrapolate {
 
-    public static final int EXTRAPOLATION_NONE        = 0x01;    // no extrapolation, covered distance = duration * 0.001 * ( baseSpeed )
-    public static final int EXTRAPOLATION_LINEAR      = 0x02;    // linear extrapolation, covered distance = duration * 0.001 * ( baseSpeed + speed )
     public static final int EXTRAPOLATION_ACCELLINEAR = 0x04;    // linear acceleration, covered distance = duration * 0.001 * ( baseSpeed + 0.5 * speed )
+    public static final int EXTRAPOLATION_ACCELSINE = 0x10;    // sinusoidal acceleration, covered distance = duration * 0.001 * ( baseSpeed + sqrt( 0.5 ) * speed )
     public static final int EXTRAPOLATION_DECELLINEAR = 0x08;    // linear deceleration, covered distance = duration * 0.001 * ( baseSpeed + 0.5 * speed )
-    public static final int EXTRAPOLATION_ACCELSINE   = 0x10;    // sinusoidal acceleration, covered distance = duration * 0.001 * ( baseSpeed + sqrt( 0.5 ) * speed )
-    public static final int EXTRAPOLATION_DECELSINE   = 0x20;    // sinusoidal deceleration, covered distance = duration * 0.001 * ( baseSpeed + sqrt( 0.5 ) * speed )
-    public static final int EXTRAPOLATION_NOSTOP      = 0x40;    // do not stop at startTime + duration
+    public static final int EXTRAPOLATION_DECELSINE = 0x20;    // sinusoidal deceleration, covered distance = duration * 0.001 * ( baseSpeed + sqrt( 0.5 ) * speed )
+    public static final int EXTRAPOLATION_LINEAR = 0x02;    // linear extrapolation, covered distance = duration * 0.001 * ( baseSpeed + speed )
+    public static final int EXTRAPOLATION_NONE = 0x01;    // no extrapolation, covered distance = duration * 0.001 * ( baseSpeed )
+    public static final int EXTRAPOLATION_NOSTOP = 0x40;    // do not stop at startTime + duration
 
     /*
      ==============================================================================================
@@ -28,18 +28,18 @@ public class Extrapolate {
      */
     public static class idExtrapolate<type> {
 
-        private /*extrapolation_t*/ int   extrapolationType;
-        private                     float startTime;
-        private                     float duration;
-        private                     type  startValue;
-        private                     type  baseSpeed;
-        private                     type  speed;
-        private                     float currentTime;
-        private                     type  currentValue;
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
+        private final int DBG_count = DBG_counter++;
+        private type baseSpeed;
+        private float currentTime;
+        private type currentValue;
+        private float duration;
+        private /*extrapolation_t*/ int extrapolationType;
+        private type speed;
+        private float startTime;
+        private type startValue;
 
         public idExtrapolate() {
             extrapolationType = EXTRAPOLATION_NONE;
@@ -92,7 +92,7 @@ public class Extrapolate {
                 }
                 case EXTRAPOLATION_ACCELLINEAR: {
                     if (0 == duration) {
-                        currentValue =TempDump.clone(startValue);
+                        currentValue = TempDump.clone(startValue);
                     } else {
                         deltaTime = (time - startTime) / duration;
                         s = (0.5f * deltaTime * deltaTime) * (duration * 0.001f);
@@ -277,5 +277,6 @@ public class Extrapolate {
 
             return (type) Float.valueOf((Float) t1 - (Float) t2);
         }
-    };
+    }
+
 }

@@ -1,7 +1,8 @@
 package neo.Renderer;
 
-import static neo.framework.Common.common;
 import neo.idlib.Lib.idException;
+
+import static neo.framework.Common.common;
 
 /**
  *
@@ -34,13 +35,13 @@ public class tr_orderIndexes {
         for (i = 0; i < numIndexes; i++) {
             v = indexes[i];
             for (j = 0; j < CACHE_SIZE; j++) {
-                if (inCache[ (fifo + j) % CACHE_SIZE] == v) {
+                if (inCache[(fifo + j) % CACHE_SIZE] == v) {
                     break;
                 }
             }
             if (j == CACHE_SIZE) {
                 c_loads++;
-                inCache[ fifo % CACHE_SIZE] = v;
+                inCache[fifo % CACHE_SIZE] = v;
                 fifo++;
             } else if (j < STALL_SIZE) {
                 c_stalls++;
@@ -49,12 +50,6 @@ public class tr_orderIndexes {
 
         return c_loads;
     }
-
-    static class vertRef_s {
-
-        vertRef_s next;
-        int tri;
-    };
 
     /*
      ====================
@@ -176,6 +171,12 @@ public class tr_orderIndexes {
 
         c_cost = R_MeshCost(numIndexes, indexes);
 
+    }
+
+    static class vertRef_s {
+
+        vertRef_s next;
+        int tri;
     }
     /*
 

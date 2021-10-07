@@ -1,41 +1,13 @@
 package neo.Game.Physics;
 
-import static java.lang.Math.abs;
-import static neo.CM.CollisionModel.contactType_t.CONTACT_TRMVERTEX;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.pm_crouchheight;
-import static neo.Game.GameSys.SysCvar.pm_deadheight;
-import static neo.Game.GameSys.SysCvar.pm_normalheight;
-import static neo.Game.GameSys.SysCvar.pm_usecylinder;
-import static neo.Game.Game_local.ENTITYNUM_WORLD;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.MASK_WATER;
-import static neo.Game.Game_local.gameLocal;
-
-import neo.Game.Game_local.idEntityPtr;
+import neo.Game.Game_local.*;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Actor.idPhysics_Actor;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_DEAD;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_FREEZE;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_NOCLIP;
-import static neo.Game.Physics.Physics_Player.pmtype_t.PM_SPECTATOR;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_FEET;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_HEAD;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_NONE;
-import static neo.Game.Physics.Physics_Player.waterLevel_t.WATERLEVEL_WAIST;
-import static neo.Game.Physics.Push.PUSHFL_APPLYIMPULSE;
-import static neo.Game.Physics.Push.PUSHFL_CLIP;
-import static neo.Game.Physics.Push.PUSHFL_NOGROUNDENTITIES;
-import static neo.Game.Physics.Push.PUSHFL_ONLYMOVEABLE;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.Renderer.Material.SURF_LADDER;
-import static neo.Renderer.Material.SURF_SLICK;
-import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
+import neo.Renderer.Material.*;
 import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
@@ -43,16 +15,104 @@ import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import static java.lang.Math.abs;
+import static neo.CM.CollisionModel.contactType_t.CONTACT_TRMVERTEX;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Physics.Physics_Player.pmtype_t.*;
+import static neo.Game.Physics.Physics_Player.waterLevel_t.*;
+import static neo.Game.Physics.Push.*;
+import static neo.Renderer.Material.*;
+import static neo.TempDump.btoi;
+import static neo.TempDump.etoi;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class Physics_Player {
 
+    //
+    public static final int MAXTOUCH = 32;
+
+    //
+    static final float MIN_WALK_NORMAL = 0.7f;     // can't walk on very steep slopes
+
+    static final float OVERCLIP = 1.001f;
+//
+    static final int PLAYER_MOVEMENT_FLAGS_BITS = 8;
+
+    static final int PLAYER_MOVEMENT_TYPE_BITS = 3;
+    static final float PLAYER_VELOCITY_MAX = 4000;
+    static final int PLAYER_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(PLAYER_VELOCITY_MAX)) + 1;
+    static final int PLAYER_VELOCITY_TOTAL_BITS = 16;
+    static final int PLAYER_VELOCITY_MANTISSA_BITS = PLAYER_VELOCITY_TOTAL_BITS - 1 - PLAYER_VELOCITY_EXPONENT_BITS;
+    //
+// movementFlags
+    static final int PMF_DUCKED = 1;        // set when ducking
+    static final int PMF_JUMPED = 2;        // set when the player jumped this frame
+    static final int PMF_JUMP_HELD = 16;       // set when jump button is held down
+    static final int PMF_STEPPED_DOWN = 8;        // set when the player stepped down this frame
+    static final int PMF_STEPPED_UP = 4;        // set when the player stepped up this frame
+    static final int PMF_TIME_KNOCKBACK = 64;       // movementTime is an air-accelerate only time
+    static final int PMF_TIME_LAND = 32;       // movementTime is time before rejump
+    static final int PMF_TIME_WATERJUMP = 128;      // movementTime is waterjump
+    static final int PMF_ALL_TIMES = (PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_KNOCKBACK);
+    //
+    static final float PM_ACCELERATE = 10.0f;
+    static final float PM_AIRACCELERATE = 1.0f;
+    static final float PM_AIRFRICTION = 0.0f;
+    static final float PM_FLYACCELERATE = 8.0f;
+    static final float PM_FLYFRICTION = 3.0f;
+    //
+    static final float PM_FRICTION = 6.0f;
+    static final float PM_LADDERSPEED = 100.0f;
+    static final float PM_NOCLIPFRICTION = 12.0f;
+    static final float PM_STEPSCALE = 1.0f;
+    // movement parameters
+    static final float PM_STOPSPEED = 100.0f;
+    static final float PM_SWIMSCALE = 0.5f;
+//
+    static final float PM_WATERACCELERATE = 4.0f;
+    static final float PM_WATERFRICTION = 1.0f;
+    //
+    static int c_pmove = 0;
+
+    /*
+     ================
+     idPhysics_Player_SavePState
+     ================
+     */
+    static void idPhysics_Player_SavePState(idSaveGame savefile, final playerPState_s state) {
+        savefile.WriteVec3(state.origin);
+        savefile.WriteVec3(state.velocity);
+        savefile.WriteVec3(state.localOrigin);
+        savefile.WriteVec3(state.pushVelocity);
+        savefile.WriteFloat(state.stepUp);
+        savefile.WriteInt(state.movementType);
+        savefile.WriteInt(state.movementFlags);
+        savefile.WriteInt(state.movementTime);
+    }
+
+    /*
+     ================
+     idPhysics_Player_RestorePState
+     ================
+     */
+    static void idPhysics_Player_RestorePState(idRestoreGame savefile, playerPState_s state) {
+        savefile.ReadVec3(state.origin);
+        savefile.ReadVec3(state.velocity);
+        savefile.ReadVec3(state.localOrigin);
+        savefile.ReadVec3(state.pushVelocity);
+        state.stepUp = savefile.ReadFloat();
+        state.movementType = savefile.ReadInt();
+        state.movementFlags = savefile.ReadInt();
+        state.movementTime = savefile.ReadInt();
+    }
     /*
      ===================================================================================
 
@@ -71,7 +131,8 @@ public class Physics_Player {
         PM_SPECTATOR, // flying without gravity but with collision detection
         PM_FREEZE, // stuck in place without control
         PM_NOCLIP   // flying without collision detection nor gravity
-    };
+    }
+//
 
     public enum waterLevel_t {
 
@@ -79,21 +140,18 @@ public class Physics_Player {
         WATERLEVEL_FEET,
         WATERLEVEL_WAIST,
         WATERLEVEL_HEAD
-    };
-//
-    public static final int MAXTOUCH = 32;
-//
+    }
 
     public static final class playerPState_s {
 
-        idVec3 origin;
-        idVec3 velocity;
         idVec3 localOrigin;
+        int movementFlags;
+        int movementTime;
+        int movementType;
+        idVec3 origin;
         idVec3 pushVelocity;
-        float  stepUp;
-        int    movementType;
-        int    movementFlags;
-        int    movementTime;
+        float stepUp;
+        idVec3 velocity;
 
         public playerPState_s() {
             origin = new idVec3();
@@ -101,89 +159,56 @@ public class Physics_Player {
             localOrigin = new idVec3();
             pushVelocity = new idVec3();
         }
-    };
-    // movement parameters
-    static final float PM_STOPSPEED       = 100.0f;
-    static final float PM_SWIMSCALE       = 0.5f;
-    static final float PM_LADDERSPEED     = 100.0f;
-    static final float PM_STEPSCALE       = 1.0f;
-    //
-    static final float PM_ACCELERATE      = 10.0f;
-    static final float PM_AIRACCELERATE   = 1.0f;
-    static final float PM_WATERACCELERATE = 4.0f;
-    static final float PM_FLYACCELERATE   = 8.0f;
-    //
-    static final float PM_FRICTION        = 6.0f;
-    static final float PM_AIRFRICTION     = 0.0f;
-    static final float PM_WATERFRICTION   = 1.0f;
-    static final float PM_FLYFRICTION     = 3.0f;
-    static final float PM_NOCLIPFRICTION  = 12.0f;
-    //
-    static final float MIN_WALK_NORMAL    = 0.7f;     // can't walk on very steep slopes
-    static final float OVERCLIP           = 1.001f;
-    //
-// movementFlags
-    static final int   PMF_DUCKED         = 1;        // set when ducking
-    static final int   PMF_JUMPED         = 2;        // set when the player jumped this frame
-    static final int   PMF_STEPPED_UP     = 4;        // set when the player stepped up this frame
-    static final int   PMF_STEPPED_DOWN   = 8;        // set when the player stepped down this frame
-    static final int   PMF_JUMP_HELD      = 16;       // set when jump button is held down
-    static final int   PMF_TIME_LAND      = 32;       // movementTime is time before rejump
-    static final int   PMF_TIME_KNOCKBACK = 64;       // movementTime is an air-accelerate only time
-    static final int   PMF_TIME_WATERJUMP = 128;      // movementTime is waterjump
-    static final int   PMF_ALL_TIMES      = (PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_KNOCKBACK);
-    //
-    static       int   c_pmove            = 0;
-//
-
-    static final float PLAYER_VELOCITY_MAX           = 4000;
-    static final int   PLAYER_VELOCITY_TOTAL_BITS    = 16;
-    static final int   PLAYER_VELOCITY_EXPONENT_BITS = idMath.BitsForInteger(idMath.BitsForFloat(PLAYER_VELOCITY_MAX)) + 1;
-    static final int   PLAYER_VELOCITY_MANTISSA_BITS = PLAYER_VELOCITY_TOTAL_BITS - 1 - PLAYER_VELOCITY_EXPONENT_BITS;
-    static final int   PLAYER_MOVEMENT_TYPE_BITS     = 3;
-    static final int   PLAYER_MOVEMENT_FLAGS_BITS    = 8;
-//
+    }
 
     public static class idPhysics_Player extends idPhysics_Actor {
         // CLASS_PROTOTYPE( idPhysics_Player );
 
-        // player physics state
-        private playerPState_s current;
-        private playerPState_s saved;
-        //
-        // properties
-        private float          walkSpeed;
-        private float          crouchSpeed;
-        private float          maxStepHeight;
-        private float          maxJumpHeight;
-        private int            debugLevel;            // if set, diagnostic output will be printed
-        //
-        // player input
-        private usercmd_t      command;
-        private idAngles       viewAngles;
-        //
-        // run-time variables
-        private int            framemsec;
-        private float          frametime;
-        private float          playerSpeed;
-        private idVec3         viewForward;
-        private idVec3         viewRight;
-        //
-        // walk movement
-        private boolean        walking;
-        private boolean        groundPlane;
-        private trace_s        groundTrace;
-        private idMaterial     groundMaterial;
-        //
-        // ladder movement
-        private boolean        ladder;
-        private idVec3         ladderNormal;
+        /*
+         ==================
+         idPhysics_Player::SlideMove
+
+         Returns true if the velocity was clipped in some way
+         ==================
+         */
+        static final int MAX_CLIP_PLANES = 5;
         //
         // results of last evaluate
         waterLevel_t waterLevel;
-        int          waterType;
+        int waterType;
+        //
+        // player input
+        private usercmd_t command;
+        private float crouchSpeed;
+        // player physics state
+        private playerPState_s current;
+        private int debugLevel;            // if set, diagnostic output will be printed
+        //
+        // run-time variables
+        private int framemsec;
+        private float frametime;
+        private idMaterial groundMaterial;
+        private boolean groundPlane;
+        private final trace_s groundTrace;
+        //
+        // ladder movement
+        private boolean ladder;
+        private final idVec3 ladderNormal;
+        private float maxJumpHeight;
+        private float maxStepHeight;
+        private float playerSpeed;
+        private playerPState_s saved;
+        private final idAngles viewAngles;
+        private final idVec3 viewForward;
+        private final idVec3 viewRight;
+        //
+        // properties
+        private float walkSpeed;
         //
         //
+        //
+        // walk movement
+        private boolean walking;
 
         public idPhysics_Player() {
             debugLevel = 0;//false;
@@ -637,7 +662,7 @@ public class Physics_Player {
             }
 
             total = idMath.Sqrt((float) forwardmove * forwardmove + rightmove * rightmove + upmove * upmove);
-            scale = (float) playerSpeed * max / (127.0f * total);
+            scale = playerSpeed * max / (127.0f * total);
 
             return scale;
         }
@@ -684,15 +709,6 @@ public class Physics_Player {
 //	current.velocity += canPush * pushDir;
             }
         }
-
-        /*
-         ==================
-         idPhysics_Player::SlideMove
-
-         Returns true if the velocity was clipped in some way
-         ==================
-         */
-        static final int MAX_CLIP_PLANES = 5;
 
         private boolean SlideMove(boolean gravity, boolean stepUp, boolean stepDown, boolean push) {
             int i, j, k, pushFlags;
@@ -871,7 +887,7 @@ public class Physics_Player {
                 for (i = 0; i < numplanes; i++) {
                     into = current.velocity.oMultiply(planes[i]);
                     if (into >= 0.1f) {
-                        continue;		// move doesn't interact with the plane
+                        continue;        // move doesn't interact with the plane
                     }
 
                     // slide along the plane
@@ -888,7 +904,7 @@ public class Physics_Player {
                             continue;
                         }
                         if ((clipVelocity.oMultiply(planes[j])) >= 0.1f) {
-                            continue;		// move doesn't interact with the plane
+                            continue;        // move doesn't interact with the plane
                         }
 
                         // try clipping the move to the plane
@@ -917,7 +933,7 @@ public class Physics_Player {
                                 continue;
                             }
                             if ((clipVelocity.oMultiply(planes[k])) >= 0.1f) {
-                                continue;		// move doesn't interact with the plane
+                                continue;        // move doesn't interact with the plane
                             }
 
                             // stop dead at a tripple plane interaction
@@ -1653,7 +1669,7 @@ public class Physics_Player {
                 return false;
             }
 
-            groundPlane = false;		// jumping away
+            groundPlane = false;        // jumping away
             walking = false;
             current.movementFlags |= PMF_JUMP_HELD | PMF_JUMPED;
 
@@ -1857,37 +1873,5 @@ public class Physics_Player {
             current.velocity.oPluSet(current.pushVelocity);
             current.pushVelocity.Zero();
         }
-    };
-
-    /*
-     ================
-     idPhysics_Player_SavePState
-     ================
-     */
-    static void idPhysics_Player_SavePState(idSaveGame savefile, final playerPState_s state) {
-        savefile.WriteVec3(state.origin);
-        savefile.WriteVec3(state.velocity);
-        savefile.WriteVec3(state.localOrigin);
-        savefile.WriteVec3(state.pushVelocity);
-        savefile.WriteFloat(state.stepUp);
-        savefile.WriteInt(state.movementType);
-        savefile.WriteInt(state.movementFlags);
-        savefile.WriteInt(state.movementTime);
-    }
-
-    /*
-     ================
-     idPhysics_Player_RestorePState
-     ================
-     */
-    static void idPhysics_Player_RestorePState(idRestoreGame savefile, playerPState_s state) {
-        savefile.ReadVec3(state.origin);
-        savefile.ReadVec3(state.velocity);
-        savefile.ReadVec3(state.localOrigin);
-        savefile.ReadVec3(state.pushVelocity);
-        state.stepUp = savefile.ReadFloat();
-        state.movementType = savefile.ReadInt();
-        state.movementFlags = savefile.ReadInt();
-        state.movementTime = savefile.ReadInt();
     }
 }

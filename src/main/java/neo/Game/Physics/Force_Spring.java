@@ -3,11 +3,12 @@ package neo.Game.Physics;
 import neo.Game.Physics.Force.idForce;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics.impactInfo_s;
-import static neo.idlib.math.Math_h.Square;
 import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+
+import static neo.idlib.math.Math_h.Square;
 import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -24,19 +25,19 @@ public class Force_Spring {
     public static class idForce_Spring extends idForce {
 //	CLASS_PROTOTYPE( idForce_Spring );
 
+        private float Kcompress;
         // spring properties
         private float Kstretch;
-        private float Kcompress;
         private float damping;
-        private float restLength;
+        private int id1;        // clip model id of first physics object
+        private int id2;        // clip model id of second physics object
+        private idVec3 p1;        // position on clip model
+        private idVec3 p2;        // position on clip model
         //
         // positioning
-        private idPhysics physics1;	// first physics object
-        private int id1;		// clip model id of first physics object
-        private idVec3 p1;		// position on clip model
-        private idPhysics physics2;	// second physics object
-        private int id2;		// clip model id of second physics object
-        private idVec3 p2;		// position on clip model
+        private idPhysics physics1;    // first physics object
+        private idPhysics physics2;    // second physics object
+        private float restLength;
         //
         //
 
@@ -111,7 +112,7 @@ public class Force_Spring {
             // if the spring is stretched
             if (length > restLength) {
                 if (Kstretch > 0.0f) {
-                    force = force.oMultiply((float) (Square(length - restLength) * Kstretch)).oMinus(dampingForce);
+                    force = force.oMultiply(Square(length - restLength) * Kstretch).oMinus(dampingForce);
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force);
                     }
@@ -121,7 +122,7 @@ public class Force_Spring {
                 }
             } else {
                 if (Kcompress > 0.0f) {
-                    force = force.oMultiply((float) (Square(length - restLength) * Kcompress)).oMinSet(dampingForce);
+                    force = force.oMultiply(Square(length - restLength) * Kcompress).oMinSet(dampingForce);
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force.oNegative());
                     }
@@ -141,5 +142,6 @@ public class Force_Spring {
                 physics2 = null;
             }
         }
-    };
+    }
+
 }

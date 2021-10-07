@@ -1,51 +1,32 @@
 package neo.Tools.Compilers.DMap;
 
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.Tools.Compilers.DMap.dmap.MAX_GROUP_LIGHTS;
-import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.mapLight_t;
-import neo.Tools.Compilers.DMap.dmap.mapTri_s;
-import neo.Tools.Compilers.DMap.dmap.node_s;
-import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
-import neo.Tools.Compilers.DMap.dmap.primitive_s;
-import neo.Tools.Compilers.DMap.dmap.side_s;
-import neo.Tools.Compilers.DMap.dmap.textureVectors_t;
-import neo.Tools.Compilers.DMap.dmap.uArea_t;
-import neo.Tools.Compilers.DMap.dmap.uBrush_t;
-import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import static neo.Tools.Compilers.DMap.map.FindFloatPlane;
-import static neo.Tools.Compilers.DMap.map.FreeOptimizeGroupList;
-import static neo.Tools.Compilers.DMap.shadowopt3.CreateLightShadow;
-import static neo.Tools.Compilers.DMap.tritools.AllocTri;
-import static neo.Tools.Compilers.DMap.tritools.CopyMapTri;
-import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
-import static neo.Tools.Compilers.DMap.tritools.MapTriArea;
-import static neo.Tools.Compilers.DMap.tritools.MergeTriLists;
-import static neo.Tools.Compilers.DMap.tritools.PlaneForTri;
-import static neo.Tools.Compilers.DMap.tritools.WindingForTri;
-import static neo.Tools.Compilers.DMap.tritools.WindingToTriList;
-import static neo.framework.Common.common;
+import neo.Tools.Compilers.DMap.dmap.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.ON_EPSILON;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.DotProduct;
-import static neo.idlib.math.Vector.VectorCopy;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
+
+import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.TempDump.*;
+import static neo.Tools.Compilers.DMap.dmap.*;
+import static neo.Tools.Compilers.DMap.map.FindFloatPlane;
+import static neo.Tools.Compilers.DMap.map.FreeOptimizeGroupList;
+import static neo.Tools.Compilers.DMap.shadowopt3.CreateLightShadow;
+import static neo.Tools.Compilers.DMap.tritools.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Plane.ON_EPSILON;
+import static neo.idlib.math.Vector.DotProduct;
+import static neo.idlib.math.Vector.VectorCopy;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -53,11 +34,11 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class usurface {
 
+    //
+    static final int SNAP_FLOAT_TO_INT = 256;
+    static final double SNAP_INT_TO_FLOAT = (1.0 / SNAP_FLOAT_TO_INT);
     static final double TEXTURE_OFFSET_EQUAL_EPSILON = 0.005;
     static final double TEXTURE_VECTOR_EQUAL_EPSILON = 0.001;
-    //
-    static final int    SNAP_FLOAT_TO_INT            = 256;
-    static final double SNAP_INT_TO_FLOAT            = (1.0 / SNAP_FLOAT_TO_INT);
 
     /*
      ===============
@@ -97,10 +78,10 @@ public class usurface {
                     }
                 }
                 if (i == 2) {
-                    break;	// exact match
+                    break;    // exact match
                 } else {
                     // different texture offsets
-                    i = 1;	// just for debugger breakpoint
+                    i = 1;    // just for debugger breakpoint
                 }
             }
         }
@@ -458,17 +439,17 @@ public class usurface {
             //		delete back;
 
             if (a1 == -2 || a2 == -2) {
-                return -2;	// different
+                return -2;    // different
             }
             if (a1 == -1) {
-                return a2;	// one solid
+                return a2;    // one solid
             }
             if (a2 == -1) {
-                return a1;	// one solid
+                return a1;    // one solid
             }
 
             if (a1 != a2) {
-                return -2;	// cross areas
+                return -2;    // cross areas
             }
             return a1;
         }

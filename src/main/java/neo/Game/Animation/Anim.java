@@ -1,25 +1,13 @@
 package neo.Game.Animation;
 
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_AXIS;
-import static neo.Game.Game_local.animationLib;
-import static neo.Game.Game_local.gameLocal;
+import neo.Game.Game_local;
 import neo.Game.Script.Script_Program.function_t;
-import static neo.Renderer.Model.MD5_ANIM_EXT;
-import static neo.Renderer.Model.MD5_VERSION;
-import static neo.Renderer.Model.MD5_VERSION_STRING;
-import neo.Renderer.Model.idMD5Joint;
-import neo.Renderer.Model.idRenderModel;
+import neo.Renderer.Model.*;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.TempDump.NOT;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.sizeof;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
@@ -28,11 +16,18 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Quat.idCQuat;
 import neo.idlib.math.Quat.idQuat;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_AXIS;
+import static neo.Game.Game_local.animationLib;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Renderer.Model.*;
+import static neo.TempDump.*;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
@@ -40,83 +35,49 @@ import neo.idlib.math.Vector.idVec3;
 public class Anim {
 
     //
-// animation channels
-// these can be changed by modmakers and licensees to be whatever they need.
-    public static final int ANIM_NumAnimChannels    = 5;
-    public static final int ANIM_MaxAnimsPerChannel = 3;
-    public static final int ANIM_MaxSyncedAnims     = 3;
-    //
 //
 // animation channels.  make sure to change script/doom_defs.script if you add any channels, or change their order
 //
-    public static final int ANIMCHANNEL_ALL         = 0;
-    public static final int ANIMCHANNEL_TORSO       = 1;
-    public static final int ANIMCHANNEL_LEGS        = 2;
-    public static final int ANIMCHANNEL_HEAD        = 3;
-    public static final int ANIMCHANNEL_EYELIDS     = 4;
+    public static final int ANIMCHANNEL_ALL = 0;
+    public static final int ANIMCHANNEL_EYELIDS = 4;
+    public static final int ANIMCHANNEL_HEAD = 3;
+    public static final int ANIMCHANNEL_LEGS = 2;
+    public static final int ANIMCHANNEL_TORSO = 1;
+    public static final int ANIM_MaxAnimsPerChannel = 3;
+    public static final int ANIM_MaxSyncedAnims = 3;
+    //
+// animation channels
+// these can be changed by modmakers and licensees to be whatever they need.
+    public static final int ANIM_NumAnimChannels = 5;
 //
+    public static final int ANIM_QX = (1 << 3);// BIT(3);
+    public static final int ANIM_QY = (1 << 4);// BIT(4);
+
+    public static final int ANIM_QZ = (1 << 5);// BIT(5);
+
+    public static final int ANIM_TX = (1 << 0);// BIT(0);
+
+    public static final int ANIM_TY = (1 << 1);// BIT(1);
+
+    public static final int ANIM_TZ = (1 << 2);// BIT(2);
 
     // for converting from 24 frames per second to milliseconds
     public static int FRAME2MS(int framenum) {
         return (framenum * 1000) / 24;
     }
+    /*
+     ==============================================================================================
 
-    public static final class frameBlend_t {
+     idAFPoseJointMod
 
-        int   cycleCount;    // how many times the anim has wrapped to the begining (0 for clamped anims)
-        int   frame1;
-        int   frame2;
-        float frontlerp;
-        float backlerp;
-    };
+     ==============================================================================================
+     */
+    public enum AFJointModType_t {
 
-    public static final class jointAnimInfo_t {
-
-        int nameIndex;
-        int parentNum;
-        int animBits;
-        int firstComponent;
-    };
-
-    public static final class jointInfo_t {
-
-        int/*jointHandle_t*/ num;
-        int/*jointHandle_t*/ parentNum;
-        int channel;
-    };
-
-    //
-// joint modifier modes.  make sure to change script/doom_defs.script if you add any, or change their order.
-//
-    public enum jointModTransform_t {
-
-        JOINTMOD_NONE, // no modification
-        JOINTMOD_LOCAL, // modifies the joint's position or orientation in joint local space
-        JOINTMOD_LOCAL_OVERRIDE, // sets the joint's position or orientation in joint local space
-        JOINTMOD_WORLD, // modifies joint's position or orientation in model space
-        JOINTMOD_WORLD_OVERRIDE        // sets the joint's position or orientation in model space
-    };
-
-    public static final class jointMod_t {
-
-        int/*jointHandle_t*/ jointnum;
-        idMat3              mat;
-        idVec3              pos;
-        jointModTransform_t transform_pos;
-        jointModTransform_t transform_axis;
-
-        public jointMod_t() {
-            this.mat = new idMat3();
-            this.pos = new idVec3();
-        }
-    };
-    public static final int ANIM_TX = (1 << 0);// BIT(0);
-    public static final int ANIM_TY = (1 << 1);// BIT(1);
-    public static final int ANIM_TZ = (1 << 2);// BIT(2);
-    public static final int ANIM_QX = (1 << 3);// BIT(3);
-    public static final int ANIM_QY = (1 << 4);// BIT(4);
-    public static final int ANIM_QZ = (1 << 5);// BIT(5);
-
+        AF_JOINTMOD_AXIS,
+        AF_JOINTMOD_ORIGIN,
+        AF_JOINTMOD_BOTH
+    }
     public enum frameCommandType_t {
 
         FC_SCRIPTFUNCTION,
@@ -160,34 +121,82 @@ public class Anim {
         FC_DISABLE_LEG_IK,
         FC_RECORDDEMO,
         FC_AVIGAME
-    };
+    }
+    //
+// joint modifier modes.  make sure to change script/doom_defs.script if you add any, or change their order.
+//
+    public enum jointModTransform_t {
+
+        JOINTMOD_NONE, // no modification
+        JOINTMOD_LOCAL, // modifies the joint's position or orientation in joint local space
+        JOINTMOD_LOCAL_OVERRIDE, // sets the joint's position or orientation in joint local space
+        JOINTMOD_WORLD, // modifies joint's position or orientation in model space
+        JOINTMOD_WORLD_OVERRIDE        // sets the joint's position or orientation in model space
+    }
+
+    public static final class frameBlend_t {
+
+        float backlerp;
+        int cycleCount;    // how many times the anim has wrapped to the begining (0 for clamped anims)
+        int frame1;
+        int frame2;
+        float frontlerp;
+    }
+
+    public static final class jointAnimInfo_t {
+
+        int animBits;
+        int firstComponent;
+        int nameIndex;
+        int parentNum;
+    }
+
+    public static final class jointInfo_t {
+
+        int channel;
+        int/*jointHandle_t*/ num;
+        int/*jointHandle_t*/ parentNum;
+    }
+
+    public static final class jointMod_t {
+
+        int/*jointHandle_t*/ jointnum;
+        idMat3 mat;
+        idVec3 pos;
+        jointModTransform_t transform_axis;
+        jointModTransform_t transform_pos;
+
+        public jointMod_t() {
+            this.mat = new idMat3();
+            this.pos = new idVec3();
+        }
+    }
 
     public static final class frameLookup_t {
 
-        int num;
         int firstCommand;
-    };
+        int num;
+    }
 
     public static final class frameCommand_t {
 
-        public frameCommandType_t type;
-        public idStr              string;
-
+        public function_t function;
+        public int index;
+        public idDeclSkin skin;
         // union {
         public idSoundShader soundShader;
-        public function_t    function;
-        public idDeclSkin    skin;
-        public int           index;
+        public idStr string;
+        public frameCommandType_t type;
         // };
-    };
+    }
 
     public static final class animFlags_t {
 
-        public boolean prevent_idle_override;//: 1;
-        public boolean random_cycle_start;//: 1;
         public boolean ai_no_turn;//: 1;
         public boolean anim_turn;//: 1;
-    };
+        public boolean prevent_idle_override;//: 1;
+        public boolean random_cycle_start;//: 1;
+    }
 
     /*
      ==============================================================================================
@@ -198,18 +207,18 @@ public class Anim {
      */
     public static class idMD5Anim {
 
-        private int                     numFrames;
-        private int                     frameRate;
-        private int                     animLength;
-        private int                     numJoints;
-        private int                     numAnimatedComponents;
-        private idList<idBounds>        bounds;
-        private idList<jointAnimInfo_t> jointInfo;
-        private idList<idJointQuat>     baseFrame;
-        private idList<Float>           componentFrames;
-        private idStr                   name;
-        private idVec3                  totaldelta;
-        private int                     ref_count;
+        private int animLength;
+        private final idList<idJointQuat> baseFrame;
+        private final idList<idBounds> bounds;
+        private final idList<Float> componentFrames;
+        private int frameRate;
+        private final idList<jointAnimInfo_t> jointInfo;
+        private final idStr name;
+        private int numAnimatedComponents;
+        private int numFrames;
+        private int numJoints;
+        private int ref_count;
+        private final idVec3 totaldelta;
 //
 //
 
@@ -393,7 +402,7 @@ public class Anim {
 
                 parser.ExpectTokenString("}");
             }
-            
+
 
             // get total move delta
             if (0 == numAnimatedComponents) {
@@ -461,14 +470,14 @@ public class Anim {
             int parent;
 
             if (jointInfo.Num() != model.NumJoints()) {
-                gameLocal.Error("Model '%s' has different # of joints than anim '%s'", model.Name(), name);
+                Game_local.idGameLocal.Error("Model '%s' has different # of joints than anim '%s'", model.Name(), name);
             }
 
             final idMD5Joint[] modelJoints = model.GetJoints();
             for (i = 0; i < jointInfo.Num(); i++) {
                 jointNum = jointInfo.oGet(i).nameIndex;
-                if (!modelJoints[ i].name.equals(animationLib.JointName(jointNum))) {
-                    gameLocal.Error("Model '%s''s joint names don't match anim '%s''s", model.Name(), name);
+                if (!modelJoints[i].name.equals(animationLib.JointName(jointNum))) {
+                    Game_local.idGameLocal.Error("Model '%s''s joint names don't match anim '%s''s", model.Name(), name);
                 }
                 if (modelJoints[i].parent != null) {
                     parent = indexOf(modelJoints[i].parent, modelJoints);
@@ -476,7 +485,7 @@ public class Anim {
                     parent = -1;
                 }
                 if (parent != jointInfo.oGet(i).parentNum) {
-                    gameLocal.Error("Model '%s' has deleteifferent joint hierarchy than anim '%s'", model.Name(), name);
+                    Game_local.idGameLocal.Error("Model '%s' has deleteifferent joint hierarchy than anim '%s'", model.Name(), name);
                 }
             }
         }
@@ -496,7 +505,7 @@ public class Anim {
             int[] lerpIndex;
 
             // copy the baseframe
-            SIMDProcessor.Memcpy(joints, baseFrame.Ptr(idJointQuat[].class), baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/);
+            SIMDProcessor.Memcpy(joints, baseFrame.getList(idJointQuat[].class), baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/);
 
             if (0 == numAnimatedComponents) {
                 // just use the base frame
@@ -511,7 +520,7 @@ public class Anim {
 //	frame2 = componentFrames.Ptr();
             f1_ptr = frame.frame1 * numAnimatedComponents;
             f2_ptr = frame.frame2 * numAnimatedComponents;
-            jointframe1 = jointframe2 = componentFrames.Ptr(Float[].class);
+            jointframe1 = jointframe2 = componentFrames.getList(Float[].class);
 
             for (i = 0; i < numIndexes; i++) {
                 int j = index[i];
@@ -682,7 +691,7 @@ public class Anim {
             jointAnimInfo_t infoPtr;
 
             // copy the baseframe
-            SIMDProcessor.Memcpy(joints, baseFrame.Ptr(idJointQuat[].class), baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/);
+            SIMDProcessor.Memcpy(joints, baseFrame.getList(idJointQuat[].class), baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/);
 
             if ((framenum == 0) || 0 == numAnimatedComponents) {
                 // just use the base frame
@@ -700,7 +709,7 @@ public class Anim {
                 animBits = infoPtr.animBits;
                 if (animBits != 0) {
 
-                    jointframe = componentFrames.Ptr();
+                    jointframe = componentFrames.getList();
                     jf_ptr = f_ptr + infoPtr.firstComponent;
 
                     if ((animBits & (ANIM_TX | ANIM_TY | ANIM_TZ)) != 0) {
@@ -758,7 +767,7 @@ public class Anim {
             return name.toString();
         }
 
-        public void GetFrameBlend(int framenum, frameBlend_t frame) {	// frame 1 is first frame
+        public void GetFrameBlend(int framenum, frameBlend_t frame) {    // frame 1 is first frame
             frame.cycleCount = 0;
             frame.backlerp = 0.0f;
             frame.frontlerp = 1.0f;
@@ -826,15 +835,15 @@ public class Anim {
 
             offset.oSet(baseFrame.oGet(0).t);
             if (0 == (jointInfo.oGet(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ))) {
-                // just use the baseframe		
+                // just use the baseframe
                 return;
             }
 
             ConvertTimeToFrame(time, cyclecount, frame);
 
-            Float[] componentPtr1 = componentFrames.Ptr(Float[].class);
+            Float[] componentPtr1 = componentFrames.getList(Float[].class);
             c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
-            Float[] componentPtr2 = componentFrames.Ptr(Float[].class);
+            Float[] componentPtr2 = componentFrames.getList(Float[].class);
             c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.oGet(0).firstComponent;
 
             if ((jointInfo.oGet(0).animBits & ANIM_TX) != 0) {
@@ -865,16 +874,16 @@ public class Anim {
 
             animBits = jointInfo.oGet(0).animBits;
             if (NOT(animBits & (ANIM_QX | ANIM_QY | ANIM_QZ))) {
-                // just use the baseframe		
+                // just use the baseframe
                 rotation.oSet(baseFrame.oGet(0).q);
                 return;
             }
 
             ConvertTimeToFrame(time, cyclecount, frame);
 
-            Float[] jointframe1 = componentFrames.Ptr(Float[].class);
+            Float[] jointframe1 = componentFrames.getList(Float[].class);
             j1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
-            Float[] jointframe2 = componentFrames.Ptr(Float[].class);
+            Float[] jointframe2 = componentFrames.getList(Float[].class);
             j2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.oGet(0).firstComponent;
 
             if ((animBits & ANIM_TX) != 0) {
@@ -984,9 +993,9 @@ public class Anim {
             // origin position
             offset = baseFrame.oGet(0).t;
             if ((jointInfo.oGet(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ)) != 0) {
-                Float[] componentPtr1 = componentFrames.Ptr(Float[].class);
+                Float[] componentPtr1 = componentFrames.getList(Float[].class);
                 c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
-                Float[] componentPtr2 = componentFrames.Ptr(Float[].class);
+                Float[] componentPtr2 = componentFrames.getList(Float[].class);
                 c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.oGet(0).firstComponent;
 
                 if ((jointInfo.oGet(0).animBits & ANIM_TX) != 0) {
@@ -1008,26 +1017,12 @@ public class Anim {
 
             bnds.oMinSet(offset);
         }
-    };
-
-    /*
-     ==============================================================================================
-
-     idAFPoseJointMod
-
-     ==============================================================================================
-     */
-    public enum AFJointModType_t {
-
-        AF_JOINTMOD_AXIS,
-        AF_JOINTMOD_ORIGIN,
-        AF_JOINTMOD_BOTH
-    };
+    }
 
     public static class idAFPoseJointMod {
+        public idMat3 axis;
         public AFJointModType_t mod;
-        public idMat3           axis;
-        public idVec3           origin;
+        public idVec3 origin;
         //
         //
 
@@ -1036,7 +1031,7 @@ public class Anim {
             axis = getMat3_identity();
             origin = new idVec3();
         }
-    };
+    }
 
     /*
      ==============================================================================================
@@ -1047,19 +1042,19 @@ public class Anim {
      */
     public static class idAnimManager {
 
-        private idHashTable<idMD5Anim> animations;
-        private idStrList jointnames;
-        private idHashIndex jointnamesHash;
+        // ~idAnimManager();
+        public static boolean forceExport = false;
+        private final idHashTable<idMD5Anim> animations;
+        private final idStrList jointnames;
         //
         //
+        private final idHashIndex jointnamesHash;
 
         public idAnimManager() {
             animations = new idHashTable<>();
             jointnames = new idStrList();
             jointnamesHash = new idHashIndex();
         }
-        // ~idAnimManager();
-        public static boolean forceExport = false;
 
         public void Shutdown() {
             animations.DeleteContents();
@@ -1179,5 +1174,6 @@ public class Anim {
 //		delete removeAnims[ i ];
             }
         }
-    };
+    }
+
 }

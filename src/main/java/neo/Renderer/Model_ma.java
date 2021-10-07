@@ -1,158 +1,37 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import neo.Renderer.Model_ma.maFileNode_t;
-import neo.Renderer.Model_ma.maMaterial_t;
-import neo.Renderer.Model_ma.maMesh_t;
-import neo.Renderer.Model_ma.maNodeHeader_t;
-import neo.Renderer.Model_ma.maObject_t;
-import static neo.TempDump.NOT;
-import static neo.TempDump.bbtocb;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat4;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+
+import static neo.TempDump.NOT;
+import static neo.TempDump.bbtocb;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.DEG2RAD;
+
 /**
  *
  */
 public class Model_ma {
 
-    /*
-     ===============================================================================
-
-     MA loader. (Maya Ascii Format)
-
-     ===============================================================================
+    /**
+     *
      */
-    static class maNodeHeader_t {
-
-//	char					name[128];
-        String name;
-//	char					parent[128];
-        String parent;
-    };
-
-    static class maAttribHeader_t {
-
-//	char					name[128];
-        String name;
-        int size;
-    };
-
-    static class maTransform_s {
-
-        idVec3 translate;
-        idVec3 rotate;
-        idVec3 scale;
-        maTransform_s parent;
-    };
-
-    static class maFace_t {
-
-        int[] edge = new int[3];
-        int[] vertexNum = new int[3];
-        int[] tVertexNum = new int[3];
-        int[] vertexColors = new int[3];
-        idVec3[] vertexNormals = new idVec3[3];
-    };
-
-    static class maMesh_t {
-
-        //Transform to be applied
-        maTransform_s transform;
-//
-        //Verts
-        int numVertexes;
-        idVec3[] vertexes;
-        int numVertTransforms;
-        idVec4[] vertTransforms;
-        int nextVertTransformIndex;
-//
-        //Texture Coordinates
-        int numTVertexes;
-        idVec2[] tvertexes;
-//
-        //Edges
-        int numEdges;
-        idVec3[] edges;
-//
-        //Colors
-        int numColors;
-        byte[] colors;
-//
-        //Faces
-        int numFaces;
-        maFace_t[] faces;
-//
-        //Normals
-        int numNormals;
-        idVec3[] normals;
-        boolean normalsParsed;
-        int nextNormal;
-    };
-
-    static class maMaterial_t {
-
-//	char					name[128];
-        String name;
-        float uOffset, vOffset;		// max lets you offset by material without changing texCoords
-        float uTiling, vTiling;		// multiply tex coords by this
-        float angle;					// in clockwise radians
-    };
-
-    static class maObject_t {
-
-//	char					name[128];
-        String name;
-        int materialRef;
-//	char					materialName[128];
-        String materialName;
-//
-        maMesh_t mesh;
-    };
-
-    static class maFileNode_t {
-
-//	char					name[128];
-        String name;
-//	char					path[1024];
-        String path;
-    };
-
-    static class maMaterialNode_s {
-
-//	char					name[128];
-        String name;
-//
-        maMaterialNode_s child;
-        maFileNode_t file;
-    };
-
-    static class maModel_s {
-
-        long[]/*ID_TIME_T*/ timeStamp = new long[1];
-        idList<maMaterial_t> materials;
-        idList<maObject_t> objects;
-        idHashTable<maTransform_s> transforms;
-//	
-        //Material Resolution
-        idHashTable<maFileNode_t> fileNodes;
-        idHashTable<maMaterialNode_s> materialNodes;
-    };
+    public static ma_t maGlobal;
 
     /*
      ======================================================================
@@ -166,14 +45,6 @@ public class Model_ma {
             common.Printf(fmt, x);
         }
     }
-
-// working variables used during parsing
-    public static class ma_t {
-
-        boolean verbose;
-        maModel_s model;
-        maObject_t currentObject;
-    };
 
     public static void MA_ParseNodeHeader(idParser parser, maNodeHeader_t header) throws idException {
 
@@ -1001,7 +872,7 @@ public class Model_ma {
                 mat.oGet(2).oSet(1, -sinAng);
                 mat.oGet(2).oSet(2, cosAng);
                 break;
-            case 1:	//y
+            case 1:    //y
                 mat.oGet(0).oSet(0, cosAng);
                 mat.oGet(0).oSet(2, -sinAng);
                 mat.oGet(2).oSet(0, sinAng);
@@ -1032,13 +903,13 @@ public class Model_ma {
                 rotz.Identity();
 
                 if (Math.abs(transform.rotate.x) > 0.0f) {
-                    MA_BuildAxisRotation(rotx, (float) DEG2RAD(-transform.rotate.x), 0);
+                    MA_BuildAxisRotation(rotx, DEG2RAD(-transform.rotate.x), 0);
                 }
                 if (Math.abs(transform.rotate.y) > 0.0f) {
-                    MA_BuildAxisRotation(roty, (float) DEG2RAD(transform.rotate.y), 1);
+                    MA_BuildAxisRotation(roty, DEG2RAD(transform.rotate.y), 1);
                 }
                 if (Math.abs(transform.rotate.z) > 0.0f) {
-                    MA_BuildAxisRotation(rotz, (float) DEG2RAD(-transform.rotate.z), 2);
+                    MA_BuildAxisRotation(rotz, DEG2RAD(-transform.rotate.z), 2);
                 }
 
                 MA_BuildScale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
@@ -1204,8 +1075,135 @@ public class Model_ma {
         ma.materialNodes.Clear();
 //	delete ma;
     }
-    /**
-     *
+
+    /*
+     ===============================================================================
+
+     MA loader. (Maya Ascii Format)
+
+     ===============================================================================
      */
-    public static ma_t maGlobal;
+    static class maNodeHeader_t {
+
+        //	char					name[128];
+        String name;
+        //	char					parent[128];
+        String parent;
+    }
+
+    static class maAttribHeader_t {
+
+        //	char					name[128];
+        String name;
+        int size;
+    }
+
+    static class maTransform_s {
+
+        maTransform_s parent;
+        idVec3 rotate;
+        idVec3 scale;
+        idVec3 translate;
+    }
+
+    static class maFace_t {
+
+        int[] edge = new int[3];
+        int[] tVertexNum = new int[3];
+        int[] vertexColors = new int[3];
+        idVec3[] vertexNormals = new idVec3[3];
+        int[] vertexNum = new int[3];
+    }
+
+    static class maMesh_t {
+
+        byte[] colors;
+        idVec3[] edges;
+        maFace_t[] faces;
+        int nextNormal;
+        int nextVertTransformIndex;
+        idVec3[] normals;
+        boolean normalsParsed;
+        //
+        //Colors
+        int numColors;
+        //
+        //Edges
+        int numEdges;
+        //
+        //Faces
+        int numFaces;
+        //
+        //Normals
+        int numNormals;
+        //
+        //Texture Coordinates
+        int numTVertexes;
+        int numVertTransforms;
+        //
+        //Verts
+        int numVertexes;
+        //Transform to be applied
+        maTransform_s transform;
+        idVec2[] tvertexes;
+        idVec4[] vertTransforms;
+        idVec3[] vertexes;
+    }
+
+    static class maMaterial_t {
+
+        float angle;                    // in clockwise radians
+        //	char					name[128];
+        String name;
+        float uOffset, vOffset;        // max lets you offset by material without changing texCoords
+        float uTiling, vTiling;        // multiply tex coords by this
+    }
+
+    static class maObject_t {
+
+        //	char					materialName[128];
+        String materialName;
+        int materialRef;
+        //
+        maMesh_t mesh;
+        //	char					name[128];
+        String name;
+    }
+
+    static class maFileNode_t {
+
+        //	char					name[128];
+        String name;
+        //	char					path[1024];
+        String path;
+    }
+
+    static class maMaterialNode_s {
+
+        //
+        maMaterialNode_s child;
+        maFileNode_t file;
+        //	char					name[128];
+        String name;
+    }
+
+    static class maModel_s {
+
+        //
+        //Material Resolution
+        idHashTable<maFileNode_t> fileNodes;
+        idHashTable<maMaterialNode_s> materialNodes;
+        idList<maMaterial_t> materials;
+        idList<maObject_t> objects;
+        long[]/*ID_TIME_T*/ timeStamp = new long[1];
+        idHashTable<maTransform_s> transforms;
+    }
+
+    // working variables used during parsing
+    public static class ma_t {
+
+        maObject_t currentObject;
+        maModel_s model;
+        boolean verbose;
+    }
 }

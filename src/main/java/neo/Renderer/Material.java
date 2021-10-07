@@ -1,186 +1,59 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import neo.Renderer.Cinematic.idCinematic;
 import neo.Renderer.Cinematic.idSndWindow;
-import static neo.Renderer.Image.MAX_IMAGE_NAME;
 import neo.Renderer.Image.cubeFiles_t;
-import static neo.Renderer.Image.cubeFiles_t.CF_2D;
-import static neo.Renderer.Image.cubeFiles_t.CF_CAMERA;
-import static neo.Renderer.Image.cubeFiles_t.CF_NATIVE;
-import static neo.Renderer.Image.globalImages;
 import neo.Renderer.Image.idImage;
 import neo.Renderer.Image.textureDepth_t;
-import static neo.Renderer.Image.textureDepth_t.TD_BUMP;
-import static neo.Renderer.Image.textureDepth_t.TD_DEFAULT;
-import static neo.Renderer.Image.textureDepth_t.TD_DIFFUSE;
-import static neo.Renderer.Image.textureDepth_t.TD_HIGH_QUALITY;
-import static neo.Renderer.Image.textureDepth_t.TD_SPECULAR;
-import static neo.Renderer.Image_program.R_ParsePastImageProgram;
-import static neo.Renderer.Material.cullType_t.CT_BACK_SIDED;
-import static neo.Renderer.Material.cullType_t.CT_FRONT_SIDED;
-import static neo.Renderer.Material.cullType_t.CT_TWO_SIDED;
-import static neo.Renderer.Material.deform_t.DFRM_EXPAND;
-import static neo.Renderer.Material.deform_t.DFRM_EYEBALL;
-import static neo.Renderer.Material.deform_t.DFRM_FLARE;
-import static neo.Renderer.Material.deform_t.DFRM_MOVE;
-import static neo.Renderer.Material.deform_t.DFRM_NONE;
-import static neo.Renderer.Material.deform_t.DFRM_PARTICLE;
-import static neo.Renderer.Material.deform_t.DFRM_PARTICLE2;
-import static neo.Renderer.Material.deform_t.DFRM_SPRITE;
-import static neo.Renderer.Material.deform_t.DFRM_TUBE;
-import static neo.Renderer.Material.deform_t.DFRM_TURB;
-import static neo.Renderer.Material.dynamicidImage_t.DI_MIRROR_RENDER;
-import static neo.Renderer.Material.dynamicidImage_t.DI_REMOTE_RENDER;
-import static neo.Renderer.Material.dynamicidImage_t.DI_XRAY_RENDER;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_ADD;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_AND;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_DIVIDE;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_EQ;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_GE;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_GT;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_LE;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_LT;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_MOD;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_MULTIPLY;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_NE;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_OR;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_SOUND;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_SUBTRACT;
-import static neo.Renderer.Material.expOpType_t.OP_TYPE_TABLE;
-import neo.Renderer.Material.expOp_t;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL0;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL1;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL2;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL3;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL4;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL5;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL6;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_GLOBAL7;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_NUM_PREDEFINED;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM0;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM1;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM10;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM11;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM2;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM3;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM4;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM5;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM6;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM7;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM8;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_PARM9;
-import static neo.Renderer.Material.expRegister_t.EXP_REG_TIME;
-import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.materialCoverage_t.MC_BAD;
-import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
-import static neo.Renderer.Material.materialCoverage_t.MC_PERFORATED;
-import static neo.Renderer.Material.materialCoverage_t.MC_TRANSLUCENT;
-import neo.Renderer.Material.newShaderStage_t;
-import neo.Renderer.Material.shaderStage_t;
-import static neo.Renderer.Material.stageLighting_t.SL_AMBIENT;
-import static neo.Renderer.Material.stageLighting_t.SL_BUMP;
-import static neo.Renderer.Material.stageLighting_t.SL_DIFFUSE;
-import static neo.Renderer.Material.stageLighting_t.SL_SPECULAR;
-import static neo.Renderer.Material.stageVertexColor_t.SVC_INVERSE_MODULATE;
-import static neo.Renderer.Material.stageVertexColor_t.SVC_MODULATE;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_10;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_11;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_12;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_13;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_14;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_15;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_CARDBOARD;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_FLESH;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_GLASS;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_LIQUID;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_METAL;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_NONE;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_PLASTIC;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_RICOCHET;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_STONE;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_WOOD;
-import static neo.Renderer.Material.texgen_t.TG_DIFFUSE_CUBE;
-import static neo.Renderer.Material.texgen_t.TG_EXPLICIT;
-import static neo.Renderer.Material.texgen_t.TG_GLASSWARP;
-import static neo.Renderer.Material.texgen_t.TG_REFLECT_CUBE;
-import static neo.Renderer.Material.texgen_t.TG_SCREEN;
-import static neo.Renderer.Material.texgen_t.TG_SCREEN2;
-import static neo.Renderer.Material.texgen_t.TG_SKYBOX_CUBE;
-import static neo.Renderer.Material.texgen_t.TG_WOBBLESKY_CUBE;
-import neo.Renderer.Material.textureFilter_t;
-import static neo.Renderer.Material.textureFilter_t.TF_DEFAULT;
-import static neo.Renderer.Material.textureFilter_t.TF_LINEAR;
-import static neo.Renderer.Material.textureFilter_t.TF_NEAREST;
-import neo.Renderer.Material.textureRepeat_t;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP_TO_ZERO;
-import static neo.Renderer.Material.textureRepeat_t.TR_CLAMP_TO_ZERO_ALPHA;
-import static neo.Renderer.Material.textureRepeat_t.TR_REPEAT;
 import neo.Renderer.MegaTexture.idMegaTexture;
-import static neo.Renderer.draw_arb2.R_FindARBProgram;
-import static neo.Renderer.tr_local.GLS_ALPHAMASK;
-import static neo.Renderer.tr_local.GLS_BLUEMASK;
-import static neo.Renderer.tr_local.GLS_COLORMASK;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_EQUAL;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_LESS;
-import static neo.Renderer.tr_local.GLS_DEPTHMASK;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_BITS;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_SRC_COLOR;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ZERO;
-import static neo.Renderer.tr_local.GLS_GREENMASK;
-import static neo.Renderer.tr_local.GLS_REDMASK;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ALPHA_SATURATE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_BITS;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_DST_COLOR;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE_MINUS_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE_MINUS_DST_COLOR;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_SRC_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ZERO;
-import static neo.Renderer.tr_local.backEnd;
-import static neo.Renderer.tr_local.glConfig;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewDef_s;
+import neo.Renderer.tr_local.*;
 import neo.Sound.sound.idSoundEmitter;
-import neo.TempDump.CPP_class;
+import neo.TempDump.*;
 import neo.TempDump.CPP_class.Bool;
 import neo.TempDump.CPP_class.Pointer;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atoi;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
-import static neo.TempDump.strLen;
+import neo.framework.DeclManager.idDecl;
+import neo.framework.DeclTable.idDeclTable;
+import neo.idlib.Text.Lexer.*;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.List.idList;
+import neo.ui.UserInterface.idUserInterface;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.Renderer.Image.MAX_IMAGE_NAME;
+import static neo.Renderer.Image.cubeFiles_t.*;
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.Image.textureDepth_t.*;
+import static neo.Renderer.Image_program.R_ParsePastImageProgram;
+import static neo.Renderer.Material.cullType_t.*;
+import static neo.Renderer.Material.deform_t.*;
+import static neo.Renderer.Material.dynamicidImage_t.*;
+import static neo.Renderer.Material.expOpType_t.*;
+import static neo.Renderer.Material.expRegister_t.*;
+import static neo.Renderer.Material.materialCoverage_t.*;
+import static neo.Renderer.Material.stageLighting_t.*;
+import static neo.Renderer.Material.stageVertexColor_t.SVC_INVERSE_MODULATE;
+import static neo.Renderer.Material.stageVertexColor_t.SVC_MODULATE;
+import static neo.Renderer.Material.surfTypes_t.*;
+import static neo.Renderer.Material.texgen_t.*;
+import static neo.Renderer.Material.textureFilter_t.*;
+import static neo.Renderer.Material.textureRepeat_t.*;
+import static neo.Renderer.draw_arb2.R_FindARBProgram;
+import static neo.Renderer.tr_local.*;
+import static neo.TempDump.*;
 import static neo.framework.CVarSystem.cvarSystem;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import static neo.framework.DeclManager.declType_t.DECL_TABLE;
-import neo.framework.DeclManager.idDecl;
-import neo.framework.DeclTable.idDeclTable;
 import static neo.idlib.Lib.BIT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
-import neo.idlib.Text.Str.idStr;
+import static neo.idlib.Text.Lexer.*;
 import static neo.idlib.Text.Token.TT_NUMBER;
-import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.List.idList;
 import static neo.idlib.precompiled.MAX_EXPRESSION_OPS;
 import static neo.idlib.precompiled.MAX_EXPRESSION_REGISTERS;
-import neo.ui.UserInterface.idUserInterface;
 import static neo.ui.UserInterface.uiManager;
 import static org.lwjgl.opengl.ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB;
 import static org.lwjgl.opengl.ARBVertexProgram.GL_VERTEX_PROGRAM_ARB;
@@ -194,39 +67,134 @@ import static org.lwjgl.opengl.ARBVertexProgram.GL_VERTEX_PROGRAM_ARB;
  */
 public class Material {
 
-    // moved from image.h for default parm
-    enum textureFilter_t {
+    public static final int CONTENTS_AAS_OBSTACLE = BIT(14);  // used to compile an obstacle into AAS that can be enabled/disabled
 
-        TF_LINEAR,
-        TF_NEAREST,
-        TF_DEFAULT			// use the user-specified r_textureFilter
+    public static final int CONTENTS_AAS_SOLID = BIT(13);  // solid for AAS
+
+    //
+    // contents used by utils
+    public static final int CONTENTS_AREAPORTAL = BIT(20);  // portal separating renderer areas
+
+    public static final int CONTENTS_BLOOD = BIT(7);   // used to detect blood decals
+
+    public static final int CONTENTS_BODY = BIT(8);   // used for actors
+
+    public static final int CONTENTS_CORPSE = BIT(10);  // used for dead bodies
+
+    public static final int CONTENTS_FLASHLIGHT_TRIGGER = BIT(15);  // used for triggers that are activated by the flashlight
+    public static final int CONTENTS_IKCLIP = BIT(6);   // solid to IK
+
+    public static final int CONTENTS_MONSTERCLIP = BIT(4);   // solid to monsters
+
+    public static final int CONTENTS_MOVEABLECLIP = BIT(5);   // solid to moveable entities
+
+    public static final int CONTENTS_NOCSG = BIT(21);  // don't cut this brush with CSG operations in the editor
+
+    public static final int CONTENTS_OPAQUE = BIT(1);   // blocks visibility (for ai)
+
+    public static final int CONTENTS_PLAYERCLIP = BIT(3);   // solid to players
+
+    public static final int CONTENTS_PROJECTILE = BIT(9);   // used for projectiles
+
+    //
+    public static final int CONTENTS_REMOVE_UTIL = ~(CONTENTS_AREAPORTAL | CONTENTS_NOCSG);
+    public static final int CONTENTS_RENDERMODEL = BIT(11);  // used for render models for collision detection
+    //} materialFlags_t;
+//
+//
+    // contents flags; NOTE: make sure to keep the defines in doom_defs.script up to date with these!
+// typedef enum {
+    public static final int CONTENTS_SOLID = BIT(0);   // an eye is never valid in a solid
+
+    public static final int CONTENTS_TRIGGER = BIT(12);  // used for triggers
+
+    public static final int CONTENTS_WATER = BIT(2);   // used for water
+
+    //
+    public static final int MAX_ENTITY_SHADER_PARMS = 12;
+    //
+//
+    // material flags
+//typedef enum {
+    public static final int MF_DEFAULTED = BIT(0);
+    public static final int MF_EDITOR_VISIBLE = BIT(6);   // in use (visible) per editor
+    public static final int MF_FORCESHADOWS = BIT(3);
+    public static final int MF_NOPORTALFOG = BIT(5);   // this fog volume won't ever consider a portal fogged out
+    public static final int MF_NOSELFSHADOW = BIT(4);
+    public static final int MF_NOSHADOWS = BIT(2);
+    public static final int MF_POLYGONOFFSET = BIT(1);
+    // } contentsFlags_t;
+//
+    // surface types
+    public static final int NUM_SURFACE_BITS = 4;
+    public static final int MAX_SURFACE_TYPES = 1 << NUM_SURFACE_BITS;
+    public static final int SS_GUI = -2;             // guis
+    public static final int SURF_COLLISION = BIT(6);    // collision surface
+//} materialSort_t;
+    public static final int SURF_DISCRETE = BIT(10);   // not clipped or merged by utilities
+
+    public static final int SURF_LADDER = BIT(7);    // player can climb up this surface
+    //
+    public static final int SURF_NODAMAGE = BIT(4);    // never give falling damage
+    public static final int SURF_NOFRAGMENT = BIT(11);   // dmap won't cut surface at each bsp boundary
+    public static final int SURF_NOIMPACT = BIT(8);    // don't make missile explosions
+    public static final int SURF_NOSTEPS = BIT(9);    // no footstep sounds
+    public static final int SURF_NULLNORMAL = BIT(12);   // renderbump will draw this surface as 0x80 0x80 0x80; which won't collect light from any angle
+    public static final int SURF_SLICK = BIT(5);    // effects game physics
+    //
+    // surface flags
+// typedef enum {
+    public static final int SURF_TYPE_BIT0 = BIT(0);    // encodes the material type (metal; flesh; concrete; etc.)
+    public static final int SURF_TYPE_BIT1 = BIT(1);    // "
+    public static final int SURF_TYPE_BIT2 = BIT(2);    // "
+    public static final int SURF_TYPE_BIT3 = BIT(3);    // "
+    public static final int SURF_TYPE_MASK = (1 << NUM_SURFACE_BITS) - 1;
+    static final int MAX_FRAGMENT_IMAGES = 8;
+    // these don't effect per-material storage, so they can be very large
+    static final int MAX_SHADER_STAGES = 256;
+    //
+    static final int MAX_TEXGEN_REGISTERS = 4;
+    static final int MAX_VERTEX_PARMS = 4;
+    //
+    static final int SS_ALMOST_NEAREST = 6;              // gun smoke puffs
+    static final int SS_BAD = -1;
+    static final int SS_CLOSE = 5;
+    static final int SS_DECAL = 2;              // scorch marks, etc.
+    //
+    static final int SS_FAR = 3;
+    static final int SS_MEDIUM = 4;              // normal translucent
+    //
+    static final int SS_NEAREST = 7;              // screen blood blobs
+    static final int SS_OPAQUE = 0;              // opaque
+    //
+    static final int SS_PORTAL_SKY = 1;
+    //
+    static final int SS_POST_PROCESS = 100;            // after a screen copy to texture
+    //typedef enum {
+    static final int SS_SUBVIEW = -3;             // mirrors, viewscreens, etc
+    @Deprecated
+    static final String[] opNames = {
+            "OP_TYPE_ADD",
+            "OP_TYPE_SUBTRACT",
+            "OP_TYPE_MULTIPLY",
+            "OP_TYPE_DIVIDE",
+            "OP_TYPE_MOD",
+            "OP_TYPE_TABLE",
+            "OP_TYPE_GT",
+            "OP_TYPE_GE",
+            "OP_TYPE_LT",
+            "OP_TYPE_LE",
+            "OP_TYPE_EQ",
+            "OP_TYPE_NE",
+            "OP_TYPE_AND",
+            "OP_TYPE_OR"
     };
+    public enum cullType_t {
 
-    enum textureRepeat_t {
-
-        TR_REPEAT,
-        TR_CLAMP,
-        TR_CLAMP_TO_BORDER, // this should replace TR_CLAMP_TO_ZERO and TR_CLAMP_TO_ZERO_ALPHA, but I don't want to risk changing it right now
-        //        
-        TR_CLAMP_TO_ZERO, // guarantee 0,0,0,255 edge for projected textures, set AFTER image format selection
-        //        
-        TR_CLAMP_TO_ZERO_ALPHA	// guarantee 0 alpha edge for projected textures, set AFTER image format selection
-    };
-
-    static class decalInfo_t {
-
-        public static final transient int SIZE
-                = Integer.SIZE
-                + Integer.SIZE
-                + (Float.SIZE * 4)
-                + (Float.SIZE * 4);
-
-        int stayTime;                           // msec for no change
-        int fadeTime;                           // msec to fade vertex colors over
-        final float[] start = new float[4];	// vertex color at spawn (possibly out of 0.0 - 1.0 range, will clamp after calc)
-        final float[] end = new float[4];	// vertex color at fade-out (possibly out of 0.0 - 1.0 range, will clamp after calc)
-    };
-
+        CT_FRONT_SIDED,
+        CT_BACK_SIDED,
+        CT_TWO_SIDED
+    }
     enum deform_t {
 
         DFRM_NONE,
@@ -239,8 +207,7 @@ public class Material {
         DFRM_PARTICLE,
         DFRM_PARTICLE2,
         DFRM_TURB
-    };
-
+    }
     enum dynamicidImage_t {
 
         DI_STATIC,
@@ -249,9 +216,9 @@ public class Material {
         DI_MIRROR_RENDER,
         DI_XRAY_RENDER,
         DI_REMOTE_RENDER
-    };
+    }
 
-// note: keep opNames[] in sync with changes
+    // note: keep opNames[] in sync with changes
     enum expOpType_t {
 
         OP_TYPE_ADD,
@@ -269,25 +236,7 @@ public class Material {
         OP_TYPE_AND,
         OP_TYPE_OR,
         OP_TYPE_SOUND
-    };
-
-    @Deprecated
-    static final String opNames[] = {
-        "OP_TYPE_ADD",
-        "OP_TYPE_SUBTRACT",
-        "OP_TYPE_MULTIPLY",
-        "OP_TYPE_DIVIDE",
-        "OP_TYPE_MOD",
-        "OP_TYPE_TABLE",
-        "OP_TYPE_GT",
-        "OP_TYPE_GE",
-        "OP_TYPE_LT",
-        "OP_TYPE_LE",
-        "OP_TYPE_EQ",
-        "OP_TYPE_NE",
-        "OP_TYPE_AND",
-        "OP_TYPE_OR"
-    };
+    }
 
     enum expRegister_t {
 
@@ -316,16 +265,98 @@ public class Material {
         EXP_REG_GLOBAL7,
         //
         EXP_REG_NUM_PREDEFINED
-    };
+    }
+    public enum materialCoverage_t {
+
+        MC_BAD,
+        MC_OPAQUE, // completely fills the triangle, will have black drawn on fillDepthBuffer
+        MC_PERFORATED, // may have alpha tested holes
+        MC_TRANSLUCENT    // blended with background
+    }
+    // the order BUMP / DIFFUSE / SPECULAR is necessary for interactions to draw correctly on low end cards
+    enum stageLighting_t {
+
+        SL_AMBIENT, // execute after lighting
+        SL_BUMP,
+        SL_DIFFUSE,
+        SL_SPECULAR
+    }
+    // cross-blended terrain textures need to modulate the color by
+// the vertex color to smoothly blend between two textures
+    enum stageVertexColor_t {
+
+        SVC_IGNORE,
+        SVC_MODULATE,
+        SVC_INVERSE_MODULATE
+    }
+    public enum surfTypes_t {
+
+        SURFTYPE_NONE, // default type
+        SURFTYPE_METAL,
+        SURFTYPE_STONE,
+        SURFTYPE_FLESH,
+        SURFTYPE_WOOD,
+        SURFTYPE_CARDBOARD,
+        SURFTYPE_LIQUID,
+        SURFTYPE_GLASS,
+        SURFTYPE_PLASTIC,
+        SURFTYPE_RICOCHET,
+        SURFTYPE_10,
+        SURFTYPE_11,
+        SURFTYPE_12,
+        SURFTYPE_13,
+        SURFTYPE_14,
+        SURFTYPE_15
+    }
+    enum texgen_t {
+
+        TG_EXPLICIT,
+        TG_DIFFUSE_CUBE,
+        TG_REFLECT_CUBE,
+        TG_SKYBOX_CUBE,
+        TG_WOBBLESKY_CUBE,
+        TG_SCREEN, // screen aligned, for mirrorRenders and screen space temporaries
+        TG_SCREEN2,
+        TG_GLASSWARP
+    }
+    // moved from image.h for default parm
+    enum textureFilter_t {
+
+        TF_LINEAR,
+        TF_NEAREST,
+        TF_DEFAULT            // use the user-specified r_textureFilter
+    }
+    enum textureRepeat_t {
+
+        TR_REPEAT,
+        TR_CLAMP,
+        TR_CLAMP_TO_BORDER, // this should replace TR_CLAMP_TO_ZERO and TR_CLAMP_TO_ZERO_ALPHA, but I don't want to risk changing it right now
+        //
+        TR_CLAMP_TO_ZERO, // guarantee 0,0,0,255 edge for projected textures, set AFTER image format selection
+        //
+        TR_CLAMP_TO_ZERO_ALPHA    // guarantee 0 alpha edge for projected textures, set AFTER image format selection
+    }
+
+    static class decalInfo_t {
+
+        public static final transient int SIZE
+                = Integer.SIZE
+                + Integer.SIZE
+                + (Float.SIZE * 4)
+                + (Float.SIZE * 4);
+        final float[] end = new float[4];    // vertex color at fade-out (possibly out of 0.0 - 1.0 range, will clamp after calc)
+        final float[] start = new float[4];    // vertex color at spawn (possibly out of 0.0 - 1.0 range, will clamp after calc)
+        int fadeTime;                           // msec to fade vertex colors over
+        int stayTime;                           // msec for no change
+    }
 
     static class expOp_t {
 
         public static final transient int SIZE
                 = CPP_class.Enum.SIZE
                 + (Integer.SIZE * 3);
-
-        expOpType_t opType;
         int a, b, c;
+        expOpType_t opType;
 
         public expOp_t() {
         }
@@ -336,7 +367,7 @@ public class Material {
             this.b = op.b;
             this.c = op.c;
         }
-    };
+    }
 
     static class colorStage_t {
 
@@ -350,19 +381,7 @@ public class Material {
         private colorStage_t(colorStage_t color) {
             System.arraycopy(color.registers, 0, this.registers, 0, this.registers.length);
         }
-    };
-
-    enum texgen_t {
-
-        TG_EXPLICIT,
-        TG_DIFFUSE_CUBE,
-        TG_REFLECT_CUBE,
-        TG_SKYBOX_CUBE,
-        TG_WOBBLESKY_CUBE,
-        TG_SCREEN, // screen aligned, for mirrorRenders and screen space temporaries
-        TG_SCREEN2,
-        TG_GLASSWARP
-    };
+    }
 
     public static class textureStage_t {
 
@@ -375,18 +394,16 @@ public class Material {
                 + CPP_class.Enum.SIZE//dynamicidImage_t
                 + (Integer.SIZE * 2)
                 + Integer.SIZE;
-
-        public final idCinematic[] cinematic = {null};
-        public final idImage[]     image     = {null};
-        public       texgen_t      texgen    = texgen_t.values()[0];
-        public boolean hasMatrix;
-        public final int[][]          matrix  = new int[2][3];    // we only allow a subset of the full projection matrix
-        // dynamic image variables
-        public       dynamicidImage_t dynamic = dynamicidImage_t.values()[0];
-        public int width, height;
-        public int dynamicFrameCount;
-
         private static int blaCounter = 0;
+        public final idCinematic[] cinematic = {null};
+        public final idImage[] image = {null};
+        public final int[][] matrix = new int[2][3];    // we only allow a subset of the full projection matrix
+        // dynamic image variables
+        public dynamicidImage_t dynamic = dynamicidImage_t.values()[0];
+        public int dynamicFrameCount;
+        public boolean hasMatrix;
+        public texgen_t texgen = texgen_t.values()[0];
+        public int width, height;
 
         public textureStage_t() {
 
@@ -405,27 +422,7 @@ public class Material {
             this.height = texture.height;
             this.dynamicFrameCount = texture.dynamicFrameCount;
         }
-    };
-
-// the order BUMP / DIFFUSE / SPECULAR is necessary for interactions to draw correctly on low end cards
-    enum stageLighting_t {
-
-        SL_AMBIENT, // execute after lighting
-        SL_BUMP,
-        SL_DIFFUSE,
-        SL_SPECULAR
-    };
-
-// cross-blended terrain textures need to modulate the color by
-// the vertex color to smoothly blend between two textures
-    enum stageVertexColor_t {
-
-        SVC_IGNORE,
-        SVC_MODULATE,
-        SVC_INVERSE_MODULATE
-    };
-    static final int MAX_FRAGMENT_IMAGES = 8;
-    static final int MAX_VERTEX_PARMS = 4;
+    }
 
     static class newShaderStage_t {
 
@@ -437,15 +434,14 @@ public class Material {
                 + Integer.SIZE
                 + (idImage.SIZE * MAX_FRAGMENT_IMAGES)//TODO:pointer
                 + idMegaTexture.SIZE;
-
-        int vertexProgram;
-        int numVertexParms;
-        final int[][] vertexParms = new int[MAX_VERTEX_PARMS][4];	// evaluated register indexes
+        final int[][] vertexParms = new int[MAX_VERTEX_PARMS][4];    // evaluated register indexes
         int fragmentProgram;
-        int numFragmentProgramImages;
         idImage[] fragmentProgramImages = new idImage[MAX_FRAGMENT_IMAGES];
         idMegaTexture megaTexture;      // handles all the binding and parameter setting
-    };
+        int numFragmentProgramImages;
+        int numVertexParms;
+        int vertexProgram;
+    }
 
     public static class shaderStage_t {
 
@@ -462,23 +458,21 @@ public class Material {
                 + Bool.SIZE
                 + Float.SIZE
                 + Pointer.SIZE;//newShaderStage_t
-
-        int             conditionRegister;      // if registers[conditionRegister] == 0, skip stage
-        stageLighting_t lighting;               // determines which passes interact with lights
-        int             drawStateBits;
-        colorStage_t    color;
-        boolean         hasAlphaTest;
-        int             alphaTestRegister;
+        private static int DBG_counter = 0;
         public final textureStage_t texture;
-        stageVertexColor_t vertexColor = stageVertexColor_t.values()[0];
-        boolean          ignoreAlphaTest;       // this stage should act as translucent, even if the surface is alpha tested
-        //
-        float            privatePolygonOffset;  // a per-stage polygon offset
+        private final int DBG_count = DBG_counter++;
+        int alphaTestRegister;
+        colorStage_t color;
+        int conditionRegister;      // if registers[conditionRegister] == 0, skip stage
+        int drawStateBits;
+        boolean hasAlphaTest;
+        boolean ignoreAlphaTest;       // this stage should act as translucent, even if the surface is alpha tested
+        stageLighting_t lighting;               // determines which passes interact with lights
         //
         newShaderStage_t newStage;              // vertex / fragment program based stage
-
-        private static int DBG_counter = 0;
-        private final  int DBG_count   = DBG_counter++;
+        //
+        float privatePolygonOffset;  // a per-stage polygon offset
+        stageVertexColor_t vertexColor = stageVertexColor_t.values()[0];
 
         public shaderStage_t() {
             this.lighting = stageLighting_t.values()[0];
@@ -506,128 +500,7 @@ public class Material {
             this.newStage = shader.newStage;//pointer
         }
 
-    };
-
-    public enum materialCoverage_t {
-
-        MC_BAD,
-        MC_OPAQUE, // completely fills the triangle, will have black drawn on fillDepthBuffer
-        MC_PERFORATED, // may have alpha tested holes
-        MC_TRANSLUCENT  	// blended with background
-    };
-    //typedef enum {
-    static final        int SS_SUBVIEW        = -3;             // mirrors, viewscreens, etc
-    public static final int SS_GUI            = -2;             // guis
-    static final        int SS_BAD            = -1;
-    static final        int SS_OPAQUE         = 0;              // opaque
-    //
-    static final        int SS_PORTAL_SKY     = 1;
-    static final        int SS_DECAL          = 2;              // scorch marks, etc.
-    //
-    static final        int SS_FAR            = 3;
-    static final        int SS_MEDIUM         = 4;              // normal translucent
-    static final        int SS_CLOSE          = 5;
-    //
-    static final        int SS_ALMOST_NEAREST = 6;              // gun smoke puffs
-    //
-    static final        int SS_NEAREST        = 7;              // screen blood blobs
-    //
-    static final        int SS_POST_PROCESS   = 100;            // after a screen copy to texture
-//} materialSort_t;
-
-    public enum cullType_t {
-
-        CT_FRONT_SIDED,
-        CT_BACK_SIDED,
-        CT_TWO_SIDED
-    };
-    // these don't effect per-material storage, so they can be very large
-    static final        int MAX_SHADER_STAGES           = 256;
-    //
-    static final        int MAX_TEXGEN_REGISTERS        = 4;
-    //
-    public static final int MAX_ENTITY_SHADER_PARMS     = 12;
-    //
-//    
-    // material flags
-//typedef enum {
-    public static final int MF_DEFAULTED                = BIT(0);
-    public static final int MF_POLYGONOFFSET            = BIT(1);
-    public static final int MF_NOSHADOWS                = BIT(2);
-    public static final int MF_FORCESHADOWS             = BIT(3);
-    public static final int MF_NOSELFSHADOW             = BIT(4);
-    public static final int MF_NOPORTALFOG              = BIT(5);   // this fog volume won't ever consider a portal fogged out
-    public static final int MF_EDITOR_VISIBLE           = BIT(6);   // in use (visible) per editor
-    //} materialFlags_t;
-//    
-//    
-    // contents flags; NOTE: make sure to keep the defines in doom_defs.script up to date with these!
-// typedef enum {
-    public static final int CONTENTS_SOLID              = BIT(0);   // an eye is never valid in a solid
-    public static final int CONTENTS_OPAQUE             = BIT(1);   // blocks visibility (for ai)
-    public static final int CONTENTS_WATER              = BIT(2);   // used for water
-    public static final int CONTENTS_PLAYERCLIP         = BIT(3);   // solid to players
-    public static final int CONTENTS_MONSTERCLIP        = BIT(4);   // solid to monsters
-    public static final int CONTENTS_MOVEABLECLIP       = BIT(5);   // solid to moveable entities
-    public static final int CONTENTS_IKCLIP             = BIT(6);   // solid to IK
-    public static final int CONTENTS_BLOOD              = BIT(7);   // used to detect blood decals
-    public static final int CONTENTS_BODY               = BIT(8);   // used for actors
-    public static final int CONTENTS_PROJECTILE         = BIT(9);   // used for projectiles
-    public static final int CONTENTS_CORPSE             = BIT(10);  // used for dead bodies
-    public static final int CONTENTS_RENDERMODEL        = BIT(11);  // used for render models for collision detection
-    public static final int CONTENTS_TRIGGER            = BIT(12);  // used for triggers
-    public static final int CONTENTS_AAS_SOLID          = BIT(13);  // solid for AAS
-    public static final int CONTENTS_AAS_OBSTACLE       = BIT(14);  // used to compile an obstacle into AAS that can be enabled/disabled
-    public static final int CONTENTS_FLASHLIGHT_TRIGGER = BIT(15);  // used for triggers that are activated by the flashlight
-    //
-    // contents used by utils
-    public static final int CONTENTS_AREAPORTAL         = BIT(20);  // portal separating renderer areas
-    public static final int CONTENTS_NOCSG              = BIT(21);  // don't cut this brush with CSG operations in the editor
-    //
-    public static final int CONTENTS_REMOVE_UTIL        = ~(CONTENTS_AREAPORTAL | CONTENTS_NOCSG);
-    // } contentsFlags_t;
-//    
-    // surface types
-    public static final int NUM_SURFACE_BITS            = 4;
-    public static final int MAX_SURFACE_TYPES           = 1 << NUM_SURFACE_BITS;
-
-    public enum surfTypes_t {
-
-        SURFTYPE_NONE, // default type
-        SURFTYPE_METAL,
-        SURFTYPE_STONE,
-        SURFTYPE_FLESH,
-        SURFTYPE_WOOD,
-        SURFTYPE_CARDBOARD,
-        SURFTYPE_LIQUID,
-        SURFTYPE_GLASS,
-        SURFTYPE_PLASTIC,
-        SURFTYPE_RICOCHET,
-        SURFTYPE_10,
-        SURFTYPE_11,
-        SURFTYPE_12,
-        SURFTYPE_13,
-        SURFTYPE_14,
-        SURFTYPE_15
-    };
-    //
-    // surface flags
-// typedef enum {
-    public static final int SURF_TYPE_BIT0  = BIT(0);    // encodes the material type (metal; flesh; concrete; etc.)
-    public static final int SURF_TYPE_BIT1  = BIT(1);    // "
-    public static final int SURF_TYPE_BIT2  = BIT(2);    // "
-    public static final int SURF_TYPE_BIT3  = BIT(3);    // "
-    public static final int SURF_TYPE_MASK  = (1 << NUM_SURFACE_BITS) - 1;
-    //
-    public static final int SURF_NODAMAGE   = BIT(4);    // never give falling damage
-    public static final int SURF_SLICK      = BIT(5);    // effects game physics
-    public static final int SURF_COLLISION  = BIT(6);    // collision surface
-    public static final int SURF_LADDER     = BIT(7);    // player can climb up this surface
-    public static final int SURF_NOIMPACT   = BIT(8);    // don't make missile explosions
-    public static final int SURF_NOSTEPS    = BIT(9);    // no footstep sounds
-    public static final int SURF_DISCRETE   = BIT(10);   // not clipped or merged by utilities
-    public static final int SURF_NOFRAGMENT = BIT(11);   // dmap won't cut surface at each bsp boundary
-    public static final int SURF_NULLNORMAL = BIT(12);   // renderbump will draw this surface as 0x80 0x80 0x80; which won't collect light from any angle
+    }
 // } surfaceFlags_t;
 
     // keep all of these on the stack, when they are static it makes material parsing non-reentrant
@@ -640,14 +513,13 @@ public class Material {
                 + (shaderStage_t.SIZE * MAX_SHADER_STAGES)
                 + Bool.SIZE
                 + Bool.SIZE;
-
-        boolean[]       registerIsTemporary = new boolean[MAX_EXPRESSION_REGISTERS];
-        float[]         shaderRegisters     = new float[MAX_EXPRESSION_REGISTERS];
-        expOp_t[]       shaderOps           = new expOp_t[MAX_EXPRESSION_OPS];
-        shaderStage_t[] parseStages         = new shaderStage_t[MAX_SHADER_STAGES];
+        boolean forceOverlays;
+        shaderStage_t[] parseStages = new shaderStage_t[MAX_SHADER_STAGES];
+        boolean[] registerIsTemporary = new boolean[MAX_EXPRESSION_REGISTERS];
         //
         boolean registersAreConstant;
-        boolean forceOverlays;
+        expOp_t[] shaderOps = new expOp_t[MAX_EXPRESSION_OPS];
+        float[] shaderRegisters = new float[MAX_EXPRESSION_REGISTERS];
 
         mtrParsingData_s() {
 
@@ -659,7 +531,7 @@ public class Material {
                 parseStages[p] = new shaderStage_t();
             }
         }
-    };
+    }
 
     public static class idMaterial extends neo.framework.DeclManager.idDecl implements neo.TempDump.SERiAL {
 
@@ -698,79 +570,167 @@ public class Material {
                 + Float.SIZE
                 + 2//2 booleans
                 + Integer.SIZE;
+        /*
+         =================
+         idMaterial::ParseExpressionPriority
 
-        private idStr           desc;            // description
-        private idStr           renderBump;      // renderbump command options, without the "renderbump" at the start
-        //
-        private idImage         lightFalloffImage;
-        //
-        private int             entityGui;       // draw a gui with the idUserInterface from the renderEntity_t non zero will draw gui, gui2, or gui3 from renderEnitty_t
-        //        
-        private idUserInterface gui;             // non-custom guis are shared by all users of a material
-        //
-        private boolean         noFog;           // surface does not create fog interactions
-        //
-        private int             spectrum;        // for invisible writing, used for both lights and surfaces
-        //
-        private float           polygonOffset;
-        //
-        private int             contentFlags;    // content flags
-        private int             surfaceFlags;    // surface flags
-        private int             materialFlags;   // material flags
-        //	
-        private decalInfo_t     decalInfo;
-        //
-        //
-        private float           sort;            // lower numbered shaders draw before higher numbered
-        private deform_t        deform;
-        private final int[] deformRegisters = new int[4];// numeric parameter for deforms
-        private idDecl deformDecl;               // for surface emitted particle deforms and tables
-        //
-        private final int[] texGenRegisters = new int[MAX_TEXGEN_REGISTERS];// for wobbleSky
-        //
-        private materialCoverage_t coverage;
-        private cullType_t         cullType;     // CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
-        private boolean            shouldCreateBackSides;
-        //	
-        private boolean            fogLight;
-        private boolean            blendLight;
-        private boolean            ambientLight;
-        private boolean            unsmoothedTangents;
-        private boolean            hasSubview;   // mirror, remote render, etc
-        private boolean            allowOverlays;
-        //
-        private int                numOps;
-        private expOp_t[]          ops;          // evaluate to make expressionRegisters
-        //																										
-        private int                numRegisters;                                                                            //
-        private float[]            expressionRegisters;
-        //
-        private float[]            constantRegisters;// NULL if ops ever reference globalParms or entityParms
-        //
-        private int                numStages;
-        private int                numAmbientStages;
-        //																										
-        public shaderStage_t[]    stages;
-        //
-        private mtrParsingData_s   pd;           // only used during parsing
-        //
-        private float              surfaceArea;  // only for listSurfaceAreas
-        //
-        // we defer loading of the editor image until it is asked for, so the game doesn't load up
-        // all the invisible and uncompressed images.
-        // If editorImage is NULL, it will atempt to load editorImageName, and set editorImage to that or defaultImage
-        private idStr              editorImageName;
-        private idImage            editorImage;  // image used for non-shaded preview
-        private float              editorAlpha;
-        //
-        private boolean            suppressInSubview;
-        private boolean            portalSky;
-        private int                refCount;
+         Returns a register index
+         =================
+         */
+        static final int TOP_PRIORITY = 4;
+        static final infoParm_t[] infoParms = {
+                // game relevant attributes
+                new infoParm_t("solid", 0, 0, CONTENTS_SOLID), // may need to override a clearSolid
+                new infoParm_t("water", 1, 0, CONTENTS_WATER), // used for water
+                new infoParm_t("playerclip", 0, 0, CONTENTS_PLAYERCLIP), // solid to players
+                new infoParm_t("monsterclip", 0, 0, CONTENTS_MONSTERCLIP), // solid to monsters
+                new infoParm_t("moveableclip", 0, 0, CONTENTS_MOVEABLECLIP),// solid to moveable entities
+                new infoParm_t("ikclip", 0, 0, CONTENTS_IKCLIP), // solid to IK
+                new infoParm_t("blood", 0, 0, CONTENTS_BLOOD), // used to detect blood decals
+                new infoParm_t("trigger", 0, 0, CONTENTS_TRIGGER), // used for triggers
+                new infoParm_t("aassolid", 0, 0, CONTENTS_AAS_SOLID), // solid for AAS
+                new infoParm_t("aasobstacle", 0, 0, CONTENTS_AAS_OBSTACLE),// used to compile an obstacle into AAS that can be enabled/disabled
+                new infoParm_t("flashlight_trigger", 0, 0, CONTENTS_FLASHLIGHT_TRIGGER), // used for triggers that are activated by the flashlight
+                new infoParm_t("nonsolid", 1, 0, 0), // clears the solid flag
+                new infoParm_t("nullNormal", 0, SURF_NULLNORMAL, 0), // renderbump will draw as 0x80 0x80 0x80
+                //
+                // utility relevant attributes
+                new infoParm_t("areaportal", 1, 0, CONTENTS_AREAPORTAL), // divides areas
+                new infoParm_t("qer_nocarve", 1, 0, CONTENTS_NOCSG), // don't cut brushes in editor
+                //
+                new infoParm_t("discrete", 1, SURF_DISCRETE, 0), // surfaces should not be automatically merged together or
+                /////////////////////////////////////////////////// clipped to the world,
+                /////////////////////////////////////////////////// because they represent discrete objects like gui shaders
+                /////////////////////////////////////////////////// mirrors, or autosprites
+                new infoParm_t("noFragment", 0, SURF_NOFRAGMENT, 0),
+                //
+                new infoParm_t("slick", 0, SURF_SLICK, 0),
+                new infoParm_t("collision", 0, SURF_COLLISION, 0),
+                new infoParm_t("noimpact", 0, SURF_NOIMPACT, 0), // don't make impact explosions or marks
+                new infoParm_t("nodamage", 0, SURF_NODAMAGE, 0), // no falling damage when hitting
+                new infoParm_t("ladder", 0, SURF_LADDER, 0), // climbable
+                new infoParm_t("nosteps", 0, SURF_NOSTEPS, 0), // no footsteps
+                //
+                // material types for particle, sound, footstep feedback
+                new infoParm_t("metal", 0, SURFTYPE_METAL, 0), // metal
+                new infoParm_t("stone", 0, SURFTYPE_STONE, 0), // stone
+                new infoParm_t("flesh", 0, SURFTYPE_FLESH, 0), // flesh
+                new infoParm_t("wood", 0, SURFTYPE_WOOD, 0), // wood
+                new infoParm_t("cardboard", 0, SURFTYPE_CARDBOARD, 0), // cardboard
+                new infoParm_t("liquid", 0, SURFTYPE_LIQUID, 0), // liquid
+                new infoParm_t("glass", 0, SURFTYPE_GLASS, 0), // glass
+                new infoParm_t("plastic", 0, SURFTYPE_PLASTIC, 0), // plastic
+                new infoParm_t("ricochet", 0, SURFTYPE_RICOCHET, 0), // behaves like metal but causes a ricochet sound
+                //
+                // unassigned surface types
+                new infoParm_t("surftype10", 0, SURFTYPE_10, 0),
+                new infoParm_t("surftype11", 0, SURFTYPE_11, 0),
+                new infoParm_t("surftype12", 0, SURFTYPE_12, 0),
+                new infoParm_t("surftype13", 0, SURFTYPE_13, 0),
+                new infoParm_t("surftype14", 0, SURFTYPE_14, 0),
+                new infoParm_t("surftype15", 0, SURFTYPE_15, 0)
+        };
+        static final int numInfoParms = infoParms.length;
+        public static int DBG_ParseStage = 0;
+        /*
+         =================
+         idMaterial::ParseStage
+
+         An open brace has been parsed
+
+
+         {
+         if <expression>
+         map <imageprogram>
+         "nearest" "linear" "clamp" "zeroclamp" "uncompressed" "highquality" "nopicmip"
+         scroll, scale, rotate
+         }
+
+         =================
+         */ static int DEBUG_imageName = 0;
+        private static int DBG_ParseBlend = 0;
+        private static int DBG_ParseExpressionPriority = 0;
+        /*
+         =========================
+         idMaterial::Parse
+
+         Parses the current material definition and finds all necessary images.
+         =========================
+         */        private static int DEBUG_Parse = 0;
+        private static int DEBUG_ParseStage = 0;
         //
         //
         private static int debug_creation_counter = 0;
         private final int dbg_count;
+        private final int[] deformRegisters = new int[4];// numeric parameter for deforms
+        //
+        private final int[] texGenRegisters = new int[MAX_TEXGEN_REGISTERS];// for wobbleSky
         public int DBG_BALLS = 0;
+        //
+        public shaderStage_t[] stages;
+        private boolean allowOverlays;
+        private boolean ambientLight;
+        private boolean blendLight;
+        //
+        private float[] constantRegisters;// NULL if ops ever reference globalParms or entityParms
+        //
+        private int contentFlags;    // content flags
+        //
+        private materialCoverage_t coverage;
+        private cullType_t cullType;     // CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
+        //
+        private final decalInfo_t decalInfo;
+        private deform_t deform;
+        private idDecl deformDecl;               // for surface emitted particle deforms and tables
+        private idStr desc;            // description
+        private float editorAlpha;
+        private idImage editorImage;  // image used for non-shaded preview
+        //
+        // we defer loading of the editor image until it is asked for, so the game doesn't load up
+        // all the invisible and uncompressed images.
+        // If editorImage is NULL, it will atempt to load editorImageName, and set editorImage to that or defaultImage
+        private idStr editorImageName;
+        //
+        private int entityGui;       // draw a gui with the idUserInterface from the renderEntity_t non zero will draw gui, gui2, or gui3 from renderEnitty_t
+        private float[] expressionRegisters;
+        //
+        private boolean fogLight;
+        //
+        private idUserInterface gui;             // non-custom guis are shared by all users of a material
+        private boolean hasSubview;   // mirror, remote render, etc
+        //
+        private idImage lightFalloffImage;
+        private int materialFlags;   // material flags
+        //
+        private boolean noFog;           // surface does not create fog interactions
+        private int numAmbientStages;
+        //
+        private int numOps;
+        //
+        private int numRegisters;                                                                            //
+        //
+        private int numStages;
+        private expOp_t[] ops;          // evaluate to make expressionRegisters
+        //
+        private mtrParsingData_s pd;           // only used during parsing
+        //
+        private float polygonOffset;
+        private boolean portalSky;
+        private int refCount;
+//	virtual				~idMaterial();
+        private idStr renderBump;      // renderbump command options, without the "renderbump" at the start
+        private boolean shouldCreateBackSides;
+        //
+        //
+        private float sort;            // lower numbered shaders draw before higher numbered
+        //
+        private int spectrum;        // for invisible writing, used for both lights and surfaces
+        //
+        private boolean suppressInSubview;
+        //
+        private float surfaceArea;  // only for listSurfaceAreas
+        private int surfaceFlags;    // surface flags
+        private boolean unsmoothedTangents;
 
         public idMaterial() {
             dbg_count = debug_creation_counter++;
@@ -781,7 +741,6 @@ public class Material {
             // we don't want it cleared when a material is purged
             surfaceArea = 0;
         }
-//	virtual				~idMaterial();
 
         idMaterial(idMaterial shader) {//TODO:clone?
             throw new UnsupportedOperationException();
@@ -865,16 +824,9 @@ public class Material {
                     + "}";
         }
 
-        /*
-         =========================
-         idMaterial::Parse
-
-         Parses the current material definition and finds all necessary images.
-         =========================
-         */        private static int DEBUG_Parse = 0;
-
         @Override
-        public boolean Parse(final String text, final int textLength) {DEBUG_Parse++;
+        public boolean Parse(final String text, final int textLength) {
+            DEBUG_Parse++;
             idLexer src = new idLexer();
 //	idToken	token;
             mtrParsingData_s parsingData = new mtrParsingData_s();
@@ -921,7 +873,7 @@ public class Material {
 
             // automatically determine coverage if not explicitly set
             if (coverage == MC_BAD) {
-                // automatically set MC_TRANSLUCENT if we don't have any interaction stages and 
+                // automatically set MC_TRANSLUCENT if we don't have any interaction stages and
                 // the first stage is blended and not an alpha test mask or a subview
                 if (0 == numStages) {
                     // non-visible
@@ -1386,7 +1338,7 @@ public class Material {
         }
 
         // this is only used by the gui system to force sorting order
-        // on images referenced from tga's instead of materials. 
+        // on images referenced from tga's instead of materials.
         // this is done this way as there are 2000 tgas the guis use
         public void SetSort(float s) {
             sort = s;
@@ -1441,6 +1393,9 @@ public class Material {
         public decalInfo_t GetDecalInfo() {
             return decalInfo;
         }
+//
+//	//------------------------------------------------------------------
+//
 
         // spectrums are used for "invisible writing" that can only be
         // illuminated by a light of matching spectrum
@@ -1469,6 +1424,7 @@ public class Material {
             }
             return stages[0].texture.cinematic[0].AnimationLength();
         }
+        //------------------------------------------------------------------
 
         public void CloseCinematic() {
             for (int i = 0; i < numStages; i++) {
@@ -1494,9 +1450,6 @@ public class Material {
             }
             stages[0].texture.cinematic[0].ImageForTime(tr.primaryRenderView.time);
         }
-//
-//	//------------------------------------------------------------------
-//
 
         // gets an image for the editor to use
         public idImage GetEditorImage() {
@@ -1547,7 +1500,6 @@ public class Material {
             gui = uiManager.FindGui(_gui, true, false, true);
         }
 
-
         /*
          ===================
          idMaterial::SetImageClassifications
@@ -1563,13 +1515,11 @@ public class Material {
                 }
             }
         }
-        //------------------------------------------------------------------
 
         // returns number of registers this material contains
         public int GetNumRegisters() {
             return numRegisters;
         }
-
 
         /*
          ===============
@@ -1582,9 +1532,10 @@ public class Material {
          */
         // regs should point to a float array large enough to hold GetNumRegisters() floats
         public void EvaluateRegisters(float[] regs, final float[] shaderParms/*[MAX_ENTITY_SHADER_PARMS]*/,
-                final viewDef_s view, idSoundEmitter soundEmitter /*= NULL*/) {
+                                      final viewDef_s view, idSoundEmitter soundEmitter /*= NULL*/) {
             int i, b;
-            /*expOp_t*/ int op;
+            /*expOp_t*/
+            int op;
 
             // copy the material constants
             for (i = etoi(EXP_REG_NUM_PREDEFINED); i < numRegisters; i++) {
@@ -1920,7 +1871,7 @@ public class Material {
                     str = R_ParsePastImageProgram(src);
                     String copy;
 
-                    copy = str;	// so other things don't step on it
+                    copy = str;    // so other things don't step on it
                     lightFalloffImage = globalImages.ImageFromFile(copy, TF_DEFAULT, false, TR_CLAMP /* TR_CLAMP_TO_ZERO */, TD_DEFAULT);
                     continue;
                 } // guisurf <guifile> | guisurf entity
@@ -2054,7 +2005,6 @@ public class Material {
                 }
             }
         }
-        public static int DBG_ParseStage = 0;
 
         /*
          ===============
@@ -2105,11 +2055,10 @@ public class Material {
             }
         }
 
-        private static int DBG_ParseBlend = 0;
         private void ParseBlend(idLexer src, shaderStage_t stage) {
             idToken token = new idToken();
             int srcBlend, dstBlend;
-            
+
 //            System.out.printf("ParseBlend(%d)\n", DBG_ParseBlend++);
 
             if (!src.ReadToken(token)) {
@@ -2117,7 +2066,8 @@ public class Material {
             }
 
             // blending combinations
-            if (0 == token.Icmp("blend")) {DBG_ParseBlend++;
+            if (0 == token.Icmp("blend")) {
+                DBG_ParseBlend++;
                 stage.drawStateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
                 return;
             }
@@ -2284,7 +2234,7 @@ public class Material {
                 }
 
                 if (0 == token.Icmp("uncompressed") || 0 == token.Icmp("highquality")) {
-                    if (0 == globalImages.image_ignoreHighQuality.GetInteger()) {
+                    if (0 == Image.idImageManager.image_ignoreHighQuality.GetInteger()) {
                         td = TD_HIGH_QUALITY;
                     }
                     continue;
@@ -2306,24 +2256,6 @@ public class Material {
                 newStage.fragmentProgramImages[unit] = globalImages.defaultImage;
             }
         }
-
-        /*
-         =================
-         idMaterial::ParseStage
-
-         An open brace has been parsed
-
-
-         {
-         if <expression>
-         map <imageprogram>
-         "nearest" "linear" "clamp" "zeroclamp" "uncompressed" "highquality" "nopicmip"
-         scroll, scale, rotate
-         }
-
-         =================
-         */ static int DEBUG_imageName = 0;
-         private static int DEBUG_ParseStage = 0;
 
         private void ParseStage(idLexer src, final textureRepeat_t trpDefault /*= TR_REPEAT */) {
             DEBUG_imageName++;
@@ -2365,7 +2297,7 @@ public class Material {
                 asdasdasdasd = 0;
             }
             while (true) {
-                if (TestMaterialFlag(MF_DEFAULTED)) {	// we have a parse error
+                if (TestMaterialFlag(MF_DEFAULTED)) {    // we have a parse error
                     return;
                 }
                 if (!src.ExpectAnyToken(token)) {
@@ -2504,7 +2436,7 @@ public class Material {
                     continue;
                 }
                 if (0 == token.Icmp("uncompressed") || 0 == token.Icmp("highquality")) {
-                    if (0 == globalImages.image_ignoreHighQuality.GetInteger()) {
+                    if (0 == Image.idImageManager.image_ignoreHighQuality.GetInteger()) {
                         td = TD_HIGH_QUALITY;
                     }
                     continue;
@@ -2725,7 +2657,7 @@ public class Material {
                     DEBUG_ParseStage++;
                     ss.color.registers[3] = ParseExpression(src);
 //                    System.out.printf("alpha=>%d\n", ss.color.registers[3]);
-                    int s = ss.color.registers[3];                    
+                    int s = ss.color.registers[3];
                     continue;
                 }
                 if (0 == token.Icmp("rgb")) {
@@ -2931,79 +2863,6 @@ public class Material {
         public void oSet(idMaterial FindMaterial) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-
-        // info parms
-        static class infoParm_t {
-
-            public infoParm_t(String name, int clearSolid, int surfaceFlags, int contents) {
-                this.name = name;
-                this.clearSolid = clearSolid;
-                this.surfaceFlags = surfaceFlags;
-                this.contents = contents;
-            }
-
-            public infoParm_t(String name, int clearSolid, surfTypes_t surfaceFlags, int contents) {
-                this.name = name;
-                this.clearSolid = clearSolid;
-                this.surfaceFlags = surfaceFlags.ordinal();
-                this.contents = contents;
-            }
-            String name;
-            int clearSolid, surfaceFlags, contents;
-        };
-        static final infoParm_t[] infoParms = {
-            // game relevant attributes
-            new infoParm_t("solid", 0, 0, CONTENTS_SOLID), // may need to override a clearSolid
-            new infoParm_t("water", 1, 0, CONTENTS_WATER), // used for water
-            new infoParm_t("playerclip", 0, 0, CONTENTS_PLAYERCLIP), // solid to players
-            new infoParm_t("monsterclip", 0, 0, CONTENTS_MONSTERCLIP), // solid to monsters
-            new infoParm_t("moveableclip", 0, 0, CONTENTS_MOVEABLECLIP),// solid to moveable entities
-            new infoParm_t("ikclip", 0, 0, CONTENTS_IKCLIP), // solid to IK
-            new infoParm_t("blood", 0, 0, CONTENTS_BLOOD), // used to detect blood decals
-            new infoParm_t("trigger", 0, 0, CONTENTS_TRIGGER), // used for triggers
-            new infoParm_t("aassolid", 0, 0, CONTENTS_AAS_SOLID), // solid for AAS
-            new infoParm_t("aasobstacle", 0, 0, CONTENTS_AAS_OBSTACLE),// used to compile an obstacle into AAS that can be enabled/disabled
-            new infoParm_t("flashlight_trigger", 0, 0, CONTENTS_FLASHLIGHT_TRIGGER), // used for triggers that are activated by the flashlight
-            new infoParm_t("nonsolid", 1, 0, 0), // clears the solid flag
-            new infoParm_t("nullNormal", 0, SURF_NULLNORMAL, 0), // renderbump will draw as 0x80 0x80 0x80
-            //
-            // utility relevant attributes
-            new infoParm_t("areaportal", 1, 0, CONTENTS_AREAPORTAL), // divides areas
-            new infoParm_t("qer_nocarve", 1, 0, CONTENTS_NOCSG), // don't cut brushes in editor
-            //
-            new infoParm_t("discrete", 1, SURF_DISCRETE, 0), // surfaces should not be automatically merged together or
-            /////////////////////////////////////////////////// clipped to the world,
-            /////////////////////////////////////////////////// because they represent discrete objects like gui shaders
-            /////////////////////////////////////////////////// mirrors, or autosprites
-            new infoParm_t("noFragment", 0, SURF_NOFRAGMENT, 0),
-            //
-            new infoParm_t("slick", 0, SURF_SLICK, 0),
-            new infoParm_t("collision", 0, SURF_COLLISION, 0),
-            new infoParm_t("noimpact", 0, SURF_NOIMPACT, 0), // don't make impact explosions or marks
-            new infoParm_t("nodamage", 0, SURF_NODAMAGE, 0), // no falling damage when hitting
-            new infoParm_t("ladder", 0, SURF_LADDER, 0), // climbable
-            new infoParm_t("nosteps", 0, SURF_NOSTEPS, 0), // no footsteps
-            //
-            // material types for particle, sound, footstep feedback
-            new infoParm_t("metal", 0, SURFTYPE_METAL, 0), // metal
-            new infoParm_t("stone", 0, SURFTYPE_STONE, 0), // stone
-            new infoParm_t("flesh", 0, SURFTYPE_FLESH, 0), // flesh
-            new infoParm_t("wood", 0, SURFTYPE_WOOD, 0), // wood
-            new infoParm_t("cardboard", 0, SURFTYPE_CARDBOARD, 0), // cardboard
-            new infoParm_t("liquid", 0, SURFTYPE_LIQUID, 0), // liquid
-            new infoParm_t("glass", 0, SURFTYPE_GLASS, 0), // glass
-            new infoParm_t("plastic", 0, SURFTYPE_PLASTIC, 0), // plastic
-            new infoParm_t("ricochet", 0, SURFTYPE_RICOCHET, 0), // behaves like metal but causes a ricochet sound
-            //
-            // unassigned surface types
-            new infoParm_t("surftype10", 0, SURFTYPE_10, 0),
-            new infoParm_t("surftype11", 0, SURFTYPE_11, 0),
-            new infoParm_t("surftype12", 0, SURFTYPE_12, 0),
-            new infoParm_t("surftype13", 0, SURFTYPE_13, 0),
-            new infoParm_t("surftype14", 0, SURFTYPE_14, 0),
-            new infoParm_t("surftype15", 0, SURFTYPE_15, 0)
-        };
-        static final int numInfoParms = infoParms.length;
 
         /*
          ===============
@@ -3249,7 +3108,7 @@ public class Material {
             }
 
             if (token.type == TT_NUMBER || token.equals(".") || token.equals("-")) {
-                final int dbg_bla = GetExpressionConstant((float) token.GetFloatValue());
+                final int dbg_bla = GetExpressionConstant(token.GetFloatValue());
 //                System.out.printf("TT_NUMBER = %d\n", dbg_bla);
                 return dbg_bla;
             }
@@ -3272,16 +3131,6 @@ public class Material {
             return EmitOp(table.Index(), b, OP_TYPE_TABLE);
         }
 
-        /*
-         =================
-         idMaterial::ParseExpressionPriority
-
-         Returns a register index
-         =================
-         */
-        static final int TOP_PRIORITY = 4;
-        private static int DBG_ParseExpressionPriority = 0;
-
         private int ParseExpressionPriority(idLexer src, int priority) {
             idToken token = new idToken();
             int a;
@@ -3294,7 +3143,7 @@ public class Material {
 
             a = ParseExpressionPriority(src, priority - 1);
 
-            if (TestMaterialFlag(MF_DEFAULTED)) {	// we have a parse error
+            if (TestMaterialFlag(MF_DEFAULTED)) {    // we have a parse error
                 return 0;
             }
 
@@ -3310,7 +3159,7 @@ public class Material {
             if (priority == 1 && token.equals("/")) {
                 return ParseEmitOp(src, a, OP_TYPE_DIVIDE, priority);
             }
-            if (priority == 1 && token.equals("%")) {	// implied truncate both to integer
+            if (priority == 1 && token.equals("%")) {    // implied truncate both to integer
                 return ParseEmitOp(src, a, OP_TYPE_MOD, priority);
             }
             if (priority == 2 && token.equals("+")) {
@@ -3416,7 +3265,7 @@ public class Material {
             return GLS_DSTBLEND_ONE;
         }
 
-        private void MultiplyTextureMatrix(textureStage_t ts, int[][] registers/*[2][3]*/) {	// FIXME: for some reason the const is bad for gcc and Mac
+        private void MultiplyTextureMatrix(textureStage_t ts, int[][] registers/*[2][3]*/) {    // FIXME: for some reason the const is bad for gcc and Mac
             int[][] old = new int[2][3];
 
             if (!ts.hasMatrix) {
@@ -3585,7 +3434,7 @@ public class Material {
                 return;
             }
 
-            // evaluate the registers once, and save them 
+            // evaluate the registers once, and save them
             constantRegisters = new float[GetNumRegisters()];// R_ClearedStaticAlloc(GetNumRegisters() /* sizeof( float )*/);
 
             float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];
@@ -3601,7 +3450,7 @@ public class Material {
          * f2 and f3 are bottom to top. TODO: find out why?
          */
         private int recursiveEmitOp(final float f1, final float f2, final float f3,
-                final int b1, final int b2) {
+                                    final int b1, final int b2) {
             final int ex1 = GetExpressionConstant(f1);
             final int ex2 = GetExpressionConstant(f2);
             final int em1 = EmitOp(ex2, b1, OP_TYPE_MULTIPLY);
@@ -3630,8 +3479,29 @@ public class Material {
         public String toString() {
             return this + " idMaterial{" + "desc=" + desc + ", renderBump=" + renderBump + ", lightFalloffImage=" + lightFalloffImage + ", entityGui=" + entityGui + ", gui=" + gui + ", noFog=" + noFog + ", spectrum=" + spectrum + ", polygonOffset=" + polygonOffset + ", contentFlags=" + contentFlags + ", surfaceFlags=" + surfaceFlags + ", materialFlags=" + materialFlags + ", decalInfo=" + decalInfo + ", sort=" + sort + ", deform=" + deform + ", deformRegisters=" + deformRegisters + ", deformDecl=" + deformDecl + ", texGenRegisters=" + texGenRegisters + ", coverage=" + coverage + ", cullType=" + cullType + ", shouldCreateBackSides=" + shouldCreateBackSides + ", fogLight=" + fogLight + ", blendLight=" + blendLight + ", ambientLight=" + ambientLight + ", unsmoothedTangents=" + unsmoothedTangents + ", hasSubview=" + hasSubview + ", allowOverlays=" + allowOverlays + ", numOps=" + numOps + ", ops=" + ops + ", numRegisters=" + numRegisters + ", expressionRegisters=" + expressionRegisters + ", constantRegisters=" + constantRegisters + ", numStages=" + numStages + ", numAmbientStages=" + numAmbientStages + ", stages=" + stages + ", pd=" + pd + ", surfaceArea=" + surfaceArea + ", editorImageName=" + editorImageName + ", editorImage=" + editorImage + ", editorAlpha=" + editorAlpha + ", suppressInSubview=" + suppressInSubview + ", portalSky=" + portalSky + ", refCount=" + refCount + '}';
         }
-    };
+
+        // info parms
+        static class infoParm_t {
+
+            int clearSolid, surfaceFlags, contents;
+            String name;
+
+            public infoParm_t(String name, int clearSolid, int surfaceFlags, int contents) {
+                this.name = name;
+                this.clearSolid = clearSolid;
+                this.surfaceFlags = surfaceFlags;
+                this.contents = contents;
+            }
+            public infoParm_t(String name, int clearSolid, surfTypes_t surfaceFlags, int contents) {
+                this.name = name;
+                this.clearSolid = clearSolid;
+                this.surfaceFlags = surfaceFlags.ordinal();
+                this.contents = contents;
+            }
+        }
+    }
 
     public static class idMatList extends idList<idMaterial> {
-    };
+    }
+
 }

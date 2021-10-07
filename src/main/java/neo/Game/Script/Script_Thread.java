@@ -3,160 +3,152 @@ package neo.Game.Script;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.Camera.idCamera;
-import static neo.Game.Entity.EV_Activate;
-import neo.Game.Entity.idEntity;
-
-import static neo.Game.Entity.EV_CacheSoundShader;
-import static neo.Game.Entity.EV_SetShaderParm;
-import static neo.Game.Entity.signalNum_t.NUM_SIGNALS;
-import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
-
+import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.eventCallback_t3;
-import neo.Game.GameSys.Class.eventCallback_t4;
-import neo.Game.GameSys.Class.eventCallback_t5;
-import neo.Game.GameSys.Class.eventCallback_t6;
-import neo.Game.GameSys.Class.idClass;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-
-import static neo.Game.GameSys.Class.EV_Remove;
-import static neo.Game.GameSys.SysCvar.g_debugScript;
-import static neo.Game.Game_local.ENTITYNUM_NONE;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundWorld;
-import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
 import neo.Game.Physics.Physics_AF.idAFBody;
 import neo.Game.Player.idPlayer;
 import neo.Game.Script.Script_Interpreter.idInterpreter;
 import neo.Game.Script.Script_Program.function_t;
-import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.UsercmdGen.USERCMD_HZ;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
-import static neo.idlib.Lib.idLib.cvarSystem;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
-import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Vector.getVec3_origin;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.Entity.*;
+import static neo.Game.Entity.signalNum_t.NUM_SIGNALS;
+import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.g_debugScript;
+import static neo.Game.Game_local.*;
+import static neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE;
+import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
+import static neo.TempDump.btoi;
+import static neo.TempDump.etoi;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.UsercmdGen.USERCMD_HZ;
+import static neo.idlib.Lib.idLib.cvarSystem;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Vector.getVec3_origin;
+
 /**
  *
  */
 public class Script_Thread {
 
-    static final idEventDef EV_Thread_Execute             = new idEventDef("<execute>", null);
-    public static final idEventDef EV_Thread_SetCallback         = new idEventDef("<script_setcallback>", null);
+    public static final idEventDef EV_Thread_SetCallback = new idEventDef("<script_setcallback>", null);
+    public static final idEventDef EV_Thread_Wait = new idEventDef("wait", "f");
+    public static final idEventDef EV_Thread_WaitFrame = new idEventDef("waitFrame");
+    static final idEventDef EV_Thread_AngToForward = new idEventDef("angToForward", "v", 'v');
+    static final idEventDef EV_Thread_AngToRight = new idEventDef("angToRight", "v", 'v');
+    static final idEventDef EV_Thread_AngToUp = new idEventDef("angToUp", "v", 'v');
+    static final idEventDef EV_Thread_Assert = new idEventDef("assert", "f");
+    static final idEventDef EV_Thread_ClearPersistantArgs = new idEventDef("clearPersistantArgs");
+    static final idEventDef EV_Thread_ClearSignal = new idEventDef("clearSignalThread", "de");
+    static final idEventDef EV_Thread_CopySpawnArgs = new idEventDef("copySpawnArgs", "e");
+    static final idEventDef EV_Thread_Cosine = new idEventDef("cos", "f", 'f');
+    static final idEventDef EV_Thread_DebugArrow = new idEventDef("debugArrow", "vvvdf");
+    static final idEventDef EV_Thread_DebugBounds = new idEventDef("debugBounds", "vvvf");
+    static final idEventDef EV_Thread_DebugCircle = new idEventDef("debugCircle", "vvvfdf");
+    static final idEventDef EV_Thread_DebugLine = new idEventDef("debugLine", "vvvf");
+    static final idEventDef EV_Thread_DrawText = new idEventDef("drawText", "svfvdf");
+    static final idEventDef EV_Thread_Error = new idEventDef("error", "s");
+    static final idEventDef EV_Thread_Execute = new idEventDef("<execute>", null);
+    static final idEventDef EV_Thread_FadeIn = new idEventDef("fadeIn", "vf");
+    static final idEventDef EV_Thread_FadeOut = new idEventDef("fadeOut", "vf");
+    static final idEventDef EV_Thread_FadeTo = new idEventDef("fadeTo", "vff");
+    static final idEventDef EV_Thread_FirstPerson = new idEventDef("firstPerson", null);
+    static final idEventDef EV_Thread_GetCvar = new idEventDef("getcvar", "s", 's');
+    static final idEventDef EV_Thread_GetEntity = new idEventDef("getEntity", "s", 'e');
+    static final idEventDef EV_Thread_GetFrameTime = new idEventDef("getFrameTime", null, 'f');
+    static final idEventDef EV_Thread_GetPersistantFloat = new idEventDef("getPersistantFloat", "s", 'f');
+    static final idEventDef EV_Thread_GetPersistantString = new idEventDef("getPersistantString", "s", 's');
+    static final idEventDef EV_Thread_GetPersistantVector = new idEventDef("getPersistantVector", "s", 'v');
+    static final idEventDef EV_Thread_GetTicsPerSecond = new idEventDef("getTicsPerSecond", null, 'f');
+    static final idEventDef EV_Thread_GetTime = new idEventDef("getTime", null, 'f');
+    static final idEventDef EV_Thread_GetTraceBody = new idEventDef("getTraceBody", null, 's');
+    static final idEventDef EV_Thread_GetTraceEndPos = new idEventDef("getTraceEndPos", null, 'v');
+    static final idEventDef EV_Thread_GetTraceEntity = new idEventDef("getTraceEntity", null, 'e');
+    static final idEventDef EV_Thread_GetTraceFraction = new idEventDef("getTraceFraction", null, 'f');
+    static final idEventDef EV_Thread_GetTraceJoint = new idEventDef("getTraceJoint", null, 's');
+    static final idEventDef EV_Thread_GetTraceNormal = new idEventDef("getTraceNormal", null, 'v');
+    static final idEventDef EV_Thread_InfluenceActive = new idEventDef("influenceActive", null, 'd');
+    static final idEventDef EV_Thread_IsClient = new idEventDef("isClient", null, 'f');
+    static final idEventDef EV_Thread_IsMultiplayer = new idEventDef("isMultiplayer", null, 'f');
+    static final idEventDef EV_Thread_KillThread = new idEventDef("killthread", "s");
+    static final idEventDef EV_Thread_Normalize = new idEventDef("vecNormalize", "v", 'v');
+    static final idEventDef EV_Thread_OnSignal = new idEventDef("onSignal", "des");
+    static final idEventDef EV_Thread_Pause = new idEventDef("pause", null);
+    static final idEventDef EV_Thread_Print = new idEventDef("print", "s");
+    static final idEventDef EV_Thread_PrintLn = new idEventDef("println", "s");
+    static final idEventDef EV_Thread_RadiusDamage = new idEventDef("radiusDamage", "vEEEsf");
+    static final idEventDef EV_Thread_Random = new idEventDef("random", "f", 'f');
+    static final idEventDef EV_Thread_Say = new idEventDef("say", "s");
+    static final idEventDef EV_Thread_SetCamera = new idEventDef("setCamera", "e");
+    static final idEventDef EV_Thread_SetCvar = new idEventDef("setcvar", "ss");
+    static final idEventDef EV_Thread_SetPersistantArg = new idEventDef("setPersistantArg", "ss");
+    static final idEventDef EV_Thread_SetSpawnArg = new idEventDef("setSpawnArg", "ss");
+    static final idEventDef EV_Thread_SetThreadName = new idEventDef("threadname", "s");
+    static final idEventDef EV_Thread_Sine = new idEventDef("sin", "f", 'f');
+    static final idEventDef EV_Thread_Spawn = new idEventDef("spawn", "s", 'e');
+    static final idEventDef EV_Thread_SpawnFloat = new idEventDef("SpawnFloat", "sf", 'f');
+    static final idEventDef EV_Thread_SpawnString = new idEventDef("SpawnString", "ss", 's');
+    static final idEventDef EV_Thread_SpawnVector = new idEventDef("SpawnVector", "sv", 'v');
+    static final idEventDef EV_Thread_SquareRoot = new idEventDef("sqrt", "f", 'f');
+    static final idEventDef EV_Thread_StartMusic = new idEventDef("music", "s");
+    static final idEventDef EV_Thread_StrLeft = new idEventDef("strLeft", "sd", 's');
+    static final idEventDef EV_Thread_StrLen = new idEventDef("strLength", "s", 'd');
+    static final idEventDef EV_Thread_StrMid = new idEventDef("strMid", "sdd", 's');
+    static final idEventDef EV_Thread_StrRight = new idEventDef("strRight", "sd", 's');
+    static final idEventDef EV_Thread_StrSkip = new idEventDef("strSkip", "sd", 's');
+    static final idEventDef EV_Thread_StrToFloat = new idEventDef("strToFloat", "s", 'f');
     //
     // script callable events
-    static final idEventDef EV_Thread_TerminateThread     = new idEventDef("terminate", "d");
-    static final idEventDef EV_Thread_Pause               = new idEventDef("pause", null);
-    public static final idEventDef EV_Thread_Wait                = new idEventDef("wait", "f");
-    public static final idEventDef EV_Thread_WaitFrame           = new idEventDef("waitFrame");
-    static final idEventDef EV_Thread_WaitFor             = new idEventDef("waitFor", "e");
-    static final idEventDef EV_Thread_WaitForThread       = new idEventDef("waitForThread", "d");
-    static final idEventDef EV_Thread_Print               = new idEventDef("print", "s");
-    static final idEventDef EV_Thread_PrintLn             = new idEventDef("println", "s");
-    static final idEventDef EV_Thread_Say                 = new idEventDef("say", "s");
-    static final idEventDef EV_Thread_Assert              = new idEventDef("assert", "f");
-    static final idEventDef EV_Thread_Trigger             = new idEventDef("trigger", "e");
-    static final idEventDef EV_Thread_SetCvar             = new idEventDef("setcvar", "ss");
-    static final idEventDef EV_Thread_GetCvar             = new idEventDef("getcvar", "s", 's');
-    static final idEventDef EV_Thread_Random              = new idEventDef("random", "f", 'f');
-    static final idEventDef EV_Thread_GetTime             = new idEventDef("getTime", null, 'f');
-    static final idEventDef EV_Thread_KillThread          = new idEventDef("killthread", "s");
-    static final idEventDef EV_Thread_SetThreadName       = new idEventDef("threadname", "s");
-    static final idEventDef EV_Thread_GetEntity           = new idEventDef("getEntity", "s", 'e');
-    static final idEventDef EV_Thread_Spawn               = new idEventDef("spawn", "s", 'e');
-    static final idEventDef EV_Thread_CopySpawnArgs       = new idEventDef("copySpawnArgs", "e");
-    static final idEventDef EV_Thread_SetSpawnArg         = new idEventDef("setSpawnArg", "ss");
-    static final idEventDef EV_Thread_SpawnString         = new idEventDef("SpawnString", "ss", 's');
-    static final idEventDef EV_Thread_SpawnFloat          = new idEventDef("SpawnFloat", "sf", 'f');
-    static final idEventDef EV_Thread_SpawnVector         = new idEventDef("SpawnVector", "sv", 'v');
-    static final idEventDef EV_Thread_ClearPersistantArgs = new idEventDef("clearPersistantArgs");
-    static final idEventDef EV_Thread_SetPersistantArg    = new idEventDef("setPersistantArg", "ss");
-    static final idEventDef EV_Thread_GetPersistantString = new idEventDef("getPersistantString", "s", 's');
-    static final idEventDef EV_Thread_GetPersistantFloat  = new idEventDef("getPersistantFloat", "s", 'f');
-    static final idEventDef EV_Thread_GetPersistantVector = new idEventDef("getPersistantVector", "s", 'v');
-    static final idEventDef EV_Thread_AngToForward        = new idEventDef("angToForward", "v", 'v');
-    static final idEventDef EV_Thread_AngToRight          = new idEventDef("angToRight", "v", 'v');
-    static final idEventDef EV_Thread_AngToUp             = new idEventDef("angToUp", "v", 'v');
-    static final idEventDef EV_Thread_Sine                = new idEventDef("sin", "f", 'f');
-    static final idEventDef EV_Thread_Cosine              = new idEventDef("cos", "f", 'f');
-    static final idEventDef EV_Thread_SquareRoot          = new idEventDef("sqrt", "f", 'f');
-    static final idEventDef EV_Thread_Normalize           = new idEventDef("vecNormalize", "v", 'v');
-    static final idEventDef EV_Thread_VecLength           = new idEventDef("vecLength", "v", 'f');
-    static final idEventDef EV_Thread_VecDotProduct       = new idEventDef("DotProduct", "vv", 'f');
-    static final idEventDef EV_Thread_VecCrossProduct     = new idEventDef("CrossProduct", "vv", 'v');
-    static final idEventDef EV_Thread_VecToAngles         = new idEventDef("VecToAngles", "v", 'v');
-    static final idEventDef EV_Thread_OnSignal            = new idEventDef("onSignal", "des");
-    static final idEventDef EV_Thread_ClearSignal         = new idEventDef("clearSignalThread", "de");
-    static final idEventDef EV_Thread_SetCamera           = new idEventDef("setCamera", "e");
-    static final idEventDef EV_Thread_FirstPerson         = new idEventDef("firstPerson", null);
-    static final idEventDef EV_Thread_Trace               = new idEventDef("trace", "vvvvde", 'f');
-    static final idEventDef EV_Thread_TracePoint          = new idEventDef("tracePoint", "vvde", 'f');
-    static final idEventDef EV_Thread_GetTraceFraction    = new idEventDef("getTraceFraction", null, 'f');
-    static final idEventDef EV_Thread_GetTraceEndPos      = new idEventDef("getTraceEndPos", null, 'v');
-    static final idEventDef EV_Thread_GetTraceNormal      = new idEventDef("getTraceNormal", null, 'v');
-    static final idEventDef EV_Thread_GetTraceEntity      = new idEventDef("getTraceEntity", null, 'e');
-    static final idEventDef EV_Thread_GetTraceJoint       = new idEventDef("getTraceJoint", null, 's');
-    static final idEventDef EV_Thread_GetTraceBody        = new idEventDef("getTraceBody", null, 's');
-    static final idEventDef EV_Thread_FadeIn              = new idEventDef("fadeIn", "vf");
-    static final idEventDef EV_Thread_FadeOut             = new idEventDef("fadeOut", "vf");
-    static final idEventDef EV_Thread_FadeTo              = new idEventDef("fadeTo", "vff");
-    static final idEventDef EV_Thread_StartMusic          = new idEventDef("music", "s");
-    static final idEventDef EV_Thread_Error               = new idEventDef("error", "s");
-    static final idEventDef EV_Thread_Warning             = new idEventDef("warning", "s");
-    static final idEventDef EV_Thread_StrLen              = new idEventDef("strLength", "s", 'd');
-    static final idEventDef EV_Thread_StrLeft             = new idEventDef("strLeft", "sd", 's');
-    static final idEventDef EV_Thread_StrRight            = new idEventDef("strRight", "sd", 's');
-    static final idEventDef EV_Thread_StrSkip             = new idEventDef("strSkip", "sd", 's');
-    static final idEventDef EV_Thread_StrMid              = new idEventDef("strMid", "sdd", 's');
-    static final idEventDef EV_Thread_StrToFloat          = new idEventDef("strToFloat", "s", 'f');
-    static final idEventDef EV_Thread_RadiusDamage        = new idEventDef("radiusDamage", "vEEEsf");
-    static final idEventDef EV_Thread_IsClient            = new idEventDef("isClient", null, 'f');
-    static final idEventDef EV_Thread_IsMultiplayer       = new idEventDef("isMultiplayer", null, 'f');
-    static final idEventDef EV_Thread_GetFrameTime        = new idEventDef("getFrameTime", null, 'f');
-    static final idEventDef EV_Thread_GetTicsPerSecond    = new idEventDef("getTicsPerSecond", null, 'f');
-    static final idEventDef EV_Thread_DebugLine           = new idEventDef("debugLine", "vvvf");
-    static final idEventDef EV_Thread_DebugArrow          = new idEventDef("debugArrow", "vvvdf");
-    static final idEventDef EV_Thread_DebugCircle         = new idEventDef("debugCircle", "vvvfdf");
-    static final idEventDef EV_Thread_DebugBounds         = new idEventDef("debugBounds", "vvvf");
-    static final idEventDef EV_Thread_DrawText            = new idEventDef("drawText", "svfvdf");
-    static final idEventDef EV_Thread_InfluenceActive     = new idEventDef("influenceActive", null, 'd');
+    static final idEventDef EV_Thread_TerminateThread = new idEventDef("terminate", "d");
+    static final idEventDef EV_Thread_Trace = new idEventDef("trace", "vvvvde", 'f');
+    static final idEventDef EV_Thread_TracePoint = new idEventDef("tracePoint", "vvde", 'f');
+    static final idEventDef EV_Thread_Trigger = new idEventDef("trigger", "e");
+    static final idEventDef EV_Thread_VecCrossProduct = new idEventDef("CrossProduct", "vv", 'v');
+    static final idEventDef EV_Thread_VecDotProduct = new idEventDef("DotProduct", "vv", 'f');
+    static final idEventDef EV_Thread_VecLength = new idEventDef("vecLength", "v", 'f');
+    static final idEventDef EV_Thread_VecToAngles = new idEventDef("VecToAngles", "v", 'v');
+    static final idEventDef EV_Thread_WaitFor = new idEventDef("waitFor", "e");
+    static final idEventDef EV_Thread_WaitForThread = new idEventDef("waitForThread", "d");
+    static final idEventDef EV_Thread_Warning = new idEventDef("warning", "s");
 
     public static class idThread extends idClass {
         public static final int BYTES = Integer.BYTES * 14;//TODO
 
         protected static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        //        // CLASS_PROTOTYPE( idThread );
+//        public static final idTypeInfo Type = new idTypeInfo(null, null, eventCallbacks, null, null, null, null);
+        //
+        //
+        private static idThread currentThread;
+        //
+        private static int threadIndex;
+        private static final idList<idThread> threadList = new idList<>();
+        //
+        private static trace_s trace = new trace_s();
+
         static {
             eventCallbacks.putAll(Class.idClass.getEventCallBacks());
-            eventCallbacks.put(EV_Thread_Execute, (eventCallback_t0<idThread>)  idThread::Event_Execute);
+            eventCallbacks.put(EV_Thread_Execute, (eventCallback_t0<idThread>) idThread::Event_Execute);
             eventCallbacks.put(EV_Thread_TerminateThread, (eventCallback_t1<idThread>) idThread::Event_TerminateThread);
             eventCallbacks.put(EV_Thread_Pause, (eventCallback_t0<idThread>) idThread::Event_Pause);
             eventCallbacks.put(EV_Thread_Wait, (eventCallback_t1<idThread>) idThread::Event_Wait);
@@ -235,63 +227,72 @@ public class Script_Thread {
             eventCallbacks.put(EV_Thread_DrawText, (eventCallback_t6<idThread>) idThread::Event_DrawText);
             eventCallbacks.put(EV_Thread_InfluenceActive, (eventCallback_t0<idThread>) idThread::Event_InfluenceActive);
         }
-//        // CLASS_PROTOTYPE( idThread );
-//        public static final idTypeInfo Type = new idTypeInfo(null, null, eventCallbacks, null, null, null, null);
+
+        private int creationTime;
+        private final idInterpreter interpreter = new idInterpreter();
         //
+        private int lastExecuteTime;
         //
-        private static idThread      currentThread;
+        private boolean manualControl;
         //
-        private        idThread      waitingForThread;
-        private        int           waitingFor;
-        private        int           waitingUntil;
-        private        idInterpreter interpreter = new idInterpreter();
+        private idDict spawnArgs;
+        private final idStr threadName = new idStr();
         //
-        private        idDict        spawnArgs;
+        private int threadNum;
+        private int waitingFor;
         //
-        private        int           threadNum;
-        private        idStr         threadName = new idStr();
-        //
-        private        int           lastExecuteTime;
-        private        int           creationTime;
-        //
-        private        boolean       manualControl;
-        //
-        private static int           threadIndex;
-        private static idList<idThread> threadList = new idList<>();
-        //
-        private static trace_s          trace      = new trace_s();
+        private idThread waitingForThread;
+        private int waitingUntil;
 //
 //
 
-        @Override
-        public void Init() {
-            // create a unique threadNum
-            do {
-                threadIndex++;
-                if (threadIndex == 0) {
-                    threadIndex = 1;
-                }
-            } while (GetThread(threadIndex) != null);
-
-            threadNum = threadIndex;
-            threadList.Append(this);
-
-            creationTime = gameLocal.time;
-            lastExecuteTime = 0;
-            manualControl = false;
-
-            ClearWaitFor();
-
-            interpreter.SetThread(this);
+        public idThread() {
+            Init();
+            SetThreadName(va("thread_%d", threadIndex));
+            if (g_debugScript.GetBool()) {
+                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
+            }
         }
 
-        private void Pause() {
-            ClearWaitFor();
-            interpreter.doneProcessing = true;
+        public idThread(idEntity self, final function_t func) {
+            assert (self != null);
+
+            Init();
+            SetThreadName(self.name.toString());
+            interpreter.EnterObjectFunction(self, func, false);
+            if (g_debugScript.GetBool()) {
+                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
+            }
         }
 
-        private void Event_Execute() {
-            Execute();
+        public idThread(final function_t func) {
+            assert (func != null);
+
+            Init();
+            SetThreadName(func.Name());
+            interpreter.EnterFunction(func, false);
+            if (g_debugScript.GetBool()) {
+                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
+            }
+        }
+
+        public idThread(idInterpreter source, final function_t func, int args) {
+            Init();
+            interpreter.ThreadCall(source, func, args);
+            if (g_debugScript.GetBool()) {
+                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
+            }
+        }
+
+        public idThread(idInterpreter source, idEntity self, final function_t func, int args) {
+            assert (self != null);
+
+            Init();
+            SetThreadName(self.name.toString());
+            interpreter.ThreadCall(source, func, args);
+            if (g_debugScript.GetBool()) {
+                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
+            }
         }
 
         private static void Event_SetThreadName(idThread t, final idEventArg<String> name) {
@@ -304,20 +305,12 @@ public class Script_Thread {
         private static void Event_TerminateThread(idThread t, idEventArg<Integer> num) {
             idThread thread;
 
-            thread = t.GetThread(num.value);
-            t.KillThread(num.value);
-        }
-
-        private void Event_Pause() {
-            Pause();
+            thread = GetThread(num.value);
+            KillThread(num.value);
         }
 
         private static void Event_Wait(idThread t, idEventArg<Float> time) {
             t.WaitSec(time.value);
-        }
-
-        private void Event_WaitFrame() {
-            WaitFrame();
         }
 
         private static void Event_WaitFor(idThread t, idEventArg<idEntity> e) {
@@ -386,10 +379,6 @@ public class Script_Thread {
             ReturnFloat(range.value * result);
         }
 
-        private void Event_GetTime() {
-            ReturnFloat(MS2SEC(gameLocal.realClientTime));
-        }
-
         private static void Event_KillThread(idThread t, final idEventArg<String> name) {
             KillThread(name.value);
         }
@@ -452,10 +441,6 @@ public class Script_Thread {
             ReturnVector(result);
         }
 
-        private void Event_ClearPersistantArgs() {
-            gameLocal.persistentLevelInfo.Clear();
-        }
-
         private static void Event_SetPersistantArg(idThread t, final idEventArg<String> key, final idEventArg<String> value) {
             gameLocal.persistentLevelInfo.Set(key.value, value.value);
         }
@@ -481,10 +466,6 @@ public class Script_Thread {
             ReturnVector(result);
         }
 
-//        private static void Event_AngToForward(idThread t, idEventArg<idAngles> ang) {
-//            ReturnVector(ang.value.ToForward());
-//        }
-
         private static void Event_AngToForward(idThread t, idEventArg<idVec3> ang) {
             ReturnVector(new idAngles(ang.value).ToForward());
         }
@@ -495,6 +476,10 @@ public class Script_Thread {
             ang.value.ToVectors(null, vec);
             ReturnVector(vec);
         }
+
+//        private static void Event_AngToForward(idThread t, idEventArg<idAngles> ang) {
+//            ReturnVector(ang.value.ToForward());
+//        }
 
         private static void Event_AngToUp(idThread t, idEventArg<idAngles> ang) {
             idVec3 vec = new idVec3();
@@ -595,10 +580,6 @@ public class Script_Thread {
             gameLocal.SetCamera((idCamera) ent);
         }
 
-        private void Event_FirstPerson() {
-            gameLocal.SetCamera(null);
-        }
-
         private static void Event_Trace(idThread t, final idEventArg<idVec3> s, final idEventArg<idVec3> e, final idEventArg<idVec3> mi,
                                         final idEventArg<idVec3> ma, idEventArg<Integer> c, idEventArg<idEntity> p) {
             idVec3 start = s.value;
@@ -609,13 +590,13 @@ public class Script_Thread {
             idEntity passEntity = p.value;
 
             {
-                trace_s[] trace = {t.trace};
+                trace_s[] trace = {idThread.trace};
                 if (mins.equals(getVec3_origin()) && maxs.equals(getVec3_origin())) {
                     gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity);
                 } else {
                     gameLocal.clip.TraceBounds(trace, start, end, new idBounds(mins, maxs), contents_mask, passEntity);
                 }
-                t.trace = trace[0];
+                idThread.trace = trace[0];
             }
             ReturnFloat(trace.fraction);
         }
@@ -626,61 +607,11 @@ public class Script_Thread {
             int contents_mask = c.value;
             idEntity passEntity = p.value;
             {
-                trace_s[] trace = {t.trace};
+                trace_s[] trace = {idThread.trace};
                 gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity);
-                t.trace = trace[0];
+                idThread.trace = trace[0];
             }
             ReturnFloat(trace.fraction);
-        }
-
-        private void Event_GetTraceFraction() {
-            ReturnFloat(trace.fraction);
-        }
-
-        private void Event_GetTraceEndPos() {
-            ReturnVector(trace.endpos);
-        }
-
-        private void Event_GetTraceNormal() {
-            if (trace.fraction < 1.0f) {
-                ReturnVector(trace.c.normal);
-            } else {
-                ReturnVector(getVec3_origin());
-            }
-        }
-
-        private void Event_GetTraceEntity() {
-            if (trace.fraction < 1.0f) {
-                ReturnEntity(gameLocal.entities[ trace.c.entityNum]);
-            } else {
-                ReturnEntity((idEntity) null);
-            }
-        }
-
-        private void Event_GetTraceJoint() {
-            if (trace.fraction < 1.0f && trace.c.id < 0) {
-                idAFEntity_Base af = (idAFEntity_Base) gameLocal.entities[trace.c.entityNum];
-                if (af != null && af.IsType(idAFEntity_Base.class) && af.IsActiveAF()) {
-                    ReturnString(af.GetAnimator().GetJointName(CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id)));
-                    return;
-                }
-            }
-            ReturnString("");
-        }
-
-        private void Event_GetTraceBody() {
-            if (trace.fraction < 1.0f && trace.c.id < 0) {
-                idAFEntity_Base af = (idAFEntity_Base) gameLocal.entities[ trace.c.entityNum];
-                if (af != null && af.IsType(idAFEntity_Base.class) && af.IsActiveAF()) {
-                    int bodyId = af.BodyForClipModelId(trace.c.id);
-                    idAFBody body = af.GetAFPhysics().GetBody(bodyId);
-                    if (body != null) {
-                        ReturnString(body.GetName());
-                        return;
-                    }
-                }
-            }
-            ReturnString("");
         }
 
         private static void Event_FadeIn(idThread t, idEventArg<idVec3> colorA, idEventArg<Float> time) {
@@ -845,22 +776,6 @@ public class Script_Thread {
             gameLocal.RadiusDamage(origin.value, inflictor.value, attacker.value, ignore.value, ignore.value, damageDefName.value, dmgPower.value);
         }
 
-        private void Event_IsClient() {
-            idThread.ReturnFloat(btoi(gameLocal.isClient));
-        }
-
-        private void Event_IsMultiplayer() {
-            idThread.ReturnFloat(btoi(gameLocal.isMultiplayer));
-        }
-
-        private void Event_GetFrameTime() {
-            idThread.ReturnFloat(MS2SEC(gameLocal.msec));
-        }
-
-        private void Event_GetTicsPerSecond() {
-            idThread.ReturnFloat(USERCMD_HZ);
-        }
-
         private static void Event_CacheSoundShader(idThread t, final idEventArg<String> soundName) {
             declManager.FindSound(soundName.value);
         }
@@ -890,64 +805,279 @@ public class Script_Thread {
             gameRenderWorld.DrawText(text.value, origin.value, scale.value, new idVec4(color.x, color.y, color.z, 0.0f), gameLocal.GetLocalPlayer().viewAngles.ToMat3(), align.value, (int) SEC2MS(lifetime.value));
         }
 
+        public static idThread GetThread(int num) {
+            int i;
+            int n;
+            idThread thread;
+
+            n = threadList.Num();
+            for (i = 0; i < n; i++) {
+                thread = threadList.oGet(i);
+                if (thread.GetThreadNum() == num) {
+                    return thread;
+                }
+            }
+
+            return null;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
+        public static void Restart() {
+            int i;
+            int n;
+
+            // reset the threadIndex
+            threadIndex = 0;
+
+            currentThread = null;
+            n = threadList.Num();
+//	for( i = n - 1; i >= 0; i-- ) {
+//		delete threadList[ i ];
+//	}
+            threadList.Clear();
+
+//	memset( &trace, 0, sizeof( trace ) );
+            trace = new trace_s();
+            trace.c.entityNum = ENTITYNUM_NONE;
+        }
+
+        public static void ObjectMoveDone(int threadnum, idEntity obj) {
+            idThread thread;
+
+            if (0 == threadnum) {
+                return;
+            }
+
+            thread = GetThread(threadnum);
+            if (thread != null) {
+                thread.ObjectMoveDone(obj);
+            }
+        }
+
+        public static idList<idThread> GetThreads() {
+            return threadList;
+        }
+
+        public static void KillThread(final String name) {
+            int i;
+            int num;
+            int len;
+            int ptr;
+            idThread thread;
+
+            // see if the name uses a wild card
+            ptr = name.indexOf('*');
+            if (ptr != -1) {
+                len = ptr - name.length();//TODO:double check this puhlease!
+            } else {
+                len = name.length();
+            }
+
+            // kill only those threads whose name matches name
+            num = threadList.Num();
+            for (i = 0; i < num; i++) {
+                thread = threadList.oGet(i);
+                if (0 == idStr.Cmpn(thread.GetThreadName(), name, len)) {
+                    thread.End();
+                }
+            }
+        }
+
+        public static void KillThread(int num) {
+            idThread thread;
+
+            thread = GetThread(num);
+            if (thread != null) {
+                // Tell thread to die.  It will delete itself on it's own.
+                thread.End();
+            }
+        }
+
+        public static idThread CurrentThread() {
+            return currentThread;
+        }
+
+        public static int CurrentThreadNum() {
+            if (currentThread != null) {
+                return currentThread.GetThreadNum();
+            } else {
+                return 0;
+            }
+        }
+
+        public static boolean BeginMultiFrameEvent(idEntity ent, final idEventDef event) {
+            if (null == currentThread) {
+                idGameLocal.Error("idThread::BeginMultiFrameEvent called without a current thread");
+            }
+            return currentThread.interpreter.BeginMultiFrameEvent(ent, event);
+        }
+
+        public static void EndMultiFrameEvent(idEntity ent, final idEventDef event) {
+            if (null == currentThread) {
+                idGameLocal.Error("idThread::EndMultiFrameEvent called without a current thread");
+            }
+            currentThread.interpreter.EndMultiFrameEvent(ent, event);
+        }
+
+        public static void ReturnString(final String text) {
+            gameLocal.program.ReturnString(text);
+        }
+
+        public static void ReturnString(final idStr text) {
+            ReturnString(text.toString());
+        }
+
+        public static void ReturnFloat(float value) {
+            gameLocal.program.ReturnFloat(value);
+        }
+
+        public static void ReturnInt(int value) {
+            // true integers aren't supported in the compiler,
+            // so int values are stored as floats
+            gameLocal.program.ReturnFloat(value);
+        }
+
+        public static void ReturnInt(boolean value) {
+            ReturnInt(value ? 1 : 0);
+        }
+
+        public static void ReturnVector(final idVec3 vec) {
+            gameLocal.program.ReturnVector(vec);
+        }
+
+        public static void ReturnEntity(idEntity ent) {
+            gameLocal.program.ReturnEntity(ent);
+        }
+
+        public static void delete(final idThread thread) {
+            thread._deconstructor();
+        }
+
+        @Override
+        public void Init() {
+            // create a unique threadNum
+            do {
+                threadIndex++;
+                if (threadIndex == 0) {
+                    threadIndex = 1;
+                }
+            } while (GetThread(threadIndex) != null);
+
+            threadNum = threadIndex;
+            threadList.Append(this);
+
+            creationTime = gameLocal.time;
+            lastExecuteTime = 0;
+            manualControl = false;
+
+            ClearWaitFor();
+
+            interpreter.SetThread(this);
+        }
+
+        private void Pause() {
+            ClearWaitFor();
+            interpreter.doneProcessing = true;
+        }
+
+        private void Event_Execute() {
+            Execute();
+        }
+
+        private void Event_Pause() {
+            Pause();
+        }
+
+        private void Event_WaitFrame() {
+            WaitFrame();
+        }
+
+        private void Event_GetTime() {
+            ReturnFloat(MS2SEC(gameLocal.realClientTime));
+        }
+
+        private void Event_ClearPersistantArgs() {
+            gameLocal.persistentLevelInfo.Clear();
+        }
+
+        private void Event_FirstPerson() {
+            gameLocal.SetCamera(null);
+        }
+
+        private void Event_GetTraceFraction() {
+            ReturnFloat(trace.fraction);
+        }
+
+        private void Event_GetTraceEndPos() {
+            ReturnVector(trace.endpos);
+        }
+
+        private void Event_GetTraceNormal() {
+            if (trace.fraction < 1.0f) {
+                ReturnVector(trace.c.normal);
+            } else {
+                ReturnVector(getVec3_origin());
+            }
+        }
+
+        private void Event_GetTraceEntity() {
+            if (trace.fraction < 1.0f) {
+                ReturnEntity(gameLocal.entities[trace.c.entityNum]);
+            } else {
+                ReturnEntity(null);
+            }
+        }
+
+        private void Event_GetTraceJoint() {
+            if (trace.fraction < 1.0f && trace.c.id < 0) {
+                idAFEntity_Base af = (idAFEntity_Base) gameLocal.entities[trace.c.entityNum];
+                if (af != null && af.IsType(idAFEntity_Base.class) && af.IsActiveAF()) {
+                    ReturnString(af.GetAnimator().GetJointName(CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id)));
+                    return;
+                }
+            }
+            ReturnString("");
+        }
+
+        private void Event_GetTraceBody() {
+            if (trace.fraction < 1.0f && trace.c.id < 0) {
+                idAFEntity_Base af = (idAFEntity_Base) gameLocal.entities[trace.c.entityNum];
+                if (af != null && af.IsType(idAFEntity_Base.class) && af.IsActiveAF()) {
+                    int bodyId = af.BodyForClipModelId(trace.c.id);
+                    idAFBody body = af.GetAFPhysics().GetBody(bodyId);
+                    if (body != null) {
+                        ReturnString(body.GetName());
+                        return;
+                    }
+                }
+            }
+            ReturnString("");
+        }
+
+        private void Event_IsClient() {
+            idThread.ReturnFloat(btoi(gameLocal.isClient));
+        }
+
+        private void Event_IsMultiplayer() {
+            idThread.ReturnFloat(btoi(gameLocal.isMultiplayer));
+        }
+
+        private void Event_GetFrameTime() {
+            idThread.ReturnFloat(MS2SEC(idGameLocal.msec));
+        }
+
+        private void Event_GetTicsPerSecond() {
+            idThread.ReturnFloat(USERCMD_HZ);
+        }
+
         private void Event_InfluenceActive() {
             idPlayer player;
 
             player = gameLocal.GetLocalPlayer();
-            if (player != null && player.GetInfluenceLevel() != 0) {
-                idThread.ReturnInt(true);
-            } else {
-                idThread.ReturnInt(false);
-            }
-        }
-
-        public idThread() {
-            Init();
-            SetThreadName(va("thread_%d", threadIndex));
-            if (g_debugScript.GetBool()) {
-                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
-            }
-        }
-
-        public idThread(idEntity self, final function_t func) {
-            assert (self != null);
-
-            Init();
-            SetThreadName(self.name.toString());
-            interpreter.EnterObjectFunction(self, func, false);
-            if (g_debugScript.GetBool()) {
-                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
-            }
-        }
-
-        public idThread(final function_t func) {
-            assert (func != null);
-
-            Init();
-            SetThreadName(func.Name());
-            interpreter.EnterFunction(func, false);
-            if (g_debugScript.GetBool()) {
-                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
-            }
-        }
-
-        public idThread(idInterpreter source, final function_t func, int args) {
-            Init();
-            interpreter.ThreadCall(source, func, args);
-            if (g_debugScript.GetBool()) {
-                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
-            }
-        }
-
-        public idThread(idInterpreter source, idEntity self, final function_t func, int args) {
-            assert (self != null);
-
-            Init();
-            SetThreadName(self.name.toString());
-            interpreter.ThreadCall(source, func, args);
-            if (g_debugScript.GetBool()) {
-                gameLocal.Printf("%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName);
-            }
+            idThread.ReturnInt(player != null && player.GetInfluenceLevel() != 0);
         }
 
         // virtual						~idThread();
@@ -983,7 +1113,7 @@ public class Script_Thread {
 
         // save games
         @Override
-        public void Save(idSaveGame savefile) {				// archives object for save game file
+        public void Save(idSaveGame savefile) {                // archives object for save game file
 
             // We will check on restore that threadNum is still the same,
             // threads should have been restored in the same order.
@@ -1005,7 +1135,7 @@ public class Script_Thread {
         }
 
         @Override
-        public void Restore(idRestoreGame savefile) {				// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             threadNum = savefile.ReadInt();
 
             savefile.ReadObject(/*reinterpret_cast<idClass *&>*/waitingForThread);
@@ -1046,7 +1176,7 @@ public class Script_Thread {
             // manual control threads don't set waitingUntil so that they can be run again
             // that frame if necessary.
             if (!manualControl) {
-                waitingUntil = gameLocal.time + gameLocal.msec;
+                waitingUntil = gameLocal.time + idGameLocal.msec;
             }
         }
 
@@ -1078,9 +1208,9 @@ public class Script_Thread {
         public void DisplayInfo() {
             gameLocal.Printf(
                     "%12i: '%s'\n"
-                    + "        File: %s(%d)\n"
-                    + "     Created: %d (%d ms ago)\n"
-                    + "      Status: ",
+                            + "        File: %s(%d)\n"
+                            + "     Created: %d (%d ms ago)\n"
+                            + "      Status: ",
                     threadNum, threadName,
                     interpreter.CurrentFile(), interpreter.CurrentLine(),
                     creationTime, gameLocal.time - creationTime);
@@ -1090,11 +1220,11 @@ public class Script_Thread {
             } else if (interpreter.doneProcessing) {
                 gameLocal.Printf(
                         "Paused since %d (%d ms)\n"
-                        + "      Reason: ", lastExecuteTime, gameLocal.time - lastExecuteTime);
+                                + "      Reason: ", lastExecuteTime, gameLocal.time - lastExecuteTime);
                 if (waitingForThread != null) {
                     gameLocal.Printf("Waiting for thread #%3d '%s'\n", waitingForThread.GetThreadNum(), waitingForThread.GetThreadName());
-                } else if ((waitingFor != ENTITYNUM_NONE) && (gameLocal.entities[ waitingFor] != null)) {
-                    gameLocal.Printf("Waiting for entity #%3d '%s'\n", waitingFor, gameLocal.entities[ waitingFor].name);
+                } else if ((waitingFor != ENTITYNUM_NONE) && (gameLocal.entities[waitingFor] != null)) {
+                    gameLocal.Printf("Waiting for entity #%3d '%s'\n", waitingFor, gameLocal.entities[waitingFor].name);
                 } else if (waitingUntil != 0) {
                     gameLocal.Printf("Waiting until %d (%d ms total wait time)\n", waitingUntil, waitingUntil - lastExecuteTime);
                 } else {
@@ -1107,22 +1237,6 @@ public class Script_Thread {
             interpreter.DisplayInfo();
 
             gameLocal.Printf("\n");
-        }
-
-        public static idThread GetThread(int num) {
-            int i;
-            int n;
-            idThread thread;
-
-            n = threadList.Num();
-            for (i = 0; i < n; i++) {
-                thread = threadList.oGet(i);
-                if (thread.GetThreadNum() == num) {
-                    return thread;
-                }
-            }
-
-            return null;
         }
 
         @Override
@@ -1140,80 +1254,9 @@ public class Script_Thread {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-
         @Override
         public void oSet(idClass oGet) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        /*
-         ================
-         idThread::ListThreads_f
-         ================
-         */
-        public static class ListThreads_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new ListThreads_f();
-
-            private ListThreads_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                int i;
-                int n;
-
-                n = threadList.Num();
-                for (i = 0; i < n; i++) {
-                    //threadList[ i ].DisplayInfo();
-                    gameLocal.Printf("%3d: %-20s : %s(%d)\n", threadList.oGet(i).threadNum, threadList.oGet(i).threadName, threadList.oGet(i).interpreter.CurrentFile(), threadList.oGet(i).interpreter.CurrentLine());
-                }
-                gameLocal.Printf("%d active threads\n\n", n);
-            }
-        };
-
-        public static void Restart() {
-            int i;
-            int n;
-
-            // reset the threadIndex
-            threadIndex = 0;
-
-            currentThread = null;
-            n = threadList.Num();
-//	for( i = n - 1; i >= 0; i-- ) {
-//		delete threadList[ i ];
-//	}
-            threadList.Clear();
-
-//	memset( &trace, 0, sizeof( trace ) );
-            trace = new trace_s();
-            trace.c.entityNum = ENTITYNUM_NONE;
-        }
-
-        public static void ObjectMoveDone(int threadnum, idEntity obj) {
-            idThread thread;
-
-            if (0 == threadnum) {
-                return;
-            }
-
-            thread = GetThread(threadnum);
-            if (thread != null) {
-                thread.ObjectMoveDone(obj);
-            }
-        }
-
-        public static idList<idThread> GetThreads() {
-            return threadList;
         }
 
         public boolean IsDoneProcessing() {
@@ -1228,41 +1271,6 @@ public class Script_Thread {
             // Tell thread to die.  It will exit on its own.
             Pause();
             interpreter.threadDying = true;
-        }
-
-        public static void KillThread(final String name) {
-            int i;
-            int num;
-            int len;
-            int ptr;
-            idThread thread;
-
-            // see if the name uses a wild card
-            ptr = name.indexOf('*');
-            if (ptr != -1) {
-                len = ptr - name.length();//TODO:double check this puhlease!
-            } else {
-                len = name.length();
-            }
-
-            // kill only those threads whose name matches name
-            num = threadList.Num();
-            for (i = 0; i < num; i++) {
-                thread = threadList.oGet(i);
-                if (0 == idStr.Cmpn(thread.GetThreadName(), name, len)) {
-                    thread.End();
-                }
-            }
-        }
-
-        public static void KillThread(int num) {
-            idThread thread;
-
-            thread = GetThread(num);
-            if (thread != null) {
-                // Tell thread to die.  It will delete itself on it's own.
-                thread.End();
-            }
         }
 
         public boolean Execute() {
@@ -1289,7 +1297,7 @@ public class Script_Thread {
                 if (waitingUntil > lastExecuteTime) {
                     PostEventMS(EV_Thread_Execute, waitingUntil - lastExecuteTime);
                 } else if (interpreter.MultiFrameEventInProgress()) {
-                    PostEventMS(EV_Thread_Execute, gameLocal.msec);
+                    PostEventMS(EV_Thread_Execute, idGameLocal.msec);
                 }
             }
 
@@ -1331,11 +1339,7 @@ public class Script_Thread {
                 return true;
             }
 
-            if (waitingUntil != 0 && (waitingUntil > gameLocal.time)) {
-                return true;
-            }
-
-            return false;
+            return waitingUntil != 0 && (waitingUntil > gameLocal.time);
         }
 
         public void ClearWaitFor() {
@@ -1416,64 +1420,35 @@ public class Script_Thread {
             interpreter.Warning(text);
         }
 
-        public static idThread CurrentThread() {
-            return currentThread;
-        }
+        /*
+         ================
+         idThread::ListThreads_f
+         ================
+         */
+        public static class ListThreads_f extends cmdFunction_t {
 
-        public static int CurrentThreadNum() {
-            if (currentThread != null) {
-                return currentThread.GetThreadNum();
-            } else {
-                return 0;
+            private static final cmdFunction_t instance = new ListThreads_f();
+
+            private ListThreads_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                int i;
+                int n;
+
+                n = threadList.Num();
+                for (i = 0; i < n; i++) {
+                    //threadList[ i ].DisplayInfo();
+                    gameLocal.Printf("%3d: %-20s : %s(%d)\n", threadList.oGet(i).threadNum, threadList.oGet(i).threadName, threadList.oGet(i).interpreter.CurrentFile(), threadList.oGet(i).interpreter.CurrentLine());
+                }
+                gameLocal.Printf("%d active threads\n\n", n);
             }
         }
+    }
 
-        public static boolean BeginMultiFrameEvent(idEntity ent, final idEventDef event) {
-            if (null == currentThread) {
-                gameLocal.Error("idThread::BeginMultiFrameEvent called without a current thread");
-            }
-            return currentThread.interpreter.BeginMultiFrameEvent(ent, event);
-        }
-
-        public static void EndMultiFrameEvent(idEntity ent, final idEventDef event) {
-            if (null == currentThread) {
-                gameLocal.Error("idThread::EndMultiFrameEvent called without a current thread");
-            }
-            currentThread.interpreter.EndMultiFrameEvent(ent, event);
-        }
-
-        public static void ReturnString(final String text) {
-            gameLocal.program.ReturnString(text);
-        }
-
-        public static void ReturnString(final idStr text) {
-            ReturnString(text.toString());
-        }
-
-        public static void ReturnFloat(float value) {
-            gameLocal.program.ReturnFloat(value);
-        }
-
-        public static void ReturnInt(int value) {
-            // true integers aren't supported in the compiler,
-            // so int values are stored as floats
-            gameLocal.program.ReturnFloat(value);
-        }
-
-        public static void ReturnInt(boolean value) {
-            ReturnInt(value ? 1 : 0);
-        }
-                                                     
-        public static void ReturnVector(final idVec3 vec) {
-            gameLocal.program.ReturnVector(vec);
-        }
-
-        public static void ReturnEntity(idEntity ent) {
-            gameLocal.program.ReturnEntity(ent);
-        }
-
-        public static void delete(final idThread thread){
-            thread._deconstructor();
-        }
-    };
 }

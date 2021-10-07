@@ -1,30 +1,9 @@
 package neo.Tools.Compilers.AAS;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.floor;
-import java.util.Arrays;
-import static neo.TempDump.NOT;
-import static neo.TempDump.SNOT;
 import neo.Tools.Compilers.AAS.AASBuild.Allowance;
-import static neo.Tools.Compilers.AAS.Brush.BFL_NO_VALID_SPLITTERS;
-import static neo.Tools.Compilers.AAS.Brush.BRUSH_PLANESIDE_BACK;
-import static neo.Tools.Compilers.AAS.Brush.BRUSH_PLANESIDE_BOTH;
-import static neo.Tools.Compilers.AAS.Brush.BRUSH_PLANESIDE_FACING;
-import static neo.Tools.Compilers.AAS.Brush.BRUSH_PLANESIDE_FRONT;
-import static neo.Tools.Compilers.AAS.Brush.DisplayRealTimeString;
-import static neo.Tools.Compilers.AAS.Brush.SFL_SPLIT;
-import static neo.Tools.Compilers.AAS.Brush.SFL_USED_SPLITTER;
-import neo.Tools.Compilers.AAS.Brush.idBrush;
-import neo.Tools.Compilers.AAS.Brush.idBrushList;
-import neo.Tools.Compilers.AAS.Brush.idBrushMap;
-import neo.Tools.Compilers.AAS.Brush.idBrushSide;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
+import neo.Tools.Compilers.AAS.Brush.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.BIT;
-import static neo.idlib.Lib.MAX_WORLD_COORD;
-import static neo.idlib.Lib.MIN_WORLD_COORD;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
@@ -33,40 +12,43 @@ import neo.idlib.containers.PlaneSet.idPlaneSet;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.containers.VectorSet.idVectorSet;
 import neo.idlib.geometry.Winding.idWinding;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import static neo.idlib.math.Plane.PLANETYPE_TRUEAXIAL;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_CROSS;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
-import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.floor;
+import static neo.TempDump.NOT;
+import static neo.TempDump.SNOT;
+import static neo.Tools.Compilers.AAS.Brush.*;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.*;
+import static neo.idlib.math.Plane.*;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class BrushBSP {
 
-    static final float   BSP_GRID_SIZE                 = 512.0f;
-    static final float   SPLITTER_EPSILON              = 0.1f;
-    static final float   VERTEX_MELT_EPSILON           = 0.1f;
-    static final float   VERTEX_MELT_HASH_SIZE         = 32;
-    //                                              
-    static final float   PORTAL_PLANE_NORMAL_EPSILON   = 0.00001f;
-    static final float   PORTAL_PLANE_DIST_EPSILON     = 0.01f;
+    //
+    static final float BASE_WINDING_EPSILON = 0.001f;
+    static final float BSP_GRID_SIZE = 512.0f;
+    static final int NODE_DONE = BIT(31);
+    //
+    static final int NODE_VISITED = BIT(30);
     //
     static final boolean OUPUT_BSP_STATS_PER_GRID_CELL = false;
+    static final float PORTAL_PLANE_DIST_EPSILON = 0.01f;
     //
-    static final int     NODE_VISITED                  = BIT(30);
-    static final int     NODE_DONE                     = BIT(31);
+    static final float PORTAL_PLANE_NORMAL_EPSILON = 0.00001f;
+    static final float SPLITTER_EPSILON = 0.1f;
     //
-    static final float   BASE_WINDING_EPSILON          = 0.001f;
-    //
-    static final float   SPLIT_WINDING_EPSILON         = 0.001f;
+    static final float SPLIT_WINDING_EPSILON = 0.001f;
+    static final float VERTEX_MELT_EPSILON = 0.1f;
+    static final float VERTEX_MELT_HASH_SIZE = 32;
 
     //===============================================================
     //
@@ -75,13 +57,13 @@ public class BrushBSP {
     //===============================================================
     static class idBrushBSPPortal {
 
-        private idPlane   plane;                                    // portal plane
-        private int       planeNum;                                 // number of plane this portal is on
-        private idWinding winding;                                  // portal winding
-        private idBrushBSPNode[]   nodes = new idBrushBSPNode[2];   // nodes this portal seperates
-        private idBrushBSPPortal[] next  = new idBrushBSPPortal[2]; // next portal in list for both nodes
-        private int flags;                                          // portal flags
         private int faceNum;                                        // number of the face created for this portal
+        private int flags;                                          // portal flags
+        private final idBrushBSPPortal[] next = new idBrushBSPPortal[2]; // next portal in list for both nodes
+        private final idBrushBSPNode[] nodes = new idBrushBSPNode[2];   // nodes this portal seperates
+        private idPlane plane;                                    // portal plane
+        private int planeNum;                                 // number of plane this portal is on
+        private idWinding winding;                                  // portal winding
         //
         //
         // friend class idBrushBSP;
@@ -235,7 +217,7 @@ public class BrushBSP {
         private void oSet(idBrushBSPPortal idBrushBSPPortal) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     //===============================================================
     //
@@ -244,18 +226,18 @@ public class BrushBSP {
     //===============================================================
     static class idBrushBSPNode {
 
+        private int areaNum;                           // number of the area created for this node
+        private idBrushList brushList;                           // list with brushes for this node
+        private final idBrushBSPNode[] children = new idBrushBSPNode[2];  // both are NULL if this is a leaf node
+        private int contents;                            // node contents
+        private int flags;                             // node flags
+        private int occupied;                          // true when portal is occupied
+        private idBrushBSPNode parent;                              // parent of this node
         // friend class idBrushBSP;
         // friend class idBrushBSPPortal;
-        private idPlane        plane;                               // split plane if this is not a leaf node
-        private idBrush        volume;                              // node volume
-        private int            contents;                            // node contents
-        private idBrushList    brushList;                           // list with brushes for this node
-        private idBrushBSPNode parent;                              // parent of this node
-        private idBrushBSPNode[] children = new idBrushBSPNode[2];  // both are NULL if this is a leaf node
+        private idPlane plane;                               // split plane if this is not a leaf node
         private idBrushBSPPortal portals;                           // portals of this node
-        private int              flags;                             // node flags
-        private int              areaNum;                           // number of the area created for this node
-        private int              occupied;                          // true when portal is occupied
+        private idBrush volume;                              // node volume
         //
         //
 
@@ -515,8 +497,6 @@ public class BrushBSP {
         }
     }
 
-    ;
-
     //===============================================================
     //
     //	idBrushBSP
@@ -524,42 +504,28 @@ public class BrushBSP {
     //===============================================================
     static class idBrushBSP {
 
-        private idBrushBSPNode root;
+        //
+        private Allowance BrushChopAllowed;
+        private Allowance BrushMergeAllowed;
+        private idBrushMap brushMap;
+        private int brushMapContents;
+        private int insideLeafNodes;
+        private idVec3 leakOrigin;
+        private int numGridCellSplits;
+        private int numGridCells;
+        private int numInsertedPoints;
+        private int numMergedPortals;
+        private int numPortals;
+        private int numPrunedSplits;
+        private int numSplits;
         private idBrushBSPNode outside;
-        private idBounds       treeBounds;
-        private idPlaneSet     portalPlanes;
-        private int            numGridCells;
-        private int            numSplits;
-        private int            numGridCellSplits;
-        private int            numPrunedSplits;
-        private int            numPortals;
-        private int            solidLeafNodes;
-        private int            outsideLeafNodes;
-        private int            insideLeafNodes;
-        private int            numMergedPortals;
-        private int            numInsertedPoints;
-        private idVec3         leakOrigin;
-        private int            brushMapContents;
-        private idBrushMap     brushMap;
-        //
-        private Allowance      BrushChopAllowed;
-        private Allowance      BrushMergeAllowed;
+        private int outsideLeafNodes;
+        private idPlaneSet portalPlanes;
+        private idBrushBSPNode root;
+        private int solidLeafNodes;
+        private idBounds treeBounds;
         //
         //
-
-        /*
-         ============
-         idBrushBSP::BrushSplitterStats
-         ============
-         */
-        private class splitterStats_s {
-
-            int numFront;	// number of brushes at the front of the splitter
-            int numBack;	// number of brushes at the back of the splitter
-            int numSplits;	// number of brush sides split by the splitter
-            int numFacing;	// number of brushes facing this splitter
-            int epsilonBrushes;	// number of tiny brushes this splitter would create
-        };
 
         public idBrushBSP() {
             root = outside = null;
@@ -567,12 +533,11 @@ public class BrushBSP {
             brushMapContents = 0;
             brushMap = null;
         }
-        // ~idBrushBSP();
 
         // build a bsp tree from a set of brushes
         public void Build(idBrushList brushList, int skipContents,
-                Allowance ChopAllowed/*boolean (*ChopAllowed)( idBrush *b1, idBrush *b2 )*/,
-                Allowance MergeAllowed) /*boolean (*MergeAllowed)( idBrush *b1, idBrush *b2 ) )*/ {
+                          Allowance ChopAllowed/*boolean (*ChopAllowed)( idBrush *b1, idBrush *b2 )*/,
+                          Allowance MergeAllowed) /*boolean (*MergeAllowed)( idBrush *b1, idBrush *b2 ) )*/ {
 
             int i;
             idList<idBrushBSPNode> gridCells = new idList<>();
@@ -615,6 +580,7 @@ public class BrushBSP {
                 brushMap = null;
             }
         }
+        // ~idBrushBSP();
 
         // remove splits in subspaces with the given contents
         public void PruneTree(int contents) {
@@ -899,13 +865,13 @@ public class BrushBSP {
 
 //	delete node;
         }
-//
-//        private void IncreaseNumSplits();
-//
 
         private boolean IsValidSplitter(final idBrushSide side) {
             return NOT(side.GetFlags() & (SFL_SPLIT | SFL_USED_SPLITTER));
         }
+//
+//        private void IncreaseNumSplits();
+//
 
         private int BrushSplitterStats(final idBrush brush, int planeNum, final idPlaneSet planeList, boolean[] testedPlanes, splitterStats_s stats) {
             int i, j, num, s, lastNumSplits;
@@ -1053,7 +1019,7 @@ public class BrushBSP {
                     if (value > bestValue) {
                         bestValue = value;
                         bestSplitter = planeNum;
-                        bestStats[0]= stats;
+                        bestStats[0] = stats;
 
                         for (b = node.brushList.Head(); b != null; b = b.Next()) {
                             b.SavePlaneSide();
@@ -2022,5 +1988,20 @@ public class BrushBSP {
             MeltPortals_r(node.children[0], skipContents, vertexList);
             MeltPortals_r(node.children[1], skipContents, vertexList);
         }
-    };
+
+        /*
+         ============
+         idBrushBSP::BrushSplitterStats
+         ============
+         */
+        private class splitterStats_s {
+
+            int epsilonBrushes;    // number of tiny brushes this splitter would create
+            int numBack;    // number of brushes at the back of the splitter
+            int numFacing;    // number of brushes facing this splitter
+            int numFront;    // number of brushes at the front of the splitter
+            int numSplits;    // number of brush sides split by the splitter
+        }
+    }
+
 }

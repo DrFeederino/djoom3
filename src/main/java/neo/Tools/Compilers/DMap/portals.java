@@ -1,64 +1,53 @@
 package neo.Tools.Compilers.DMap;
 
-import static neo.Renderer.Material.CONTENTS_AREAPORTAL;
 import neo.Renderer.Material.idMaterial;
+import neo.Tools.Compilers.DMap.dmap.*;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.MapFile.idMapEntity;
+import neo.idlib.geometry.Winding.idWinding;
+import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Vector.idVec3;
+
+import static neo.Renderer.Material.CONTENTS_AREAPORTAL;
 import static neo.TempDump.NOT;
 import static neo.TempDump.isNotNullOrEmpty;
-import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.node_s;
-import neo.Tools.Compilers.DMap.dmap.side_s;
-import neo.Tools.Compilers.DMap.dmap.tree_s;
-import neo.Tools.Compilers.DMap.dmap.uBrush_t;
-import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import neo.Tools.Compilers.DMap.dmap.uPortal_s;
-import neo.Tools.Compilers.DMap.portals.interAreaPortal_t;
+import static neo.Tools.Compilers.DMap.dmap.*;
 import static neo.Tools.Compilers.DMap.ubrush.CLIP_EPSILON;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
-import neo.idlib.BV.Bounds.idBounds;
 import static neo.idlib.Lib.MAX_WORLD_COORD;
 import static neo.idlib.Lib.MIN_WORLD_COORD;
-import neo.idlib.MapFile.idMapEntity;
-import neo.idlib.geometry.Winding.idWinding;
 import static neo.idlib.math.Plane.ON_EPSILON;
-import neo.idlib.math.Plane.idPlane;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
  */
 public class portals {
 
-    static final int   MAX_INTER_AREA_PORTALS = 1024;
     //
-    static final int   SIDESPACE              = 8;
-    //
-    static final float BASE_WINDING_EPSILON   = 0.001f;
-    static final float SPLIT_WINDING_EPSILON  = 0.001f;
-    //
-    static int c_tinyportals;
-    //
-    static int c_floodedleafs;
-    //
-    static int c_areas;
-    static int c_areaFloods;
-    //
-    static int c_outside;
-    static int c_inside;
-    static int c_solid;
-
-    static class interAreaPortal_t {
-
-        int area0, area1;
-        side_s side;
-    };
+    static final float BASE_WINDING_EPSILON = 0.001f;
+    static final int MAX_INTER_AREA_PORTALS = 1024;
     //
     public static final interAreaPortal_t[] interAreaPortals = new interAreaPortal_t[MAX_INTER_AREA_PORTALS];
+    //
+    static final int SIDESPACE = 8;
+    static final float SPLIT_WINDING_EPSILON = 0.001f;
     public static int numInterAreaPortals;
     //
-    static        int c_active_portals;
-    static        int c_peak_portals;
+    static int c_active_portals;
+    static int c_areaFloods;
+    //
+    static int c_areas;
+    //
+    static int c_floodedleafs;
+    static int c_inside;
+    //
+    static int c_outside;
+
+    static int c_peak_portals;
+    static int c_solid;
+    //
+    static int c_tinyportals;
 
     /*
      ===========
@@ -88,8 +77,6 @@ public class portals {
         p.clear();//Mem_Free(p);
     }
 
-//==============================================================
-
     /*
      =============
      Portal_Passable
@@ -107,14 +94,12 @@ public class portals {
             common.Error("Portal_EntityFlood: not a leaf");
         }
 
-        if (!p.nodes[0].opaque && !p.nodes[1].opaque) {
-            return true;
-        }
-
-        return false;
+        return !p.nodes[0].opaque && !p.nodes[1].opaque;
     }
 
-//=============================================================================
+//==============================================================
+
+    //=============================================================================
     /*
      =============
      AddPortalToNodes
@@ -133,7 +118,6 @@ public class portals {
         p.next[1] = back.portals;
         back.portals = p;
     }
-
 
     /*
      =============
@@ -176,7 +160,7 @@ public class portals {
         }
     }
 
-//============================================================================
+    //============================================================================
     static void PrintPortal(uPortal_s p) {
         int i;
         idWinding w;
@@ -257,7 +241,7 @@ public class portals {
         }
     }
 
-//===================================================
+    //===================================================
     /*
      ================
      BaseWindingForNode
@@ -270,7 +254,7 @@ public class portals {
         w = new idWinding(dmapGlobals.mapPlanes.oGet(node.planenum));
 
         // clip by all the parents
-        for (n = node.parent; n != null && w != null;) {
+        for (n = node.parent; n != null && w != null; ) {
             final idPlane plane = dmapGlobals.mapPlanes.oGet(n.planenum);
 
             if (n.children[0].equals(node)) {
@@ -287,8 +271,6 @@ public class portals {
 
         return w;
     }
-
-//============================================================
 
     /*
      ==================
@@ -318,7 +300,7 @@ public class portals {
                 plane = p.plane.oNegative();
             } else {
                 common.Error("CutNodePortals_r: mislinked portal");
-                side = 0;	// quiet a compiler warning
+                side = 0;    // quiet a compiler warning
             }
 
             w = w.Clip(plane, CLIP_EPSILON);
@@ -341,6 +323,7 @@ public class portals {
         AddPortalToNodes(new_portal, node.children[0], node.children[1]);
     }
 
+//============================================================
 
     /*
      ==============
@@ -368,7 +351,7 @@ public class portals {
                 side = 1;
             } else {
                 common.Error("SplitNodePortals: mislinked portal");
-                side = 0;	// quiet a compiler warning
+                side = 0;    // quiet a compiler warning
             }
             next_portal = p.next[side];
 
@@ -393,7 +376,7 @@ public class portals {
                 c_tinyportals++;
             }
 
-            if (NOT(frontwinding) && NOT(backwinding)) {	// tiny windings on both sides
+            if (NOT(frontwinding) && NOT(backwinding)) {    // tiny windings on both sides
                 continue;
             }
 
@@ -435,7 +418,6 @@ public class portals {
         node.portals = null;
     }
 
-
     /*
      ================
      CalcNodeBounds
@@ -455,7 +437,6 @@ public class portals {
             }
         }
     }
-
 
     /*
      ==================
@@ -723,7 +704,7 @@ public class portals {
         int s;
 
         if (node.area != -1) {
-            return;		// allready got it
+            return;        // allready got it
         }
         if (node.opaque) {
             return;
@@ -771,7 +752,7 @@ public class portals {
         }
 
         if (node.area != -1) {
-            return;		// allready got it
+            return;        // allready got it
         }
 
         c_areaFloods = 0;
@@ -812,7 +793,7 @@ public class portals {
         node.area = -1;
     }
 
-//=============================================================
+    //=============================================================
     /*
      =================
      FindInterAreaPortals_r
@@ -876,7 +857,7 @@ public class portals {
             }
 
             if (i != numInterAreaPortals) {
-                continue;	// already emited
+                continue;    // already emited
             }
 
             iap = interAreaPortals[numInterAreaPortals];
@@ -969,5 +950,11 @@ public class portals {
         common.Printf("%5d solid leafs\n", c_solid);
         common.Printf("%5d leafs filled\n", c_outside);
         common.Printf("%5d inside leafs\n", c_inside);
+    }
+
+    static class interAreaPortal_t {
+
+        int area0, area1;
+        side_s side;
     }
 }

@@ -1,28 +1,35 @@
 package neo.idlib;
 
-import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static neo.TempDump.ctos;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.math.Math_h.ANGLE2BYTE;
-import static neo.idlib.math.Math_h.ANGLE2SHORT;
-import static neo.idlib.math.Math_h.BYTE2ANGLE;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import static neo.idlib.math.Math_h.SHORT2ANGLE;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.sys.sys_public;
 import neo.sys.sys_public.netadr_t;
+
+import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static neo.TempDump.ctos;
+import static neo.idlib.math.Math_h.*;
 
 /**
  *
  */
 public class BitMsg {
+
+    /*
+     ==============================================================================
+
+     idBitMsgDelta
+
+     ==============================================================================
+     */
+    static final int MAX_DATA_BUFFER = 1024;
 
     /*
      ===============================================================================
@@ -37,15 +44,15 @@ public class BitMsg {
      */
     public static class idBitMsg {
 
-        private ByteBuffer writeData;           // pointer to data for writing
+        private boolean allowOverflow;       // if false, generate an error when the message is overflowed
+        private int curSize;             // current size of message in bytes
+        private int maxSize;             // maximum size of message in bytes
+        private boolean overflowed;          // set to true if the buffer size failed (with allowOverflow set)
+        private int readBit;             // number of bits read from the last read byte
+        private int readCount;           // number of bytes read so far
         private ByteBuffer readData;            // pointer to data for reading
-        private int        maxSize;             // maximum size of message in bytes
-        private int        curSize;             // current size of message in bytes
-        private int        writeBit;            // number of bits written to the last written byte
-        private int        readCount;           // number of bytes read so far
-        private int        readBit;             // number of bits read from the last read byte
-        private boolean    allowOverflow;       // if false, generate an error when the message is overflowed
-        private boolean    overflowed;          // set to true if the buffer size failed (with allowOverflow set)
+        private int writeBit;            // number of bits written to the last written byte
+        private ByteBuffer writeData;           // pointer to data for writing
         //
         //
 
@@ -61,6 +68,45 @@ public class BitMsg {
             overflowed = false;
         }
 //public					~idBitMsg() {}
+
+        public static int DirToBits(final idVec3 dir, int numBits) {
+            int max, bits;
+            float bias;
+
+            assert (numBits >= 6 && numBits <= 32);
+            assert (dir.LengthSqr() - 1.0f < 0.01f);
+
+            numBits /= 3;
+            max = (1 << (numBits - 1)) - 1;
+            bias = 0.5f / max;
+
+            bits = FLOATSIGNBITSET(dir.x) << (numBits * 3 - 1);
+            bits |= (idMath.Ftoi((idMath.Fabs(dir.x) + bias) * max)) << (numBits * 2);
+            bits |= FLOATSIGNBITSET(dir.y) << (numBits * 2 - 1);
+            bits |= (idMath.Ftoi((idMath.Fabs(dir.y) + bias) * max)) << (numBits * 1);
+            bits |= FLOATSIGNBITSET(dir.z) << (numBits * 1 - 1);
+            bits |= (idMath.Ftoi((idMath.Fabs(dir.z) + bias) * max)) << (numBits * 0);
+            return bits;
+        }
+
+        public static idVec3 BitsToDir(int bits, int numBits) {
+            float[] sign = {1.0f, -1.0f};
+            int max;
+            float invMax;
+            idVec3 dir = new idVec3();
+
+            assert (numBits >= 6 && numBits <= 32);
+
+            numBits /= 3;
+            max = (1 << (numBits - 1)) - 1;
+            invMax = 1.0f / max;
+
+            dir.x = sign[(bits >> (numBits * 3 - 1)) & 1] * ((bits >> (numBits * 2)) & max) * invMax;
+            dir.y = sign[(bits >> (numBits * 2 - 1)) & 1] * ((bits >> (numBits * 1)) & max) * invMax;
+            dir.z = sign[(bits >> (numBits * 1 - 1)) & 1] * ((bits >> (numBits * 0)) & max) * invMax;
+            dir.NormalizeFast();
+            return dir;
+        }
 
         public void Init(byte[] data) {
             this.Init(ByteBuffer.wrap(data), data.length);
@@ -257,7 +303,7 @@ public class BitMsg {
                             idLib.common.Warning("idBitMsg.WriteBits: value overflow %d %d", value, numBits);
                         }
                     } else {
-                        int r = 1 << (- 1 - numBits);
+                        int r = 1 << (-1 - numBits);
                         if (value > r - 1) {
                             idLib.common.Warning("idBitMsg.WriteBits: value overflow %d %d", value, numBits);
                         } else if (value < -r) {
@@ -453,6 +499,7 @@ public class BitMsg {
                 WriteBits(((1 << i) - 1) & newValue, i);
             }
         }
+//
 
         public void WriteDeltaLongCounter(int oldValue, int newValue) {
             int i, x;
@@ -516,18 +563,17 @@ public class BitMsg {
 
             return changed;
         }
-//
 
-        public void BeginReading() {				// begin reading.
+        public void BeginReading() {                // begin reading.
             readCount = 0;
             readBit = 0;
         }
 
-        public int GetRemaingData() {			// number of bytes left to read
+        public int GetRemaingData() {            // number of bytes left to read
             return curSize - readCount;
         }
 
-        public void ReadByteAlign() {			// read up to the next byte boundary
+        public void ReadByteAlign() {            // read up to the next byte boundary
             readBit = 0;
         }
 
@@ -627,11 +673,11 @@ public class BitMsg {
         }
 
         public float ReadAngle8() throws idException {
-            return (float) BYTE2ANGLE(ReadByte());
+            return BYTE2ANGLE(ReadByte());
         }
 
         public float ReadAngle16() throws idException {
-            return (float) SHORT2ANGLE(ReadShort());
+            return SHORT2ANGLE(ReadShort());
         }
 
         public idVec3 ReadDir(int numBits) throws idException {
@@ -665,6 +711,7 @@ public class BitMsg {
             buffer[l] = 0;
             return l;
         }
+//
 
         public int ReadData(ByteBuffer data, int length) {
             int cnt;
@@ -698,7 +745,6 @@ public class BitMsg {
             }
             adr.port = (short) ReadUShort();
         }
-//
 
         public int ReadDeltaChar(int oldValue) throws idException {
             return ReadDelta(oldValue, -8);
@@ -749,6 +795,7 @@ public class BitMsg {
             newValue = ReadBits(i);
             return ((oldValue & ~((1 << i) - 1)) | newValue);
         }
+//
 
         public int ReadDeltaLongCounter(int oldValue) throws idException {
             int i, newValue;
@@ -785,46 +832,6 @@ public class BitMsg {
 
             return changed;
         }
-//
-
-        public static int DirToBits(final idVec3 dir, int numBits) {
-            int max, bits;
-            float bias;
-
-            assert (numBits >= 6 && numBits <= 32);
-            assert (dir.LengthSqr() - 1.0f < 0.01f);
-
-            numBits /= 3;
-            max = (1 << (numBits - 1)) - 1;
-            bias = 0.5f / max;
-
-            bits = FLOATSIGNBITSET(dir.x) << (numBits * 3 - 1);
-            bits |= (idMath.Ftoi((idMath.Fabs(dir.x) + bias) * max)) << (numBits * 2);
-            bits |= FLOATSIGNBITSET(dir.y) << (numBits * 2 - 1);
-            bits |= (idMath.Ftoi((idMath.Fabs(dir.y) + bias) * max)) << (numBits * 1);
-            bits |= FLOATSIGNBITSET(dir.z) << (numBits * 1 - 1);
-            bits |= (idMath.Ftoi((idMath.Fabs(dir.z) + bias) * max)) << (numBits * 0);
-            return bits;
-        }
-
-        public static idVec3 BitsToDir(int bits, int numBits) {
-            float[] sign = {1.0f, -1.0f};
-            int max;
-            float invMax;
-            idVec3 dir = new idVec3();
-
-            assert (numBits >= 6 && numBits <= 32);
-
-            numBits /= 3;
-            max = (1 << (numBits - 1)) - 1;
-            invMax = 1.0f / max;
-
-            dir.x = sign[(bits >> (numBits * 3 - 1)) & 1] * ((bits >> (numBits * 2)) & max) * invMax;
-            dir.y = sign[(bits >> (numBits * 2 - 1)) & 1] * ((bits >> (numBits * 1)) & max) * invMax;
-            dir.z = sign[(bits >> (numBits * 1 - 1)) & 1] * ((bits >> (numBits * 0)) & max) * invMax;
-            dir.NormalizeFast();
-            return dir;
-        }
 
         private boolean CheckOverflow(int numBits) throws Lib.idException {
             assert (numBits >= 0);
@@ -857,7 +864,7 @@ public class BitMsg {
             CheckOverflow(length << 3);
 
             ptr = new byte[writeData.capacity() - curSize];
-            ((ByteBuffer) writeData.mark().position(curSize)).get(ptr).rewind();
+            writeData.mark().position(curSize).get(ptr).rewind();
             curSize += length;
             return ptr;
         }
@@ -877,23 +884,15 @@ public class BitMsg {
             }
             return oldValue;
         }
-    };
-    /*
-     ==============================================================================
-
-     idBitMsgDelta
-
-     ==============================================================================
-     */
-    static final int MAX_DATA_BUFFER = 1024;
+    }
 
     public static class idBitMsgDelta {
 
-        private idBitMsg base;			// base
-        private idBitMsg newBase;		// new base
-        private idBitMsg writeDelta;		// delta from base to new base for writing
-        private idBitMsg readDelta;		// delta from base to new base for reading
-        private boolean changed;		// true if the new base is different from the base
+        private idBitMsg base;            // base
+        private boolean changed;        // true if the new base is different from the base
+        private idBitMsg newBase;        // new base
+        private idBitMsg readDelta;        // delta from base to new base for reading
+        private idBitMsg writeDelta;        // delta from base to new base for writing
         //
         //
 
@@ -988,7 +987,7 @@ public class BitMsg {
             WriteBits(idBitMsg.DirToBits(dir, numBits), numBits);
         }
 
-//public	void			WriteString( final String s, int maxLength = -1 );
+        //public	void			WriteString( final String s, int maxLength = -1 );
         public void WriteString(final String s, int maxLength) throws idException {
             if (newBase != null) {
                 newBase.WriteString(s, maxLength);
@@ -1189,11 +1188,11 @@ public class BitMsg {
         }
 
         public float ReadAngle8() throws idException {
-            return (float) BYTE2ANGLE(ReadByte());
+            return BYTE2ANGLE(ReadByte());
         }
 
         public float ReadAngle16() throws idException {
-            return (float) SHORT2ANGLE(ReadShort());
+            return SHORT2ANGLE(ReadShort());
         }
 
         public idVec3 ReadDir(int numBits) throws idException {
@@ -1415,5 +1414,6 @@ public class BitMsg {
             }
             return value;
         }
-    };
+    }
+
 }

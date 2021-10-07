@@ -4,15 +4,16 @@ import neo.CM.CollisionModel.trace_s;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.gameLocal;
 import neo.Game.Game_local.idEntityPtr;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_Base.idPhysics_Base;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_zero;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.idlib.math.Vector.getVec3_zero;
 
 /**
  *
@@ -33,20 +34,20 @@ public class Physics_Actor {
     public static class idPhysics_Actor extends idPhysics_Base {
         // CLASS_PROTOTYPE( idPhysics_Actor );
 
-        protected idClipModel           clipModel;    // clip model used for collision detection
-        protected idMat3                clipModelAxis;// axis of clip model aligned with gravity direction
-        //
-        // derived properties
-        protected float                 mass;
-        protected float                 invMass;
-        //
-        // master
-        protected idEntity              masterEntity;
-        protected float                 masterYaw;
-        protected float                 masterDeltaYaw;
+        protected idClipModel clipModel;    // clip model used for collision detection
+        protected idMat3 clipModelAxis;// axis of clip model aligned with gravity direction
         //
         // results of last evaluate
         protected idEntityPtr<idEntity> groundEntityPtr;
+        protected float invMass;
+        //
+        // derived properties
+        protected float mass;
+        protected float masterDeltaYaw;
+        //
+        // master
+        protected idEntity masterEntity;
+        protected float masterYaw;
         //
         //
 
@@ -64,7 +65,7 @@ public class Physics_Actor {
 
         // ~idPhysics_Actor();
         @Override
-        protected void _deconstructor(){
+        protected void _deconstructor() {
             idClipModel.delete(clipModel);
             clipModel = null;
 
@@ -275,5 +276,6 @@ public class Physics_Actor {
             return (contacts.Num() != 0);
         }
 
-    };
+    }
+
 }

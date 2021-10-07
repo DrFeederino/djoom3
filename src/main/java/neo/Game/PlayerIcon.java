@@ -1,46 +1,41 @@
 package neo.Game;
 
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Player.idPlayer;
-import static neo.Game.PlayerIcon.playerIconType_t.ICON_CHAT;
-import static neo.Game.PlayerIcon.playerIconType_t.ICON_LAG;
-import static neo.Game.PlayerIcon.playerIconType_t.ICON_NONE;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_ALPHA;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_SPRITE_HEIGHT;
-import static neo.Renderer.RenderWorld.SHADERPARM_SPRITE_WIDTH;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import static neo.TempDump.etoi;
-import static neo.framework.DeclManager.declManager;
+import neo.Renderer.RenderWorld.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Game.PlayerIcon.playerIconType_t.*;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.etoi;
+import static neo.framework.DeclManager.declManager;
 
 /**
  *
  */
 public class PlayerIcon {
 
+    public static final String[] iconKeys/*[ ICON_NONE ]*/ = {
+            "mtr_icon_lag",
+            "mtr_icon_chat"
+    };
+
     public enum playerIconType_t {
 
         ICON_LAG,
         ICON_CHAT,
         ICON_NONE
-    };
-    public static final String[] iconKeys/*[ ICON_NONE ]*/ = {
-                "mtr_icon_lag",
-                "mtr_icon_chat"
-            };
+    }
 
     public static class idPlayerIcon {
 
+        public int/*qhandle_t*/ iconHandle;
         public playerIconType_t iconType;
         public renderEntity_s renderEnt;
-        public int/*qhandle_t*/ iconHandle;
         //
         //
 
@@ -89,7 +84,7 @@ public class PlayerIcon {
         }
 
         public void FreeIcon() {
-            if (iconHandle != - 1) {
+            if (iconHandle != -1) {
                 gameRenderWorld.FreeEntityDef(iconHandle);
                 iconHandle = -1;
             }
@@ -145,5 +140,6 @@ public class PlayerIcon {
             renderEnt.axis.oSet(axis);
             gameRenderWorld.UpdateEntityDef(iconHandle, renderEnt);
         }
-    };
+    }
+
 }

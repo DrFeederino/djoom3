@@ -1,44 +1,37 @@
 package neo.ui;
 
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
-import static neo.framework.CVarSystem.cvarSystem;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.common;
-import static neo.framework.KeyInput.K_KP_LEFTARROW;
-import static neo.framework.KeyInput.K_KP_RIGHTARROW;
-import static neo.framework.KeyInput.K_LEFTARROW;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.KeyInput.K_MOUSE2;
-import static neo.framework.KeyInput.K_RIGHTARROW;
-import static neo.idlib.Lib.colorBlack;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.WIN_CANFOCUS;
-import static neo.ui.Window.WIN_FOCUS;
 import neo.ui.Window.idWindow;
-import static neo.ui.Window.idWindow.ON.ON_ACTION;
-import static neo.ui.Window.idWindow.ON.ON_ACTIONRELEASE;
 import neo.ui.Winvar.idMultiWinVar;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinStr;
 import neo.ui.Winvar.idWinVar;
+
+import static neo.TempDump.NOT;
+import static neo.TempDump.etoi;
+import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.Common.common;
+import static neo.framework.KeyInput.*;
+import static neo.idlib.Lib.colorBlack;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
+import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.ui.Window.WIN_CANFOCUS;
+import static neo.ui.Window.WIN_FOCUS;
+import static neo.ui.Window.idWindow.ON.ON_ACTION;
+import static neo.ui.Window.idWindow.ON.ON_ACTIONRELEASE;
 
 /**
  *
@@ -47,22 +40,22 @@ public class ChoiceWindow {
 
     public static class idChoiceWindow extends idWindow {
 
-        private int currentChoice;
         private int choiceType;
-        private idStr latchedChoices = new idStr();
-        private idWinStr choicesStr = new idWinStr();
-        private idStr latchedVals = new idStr();
-        private idWinStr choiceVals = new idWinStr();
-        private idStrList choices = new idStrList();
-        private idStrList values = new idStrList();
-        //
-        private idWinStr guiStr = new idWinStr();
-        private idWinStr cvarStr = new idWinStr();
+        private final idWinStr choiceVals = new idWinStr();
+        private final idStrList choices = new idStrList();
+        private final idWinStr choicesStr = new idWinStr();
+        private int currentChoice;
         private idCVar cvar;
-        private idMultiWinVar updateStr = new idMultiWinVar();
+        private final idWinStr cvarStr = new idWinStr();
         //
-        private idWinBool liveUpdate = new idWinBool();
-        private idWinStr updateGroup = new idWinStr();
+        private final idWinStr guiStr = new idWinStr();
+        private final idStr latchedChoices = new idStr();
+        private final idStr latchedVals = new idStr();
+        //
+        private final idWinBool liveUpdate = new idWinBool();
+        private final idWinStr updateGroup = new idWinStr();
+        private final idMultiWinVar updateStr = new idMultiWinVar();
+        private final idStrList values = new idStrList();
         //
         //
 
@@ -443,5 +436,6 @@ public class ChoiceWindow {
                 latchedVals.oSet(choiceVals.c_str());
             }
         }
-    };
+    }
+
 }

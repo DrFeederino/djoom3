@@ -1,104 +1,43 @@
 package neo.Game.AI;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import java.nio.IntBuffer;
-import static neo.Game.AI.AAS.PATHTYPE_BARRIERJUMP;
-import static neo.Game.AI.AAS.PATHTYPE_JUMP;
-import static neo.Game.AI.AAS.PATHTYPE_WALK;
-import static neo.Game.AI.AAS.PATHTYPE_WALKOFFLEDGE;
-import neo.Game.AI.AAS.aasGoal_s;
-import neo.Game.AI.AAS.aasObstacle_s;
-import neo.Game.AI.AAS.aasPath_s;
-import neo.Game.AI.AAS.idAAS;
-import neo.Game.AI.AAS.idAASCallback;
-import static neo.Game.AI.AAS_pathing.SUBSAMPLE_FLY_PATH;
-import static neo.Game.AI.AAS_pathing.SUBSAMPLE_WALK_PATH;
-import static neo.Game.AI.AAS_pathing.flyPathSampleDistance;
-import static neo.Game.AI.AAS_pathing.maxFlyPathDistance;
-import static neo.Game.AI.AAS_pathing.maxFlyPathIterations;
-import static neo.Game.AI.AAS_pathing.maxWalkPathDistance;
-import static neo.Game.AI.AAS_pathing.maxWalkPathIterations;
-import static neo.Game.AI.AAS_pathing.walkPathSampleDistance;
-import static neo.Game.AI.AAS_routing.CACHETYPE_AREA;
-import static neo.Game.AI.AAS_routing.CACHETYPE_PORTAL;
-import static neo.Game.AI.AAS_routing.LEDGE_TRAVELTIME_PANALTY;
-import static neo.Game.AI.AAS_routing.MAX_ROUTING_CACHE_MEMORY;
-import neo.Game.AI.AAS_routing.idRoutingCache;
-import neo.Game.AI.AAS_routing.idRoutingObstacle;
-import neo.Game.AI.AAS_routing.idRoutingUpdate;
+import neo.Game.AI.AAS.*;
+import neo.Game.AI.AAS_routing.*;
 import neo.Game.AI.AI.idAASFindCover;
 import neo.Game.AI.AI_pathing.wallEdge_s;
-import static neo.Game.GameSys.SysCvar.aas_goalArea;
-import static neo.Game.GameSys.SysCvar.aas_pullPlayer;
-import static neo.Game.GameSys.SysCvar.aas_randomPullPlayer;
-import static neo.Game.GameSys.SysCvar.aas_showAreas;
-import static neo.Game.GameSys.SysCvar.aas_showFlyPath;
-import static neo.Game.GameSys.SysCvar.aas_showHideArea;
-import static neo.Game.GameSys.SysCvar.aas_showPath;
-import static neo.Game.GameSys.SysCvar.aas_showPushIntoArea;
-import static neo.Game.GameSys.SysCvar.aas_showWallEdges;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
+import neo.Game.Game_local;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Player.idPlayer;
-import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_CLUSTERPORTAL;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_OBSTACLE;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_LEDGE;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_FLY;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
-import static neo.Tools.Compilers.AAS.AASFile.FACE_FLOOR;
-import static neo.Tools.Compilers.AAS.AASFile.MAX_REACH_PER_AREA;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_AIR;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_BARRIERJUMP;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_CROUCH;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_FLY;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_INVALID;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_JUMP;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WALK;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WALKOFFLEDGE;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WATER;
-import neo.Tools.Compilers.AAS.AASFile.aasArea_s;
-import neo.Tools.Compilers.AAS.AASFile.aasCluster_s;
-import neo.Tools.Compilers.AAS.AASFile.aasEdge_s;
-import neo.Tools.Compilers.AAS.AASFile.aasFace_s;
-import neo.Tools.Compilers.AAS.AASFile.aasNode_s;
-import neo.Tools.Compilers.AAS.AASFile.aasPortal_s;
-import neo.Tools.Compilers.AAS.AASFile.aasTrace_s;
-import neo.Tools.Compilers.AAS.AASFile.idAASFile;
-import neo.Tools.Compilers.AAS.AASFile.idAASSettings;
-import neo.Tools.Compilers.AAS.AASFile.idReachability;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_Walk;
-import static neo.Tools.Compilers.AAS.AASFileManager.AASFileManager;
-import static neo.framework.Common.common;
+import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorPurple;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.colorYellow;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.INTSIGNBITSET;
-import static neo.idlib.math.Math_h.Square;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Simd.SIMDProcessor;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.nio.IntBuffer;
+
+import static java.lang.Math.*;
+import static neo.Game.AI.AAS.*;
+import static neo.Game.AI.AAS_pathing.*;
+import static neo.Game.AI.AAS_routing.*;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.AAS.AASFile.*;
+import static neo.Tools.Compilers.AAS.AASFileManager.AASFileManager;
+import static neo.framework.Common.common;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Plane.PLANESIDE_BACK;
+import static neo.idlib.math.Plane.PLANESIDE_FRONT;
+import static neo.idlib.math.Simd.SIMDProcessor;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -107,31 +46,33 @@ public class AAS_local {
 
     static class idAASLocal extends idAAS {
 
-        private idAASFile                 file;
-        private idStr                     name;
+        private static idPlane dummy;
+        private static int lastAreaNum;
         //
         // routing data
-        private idRoutingCache[][]        areaCacheIndex;        // for each area in each cluster the travel times to all other areas in the cluster
-        private int                       areaCacheIndexSize;    // number of area cache entries
-        private idRoutingCache[]          portalCacheIndex;      // for each area in the world the travel times from each portal
-        private int                       portalCacheIndexSize;  // number of portal cache entries
-        private idRoutingUpdate[]         areaUpdate;            // memory used to update the area routing cache
-        private idRoutingUpdate[]         portalUpdate;          // memory used to update the portal routing cache
-        private int[]                     goalAreaTravelTimes;   // travel times to goal areas
-        private int[]                     areaTravelTimes;       // travel times through the areas
-        private int                       numAreaTravelTimes;    // number of area travel times
-        private idRoutingCache            cacheListStart;        // start of list with cache sorted from oldest to newest
-        private idRoutingCache            cacheListEnd;          // end of list with cache sorted from oldest to newest
-        private int                       totalCacheMemory;      // total cache memory used
-        private idList<idRoutingObstacle> obstacleList;          // list with obstacles
+        private idRoutingCache[][] areaCacheIndex;        // for each area in each cluster the travel times to all other areas in the cluster
+        private int areaCacheIndexSize;    // number of area cache entries
+        private int[] areaTravelTimes;       // travel times through the areas
+        private idRoutingUpdate[] areaUpdate;            // memory used to update the area routing cache
+        private idRoutingCache cacheListEnd;          // end of list with cache sorted from oldest to newest
+        private idRoutingCache cacheListStart;        // start of list with cache sorted from oldest to newest
+        private idAASFile file;
+        private int[] goalAreaTravelTimes;   // travel times to goal areas
+        private idStr name;
+        private int numAreaTravelTimes;    // number of area travel times
+        private final idList<idRoutingObstacle> obstacleList;          // list with obstacles
+        private idRoutingCache[] portalCacheIndex;      // for each area in the world the travel times from each portal
+        private int portalCacheIndexSize;  // number of portal cache entries
         //
         //
+        private idRoutingUpdate[] portalUpdate;          // memory used to update the portal routing cache
+        // virtual						~idAASLocal();
+        private int totalCacheMemory;      // total cache memory used
 
         public idAASLocal() {
             file = null;
             obstacleList = new idList<>();
         }
-        // virtual						~idAASLocal();
 
         @Override
         public boolean Init(final idStr mapName, /*unsigned int*/ long mapFileCRC) {
@@ -280,7 +221,6 @@ public class AAS_local {
             }
             return file.Trace(trace, start, end);
         }
-        private static idPlane dummy;
 
         @Override
         public idPlane GetPlane(int planeNum) {
@@ -553,7 +493,8 @@ public class AAS_local {
         @Override
         public boolean RouteToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags, int[] travelTime, idReachability[] reach) {
             int clusterNum, goalClusterNum, portalNum, i, clusterAreaNum;
-            /*unsigned short*/ int t, bestTime;
+            /*unsigned short*/
+            int t, bestTime;
             aasPortal_s portal;
             aasCluster_s cluster;
             idRoutingCache areaCache, portalCache, clusterCache;
@@ -827,7 +768,6 @@ public class AAS_local {
             return true;
         }
 
-
         /*
          ============
          idAASLocal::WalkPathValid
@@ -1040,11 +980,7 @@ public class AAS_local {
                 }
             }
 
-            if (null == reach[0]) {
-                return false;
-            }
-
-            return true;
+            return null != reach[0];
         }
 
         /*
@@ -1069,11 +1005,7 @@ public class AAS_local {
             endPos = trace.endpos;
             endAreaNum[0] = trace.lastAreaNum;
 
-            if (trace.fraction >= 1.0f) {
-                return true;
-            }
-
-            return false;
+            return trace.fraction >= 1.0f;
         }
 
         @Override
@@ -1165,7 +1097,8 @@ public class AAS_local {
         @Override
         public boolean FindNearestGoal(aasGoal_s goal, int areaNum, final idVec3 origin, final idVec3 target, int travelFlags, aasObstacle_s[] obstacles, int numObstacles, idAASCallback callback) {
             int i, j, k, badTravelFlags, nextAreaNum, bestAreaNum;
-            /*unsigned short*/ int t, bestTravelTime;
+            /*unsigned short*/
+            int t, bestTravelTime;
             idRoutingUpdate updateListStart, updateListEnd, curUpdate, nextUpdate;
             idReachability reach;
             aasArea_s nextArea;
@@ -1413,11 +1346,11 @@ public class AAS_local {
                 for (maxt = i = 0, reach = file.GetArea(n).reach; reach != null; reach = reach.next, i++) {
                     assert (i < MAX_REACH_PER_AREA);
                     if (i >= MAX_REACH_PER_AREA) {
-                        gameLocal.Error("i >= MAX_REACH_PER_AREA");
+                        Game_local.idGameLocal.Error("i >= MAX_REACH_PER_AREA");
                     }
                     reach.number = (byte) i;
                     reach.disableCount = 0;
-                    reach.areaTravelTimes = ((IntBuffer) IntBuffer.wrap(areaTravelTimes).position(bytePtr)).slice();
+                    reach.areaTravelTimes = IntBuffer.wrap(areaTravelTimes).position(bytePtr).slice();
                     for (j = 0, rev_reach = file.GetArea(n).rev_reach; rev_reach != null; rev_reach = rev_reach.rev_next, j++) {
                         t = AreaTravelTime(n, reach.start, rev_reach.end);
                         reach.areaTravelTimes.put(j, t);
@@ -1713,7 +1646,7 @@ public class AAS_local {
                     // get the number of the area in the cluster
                     clusterAreaNum = ClusterAreaNum(areaCache.cluster, nextAreaNum);
                     if (clusterAreaNum >= numReachableAreas) {
-                        continue;	// should never happen
+                        continue;    // should never happen
                     }
 
                     assert (clusterAreaNum < areaCache.size);
@@ -2286,7 +2219,6 @@ public class AAS_local {
                 final idReachability_Walk walk = (idReachability_Walk) reach;
             }
         }
-        private static int lastAreaNum;
 
         private void ShowArea(final idVec3 origin) {
             int areaNum;
@@ -2332,7 +2264,7 @@ public class AAS_local {
             }
 
             if (!org.equals(origin)) {
-                idBounds bnds = file.GetSettings().boundingBoxes[ 0];
+                idBounds bnds = file.GetSettings().boundingBoxes[0];
                 bnds.oGet(1).z = bnds.oGet(0).z;
                 gameRenderWorld.DebugBounds(colorYellow, bnds, org);
             }
@@ -2456,5 +2388,6 @@ public class AAS_local {
             gameRenderWorld.DebugArrow(colorGreen, origin, target, 1);
         }
 
-    };
+    }
+
 }

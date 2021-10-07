@@ -1,18 +1,46 @@
 package neo.framework;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import static neo.framework.Common.common;
 import neo.framework.File_h.fsOrigin_t;
 import neo.framework.File_h.idFile;
 import neo.idlib.Lib;
 import neo.idlib.Lib.idException;
 import neo.idlib.containers.HashIndex.idHashIndex;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.framework.Common.common;
+
 /**
  *
  */
 public class Compressor {
+
+    static final int AC_HIGH_INIT = 0xffff;
+
+    static final int AC_LOW_INIT = 0x0000;
+
+    static final int AC_MSB2_MASK = 0x4000;
+
+    static final int AC_MSB2_SHIFT = 14;
+
+    static final int AC_MSB_MASK = 0x8000;
+
+    static final int AC_MSB_SHIFT = 15;
+    static final int AC_NUM_BITS = 16;
+    static final int AC_WORD_LENGTH = 8;
+    static final int HMAX = 256;                // Maximum symbol
+
+    static final int INTERNAL_NODE = HMAX + 1;            // internal node
+
+    static final int LZSS_BLOCK_SIZE = 65535;
+
+    static final int LZSS_HASH_BITS = 10;
+    static final int LZSS_HASH_MASK = (1 << LZSS_HASH_BITS) - 1;
+    static final int LZSS_HASH_SIZE = (1 << LZSS_HASH_BITS);
+    static final int LZSS_LENGTH_BITS = 5;
+    static final int LZSS_OFFSET_BITS = 11;
+    static final int NYT = HMAX;                // NYT = Not Yet Transmitted
 
     /*
      ===============================================================================
@@ -121,7 +149,7 @@ public class Compressor {
         public boolean Seek(long offset, fsOrigin_t origin) throws idException {
             return super.Seek(offset, origin);
         }
-    };
+    }
 
     /*
      =================================================================================
@@ -131,6 +159,11 @@ public class Compressor {
      =================================================================================
      */
     static class idCompressor_None extends idCompressor {
+
+        protected boolean compress;
+        //
+//
+        protected idFile file;
 
         public idCompressor_None() {
             file = null;
@@ -232,11 +265,7 @@ public class Compressor {
             common.Error("cannot seek on idCompressor");
             return false;//-1;
         }
-//
-//
-        protected idFile file;
-        protected boolean compress;
-    };
+    }
 
     /*
      =================================================================================
@@ -250,19 +279,19 @@ public class Compressor {
     static class idCompressor_BitStream extends idCompressor_None {
 
         protected ByteBuffer buffer = ByteBuffer.allocate(65536);
-        protected int wordLength;
+        protected int readBit;
+        protected int readByte;
+        protected ByteBuffer readData;//= new byte[1];
+        protected int readLength;
         //
         protected int readTotalBytes;
-        protected int readLength;
-        protected int readByte;
-        protected int readBit;
-        protected ByteBuffer readData;//= new byte[1];
+        protected int wordLength;
+        protected int writeBit;
+        protected int writeByte;
+        protected ByteBuffer writeData;//= new byte[1];
+        protected int writeLength;
         //
         protected int writeTotalBytes;
-        protected int writeLength;
-        protected int writeByte;
-        protected int writeBit;
-        protected ByteBuffer writeData;//= new byte[1];
         //
         //
 
@@ -559,7 +588,7 @@ public class Compressor {
                 return i;
             }
         }
-    };
+    }
 
     /*
      =================================================================================
@@ -572,6 +601,10 @@ public class Compressor {
      =================================================================================
      */
     static class idCompressor_RunLength extends idCompressor_BitStream {
+
+        //
+//
+        private int runLengthCode;
 
         public idCompressor_RunLength() {
         }
@@ -651,10 +684,7 @@ public class Compressor {
 
             return writeByte;
         }
-//
-//
-        private int runLengthCode;
-    };
+    }
 
     /*
      =================================================================================
@@ -722,22 +752,7 @@ public class Compressor {
 
             return writeByte;
         }
-    };
-    static final int HMAX = 256;				// Maximum symbol
-    static final int NYT = HMAX;				// NYT = Not Yet Transmitted
-    static final int INTERNAL_NODE = HMAX + 1;			// internal node
-
-    class nodetype {
-
-        nodetype left, right, parent; // tree structure
-        nodetype next, prev;			// doubly-linked list
-        nodetype head;					// highest ranked node in block
-        int weight;
-        int symbol;
-    };
-
-    class huffmanNode_t extends nodetype {
-    };
+    }
 
     /*
      =================================================================================
@@ -752,24 +767,24 @@ public class Compressor {
      */
     static class idCompressor_Huffman extends idCompressor_None {
 
-        private ByteBuffer seq = ByteBuffer.allocate(65536);//TODO:allocateDirect?
         private int bloc;
-        private int blocMax;
         private int blocIn;
+        private int blocMax;
         private int blocNode;
         private int blocPtrs;
         //
         private int compressedSize;
-        private int unCompressedSize;
+        private huffmanNode_t[] freelist;
+        private huffmanNode_t lhead;
+        private final huffmanNode_t[] loc = new huffmanNode_t[HMAX + 1];
+        private huffmanNode_t ltail;
+        //
+        private final huffmanNode_t[] nodeList = new huffmanNode_t[768];
+        private final huffmanNode_t[] nodePtrs = new huffmanNode_t[768];
+        private final ByteBuffer seq = ByteBuffer.allocate(65536);//TODO:allocateDirect?
         //
         private huffmanNode_t tree;
-        private huffmanNode_t lhead;
-        private huffmanNode_t ltail;
-        private huffmanNode_t[] loc = new huffmanNode_t[HMAX + 1];
-        private huffmanNode_t[] freelist;
-        //
-        private huffmanNode_t[] nodeList = new huffmanNode_t[768];
-        private huffmanNode_t[] nodePtrs = new huffmanNode_t[768];
+        private int unCompressedSize;
         //
         //
 
@@ -812,7 +827,7 @@ public class Compressor {
                 tree.parent = tree.left = tree.right = null;
                 loc[NYT] = tree;
             } else {
-                // Initialize the tree & list with the NYT node 
+                // Initialize the tree & list with the NYT node
                 tree = lhead = ltail = loc[NYT] = nodeList[blocNode++];
                 tree.symbol = NYT;
                 tree.weight = 0;
@@ -853,8 +868,8 @@ public class Compressor {
 
             for (i = 0; i < inLength; i++) {
                 ch = inData.getInt(i);
-                Transmit(ch, seq);  // Transmit symbol 
-                AddRef((byte) ch);         // Do update 
+                Transmit(ch, seq);  // Transmit symbol
+                AddRef((byte) ch);         // Do update
 
                 int b = (bloc >> 3);
                 if (b > 32768) {
@@ -889,8 +904,8 @@ public class Compressor {
                 if ((bloc >> 3) > blocMax) {
                     break;
                 }
-                Receive(tree, ch);		// Get a character 
-                if (ch[0] == NYT) {		// We got a NYT, get the symbol associated with it
+                Receive(tree, ch);        // Get a character
+                if (ch[0] == NYT) {        // We got a NYT, get the symbol associated with it
 
                     ch[0] = 0;
                     for (j = 0; j < 8; j++) {
@@ -898,8 +913,8 @@ public class Compressor {
                     }
                 }
 
-                outData.putInt(i, ch[0]);		// Write symbol 
-                AddRef((byte) ch[0]);				// Increment node 
+                outData.putInt(i, ch[0]);        // Write symbol
+                AddRef((byte) ch[0]);                // Increment node
             }
 
             compressedSize = bloc >> 3;
@@ -1228,15 +1243,7 @@ public class Compressor {
                 }
             }
         }
-    };
-    static final int AC_WORD_LENGTH = 8;
-    static final int AC_NUM_BITS = 16;
-    static final int AC_MSB_SHIFT = 15;
-    static final int AC_MSB2_SHIFT = 14;
-    static final int AC_MSB_MASK = 0x8000;
-    static final int AC_MSB2_MASK = 0x4000;
-    static final int AC_HIGH_INIT = 0xffff;
-    static final int AC_LOW_INIT = 0x0000;
+    }
 
     /*
      =================================================================================
@@ -1250,38 +1257,20 @@ public class Compressor {
      */
     static class idCompressor_Arithmetic extends idCompressor_BitStream {
 
-        private class acProbs_s {
+        private int code;
 
-            long low;
-            long high;
-        };
+        private int high;
 
-        private class acProbs_t extends acProbs_s {
-        };
-
-        private class acSymbol_s {
-
-            long low;
-            long high;
-            int position;
-        };
-
-        private class acSymbol_t extends acSymbol_s {
-        };
-
-        private acProbs_t[] probabilities = new acProbs_t[1 << AC_WORD_LENGTH];
-        //
-        private int symbolBuffer;
-        private int symbolBit;
         //
         private int low;
-        private int high;
-        private int code;
-        private long underflowBits;
-        private long scale;
-        //
-        //
 
+        private final acProbs_t[] probabilities = new acProbs_t[1 << AC_WORD_LENGTH];
+
+        private long scale;
+        private int symbolBit;
+        //
+        private int symbolBuffer;
+        private long underflowBits;
         public idCompressor_Arithmetic() {
         }
 
@@ -1333,6 +1322,8 @@ public class Compressor {
 
             return inLength;
         }
+        //
+        //
 
         @Override
         public int Read(ByteBuffer outData, int outLength) {
@@ -1436,7 +1427,6 @@ public class Compressor {
 
             }
         }
-//
 
         private void CharToSymbol(int c, acSymbol_t symbol) {
             symbol.low = probabilities[c].low;
@@ -1478,7 +1468,6 @@ public class Compressor {
                 high |= 1;
             }
         }
-//
 
         private int SymbolFromCount(long count, acSymbol_t symbol) {
             int p = ProbabilityForCount(count);
@@ -1491,6 +1480,7 @@ public class Compressor {
         private int GetCurrentCount() {
             return (int) (((code - low + 1) * scale - 1) / (high - low + 1));
         }
+//
 
         private void RemoveSymbolFromStream(acSymbol_t symbol) {
             long range;
@@ -1518,7 +1508,6 @@ public class Compressor {
                 code |= ReadBits(1);
             }
         }
-//
 
         private void PutBit(int putbit) {
             symbolBuffer |= (putbit & 1) << symbolBit;
@@ -1534,6 +1523,7 @@ public class Compressor {
                 symbolBuffer = 0;
             }
         }
+//
 
         private int GetBit() {
             int getbit;
@@ -1551,7 +1541,6 @@ public class Compressor {
 
             return getbit;
         }
-//
 
         private void WriteOverflowBits() {
 
@@ -1562,13 +1551,28 @@ public class Compressor {
                 WriteBits(~low >> AC_MSB2_SHIFT, 1);
             }
         }
-    };
-    static final int LZSS_BLOCK_SIZE = 65535;
-    static final int LZSS_HASH_BITS = 10;
-    static final int LZSS_HASH_SIZE = (1 << LZSS_HASH_BITS);
-    static final int LZSS_HASH_MASK = (1 << LZSS_HASH_BITS) - 1;
-    static final int LZSS_OFFSET_BITS = 11;
-    static final int LZSS_LENGTH_BITS = 5;
+
+        private class acProbs_s {
+
+            long high;
+            long low;
+        }
+//
+
+        private class acProbs_t extends acProbs_s {
+        }
+
+        private class acSymbol_s {
+
+            long high;
+            long low;
+            int position;
+        }
+//
+
+        private class acSymbol_t extends acSymbol_s {
+        }
+    }
 
     /*
      =================================================================================
@@ -1593,16 +1597,16 @@ public class Compressor {
      */
     static class idCompressor_LZSS extends idCompressor_BitStream {
 
-        protected int offsetBits;
-        protected int lengthBits;
-        protected int minMatchWords;
         //
         protected byte[] block = new byte[LZSS_BLOCK_SIZE];
-        protected int blockSize;
         protected int blockIndex;
+        protected int blockSize;
+        protected int[] hashNext = new int[LZSS_BLOCK_SIZE * 8];
         //
         protected int[] hashTable = new int[LZSS_HASH_SIZE];
-        protected int[] hashNext = new int[LZSS_BLOCK_SIZE * 8];
+        protected int lengthBits;
+        protected int minMatchWords;
+        protected int offsetBits;
         //
         //
 
@@ -1632,7 +1636,7 @@ public class Compressor {
             super.FinishCompress();
         }
 
-//
+        //
         @Override
         public int Write(final ByteBuffer inData, int inLength) {
             int i, n;
@@ -1814,7 +1818,7 @@ public class Compressor {
 
             blockSize = Lib.Min(writeByte, LZSS_BLOCK_SIZE);
         }
-    };
+    }
 
     /*
      =================================================================================
@@ -1901,7 +1905,7 @@ public class Compressor {
 
             blockSize = Lib.Min(writeByte, LZSS_BLOCK_SIZE);
         }
-    };
+    }
 
     /*
      =================================================================================
@@ -1953,40 +1957,34 @@ public class Compressor {
     static class idCompressor_LZW extends idCompressor_BitStream {
 
         protected static final int LZW_BLOCK_SIZE = 32767;
-        protected static final int LZW_START_BITS = 9;
-        protected static final int LZW_FIRST_CODE = (1 << (LZW_START_BITS - 1));
         protected static final int LZW_DICT_BITS = 12;
         protected static final int LZW_DICT_SIZE = 1 << LZW_DICT_BITS;
+        protected static final int LZW_START_BITS = 9;
+        protected static final int LZW_FIRST_CODE = (1 << (LZW_START_BITS - 1));
         //
         //
         // Dictionary data
+        //
+        // Block data
+        protected byte[] block = new byte[LZW_BLOCK_SIZE];
 
-        protected class dictionary {
-
-            int k;
-            int w;
-        };
+        protected int blockIndex;
+        protected int blockSize;
+        protected int codeBits;
         protected dictionary[] dictionary = new dictionary[LZW_DICT_SIZE];
         protected idHashIndex index;
         //
         protected int nextCode;
-        protected int codeBits;
-        //
-        // Block data
-        protected byte[] block = new byte[LZW_BLOCK_SIZE];
-        protected int blockSize;
-        protected int blockIndex;
-        //
-        // Used by the compressor
-        protected int w;
         //
         // Used by the decompressor
         protected int oldCode;
         //
-        //
-
+        // Used by the compressor
+        protected int w;
         public idCompressor_LZW() {
         }
+        //
+        //
 
         @Override
         public void Init(idFile f, boolean compress, int wordLength) {
@@ -2094,7 +2092,6 @@ public class Compressor {
             return -1;
         }
 
-
         /*
          ================
          idCompressor_LZW::BumpBits
@@ -2115,7 +2112,6 @@ public class Compressor {
             }
             return false;
         }
-
 
         /*
          ================
@@ -2177,5 +2173,24 @@ public class Compressor {
 
             blockSize = Lib.Min(writeByte, LZW_BLOCK_SIZE);
         }
-    };
+
+        protected class dictionary {
+
+            int k;
+            int w;
+        }
+    }
+
+    class nodetype {
+
+        nodetype head;                    // highest ranked node in block
+        nodetype left, right, parent; // tree structure
+        nodetype next, prev;            // doubly-linked list
+        int symbol;
+        int weight;
+    }
+
+    class huffmanNode_t extends nodetype {
+    }
+
 }

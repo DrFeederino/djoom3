@@ -8,6 +8,27 @@ import neo.idlib.math.Math_h.idMath;
  */
 public class Token {
 
+    public static final int TT_BINARY = 0x00010;    // binary number
+    public static final int TT_DECIMAL = 0x00002;    // decimal number
+    public static final int TT_DOUBLE_PRECISION = 0x00200;    // double
+    public static final int TT_EXTENDED_PRECISION = 0x00400;    // long double
+    public static final int TT_FLOAT = 0x00080;    // floating point number
+    public static final int TT_HEX = 0x00004;    // hexadecimal number
+    public static final int TT_INDEFINITE = 0x01000;    // indefinite 1.#IND
+    public static final int TT_INFINITE = 0x00800;    // infinite 1.#INF
+    //
+    // number sub types
+    public static final int TT_INTEGER = 0x00001;    // integer
+    public static final int TT_IPADDRESS = 0x04000;    // ip address
+    public static final int TT_IPPORT = 0x08000;    // ip port
+    public static final int TT_LITERAL = 2;          // literal
+    public static final int TT_LONG = 0x00020;    // long int
+    public static final int TT_NAME = 4;          // name
+    public static final int TT_NAN = 0x02000;    // NaN
+    public static final int TT_NUMBER = 3;          // number
+    public static final int TT_OCTAL = 0x00008;    // octal number
+    public static final int TT_PUNCTUATION = 5;          // punctuation
+    public static final int TT_SINGLE_PRECISION = 0x00100;    // float
     /*
      ===============================================================================
 
@@ -16,30 +37,9 @@ public class Token {
      ===============================================================================
      */
     // token types
-    public static final int TT_STRING             = 1;          // string
-    public static final int TT_LITERAL            = 2;          // literal
-    public static final int TT_NUMBER             = 3;          // number
-    public static final int TT_NAME               = 4;          // name
-    public static final int TT_PUNCTUATION        = 5;          // punctuation
-    //                                        
-    // number sub types                     
-    public static final int TT_INTEGER            = 0x00001;    // integer
-    public static final int TT_DECIMAL            = 0x00002;    // decimal number
-    public static final int TT_HEX                = 0x00004;    // hexadecimal number
-    public static final int TT_OCTAL              = 0x00008;    // octal number
-    public static final int TT_BINARY             = 0x00010;    // binary number
-    public static final int TT_LONG               = 0x00020;    // long int
-    public static final int TT_UNSIGNED           = 0x00040;    // unsigned int
-    public static final int TT_FLOAT              = 0x00080;    // floating point number
-    public static final int TT_SINGLE_PRECISION   = 0x00100;    // float
-    public static final int TT_DOUBLE_PRECISION   = 0x00200;    // double
-    public static final int TT_EXTENDED_PRECISION = 0x00400;    // long double
-    public static final int TT_INFINITE           = 0x00800;    // infinite 1.#INF
-    public static final int TT_INDEFINITE         = 0x01000;    // indefinite 1.#IND
-    public static final int TT_NAN                = 0x02000;    // NaN
-    public static final int TT_IPADDRESS          = 0x04000;    // ip address
-    public static final int TT_IPPORT             = 0x08000;    // ip port
-    public static final int TT_VALUESVALID        = 0x10000;    // set if intvalue and floatvalue are valid
+    public static final int TT_STRING = 1;          // string
+    public static final int TT_UNSIGNED = 0x00040;    // unsigned int
+    public static final int TT_VALUESVALID = 0x10000;    // set if intvalue and floatvalue are valid
 
     // string sub type is the length of the string
     // literal sub type is the ASCII code
@@ -49,17 +49,17 @@ public class Token {
 //	friend class idParser;
 //	friend class idLexer;
 
-        public    int     type;                   // token type
-        public    int     subtype;                // token sub type
-        public    int     line;                   // line in script the token was on
-        public    int     linesCrossed;           // number of lines crossed in white space before token
-        public    int     flags;                  // token flags, used for recursive defines
+        public int flags;                  // token flags, used for recursive defines
+        public int line;                   // line in script the token was on
+        public int linesCrossed;           // number of lines crossed in white space before token
+        public int subtype;                // token sub type
+        public int type;                   // token type
+        protected double floatValue;             // floating point value
         //
-        protected long    intValue;               // integer value
-        protected double  floatValue;             // floating point value
-        protected int     whiteSpaceStart_p;      // start of white space before token, only used by idLexer
-        protected int     whiteSpaceEnd_p;        // end of white space before token, only used by idLexer
+        protected long intValue;               // integer value
         protected idToken next;                   // next token in chain, only used by idParser
+        protected int whiteSpaceEnd_p;        // end of white space before token, only used by idLexer
+        protected int whiteSpaceStart_p;      // start of white space before token, only used by idLexer
         //
         //
 
@@ -141,13 +141,13 @@ public class Token {
                 if ((subtype & (TT_INFINITE | TT_INDEFINITE | TT_NAN)) != 0) {
                     if ((subtype & TT_INFINITE) != 0) {            // 1.#INF
                         int inf = 0x7f800000;
-                        floatValue = (double) ((float) inf);//TODO:WHY THE DOUBLE CAST?
+                        floatValue = (float) inf;//TODO:WHY THE DOUBLE CAST?
                     } else if ((subtype & TT_INDEFINITE) != 0) {    // 1.#IND
                         int ind = 0xffc00000;
-                        floatValue = (double) ((float) ind);
-                    } else if ((subtype & TT_NAN) != 0) {			// 1.#QNAN
+                        floatValue = (float) ind;
+                    } else if ((subtype & TT_NAN) != 0) {            // 1.#QNAN
                         int nan = 0x7fc00000;
-                        floatValue = (double) ((float) nan);
+                        floatValue = (float) nan;
                     }
                 } else {
                     while ( /*p[pIndex]!=null &&*/p[pIndex] != '.' && p[pIndex] != 'e') {
@@ -174,7 +174,7 @@ public class Token {
                         }
 
                         for (pow = 0; pIndex < p.length; pIndex++) {
-                            pow = pow * 10 + (int) (p[pIndex] - '0');
+                            pow = pow * 10 + (p[pIndex] - '0');
                         }
                         for (m = 1.0, i = 0; i < pow; i++) {
                             m *= 10.0;
@@ -291,5 +291,6 @@ public class Token {
             return this.data.startsWith(other.data);
         }
 
-    };
+    }
+
 }

@@ -1,43 +1,28 @@
 package neo.Tools.Compilers.DMap;
 
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderWorld.PROC_FILE_EXT;
-import static neo.Renderer.RenderWorld.PROC_FILE_ID;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_CreateSilIndexes;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurfSilIndexes;
-import static neo.Renderer.tr_trisurf.R_RangeCheckIndexes;
-import static neo.Renderer.tr_trisurf.R_RemoveDegenerateTriangles;
-import static neo.TempDump.NOT;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.mapLight_t;
-import neo.Tools.Compilers.DMap.dmap.mapTri_s;
-import neo.Tools.Compilers.DMap.dmap.node_s;
-import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s;
-import neo.Tools.Compilers.DMap.dmap.uArea_t;
-import neo.Tools.Compilers.DMap.dmap.uEntity_t;
-import static neo.Tools.Compilers.DMap.facebsp.FreeTreePortals_r;
-import static neo.Tools.Compilers.DMap.facebsp.FreeTree_r;
+import neo.Tools.Compilers.DMap.dmap.*;
 import neo.Tools.Compilers.DMap.portals.interAreaPortal_t;
-import static neo.Tools.Compilers.DMap.portals.interAreaPortals;
-import static neo.Tools.Compilers.DMap.portals.numInterAreaPortals;
-import static neo.Tools.Compilers.DMap.tritools.CopyTriList;
-import static neo.Tools.Compilers.DMap.tritools.CountTriList;
-import static neo.Tools.Compilers.DMap.tritools.FreeTriList;
-import static neo.Tools.Compilers.DMap.tritools.MergeTriLists;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
+
+import static neo.Renderer.RenderWorld.PROC_FILE_EXT;
+import static neo.Renderer.RenderWorld.PROC_FILE_ID;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.Tools.Compilers.DMap.dmap.*;
+import static neo.Tools.Compilers.DMap.facebsp.FreeTreePortals_r;
+import static neo.Tools.Compilers.DMap.facebsp.FreeTree_r;
+import static neo.Tools.Compilers.DMap.portals.interAreaPortals;
+import static neo.Tools.Compilers.DMap.portals.numInterAreaPortals;
+import static neo.Tools.Compilers.DMap.tritools.*;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
 import static neo.idlib.math.Vector.DotProduct;
 
 /**
@@ -45,6 +30,12 @@ import static neo.idlib.math.Vector.DotProduct;
  */
 public class output {
 
+    //
+    static final int AREANUM_DIFFERENT = -2;
+    static final double COSINE_EPSILON = 0.999;
+    static final double ST_EPSILON = 0.001;
+    //
+    static final double XYZ_EPSILON = 0.01;
     //=================================================================================
 //#if 0
 //
@@ -59,13 +50,6 @@ public class output {
 //
 //#endif
     static idFile procFile;
-    //
-    static final int    AREANUM_DIFFERENT = -2;
-    //
-    static final double XYZ_EPSILON       = 0.01;
-    static final double ST_EPSILON        = 0.001;
-    static final double COSINE_EPSILON    = 0.999;
-
 
     /*
      =============
@@ -185,11 +169,7 @@ public class output {
         }
 
         // otherwise do a dot-product cosine check
-        if (DotProduct(a.normal, b.normal) < COSINE_EPSILON) {
-            return false;
-        }
-
-        return true;
+        return !(DotProduct(a.normal, b.normal) < COSINE_EPSILON);
     }
 
     /*
@@ -379,10 +359,7 @@ public class output {
         if (!a.material.equals(b.material)) {
             return false;
         }
-        if (!a.mergeGroup.equals(b.mergeGroup)) {
-            return false;
-        }
-        return true;
+        return a.mergeGroup.equals(b.mergeGroup);
     }
 
     /*
@@ -403,10 +380,10 @@ public class output {
 //	mapTri_s	*tri;
         class interactionTris_s {
 
+            mapLight_t light;
             interactionTris_s next;
             mapTri_s triList;
-            mapLight_t light;
-        };
+        }
 
         interactionTris_s interactions, checkInter; //, *nextInter;
 

@@ -6,23 +6,24 @@ import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_gravity;
-import static neo.Game.Game_local.gameLocal;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force.idForce;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Static.staticPState_s;
-import static neo.idlib.BV.Bounds.bounds_zero;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Quat.idCQuat;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Game.GameSys.SysCvar.g_gravity;
+import static neo.Game.Game_local.gameLocal;
+import static neo.idlib.BV.Bounds.bounds_zero;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -41,15 +42,20 @@ public class Physics_StaticMulti {
     public static class idPhysics_StaticMulti extends idPhysics {
         // CLASS_PROTOTYPE( idPhysics_StaticMulti );
 
-        protected idEntity               self;            // entity using this physics object
+        private static final idVec3 gravity = new idVec3(0, 0, -g_gravity.GetFloat());
+        private static final idVec3 gravityNormal = new idVec3(0, 0, -1);
+        private static idBounds absBounds;
+        private static idBounds bounds;
+        private static contactInfo_t info;
+        //
+        //
+        protected idList<idClipModel> clipModels;    // collision model
         protected idList<staticPState_s> current;    // physics state
-        protected idList<idClipModel>    clipModels;    // collision model
         //
         // master
-        protected boolean                hasMaster;
-        protected boolean                isOrientated;
-        //
-        //
+        protected boolean hasMaster;
+        protected boolean isOrientated;
+        protected idEntity self;            // entity using this physics object
 
         public idPhysics_StaticMulti() {
             self = null;
@@ -246,7 +252,6 @@ public class Physics_StaticMulti {
         public int GetClipMask(int id /*= -1*/) {
             return 0;
         }
-        private static idBounds bounds;
 
         @Override
         public idBounds GetBounds(int id /*= -1*/) {
@@ -275,7 +280,6 @@ public class Physics_StaticMulti {
             }
             return bounds_zero;
         }
-        private static idBounds absBounds;
 
         @Override
         public idBounds GetAbsBounds(int id /*= -1*/) {
@@ -547,13 +551,11 @@ public class Physics_StaticMulti {
         @Override
         public void SetGravity(final idVec3 newGravity) {
         }
-        private static final idVec3 gravity = new idVec3(0, 0, -g_gravity.GetFloat());
 
         @Override
         public idVec3 GetGravity() {
             return gravity;
         }
-        private static final idVec3 gravityNormal = new idVec3(0, 0, -1);
 
         @Override
         public idVec3 GetGravityNormal() {
@@ -643,7 +645,6 @@ public class Physics_StaticMulti {
         public int GetNumContacts() {
             return 0;
         }
-        private static contactInfo_t info;
 
         @Override
         public contactInfo_t GetContact(int num) {
@@ -808,5 +809,6 @@ public class Physics_StaticMulti {
         public void oSet(idClass oGet) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
+
 }

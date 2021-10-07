@@ -1,29 +1,31 @@
 package neo.Game.GameSys;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import static neo.Game.GameSys.NoGameTypeInfo.classTypeInfo;
 import neo.Game.GameSys.NoGameTypeInfo.classTypeInfo_t;
 import neo.Game.GameSys.NoGameTypeInfo.classVariableInfo_t;
-import static neo.Game.GameSys.NoGameTypeInfo.enumTypeInfo;
 import neo.Game.GameSys.NoGameTypeInfo.enumTypeInfo_t;
-import static neo.Game.Game_local.gameLocal;
-import static neo.TempDump.ctos;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.common;
 import neo.framework.File_h.idFile;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_STRING;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.Game.GameSys.NoGameTypeInfo.classTypeInfo;
+import static neo.Game.GameSys.NoGameTypeInfo.enumTypeInfo;
+import static neo.Game.Game_local.gameLocal;
+import static neo.TempDump.ctos;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.TT_STRING;
 
 /**
  *
@@ -32,6 +34,107 @@ public class TypeInfo {
 
     static final boolean DUMP_GAMELOCAL = false;
 
+    /*
+     ================
+     IsAllowedToChangedFromSaveGames
+     ================
+     */
+    static boolean IsAllowedToChangedFromSaveGames(final String varName, final String varType, final String scope, final String prefix, final String postfix, final String value) {
+        if (idStr.Icmp(scope, "idAnimator") == 0) {
+            if (idStr.Icmp(varName, "forceUpdate") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "lastTransformTime") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "AFPoseTime") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "frameBounds") == 0) {
+                return true;
+            }
+        } else if (idStr.Icmp(scope, "idClipModel") == 0) {
+            if (idStr.Icmp(varName, "touchCount") == 0) {
+                return true;
+            }
+        } else if (idStr.Icmp(scope, "idEntity") == 0) {
+            if (idStr.Icmp(varName, "numPVSAreas") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "renderView") == 0) {
+                return true;
+            }
+        } else if (idStr.Icmp(scope, "idBrittleFracture") == 0) {
+            if (idStr.Icmp(varName, "changed") == 0) {
+                return true;
+            }
+        } else if (idStr.Icmp(scope, "idPhysics_AF") == 0) {
+            return true;
+        } else if (idStr.Icmp(scope, "renderEntity_t") == 0) {
+            // These get fixed up when UpdateVisuals is called
+            if (idStr.Icmp(varName, "origin") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "axis") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "bounds") == 0) {
+                return true;
+            }
+        }
+
+        return idStr.Icmpn(prefix, "idAFEntity_Base::af.idAF::physicsObj.idPhysics_AF", 49) == 0;
+    }
+
+    /*
+     ================
+     IsRenderHandleVariable
+     ================
+     */
+    static boolean IsRenderHandleVariable(final String varName, final String varType, final String scope, final String prefix, final String postfix, final String value) {
+        if (idStr.Icmp(scope, "idClipModel") == 0) {
+            return idStr.Icmp(varName, "renderModelHandle") == 0;
+        } else if (idStr.Icmp(scope, "idFXLocalAction") == 0) {
+            if (idStr.Icmp(varName, "lightDefHandle") == 0) {
+                return true;
+            }
+            return idStr.Icmp(varName, "modelDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idEntity") == 0) {
+            return idStr.Icmp(varName, "modelDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idLight") == 0) {
+            return idStr.Icmp(varName, "lightDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idAFEntity_Gibbable") == 0) {
+            return idStr.Icmp(varName, "skeletonModelDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idAFEntity_SteamPipe") == 0) {
+            return idStr.Icmp(varName, "steamModelHandle") == 0;
+        } else if (idStr.Icmp(scope, "idItem") == 0) {
+            return idStr.Icmp(varName, "itemShellHandle") == 0;
+        } else if (idStr.Icmp(scope, "idExplodingBarrel") == 0) {
+            if (idStr.Icmp(varName, "particleModelDefHandle") == 0) {
+                return true;
+            }
+            return idStr.Icmp(varName, "lightDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idProjectile") == 0) {
+            return idStr.Icmp(varName, "lightDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idBFGProjectile") == 0) {
+            return idStr.Icmp(varName, "secondModelDefHandle") == 0;
+        } else if (idStr.Icmp(scope, "idSmokeParticles") == 0) {
+            return idStr.Icmp(varName, "renderEntityHandle") == 0;
+        } else if (idStr.Icmp(scope, "idWeapon") == 0) {
+            if (idStr.Icmp(varName, "muzzleFlashHandle") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "worldMuzzleFlashHandle") == 0) {
+                return true;
+            }
+            if (idStr.Icmp(varName, "guiLightHandle") == 0) {
+                return true;
+            }
+            return idStr.Icmp(varName, "nozzleGlowHandle") == 0;
+        }
+        return false;
+    }
+
     public static abstract class WriteVariableType_t {
 
         public abstract void run(final String varName, final String varType, final String scope, final String prefix, final String postfix, final String value, final ByteBuffer varPtr, int varSize);
@@ -39,13 +142,15 @@ public class TypeInfo {
 
     public static class idTypeInfoTools {
 
+        static char[][] buffers = new char[4][16384];
+        static int index = 0;
+        private static WriteVariableType_t Write = null;
         private static idFile fp = null;
         private static int initValue = 0;
-        private static WriteVariableType_t Write = null;
-        private static idLexer src = null;
+        //
+        //
+        private static final idLexer src = null;
         private static boolean typeError = false;
-        //
-        //
 
         public static classTypeInfo_t FindClassInfo(final String typeName) {
             int i;
@@ -232,8 +337,6 @@ public class TypeInfo {
 ////	delete src;
 //            src = null;
         }
-        static int index = 0;
-        static char[][] buffers = new char[4][16384];
 
         private static String OutputString(final String string) {
             char[] out;
@@ -269,7 +372,7 @@ public class TypeInfo {
                         out[i] = 't';
                         break;
                     case //'\v'
-                    '\u000B':
+                            '\u000B':
                         out[i++] = '\\';
                         out[i] = 'v';
                         break;
@@ -310,130 +413,6 @@ public class TypeInfo {
             }
             return true;
         }
-
-        private static class PrintVariable extends WriteVariableType_t {
-
-            public static final WriteVariableType_t INSTANCE = new PrintVariable();
-
-            private PrintVariable() {
-            }
-
-            @Override
-            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
-                common.Printf("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value);
-            }
-        };
-
-        private static class WriteVariable extends WriteVariableType_t {
-
-            public static final WriteVariableType_t INSTANCE = new WriteVariable();
-
-            private WriteVariable() {
-            }
-
-            @Override
-            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
-
-                for (int i = idStr.FindChar(value, '#', 0); i >= 0; i = idStr.FindChar(value, '#', i + 1)) {
-                    if (idStr.Icmpn(value + i + 1, "INF", 3) == 0
-                            || idStr.Icmpn(value + i + 1, "IND", 3) == 0
-                            || idStr.Icmpn(value + i + 1, "NAN", 3) == 0
-                            || idStr.Icmpn(value + i + 1, "QNAN", 4) == 0
-                            || idStr.Icmpn(value + i + 1, "SNAN", 4) == 0) {
-                        common.Warning("%s%s::%s%s = \"%s\"", prefix, scope, varName, postfix, value);
-                        break;
-                    }
-                }
-                fp.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value);
-            }
-        };
-
-        private static class WriteGameStateVariable extends WriteVariableType_t {
-
-            public static final WriteVariableType_t INSTANCE = new WriteGameStateVariable();
-
-            private WriteGameStateVariable() {
-            }
-
-            @Override
-            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
-
-                for (int i = idStr.FindChar(value, '#', 0); i >= 0; i = idStr.FindChar(value, '#', i + 1)) {
-                    if (idStr.Icmpn(value + i + 1, "INF", 3) == 0
-                            || idStr.Icmpn(value + i + 1, "IND", 3) == 0
-                            || idStr.Icmpn(value + i + 1, "NAN", 3) == 0
-                            || idStr.Icmpn(value + i + 1, "QNAN", 4) == 0
-                            || idStr.Icmpn(value + i + 1, "SNAN", 4) == 0) {
-                        common.Warning("%s%s::%s%s = \"%s\"", prefix, scope, varName, postfix, value);
-                        break;
-                    }
-                }
-
-                if (IsRenderHandleVariable(varName, varType, scope, prefix, postfix, value)) {
-                    return;
-                }
-
-                if (IsAllowedToChangedFromSaveGames(varName, varType, scope, prefix, postfix, value)) {
-                    return;
-                }
-
-                fp.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value);
-            }
-        };
-
-        private static class InitVariable extends WriteVariableType_t {
-
-            public static final WriteVariableType_t INSTANCE = new InitVariable();
-
-            private InitVariable() {
-            }
-
-            @Override
-            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
-                if (varPtr != null && varSize > 0) {
-                    // NOTE: skip renderer handles
-                    if (IsRenderHandleVariable(varName, varType, scope, prefix, postfix, value)) {
-                        return;
-                    }
-//                    memset(const_cast < void * > (varPtr), initValue, varSize);
-                    Arrays.fill(varPtr.array(), 0, varSize, (byte) initValue);
-                }
-            }
-        };
-
-        private static class VerifyVariable extends WriteVariableType_t {
-
-            public static final WriteVariableType_t INSTANCE = new VerifyVariable();
-
-            private VerifyVariable() {
-            }
-
-            @Override
-            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
-                idToken token = new idToken();
-
-                if (typeError) {
-                    return;
-                }
-
-                src.SkipUntilString("=");
-                src.ExpectTokenType(TT_STRING, 0, token);
-                if (token.Cmp(value) != 0) {
-
-                    // NOTE: skip several things
-                    if (IsRenderHandleVariable(varName, varType, scope, prefix, postfix, value)) {
-                        return;
-                    }
-
-                    if (IsAllowedToChangedFromSaveGames(varName, varType, scope, prefix, postfix, value)) {
-                        return;
-                    }
-
-                    src.Warning("state diff for %s%s::%s%s\n%s\n%s", prefix, scope, varName, postfix, token, value);
-                    typeError = true;
-                }
-            }
-        };
 
         private static int WriteVariable_r(final ByteBuffer varPtr, final String varName, final String varType, final String scope, final String prefix, final int pointerDepth) {
             throw new UnsupportedOperationException();
@@ -1130,7 +1109,131 @@ public class TypeInfo {
                 WriteVariable_r(varPtr, classVar.name, classVar.type, classType, prefix, pointerDepth);
             }
         }
-    };
+
+        private static class PrintVariable extends WriteVariableType_t {
+
+            public static final WriteVariableType_t INSTANCE = new PrintVariable();
+
+            private PrintVariable() {
+            }
+
+            @Override
+            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
+                common.Printf("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value);
+            }
+        }
+
+        private static class WriteVariable extends WriteVariableType_t {
+
+            public static final WriteVariableType_t INSTANCE = new WriteVariable();
+
+            private WriteVariable() {
+            }
+
+            @Override
+            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
+
+                for (int i = idStr.FindChar(value, '#', 0); i >= 0; i = idStr.FindChar(value, '#', i + 1)) {
+                    if (idStr.Icmpn(value + i + 1, "INF", 3) == 0
+                            || idStr.Icmpn(value + i + 1, "IND", 3) == 0
+                            || idStr.Icmpn(value + i + 1, "NAN", 3) == 0
+                            || idStr.Icmpn(value + i + 1, "QNAN", 4) == 0
+                            || idStr.Icmpn(value + i + 1, "SNAN", 4) == 0) {
+                        common.Warning("%s%s::%s%s = \"%s\"", prefix, scope, varName, postfix, value);
+                        break;
+                    }
+                }
+                fp.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value);
+            }
+        }
+
+        private static class WriteGameStateVariable extends WriteVariableType_t {
+
+            public static final WriteVariableType_t INSTANCE = new WriteGameStateVariable();
+
+            private WriteGameStateVariable() {
+            }
+
+            @Override
+            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
+
+                for (int i = idStr.FindChar(value, '#', 0); i >= 0; i = idStr.FindChar(value, '#', i + 1)) {
+                    if (idStr.Icmpn(value + i + 1, "INF", 3) == 0
+                            || idStr.Icmpn(value + i + 1, "IND", 3) == 0
+                            || idStr.Icmpn(value + i + 1, "NAN", 3) == 0
+                            || idStr.Icmpn(value + i + 1, "QNAN", 4) == 0
+                            || idStr.Icmpn(value + i + 1, "SNAN", 4) == 0) {
+                        common.Warning("%s%s::%s%s = \"%s\"", prefix, scope, varName, postfix, value);
+                        break;
+                    }
+                }
+
+                if (IsRenderHandleVariable(varName, varType, scope, prefix, postfix, value)) {
+                    return;
+                }
+
+                if (IsAllowedToChangedFromSaveGames(varName, varType, scope, prefix, postfix, value)) {
+                    return;
+                }
+
+                fp.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value);
+            }
+        }
+
+        private static class InitVariable extends WriteVariableType_t {
+
+            public static final WriteVariableType_t INSTANCE = new InitVariable();
+
+            private InitVariable() {
+            }
+
+            @Override
+            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
+                if (varPtr != null && varSize > 0) {
+                    // NOTE: skip renderer handles
+                    if (IsRenderHandleVariable(varName, varType, scope, prefix, postfix, value)) {
+                        return;
+                    }
+//                    memset(const_cast < void * > (varPtr), initValue, varSize);
+                    Arrays.fill(varPtr.array(), 0, varSize, (byte) initValue);
+                }
+            }
+        }
+
+        private static class VerifyVariable extends WriteVariableType_t {
+
+            public static final WriteVariableType_t INSTANCE = new VerifyVariable();
+
+            private VerifyVariable() {
+            }
+
+            @Override
+            public void run(String varName, String varType, String scope, String prefix, String postfix, String value, ByteBuffer varPtr, int varSize) {
+                idToken token = new idToken();
+
+                if (typeError) {
+                    return;
+                }
+
+                src.SkipUntilString("=");
+                src.ExpectTokenType(TT_STRING, 0, token);
+                if (token.Cmp(value) != 0) {
+
+                    // NOTE: skip several things
+                    if (IsRenderHandleVariable(varName, varType, scope, prefix, postfix, value)) {
+                        return;
+                    }
+
+                    if (IsAllowedToChangedFromSaveGames(varName, varType, scope, prefix, postfix, value)) {
+                        return;
+                    }
+
+                    src.Warning("state diff for %s%s::%s%s\n%s\n%s", prefix, scope, varName, postfix, token, value);
+                    typeError = true;
+                }
+            }
+        }
+    }
 
     /*
      ================
@@ -1161,7 +1264,7 @@ public class TypeInfo {
 
             idTypeInfoTools.WriteGameState(fileName.toString());
         }
-    };
+    }
 
     /*
      ================
@@ -1192,7 +1295,7 @@ public class TypeInfo {
 
             idTypeInfoTools.CompareGameState(fileName.toString());
         }
-    };
+    }
 
     /*
      ================
@@ -1232,7 +1335,7 @@ public class TypeInfo {
             }
             cmdSystem.BufferCommandText(CMD_EXEC_NOW, "quit");
         }
-    };
+    }
 
     /*
      ================
@@ -1278,7 +1381,7 @@ public class TypeInfo {
             public int compare(final Integer a, final Integer b) {
                 return idStr.Icmp(classTypeInfo[a].typeName, classTypeInfo[b].typeName);
             }
-        };
+        }
 
         private static class SortTypeInfoBySize implements cmp_t<Integer> {
 
@@ -1292,137 +1395,7 @@ public class TypeInfo {
                 }
                 return 0;
             }
-        };
-
-    };
-
-    /*
-     ================
-     IsAllowedToChangedFromSaveGames
-     ================
-     */
-    static boolean IsAllowedToChangedFromSaveGames(final String varName, final String varType, final String scope, final String prefix, final String postfix, final String value) {
-        if (idStr.Icmp(scope, "idAnimator") == 0) {
-            if (idStr.Icmp(varName, "forceUpdate") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "lastTransformTime") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "AFPoseTime") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "frameBounds") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idClipModel") == 0) {
-            if (idStr.Icmp(varName, "touchCount") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idEntity") == 0) {
-            if (idStr.Icmp(varName, "numPVSAreas") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "renderView") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idBrittleFracture") == 0) {
-            if (idStr.Icmp(varName, "changed") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idPhysics_AF") == 0) {
-            return true;
-        } else if (idStr.Icmp(scope, "renderEntity_t") == 0) {
-            // These get fixed up when UpdateVisuals is called
-            if (idStr.Icmp(varName, "origin") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "axis") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "bounds") == 0) {
-                return true;
-            }
         }
 
-        if (idStr.Icmpn(prefix, "idAFEntity_Base::af.idAF::physicsObj.idPhysics_AF", 49) == 0) {
-            return true;
-        }
-
-        return false;
-    }
-
-
-    /*
-     ================
-     IsRenderHandleVariable
-     ================
-     */
-    static boolean IsRenderHandleVariable(final String varName, final String varType, final String scope, final String prefix, final String postfix, final String value) {
-        if (idStr.Icmp(scope, "idClipModel") == 0) {
-            if (idStr.Icmp(varName, "renderModelHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idFXLocalAction") == 0) {
-            if (idStr.Icmp(varName, "lightDefHandle") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "modelDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idEntity") == 0) {
-            if (idStr.Icmp(varName, "modelDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idLight") == 0) {
-            if (idStr.Icmp(varName, "lightDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idAFEntity_Gibbable") == 0) {
-            if (idStr.Icmp(varName, "skeletonModelDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idAFEntity_SteamPipe") == 0) {
-            if (idStr.Icmp(varName, "steamModelHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idItem") == 0) {
-            if (idStr.Icmp(varName, "itemShellHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idExplodingBarrel") == 0) {
-            if (idStr.Icmp(varName, "particleModelDefHandle") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "lightDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idProjectile") == 0) {
-            if (idStr.Icmp(varName, "lightDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idBFGProjectile") == 0) {
-            if (idStr.Icmp(varName, "secondModelDefHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idSmokeParticles") == 0) {
-            if (idStr.Icmp(varName, "renderEntityHandle") == 0) {
-                return true;
-            }
-        } else if (idStr.Icmp(scope, "idWeapon") == 0) {
-            if (idStr.Icmp(varName, "muzzleFlashHandle") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "worldMuzzleFlashHandle") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "guiLightHandle") == 0) {
-                return true;
-            }
-            if (idStr.Icmp(varName, "nozzleGlowHandle") == 0) {
-                return true;
-            }
-        }
-        return false;
     }
 }

@@ -6,29 +6,29 @@ import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Game_local.idEntityPtr;
 import neo.Game.Physics.Clip.idClipModel;
-import static neo.Game.Physics.Physics.CONTACT_EPSILON;
-
 import neo.Game.Physics.Force.idForce;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics.impactInfo_s;
-import static neo.idlib.BV.Bounds.bounds_zero;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorRed;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.Square;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec6;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Game.Physics.Physics.CONTACT_EPSILON;
+import static neo.idlib.BV.Bounds.bounds_zero;
+import static neo.idlib.Lib.colorBlue;
+import static neo.idlib.Lib.colorRed;
+import static neo.idlib.math.Math_h.Square;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -44,19 +44,20 @@ public class Physics_Base {
      */
     public static class contactEntity_t extends idEntityPtr<idEntity> {
 
-    };
+    }
 
     public static class idPhysics_Base extends idPhysics {
         // CLASS_PROTOTYPE( idPhysics_Base );
 
-        protected idEntity                self;             // entity using this physics object
-        protected int                     clipMask;         // contents the physics object collides with
-        protected idVec3                  gravityVector;    // direction and magnitude of gravity
-        protected idVec3                  gravityNormal;    // normalized direction of gravity
-        protected idList<contactInfo_t>   contacts;         // contacts with other physics objects
+        private static int DBG_IsOutsideWorld = 0;
+        protected int clipMask;         // contents the physics object collides with
         protected idList<contactEntity_t> contactEntities;  // entities touching this physics object
+        protected idList<contactInfo_t> contacts;         // contacts with other physics objects
+        protected idVec3 gravityNormal;    // normalized direction of gravity
+        protected idVec3 gravityVector;    // direction and magnitude of gravity
         //
         //
+        protected idEntity self;             // entity using this physics object
 
         public idPhysics_Base() {
             self = null;
@@ -367,7 +368,7 @@ public class Physics_Base {
             idEntity ent;
 
             for (i = 0; i < contacts.Num(); i++) {
-                ent = gameLocal.entities[ contacts.oGet(i).entityNum];
+                ent = gameLocal.entities[contacts.oGet(i).entityNum];
                 if (ent != null) {
                     ent.RemoveContactEntity(self);
                 }
@@ -520,7 +521,7 @@ public class Physics_Base {
             idEntity ent;
 
             for (i = 0; i < contacts.Num(); i++) {
-                ent = gameLocal.entities[ contacts.oGet(i).entityNum];
+                ent = gameLocal.entities[contacts.oGet(i).entityNum];
                 if (ent != null && !ent.equals(self)) {
                     ent.AddContactEntity(self);
                 }
@@ -542,13 +543,10 @@ public class Physics_Base {
             }
         }
 
-        private static int DBG_IsOutsideWorld = 0;
         // returns true if the whole physics object is outside the world bounds
-        protected boolean IsOutsideWorld() {       DBG_IsOutsideWorld++;
-            if (!gameLocal.clip.GetWorldBounds().Expand(128.0f).IntersectsBounds(GetAbsBounds())) {
-                return true;
-            }
-            return false;
+        protected boolean IsOutsideWorld() {
+            DBG_IsOutsideWorld++;
+            return !gameLocal.clip.GetWorldBounds().Expand(128.0f).IntersectsBounds(GetAbsBounds());
         }
 
         // draw linear and angular velocity
@@ -607,5 +605,6 @@ public class Physics_Base {
         public void oSet(idClass oGet) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
+
 }

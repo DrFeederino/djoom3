@@ -1,5 +1,15 @@
 package neo.framework;
 
+import neo.TempDump.*;
+import neo.idlib.BitMsg.idBitMsg;
+import neo.idlib.Lib.*;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec2;
+import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.idVec4;
+import neo.idlib.math.Vector.idVec6;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -9,35 +19,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import static neo.TempDump.NOT;
-import neo.TempDump.SERiAL;
-import static neo.TempDump.atobb;
-import static neo.TempDump.ctos;
-import static neo.TempDump.etoi;
+
+import static neo.TempDump.*;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.FileSystem_h.fsMode_t.FS_READ;
 import static neo.framework.FileSystem_h.fsMode_t.FS_WRITE;
-import static neo.framework.File_h.fsOrigin_t.FS_SEEK_CUR;
-import static neo.framework.File_h.fsOrigin_t.FS_SEEK_END;
 import static neo.framework.File_h.fsOrigin_t.FS_SEEK_SET;
-import neo.idlib.BitMsg.idBitMsg;
-import static neo.idlib.Lib.LittleFloat;
-import static neo.idlib.Lib.LittleLong;
-import static neo.idlib.Lib.LittleShort;
-import neo.idlib.Lib.idException;
+import static neo.idlib.Lib.*;
 import static neo.idlib.Lib.idLib.common;
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Vector.idVec2;
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
-import neo.idlib.math.Vector.idVec6;
 import static neo.sys.win_main.Sys_FileTimeStamp;
 
 /**
  *
  */
 public class File_h {
+
+    static final int MAX_PRINT_MSG = 4096;
 
     /*
      =================
@@ -83,7 +80,7 @@ public class File_h {
                                 tmp = new idStr(String.format("%1.10f", f));
                                 tmp.StripTrailing('0');
                                 tmp.StripTrailing('.');
-                                temp = String.format("%s", tmp.toString());
+                                temp = String.format("%s", tmp);
                                 System.arraycopy(temp.toCharArray(), 0, buf, index, temp.length());
                                 index += temp.length();
 //                                index += sprintf(buf + index, "%s", tmp.c_str());
@@ -176,7 +173,7 @@ public class File_h {
                             buf[index++] = '\\';
                             break;
                         default:
-                            common.Error("FS_WriteFloatString: unknown escape character \'%c\'", fmt[fmt_ptr]);
+                            common.Error("FS_WriteFloatString: unknown escape character '%c'", fmt[fmt_ptr]);
                             break;
                     }
                     fmt_ptr++;
@@ -192,7 +189,6 @@ public class File_h {
         return index;
     }
 
-
     /*
      ==============================================================
 
@@ -207,7 +203,6 @@ public class File_h {
         FS_SEEK_END,
         FS_SEEK_SET
     }
-    static final int MAX_PRINT_MSG = 4096;
 
     /*
      =================================================================================
@@ -635,7 +630,7 @@ public class File_h {
             return Write(buffer);
         }
 
-    };
+    }
 
     /*
      =================================================================================
@@ -647,18 +642,18 @@ public class File_h {
     public static class idFile_Memory extends idFile {
         // friend class			idFileSystemLocal;
 
-        private idStr      name;        // name of the file
-        private int        mode;        // open mode
-        private int        maxSize;     // maximum size of file
-        private int        fileSize;    // size of the file
-        private int        allocated;   // allocated size
-        private int        granularity; // file granularity
+        private int allocated;   // allocated size
+        private int curPtr;      // current read/write pointer
         private ByteBuffer filePtr;     // buffer holding the file data
-        private int        curPtr;      // current read/write pointer
+        private int fileSize;    // size of the file
+        private int granularity; // file granularity
+        private int maxSize;     // maximum size of file
+        private int mode;        // open mode
+        private final idStr name;        // name of the file
         //
         //
 
-        public idFile_Memory() {	// file for writing without name
+        public idFile_Memory() {    // file for writing without name
             name = new idStr("*unknown*");
             maxSize = 0;
             fileSize = 0;
@@ -670,7 +665,7 @@ public class File_h {
             curPtr = 0;
         }
 
-        public idFile_Memory(final String name) {	// file for writing
+        public idFile_Memory(final String name) {    // file for writing
             this.name = new idStr(name);
             maxSize = 0;
             fileSize = 0;
@@ -682,7 +677,7 @@ public class File_h {
             curPtr = 0;
         }
 
-        public idFile_Memory(final String name, ByteBuffer data, int length) {	// file for writing
+        public idFile_Memory(final String name, ByteBuffer data, int length) {    // file for writing
             this.name = new idStr(name);
             maxSize = length;
             fileSize = 0;
@@ -880,7 +875,7 @@ public class File_h {
             assert (g > 0);
             granularity = g;
         }
-    };
+    }
 
     /*
      =================================================================================
@@ -892,9 +887,9 @@ public class File_h {
     public static class idFile_BitMsg extends idFile {
         // friend class			idFileSystemLocal;
 
-        private idStr    name;            // name of the file
-        private int      mode;            // open mode
-        private idBitMsg msg;
+        private final int mode;            // open mode
+        private final idBitMsg msg;
+        private final idStr name;            // name of the file
         //
         //
 
@@ -988,7 +983,7 @@ public class File_h {
         public boolean Seek(long offset, fsOrigin_t origin) {
             return false;//-1;
         }
-    };
+    }
 
     /*
      =================================================================================
@@ -1000,12 +995,12 @@ public class File_h {
     public static class idFile_Permanent extends idFile {
         // friend class			idFileSystemLocal;
 
-        idStr       name;        // relative path of the file - relative path
-        idStr       fullPath;    // full file path - OS path
-        int         mode;        // open mode
-        int         fileSize;    // size of the file
+        int fileSize;    // size of the file
+        idStr fullPath;    // full file path - OS path
+        boolean handleSync;  // true if written data is immediately flushed
+        int mode;        // open mode
+        idStr name;        // relative path of the file - relative path
         FileChannel o;           // file handle
-        boolean     handleSync;  // true if written data is immediately flushed
         //
         //
 
@@ -1233,7 +1228,7 @@ public class File_h {
             return o;
         }
 
-    };
+    }
 
     /*
      =================================================================================
@@ -1245,15 +1240,23 @@ public class File_h {
     static class idFile_InZip extends idFile {
         // friend class			idFileSystemLocal;
 
-        idStr    name;                  // name of the file in the pak
-        idStr    fullPath;              // full file path including pak file name
-        int      zipFilePos;            // zip file info position in pak
-        int      fileSize;              // size of the file
+        /*
+         =================
+         idFile_InZip::Seek
+
+         returns zero on success and -1 on failure
+         =================
+         */
+        static final int ZIP_SEEK_BUF_SIZE = 1 << 15;
+        int fileSize;              // size of the file
+        idStr fullPath;              // full file path including pak file name
+        idStr name;                  // name of the file in the pak
         ZipEntry z;                     // unzip info //TODO:use faster zip method
-        private int         byteCounter;// current offset within zip archive.
+        int zipFilePos;            // zip file info position in pak
+        private int byteCounter;// current offset within zip archive.
+        //
+        //
         private InputStream inputStream;
-        //
-        //
 
         public idFile_InZip() {
             name = new idStr("invalid");
@@ -1264,7 +1267,7 @@ public class File_h {
             // memset( &z, 0, sizeof( z ) );//TODO:size of void ptr
         }
 
-// public	virtual					~idFile_InZip( void );
+        // public	virtual					~idFile_InZip( void );
         @Override
         public String GetName() {
             return name.toString();
@@ -1335,15 +1338,6 @@ public class File_h {
             common.FatalError("idFile_InZip::Flush: cannot flush the zipped file %s", name);
         }
 
-        /*
-         =================
-         idFile_InZip::Seek
-
-         returns zero on success and -1 on failure
-         =================
-         */
-        static final int ZIP_SEEK_BUF_SIZE = 1 << 15;
-
         @Override
         public boolean Seek(long offset, fsOrigin_t origin) {
             int res, i;
@@ -1392,5 +1386,6 @@ public class File_h {
             }
             inputStream = null; //reload inputStream.
         }
-    };
+    }
+
 }

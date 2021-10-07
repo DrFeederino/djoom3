@@ -1,13 +1,13 @@
 package neo.idlib.math;
 
-import java.util.Arrays;
-
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 
+import java.util.Arrays;
+
 /**
- *  Plücker
+ * Plücker
  */
 public class Pluecker {
 
@@ -19,8 +19,8 @@ public class Pluecker {
      ===============================================================================
      */
     public static class idPluecker {
-        private float[] p = new float[6];
-        
+        private final float[] p = new float[6];
+
 
         public idPluecker() {
         }
@@ -145,11 +145,7 @@ public class Pluecker {
                 return false;
             }
 
-            if (idMath.Fabs(p[5] - a.p[5]) > epsilon) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(p[5] - a.p[5]) > epsilon);
         }
 //public	boolean			operator==(	final idPluecker &a ) final;					// exact compare, no epsilon
 //public	boolean			operator!=(	final idPluecker &a ) final;					// exact compare, no epsilon
@@ -170,10 +166,7 @@ public class Pluecker {
                 return false;
             }
             final idPluecker other = (idPluecker) obj;
-            if (!Arrays.equals(this.p, other.p)) {
-                return false;
-            }
-            return true;
+            return Arrays.equals(this.p, other.p);
         }
 
         public void Set(final idPluecker a) {
@@ -359,5 +352,6 @@ public class Pluecker {
 //public	final float *	ToFloatPtr( void ) final;
 //public	float *			ToFloatPtr( void );
 //public	final char *	ToString( int precision = 2 ) final;
-    };
+    }
+
 }

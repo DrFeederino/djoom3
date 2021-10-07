@@ -27,13 +27,13 @@ public class RenderWorld_portals {
 
     static class portalStack_s {
 
-        portal_s      p;
         portalStack_s next;
         //
-        idScreenRect  rect;
+        int numPortalPlanes;
+        portal_s p;
+        idPlane[] portalPlanes = Stream.generate(idPlane::new).limit(MAX_PORTAL_PLANES + 1).toArray(idPlane[]::new);
         //
-        int           numPortalPlanes;
-        idPlane[]     portalPlanes = Stream.generate(idPlane::new).limit(MAX_PORTAL_PLANES + 1).toArray(idPlane[]::new);
+        idScreenRect rect;
         // positive side is outside the visible frustum
 
         public portalStack_s() {
@@ -49,6 +49,6 @@ public class RenderWorld_portals {
                 this.portalPlanes[i].oSet(p.portalPlanes[i]);
             }
         }
-    };
+    }
 
 }

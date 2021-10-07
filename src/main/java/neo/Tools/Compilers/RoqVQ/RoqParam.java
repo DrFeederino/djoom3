@@ -1,71 +1,176 @@
 package neo.Tools.Compilers.RoqVQ;
 
-import static java.lang.Math.abs;
-import java.util.Scanner;
-import static neo.TempDump.atoi;
-import static neo.TempDump.ctos;
-import static neo.TempDump.strLen;
-import static neo.framework.Common.common;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.StrList.idStrList;
+
+import java.util.Scanner;
+
+import static java.lang.Math.abs;
+import static neo.TempDump.*;
+import static neo.framework.Common.common;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.va;
 
 /**
  *
  */
 public class RoqParam {
 
+    static int parseRange(final String rangeStr, int field, int[] skipnum, int[] startnum, int[] endnum, int[] numfiles, boolean[] padding, int[] numpadding) {
+        char[] start = new char[64], end = new char[64], skip = new char[64];
+        int stptr, enptr, skptr;
+        int i, realnum;
+
+        i = 1;
+        realnum = 0;
+//	stptr = start;
+//	enptr = end;
+//	skptr = skip;
+        stptr = enptr = skptr = 0;
+        do {
+            start[stptr++] = rangeStr.charAt(i++);
+        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
+        start[stptr] = '\0';
+        if (rangeStr.charAt(i++) != '-') {
+            common.Error("Error: invalid range on middle \n");
+        }
+        do {
+            end[enptr++] = rangeStr.charAt(i++);
+        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
+        end[enptr] = '\0';
+        if (rangeStr.charAt(i) != ']') {
+            if (rangeStr.charAt(i++) != '+') {
+                common.Error("Error: invalid range on close\n");
+            }
+            do {
+                skip[skptr++] = rangeStr.charAt(i++);
+            } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
+            skip[skptr] = '\0';
+            skipnum[field] = atoi(skip);
+        } else {
+            skipnum[field] = 1;
+        }
+        startnum[field] = atoi(start);
+        endnum[field] = atoi(end);
+        numfiles[field] = (abs(startnum[field] - endnum[field]) / skipnum[field]) + 1;
+        realnum += numfiles[field];
+        if (start[0] == '0' && start[1] != '\0') {
+            padding[field] = true;
+            numpadding[field] = strLen(start);
+        } else {
+            padding[field] = false;
+        }
+        return realnum;
+    }
+
+    static int parseTimecodeRange(final String rangeStr, int field, int[] skipnum, int[] startnum, int[] endnum, int[] numfiles, boolean[] padding, int[] numpadding) {
+        char[] start = new char[64], end = new char[64], skip = new char[64];
+        int stptr, enptr, skptr;
+        int i, realnum;
+        int[] hrs = {0}, mins = {0}, secs = {0}, frs = {0};
+
+        i = 1;//skip the '['
+        realnum = 0;
+//	stptr = start;
+//	enptr = end;
+//	skptr = skip;
+        stptr = enptr = skptr = 0;
+        do {
+            start[stptr++] = rangeStr.charAt(i++);
+        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
+        start[stptr] = '\0';
+        if (rangeStr.charAt(i++) != '-') {
+            common.Error("Error: invalid range on middle \n");
+        }
+        do {
+            end[enptr++] = rangeStr.charAt(i++);
+        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
+        end[enptr] = '\0';
+        if (rangeStr.charAt(i) != ']') {
+            if (rangeStr.charAt(i++) != '+') {
+                common.Error("Error: invalid range on close\n");
+            }
+            do {
+                skip[skptr++] = rangeStr.charAt(i++);
+            } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
+            skip[skptr] = '\0';
+            skipnum[field] = atoi(skip);
+        } else {
+            skipnum[field] = 1;
+        }
+        sscanf(start, "%2d%2d%2d%2d", hrs, mins, secs, frs);
+        startnum[field] = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0];
+        sscanf(end, "%2d%2d%2d%2d", hrs, mins, secs, frs);
+        endnum[field] = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0];
+        numfiles[field] = (abs(startnum[field] - endnum[field]) / skipnum[field]) + 1;
+        realnum += numfiles[field];
+        if (start[0] == '0' && start[1] != '\0') {
+            padding[field] = true;
+            numpadding[field] = strLen(start);
+        } else {
+            padding[field] = false;
+        }
+        return realnum;
+    }
+
+    public static void sscanf(final char[] start, String bla, int[]
+            ... args) {
+
+        try (Scanner scanner = new Scanner(ctos(start))) {
+            for (int[] a : args) {
+                a[0] = scanner.nextInt();
+            }
+        }
+    }
+
     static class roqParam {
 
-        public  idStr     outputFilename;
-        public  int       numInputFiles;
-        //
-        private int[]     range;
-        private boolean[] padding, padding2;
+        public int numInputFiles;
+        public idStr outputFilename;
+        private boolean addPath;
+        private idStr currentFile;
+        private idStr currentPath;
+        private boolean encodeVideo;
+        private idStr endPal;
+        private boolean endPalette;
+        private int[] endnum, endnum2;
+        private int field;
         private idStrList file;
         private idStrList file2;
-        private idStr     soundfile;
-        private idStr     currentPath;
-        private idStr     tempFilename;
-        private idStr     startPal;
-        private idStr     endPal;
-        private idStr     currentFile;
-        private int[]     skipnum, skipnum2;
-        private int[] startnum, startnum2;
-        private int[] endnum, endnum2;
-        private int[] numpadding, numpadding2;
-        private int[] numfiles;
-        private byte  keyR, keyG, keyB;
-        private int field;
-        private int realnum;
-        private int[] onFrame = {0};
-        private int     firstframesize;
-        private int     normalframesize;
-        private int     jpegDefault;
-        //
-        private boolean scaleDown;
-        private boolean twentyFourToThirty;
-        private boolean encodeVideo;
-        private boolean useTimecodeForRange;
-        private boolean addPath;
-        private boolean screenShots;
-        private boolean startPalette;
-        private boolean endPalette;
+        private int firstframesize;
         private boolean fixedPalette;
-        private boolean keyColor;
-        private boolean justDelta;
-        private boolean make3DO;
-        private boolean makeVectors;
-        private boolean justDeltaFlag;
-        private boolean noAlphaAtAll;
         private boolean fullSearch;
         private boolean hasSound;
         private boolean isScaleable;
+        private int jpegDefault;
+        private boolean justDelta;
+        private boolean justDeltaFlag;
+        private boolean keyColor;
+        private byte keyR, keyG, keyB;
+        private boolean make3DO;
+        private boolean makeVectors;
+        private boolean noAlphaAtAll;
+        private int normalframesize;
+        private int[] numfiles;
+        private int[] numpadding, numpadding2;
+        private final int[] onFrame = {0};
+        private boolean[] padding, padding2;
+        //
+        private int[] range;
+        private int realnum;
+        //
+        private boolean scaleDown;
+        private boolean screenShots;
+        private int[] skipnum, skipnum2;
+        private idStr soundfile;
+        private idStr startPal;
+        private boolean startPalette;
+        private int[] startnum, startnum2;
+        private idStr tempFilename;
+        private boolean twentyFourToThirty;
+        private boolean useTimecodeForRange;
         //
         //
 
@@ -234,7 +339,7 @@ public class RoqParam {
                     hasSound = true;
                     continue;
                 }
-// outfile	
+// outfile
                 if (token.Icmp("filename") == 0) {
                     src.ReadToken(token);
                     outputFilename = token;
@@ -246,7 +351,7 @@ public class RoqParam {
 // starting palette
                 if (token.Icmp("start_palette") == 0) {
                     src.ReadToken(token);
-                    startPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token.toString()));
+                    startPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token));
 //			common.Error("  + starting palette is %s\n", startPal );
                     startPalette = true;
                     readarg++;
@@ -255,7 +360,7 @@ public class RoqParam {
 // ending palette
                 if (token.Icmp("end_palette") == 0) {
                     src.ReadToken(token);
-                    endPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token.toString()));
+                    endPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token));
 //			common.Printf("  + ending palette is %s\n", endPal );
                     endPalette = true;
                     readarg++;
@@ -264,7 +369,7 @@ public class RoqParam {
 // fixed palette
                 if (token.Icmp("fixed_palette") == 0) {
                     src.ReadToken(token);
-                    startPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token.toString()));
+                    startPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token));
 //			common.Printf("  + fixed palette is %s\n", startPal );
                     fixedPalette = true;
                     readarg++;
@@ -277,7 +382,7 @@ public class RoqParam {
                     readarg++;
                     continue;
                 }
-//	key_color	r g b	
+//	key_color	r g b
                 if (token.Icmp("key_color") == 0) {
                     keyR = (byte) src.ParseInt();
                     keyG = (byte) src.ParseInt();
@@ -522,11 +627,7 @@ public class RoqParam {
         }
 
         public boolean MoreFrames() {
-            if (onFrame[0] < numInputFiles) {
-                return true;
-            } else {
-                return false;
-            }
+            return onFrame[0] < numInputFiles;
         }
 
         public boolean OutputVectors() {
@@ -575,113 +676,6 @@ public class RoqParam {
 
         public boolean IsScaleable() {
             return isScaleable;
-        }
-    };
-
-    static int parseRange(final String rangeStr, int field, int[] skipnum, int[] startnum, int[] endnum, int[] numfiles, boolean[] padding, int[] numpadding) {
-        char[] start = new char[64], end = new char[64], skip = new char[64];
-        int stptr, enptr, skptr;
-        int i, realnum;
-
-        i = 1;
-        realnum = 0;
-//	stptr = start;
-//	enptr = end;
-//	skptr = skip;
-        stptr = enptr = skptr = 0;
-        do {
-            start[stptr++] = rangeStr.charAt(i++);
-        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
-        start[stptr] = '\0';
-        if (rangeStr.charAt(i++) != '-') {
-            common.Error("Error: invalid range on middle \n");
-        }
-        do {
-            end[enptr++] = rangeStr.charAt(i++);
-        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
-        end[enptr] = '\0';
-        if (rangeStr.charAt(i) != ']') {
-            if (rangeStr.charAt(i++) != '+') {
-                common.Error("Error: invalid range on close\n");
-            }
-            do {
-                skip[skptr++] = rangeStr.charAt(i++);
-            } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
-            skip[skptr] = '\0';
-            skipnum[field] = atoi(skip);
-        } else {
-            skipnum[field] = 1;
-        }
-        startnum[field] = atoi(start);
-        endnum[field] = atoi(end);
-        numfiles[field] = (abs(startnum[field] - endnum[field]) / skipnum[field]) + 1;
-        realnum += numfiles[field];
-        if (start[0] == '0' && start[1] != '\0') {
-            padding[field] = true;
-            numpadding[field] = strLen(start);
-        } else {
-            padding[field] = false;
-        }
-        return realnum;
-    }
-
-    static int parseTimecodeRange(final String rangeStr, int field, int[] skipnum, int[] startnum, int[] endnum, int[] numfiles, boolean[] padding, int[] numpadding) {
-        char[] start = new char[64], end = new char[64], skip = new char[64];
-        int stptr, enptr, skptr;
-        int i, realnum;
-        int[] hrs = {0}, mins = {0}, secs = {0}, frs = {0};
-
-        i = 1;//skip the '['
-        realnum = 0;
-//	stptr = start;
-//	enptr = end;
-//	skptr = skip;
-        stptr = enptr = skptr = 0;
-        do {
-            start[stptr++] = rangeStr.charAt(i++);
-        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
-        start[stptr] = '\0';
-        if (rangeStr.charAt(i++) != '-') {
-            common.Error("Error: invalid range on middle \n");
-        }
-        do {
-            end[enptr++] = rangeStr.charAt(i++);
-        } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
-        end[enptr] = '\0';
-        if (rangeStr.charAt(i) != ']') {
-            if (rangeStr.charAt(i++) != '+') {
-                common.Error("Error: invalid range on close\n");
-            }
-            do {
-                skip[skptr++] = rangeStr.charAt(i++);
-            } while (rangeStr.charAt(i) >= '0' && rangeStr.charAt(i) <= '9');
-            skip[skptr] = '\0';
-            skipnum[field] = atoi(skip);
-        } else {
-            skipnum[field] = 1;
-        }
-        sscanf(start, "%2d%2d%2d%2d", hrs, mins, secs, frs);
-        startnum[field] = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0];
-        sscanf(end, "%2d%2d%2d%2d", hrs, mins, secs, frs);
-        endnum[field] = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0];
-        numfiles[field] = (abs(startnum[field] - endnum[field]) / skipnum[field]) + 1;
-        realnum += numfiles[field];
-        if (start[0] == '0' && start[1] != '\0') {
-            padding[field] = true;
-            numpadding[field] = strLen(start);
-        } else {
-            padding[field] = false;
-        }
-        return realnum;
-    }
-
-    public static void sscanf(final char[] start, String bla, int[]  
-        ... args) {
-
-        try (Scanner scanner = new Scanner(ctos(start))) {
-            for (int[] a : args) {
-                a[0] = scanner.nextInt();
-            }
         }
     }
 

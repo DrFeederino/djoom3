@@ -1,105 +1,30 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AI.AI.idAI;
-import neo.Game.Actor.idActor;
-
-import static neo.Game.Actor.AI_AnimDone;
-import static neo.Game.Actor.AI_GetBlendFrames;
-import static neo.Game.Actor.AI_PlayAnim;
-import static neo.Game.Actor.AI_PlayCycle;
-import static neo.Game.Actor.AI_SetBlendFrames;
-import static neo.Game.Animation.Anim.FRAME2MS;
-import static neo.Game.Entity.EV_SetSkin;
-import static neo.Game.Entity.EV_Touch;
+import neo.Game.Actor.*;
 import neo.Game.Entity.idAnimatedEntity;
 import neo.Game.Entity.idEntity;
-import static neo.Game.Entity.signalNum_t.SIG_TOUCH;
 import neo.Game.Game.refSound_t;
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.eventCallback_t4;
-import neo.Game.GameSys.Class.eventCallback_t5;
-import neo.Game.GameSys.Class.idClass;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_debugWeapon;
-import static neo.Game.GameSys.SysCvar.g_muzzleFlash;
-import static neo.Game.GameSys.SysCvar.g_showBrass;
-import static neo.Game.GameSys.SysCvar.g_showPlayerShadow;
-import static neo.Game.GameSys.SysCvar.pm_thirdPerson;
-import static neo.Game.Game_local.MASK_SHOT_RENDERMODEL;
-import static neo.Game.Game_local.MAX_EVENT_PARAM_SIZE;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY2;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY3;
-import static neo.Game.Game_local.gameState_t.GAMESTATE_SHUTDOWN;
-import neo.Game.Game_local.idEntityPtr;
+import neo.Game.Game_local.*;
 import neo.Game.Item.idMoveableItem;
-
-import static neo.Game.Light.EV_Light_GetLightParm;
-import static neo.Game.Light.EV_Light_SetLightParm;
-import static neo.Game.Light.EV_Light_SetLightParms;
-import static neo.Game.MultiplayerGame.gameType_t.GAME_TDM;
-import static neo.Game.Player.ASYNC_PLAYER_INV_CLIP_BITS;
-import static neo.Game.Player.BERSERK;
-import static neo.Game.Player.INVISIBILITY;
-import static neo.Game.Player.MELEE_DAMAGE;
-import static neo.Game.Player.MELEE_DISTANCE;
-import static neo.Game.Player.SPEED;
-import neo.Game.Player.idPlayer;
+import neo.Game.Player.*;
 import neo.Game.Projectile.idDebris;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Program.idScriptBool;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Trigger.idTrigger;
-import static neo.Game.Weapon.weaponStatus_t.WP_HOLSTERED;
-import static neo.Game.Weapon.weaponStatus_t.WP_LOWERING;
-import static neo.Game.Weapon.weaponStatus_t.WP_OUTOFAMMO;
-import static neo.Game.Weapon.weaponStatus_t.WP_READY;
-import static neo.Game.Weapon.weaponStatus_t.WP_RELOAD;
-import static neo.Game.Weapon.weaponStatus_t.WP_RISING;
-import static neo.Renderer.Material.CONTENTS_FLASHLIGHT_TRIGGER;
-import static neo.Renderer.Material.CONTENTS_OPAQUE;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
-import neo.Renderer.Material.idMaterial;
-import neo.Renderer.Material.surfTypes_t;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_NONE;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.RenderWorld.SHADERPARM_ALPHA;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_DIVERSITY;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMESCALE;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
+import neo.Renderer.Material.*;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
-
-import static neo.framework.BuildDefines.ID_DEMO_BUILD;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
-import static neo.framework.DeclManager.declType_t.DECL_SKIN;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.BV.Bounds.idBounds;
@@ -107,24 +32,47 @@ import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorYellow;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import static neo.Game.Actor.*;
+import static neo.Game.Animation.Anim.FRAME2MS;
+import static neo.Game.Entity.EV_SetSkin;
+import static neo.Game.Entity.EV_Touch;
+import static neo.Game.Entity.signalNum_t.SIG_TOUCH;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.*;
+import static neo.Game.Game_local.gameState_t.GAMESTATE_SHUTDOWN;
+import static neo.Game.Light.*;
+import static neo.Game.MultiplayerGame.gameType_t.GAME_TDM;
+import static neo.Game.Player.*;
+import static neo.Game.Weapon.weaponStatus_t.*;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.Material.surfTypes_t.SURFTYPE_NONE;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.*;
+import static neo.framework.BuildDefines.ID_DEMO_BUILD;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
+import static neo.framework.DeclManager.declType_t.DECL_SKIN;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -132,11 +80,48 @@ import static neo.ui.UserInterface.uiManager;
  */
 public class Weapon {
 
+    //
+    public static final int AMMO_NUMTYPES = 16;
+
+    public static final idEventDef EV_Weapon_AddToClip = new idEventDef("addToClip", "d");
+    public static final idEventDef EV_Weapon_AllowDrop = new idEventDef("allowDrop", "d");
+    public static final idEventDef EV_Weapon_AmmoAvailable = new idEventDef("ammoAvailable", null, 'f');
+    public static final idEventDef EV_Weapon_AmmoInClip = new idEventDef("ammoInClip", null, 'f');
+    public static final idEventDef EV_Weapon_AutoReload = new idEventDef("autoReload", null, 'f');
+    //
+    //
+    // event defs
+    //
+    public static final idEventDef EV_Weapon_Clear = new idEventDef("<clear>");
+    public static final idEventDef EV_Weapon_ClipSize = new idEventDef("clipSize", null, 'f');
+    public static final idEventDef EV_Weapon_CreateProjectile = new idEventDef("createProjectile", null, 'e');
+    public static final idEventDef EV_Weapon_EjectBrass = new idEventDef("ejectBrass");
+    public static final idEventDef EV_Weapon_Flashlight = new idEventDef("flashlight", "d");
+    public static final idEventDef EV_Weapon_GetOwner = new idEventDef("getOwner", null, 'e');
+    public static final idEventDef EV_Weapon_GetWorldModel = new idEventDef("getWorldModel", null, 'e');
+    public static final idEventDef EV_Weapon_IsInvisible = new idEventDef("isInvisible", null, 'f');
+    public static final idEventDef EV_Weapon_LaunchProjectiles = new idEventDef("launchProjectiles", "dffff");
+    public static final idEventDef EV_Weapon_Melee = new idEventDef("melee", null, 'd');
+    public static final idEventDef EV_Weapon_NetEndReload = new idEventDef("netEndReload");
+    public static final idEventDef EV_Weapon_NetReload = new idEventDef("netReload");
+    public static final idEventDef EV_Weapon_Next = new idEventDef("nextWeapon");
+    public static final idEventDef EV_Weapon_State = new idEventDef("weaponState", "sd");
+    public static final idEventDef EV_Weapon_TotalAmmoCount = new idEventDef("totalAmmoCount", null, 'f');
+    public static final idEventDef EV_Weapon_UseAmmo = new idEventDef("useAmmo", "d");
+    public static final idEventDef EV_Weapon_WeaponHolstered = new idEventDef("weaponHolstered");
+    public static final idEventDef EV_Weapon_WeaponLowering = new idEventDef("weaponLowering");
+    public static final idEventDef EV_Weapon_WeaponOutOfAmmo = new idEventDef("weaponOutOfAmmo");
+    public static final idEventDef EV_Weapon_WeaponReady = new idEventDef("weaponReady");
+    public static final idEventDef EV_Weapon_WeaponReloading = new idEventDef("weaponReloading");
+    public static final idEventDef EV_Weapon_WeaponRising = new idEventDef("weaponRising");
+    public static final int LIGHTID_VIEW_MUZZLE_FLASH = 100;
+    //
+    public static final int LIGHTID_WORLD_MUZZLE_FLASH = 1;
     /*
      ===============================================================================
 
      Player Weapon
-	
+
      ===============================================================================
      */
     public enum weaponStatus_t {
@@ -147,43 +132,7 @@ public class Weapon {
         WP_HOLSTERED,
         WP_RISING,
         WP_LOWERING
-    };
-    //    
-    public static final int        AMMO_NUMTYPES               = 16;
-    //
-    public static final int        LIGHTID_WORLD_MUZZLE_FLASH  = 1;
-    public static final int        LIGHTID_VIEW_MUZZLE_FLASH   = 100;
-    //  
-    //
-    // event defs
-    //
-    public static final idEventDef EV_Weapon_Clear             = new idEventDef("<clear>");
-    public static final idEventDef EV_Weapon_GetOwner          = new idEventDef("getOwner", null, 'e');
-    public static final idEventDef EV_Weapon_Next              = new idEventDef("nextWeapon");
-    public static final idEventDef EV_Weapon_State             = new idEventDef("weaponState", "sd");
-    public static final idEventDef EV_Weapon_UseAmmo           = new idEventDef("useAmmo", "d");
-    public static final idEventDef EV_Weapon_AddToClip         = new idEventDef("addToClip", "d");
-    public static final idEventDef EV_Weapon_AmmoInClip        = new idEventDef("ammoInClip", null, 'f');
-    public static final idEventDef EV_Weapon_AmmoAvailable     = new idEventDef("ammoAvailable", null, 'f');
-    public static final idEventDef EV_Weapon_TotalAmmoCount    = new idEventDef("totalAmmoCount", null, 'f');
-    public static final idEventDef EV_Weapon_ClipSize          = new idEventDef("clipSize", null, 'f');
-    public static final idEventDef EV_Weapon_WeaponOutOfAmmo   = new idEventDef("weaponOutOfAmmo");
-    public static final idEventDef EV_Weapon_WeaponReady       = new idEventDef("weaponReady");
-    public static final idEventDef EV_Weapon_WeaponReloading   = new idEventDef("weaponReloading");
-    public static final idEventDef EV_Weapon_WeaponHolstered   = new idEventDef("weaponHolstered");
-    public static final idEventDef EV_Weapon_WeaponRising      = new idEventDef("weaponRising");
-    public static final idEventDef EV_Weapon_WeaponLowering    = new idEventDef("weaponLowering");
-    public static final idEventDef EV_Weapon_Flashlight        = new idEventDef("flashlight", "d");
-    public static final idEventDef EV_Weapon_LaunchProjectiles = new idEventDef("launchProjectiles", "dffff");
-    public static final idEventDef EV_Weapon_CreateProjectile  = new idEventDef("createProjectile", null, 'e');
-    public static final idEventDef EV_Weapon_EjectBrass        = new idEventDef("ejectBrass");
-    public static final idEventDef EV_Weapon_Melee             = new idEventDef("melee", null, 'd');
-    public static final idEventDef EV_Weapon_GetWorldModel     = new idEventDef("getWorldModel", null, 'e');
-    public static final idEventDef EV_Weapon_AllowDrop         = new idEventDef("allowDrop", "d");
-    public static final idEventDef EV_Weapon_AutoReload        = new idEventDef("autoReload", null, 'f');
-    public static final idEventDef EV_Weapon_NetReload         = new idEventDef("netReload");
-    public static final idEventDef EV_Weapon_IsInvisible       = new idEventDef("isInvisible", null, 'f');
-    public static final idEventDef EV_Weapon_NetEndReload      = new idEventDef("netEndReload");
+    }
 
     /* **********************************************************************
 
@@ -191,8 +140,14 @@ public class Weapon {
 	
      ***********************************************************************/
     public static class idWeapon extends idAnimatedEntity {
+        // enum {
+        public static final int EVENT_RELOAD = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_ENDRELOAD = EVENT_RELOAD + 1;
+        public static final int EVENT_CHANGESKIN = EVENT_RELOAD + 2;
+        public static final int EVENT_MAXEVENTS = EVENT_RELOAD + 3;
         // CLASS_PROTOTYPE( idWeapon );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idAnimatedEntity.getEventCallBacks());
             eventCallbacks.put(EV_Weapon_Clear, (eventCallback_t0<idWeapon>) idWeapon::Event_Clear);
@@ -233,154 +188,155 @@ public class Weapon {
             eventCallbacks.put(EV_Weapon_NetEndReload, (eventCallback_t0<idWeapon>) idWeapon::Event_NetEndReload);
         }
 
-
         // script control
-        private idScriptBool WEAPON_ATTACK       = new idScriptBool();
-        private idScriptBool WEAPON_RELOAD       = new idScriptBool();
-        private idScriptBool WEAPON_NETRELOAD    = new idScriptBool();
-        private idScriptBool WEAPON_NETENDRELOAD = new idScriptBool();
-        private idScriptBool WEAPON_NETFIRING    = new idScriptBool();
-        private idScriptBool WEAPON_RAISEWEAPON  = new idScriptBool();
-        private idScriptBool WEAPON_LOWERWEAPON  = new idScriptBool();
-        private weaponStatus_t                status;
-        private idThread                      thread;
-        private idStr                         state;
-        private idStr                         idealState;
-        private int                           animBlendFrames;
-        private int                           animDoneTime;
-        private boolean                       isLinked;
+        private final idScriptBool WEAPON_ATTACK = new idScriptBool();
+        private final idScriptBool WEAPON_LOWERWEAPON = new idScriptBool();
+        private final idScriptBool WEAPON_NETENDRELOAD = new idScriptBool();
+        private final idScriptBool WEAPON_NETFIRING = new idScriptBool();
+        private final idScriptBool WEAPON_NETRELOAD = new idScriptBool();
+        private final idScriptBool WEAPON_RAISEWEAPON = new idScriptBool();
+        private final idScriptBool WEAPON_RELOAD = new idScriptBool();
+        private boolean allowDrop;
+        private int ammoClip;
+        private int ammoRequired;         // amount of ammo to use each shot.  0 means weapon doesn't need ammo.
         //
-        // precreated projectile
-        private idEntity                      projectileEnt;
+        // ammo management
+        private int /*ammo_t*/                ammoType;
+        private int animBlendFrames;
+        private int animDoneTime;
         //
-        private idPlayer                      owner;
-        private idEntityPtr<idAnimatedEntity> worldModel;
-        //
-        // hiding (for GUIs and NPCs)
-        private int                           hideTime;
-        private float                         hideDistance;
-        private int                           hideStartTime;
-        private float                         hideStart;
-        private float                         hideEnd;
-        private float                         hideOffset;
-        private boolean                       hide;
-        private boolean                       disabled;
+        // joints from models
+        private int /*jointHandle_t*/         barrelJointView;
+        private int /*jointHandle_t*/         barrelJointWorld;
         //
         // berserk
-        private int                           berserk;
+        private int berserk;
+        private int brassDelay;
+        private final idDict brassDict;
+        private int clipSize;             // 0 means no reload
+        private boolean continuousSmoke;      // if smoke is continuous ( chainsaw )
+        private boolean disabled;
+        private int /*jointHandle_t*/         ejectJointView;
+        private int /*jointHandle_t*/         ejectJointWorld;
         //
-        // these are the player render view parms, which include bobbing
-        private idVec3                        playerViewOrigin;
-        private idMat3                        playerViewAxis;
+        private final idVec3 flashColor;
+        private int /*jointHandle_t*/         flashJointView;
         //
-        // the view weapon render entity parms
-        private idVec3                        viewWeaponOrigin;
-        private idMat3                        viewWeaponAxis;
+        private int /*jointHandle_t*/         flashJointWorld;
+        private int flashTime;
+        //
+        // view weapon gui light
+        private renderLight_s guiLight;
+        private int guiLightHandle;
+        private int /*jointHandle_t*/         guiLightJointView;
+        //
+        // effects
+        private boolean hasBloodSplat;
+        private boolean hide;
+        private float hideDistance;
+        private float hideEnd;
+        private float hideOffset;
+        private float hideStart;
+        private int hideStartTime;
+        //
+        // hiding (for GUIs and NPCs)
+        private int hideTime;
+        private final idStr icon;
+        private final idStr idealState;
+        // a projectile is launched
+        // mp client
+        private boolean isFiring;
+        private boolean isLinked;
+        //
+        // weapon kick
+        private int kick_endtime;
+        private int lastAttack;           // last time an attack occured
+        private boolean lightOn;
+        private int lowAmmo;              // if ammo in clip hits this threshold, snd_
+        private idDeclEntityDef meleeDef;
+        private final idStr meleeDefName;
+        private float meleeDistance;
+        private final idMat3 muzzleAxis;
+        //
+        // muzzle flash
+        private renderLight_s muzzleFlash;          // positioned on view weapon bone
+        private int muzzleFlashEnd;
+        private int muzzleFlashHandle;
         //
         // the muzzle bone's position, used for launching projectiles and trailing smoke
-        private idVec3                        muzzleOrigin;
-        private idMat3                        muzzleAxis;
+        private final idVec3 muzzleOrigin;
+        private final idAngles muzzle_kick_angles;
+        private int muzzle_kick_maxtime;
+        private final idVec3 muzzle_kick_offset;
+        private int muzzle_kick_time;
+        private int nextStrikeFx;         // used for sound and decal ( may use for strike smoke too )
         //
-        private idVec3                        pushVelocity;
+        // nozzle effects
+        private boolean nozzleFx;             // does this use nozzle effects ( parm5 at rest, parm6 firing )
+        // this also assumes a nozzle light atm
+        private int nozzleFxFade;         // time it takes to fade between the effects
+        private renderLight_s nozzleGlow;           // nozzle light
+        //
+        private final idVec3 nozzleGlowColor;      // color of the nozzle glow
+        private int nozzleGlowHandle;     // handle for nozzle light
+        private float nozzleGlowRadius;     // radius of glow light
+        private idMaterial nozzleGlowShader;     // shader for glow light
+        //
+        private idPlayer owner;
+        private final idMat3 playerViewAxis;
+        //
+        // these are the player render view parms, which include bobbing
+        private final idVec3 playerViewOrigin;
+        private boolean powerAmmo;            // true if the clip reduction is a factor of the power setting when
+        private final idDict projectileDict;
+        //
+        // precreated projectile
+        private idEntity projectileEnt;
+        //
+        private final idVec3 pushVelocity;
+        private boolean silent_fire;
+        //
+        // sound
+        private idSoundShader sndHum;
+        private final idStr state;
+        private weaponStatus_t status;
+        private idMat3 strikeAxis;           // axis of last melee strike
+        private final idVec3 strikePos;            // position of last melee strike
+        private idDeclParticle strikeSmoke;          // striking something in melee
+        private int strikeSmokeStartTime; // timing
+        private idThread thread;
+        private int /*jointHandle_t*/         ventLightJointView;
+        private final idMat3 viewWeaponAxis;
+        //
+        // the view weapon render entity parms
+        private final idVec3 viewWeaponOrigin;
+        //
+        // weighting for viewmodel angles
+        private int weaponAngleOffsetAverages;
+        private float weaponAngleOffsetMax;
+        private float weaponAngleOffsetScale;
         //
         // weapon definition
         // we maintain local copies of the projectile and brass dictionaries so they
         // do not have to be copied across the DLL boundary when entities are spawned
-        private idDeclEntityDef               weaponDef;
-        private idDeclEntityDef               meleeDef;
-        private idDict                        projectileDict;
-        private float                         meleeDistance;
-        private idStr                         meleeDefName;
-        private idDict                        brassDict;
-        private int                           brassDelay;
-        private idStr                         icon;
-        //
-        // view weapon gui light
-        private renderLight_s                 guiLight;
-        private int                           guiLightHandle;
-        //
-        // muzzle flash
-        private renderLight_s                 muzzleFlash;          // positioned on view weapon bone
-        private int                           muzzleFlashHandle;
-        //
-        private renderLight_s                 worldMuzzleFlash;     // positioned on world weapon bone
-        private int                           worldMuzzleFlashHandle;
-        //
-        private idVec3                        flashColor;
-        private int                           muzzleFlashEnd;
-        private int                           flashTime;
-        private boolean                       lightOn;
-        private boolean                       silent_fire;
-        private boolean                       allowDrop;
-        //
-        // effects
-        private boolean                       hasBloodSplat;
-        //
-        // weapon kick
-        private int                           kick_endtime;
-        private int                           muzzle_kick_time;
-        private int                           muzzle_kick_maxtime;
-        private idAngles                      muzzle_kick_angles;
-        private idVec3                        muzzle_kick_offset;
-        //
-        // ammo management
-        private int /*ammo_t*/                ammoType;
-        private int                           ammoRequired;         // amount of ammo to use each shot.  0 means weapon doesn't need ammo.
-        private int                           clipSize;             // 0 means no reload
-        private int                           ammoClip;
-        private int                           lowAmmo;              // if ammo in clip hits this threshold, snd_
-        private boolean                       powerAmmo;            // true if the clip reduction is a factor of the power setting when
-        // a projectile is launched
-        // mp client
-        private boolean                       isFiring;
-        //
-        // zoom
-        private int                           zoomFov;              // variable zoom fov per weapon
-        //
-        // joints from models
-        private int /*jointHandle_t*/         barrelJointView;
-        private int /*jointHandle_t*/         flashJointView;
-        private int /*jointHandle_t*/         ejectJointView;
-        private int /*jointHandle_t*/         guiLightJointView;
-        private int /*jointHandle_t*/         ventLightJointView;
-        //
-        private int /*jointHandle_t*/         flashJointWorld;
-        private int /*jointHandle_t*/         barrelJointWorld;
-        private int /*jointHandle_t*/         ejectJointWorld;
-        //
-        // sound
-        private idSoundShader                 sndHum;
+        private idDeclEntityDef weaponDef;
+        private float weaponOffsetScale;
+        private float weaponOffsetTime;
         //
         // new style muzzle smokes
-        private idDeclParticle                weaponSmoke;          // null if it doesn't smoke
-        private int                           weaponSmokeStartTime; // set to gameLocal.time every weapon fire
-        private boolean                       continuousSmoke;      // if smoke is continuous ( chainsaw )
-        private idDeclParticle                strikeSmoke;          // striking something in melee
-        private int                           strikeSmokeStartTime; // timing
-        private idVec3                        strikePos;            // position of last melee strike
-        private idMat3                        strikeAxis;           // axis of last melee strike
-        private int                           nextStrikeFx;         // used for sound and decal ( may use for strike smoke too )
-        //
-        // nozzle effects
-        private boolean                       nozzleFx;             // does this use nozzle effects ( parm5 at rest, parm6 firing )
-        // this also assumes a nozzle light atm
-        private int                           nozzleFxFade;         // time it takes to fade between the effects
-        private int                           lastAttack;           // last time an attack occured
-        private renderLight_s                 nozzleGlow;           // nozzle light
-        private int                           nozzleGlowHandle;     // handle for nozzle light
-        //
-        private idVec3                        nozzleGlowColor;      // color of the nozzle glow
-        private idMaterial                    nozzleGlowShader;     // shader for glow light
-        private float                         nozzleGlowRadius;     // radius of glow light
-        //
-        // weighting for viewmodel angles
-        private int                           weaponAngleOffsetAverages;
-        private float                         weaponAngleOffsetScale;
-        private float                         weaponAngleOffsetMax;
-        private float                         weaponOffsetTime;
-        private float                         weaponOffsetScale;
+        private idDeclParticle weaponSmoke;          // null if it doesn't smoke
+        private int weaponSmokeStartTime; // set to gameLocal.time every weapon fire
 //
 //
+        private final idEntityPtr<idAnimatedEntity> worldModel;
+        // virtual					~idWeapon();
+        //
+        private renderLight_s worldMuzzleFlash;     // positioned on world weapon bone
+        private int worldMuzzleFlashHandle;
+        //
+        // zoom
+        private int zoomFov;              // variable zoom fov per weapon
+
 
         /* **********************************************************************
 
@@ -433,7 +389,125 @@ public class Weapon {
 
             fl.networkSync = true;
         }
-        // virtual					~idWeapon();
+
+        public static void CacheWeapon(final String weaponName) {
+            idDeclEntityDef weaponDef;
+            String brassDefName;
+            idStr clipModelName = new idStr();
+            idTraceModel trm = new idTraceModel();
+            String guiName;
+
+            weaponDef = gameLocal.FindEntityDef(weaponName, false);
+            if (null == weaponDef) {
+                return;
+            }
+
+            // precache the brass collision model
+            brassDefName = weaponDef.dict.GetString("def_ejectBrass");
+            if (isNotNullOrEmpty(brassDefName)) {
+                final idDeclEntityDef brassDef = gameLocal.FindEntityDef(brassDefName, false);
+                if (brassDef != null) {
+                    brassDef.dict.GetString("clipmodel", "", clipModelName);
+                    if (!isNotNullOrEmpty(clipModelName)) {
+                        clipModelName.oSet(brassDef.dict.GetString("model"));        // use the visual model
+                    }
+                    // load the trace model
+                    CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm);
+                }
+            }
+
+            guiName = weaponDef.dict.GetString("gui");
+            if (isNotNullOrEmpty(guiName)) {
+                uiManager.FindGui(guiName, true, false, true);
+            }
+        }
+
+        /* **********************************************************************
+
+         Ammo
+
+         ***********************************************************************/
+        public static int /*ammo_t*/ GetAmmoNumForName(final String ammoname) {
+            int[] num = new int[1];
+            idDict ammoDict;
+
+            assert (ammoname != null);
+
+            ammoDict = gameLocal.FindEntityDefDict("ammo_types", false);
+            if (null == ammoDict) {
+                idGameLocal.Error("Could not find entity definition for 'ammo_types'\n");
+            }
+
+            if (!isNotNullOrEmpty(ammoname)) {
+                return 0;
+            }
+
+            if (!ammoDict.GetInt(ammoname, "-1", num)) {
+                idGameLocal.Error("Unknown ammo type '%s'", ammoname);
+            }
+
+            if ((num[0] < 0) || (num[0] >= AMMO_NUMTYPES)) {
+                idGameLocal.Error("Ammo type '%s' value out of range.  Maximum ammo types is %d.\n", ammoname, AMMO_NUMTYPES);
+            }
+
+            return num[0];
+        }
+
+        public static String GetAmmoNameForNum(int /*ammo_t*/ ammonum) {
+            int i;
+            int num;
+            idDict ammoDict;
+            idKeyValue kv;
+//	char []text = new char[32 ];
+            String text;
+
+            ammoDict = gameLocal.FindEntityDefDict("ammo_types", false);
+            if (null == ammoDict) {
+                idGameLocal.Error("Could not find entity definition for 'ammo_types'\n");
+            }
+
+            text = String.format("%d", ammonum);
+
+            num = ammoDict.GetNumKeyVals();
+            for (i = 0; i < num; i++) {
+                kv = ammoDict.GetKeyVal(i);
+                if (kv.GetValue().equals(text)) {
+                    return kv.GetKey().toString();
+                }
+            }
+
+            return null;
+        }
+
+        public static String GetAmmoPickupNameForNum(int /*ammo_t*/ ammonum) {
+            int i;
+            int num;
+            idDict ammoDict;
+            idKeyValue kv;
+
+            ammoDict = gameLocal.FindEntityDefDict("ammo_names", false);
+            if (null == ammoDict) {
+                idGameLocal.Error("Could not find entity definition for 'ammo_names'\n");
+            }
+
+            final String name = GetAmmoNameForNum(ammonum);
+
+            if (isNotNullOrEmpty(name)) {
+                num = ammoDict.GetNumKeyVals();
+                for (i = 0; i < num; i++) {
+                    kv = ammoDict.GetKeyVal(i);
+                    if (idStr.Icmp(kv.GetKey().toString(), name) == 0) {
+                        return kv.GetValue().toString();
+                    }
+                }
+            }
+
+            return "";
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         // Init
         @Override
@@ -472,7 +546,6 @@ public class Weapon {
             return owner;
         }
 
-
         /*
          ================
          idWeapon::ShouldConstructScriptObjectAtSpawn
@@ -485,41 +558,9 @@ public class Weapon {
             return false;
         }
 
-        public static void CacheWeapon(final String weaponName) {
-            idDeclEntityDef weaponDef;
-            String brassDefName;
-            idStr clipModelName = new idStr();
-            idTraceModel trm = new idTraceModel();
-            String guiName;
-
-            weaponDef = gameLocal.FindEntityDef(weaponName, false);
-            if (null == weaponDef) {
-                return;
-            }
-
-            // precache the brass collision model
-            brassDefName = weaponDef.dict.GetString("def_ejectBrass");
-            if (isNotNullOrEmpty(brassDefName)) {
-                final idDeclEntityDef brassDef = gameLocal.FindEntityDef(brassDefName, false);
-                if (brassDef != null) {
-                    brassDef.dict.GetString("clipmodel", "", clipModelName);
-                    if (!isNotNullOrEmpty(clipModelName)) {
-                        clipModelName.oSet(brassDef.dict.GetString("model"));		// use the visual model
-                    }
-                    // load the trace model
-                    CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm);
-                }
-            }
-
-            guiName = weaponDef.dict.GetString("gui");
-            if (isNotNullOrEmpty(guiName)) {
-                uiManager.FindGui(guiName, true, false, true);
-            }
-        }
-
         // save games
         @Override
-        public void Save(idSaveGame savefile) {					// archives object for save game file
+        public void Save(idSaveGame savefile) {                    // archives object for save game file
 
             savefile.WriteInt(etoi(status));
             savefile.WriteObject(thread);
@@ -641,7 +682,7 @@ public class Weapon {
         }
 
         @Override
-        public void Restore(idRestoreGame savefile) {					// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                    // unarchives object from save game file
 
             status = weaponStatus_t.values()[savefile.ReadInt()];
             savefile.ReadObject(/*reinterpret_cast<idClass *&>*/thread);
@@ -838,11 +879,11 @@ public class Weapon {
             renderEntity.customSkin = null;
 
             // set default shader parms
-            renderEntity.shaderParms[ SHADERPARM_RED] = 1.0f;
-            renderEntity.shaderParms[ SHADERPARM_GREEN] = 1.0f;
-            renderEntity.shaderParms[ SHADERPARM_BLUE] = 1.0f;
+            renderEntity.shaderParms[SHADERPARM_RED] = 1.0f;
+            renderEntity.shaderParms[SHADERPARM_GREEN] = 1.0f;
+            renderEntity.shaderParms[SHADERPARM_BLUE] = 1.0f;
             renderEntity.shaderParms[3] = 1.0f;
-            renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET] = 0.0f;
+            renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = 0.0f;
             renderEntity.shaderParms[5] = 0.0f;
             renderEntity.shaderParms[6] = 0.0f;
             renderEntity.shaderParms[7] = 0.0f;
@@ -1083,7 +1124,7 @@ public class Weapon {
             flashShader = declManager.FindMaterial(shader[0], false);
             flashPointLight = weaponDef.dict.GetBool("flashPointLight", "1");
             weaponDef.dict.GetVector("flashColor", "0 0 0", flashColor);
-            flashRadius = (float) weaponDef.dict.GetInt("flashRadius");	// if 0, no light will spawn
+            flashRadius = (float) weaponDef.dict.GetInt("flashRadius");    // if 0, no light will spawn
             flashTime = (int) SEC2MS(weaponDef.dict.GetFloat("flashTime", "0.25"));
             flashTarget = weaponDef.dict.GetVector("flashTarget");
             flashUp = weaponDef.dict.GetVector("flashUp");
@@ -1099,10 +1140,10 @@ public class Weapon {
 
             muzzleFlash.pointLight = flashPointLight;
             muzzleFlash.shader = flashShader;
-            muzzleFlash.shaderParms[ SHADERPARM_RED] = flashColor.oGet(0);
-            muzzleFlash.shaderParms[ SHADERPARM_GREEN] = flashColor.oGet(1);
-            muzzleFlash.shaderParms[ SHADERPARM_BLUE] = flashColor.oGet(2);
-            muzzleFlash.shaderParms[ SHADERPARM_TIMESCALE] = 1.0f;
+            muzzleFlash.shaderParms[SHADERPARM_RED] = flashColor.oGet(0);
+            muzzleFlash.shaderParms[SHADERPARM_GREEN] = flashColor.oGet(1);
+            muzzleFlash.shaderParms[SHADERPARM_BLUE] = flashColor.oGet(2);
+            muzzleFlash.shaderParms[SHADERPARM_TIMESCALE] = 1.0f;
 
             muzzleFlash.lightRadius.oSet(0, flashRadius);
             muzzleFlash.lightRadius.oSet(1, flashRadius);
@@ -1135,7 +1176,7 @@ public class Weapon {
             if (meleeDefName.Length() != 0) {
                 meleeDef = gameLocal.FindEntityDef(meleeDefName.toString(), false);
                 if (null == meleeDef) {
-                    gameLocal.Error("Unknown melee '%s'", meleeDefName);
+                    idGameLocal.Error("Unknown melee '%s'", meleeDefName);
                 }
             }
 
@@ -1167,10 +1208,10 @@ public class Weapon {
                 }
             }
 
-            renderEntity.gui[ 0] = null;
+            renderEntity.gui[0] = null;
             guiName = weaponDef.dict.GetString("gui");
             if (isNotNullOrEmpty(guiName)) {
-                renderEntity.gui[ 0] = uiManager.FindGui(guiName, true, false, true);
+                renderEntity.gui[0] = uiManager.FindGui(guiName, true, false, true);
             }
 
             zoomFov = weaponDef.dict.GetInt("zoomFov", "70");
@@ -1184,12 +1225,12 @@ public class Weapon {
             weaponOffsetScale = weaponDef.dict.GetFloat("weaponOffsetScale", "0.005");
 
             if (!weaponDef.dict.GetString("weapon_scriptobject", null, objectType)) {
-                gameLocal.Error("No 'weapon_scriptobject' set on '%s'.", objectName);
+                idGameLocal.Error("No 'weapon_scriptobject' set on '%s'.", objectName);
             }
 
             // setup script object
             if (!scriptObject.SetType(objectType[0])) {
-                gameLocal.Error("Script object '%s' not found on weapon '%s'.", objectType[0], objectName);
+                idGameLocal.Error("Script object '%s' not found on weapon '%s'.", objectType[0], objectName);
             }
 
             WEAPON_ATTACK.LinkTo(scriptObject, "WEAPON_ATTACK");
@@ -1236,7 +1277,7 @@ public class Weapon {
         }
 
         public void UpdateGUI() {
-            if (null == renderEntity.gui[ 0]) {
+            if (null == renderEntity.gui[0]) {
                 return;
             }
 
@@ -1251,8 +1292,8 @@ public class Weapon {
 
             if (gameLocal.localClientNum != owner.entityNumber) {
                 // if updating the hud for a followed client
-                if (gameLocal.localClientNum >= 0 && gameLocal.entities[ gameLocal.localClientNum] != null && gameLocal.entities[ gameLocal.localClientNum].IsType(idPlayer.class)) {
-                    idPlayer p = (idPlayer) gameLocal.entities[ gameLocal.localClientNum];
+                if (gameLocal.localClientNum >= 0 && gameLocal.entities[gameLocal.localClientNum] != null && gameLocal.entities[gameLocal.localClientNum].IsType(idPlayer.class)) {
+                    idPlayer p = (idPlayer) gameLocal.entities[gameLocal.localClientNum];
                     if (!p.spectating || p.spectator != owner.entityNumber) {
                         return;
                     }
@@ -1266,7 +1307,7 @@ public class Weapon {
 
             if (ammoamount < 0) {
                 // show infinite ammo
-                renderEntity.gui[ 0].SetStateString("player_ammo", "");
+                renderEntity.gui[0].SetStateString("player_ammo", "");
             } else {
                 // show remaining ammo
                 renderEntity.gui[0].SetStateString("player_totalammo", va("%d", ammoamount - inclip));
@@ -1370,14 +1411,14 @@ public class Weapon {
 
         public void Raise() {
             if (isLinked) {
-                WEAPON_RAISEWEAPON._(true);
+                WEAPON_RAISEWEAPON.underscore(true);
             }
         }
 
         public void PutAway() {
             hasBloodSplat = false;
             if (isLinked) {
-                WEAPON_LOWERWEAPON._(true);
+                WEAPON_LOWERWEAPON.underscore(true);
             }
         }
 
@@ -1389,7 +1430,7 @@ public class Weapon {
          */
         public void Reload() {
             if (isLinked) {
-                WEAPON_RELOAD._(true);
+                WEAPON_RELOAD.underscore(true);
             }
         }
 
@@ -1476,20 +1517,20 @@ public class Weapon {
                 return;
             }
 
-            if (!WEAPON_ATTACK._()) {
+            if (!WEAPON_ATTACK.underscore()) {
                 if (sndHum != null) {
                     StopSound(etoi(SND_CHANNEL_BODY), false);
                 }
             }
-            WEAPON_ATTACK._(true);
+            WEAPON_ATTACK.underscore(true);
         }
 
         public void EndAttack() {
             if (!WEAPON_ATTACK.IsLinked()) {
                 return;
             }
-            if (WEAPON_ATTACK._()) {
-                WEAPON_ATTACK._(false);
+            if (WEAPON_ATTACK.underscore()) {
+                WEAPON_ATTACK.underscore(false);
                 if (sndHum != null) {
                     StartSoundShader(sndHum, SND_CHANNEL_BODY, 0, false, null);
                 }
@@ -1534,10 +1575,7 @@ public class Weapon {
                 return false;
             }
             final String classname = weaponDef.dict.GetString("def_dropItem");
-            if (!isNotNullOrEmpty(classname)) {
-                return false;
-            }
-            return true;
+            return isNotNullOrEmpty(classname);
         }
 
         public void WeaponStolen() {
@@ -1578,7 +1616,7 @@ public class Weapon {
             // call script object's constructor
             constructor = scriptObject.GetConstructor();
             if (null == constructor) {
-                gameLocal.Error("Missing constructor on '%s' for weapon", scriptObject.GetTypeName());
+                idGameLocal.Error("Missing constructor on '%s' for weapon", scriptObject.GetTypeName());
             }
 
             // init the script object's data
@@ -1635,7 +1673,7 @@ public class Weapon {
             func = scriptObject.GetFunction(statename);
             if (null == func) {
                 assert (false);
-                gameLocal.Error("Can't find function '%s' in object '%s'", statename, scriptObject.GetTypeName());
+                idGameLocal.Error("Can't find function '%s' in object '%s'", statename, scriptObject.GetTypeName());
             }
 
             thread.CallFunction(this, func, true);
@@ -1674,7 +1712,7 @@ public class Weapon {
                 }
             }
 
-            WEAPON_RELOAD._(false);
+            WEAPON_RELOAD.underscore(false);
         }
 
         public void EnterCinematic() {
@@ -1684,13 +1722,13 @@ public class Weapon {
                 SetState("EnterCinematic", 0);
                 thread.Execute();
 
-                WEAPON_ATTACK._(false);
-                WEAPON_RELOAD._(false);
-                WEAPON_NETRELOAD._(false);
-                WEAPON_NETENDRELOAD._(false);
-                WEAPON_NETFIRING._(false);
-                WEAPON_RAISEWEAPON._(false);
-                WEAPON_LOWERWEAPON._(false);
+                WEAPON_ATTACK.underscore(false);
+                WEAPON_RELOAD.underscore(false);
+                WEAPON_NETRELOAD.underscore(false);
+                WEAPON_NETENDRELOAD.underscore(false);
+                WEAPON_NETFIRING.underscore(false);
+                WEAPON_RAISEWEAPON.underscore(false);
+                WEAPON_LOWERWEAPON.underscore(false);
             }
 
             disabled = true;
@@ -1922,89 +1960,6 @@ public class Weapon {
             return true;
         }
 
-        /* **********************************************************************
-
-         Ammo
-
-         ***********************************************************************/
-        public static int /*ammo_t*/ GetAmmoNumForName(final String ammoname) {
-            int[] num = new int[1];
-            idDict ammoDict;
-
-            assert (ammoname != null);
-
-            ammoDict = gameLocal.FindEntityDefDict("ammo_types", false);
-            if (null == ammoDict) {
-                gameLocal.Error("Could not find entity definition for 'ammo_types'\n");
-            }
-
-            if (!isNotNullOrEmpty(ammoname)) {
-                return 0;
-            }
-
-            if (!ammoDict.GetInt(ammoname, "-1", num)) {
-                gameLocal.Error("Unknown ammo type '%s'", ammoname);
-            }
-
-            if ((num[0] < 0) || (num[0] >= AMMO_NUMTYPES)) {
-                gameLocal.Error("Ammo type '%s' value out of range.  Maximum ammo types is %d.\n", ammoname, AMMO_NUMTYPES);
-            }
-
-            return num[0];
-        }
-
-        public static String GetAmmoNameForNum(int /*ammo_t*/ ammonum) {
-            int i;
-            int num;
-            idDict ammoDict;
-            idKeyValue kv;
-//	char []text = new char[32 ];
-            String text;
-
-            ammoDict = gameLocal.FindEntityDefDict("ammo_types", false);
-            if (null == ammoDict) {
-                gameLocal.Error("Could not find entity definition for 'ammo_types'\n");
-            }
-
-            text = String.format("%d", ammonum);
-
-            num = ammoDict.GetNumKeyVals();
-            for (i = 0; i < num; i++) {
-                kv = ammoDict.GetKeyVal(i);
-                if (kv.GetValue().equals(text)) {
-                    return kv.GetKey().toString();
-                }
-            }
-
-            return null;
-        }
-
-        public static String GetAmmoPickupNameForNum(int /*ammo_t*/ ammonum) {
-            int i;
-            int num;
-            idDict ammoDict;
-            idKeyValue kv;
-
-            ammoDict = gameLocal.FindEntityDefDict("ammo_names", false);
-            if (null == ammoDict) {
-                gameLocal.Error("Could not find entity definition for 'ammo_names'\n");
-            }
-
-            final String name = GetAmmoNameForNum(ammonum);
-
-            if (isNotNullOrEmpty(name)) {
-                num = ammoDict.GetNumKeyVals();
-                for (i = 0; i < num; i++) {
-                    kv = ammoDict.GetKeyVal(i);
-                    if (idStr.Icmp(kv.GetKey().toString(), name) == 0) {
-                        return kv.GetValue().toString();
-                    }
-                }
-            }
-
-            return "";
-        }
-
         public int /*ammo_t*/ GetAmmoType() {
             return ammoType;
         }
@@ -2044,6 +1999,7 @@ public class Weapon {
             msg.WriteBits(btoi(lightOn), 1);
             msg.WriteBits(isFiring ? 1 : 0, 1);
         }
+        // };
 
         @Override
         public void ReadFromSnapshot(final idBitMsgDelta msg) {
@@ -2056,28 +2012,22 @@ public class Weapon {
             if (owner != null && gameLocal.localClientNum != owner.entityNumber && WEAPON_NETFIRING.IsLinked()) {
 
                 // immediately go to the firing state so we don't skip fire animations
-                if (!WEAPON_NETFIRING._() && isFiring) {
+                if (!WEAPON_NETFIRING.underscore() && isFiring) {
                     idealState.oSet("Fire");
                 }
 
                 // immediately switch back to idle
-                if (WEAPON_NETFIRING._() && !isFiring) {
+                if (WEAPON_NETFIRING.underscore() && !isFiring) {
                     idealState.oSet("Idle");
                 }
 
-                WEAPON_NETFIRING._(isFiring);
+                WEAPON_NETFIRING.underscore(isFiring);
             }
 
             if (snapLight != lightOn) {
                 Reload();
             }
         }
-        // enum {
-        public static final int EVENT_RELOAD = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_ENDRELOAD = EVENT_RELOAD + 1;
-        public static final int EVENT_CHANGESKIN = EVENT_RELOAD + 2;
-        public static final int EVENT_MAXEVENTS = EVENT_RELOAD + 3;
-        // };
 
         @Override
         public boolean ClientReceiveEvent(int event, int time, final idBitMsg msg) {
@@ -2086,15 +2036,15 @@ public class Weapon {
                 case EVENT_RELOAD: {
                     if (gameLocal.time - time < 1000) {
                         if (WEAPON_NETRELOAD.IsLinked()) {
-                            WEAPON_NETRELOAD._(true);
-                            WEAPON_NETENDRELOAD._(false);
+                            WEAPON_NETRELOAD.underscore(true);
+                            WEAPON_NETENDRELOAD.underscore(false);
                         }
                     }
                     return true;
                 }
                 case EVENT_ENDRELOAD: {
                     if (WEAPON_NETENDRELOAD.IsLinked()) {
-                        WEAPON_NETENDRELOAD._(true);
+                        WEAPON_NETENDRELOAD.underscore(true);
                     }
                     return true;
                 }
@@ -2216,11 +2166,11 @@ public class Weapon {
             UpdateFlashPosition();
 
             // these will be different each fire
-            muzzleFlash.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
-            muzzleFlash.shaderParms[ SHADERPARM_DIVERSITY] = renderEntity.shaderParms[SHADERPARM_DIVERSITY];
+            muzzleFlash.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            muzzleFlash.shaderParms[SHADERPARM_DIVERSITY] = renderEntity.shaderParms[SHADERPARM_DIVERSITY];
 
-            worldMuzzleFlash.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
-            worldMuzzleFlash.shaderParms[ SHADERPARM_DIVERSITY] = renderEntity.shaderParms[SHADERPARM_DIVERSITY];
+            worldMuzzleFlash.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            worldMuzzleFlash.shaderParms[SHADERPARM_DIVERSITY] = renderEntity.shaderParms[SHADERPARM_DIVERSITY];
 
             // the light will be removed at this time
             muzzleFlashEnd = gameLocal.time + flashTime;
@@ -2305,17 +2255,17 @@ public class Weapon {
                 nozzleGlow.lightRadius.y = nozzleGlowRadius;
                 nozzleGlow.lightRadius.z = nozzleGlowRadius;
                 nozzleGlow.shader = nozzleGlowShader;
-                nozzleGlow.shaderParms[ SHADERPARM_TIMESCALE] = 1.0f;
-                nozzleGlow.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+                nozzleGlow.shaderParms[SHADERPARM_TIMESCALE] = 1.0f;
+                nozzleGlow.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
                 GetGlobalJointTransform(true, ventLightJointView, nozzleGlow.origin, nozzleGlow.axis);
                 nozzleGlowHandle = gameRenderWorld.AddLightDef(nozzleGlow);
             }
 
             GetGlobalJointTransform(true, ventLightJointView, nozzleGlow.origin, nozzleGlow.axis);
 
-            nozzleGlow.shaderParms[ SHADERPARM_RED] = nozzleGlowColor.x * s;
-            nozzleGlow.shaderParms[ SHADERPARM_GREEN] = nozzleGlowColor.y * s;
-            nozzleGlow.shaderParms[ SHADERPARM_BLUE] = nozzleGlowColor.z * s;
+            nozzleGlow.shaderParms[SHADERPARM_RED] = nozzleGlowColor.x * s;
+            nozzleGlow.shaderParms[SHADERPARM_GREEN] = nozzleGlowColor.y * s;
+            nozzleGlow.shaderParms[SHADERPARM_BLUE] = nozzleGlowColor.z * s;
             gameRenderWorld.UpdateLightDef(nozzleGlowHandle, nozzleGlow);
         }
 
@@ -2347,6 +2297,9 @@ public class Weapon {
         private void Event_GetOwner() {
             idThread.ReturnEntity(owner);
         }
+//
+//        private void Event_SetWeaponStatus(float newStatus);
+//
 
         private void Event_WeaponState(final idEventArg<String> _statename, idEventArg<Integer> blendFrames) {
             String statename = _statename.value;
@@ -2355,28 +2308,21 @@ public class Weapon {
             func = scriptObject.GetFunction(statename);
             if (null == func) {
                 assert (false);
-                gameLocal.Error("Can't find function '%s' in object '%s'", statename, scriptObject.GetTypeName());
+                idGameLocal.Error("Can't find function '%s' in object '%s'", statename, scriptObject.GetTypeName());
             }
 
             idealState.oSet(statename);
 
-            if (0 == idealState.Icmp("Fire")) {
-                isFiring = true;
-            } else {
-                isFiring = false;
-            }
+            isFiring = 0 == idealState.Icmp("Fire");
 
             animBlendFrames = blendFrames.value;
             thread.DoneProcessing();
         }
-//
-//        private void Event_SetWeaponStatus(float newStatus);
-//
 
         private void Event_WeaponReady() {
             status = WP_READY;
             if (isLinked) {
-                WEAPON_RAISEWEAPON._(false);
+                WEAPON_RAISEWEAPON.underscore(false);
             }
             if (sndHum != null) {
                 StartSoundShader(sndHum, SND_CHANNEL_BODY, 0, false, null);
@@ -2387,7 +2333,7 @@ public class Weapon {
         private void Event_WeaponOutOfAmmo() {
             status = WP_OUTOFAMMO;
             if (isLinked) {
-                WEAPON_RAISEWEAPON._(false);
+                WEAPON_RAISEWEAPON.underscore(false);
             }
         }
 
@@ -2398,14 +2344,14 @@ public class Weapon {
         private void Event_WeaponHolstered() {
             status = WP_HOLSTERED;
             if (isLinked) {
-                WEAPON_LOWERWEAPON._(false);
+                WEAPON_LOWERWEAPON.underscore(false);
             }
         }
 
         private void Event_WeaponRising() {
             status = WP_RISING;
             if (isLinked) {
-                WEAPON_LOWERWEAPON._(false);
+                WEAPON_LOWERWEAPON.underscore(false);
             }
             owner.WeaponRisingCallback();
         }
@@ -2413,7 +2359,7 @@ public class Weapon {
         private void Event_WeaponLowering() {
             status = WP_LOWERING;
             if (isLinked) {
-                WEAPON_RAISEWEAPON._(false);
+                WEAPON_RAISEWEAPON.underscore(false);
             }
             owner.WeaponLoweringCallback();
         }
@@ -2523,11 +2469,7 @@ public class Weapon {
         }
 
         private void Event_AnimDone(idEventArg<Integer> channel, idEventArg<Integer> blendFrames) {
-            if (animDoneTime - FRAME2MS(blendFrames.value) <= gameLocal.time) {
-                idThread.ReturnInt(true);
-            } else {
-                idThread.ReturnInt(false);
-            }
+            idThread.ReturnInt(animDoneTime - FRAME2MS(blendFrames.value) <= gameLocal.time);
         }
 
         private void Event_SetBlendFrames(idEventArg<Integer> channel, idEventArg<Integer> blendFrames) {
@@ -2583,21 +2525,21 @@ public class Weapon {
         private void Event_GetLightParm(idEventArg<Integer> _parmnum) {
             int parmnum = _parmnum.value;
             if ((parmnum < 0) || (parmnum >= MAX_ENTITY_SHADER_PARMS)) {
-                gameLocal.Error("shader parm index (%d) out of range", parmnum);
+                idGameLocal.Error("shader parm index (%d) out of range", parmnum);
             }
 
-            idThread.ReturnFloat(muzzleFlash.shaderParms[ parmnum]);
+            idThread.ReturnFloat(muzzleFlash.shaderParms[parmnum]);
         }
 
         private void Event_SetLightParm(idEventArg<Integer> _parmnum, idEventArg<Float> _value) {
             int parmnum = _parmnum.value;
             float value = _value.value;
             if ((parmnum < 0) || (parmnum >= MAX_ENTITY_SHADER_PARMS)) {
-                gameLocal.Error("shader parm index (%d) out of range", parmnum);
+                idGameLocal.Error("shader parm index (%d) out of range", parmnum);
             }
 
-            muzzleFlash.shaderParms[ parmnum] = value;
-            worldMuzzleFlash.shaderParms[ parmnum] = value;
+            muzzleFlash.shaderParms[parmnum] = value;
+            worldMuzzleFlash.shaderParms[parmnum] = value;
             UpdateVisuals();
         }
 
@@ -2650,13 +2592,13 @@ public class Weapon {
                     return;
                 }
 
-                // if this is a power ammo weapon ( currently only the bfg ) then make sure 
+                // if this is a power ammo weapon ( currently only the bfg ) then make sure
                 // we only fire as much power as available in each clip
                 if (powerAmmo) {
                     // power comes in as a float from zero to max
                     // if we use this on more than the bfg will need to define the max
                     // in the .def as opposed to just in the script so proper calcs
-                    // can be done here. 
+                    // can be done here.
                     dmgPower = (int) dmgPower + 1;
                     if (dmgPower > ammoClip) {
                         dmgPower = ammoClip;
@@ -2677,12 +2619,12 @@ public class Weapon {
 
             // set the shader parm to the time of last projectile firing,
             // which the gun material shaders can reference for single shot barrel glows, etc
-            renderEntity.shaderParms[ SHADERPARM_DIVERSITY] = gameLocal.random.CRandomFloat();
-            renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.realClientTime);
+            renderEntity.shaderParms[SHADERPARM_DIVERSITY] = gameLocal.random.CRandomFloat();
+            renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.realClientTime);
 
             if (worldModel.GetEntity() != null) {
-                worldModel.GetEntity().SetShaderParm(SHADERPARM_DIVERSITY, renderEntity.shaderParms[ SHADERPARM_DIVERSITY]);
-                worldModel.GetEntity().SetShaderParm(SHADERPARM_TIMEOFFSET, renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET]);
+                worldModel.GetEntity().SetShaderParm(SHADERPARM_DIVERSITY, renderEntity.shaderParms[SHADERPARM_DIVERSITY]);
+                worldModel.GetEntity().SetShaderParm(SHADERPARM_TIMEOFFSET, renderEntity.shaderParms[SHADERPARM_TIMEOFFSET]);
             }
 
             // calculate the muzzle position
@@ -2712,7 +2654,7 @@ public class Weapon {
                     muzzle_pos = muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f));
                     for (i = 0; i < num_projectiles; i++) {
                         ang = idMath.Sin(spreadRad * gameLocal.random.RandomFloat());
-                        spin = (float) DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
+                        spin = DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
                         dir = playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin))));
                         dir.Normalize();
                         gameLocal.clip.Translation(tr, muzzle_pos, muzzle_pos.oPlus(dir.oMultiply(4096.0f)), null, getMat3_identity(), MASK_SHOT_RENDERMODEL, owner);
@@ -2728,10 +2670,10 @@ public class Weapon {
 
                 owner.AddProjectilesFired(num_projectiles);
 
-                float spreadRad = (float) DEG2RAD(spread);
+                float spreadRad = DEG2RAD(spread);
                 for (i = 0; i < num_projectiles; i++) {
                     ang = idMath.Sin(spreadRad * gameLocal.random.RandomFloat());
-                    spin = (float) DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
+                    spin = DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
                     dir = playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin))));
                     dir.Normalize();
 
@@ -2746,7 +2688,7 @@ public class Weapon {
 
                     if (null == ent[0] || !ent[0].IsType(idProjectile.class)) {
                         final String projectileName = weaponDef.dict.GetString("def_projectile");
-                        gameLocal.Error("'%s' is not an idProjectile", projectileName);
+                        idGameLocal.Error("'%s' is not an idProjectile", projectileName);
                     }
 
                     if (projectileDict.GetBool("net_instanthit")) {
@@ -2836,7 +2778,7 @@ public class Weapon {
 
             gameLocal.SpawnEntityDef(brassDict, ent, false);
             if (NOT(ent[0]) || !ent[0].IsType(idDebris.class)) {
-                gameLocal.Error("'%s' is not an idDebris", weaponDef != null ? weaponDef.dict.GetString("def_ejectBrass") : "def_ejectBrass");
+                idGameLocal.Error("'%s' is not an idDebris", weaponDef != null ? weaponDef.dict.GetString("def_ejectBrass") : "def_ejectBrass");
             }
             idDebris debris = (idDebris) ent[0];
             debris.Create(owner, origin, axis);
@@ -2854,7 +2796,7 @@ public class Weapon {
             trace_s[] tr = {null};
 
             if (null == meleeDef) {
-                gameLocal.Error("No meleeDef on '%s'", weaponDef.dict.GetString("classname"));
+                idGameLocal.Error("No meleeDef on '%s'", weaponDef.dict.GetString("classname"));
             }
 
             if (!gameLocal.isClient) {
@@ -2921,7 +2863,7 @@ public class Weapon {
                                 type = surfTypes_t.values()[GetDefaultSurfaceType()];
                             }
 
-                            final String materialType = gameLocal.sufaceTypeNames[ type.ordinal()];
+                            final String materialType = gameLocal.sufaceTypeNames[type.ordinal()];
 
                             // start impact sound based on material type
                             hitSound = meleeDef.dict.GetString(va("snd_%s", materialType));
@@ -3011,9 +2953,6 @@ public class Weapon {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

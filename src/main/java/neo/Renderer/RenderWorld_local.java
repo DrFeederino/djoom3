@@ -1,164 +1,89 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.stream.Stream;
 import neo.Renderer.Interaction.areaNumRef_s;
 import neo.Renderer.Interaction.idInteraction;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
-import static neo.Renderer.Material.SURF_COLLISION;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
-import static neo.Renderer.Material.materialCoverage_t.MC_PERFORATED;
 import neo.Renderer.Material.shaderStage_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
-import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.ModelDecal.decalProjectionInfo_s;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
-import static neo.Renderer.ModelManager.renderModelManager;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import static neo.Renderer.RenderSystem.R_LockSurfaceScene;
-import static neo.Renderer.RenderSystem.renderSystem;
-import static neo.Renderer.RenderSystem_init.r_lockSurfaces;
-import static neo.Renderer.RenderSystem_init.r_showDemo;
-import static neo.Renderer.RenderSystem_init.r_singleArea;
-import static neo.Renderer.RenderSystem_init.r_singleEntity;
-import static neo.Renderer.RenderSystem_init.r_singleLight;
-import static neo.Renderer.RenderSystem_init.r_skipFrontEnd;
-import static neo.Renderer.RenderSystem_init.r_skipSuppress;
-import static neo.Renderer.RenderSystem_init.r_skipUpdates;
-import static neo.Renderer.RenderSystem_init.r_useEntityCallbacks;
-import static neo.Renderer.RenderSystem_init.r_useEntityCulling;
-import static neo.Renderer.RenderSystem_init.r_useInteractionTable;
-import static neo.Renderer.RenderSystem_init.r_useLightCulling;
-import static neo.Renderer.RenderSystem_init.r_useNodeCommonChildren;
-import static neo.Renderer.RenderSystem_init.r_usePortals;
-import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
-import static neo.Renderer.RenderWorld.NUM_PORTAL_ATTRIBUTES;
-import static neo.Renderer.RenderWorld.PROC_FILE_EXT;
-import static neo.Renderer.RenderWorld.PROC_FILE_ID;
-import static neo.Renderer.RenderWorld.R_RemapShaderBySkin;
-import neo.Renderer.RenderWorld.exitPortal_t;
-import neo.Renderer.RenderWorld.guiPoint_t;
-import neo.Renderer.RenderWorld.idRenderWorld;
-import neo.Renderer.RenderWorld.modelTrace_s;
-import neo.Renderer.RenderWorld.portalConnection_t;
-import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_NONE;
-import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_VIEW;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
-import neo.Renderer.RenderWorld.renderView_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Renderer.RenderWorld_demo.demoHeader_t;
-import static neo.Renderer.RenderWorld_portals.MAX_PORTAL_PLANES;
 import neo.Renderer.RenderWorld_portals.portalStack_s;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglColor3f;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglVertex3fv;
-import static neo.Renderer.tr_guisurf.R_SurfaceToTextureAxis;
-import static neo.Renderer.tr_light.R_EntityDefDynamicModel;
-import static neo.Renderer.tr_light.R_IssueEntityDefCallback;
-import static neo.Renderer.tr_light.R_SetEntityDefViewEntity;
-import static neo.Renderer.tr_light.R_SetLightDefViewLight;
-import static neo.Renderer.tr_lightrun.R_ClearEntityDefDynamicModel;
-import static neo.Renderer.tr_lightrun.R_CreateEntityRefs;
-import static neo.Renderer.tr_lightrun.R_CreateLightDefFogPortals;
-import static neo.Renderer.tr_lightrun.R_CreateLightRefs;
-import static neo.Renderer.tr_lightrun.R_DeriveLightData;
-import static neo.Renderer.tr_lightrun.R_FreeEntityDefDecals;
-import static neo.Renderer.tr_lightrun.R_FreeEntityDefDerivedData;
-import static neo.Renderer.tr_lightrun.R_FreeEntityDefFadedDecals;
-import static neo.Renderer.tr_lightrun.R_FreeEntityDefOverlay;
-import static neo.Renderer.tr_lightrun.R_FreeLightDefDerivedData;
-import neo.Renderer.tr_lightrun.R_RegenerateWorld_f;
-import static neo.Renderer.tr_local.DEFAULT_FOG_DISTANCE;
-import neo.Renderer.tr_local.areaReference_s;
-import neo.Renderer.tr_local.demoCommand_t;
-import static neo.Renderer.tr_local.demoCommand_t.DC_DELETE_ENTITYDEF;
-import static neo.Renderer.tr_local.demoCommand_t.DC_DELETE_LIGHTDEF;
-import static neo.Renderer.tr_local.demoCommand_t.DC_LOADMAP;
-import static neo.Renderer.tr_local.demoCommand_t.DC_RENDERVIEW;
-import static neo.Renderer.tr_local.demoCommand_t.DC_SET_PORTAL_STATE;
-import static neo.Renderer.tr_local.demoCommand_t.DC_UPDATE_ENTITYDEF;
-import static neo.Renderer.tr_local.demoCommand_t.DC_UPDATE_LIGHTDEF;
-import static neo.Renderer.tr_local.glConfig;
-import neo.Renderer.tr_local.idRenderEntityLocal;
-import neo.Renderer.tr_local.idRenderLightLocal;
-import neo.Renderer.tr_local.idScreenRect;
-import neo.Renderer.tr_local.localTrace_t;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewDef_s;
-import neo.Renderer.tr_local.viewEntity_s;
-import neo.Renderer.tr_local.viewLight_s;
-import static neo.Renderer.tr_main.R_AxisToModelMatrix;
-import static neo.Renderer.tr_main.R_CullLocalBox;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.Renderer.tr_main.R_GlobalToNormalizedDeviceCoordinates;
-import static neo.Renderer.tr_main.R_LocalPointToGlobal;
-import static neo.Renderer.tr_main.R_RenderView;
-import static neo.Renderer.tr_rendertools.RB_AddDebugLine;
-import static neo.Renderer.tr_rendertools.RB_AddDebugPolygon;
-import static neo.Renderer.tr_rendertools.RB_ClearDebugLines;
-import static neo.Renderer.tr_rendertools.RB_ClearDebugPolygons;
-import static neo.Renderer.tr_rendertools.RB_ClearDebugText;
-import static neo.Renderer.tr_rendertools.RB_DrawTextLength;
-import static neo.Renderer.tr_trace.R_LocalTrace;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfShadowVerts;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
+import neo.Renderer.tr_lightrun.*;
+import neo.Renderer.tr_local.*;
 import neo.TempDump;
-import neo.TempDump.Atomics;
+import neo.TempDump.*;
 import neo.TempDump.Atomics.renderEntityShadow;
 import neo.TempDump.Atomics.renderLightShadow;
 import neo.TempDump.Atomics.renderViewShadow;
-import static neo.TempDump.NOT;
-import static neo.TempDump.ctos;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.sizeof;
-import static neo.framework.BuildDefines.ID_DEDICATED;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DemoFile.demoSystem_t.DS_RENDER;
 import neo.framework.DemoFile.idDemoFile;
-import static neo.framework.EventLoop.eventLoop;
-import static neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP;
-import static neo.framework.FileSystem_h.fileSystem;
-import static neo.framework.Session.session;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.BV.Frustum.idFrustum;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorWhite;
-import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_NODOLLARPRECOMPILE;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
+import neo.idlib.Lib.*;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.Material.SURF_COLLISION;
+import static neo.Renderer.Material.materialCoverage_t.MC_OPAQUE;
+import static neo.Renderer.Material.materialCoverage_t.MC_PERFORATED;
+import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
+import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderSystem.R_LockSurfaceScene;
+import static neo.Renderer.RenderSystem.renderSystem;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.RenderWorld.*;
+import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_NONE;
+import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_VIEW;
+import static neo.Renderer.RenderWorld_portals.MAX_PORTAL_PLANES;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_guisurf.R_SurfaceToTextureAxis;
+import static neo.Renderer.tr_light.*;
+import static neo.Renderer.tr_lightrun.*;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_local.demoCommand_t.*;
+import static neo.Renderer.tr_main.*;
+import static neo.Renderer.tr_rendertools.*;
+import static neo.Renderer.tr_trace.R_LocalTrace;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.*;
+import static neo.framework.BuildDefines.ID_DEDICATED;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DemoFile.demoSystem_t.DS_RENDER;
+import static neo.framework.EventLoop.eventLoop;
+import static neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Lexer.LEXFL_NODOLLARPRECOMPILE;
+import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.DEG2RAD;
+import static neo.idlib.math.Plane.*;
 import static neo.sys.win_shared.Sys_Milliseconds;
 import static neo.ui.UserInterface.uiManager;
 import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
@@ -168,46 +93,49 @@ import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
  */
 public class RenderWorld_local {
 
+    static final int AREANUM_SOLID = -1;
+    static final int CHILDREN_HAVE_MULTIPLE_AREAS = -2;
     // assume any lightDef or entityDef index above this is an internal error
     static final int LUDICROUS_INDEX = 10000;
+
     //
     static final boolean WRITE_GUIS = false;
 
     public static class portal_s {
 
-        int            intoArea;     // area this portal leads to
-        idWinding      w;            // winding points have counter clockwise ordering seen this area
-        idPlane        plane;        // view must be on the positive side of the plane to cross
-        portal_s       next;         // next portal of the area
         doublePortal_s doublePortal;
-        
-        public portal_s(){
+        int intoArea;     // area this portal leads to
+        portal_s next;         // next portal of the area
+        idPlane plane;        // view must be on the positive side of the plane to cross
+        idWinding w;            // winding points have counter clockwise ordering seen this area
+
+        public portal_s() {
             intoArea = 0;
             w = new idWinding();
             plane = new idPlane();
         }
-    };
+    }
 
     public static class doublePortal_s {
 
-        portal_s[] portals = new portal_s[2];
         int blockingBits;               // PS_BLOCK_VIEW, PS_BLOCK_AIR, etc, set by doors that shut them off
-//
+        //
         // A portal will be considered closed if it is past the
         // fog-out point in a fog volume.  We only support a single
         // fog volume over each portal.
         idRenderLightLocal fogLight;
         doublePortal_s nextFoggedPortal;
-    };
+        portal_s[] portals = new portal_s[2];
+    }
 
     public static class portalArea_s {
-        int             areaNum;
-        int[]           connectedAreaNum;   // if two areas have matching connectedAreaNum, they are
-                                            // not separated by a portal with the apropriate PS_BLOCK_* blockingBits
-        int             viewCount;          // set by R_FindViewLightsAndEntities
-        portal_s        portals;            // never changes after load
+        int areaNum;
+        int[] connectedAreaNum;   // if two areas have matching connectedAreaNum, they are
         areaReference_s entityRefs;         // head/tail of doubly linked list, may change
         areaReference_s lightRefs;          // head/tail of doubly linked list, may change
+        portal_s portals;            // never changes after load
+        // not separated by a portal with the apropriate PS_BLOCK_* blockingBits
+        int viewCount;          // set by R_FindViewLightsAndEntities
 
         public portalArea_s() {
             this.connectedAreaNum = new int[NUM_PORTAL_ATTRIBUTES];
@@ -221,39 +149,63 @@ public class RenderWorld_local {
                     limit(length).
                     toArray(portalArea_s[]::new);
         }
-    };
-    static final int CHILDREN_HAVE_MULTIPLE_AREAS = -2;
-    static final int AREANUM_SOLID                = -1;
+    }
 
     public static class areaNode_t {
 
-        idPlane plane = new idPlane();
-        int[] children = new int[2];	// negative numbers are (-1 - areaNumber), 0 = solid
+        int[] children = new int[2];    // negative numbers are (-1 - areaNumber), 0 = solid
         int commonChildrenArea;         // if all children are either solid or a single area,
+        idPlane plane = new idPlane();
         //                              // this is the area number, else CHILDREN_HAVE_MULTIPLE_AREAS
-    };
+    }
 
     public static class idRenderWorldLocal extends idRenderWorld {
 
-        public idStr                mapName;         // ie: maps/tim_dm2.proc, written to demoFile
-        public long[] /*ID_TIME_T*/ mapTimeStamp;    // for fast reloads of the same level
+        static final String[] playerMaterialExcludeList = {
+                "muzzlesmokepuff",
+                null
+        };
+        // FIXME: _D3XP added those.
+        static final String[] playerModelExcludeList = {
+                "models/md5/characters/player/d3xp_spplayer.md5mesh",
+                "models/md5/characters/player/head/d3xp_head.md5mesh",
+                "models/md5/weapons/pistol_world/worldpistol.md5mesh",
+                null
+        };
+        private static final float[] arrowCos = new float[40];
+        private static final float[] arrowSin = new float[40];
+        /*
+         ===================
+         AddAreaLightRefs
+
+         This is the only point where lights get added to the viewLights list
+         ===================
+         */ static int DEBUG_AddAreaLightRefs = 0;
+        private static int arrowStep;
+        /*
+         =============
+         FindViewLightsAndEntites
+
+         All the modelrefs and lightrefs that are in visible areas
+         will have viewEntitys and viewLights created for them.
+
+         The scissorRects on the viewEntitys and viewLights may be empty if
+         they were considered, but not actually visible.
+         =============
+         */
+        private static int lastPrintedAreaNum;
         //
-        public areaNode_t[]         areaNodes;
-        public int                  numAreaNodes;
+        public areaNode_t[] areaNodes;
         //
-        public portalArea_s[]       portalAreas;
-        public int                  numPortalAreas;
-        public int                  connectedAreaNum;// incremented every time a door portal state changes
+        public idScreenRect[] areaScreenRect;
+        public int connectedAreaNum;// incremented every time a door portal state changes
         //
-        public idScreenRect[]       areaScreenRect;
-        //
-        public doublePortal_s[]     doublePortals;
-        public int                  numInterAreaPortals;
-        //
-        public idList<idRenderModel> localModels = new idList<>();
+        public doublePortal_s[] doublePortals;
         //
         public idList<idRenderEntityLocal> entityDefs = new idList<>();
-        public idList<idRenderLightLocal> lightDefs = new idList<>();
+        //
+        //
+        public boolean generateAllInteractionsCalled;
         //
 //        public final idBlockAlloc<areaReference_s> areaReferenceAllocator = new idBlockAlloc<>(1024);
 //        public final idBlockAlloc<idInteraction> interactionAllocator = new idBlockAlloc<>(256);
@@ -264,13 +216,30 @@ public class RenderWorld_local {
         // Growing this table is time consuming, so we add a pad value to the number
         // of entityDefs and lightDefs
         public idInteraction[] interactionTable;
-        public int interactionTableWidth;		// entityDefs
-        public int interactionTableHeight;		// lightDefs
+        public int interactionTableHeight;        // lightDefs
+        public int interactionTableWidth;        // entityDefs
+        public idList<idRenderLightLocal> lightDefs = new idList<>();
         //
         //
-        public boolean generateAllInteractionsCalled;
         //
+        public idList<idRenderModel> localModels = new idList<>();
+        // virtual					~idRenderWorldLocal();
+        public idStr mapName;         // ie: maps/tim_dm2.proc, written to demoFile
+        public long[] /*ID_TIME_T*/ mapTimeStamp;    // for fast reloads of the same level
+        public int numAreaNodes;
+        public int numInterAreaPortals;
+        public int numPortalAreas;
         //
+        public portalArea_s[] portalAreas;
+        /*
+         ==============
+         UpdateEntityDef
+
+         Does not write to the demo file, which will only be updated for
+         visible entities
+         ==============
+         */
+        int c_callbackUpdate;
 
         public idRenderWorldLocal() {
             mapName = new idStr();//.Clear();
@@ -291,7 +260,6 @@ public class RenderWorld_local {
             interactionTableWidth = 0;
             interactionTableHeight = 0;
         }
-        // virtual					~idRenderWorldLocal();
 
         @Override
         public int AddEntityDef(renderEntity_s re) {
@@ -308,16 +276,6 @@ public class RenderWorld_local {
 
             return entityHandle;
         }
-
-        /*
-         ==============
-         UpdateEntityDef
-
-         Does not write to the demo file, which will only be updated for
-         visible entities
-         ==============
-         */
-        int c_callbackUpdate;
 
         @Override
         public void UpdateEntityDef(int entityHandle, renderEntity_s re) {
@@ -810,7 +768,7 @@ public class RenderWorld_local {
             final renderEntity_s refEnt = def.parms;
 
             idRenderModel model = refEnt.hModel;
-            if (model.IsDynamicModel() != DM_CACHED) {	// FIXME: probably should be MD5 only
+            if (model.IsDynamicModel() != DM_CACHED) {    // FIXME: probably should be MD5 only
                 return;
             }
             model = R_EntityDefDynamicModel(def);
@@ -912,7 +870,7 @@ public class RenderWorld_local {
                 parms.floatTime = parms.renderView.time * 0.001f;
                 parms.renderWorld = this;
 
-                // use this time for any subsequent 2D rendering, so damage blobs/etc 
+                // use this time for any subsequent 2D rendering, so damage blobs/etc
                 // can use level time
                 tr.frameShaderTime = parms.floatTime;
 
@@ -920,11 +878,7 @@ public class RenderWorld_local {
                 // or environment cube sides
                 idVec3 cross;
                 cross = parms.renderView.viewaxis.oGet(1).Cross(parms.renderView.viewaxis.oGet(2));
-                if (cross.oMultiply(parms.renderView.viewaxis.oGet(0)) > 0) {
-                    parms.isMirror = false;
-                } else {
-                    parms.isMirror = true;
-                }
+                parms.isMirror = !(cross.oMultiply(parms.renderView.viewaxis.oGet(0)) > 0);
 
                 if (r_lockSurfaces.GetBool()) {
                     R_LockSurfaceScene(parms);
@@ -1001,7 +955,7 @@ public class RenderWorld_local {
                     nodeNum = node.children[1];
                 }
                 if (nodeNum == 0) {
-                    return -1;		// in solid
+                    return -1;        // in solid
                 }
                 if (nodeNum < 0) {
                     nodeNum = -1 - nodeNum;
@@ -1260,17 +1214,6 @@ public class RenderWorld_local {
 
             return (trace.fraction < 1.0f);
         }
-        // FIXME: _D3XP added those.
-        static final String[] playerModelExcludeList = {
-            "models/md5/characters/player/d3xp_spplayer.md5mesh",
-            "models/md5/characters/player/head/d3xp_head.md5mesh",
-            "models/md5/weapons/pistol_world/worldpistol.md5mesh",
-            null
-        };
-        static final String[] playerMaterialExcludeList = {
-            "muzzlesmokepuff",
-            null
-        };
 
         @Override
         public boolean Trace(modelTrace_s trace, idVec3 start, idVec3 end, float radius, boolean skipDynamic, boolean skipPlayer /*_D3XP*/) {
@@ -1319,7 +1262,7 @@ public class RenderWorld_local {
                             continue;
                         }
 
-                        if (true) {	/* _D3XP addition. could use a cleaner approach */
+                        if (true) {    /* _D3XP addition. could use a cleaner approach */
 
                             if (skipPlayer) {
                                 final String name = model.Name();
@@ -1341,7 +1284,7 @@ public class RenderWorld_local {
 
                         model = R_EntityDefDynamicModel(def);
                         if (null == model) {
-                            continue;	// can happen with particle systems, which don't instantiate without a valid view
+                            continue;    // can happen with particle systems, which don't instantiate without a valid view
                         }
                     }
 
@@ -1441,9 +1384,6 @@ public class RenderWorld_local {
         public void DebugLine(idVec4 color, idVec3 start, idVec3 end, int lifetime, boolean depthTest) {
             RB_AddDebugLine(color, start, end, lifetime, depthTest);
         }
-        private static final float[] arrowCos = new float[40];
-        private static final float[] arrowSin = new float[40];
-        private static int arrowStep;
 
         @Override
         public void DebugArrow(idVec4 color, idVec3 start, idVec3 end, int size, int lifetime) {
@@ -1460,8 +1400,8 @@ public class RenderWorld_local {
             if (arrowStep != RenderSystem_init.r_debugArrowStep.GetInteger()) {
                 arrowStep = RenderSystem_init.r_debugArrowStep.GetInteger();
                 for (i = 0, a = 0; a < 360.0f; a += arrowStep, i++) {
-                    arrowCos[i] = idMath.Cos16((float) DEG2RAD(a));
-                    arrowSin[i] = idMath.Sin16((float) DEG2RAD(a));
+                    arrowCos[i] = idMath.Cos16(DEG2RAD(a));
+                    arrowSin[i] = idMath.Sin16(DEG2RAD(a));
                 }
                 arrowCos[i] = arrowCos[0];
                 arrowSin[i] = arrowSin[0];
@@ -1674,8 +1614,8 @@ public class RenderWorld_local {
             centery = (viewDef.viewport.y2 - viewDef.viewport.y1) * 0.5f;
 
             dScale = RenderSystem_init.r_znear.GetFloat() + 1.0f;
-            hScale = dScale * idMath.Tan16((float) DEG2RAD(viewDef.renderView.fov_x * 0.5f));
-            vScale = dScale * idMath.Tan16((float) DEG2RAD(viewDef.renderView.fov_y * 0.5f));
+            hScale = dScale * idMath.Tan16(DEG2RAD(viewDef.renderView.fov_x * 0.5f));
+            vScale = dScale * idMath.Tan16(DEG2RAD(viewDef.renderView.fov_y * 0.5f));
 
             bounds.oSet(0, 0,
                     bounds.oSet(1, 0, dScale));
@@ -1756,7 +1696,7 @@ public class RenderWorld_local {
 
                 surf.shader = declManager.FindMaterial(token);
 
-                ((idMaterial) surf.shader).AddReference();
+                surf.shader.AddReference();
 
                 tri = R_AllocStaticTriSurf();
                 surf.geometry = tri;
@@ -2037,7 +1977,7 @@ public class RenderWorld_local {
                 areaNodes = null;
             }
 
-            // free all the inline idRenderModels 
+            // free all the inline idRenderModels
             for (i = 0; i < localModels.Num(); i++) {
                 renderModelManager.RemoveModel(localModels.oGet(i));
                 localModels.RemoveIndex(i);
@@ -2178,6 +2118,8 @@ public class RenderWorld_local {
                 AddEntityRefToArea(def, portalAreas[i]);
             }
         }
+        //--------------------------
+        // RenderWorld_portals.cpp
 
         public void ClearPortalStates() {
             int i, j;
@@ -2319,8 +2261,6 @@ public class RenderWorld_local {
             // done!
             return true;
         }
-        //--------------------------
-        // RenderWorld_portals.cpp
 
         public idScreenRect ScreenRectFromWinding(final idWinding w, viewEntity_s space) {
             idScreenRect r = new idScreenRect();
@@ -2388,7 +2328,7 @@ public class RenderWorld_local {
 
                 d = forward.Distance(w.oGet(i).ToVec3());
                 if (d < 0.5f) {
-                    return false;		// a point not clipped off
+                    return false;        // a point not clipped off
                 }
             }
 
@@ -2404,7 +2344,7 @@ public class RenderWorld_local {
             int i, j;
             idVec3 v1, v2;
             int addPlanes;
-            idFixedWinding w;		// we won't overflow because MAX_PORTAL_PLANES = 20
+            idFixedWinding w;        // we won't overflow because MAX_PORTAL_PLANES = 20
 
             area = portalAreas[areaNum];
 
@@ -2434,11 +2374,11 @@ public class RenderWorld_local {
                 // which would cause an infinite loop
                 for (check = ps; check != null; check = check.next) {
                     if (p.equals(check.p)) {
-                        break;		// don't recursively enter a stack
+                        break;        // don't recursively enter a stack
                     }
                 }
                 if (check != null) {
-                    continue;	// already in stack
+                    continue;    // already in stack
                 }
 
                 // if we are very close to the portal surface, don't bother clipping
@@ -2461,7 +2401,7 @@ public class RenderWorld_local {
                     }
                 }
                 if (0 == w.GetNumPoints()) {
-                    continue;	// portal not visible
+                    continue;    // portal not visible
                 }
 
                 // see if it is fogged out
@@ -2570,7 +2510,7 @@ public class RenderWorld_local {
             int i, j;
             idVec3 v1, v2;
             int addPlanes;
-            idFixedWinding w;		// we won't overflow because MAX_PORTAL_PLANES = 20
+            idFixedWinding w;        // we won't overflow because MAX_PORTAL_PLANES = 20
 
             area = portalAreas[areaNum];
 
@@ -2590,11 +2530,11 @@ public class RenderWorld_local {
                 for (check = ps; check != null; check = check.next) {
                     firstPortalStack = check;
                     if (check.p == p) {
-                        break;		// don't recursively enter a stack
+                        break;        // don't recursively enter a stack
                     }
                 }
                 if (check != null) {
-                    continue;	// already in stack
+                    continue;    // already in stack
                 }
 
                 // if we are very close to the portal surface, don't bother clipping
@@ -2616,7 +2556,7 @@ public class RenderWorld_local {
                     }
                 }
                 if (0 == w.GetNumPoints()) {
-                    continue;	// portal not visible
+                    continue;    // portal not visible
                 }
                 // also always clip to the original light planes, because they aren't
                 // necessarily extending to infinitiy like a view frustum
@@ -2626,7 +2566,7 @@ public class RenderWorld_local {
                     }
                 }
                 if (0 == w.GetNumPoints()) {
-                    continue;	// portal not visible
+                    continue;    // portal not visible
                 }
 
                 // go through this portal
@@ -2792,11 +2732,7 @@ public class RenderWorld_local {
             // because we want to do all touching of the model after
             // we have determined all the lights that may effect it,
             // which optimizes cache usage
-            if (R_CullLocalBox(entity.referenceBounds, entity.modelMatrix, ps.numPortalPlanes, ps.portalPlanes)) {
-                return true;
-            }
-
-            return false;
+            return R_CullLocalBox(entity.referenceBounds, entity.modelMatrix, ps.numPortalPlanes, ps.portalPlanes);
         }
 
         /*
@@ -2804,7 +2740,7 @@ public class RenderWorld_local {
          AddAreaEntityRefs
 
          Any models that are visible through the current portalStack will
-         have their scissor 
+         have their scissor
          ===================
          */
         public void AddAreaEntityRefs(int areaNum, final portalStack_s ps) {
@@ -2863,7 +2799,7 @@ public class RenderWorld_local {
             int i, j;
             srfTriangles_s tri;
             float d;
-            idFixedWinding w = new idFixedWinding();		// we won't overflow because MAX_PORTAL_PLANES = 20
+            idFixedWinding w = new idFixedWinding();        // we won't overflow because MAX_PORTAL_PLANES = 20
 
             if (r_useLightCulling.GetInteger() == 0) {
                 return false;
@@ -2916,7 +2852,7 @@ public class RenderWorld_local {
                     for (j = 0; j < tri.numVerts; j++) {
                         d = ps.portalPlanes[i].Distance(tri.verts[j].xyz);
                         if (d < 0.0f) {
-                            break;	// point is inside this plane
+                            break;    // point is inside this plane
                         }
                     }
                     if (j == tri.numVerts) {
@@ -2929,14 +2865,6 @@ public class RenderWorld_local {
 
             return false;
         }
-
-        /*
-         ===================
-         AddAreaLightRefs
-
-         This is the only point where lights get added to the viewLights list
-         ===================
-         */ static int DEBUG_AddAreaLightRefs = 0;
 
         public void AddAreaLightRefs(int areaNum, final portalStack_s ps) {
             areaReference_s lref;
@@ -3037,19 +2965,6 @@ public class RenderWorld_local {
             tr.viewDef.connectedAreas = new boolean[numPortalAreas];
             BuildConnectedAreas_r(tr.viewDef.areaNum);
         }
-
-        /*
-         =============
-         FindViewLightsAndEntites
-
-         All the modelrefs and lightrefs that are in visible areas
-         will have viewEntitys and viewLights created for them.
-
-         The scissorRects on the viewEntitys and viewLights may be empty if
-         they were considered, but not actually visible.
-         =============
-         */
-        private static int lastPrintedAreaNum;
 
         public void FindViewLightsAndEntities() {
             // clear the visible lightDef and entityDef lists
@@ -3352,7 +3267,7 @@ public class RenderWorld_local {
                     }
                     InitFromMap(ctos(header.mapname));
 
-                    newMap = true;		// we will need to set demoTimeOffset
+                    newMap = true;        // we will need to set demoTimeOffset
 
                     break;
 
@@ -4042,7 +3957,7 @@ public class RenderWorld_local {
             areaNode_t node;
 
             if (results.fraction <= p1f) {
-                return;		// already hit something nearer
+                return;        // already hit something nearer
             }
             // empty leaf
             if (nodeNum < 0) {
@@ -4169,7 +4084,7 @@ public class RenderWorld_local {
 
                 area = portalAreas[areaNum];
                 if (area.viewCount == tr.viewCount) {
-                    return;	// already added a reference here
+                    return;    // already added a reference here
                 }
                 area.viewCount = tr.viewCount;
 
@@ -4203,14 +4118,14 @@ public class RenderWorld_local {
             float sd = node.plane.Distance(sphere.GetOrigin());
             if (sd >= sphere.GetRadius()) {
                 nodeNum = node.children[0];
-                if (nodeNum != 0) {	// 0 = solid
+                if (nodeNum != 0) {    // 0 = solid
                     PushVolumeIntoTree_r(def, light, sphere, numPoints, points, nodeNum);
                 }
                 return;
             }
             if (sd <= -sphere.GetRadius()) {
                 nodeNum = node.children[1];
-                if (nodeNum != 0) {	// 0 = solid
+                if (nodeNum != 0) {    // 0 = solid
                     PushVolumeIntoTree_r(def, light, sphere, numPoints, points, nodeNum);
                 }
                 return;
@@ -4285,13 +4200,13 @@ public class RenderWorld_local {
             }
             if (front) {
                 nodeNum = node.children[0];
-                if (nodeNum != 0) {	// 0 = solid
+                if (nodeNum != 0) {    // 0 = solid
                     PushVolumeIntoTree_r(def, light, sphere, numPoints, points, nodeNum);
                 }
             }
             if (back) {
                 nodeNum = node.children[1];
-                if (nodeNum != 0) {	// 0 = solid
+                if (nodeNum != 0) {    // 0 = solid
                     PushVolumeIntoTree_r(def, light, sphere, numPoints, points, nodeNum);
                 }
             }
@@ -4470,5 +4385,6 @@ public class RenderWorld_local {
                 }
             }
         }
-    };
+    }
+
 }

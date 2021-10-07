@@ -1,58 +1,19 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Stream;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.Actor.idActor;
 import neo.Game.Animation.Anim.jointModTransform_t;
 import neo.Game.Animation.Anim_Blend.idAnim;
 import neo.Game.Animation.Anim_Blend.idAnimator;
-import static neo.Game.Entity.signalNum_t.NUM_SIGNALS;
-import static neo.Game.Entity.signalNum_t.SIG_BLOCKED;
-import static neo.Game.Entity.signalNum_t.SIG_REMOVED;
-import static neo.Game.Entity.signalNum_t.SIG_TOUCH;
-import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
 import neo.Game.FX.idEntityFx;
 import neo.Game.Game.refSound_t;
 import neo.Game.GameSys.Class;
-import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.eventCallback_t3;
-import neo.Game.GameSys.Class.eventCallback_t4;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_bloodEffects;
-import static neo.Game.GameSys.SysCvar.g_decals;
-import static neo.Game.Game_local.ENTITYNUM_NONE;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_DELETE_ENT;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_EVENT;
-import static neo.Game.Game_local.GENTITYNUM_BITS;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.MAX_CLIENTS;
-import static neo.Game.Game_local.MAX_EVENT_PARAM_SIZE;
-import static neo.Game.Game_local.MAX_GAME_MESSAGE_SIZE;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import static neo.Game.Game_local.gameSoundWorld;
-import static neo.Game.Game_local.gameState_t.GAMESTATE_SHUTDOWN;
-import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
-import neo.Game.Game_local.idEntityPtr;
-import static neo.Game.Mover.EV_PartBlocked;
-import static neo.Game.Mover.EV_ReachedAng;
-import static neo.Game.Mover.EV_ReachedPos;
-import static neo.Game.Mover.EV_TeamBlocked;
+import neo.Game.Game_local.*;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics.impactInfo_s;
@@ -65,42 +26,12 @@ import neo.Game.Pvs.pvsHandle_t;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Program.idScriptObject;
 import neo.Game.Script.Script_Thread.idThread;
-
-import static neo.Game.Script.Script_Thread.EV_Thread_Wait;
-import static neo.Game.Script.Script_Thread.EV_Thread_WaitFrame;
-import static neo.Renderer.Material.CONTENTS_TRIGGER;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_METAL;
-import static neo.Renderer.Material.surfTypes_t.SURFTYPE_NONE;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
-import static neo.Renderer.RenderWorld.SHADERPARM_ALPHA;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_MODE;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import neo.Renderer.RenderWorld.deferredEntityCallback_t;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderView_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.sound.idSoundEmitter;
 import neo.TempDump;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atoi;
-import static neo.TempDump.etoi;
-import static neo.framework.Async.NetworkSystem.networkSystem;
-import static neo.framework.Common.STRTABLE_ID;
-import static neo.framework.Common.STRTABLE_ID_LENGTH;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
-import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
-import static neo.framework.DeclManager.declType_t.DECL_SOUND;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.BV.Bounds.idBounds;
@@ -108,34 +39,59 @@ import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.LittleBitField;
-import static neo.idlib.Lib.MAX_WORLD_SIZE;
-import static neo.idlib.Lib.PackColor;
-import static neo.idlib.Lib.UnpackColor;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Curve.idCurve_BSpline;
-import neo.idlib.math.Curve.idCurve_CatmullRomSpline;
-import neo.idlib.math.Curve.idCurve_NURBS;
-import neo.idlib.math.Curve.idCurve_NonUniformBSpline;
-import neo.idlib.math.Curve.idCurve_Spline;
-import static neo.idlib.math.Math_h.MS2SEC;
+import neo.idlib.math.Curve.*;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.ui.UserInterface.idUserInterface;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static neo.Game.Entity.signalNum_t.*;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.g_bloodEffects;
+import static neo.Game.GameSys.SysCvar.g_decals;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
+import static neo.Game.Game_local.gameState_t.GAMESTATE_SHUTDOWN;
+import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
+import static neo.Game.Mover.*;
+import static neo.Game.Script.Script_Thread.EV_Thread_Wait;
+import static neo.Game.Script.Script_Thread.EV_Thread_WaitFrame;
+import static neo.Renderer.Material.CONTENTS_TRIGGER;
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.Material.surfTypes_t.SURFTYPE_METAL;
+import static neo.Renderer.Material.surfTypes_t.SURFTYPE_NONE;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.*;
+import static neo.framework.Async.NetworkSystem.networkSystem;
+import static neo.framework.Common.STRTABLE_ID;
+import static neo.framework.Common.STRTABLE_ID_LENGTH;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.*;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -152,92 +108,127 @@ public class Entity {
      */
     public static final int DELAY_DORMANT_TIME = 3000;
     //
-
-    // overridable events
-    public static final idEventDef EV_PostSpawn          = new idEventDef("<postspawn>", null);
-    public static final idEventDef EV_FindTargets        = new idEventDef("<findTargets>", null);
-    public static final idEventDef EV_Touch              = new idEventDef("<touch>", "et");
-    public static final idEventDef EV_GetName            = new idEventDef("getName", null, 's');
-    public static final idEventDef EV_SetName            = new idEventDef("setName", "s");
-    public static final idEventDef EV_Activate           = new idEventDef("activate", "e");
-    public static final idEventDef EV_ActivateTargets    = new idEventDef("activateTargets", "e");
-    public static final idEventDef EV_NumTargets         = new idEventDef("numTargets", null, 'f');
-    public static final idEventDef EV_GetTarget          = new idEventDef("getTarget", "f", 'e');
-    public static final idEventDef EV_RandomTarget       = new idEventDef("randomTarget", "s", 'e');
-    public static final idEventDef EV_Bind               = new idEventDef("bind", "e");
-    public static final idEventDef EV_BindPosition       = new idEventDef("bindPosition", "e");
-    public static final idEventDef EV_BindToJoint        = new idEventDef("bindToJoint", "esf");
-    public static final idEventDef EV_Unbind             = new idEventDef("unbind", null);
-    public static final idEventDef EV_RemoveBinds        = new idEventDef("removeBinds");
-    public static final idEventDef EV_SpawnBind          = new idEventDef("<spawnbind>", null);
-    public static final idEventDef EV_SetOwner           = new idEventDef("setOwner", "e");
-    public static final idEventDef EV_SetModel           = new idEventDef("setModel", "s");
-    public static final idEventDef EV_SetSkin            = new idEventDef("setSkin", "s");
-    public static final idEventDef EV_GetWorldOrigin     = new idEventDef("getWorldOrigin", null, 'v');
-    public static final idEventDef EV_SetWorldOrigin     = new idEventDef("setWorldOrigin", "v");
-    public static final idEventDef EV_GetOrigin          = new idEventDef("getOrigin", null, 'v');
-    public static final idEventDef EV_SetOrigin          = new idEventDef("setOrigin", "v");
-    public static final idEventDef EV_GetAngles          = new idEventDef("getAngles", null, 'v');
-    public static final idEventDef EV_SetAngles          = new idEventDef("setAngles", "v");
-    public static final idEventDef EV_GetLinearVelocity  = new idEventDef("getLinearVelocity", null, 'v');
-    public static final idEventDef EV_SetLinearVelocity  = new idEventDef("setLinearVelocity", "v");
+    public static final idEventDef EV_Activate = new idEventDef("activate", "e");
+    public static final idEventDef EV_ActivateTargets = new idEventDef("activateTargets", "e");
+    public static final idEventDef EV_Bind = new idEventDef("bind", "e");
+    public static final idEventDef EV_BindPosition = new idEventDef("bindPosition", "e");
+    public static final idEventDef EV_BindToJoint = new idEventDef("bindToJoint", "esf");
+    public static final idEventDef EV_CacheSoundShader = new idEventDef("cacheSoundShader", "s");
+    public static final idEventDef EV_CallFunction = new idEventDef("callFunction", "s");
+    public static final idEventDef EV_ClearAllJoints = new idEventDef("clearAllJoints");
+    public static final idEventDef EV_ClearJoint = new idEventDef("clearJoint", "d");
+    public static final idEventDef EV_ClearSignal = new idEventDef("clearSignal", "d");
+    public static final idEventDef EV_DistanceTo = new idEventDef("distanceTo", "E", 'f');
+    public static final idEventDef EV_DistanceToPoint = new idEventDef("distanceToPoint", "v", 'f');
+    public static final idEventDef EV_FadeSound = new idEventDef("fadeSound", "dff");
+    public static final idEventDef EV_FindTargets = new idEventDef("<findTargets>", null);
+    public static final idEventDef EV_GetAngles = new idEventDef("getAngles", null, 'v');
     public static final idEventDef EV_GetAngularVelocity = new idEventDef("getAngularVelocity", null, 'v');
+    public static final idEventDef EV_GetColor = new idEventDef("getColor", null, 'v');
+    public static final idEventDef EV_GetEntityKey = new idEventDef("getEntityKey", "s", 'e');
+    public static final idEventDef EV_GetFloatKey = new idEventDef("getFloatKey", "s", 'f');
+    public static final idEventDef EV_GetIntKey = new idEventDef("getIntKey", "s", 'f');
+    public static final idEventDef EV_GetJointAngle = new idEventDef("getJointAngle", "d", 'v');
+    //
+    public static final idEventDef EV_GetJointHandle = new idEventDef("getJointHandle", "s", 'd');
+    public static final idEventDef EV_GetJointPos = new idEventDef("getJointPos", "d", 'v');
+    public static final idEventDef EV_GetKey = new idEventDef("getKey", "s", 's');
+    public static final idEventDef EV_GetLinearVelocity = new idEventDef("getLinearVelocity", null, 'v');
+    public static final idEventDef EV_GetMaxs = new idEventDef("getMaxs", null, 'v');
+    public static final idEventDef EV_GetMins = new idEventDef("getMins", null, 'v');
+    public static final idEventDef EV_GetName = new idEventDef("getName", null, 's');
+    public static final idEventDef EV_GetNextKey = new idEventDef("getNextKey", "ss", 's');
+    public static final idEventDef EV_GetOrigin = new idEventDef("getOrigin", null, 'v');
+    public static final idEventDef EV_GetShaderParm = new idEventDef("getShaderParm", "d", 'f');
+    public static final idEventDef EV_GetSize = new idEventDef("getSize", null, 'v');
+    public static final idEventDef EV_GetTarget = new idEventDef("getTarget", "f", 'e');
+    public static final idEventDef EV_GetVectorKey = new idEventDef("getVectorKey", "s", 'v');
+    public static final idEventDef EV_GetWorldOrigin = new idEventDef("getWorldOrigin", null, 'v');
+    public static final idEventDef EV_HasFunction = new idEventDef("hasFunction", "s", 'd');
+    public static final idEventDef EV_Hide = new idEventDef("hide", null);
+    public static final idEventDef EV_IsHidden = new idEventDef("isHidden", null, 'd');
+    public static final idEventDef EV_NumTargets = new idEventDef("numTargets", null, 'f');
+    // overridable events
+    public static final idEventDef EV_PostSpawn = new idEventDef("<postspawn>", null);
+    public static final idEventDef EV_RandomTarget = new idEventDef("randomTarget", "s", 'e');
+    public static final idEventDef EV_RemoveBinds = new idEventDef("removeBinds");
+    public static final idEventDef EV_RestorePosition = new idEventDef("restorePosition");
+    public static final idEventDef EV_SetAngles = new idEventDef("setAngles", "v");
     public static final idEventDef EV_SetAngularVelocity = new idEventDef("setAngularVelocity", "v");
-    public static final idEventDef EV_GetSize            = new idEventDef("getSize", null, 'v');
-    public static final idEventDef EV_SetSize            = new idEventDef("setSize", "vv");
-    public static final idEventDef EV_GetMins            = new idEventDef("getMins", null, 'v');
-    public static final idEventDef EV_GetMaxs            = new idEventDef("getMaxs", null, 'v');
-    public static final idEventDef EV_IsHidden           = new idEventDef("isHidden", null, 'd');
-    public static final idEventDef EV_Hide               = new idEventDef("hide", null);
-    public static final idEventDef EV_Show               = new idEventDef("show", null);
-    public static final idEventDef EV_Touches            = new idEventDef("touches", "E", 'd');
-    public static final idEventDef EV_ClearSignal        = new idEventDef("clearSignal", "d");
-    public static final idEventDef EV_GetShaderParm      = new idEventDef("getShaderParm", "d", 'f');
-    public static final idEventDef EV_SetShaderParm      = new idEventDef("setShaderParm", "df");
-    public static final idEventDef EV_SetShaderParms     = new idEventDef("setShaderParms", "ffff");
-    public static final idEventDef EV_SetColor           = new idEventDef("setColor", "fff");
-    public static final idEventDef EV_GetColor           = new idEventDef("getColor", null, 'v');
-    public static final idEventDef EV_CacheSoundShader   = new idEventDef("cacheSoundShader", "s");
-    public static final idEventDef EV_StartSoundShader   = new idEventDef("startSoundShader", "sd", 'f');
-    public static final idEventDef EV_StartSound         = new idEventDef("startSound", "sdd", 'f');
-    public static final idEventDef EV_StopSound          = new idEventDef("stopSound", "dd");
-    public static final idEventDef EV_FadeSound          = new idEventDef("fadeSound", "dff");
-    public static final idEventDef EV_SetGuiParm         = new idEventDef("setGuiParm", "ss");
-    public static final idEventDef EV_SetGuiFloat        = new idEventDef("setGuiFloat", "sf");
-    public static final idEventDef EV_GetNextKey         = new idEventDef("getNextKey", "ss", 's');
-    public static final idEventDef EV_SetKey             = new idEventDef("setKey", "ss");
-    public static final idEventDef EV_GetKey             = new idEventDef("getKey", "s", 's');
-    public static final idEventDef EV_GetIntKey          = new idEventDef("getIntKey", "s", 'f');
-    public static final idEventDef EV_GetFloatKey        = new idEventDef("getFloatKey", "s", 'f');
-    public static final idEventDef EV_GetVectorKey       = new idEventDef("getVectorKey", "s", 'v');
-    public static final idEventDef EV_GetEntityKey       = new idEventDef("getEntityKey", "s", 'e');
-    public static final idEventDef EV_RestorePosition    = new idEventDef("restorePosition");
+    public static final idEventDef EV_SetColor = new idEventDef("setColor", "fff");
+    public static final idEventDef EV_SetGuiFloat = new idEventDef("setGuiFloat", "sf");
+    public static final idEventDef EV_SetGuiParm = new idEventDef("setGuiParm", "ss");
+    public static final idEventDef EV_SetJointAngle = new idEventDef("setJointAngle", "ddv");
+    public static final idEventDef EV_SetJointPos = new idEventDef("setJointPos", "ddv");
+    public static final idEventDef EV_SetKey = new idEventDef("setKey", "ss");
+    public static final idEventDef EV_SetLinearVelocity = new idEventDef("setLinearVelocity", "v");
+    public static final idEventDef EV_SetModel = new idEventDef("setModel", "s");
+    public static final idEventDef EV_SetName = new idEventDef("setName", "s");
+    public static final idEventDef EV_SetNeverDormant = new idEventDef("setNeverDormant", "d");
+    public static final idEventDef EV_SetOrigin = new idEventDef("setOrigin", "v");
+    public static final idEventDef EV_SetOwner = new idEventDef("setOwner", "e");
+    public static final idEventDef EV_SetShaderParm = new idEventDef("setShaderParm", "df");
+    public static final idEventDef EV_SetShaderParms = new idEventDef("setShaderParms", "ffff");
+    public static final idEventDef EV_SetSize = new idEventDef("setSize", "vv");
+    public static final idEventDef EV_SetSkin = new idEventDef("setSkin", "s");
+    public static final idEventDef EV_SetWorldOrigin = new idEventDef("setWorldOrigin", "v");
+    public static final idEventDef EV_Show = new idEventDef("show", null);
+    public static final idEventDef EV_SpawnBind = new idEventDef("<spawnbind>", null);
+    public static final idEventDef EV_StartFx = new idEventDef("startFx", "s");
+    public static final idEventDef EV_StartSound = new idEventDef("startSound", "sdd", 'f');
+    public static final idEventDef EV_StartSoundShader = new idEventDef("startSoundShader", "sd", 'f');
+    public static final idEventDef EV_StopSound = new idEventDef("stopSound", "dd");
+    public static final idEventDef EV_Touch = new idEventDef("<touch>", "et");
+    public static final idEventDef EV_Touches = new idEventDef("touches", "E", 'd');
+    public static final idEventDef EV_Unbind = new idEventDef("unbind", null);
     public static final idEventDef EV_UpdateCameraTarget = new idEventDef("<updateCameraTarget>", null);
-    public static final idEventDef EV_DistanceTo         = new idEventDef("distanceTo", "E", 'f');
-    public static final idEventDef EV_DistanceToPoint    = new idEventDef("distanceToPoint", "v", 'f');
-    public static final idEventDef EV_StartFx            = new idEventDef("startFx", "s");
-    public static final idEventDef EV_HasFunction        = new idEventDef("hasFunction", "s", 'd');
-    public static final idEventDef EV_CallFunction       = new idEventDef("callFunction", "s");
-    public static final idEventDef EV_SetNeverDormant    = new idEventDef("setNeverDormant", "d");
     //
-    public static final idEventDef EV_GetJointHandle     = new idEventDef("getJointHandle", "s", 'd');
-    public static final idEventDef EV_ClearAllJoints     = new idEventDef("clearAllJoints");
-    public static final idEventDef EV_ClearJoint         = new idEventDef("clearJoint", "d");
-    public static final idEventDef EV_SetJointPos        = new idEventDef("setJointPos", "ddv");
-    public static final idEventDef EV_SetJointAngle      = new idEventDef("setJointAngle", "ddv");
-    public static final idEventDef EV_GetJointPos        = new idEventDef("getJointPos", "d", 'v');
-    public static final idEventDef EV_GetJointAngle      = new idEventDef("getJointAngle", "d", 'v');
-    //
-
+    // FIXME: At some point we may want to just limit it to one thread per signal, but
+    // for now, I'm allowing multiple threads.  We should reevaluate this later in the project
+    public static final int MAX_SIGNAL_THREADS = 16;    // probably overkill, but idList uses a granularity of 16
     // Think flags
 //enum {
-    public static final int TH_ALL             = -1;
-    public static final int TH_THINK           = 1;        // run think function each frame
-    public static final int TH_PHYSICS         = 2;        // run physics each frame
-    public static final int TH_ANIMATE         = 4;        // update animation each frame
-    public static final int TH_UPDATEVISUALS   = 8;        // update renderEntity
+    public static final int TH_ALL = -1;
+    public static final int TH_ANIMATE = 4;        // update animation each frame
+    public static final int TH_PHYSICS = 2;        // run physics each frame
+    public static final int TH_THINK = 1;        // run think function each frame
     public static final int TH_UPDATEPARTICLES = 16;
 //};
+    public static final int TH_UPDATEVISUALS = 8;        // update renderEntity
+
+    /*
+     ================
+     UpdateGuiParms
+     ================
+     */
+    static void UpdateGuiParms(idUserInterface gui, final idDict args) {
+        if (gui == null || args == null) {
+            return;
+        }
+        idKeyValue kv = args.MatchPrefix("gui_parm", null);
+        while (kv != null) {
+            gui.SetStateString(kv.GetKey().toString(), kv.GetValue().toString());
+            kv = args.MatchPrefix("gui_parm", kv);
+        }
+        gui.SetStateBool("noninteractive", args.GetBool("gui_noninteractive"));
+        gui.StateChanged(gameLocal.time);
+    }
+    //
+
+    /*
+     ================
+     AddRenderGui
+     ================
+     */
+    public static idUserInterface AddRenderGui(final String name, final idDict args) {
+        idUserInterface gui;
+
+        final idKeyValue kv = args.MatchPrefix("gui_parm", null);
+        gui = uiManager.FindGui(name, true, (kv != null));
+        UpdateGuiParms(gui, args);
+
+        return gui;
+    }
 
     //
     // Signals
@@ -260,15 +251,10 @@ public class Entity {
         NUM_SIGNALS
     }
 
-    // FIXME: At some point we may want to just limit it to one thread per signal, but
-    // for now, I'm allowing multiple threads.  We should reevaluate this later in the project
-    public static final int MAX_SIGNAL_THREADS = 16;    // probably overkill, but idList uses a granularity of 16
-    //
-
     public static class signal_t {
 
-        int        threadnum;
         function_t function;
+        int threadnum;
     }
 
     public static class signalList_t {
@@ -277,8 +263,29 @@ public class Entity {
     }
 
     public static class idEntity extends neo.Game.GameSys.Class.idClass implements neo.TempDump.NiLLABLE<idEntity>, neo.TempDump.SERiAL {
+        public static final int EVENT_MAXEVENTS = 2;
+        //
+        // enum {
+        public static final int EVENT_STARTSOUNDSHADER = 0;
+        public static final int EVENT_STOPSOUNDSHADER = 1;
+        public static final int MAX_PVS_AREAS = 4;
+        public static String DBG_name = "";
+        /* **********************************************************************
+
+         Physics.
+
+         ***********************************************************************/
+        // physics
+        // initialize the default physics
+        private static int DBG_InitDefaultPhysics = 0;
+        private static int DBG_RunPhysics = 0;
+        //
+        //
+        //
+        private static int DBG_counter = 0;
         //	ABSTRACT_PROTOTYPE( idEntity );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(Class.idClass.getEventCallBacks());
             eventCallbacks.put(EV_GetName, (eventCallback_t0<idEntity>) idEntity::Event_GetName);
@@ -346,143 +353,54 @@ public class Entity {
             eventCallbacks.put(EV_SetNeverDormant, (eventCallback_t1<idEntity>) idEntity::Event_SetNeverDormant);
         }
 
-        public static final int MAX_PVS_AREAS = 4;
-        //
-        public       int                           entityNumber;      // index into the entity list
-        public       int                           entityDefNumber;   // index into the entity def list
-        //
-        public       idLinkList<idEntity>          spawnNode;         // for being linked into spawnedEntities list
-        public       idLinkList<idEntity>          activeNode;        // for being linked into activeEntities list
-        //
-        public       idLinkList<idEntity>          snapshotNode;      // for being linked into snapshotEntities list
-        public       int                           snapshotSequence;  // last snapshot this entity was in
-        public       int                           snapshotBits;      // number of bits this entity occupied in the last snapshot
-        //
-        public       idStr                         name;              // name of entity
-        public       idDict                        spawnArgs;         // key/value pairs used to spawn and initialize entity
-        public       idScriptObject                scriptObject;      // contains all script defined data for this entity
-        //
-        public       int                           thinkFlags;        // TH_? flags
-        public       int                           dormantStart;      // time that the entity was first closed off from player
-        public       boolean                       cinematic;         // during cinematics, entity will only think if cinematic is set
-        //
-        public       renderView_s                  renderView;        // for camera views from this entity
-        public       idEntity                      cameraTarget;      // any remoteRenderMap shaders will use this
         //
         public final idList<idEntityPtr<idEntity>> targets;           // when this entity is activated these entities entity are activated
-        //
-        public       int                           health;            // FIXME: do all objects really need health?
-//
-
-        @Override
-        public Class.idClass CreateInstance() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override//TODO:final this
-        public java.lang.Class/*idTypeInfo*/ GetType() {//TODO: make method final
-            return getClass();
-        }
-
-        @Override
-        public eventCallback_t getEventCallBack(idEventDef event) {
-            return eventCallbacks.get(event);
-        }
-
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-
-        @Override
-        public idEntity oSet(idEntity node) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public boolean isNULL() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public ByteBuffer AllocBuffer() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public void Read(ByteBuffer buffer) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public ByteBuffer Write() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public void oSet(Class.idClass oGet) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        public static class entityFlags_s implements TempDump.SERiAL {
-
-            public boolean notarget;            // if true never attack or target this entity
-            public boolean noknockback;         // if true no knockback from hits
-            public boolean takedamage;          // if true this entity can be damaged
-            public boolean hidden;              // if true this entity is not visible
-            public boolean bindOrientated;      // if true both the master orientation is used for binding
-            public boolean solidForTeam;        // if true this entity is considered solid when a physics team mate pushes entities
-            public boolean forcePhysicsUpdate;  // if true always update from the physics whether the object moved or not
-            public boolean selected;            // if true the entity is selected for editing
-            public boolean neverDormant;        // if true the entity never goes dormant
-            public boolean isDormant;           // if true the entity is dormant
-            public boolean hasAwakened;         // before a monster has been awakened the first time, use full PVS for dormant instead of area-connected
-            public boolean networkSync;         // if true the entity is synchronized over the network
-
-            @Override
-            public ByteBuffer AllocBuffer() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-
-            @Override
-            public void Read(ByteBuffer buffer) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-
-            @Override
-            public ByteBuffer Write() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        }
-
-        public    entityFlags_s        fl;
-        //
-        //
-        protected renderEntity_s       renderEntity;                    // used to present a model to the renderer
-        protected int                  modelDefHandle;                  // handle to static renderer model
-        protected refSound_t           refSound;                        // used to present sound to the audio engine
-        //
-        private   idPhysics_Static     defaultPhysicsObj;               // default physics object
-        private   idPhysics            physics;                         // physics used for this entity
-        private   idEntity             bindMaster;                      // entity bound to if unequal NULL
-        private   int/*jointHandle_t*/ bindJoint;                       // joint bound to if unequal INVALID_JOINT
-        private   int                  bindBody;                        // body bound to if unequal -1
-        private   idEntity             teamMaster;                      // master of the physics team
-        private   idEntity             teamChain;                       // next entity in physics team
-        //
-        private   int                  numPVSAreas;                     // number of renderer areas the entity covers
+        private final int DBG_count = DBG_counter++;
         private final int[] PVSAreas = new int[MAX_PVS_AREAS];          // numbers of the renderer areas the entity covers
+        public idLinkList<idEntity> activeNode;        // for being linked into activeEntities list
+        public idEntity cameraTarget;      // any remoteRenderMap shaders will use this
+        public boolean cinematic;         // during cinematics, entity will only think if cinematic is set
+        public int dormantStart;      // time that the entity was first closed off from player
+        public int entityDefNumber;   // index into the entity def list
+        //
+        public int entityNumber;      // index into the entity list
+        public entityFlags_s fl;
+//
+        //
+        public int health;            // FIXME: do all objects really need health?
+        //
+        public idStr name;              // name of entity
+        //
+        public renderView_s renderView;        // for camera views from this entity
+        public idScriptObject scriptObject;      // contains all script defined data for this entity
+        public int snapshotBits;      // number of bits this entity occupied in the last snapshot
+        //
+        public idLinkList<idEntity> snapshotNode;      // for being linked into snapshotEntities list
+        public int snapshotSequence;  // last snapshot this entity was in
+        public idDict spawnArgs;         // key/value pairs used to spawn and initialize entity
+        //
+        public idLinkList<idEntity> spawnNode;         // for being linked into spawnedEntities list
+        //
+        public int thinkFlags;        // TH_? flags
+        protected int modelDefHandle;                  // handle to static renderer model
+        protected refSound_t refSound;                        // used to present sound to the audio engine
+        //
+        //
+        protected renderEntity_s renderEntity;                    // used to present a model to the renderer
+        private int bindBody;                        // body bound to if unequal -1
+        private int/*jointHandle_t*/ bindJoint;                       // joint bound to if unequal INVALID_JOINT
+        private idEntity bindMaster;                      // entity bound to if unequal NULL
+        //
+        private final idPhysics_Static defaultPhysicsObj;               // default physics object
+        //
+        private int mpGUIState;                                // local cache to avoid systematic SetStateInt
+        //
+        private int numPVSAreas;                     // number of renderer areas the entity covers
+        private idPhysics physics;                         // physics used for this entity
         //
         private signalList_t signals;
-        //
-        private int          mpGUIState;                                // local cache to avoid systematic SetStateInt
-        //
-        //
-        //
-        private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
-//
-
+        private idEntity teamChain;                       // next entity in physics team
+        private idEntity teamMaster;                      // master of the physics team
         //        public static final idTypeInfo Type;
 //
 //        public static idClass CreateInstance();
@@ -538,6 +456,350 @@ public class Entity {
 
             mpGUIState = -1;
 
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
+        private static void Event_SetName(idEntity e, final idEventArg<String> newName) {
+            e.SetName(newName.value);
+        }
+
+        /*
+         ============
+         idEntity::Event_ActivateTargets
+
+         Activates any entities targeted by this entity.  Mainly used as an
+         event to delay activating targets.
+         ============
+         */
+        private static void Event_ActivateTargets(idEntity e, idEventArg<idEntity> activator) {
+            e.ActivateTargets(activator.value);
+        }
+
+        private static void Event_GetTarget(idEntity e, idEventArg<Float> index) {
+            int i;
+
+            i = index.value.intValue();
+            if ((i < 0) || i >= e.targets.Num()) {
+                idThread.ReturnEntity(null);
+            } else {
+                idThread.ReturnEntity(e.targets.oGet(i).GetEntity());
+            }
+        }
+//
+
+        private static void Event_RandomTarget(idEntity e, final idEventArg<String> ignor) {
+            int num;
+            idEntity ent;
+            int i;
+            int ignoreNum;
+            final String ignore = ignor.value;
+
+            e.RemoveNullTargets();
+            if (0 == e.targets.Num()) {
+                idThread.ReturnEntity(null);
+                return;
+            }
+
+            ignoreNum = -1;
+            if (ignore != null && (!ignore.isEmpty()) && (e.targets.Num() > 1)) {
+                for (i = 0; i < e.targets.Num(); i++) {
+                    ent = e.targets.oGet(i).GetEntity();
+                    if (ent != null && (ent.name.equals(ignore))) {
+                        ignoreNum = i;
+                        break;
+                    }
+                }
+            }
+
+            if (ignoreNum >= 0) {
+                num = gameLocal.random.RandomInt(e.targets.Num() - 1);
+                if (num >= ignoreNum) {
+                    num++;
+                }
+            } else {
+                num = gameLocal.random.RandomInt(e.targets.Num());
+            }
+
+            ent = e.targets.oGet(num).GetEntity();
+            idThread.ReturnEntity(ent);
+        }
+
+        private static void Event_Bind(idEntity e, idEventArg<idEntity> master) {
+            e.Bind(master.value, true);
+        }
+
+        private static void Event_BindPosition(idEntity e, idEventArg<idEntity> master) {
+            e.Bind(master.value, false);
+        }
+
+        private static void Event_BindToJoint(idEntity e, idEventArg<idEntity> master, final idEventArg<String> jointname, idEventArg<Float> orientated) {
+            e.BindToJoint(master.value, jointname.value, (orientated.value != 0));
+        }
+
+        private static void Event_SetOwner(idEntity e, idEventArg<idEntity> owner) {
+            int i;
+
+            for (i = 0; i < e.GetPhysics().GetNumClipModels(); i++) {
+                e.GetPhysics().GetClipModel(i).SetOwner(owner.value);
+            }
+        }
+
+        private static void Event_SetModel(idEntity e, final idEventArg<String> modelname) {
+            e.SetModel(modelname.value);
+        }
+
+        private static void Event_SetSkin(idEntity e, final idEventArg<String> skinname) {
+            e.renderEntity.customSkin = declManager.FindSkin(skinname.value);
+            e.UpdateVisuals();
+        }
+
+        private static void Event_GetShaderParm(idEntity e, idEventArg<Integer> parm) {
+            final int parmnum = parm.value;
+            if ((parmnum < 0) || (parmnum >= MAX_ENTITY_SHADER_PARMS)) {
+                idGameLocal.Error("shader parm index (%d) out of range", parmnum);
+            }
+
+            idThread.ReturnFloat(e.renderEntity.shaderParms[parmnum]);
+        }
+
+        private static void Event_SetShaderParm(idEntity e, idEventArg<Integer> parmnum, idEventArg<Float> value) {
+            e.SetShaderParm(parmnum.value, value.value);
+        }
+
+        private static void Event_SetShaderParms(idEntity e, idEventArg<Float> parm0, idEventArg<Float> parm1, idEventArg<Float> parm2, idEventArg<Float> parm3) {
+            e.renderEntity.shaderParms[SHADERPARM_RED] = parm0.value;
+            e.renderEntity.shaderParms[SHADERPARM_GREEN] = parm1.value;
+            e.renderEntity.shaderParms[SHADERPARM_BLUE] = parm2.value;
+            e.renderEntity.shaderParms[SHADERPARM_ALPHA] = parm3.value;
+            e.UpdateVisuals();
+        }
+
+        private static void Event_SetColor(idEntity e, idEventArg<Float> red, idEventArg<Float> green, idEventArg<Float> blue) {
+            e.SetColor(red.value, green.value, blue.value);
+        }
+
+        private static void Event_CacheSoundShader(idEntity e, final idEventArg<String> soundName) {
+            declManager.FindSound(soundName.value);
+        }
+
+        private static void Event_StartSoundShader(idEntity e, final idEventArg<String> soundName, idEventArg<Integer> channel) {
+            int[] length = new int[1];
+
+            e.StartSoundShader(declManager.FindSound(soundName.value), /*(s_channelType)*/ channel.value, 0, false, length);
+            idThread.ReturnFloat(MS2SEC(length[0]));
+        }
+
+        private static void Event_StopSound(idEntity e, idEventArg<Integer> channel, idEventArg<Integer> netSync) {
+            e.StopSound(channel.value, (netSync.value != 0));
+        }
+
+        private static void Event_StartSound(idEntity e, final idEventArg<String> soundName, idEventArg<Integer> channel, idEventArg<Integer> netSync) {
+            int[] time = new int[1];
+
+            e.StartSound(soundName.value, /*(s_channelType)*/ channel.value, 0, (netSync.value != 0), time);
+            idThread.ReturnFloat(MS2SEC(time[0]));
+        }
+
+        private static void Event_FadeSound(idEntity e, idEventArg<Integer> channel, idEventArg<Float> to, idEventArg<Float> over) {
+            if (e.refSound.referenceSound != null) {
+                e.refSound.referenceSound.FadeSound(channel.value, to.value, over.value);
+            }
+        }
+
+        private static void Event_SetWorldOrigin(idEntity e, final idEventArg<idVec3> org) {
+            idVec3 neworg = e.GetLocalCoordinates(org.value);
+            e.SetOrigin(neworg);
+        }
+
+        private static void Event_SetOrigin(idEntity e, final idEventArg<idVec3> org) {
+            e.SetOrigin(org.value);
+        }
+
+        private static void Event_SetAngles(idEntity e, final idEventArg<idAngles> ang) {
+            e.SetAngles(ang.value);
+        }
+
+        private static void Event_SetLinearVelocity(idEntity e, final idEventArg<idVec3> velocity) {
+            e.GetPhysics().SetLinearVelocity(velocity.value);
+        }
+
+        private static void Event_SetAngularVelocity(idEntity e, final idEventArg<idVec3> velocity) {
+            e.GetPhysics().SetAngularVelocity(velocity.value);
+        }
+
+        private static void Event_SetSize(idEntity e, final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs) {
+            e.GetPhysics().SetClipBox(new idBounds(mins.value, maxs.value), 1.0f);
+        }
+
+        private static void Event_Touches(idEntity e, idEventArg<idEntity> ent) {
+            if (NOT(ent.value)) {
+                idThread.ReturnInt(false);
+                return;
+            }
+
+            final idBounds myBounds = e.GetPhysics().GetAbsBounds();
+            final idBounds entBounds = ent.value.GetPhysics().GetAbsBounds();
+
+            idThread.ReturnInt(myBounds.IntersectsBounds(entBounds));
+        }
+
+        private static void Event_SetGuiParm(idEntity e, final idEventArg<String> k, final idEventArg<String> v) {
+            final String key = k.value;
+            final String val = v.value;
+            for (int i = 0; i < MAX_RENDERENTITY_GUI; i++) {
+                if (e.renderEntity.gui[i] != null) {
+                    if (idStr.Icmpn(key, "gui_", 4) == 0) {
+                        e.spawnArgs.Set(key, val);
+                    }
+                    e.renderEntity.gui[i].SetStateString(key, val);
+                    e.renderEntity.gui[i].StateChanged(gameLocal.time);
+                }
+            }
+        }
+
+        private static void Event_SetGuiFloat(idEntity e, final idEventArg<String> key, idEventArg<Float> f) {
+            for (int i = 0; i < MAX_RENDERENTITY_GUI; i++) {
+                if (e.renderEntity.gui[i] != null) {
+                    e.renderEntity.gui[i].SetStateString(key.value, va("%f", f.value));
+                    e.renderEntity.gui[i].StateChanged(gameLocal.time);
+                }
+            }
+        }
+
+        private static void Event_GetNextKey(idEntity e, final idEventArg<String> prefix, final idEventArg<String> lastMatch) {
+            final idKeyValue kv;
+            final idKeyValue previous;
+
+            if (!lastMatch.value.isEmpty()) {
+                previous = e.spawnArgs.FindKey(lastMatch.value);
+            } else {
+                previous = null;
+            }
+
+            kv = e.spawnArgs.MatchPrefix(prefix.value, previous);
+            if (null == kv) {
+                idThread.ReturnString("");
+            } else {
+                idThread.ReturnString(kv.GetKey());
+            }
+        }
+
+        private static void Event_SetKey(idEntity e, final idEventArg<String> key, final idEventArg<String> value) {
+            e.spawnArgs.Set(key.value, value.value);
+        }
+
+        private static void Event_GetKey(idEntity e, final idEventArg<String> key) {
+            String[] value = new String[1];
+
+            e.spawnArgs.GetString(key.value, "", value);
+            idThread.ReturnString(value[0]);
+        }
+
+        private static void Event_GetIntKey(idEntity e, final idEventArg<String> key) {
+            int[] value = new int[1];
+
+            e.spawnArgs.GetInt(key.value, "0", value);
+
+            // scripts only support floats
+            idThread.ReturnFloat(value[0]);
+        }
+
+        private static void Event_GetFloatKey(idEntity e, final idEventArg<String> key) {
+            float[] value = new float[1];
+
+            e.spawnArgs.GetFloat(key.value, "0", value);
+            idThread.ReturnFloat(value[0]);
+        }
+
+        private static void Event_GetVectorKey(idEntity e, final idEventArg<String> key) {
+            idVec3 value = new idVec3();
+
+            e.spawnArgs.GetVector(key.value, "0 0 0", value);
+            idThread.ReturnVector(value);
+        }
+
+        private static void Event_GetEntityKey(idEntity e, final idEventArg<String> key) {
+            idEntity ent;
+            String[] entName = new String[1];
+
+            if (!e.spawnArgs.GetString(key.value, null, entName)) {
+                idThread.ReturnEntity(null);
+                return;
+            }
+
+            ent = gameLocal.FindEntity(entName[0]);
+            if (null == ent) {
+                gameLocal.Warning("Couldn't find entity '%s' specified in '%s' key in entity '%s'", entName, key, e.name);
+            }
+
+            idThread.ReturnEntity(ent);
+        }
+
+        private static void Event_DistanceTo(idEntity e, idEventArg<idEntity> ent) {
+            if (null == ent.value) {
+                // just say it's really far away
+                idThread.ReturnFloat(MAX_WORLD_SIZE);
+            } else {
+                float dist = e.GetPhysics().GetOrigin().oMinus(ent.value.GetPhysics().GetOrigin()).LengthFast();
+                idThread.ReturnFloat(dist);
+            }
+        }
+
+        private static void Event_DistanceToPoint(idEntity e, final idEventArg<idVec3> point) {
+            float dist = e.GetPhysics().GetOrigin().oMinus(point.value).LengthFast();
+            idThread.ReturnFloat(dist);
+        }
+
+        private static void Event_StartFx(idEntity e, final idEventArg<String> fx) {
+            idEntityFx.StartFx(fx.value, null, null, e, true);
+        }
+
+        @Override
+        public Class.idClass CreateInstance() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override//TODO:final this
+        public java.lang.Class/*idTypeInfo*/ GetType() {//TODO: make method final
+            return getClass();
+        }
+
+        @Override
+        public eventCallback_t getEventCallBack(idEventDef event) {
+            return eventCallbacks.get(event);
+        }
+
+        @Override
+        public idEntity oSet(idEntity node) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public boolean isNULL() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public ByteBuffer AllocBuffer() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void Read(ByteBuffer buffer) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public ByteBuffer Write() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void oSet(Class.idClass oGet) {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
@@ -621,7 +883,7 @@ public class Entity {
             renderEntity.entityNum = entityNumber;
 
             // go dormant within 5 frames so that when the map starts most monsters are dormant
-            dormantStart = gameLocal.time - DELAY_DORMANT_TIME + gameLocal.msec * 5;
+            dormantStart = gameLocal.time - DELAY_DORMANT_TIME + idGameLocal.msec * 5;
 
             origin = new idVec3(renderEntity.origin);
             axis = new idMat3(renderEntity.axis);
@@ -705,7 +967,7 @@ public class Entity {
             // setup script object
             if (ShouldConstructScriptObjectAtSpawn() && spawnArgs.GetString("scriptobject", null, scriptObjectName)) {
                 if (!scriptObject.SetType(scriptObjectName[0])) {
-                    gameLocal.Error("Script object '%s' not found on entity '%s'.", scriptObjectName[0], name);
+                    idGameLocal.Error("Script object '%s' not found on entity '%s'.", scriptObjectName[0], name);
                 }
 
                 ConstructScriptObject();
@@ -875,7 +1137,7 @@ public class Entity {
             if (name.Length() != 0) {
 //            if ( ( name == "NULL" ) || ( name == "null_entity" ) ) {
                 if (("NULL".equals(newname)) || ("null_entity".equals(newname))) {
-                    gameLocal.Error("Cannot name entity '%s'.  '%s' is reserved for script.", name, name);
+                    idGameLocal.Error("Cannot name entity '%s'.  '%s' is reserved for script.", name, name);
                 }
                 gameLocal.AddEntityToHash(name.toString(), this);
                 gameLocal.program.SetEntity(name.toString(), this);
@@ -1372,52 +1634,6 @@ public class Entity {
 
         /*
          ================
-         idEntity::ModelCallback
-
-         NOTE: may not change the game state whatsoever!
-         ================
-         */
-        public static class ModelCallback extends deferredEntityCallback_t {
-
-            public static final deferredEntityCallback_t instance = new ModelCallback();
-
-            private ModelCallback() {
-            }
-
-            public static deferredEntityCallback_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public boolean run(renderEntity_s e, renderView_s v) {
-                idEntity ent;
-
-                ent = gameLocal.entities[e.entityNum];
-                if (null == ent) {
-                    gameLocal.Error("idEntity::ModelCallback: callback with NULL game entity");
-                }
-
-                return ent.UpdateRenderEntity(e, v);
-            }
-
-            @Override
-            public ByteBuffer AllocBuffer() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-
-            @Override
-            public void Read(ByteBuffer buffer) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-
-            @Override
-            public ByteBuffer Write() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        }
-
-        /*
-         ================
          idEntity::GetAnimator
 
          Subclasses will be responsible for allocating animator.
@@ -1703,7 +1919,6 @@ public class Entity {
             PostBind();
         }
 
-
         /*
          ================
          idEntity::BindToJoint
@@ -1882,10 +2097,7 @@ public class Entity {
         }
 
         public boolean IsBound() {
-            if (bindMaster != null) {
-                return true;
-            }
-            return false;
+            return bindMaster != null;
         }
 
         public boolean IsBoundTo(idEntity master) {
@@ -2009,7 +2221,6 @@ public class Entity {
             return pos;
         }
 
-
         /*
          ================
          idEntity::GetWorldCoordinates
@@ -2091,7 +2302,7 @@ public class Entity {
         /* **********************************************************************
 
          Physics.
-	
+
          ***********************************************************************/
         // physics
         // set a new physics object to be used by this entity
@@ -2124,7 +2335,6 @@ public class Entity {
             physics = phys;
         }
 
-        private static int DBG_RunPhysics = 0;
         // run the physics for this entity
         public boolean RunPhysics() {
             int i, reachedTime, startTime, endTime;
@@ -2161,12 +2371,12 @@ public class Entity {
                     part.physics.SaveState();
                 }
             }
-                                                      DBG_name = name.toString();
+            DBG_name = name.toString();
             // move the whole team
             for (part = this; part != null; part = part.teamChain) {
 
                 if (part.physics != null) {
-                                             if(name.equals("marscity_civilian1_1_head")) DBG_RunPhysics++;
+                    if (name.equals("marscity_civilian1_1_head")) DBG_RunPhysics++;
                     // run physics
                     moved = part.physics.Evaluate(endTime - startTime, endTime);
 
@@ -2263,7 +2473,6 @@ public class Entity {
 
             return true;
         }
-        public static String DBG_name = "";
 
         // set the origin of the physics object (relative to bindMaster if not NULL)
         public void SetOrigin(final idVec3 org) {
@@ -2313,6 +2522,8 @@ public class Entity {
         public boolean GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
             return false;
         }
+        // };
+//
 
         // retrieves the transformation going from the physics origin/axis to the sound origin/axis
         public boolean GetPhysicsToSoundTransform(idVec3 origin, idMat3 axis) {
@@ -2374,7 +2585,7 @@ public class Entity {
         /* **********************************************************************
 
          Damage
-	
+
          ***********************************************************************/
         // damage
         /*
@@ -2491,7 +2702,7 @@ public class Entity {
 
             final idDict damageDef = gameLocal.FindEntityDefDict(damageDefName, false);
             if (null == damageDef) {
-                gameLocal.Error("Unknown damageDef '%s'\n", damageDefName);
+                idGameLocal.Error("Unknown damageDef '%s'\n", damageDefName);
             }
 
             int[] damage = {damageDef.GetInt("damage")};
@@ -2589,7 +2800,7 @@ public class Entity {
         /* **********************************************************************
 
          Script functions
-	
+
          ***********************************************************************/
         // scripting
 /*
@@ -2708,7 +2919,7 @@ public class Entity {
             final int signalnum = _signalnum.ordinal();
             assert (thread != null);
             if ((signalnum < 0) || (signalnum >= NUM_SIGNALS.ordinal())) {
-                gameLocal.Error("Signal out of range");
+                idGameLocal.Error("Signal out of range");
             }
 
             if (null == signals) {
@@ -2731,7 +2942,7 @@ public class Entity {
             assert (thread != null);
 
             if ((signalnum < 0) || (signalnum >= NUM_SIGNALS.ordinal())) {
-                gameLocal.Error("Signal out of range");
+                idGameLocal.Error("Signal out of range");
             }
 
             if (null == signals) {
@@ -2795,7 +3006,7 @@ public class Entity {
         public void SignalEvent(idThread thread, signalNum_t _signalNum) {
             final int signalNum = etoi(_signalNum);
             if ((signalNum < 0) || (signalNum >= etoi(NUM_SIGNALS))) {
-                gameLocal.Error("Signal out of range");
+                idGameLocal.Error("Signal out of range");
             }
 
             if (null == signals) {
@@ -2808,7 +3019,7 @@ public class Entity {
         /* **********************************************************************
 
          Guis.
-	
+
          ***********************************************************************/
         // gui
         public void TriggerGuis() {
@@ -2867,13 +3078,13 @@ public class Entity {
 //						idToken token3;
                                 token3 = new idToken();
                                 if (!src.ReadToken(token3)) {
-                                    gameLocal.Error("Expecting function name following '::' in gui for entity '%s'", entityGui.name);
+                                    idGameLocal.Error("Expecting function name following '::' in gui for entity '%s'", entityGui.name);
                                 }
-                                token2.Append("::" + token3.toString());
+                                token2.Append("::" + token3);
                             }
                             final function_t func = gameLocal.program.FindFunction(token2);
                             if (null == func) {
-                                gameLocal.Error("Can't find function '%s' for gui in entity '%s'", token2, entityGui.name);
+                                idGameLocal.Error("Can't find function '%s' for gui in entity '%s'", token2, entityGui.name);
                             } else {
                                 idThread thread = new idThread(func);
                                 thread.DelayedStart(0);
@@ -2979,7 +3190,7 @@ public class Entity {
         /* **********************************************************************
 
          Targets
-	
+
          ***********************************************************************/
         // targets
         /*
@@ -3000,7 +3211,7 @@ public class Entity {
             // ensure that we don't target ourselves since that could cause an infinite loop when activating entities
             for (i = 0; i < targets.Num(); i++) {
                 if (targets.oGet(i).GetEntity() == this) {
-                    gameLocal.Error("Entity '%s' is targeting itself", name);
+                    idGameLocal.Error("Entity '%s' is targeting itself", name);
                 }
             }
         }
@@ -3046,7 +3257,7 @@ public class Entity {
         /* **********************************************************************
 
          Misc.
-	
+
          ***********************************************************************/
         // misc
         public void Teleport(final idVec3 origin, final idAngles angles, idEntity destination) {
@@ -3155,18 +3366,10 @@ public class Entity {
         public void ShowEditingDialog() {
         }
 
-        //
-        // enum {
-        public static final int EVENT_STARTSOUNDSHADER = 0;
-        public static final int EVENT_STOPSOUNDSHADER  = 1;
-        public static final int EVENT_MAXEVENTS        = 2;
-        // };
-//
-
         /* **********************************************************************
 
          Network
-	
+
          ***********************************************************************/
         public void ClientPredictionThink() {
             RunPhysics();
@@ -3416,11 +3619,8 @@ public class Entity {
                 if (dormantStart == 0) {
                     dormantStart = gameLocal.time;
                 }
-                if (gameLocal.time - dormantStart < DELAY_DORMANT_TIME) {
-                    // just got closed off, don't go dormant yet
-                    return false;
-                }
-                return true;
+                // just got closed off, don't go dormant yet
+                return gameLocal.time - dormantStart >= DELAY_DORMANT_TIME;
             } else {
                 // the monster area is topologically connected to a player, but if
                 // the monster hasn't been woken up before, do the more precise PVS check
@@ -3436,21 +3636,13 @@ public class Entity {
                 return false;
             }
 
-//            return false; 
+//            return false;
         }
 
-
-        /* **********************************************************************
-
-         Physics.
-	
-         ***********************************************************************/
-        // physics
-        // initialize the default physics
-        private static int DBG_InitDefaultPhysics = 0;
         private void InitDefaultPhysics(final idVec3 origin, final idMat3 axis) {
             String[] temp = new String[1];
-            idClipModel clipModel = null;DBG_InitDefaultPhysics++;
+            idClipModel clipModel = null;
+            DBG_InitDefaultPhysics++;
 
             // check if a clipmodel key/value pair is set
             if (spawnArgs.GetString("clipmodel", "", temp)) {
@@ -3471,11 +3663,11 @@ public class Entity {
                             && spawnArgs.GetVector("maxs", null, bounds.oGet(1))) {
                         setClipModel = true;
                         if (bounds.oGet(0).oGet(0) > bounds.oGet(1).oGet(0) || bounds.oGet(0).oGet(1) > bounds.oGet(1).oGet(1) || bounds.oGet(0).oGet(2) > bounds.oGet(1).oGet(2)) {
-                            gameLocal.Error("Invalid bounds '%s'-'%s' on entity '%s'", bounds.oGet(0).ToString(), bounds.oGet(1).ToString(), name);
+                            idGameLocal.Error("Invalid bounds '%s'-'%s' on entity '%s'", bounds.oGet(0).ToString(), bounds.oGet(1).ToString(), name);
                         }
                     } else if (spawnArgs.GetVector("size", null, size)) {
                         if ((size.x < 0.0f) || (size.y < 0.0f) || (size.z < 0.0f)) {
-                            gameLocal.Error("Invalid size '%s' on entity '%s'", size.ToString(), name);
+                            idGameLocal.Error("Invalid size '%s' on entity '%s'", size.ToString(), name);
                         }
                         bounds.oGet(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f);
                         bounds.oGet(1).Set(size.x * 0.5f, size.y * 0.5f, size.z);
@@ -3546,12 +3738,12 @@ public class Entity {
             }
 
             if (master.equals(this)) {//TODO:equals
-                gameLocal.Error("Tried to bind an object to itself.");
+                idGameLocal.Error("Tried to bind an object to itself.");
                 return false;
             }
 
             if (this == gameLocal.world) {
-                gameLocal.Error("Tried to bind world to another entity");
+                idGameLocal.Error("Tried to bind world to another entity");
                 return false;
             }
 
@@ -3669,95 +3861,19 @@ public class Entity {
         /* **********************************************************************
 
          Events
-	
+
          ***********************************************************************/
         // events
         private void Event_GetName() {
             idThread.ReturnString(name.toString());
         }
 
-        private static void Event_SetName(idEntity e, final idEventArg<String> newName) {
-            e.SetName(newName.value);
-        }
-
         private void Event_FindTargets() {
             FindTargets();
         }
 
-        /*
-         ============
-         idEntity::Event_ActivateTargets
-
-         Activates any entities targeted by this entity.  Mainly used as an
-         event to delay activating targets.
-         ============
-         */
-        private static void Event_ActivateTargets(idEntity e, idEventArg<idEntity> activator) {
-            e.ActivateTargets(activator.value);
-        }
-
         private void Event_NumTargets() {
             idThread.ReturnFloat(targets.Num());
-        }
-
-        private static void Event_GetTarget(idEntity e, idEventArg<Float> index) {
-            int i;
-
-            i = index.value.intValue();
-            if ((i < 0) || i >= e.targets.Num()) {
-                idThread.ReturnEntity(null);
-            } else {
-                idThread.ReturnEntity(e.targets.oGet(i).GetEntity());
-            }
-        }
-
-        private static void Event_RandomTarget(idEntity e, final idEventArg<String> ignor) {
-            int num;
-            idEntity ent;
-            int i;
-            int ignoreNum;
-            final String ignore = ignor.value;
-
-            e.RemoveNullTargets();
-            if (0 == e.targets.Num()) {
-                idThread.ReturnEntity(null);
-                return;
-            }
-
-            ignoreNum = -1;
-            if (ignore != null && (!ignore.isEmpty()) && (e.targets.Num() > 1)) {
-                for (i = 0; i < e.targets.Num(); i++) {
-                    ent = e.targets.oGet(i).GetEntity();
-                    if (ent != null && (ent.name.equals(ignore))) {
-                        ignoreNum = i;
-                        break;
-                    }
-                }
-            }
-
-            if (ignoreNum >= 0) {
-                num = gameLocal.random.RandomInt(e.targets.Num() - 1);
-                if (num >= ignoreNum) {
-                    num++;
-                }
-            } else {
-                num = gameLocal.random.RandomInt(e.targets.Num());
-            }
-
-            ent = e.targets.oGet(num).GetEntity();
-            idThread.ReturnEntity(ent);
-        }
-
-        private static void Event_Bind(idEntity e, idEventArg<idEntity> master) {
-            e.Bind(master.value, true);
-        }
-
-        private static void Event_BindPosition(idEntity e, idEventArg<idEntity> master) {
-            e.Bind(master.value, false);
-        }
-
-        private static void Event_BindToJoint(idEntity e, idEventArg<idEntity> master, final idEventArg<String> jointname, idEventArg<Float> orientated) {
-            e.BindToJoint(master.value, jointname.value, (orientated.value != 0));
         }
 
         private void Event_Unbind() {
@@ -3791,22 +3907,22 @@ public class Entity {
                     if (spawnArgs.GetString("bindToJoint", "", joint) && joint[0] != null) {//TODO:check if java actually compiles them in the right order.
                         parentAnimator = parent.GetAnimator();
                         if (NOT(parentAnimator)) {
-                            gameLocal.Error("Cannot bind to joint '%s' on '%s'.  Entity does not support skeletal models.", joint[0], name);
+                            idGameLocal.Error("Cannot bind to joint '%s' on '%s'.  Entity does not support skeletal models.", joint[0], name);
                         }
                         bindJoint = parentAnimator.GetJointHandle(joint[0]);
                         if (bindJoint == INVALID_JOINT) {
-                            gameLocal.Error("Joint '%s' not found for bind on '%s'", joint[0], name);
+                            idGameLocal.Error("Joint '%s' not found for bind on '%s'", joint[0], name);
                         }
 
                         // bind it relative to a specific anim
                         if ((parent.spawnArgs.GetString("bindanim", "", bindanim) || parent.spawnArgs.GetString("anim", "", bindanim)) && bindanim[0] != null) {
                             animNum = parentAnimator.GetAnim(bindanim[0]);
                             if (0 == animNum) {
-                                gameLocal.Error("Anim '%s' not found for bind on '%s'", bindanim[0], name);
+                                idGameLocal.Error("Anim '%s' not found for bind on '%s'", bindanim[0], name);
                             }
                             anim = parentAnimator.GetAnim(animNum);
                             if (NOT(anim)) {
-                                gameLocal.Error("Anim '%s' not found for bind on '%s'", bindanim[0], name);
+                                idGameLocal.Error("Anim '%s' not found for bind on '%s'", bindanim[0], name);
                             }
 
                             // make sure parent's render origin has been set
@@ -3832,48 +3948,6 @@ public class Entity {
             }
         }
 
-        private static void Event_SetOwner(idEntity e, idEventArg<idEntity> owner) {
-            int i;
-
-            for (i = 0; i < e.GetPhysics().GetNumClipModels(); i++) {
-                e.GetPhysics().GetClipModel(i).SetOwner(owner.value);
-            }
-        }
-
-        private static void Event_SetModel(idEntity e, final idEventArg<String> modelname) {
-            e.SetModel(modelname.value);
-        }
-
-        private static void Event_SetSkin(idEntity e, final idEventArg<String> skinname) {
-            e.renderEntity.customSkin = declManager.FindSkin(skinname.value);
-            e.UpdateVisuals();
-        }
-
-        private static void Event_GetShaderParm(idEntity e, idEventArg<Integer> parm) {
-            final int parmnum = parm.value;
-            if ((parmnum < 0) || (parmnum >= MAX_ENTITY_SHADER_PARMS)) {
-                gameLocal.Error("shader parm index (%d) out of range", parmnum);
-            }
-
-            idThread.ReturnFloat(e.renderEntity.shaderParms[parmnum]);
-        }
-
-        private static void Event_SetShaderParm(idEntity e, idEventArg<Integer> parmnum, idEventArg<Float> value) {
-            e.SetShaderParm(parmnum.value, value.value);
-        }
-
-        private static void Event_SetShaderParms(idEntity e, idEventArg<Float> parm0, idEventArg<Float> parm1, idEventArg<Float> parm2, idEventArg<Float> parm3) {
-            e.renderEntity.shaderParms[SHADERPARM_RED] = parm0.value;
-            e.renderEntity.shaderParms[SHADERPARM_GREEN] = parm1.value;
-            e.renderEntity.shaderParms[SHADERPARM_BLUE] = parm2.value;
-            e.renderEntity.shaderParms[SHADERPARM_ALPHA] = parm3.value;
-            e.UpdateVisuals();
-        }
-
-        private static void Event_SetColor(idEntity e, idEventArg<Float> red, idEventArg<Float> green, idEventArg<Float> blue) {
-            e.SetColor(red.value, green.value, blue.value);
-        }
-
         private void Event_GetColor() {
             idVec3 out = new idVec3();
 
@@ -3893,49 +3967,12 @@ public class Entity {
             Show();
         }
 
-        private static void Event_CacheSoundShader(idEntity e, final idEventArg<String> soundName) {
-            declManager.FindSound(soundName.value);
-        }
-
-        private static void Event_StartSoundShader(idEntity e, final idEventArg<String> soundName, idEventArg<Integer> channel) {
-            int[] length = new int[1];
-
-            e.StartSoundShader(declManager.FindSound(soundName.value), /*(s_channelType)*/ channel.value, 0, false, length);
-            idThread.ReturnFloat(MS2SEC(length[0]));
-        }
-
-        private static void Event_StopSound(idEntity e, idEventArg<Integer> channel, idEventArg<Integer> netSync) {
-            e.StopSound(channel.value, (netSync.value != 0));
-        }
-
-        private static void Event_StartSound(idEntity e, final idEventArg<String> soundName, idEventArg<Integer> channel, idEventArg<Integer> netSync) {
-            int[] time = new int[1];
-
-            e.StartSound(soundName.value, /*(s_channelType)*/ channel.value, 0, (netSync.value != 0), time);
-            idThread.ReturnFloat(MS2SEC(time[0]));
-        }
-
-        private static void Event_FadeSound(idEntity e, idEventArg<Integer> channel, idEventArg<Float> to, idEventArg<Float> over) {
-            if (e.refSound.referenceSound != null) {
-                e.refSound.referenceSound.FadeSound(channel.value, to.value, over.value);
-            }
-        }
-
         private void Event_GetWorldOrigin() {
             idThread.ReturnVector(GetPhysics().GetOrigin());
         }
 
-        private static void Event_SetWorldOrigin(idEntity e, final idEventArg<idVec3> org) {
-            idVec3 neworg = e.GetLocalCoordinates(org.value);
-            e.SetOrigin(neworg);
-        }
-
         private void Event_GetOrigin() {
             idThread.ReturnVector(GetLocalCoordinates(GetPhysics().GetOrigin()));
-        }
-
-        private static void Event_SetOrigin(idEntity e, final idEventArg<idVec3> org) {
-            e.SetOrigin(org.value);
         }
 
         private void Event_GetAngles() {
@@ -3943,28 +3980,12 @@ public class Entity {
             idThread.ReturnVector(new idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2)));
         }
 
-        private static void Event_SetAngles(idEntity e, final idEventArg<idAngles> ang) {
-            e.SetAngles(ang.value);
-        }
-
-        private static void Event_SetLinearVelocity(idEntity e, final idEventArg<idVec3> velocity) {
-            e.GetPhysics().SetLinearVelocity(velocity.value);
-        }
-
         private void Event_GetLinearVelocity() {
             idThread.ReturnVector(GetPhysics().GetLinearVelocity());
         }
 
-        private static void Event_SetAngularVelocity(idEntity e, final idEventArg<idVec3> velocity) {
-            e.GetPhysics().SetAngularVelocity(velocity.value);
-        }
-
         private void Event_GetAngularVelocity() {
             idThread.ReturnVector(GetPhysics().GetAngularVelocity());
-        }
-
-        private static void Event_SetSize(idEntity e, final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs) {
-            e.GetPhysics().SetClipBox(new idBounds(mins.value, maxs.value), 1.0f);
         }
 
         private void Event_GetSize() {
@@ -3980,110 +4001,6 @@ public class Entity {
 
         private void Event_GetMaxs() {
             idThread.ReturnVector(GetPhysics().GetBounds().oGet(1));
-        }
-
-        private static void Event_Touches(idEntity e, idEventArg<idEntity> ent) {
-            if (NOT(ent.value)) {
-                idThread.ReturnInt(false);
-                return;
-            }
-
-            final idBounds myBounds = e.GetPhysics().GetAbsBounds();
-            final idBounds entBounds = ent.value.GetPhysics().GetAbsBounds();
-
-            idThread.ReturnInt(myBounds.IntersectsBounds(entBounds));
-        }
-
-        private static void Event_SetGuiParm(idEntity e, final idEventArg<String> k, final idEventArg<String> v) {
-            final String key = k.value;
-            final String val = v.value;
-            for (int i = 0; i < MAX_RENDERENTITY_GUI; i++) {
-                if (e.renderEntity.gui[i] != null) {
-                    if (idStr.Icmpn(key, "gui_", 4) == 0) {
-                        e.spawnArgs.Set(key, val);
-                    }
-                    e.renderEntity.gui[i].SetStateString(key, val);
-                    e.renderEntity.gui[i].StateChanged(gameLocal.time);
-                }
-            }
-        }
-
-        private static void Event_SetGuiFloat(idEntity e, final idEventArg<String> key, idEventArg<Float> f) {
-            for (int i = 0; i < MAX_RENDERENTITY_GUI; i++) {
-                if (e.renderEntity.gui[i] != null) {
-                    e.renderEntity.gui[i].SetStateString(key.value, va("%f", f.value));
-                    e.renderEntity.gui[i].StateChanged(gameLocal.time);
-                }
-            }
-        }
-
-        private static void Event_GetNextKey(idEntity e, final idEventArg<String> prefix, final idEventArg<String> lastMatch) {
-            final idKeyValue kv;
-            final idKeyValue previous;
-
-            if (!lastMatch.value.isEmpty()) {
-                previous = e.spawnArgs.FindKey(lastMatch.value);
-            } else {
-                previous = null;
-            }
-
-            kv = e.spawnArgs.MatchPrefix(prefix.value, previous);
-            if (null == kv) {
-                idThread.ReturnString("");
-            } else {
-                idThread.ReturnString(kv.GetKey());
-            }
-        }
-
-        private static void Event_SetKey(idEntity e, final idEventArg<String> key, final idEventArg<String> value) {
-            e.spawnArgs.Set(key.value, value.value);
-        }
-
-        private static void Event_GetKey(idEntity e, final idEventArg<String> key) {
-            String[] value = new String[1];
-
-            e.spawnArgs.GetString(key.value, "", value);
-            idThread.ReturnString(value[0]);
-        }
-
-        private static void Event_GetIntKey(idEntity e, final idEventArg<String> key) {
-            int[] value = new int[1];
-
-            e.spawnArgs.GetInt(key.value, "0", value);
-
-            // scripts only support floats
-            idThread.ReturnFloat(value[0]);
-        }
-
-        private static void Event_GetFloatKey(idEntity e, final idEventArg<String> key) {
-            float[] value = new float[1];
-
-            e.spawnArgs.GetFloat(key.value, "0", value);
-            idThread.ReturnFloat(value[0]);
-        }
-
-        private static void Event_GetVectorKey(idEntity e, final idEventArg<String> key) {
-            idVec3 value = new idVec3();
-
-            e.spawnArgs.GetVector(key.value, "0 0 0", value);
-            idThread.ReturnVector(value);
-        }
-
-        private static void Event_GetEntityKey(idEntity e, final idEventArg<String> key) {
-            idEntity ent;
-            String[] entName = new String[1];
-
-            if (!e.spawnArgs.GetString(key.value, null, entName)) {
-                idThread.ReturnEntity(null);
-                return;
-            }
-
-            ent = gameLocal.FindEntity(entName[0]);
-            if (null == ent) {
-                gameLocal.Warning("Couldn't find entity '%s' specified in '%s' key in entity '%s'", entName, key, e.name);
-            }
-
-            idThread.ReturnEntity(ent);
         }
 
         private void Event_RestorePosition() {
@@ -4145,25 +4062,6 @@ public class Entity {
             UpdateVisuals();
         }
 
-        private static void Event_DistanceTo(idEntity e, idEventArg<idEntity> ent) {
-            if (null == ent.value) {
-                // just say it's really far away
-                idThread.ReturnFloat(MAX_WORLD_SIZE);
-            } else {
-                float dist = e.GetPhysics().GetOrigin().oMinus(ent.value.GetPhysics().GetOrigin()).LengthFast();
-                idThread.ReturnFloat(dist);
-            }
-        }
-
-        private static void Event_DistanceToPoint(idEntity e, final idEventArg<idVec3> point) {
-            float dist = e.GetPhysics().GetOrigin().oMinus(point.value).LengthFast();
-            idThread.ReturnFloat(dist);
-        }
-
-        private static void Event_StartFx(idEntity e, final idEventArg<String> fx) {
-            idEntityFx.StartFx(fx.value, null, null, e, true);
-        }
-
         private void Event_WaitFrame() {
             idThread thread;
 
@@ -4177,7 +4075,7 @@ public class Entity {
             idThread thread = idThread.CurrentThread();
 
             if (null == thread) {
-                gameLocal.Error("Event 'wait' called from outside thread");
+                idGameLocal.Error("Event 'wait' called from outside thread");
             }
 
             thread.WaitSec(time.value);
@@ -4187,11 +4085,7 @@ public class Entity {
             function_t func;
 
             func = scriptObject.GetFunction(name.value);
-            if (func != null) {
-                idThread.ReturnInt(true);
-            } else {
-                idThread.ReturnInt(false);
-            }
+            idThread.ReturnInt(func != null);
         }
 
         private void Event_CallFunction(final idEventArg<String> _funcName) {
@@ -4201,19 +4095,19 @@ public class Entity {
 
             thread = idThread.CurrentThread();
             if (null == thread) {
-                gameLocal.Error("Event 'callFunction' called from outside thread");
+                idGameLocal.Error("Event 'callFunction' called from outside thread");
             }
 
             func = scriptObject.GetFunction(funcName);
             if (NOT(func)) {
-                gameLocal.Error("Unknown function '%s' in '%s'", funcName, scriptObject.GetTypeName());
+                idGameLocal.Error("Unknown function '%s' in '%s'", funcName, scriptObject.GetTypeName());
             }
 
             if (func.type.NumParameters() != 1) {
-                gameLocal.Error("Function '%s' has the wrong number of parameters for 'callFunction'", funcName);
+                idGameLocal.Error("Function '%s' has the wrong number of parameters for 'callFunction'", funcName);
             }
             if (!scriptObject.GetTypeDef().Inherits(func.type.GetParmType(0))) {
-                gameLocal.Error("Function '%s' is the wrong type for 'callFunction'", funcName);
+                idGameLocal.Error("Function '%s' is the wrong type for 'callFunction'", funcName);
             }
 
             // function args will be invalid after this call
@@ -4223,6 +4117,83 @@ public class Entity {
         private void Event_SetNeverDormant(idEventArg<Integer> enable) {
             fl.neverDormant = (enable.value != 0);
             dormantStart = 0;
+        }
+
+        public static class entityFlags_s implements TempDump.SERiAL {
+
+            public boolean bindOrientated;      // if true both the master orientation is used for binding
+            public boolean forcePhysicsUpdate;  // if true always update from the physics whether the object moved or not
+            public boolean hasAwakened;         // before a monster has been awakened the first time, use full PVS for dormant instead of area-connected
+            public boolean hidden;              // if true this entity is not visible
+            public boolean isDormant;           // if true the entity is dormant
+            public boolean networkSync;         // if true the entity is synchronized over the network
+            public boolean neverDormant;        // if true the entity never goes dormant
+            public boolean noknockback;         // if true no knockback from hits
+            public boolean notarget;            // if true never attack or target this entity
+            public boolean selected;            // if true the entity is selected for editing
+            public boolean solidForTeam;        // if true this entity is considered solid when a physics team mate pushes entities
+            public boolean takedamage;          // if true this entity can be damaged
+
+            @Override
+            public ByteBuffer AllocBuffer() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void Read(ByteBuffer buffer) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public ByteBuffer Write() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        }
+
+        /*
+         ================
+         idEntity::ModelCallback
+
+         NOTE: may not change the game state whatsoever!
+         ================
+         */
+        public static class ModelCallback extends deferredEntityCallback_t {
+
+            public static final deferredEntityCallback_t instance = new ModelCallback();
+
+            private ModelCallback() {
+            }
+
+            public static deferredEntityCallback_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public boolean run(renderEntity_s e, renderView_s v) {
+                idEntity ent;
+
+                ent = gameLocal.entities[e.entityNum];
+                if (null == ent) {
+                    idGameLocal.Error("idEntity::ModelCallback: callback with NULL game entity");
+                }
+
+                return ent.UpdateRenderEntity(e, v);
+            }
+
+            @Override
+            public ByteBuffer AllocBuffer() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void Read(ByteBuffer buffer) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public ByteBuffer Write() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
         }
     }
 
@@ -4236,11 +4207,11 @@ public class Entity {
     public static class damageEffect_s {
 
         int/*jointHandle_t*/ jointNum;
-        idVec3         localOrigin;
-        idVec3         localNormal;
-        int            time;
-        idDeclParticle type;
+        idVec3 localNormal;
+        idVec3 localOrigin;
         damageEffect_s next;
+        int time;
+        idDeclParticle type;
     }
 
     /*
@@ -4251,7 +4222,11 @@ public class Entity {
      ===============================================================================
      */
     public static class idAnimatedEntity extends idEntity {
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        // enum {
+        public static final int EVENT_ADD_DAMAGE_EFFECT = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_MAXEVENTS = EVENT_ADD_DAMAGE_EFFECT + 1;
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_GetJointHandle, (eventCallback_t1<idAnimatedEntity>) idAnimatedEntity::Event_GetJointHandle);
@@ -4263,12 +4238,9 @@ public class Entity {
             eventCallbacks.put(EV_GetJointAngle, (eventCallback_t1<idAnimatedEntity>) idAnimatedEntity::Event_GetJointAngle);
         }
 
-        // enum {
-        public static final int EVENT_ADD_DAMAGE_EFFECT = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_MAXEVENTS         = EVENT_ADD_DAMAGE_EFFECT + 1;
         // };
         //
-        protected idAnimator     animator;
+        protected idAnimator animator;
         protected damageEffect_s damageEffects;
         //
         //
@@ -4287,6 +4259,99 @@ public class Entity {
         }
 
 //							// ~idAnimatedEntity();
+
+        /*
+         ================
+         idAnimatedEntity::Event_GetJointHandle
+
+         looks up the number of the specified joint.  returns INVALID_JOINT if the joint is not found.
+         ================
+         */
+        private static void Event_GetJointHandle(idAnimatedEntity e, final idEventArg<String> jointname) {
+//            jointHandle_t joint = new jointHandle_t();
+            int joint;
+
+            joint = e.animator.GetJointHandle(jointname.value);
+            idThread.ReturnInt(joint);
+        }
+
+        /*
+         ================
+         idAnimatedEntity::Event_ClearJoint
+
+         removes any custom transforms on the specified joint
+         ================
+         */
+        private static void Event_ClearJoint(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
+            e.animator.ClearJoint(jointnum.value);
+        }
+
+        /*
+         ================
+         idAnimatedEntity::Event_SetJointPos
+
+         modifies the position of the joint based on the transform type
+         ================
+         */
+        private static void Event_SetJointPos(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum, idEventArg<jointModTransform_t> transform_type, final idEventArg<idVec3> pos) {
+            e.animator.SetJointPos(jointnum.value, transform_type.value, pos.value);
+        }
+
+        /*
+         ================
+         idAnimatedEntity::Event_SetJointAngle
+
+         modifies the orientation of the joint based on the transform type
+         ================
+         */
+        private static void Event_SetJointAngle(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum, idEventArg<Integer>/*jointModTransform_t*/ transform_type, final idEventArg<idVec3> angles) {
+            idMat3 mat;
+
+            mat = angles.value.ToMat3();
+            e.animator.SetJointAxis(jointnum.value, jointModTransform_t.values()[transform_type.value], mat);
+        }
+
+        /*
+         ================
+         idAnimatedEntity::Event_GetJointPos
+
+         returns the position of the joint in worldspace
+         ================
+         */
+        private static void Event_GetJointPos(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
+            idVec3 offset = new idVec3();
+            idMat3 axis = new idMat3();
+
+            if (!e.GetJointWorldTransform(jointnum.value, gameLocal.time, offset, axis)) {
+                gameLocal.Warning("Joint # %d out of range on entity '%s'", jointnum, e.name);
+            }
+
+            idThread.ReturnVector(offset);
+        }
+
+        /*
+         ================
+         idAnimatedEntity::Event_GetJointAngle
+
+         returns the orientation of the joint in worldspace
+         ================
+         */
+        private static void Event_GetJointAngle(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
+            idVec3 offset = new idVec3();
+            idMat3 axis = new idMat3();
+
+            if (!e.GetJointWorldTransform(jointnum.value, gameLocal.time, offset, axis)) {
+                gameLocal.Warning("Joint # %d out of range on entity '%s'", jointnum, e.name);
+            }
+
+            idAngles ang = axis.ToAngles();
+            idVec3 vec = new idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2));
+            idThread.ReturnVector(vec);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         /*
          ================
@@ -4623,22 +4688,6 @@ public class Entity {
 //            return false;
         }
 
-
-        /*
-         ================
-         idAnimatedEntity::Event_GetJointHandle
-
-         looks up the number of the specified joint.  returns INVALID_JOINT if the joint is not found.
-         ================
-         */
-        private static void Event_GetJointHandle(idAnimatedEntity e, final idEventArg<String> jointname) {
-//            jointHandle_t joint = new jointHandle_t();
-            int joint;
-
-            joint = e.animator.GetJointHandle(jointname.value);
-            idThread.ReturnInt(joint);
-        }
-
         /*
          ================
          idAnimatedEntity::Event_ClearAllJoints
@@ -4648,81 +4697,6 @@ public class Entity {
          */
         private void Event_ClearAllJoints() {
             animator.ClearAllJoints();
-        }
-
-        /*
-         ================
-         idAnimatedEntity::Event_ClearJoint
-
-         removes any custom transforms on the specified joint
-         ================
-         */
-        private static void Event_ClearJoint(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
-            e.animator.ClearJoint(jointnum.value);
-        }
-
-        /*
-         ================
-         idAnimatedEntity::Event_SetJointPos
-
-         modifies the position of the joint based on the transform type
-         ================
-         */
-        private static void Event_SetJointPos(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum, idEventArg<jointModTransform_t> transform_type, final idEventArg<idVec3> pos) {
-            e.animator.SetJointPos(jointnum.value, transform_type.value, pos.value);
-        }
-
-        /*
-         ================
-         idAnimatedEntity::Event_SetJointAngle
-
-         modifies the orientation of the joint based on the transform type
-         ================
-         */
-        private static void Event_SetJointAngle(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum, idEventArg<Integer>/*jointModTransform_t*/ transform_type, final idEventArg<idVec3> angles) {
-            idMat3 mat;
-
-            mat = angles.value.ToMat3();
-            e.animator.SetJointAxis(jointnum.value, jointModTransform_t.values()[transform_type.value], mat);
-        }
-
-        /*
-         ================
-         idAnimatedEntity::Event_GetJointPos
-
-         returns the position of the joint in worldspace
-         ================
-         */
-        private static void Event_GetJointPos(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
-            idVec3 offset = new idVec3();
-            idMat3 axis = new idMat3();
-
-            if (!e.GetJointWorldTransform(jointnum.value, gameLocal.time, offset, axis)) {
-                gameLocal.Warning("Joint # %d out of range on entity '%s'", jointnum, e.name);
-            }
-
-            idThread.ReturnVector(offset);
-        }
-
-
-        /*
-         ================
-         idAnimatedEntity::Event_GetJointAngle
-
-         returns the orientation of the joint in worldspace
-         ================
-         */
-        private static void Event_GetJointAngle(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
-            idVec3 offset = new idVec3();
-            idMat3 axis = new idMat3();
-
-            if (!e.GetJointWorldTransform(jointnum.value, gameLocal.time, offset, axis)) {
-                gameLocal.Warning("Joint # %d out of range on entity '%s'", jointnum, e.name);
-            }
-
-            idAngles ang = axis.ToAngles();
-            idVec3 vec = new idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2));
-            idThread.ReturnVector(vec);
         }
 
         /**
@@ -4773,43 +4747,6 @@ public class Entity {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    }
-
-    /*
-     ================
-     UpdateGuiParms
-     ================
-     */
-    static void UpdateGuiParms(idUserInterface gui, final idDict args) {
-        if (gui == null || args == null) {
-            return;
-        }
-        idKeyValue kv = args.MatchPrefix("gui_parm", null);
-        while (kv != null) {
-            gui.SetStateString(kv.GetKey().toString(), kv.GetValue().toString());
-            kv = args.MatchPrefix("gui_parm", kv);
-        }
-        gui.SetStateBool("noninteractive", args.GetBool("gui_noninteractive"));
-        gui.StateChanged(gameLocal.time);
-    }
-
-    /*
-     ================
-     AddRenderGui
-     ================
-     */
-    public static idUserInterface AddRenderGui(final String name, final idDict args) {
-        idUserInterface gui;
-
-        final idKeyValue kv = args.MatchPrefix("gui_parm", null);
-        gui = uiManager.FindGui(name, true, (kv != null));
-        UpdateGuiParms(gui, args);
-
-        return gui;
     }
 
 }

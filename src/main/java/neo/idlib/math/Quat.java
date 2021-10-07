@@ -15,18 +15,18 @@ public class Quat {
 
     /**
      * ===============================================================================
-     *
+     * <p>
      * Quaternion
-     *
+     * <p>
      * ===============================================================================
      */
     public static class idQuat {
 //        public:
 
+        public float w;
         public float x;//TODO:prime candidate to turn into an array.
         public float y;
         public float z;
-        public float w;
 
         public idQuat() {
         }
@@ -45,14 +45,23 @@ public class Quat {
             this.w = quat.w;
         }
 
+        public static idQuat oMultiply(final float a, final idQuat b) {
+            return b.oMultiply(a);
+        }
+//
+//	float			operator[]( int index ) const;
+
+        public static idVec3 oMultiply(final idVec3 a, final idQuat b) {
+            return b.oMultiply(a);
+        }
+//	float &			operator[]( int index );
+
         public void Set(float x, float y, float z, float w) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.w = w;
         }
-//
-//	float			operator[]( int index ) const;
 
         public float oGet(final int index) {
             switch (index) {
@@ -66,7 +75,6 @@ public class Quat {
                     return w;
             }
         }
-//	float &			operator[]( int index );
 
         public void oSet(final int index, final float value) {
             switch (index) {
@@ -158,6 +166,7 @@ public class Quat {
         public idQuat oMultiply(float a) {
             return new idQuat(x * a, y * a, z * a, w * a);
         }
+//
 
         public idQuat oMulSet(final idQuat a) {
             this.oSet(this.oMultiply(a));
@@ -175,15 +184,6 @@ public class Quat {
         }
 //
 
-        public static idQuat oMultiply(final float a, final idQuat b) {
-            return b.oMultiply(a);
-        }
-
-        public static idVec3 oMultiply(final idVec3 a, final idQuat b) {
-            return b.oMultiply(a);
-        }
-//
-
         public boolean Compare(final idQuat a) {// exact compare, no epsilon
             return ((x == a.x) && (y == a.y) && (z == a.z) && (w == a.w));
         }
@@ -198,13 +198,10 @@ public class Quat {
             if (idMath.Fabs(z - a.z) > epsilon) {
                 return false;
             }
-            if (idMath.Fabs(w - a.w) > epsilon) {
-                return false;
-            }
-            return true;
+            return !(idMath.Fabs(w - a.w) > epsilon);
         }
 
-//public 	bool			operator==(	const idQuat &a ) const;					// exact compare, no epsilon
+        //public 	bool			operator==(	const idQuat &a ) const;					// exact compare, no epsilon
 //public 	bool			operator!=(	const idQuat &a ) const;					// exact compare, no epsilon
         @Override
         public int hashCode() {
@@ -234,10 +231,7 @@ public class Quat {
             if (Float.floatToIntBits(this.z) != Float.floatToIntBits(other.z)) {
                 return false;
             }
-            if (Float.floatToIntBits(this.w) != Float.floatToIntBits(other.w)) {
-                return false;
-            }
-            return true;
+            return Float.floatToIntBits(this.w) == Float.floatToIntBits(other.w);
         }
 //
 
@@ -324,17 +318,17 @@ public class Quat {
             wy = w * y2;
             wz = w * z2;
 
-            mat.oSet(0, 0, 1.0f - ( yy + zz ));
+            mat.oSet(0, 0, 1.0f - (yy + zz));
             mat.oSet(0, 1, xy - wz);
             mat.oSet(0, 2, xz + wy);
 
             mat.oSet(1, 0, xy + wz);
-            mat.oSet(1, 1, 1.0f - ( xx + zz ));
+            mat.oSet(1, 1, 1.0f - (xx + zz));
             mat.oSet(1, 2, yz - wx);
 
             mat.oSet(2, 0, xz - wy);
             mat.oSet(2, 1, yz + wx);
-            mat.oSet(2, 2, 1.0f - ( xx + yy ));
+            mat.oSet(2, 2, 1.0f - (xx + yy));
 
             return mat;
         }
@@ -360,7 +354,7 @@ public class Quat {
             return vec.oMultiply(idMath.ACos(w));
         }
 
-//public 	const float *	ToFloatPtr( void ) const;
+        //public 	const float *	ToFloatPtr( void ) const;
         @Deprecated
         public float[] ToFloatPtr() {
             return new float[]{x, y, z, w};//TODO:array!?
@@ -371,9 +365,10 @@ public class Quat {
         }
 
 //
+
         /**
          * ===================== idQuat::Slerp
-         *
+         * <p>
          * Spherical linear interpolation between two quaternions.
          * =====================
          */
@@ -425,13 +420,13 @@ public class Quat {
             this.oSet(from.oMultiply(scale0).oPlus(temp.oMultiply(scale1)));
             return this;
         }
-    };
+    }
 
     /**
      * ===============================================================================
-     *
+     * <p>
      * Compressed quaternion
-     *
+     * <p>
      * ===============================================================================
      */
     public static class idCQuat {
@@ -459,7 +454,7 @@ public class Quat {
         }
 //
 
-//	float			operator[]( int index ) const;
+        //	float			operator[]( int index ) const;
         public float oGet(final int index) {
             switch (index) {
                 default:
@@ -471,7 +466,7 @@ public class Quat {
             }
         }
 
-//	float &			operator[]( int index );
+        //	float &			operator[]( int index );
         public void oSet(final int index, final float value) {
             switch (index) {
                 default:
@@ -498,13 +493,10 @@ public class Quat {
             if (idMath.Fabs(y - a.y) > epsilon) {
                 return false;
             }
-            if (idMath.Fabs(z - a.z) > epsilon) {
-                return false;
-            }
-            return true;
+            return !(idMath.Fabs(z - a.z) > epsilon);
         }
 
-//	bool			operator==(	const idCQuat &a ) const;					// exact compare, no epsilon
+        //	bool			operator==(	const idCQuat &a ) const;					// exact compare, no epsilon
 //	bool			operator!=(	const idCQuat &a ) const;					// exact compare, no epsilon
         @Override
         public int hashCode() {
@@ -530,10 +522,7 @@ public class Quat {
             if (Float.floatToIntBits(this.y) != Float.floatToIntBits(other.y)) {
                 return false;
             }
-            if (Float.floatToIntBits(this.z) != Float.floatToIntBits(other.z)) {
-                return false;
-            }
-            return true;
+            return Float.floatToIntBits(this.z) == Float.floatToIntBits(other.z);
         }
 //
 
@@ -571,5 +560,6 @@ public class Quat {
         public String ToString(int precision) {
             return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision);
         }
-    };
+    }
+
 }

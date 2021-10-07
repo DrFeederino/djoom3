@@ -1,11 +1,12 @@
 package neo.idlib.math;
 
-import static java.lang.Math.floor;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
+
+import static java.lang.Math.floor;
+import static neo.idlib.math.Math_h.DEG2RAD;
 
 /**
  *
@@ -14,12 +15,12 @@ public class Rotation {
 
     public static class idRotation {
 
-        //private:
-        public idVec3  origin;      // origin of rotation
-        public idVec3  vec;         // normalized vector to rotate around
-        public float   angle;       // angle of rotation in degrees
-        public idMat3  axis;        // rotation axis
+        public float angle;       // angle of rotation in degrees
+        public idMat3 axis;        // rotation axis
         public boolean axisValid;   // true if rotation axis is valid
+        //private:
+        public idVec3 origin;      // origin of rotation
+        public idVec3 vec;         // normalized vector to rotate around
         //
         //
 
@@ -123,7 +124,7 @@ public class Rotation {
             return ToMat3().ToAngles();
         }
 
-//	idQuat				ToQuat( void ) const;
+        //	idQuat				ToQuat( void ) const;
         public idMat3 ToMat3() {
             float wx, wy, wz;
             float xx, yy, yz;
@@ -178,7 +179,7 @@ public class Rotation {
 //	idMat4				ToMat4( void ) const;
 
         public idVec3 ToAngularVelocity() {
-            return vec.oMultiply((float) DEG2RAD(angle));
+            return vec.oMultiply(DEG2RAD(angle));
         }
 
         public void RotatePoint(idVec3 point) {
@@ -206,5 +207,6 @@ public class Rotation {
             angle = other.angle;
             axisValid = other.axisValid;
         }
-    };
+    }
+
 }

@@ -1,54 +1,29 @@
 package neo.Tools.Compilers.AAS;
 
-import static java.lang.Math.abs;
-import static neo.TempDump.SNOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.itob;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_CLUSTERPORTAL;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_WATER;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_CROUCH;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_FLOOR;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_LADDER;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_LIQUID;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_FLY;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
-import static neo.Tools.Compilers.AAS.AASFile.FACE_FLOOR;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_BARRIERJUMP;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_FLY;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_SWIM;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WALK;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WALKOFFLEDGE;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WATERJUMP;
-import neo.Tools.Compilers.AAS.AASFile.aasArea_s;
-import neo.Tools.Compilers.AAS.AASFile.aasEdge_s;
-import neo.Tools.Compilers.AAS.AASFile.aasFace_s;
-import neo.Tools.Compilers.AAS.AASFile.aasTrace_s;
-import neo.Tools.Compilers.AAS.AASFile.idReachability;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_BarrierJump;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_Fly;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_Swim;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_Walk;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_WalkOffLedge;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_WaterJump;
+import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.Tools.Compilers.AAS.AASFile_local.idAASFileLocal;
-import static neo.framework.Common.common;
 import neo.idlib.MapFile.idMapFile;
-import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.INTSIGNBITSET;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
+
+import static java.lang.Math.abs;
+import static neo.TempDump.*;
+import static neo.Tools.Compilers.AAS.AASFile.*;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Math_h.INTSIGNBITNOTSET;
+import static neo.idlib.math.Math_h.INTSIGNBITSET;
 
 /**
  *
  */
 public class AASReach {
 
-    static final float INSIDEUNITS           = 2.0f;
-    static final float INSIDEUNITS_WALKEND   = 0.5f;
+    static final float INSIDEUNITS = 2.0f;
+    static final float INSIDEUNITS_FLYEND = 0.5f;
+    static final float INSIDEUNITS_SWIMEND = 0.5f;
+    static final float INSIDEUNITS_WALKEND = 0.5f;
     static final float INSIDEUNITS_WALKSTART = 0.1f;
-    static final float INSIDEUNITS_SWIMEND   = 0.5f;
-    static final float INSIDEUNITS_FLYEND    = 0.5f;
     static final float INSIDEUNITS_WATERJUMP = 15.0f;
 
     /*
@@ -60,11 +35,11 @@ public class AASReach {
      */
     static class idAASReach {
 
-        private idMapFile      mapFile;
+        private boolean allowFlyReachabilities;
+        private boolean allowSwimReachabilities;
         private idAASFileLocal file;
-        private int            numReachabilities;
-        private boolean        allowSwimReachabilities;
-        private boolean        allowFlyReachabilities;
+        private idMapFile mapFile;
+        private int numReachabilities;
 //
 //
 
@@ -617,9 +592,9 @@ public class AASReach {
                                     water_bestArea1FloorEdgeNum = edge1Num;
                                     water_bestArea2FloorEdgeNum = edge2Num;
                                     water_bestFace1 = floorFace1;
-                                    water_bestStart = start;	// best start point in area1
-                                    water_bestNormal = normal;	// normal is pointing into area2
-                                    water_bestEnd = end;		// best point towards area2
+                                    water_bestStart = start;    // best start point in area1
+                                    water_bestNormal = normal;    // normal is pointing into area2
+                                    water_bestEnd = end;        // best point towards area2
                                 }
                             }
                         }
@@ -916,5 +891,6 @@ public class AASReach {
                 }
             }
         }
-    };
+    }
+
 }

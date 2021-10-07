@@ -7,9 +7,6 @@ import java.security.NoSuchAlgorithmException;
 
 import static neo.idlib.Lib.idException;
 
-/**
- *
- */
 public class MD4 {
 
     private static final boolean MD4 = true;
@@ -35,29 +32,14 @@ public class MD4 {
     }
 
     public static String MD4_BlockChecksum(final byte[] data, int length) {
-//        final StringBuffer hash = new StringBuffer(16);
-//        final MessageDigest messageDigest = sun.security.provider.MD4.getInstance();
-//
-////        if (data instanceof byte[]) {
-//        messageDigest.update(data);
-//        for (byte b : messageDigest.digest()) {
-//            hash.append(String.format("%02d", 0xff & b));
-//        }
-
-//        } else if (data instanceof short[]) {
-//        } else if (data instanceof char[]) {
-//        } else if (data instanceof int[]) {
-//        } else if (data instanceof long[]) {
-//        }
-        return BlockChecksum(ByteBuffer.wrap(data), length, MD4);//TODO: make sure checksums match the original c++ rsa version.
+        return BlockChecksum(ByteBuffer.wrap(data), length, MD4); //TODO: make sure checksums match the original c++ rsa version.
     }
 
     static String BlockChecksum(final ByteBuffer data, final int length, final boolean MD4) {
         int hash = 0;
-
         try {
             final int currentPosition = data.position();
-            MessageDigest messageDigest = MD4 ? sun.security.provider.MD4.getInstance() : MessageDigest.getInstance("MD5");
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
 
             messageDigest.update(data);
 
@@ -65,7 +47,8 @@ public class MD4 {
 
             ByteBuffer digest = ByteBuffer.wrap(messageDigest.digest());
             digest.order(ByteOrder.LITTLE_ENDIAN);
-            hash = digest.getInt() ^ digest.getInt() ^ digest.getInt() ^ digest.getInt();
+            int digestInt = digest.getInt();
+            hash = digestInt ^ digestInt ^ digestInt ^ digestInt;
 
         } catch (NoSuchAlgorithmException ex) {
             throw new idException(ex);

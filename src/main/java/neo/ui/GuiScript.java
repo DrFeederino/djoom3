@@ -1,61 +1,66 @@
 package neo.ui;
 
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.atoi;
-import static neo.TempDump.dynamic_cast;
-import static neo.TempDump.sizeof;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.STRTABLE_ID;
-import static neo.framework.Common.STRTABLE_ID_LENGTH;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.DemoFile.idDemoFile;
 import neo.framework.File_h.idFile;
-import static neo.framework.Session.session;
-import static neo.idlib.Lib.idLib.cvarSystem;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
-import static neo.ui.Window.WIN_NOCURSOR;
 import neo.ui.Window.idWindow;
-import neo.ui.Winvar.idWinBackground;
-import neo.ui.Winvar.idWinFloat;
-import neo.ui.Winvar.idWinRectangle;
-import neo.ui.Winvar.idWinStr;
-import neo.ui.Winvar.idWinVar;
-import neo.ui.Winvar.idWinVec4;
+import neo.ui.Winvar.*;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.*;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.idLib.cvarSystem;
+import static neo.idlib.Text.Lexer.*;
+import static neo.ui.Window.WIN_NOCURSOR;
 
 /**
  *
  */
 public class GuiScript {
 
+    static final guiCommandDef_t[] commandList = {
+            new guiCommandDef_t("set", Script_Set.getInstance(), 2, 999),
+            new guiCommandDef_t("setFocus", Script_SetFocus.getInstance(), 1, 1),
+            new guiCommandDef_t("endGame", Script_EndGame.getInstance(), 0, 0),
+            new guiCommandDef_t("resetTime", Script_ResetTime.getInstance(), 0, 2),
+            new guiCommandDef_t("showCursor", Script_ShowCursor.getInstance(), 1, 1),
+            new guiCommandDef_t("resetCinematics", Script_ResetCinematics.getInstance(), 0, 2),
+            new guiCommandDef_t("transition", Script_Transition.getInstance(), 4, 6),
+            new guiCommandDef_t("localSound", Script_LocalSound.getInstance(), 1, 1),
+            new guiCommandDef_t("runScript", Script_RunScript.getInstance(), 1, 1),
+            new guiCommandDef_t("evalRegs", Script_EvalRegs.getInstance(), 0, 0)
+    };
+
+    static final int scriptCommandCount = commandList.length;
+
     public static class idGSWinVar {
 
-        public idWinVar var;
         public boolean own;
+        public idWinVar var;
 
         public idGSWinVar() {
             var = null;
             own = false;
         }
-    };
+    }
 
     static class guiCommandDef_t {
 
-        String name;
         Handler handler;
+        int mMaxParms;
         // void (*handler) (idWindow *window, idList<idGSWinVar> *src);
         int mMinParms;
-        int mMaxParms;
+        String name;
 
         public guiCommandDef_t(String name, Handler handler, int mMinParms, int mMaxParms) {
             this.name = name;
@@ -63,30 +68,17 @@ public class GuiScript {
             this.mMinParms = mMinParms;
             this.mMaxParms = mMaxParms;
         }
-    };
-    static final guiCommandDef_t[] commandList = {
-        new guiCommandDef_t("set", Script_Set.getInstance(), 2, 999),
-        new guiCommandDef_t("setFocus", Script_SetFocus.getInstance(), 1, 1),
-        new guiCommandDef_t("endGame", Script_EndGame.getInstance(), 0, 0),
-        new guiCommandDef_t("resetTime", Script_ResetTime.getInstance(), 0, 2),
-        new guiCommandDef_t("showCursor", Script_ShowCursor.getInstance(), 1, 1),
-        new guiCommandDef_t("resetCinematics", Script_ResetCinematics.getInstance(), 0, 2),
-        new guiCommandDef_t("transition", Script_Transition.getInstance(), 4, 6),
-        new guiCommandDef_t("localSound", Script_LocalSound.getInstance(), 1, 1),
-        new guiCommandDef_t("runScript", Script_RunScript.getInstance(), 1, 1),
-        new guiCommandDef_t("evalRegs", Script_EvalRegs.getInstance(), 0, 0)
-    };
-    static final int scriptCommandCount = commandList.length;
+    }
 
     public static class idGuiScript {
         // friend class idGuiScriptList;
         // friend class idWindow;
 
         protected int conditionReg;
-        protected idGuiScriptList ifList;
         protected idGuiScriptList elseList;
-        private idList<idGSWinVar> parms;
+        protected idGuiScriptList ifList;
         private Handler handler;
+        private final idList<idGSWinVar> parms;
         //
         //
 
@@ -358,7 +350,7 @@ public class GuiScript {
         }
 
 //protected	void (*handler) (idWindow *window, idList<idGSWinVar> *src);
-    };
+    }
 
     static class idGuiScriptList {
 
@@ -438,7 +430,7 @@ public class GuiScript {
                 list.oGet(i).ReadFromSaveGame(savefile);
             }
         }
-    };
+    }
 
     static abstract class Handler {
 
@@ -490,7 +482,7 @@ public class GuiScript {
             src.oGet(0).var.Set(src.oGet(1).var.c_str());
             src.oGet(0).var.SetEval(false);
         }
-    };
+    }
 
     /*
      =========================
@@ -518,7 +510,7 @@ public class GuiScript {
                 }
             }
         }
-    };
+    }
 
     /*
      =========================
@@ -547,7 +539,7 @@ public class GuiScript {
                 }
             }
         }
-    };
+    }
 
     /*
      =========================
@@ -577,7 +569,7 @@ public class GuiScript {
                 window.cmd.oSet(str);
             }
         }
-    };
+    }
 
     /*
      =========================
@@ -602,7 +594,7 @@ public class GuiScript {
                 session.sw.PlayShaderDirectly(parm.data.toString());
             }
         }
-    };
+    }
 
     /*
      =========================
@@ -624,7 +616,7 @@ public class GuiScript {
         public void run(idWindow window, idList<idGSWinVar> src) {
             window.EvalRegs(-1, true);
         }
-    };
+    }
 
     /*
      =========================
@@ -647,7 +639,7 @@ public class GuiScript {
             cvarSystem.SetCVarBool("g_nightmare", true);
             cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "disconnect\n");
         }
-    };
+    }
 
     /*
      =========================
@@ -681,7 +673,7 @@ public class GuiScript {
                 window.EvalRegs(-1, true);
             }
         }
-    };
+    }
 
     /*
      =========================
@@ -703,7 +695,7 @@ public class GuiScript {
         public void run(idWindow window, idList<idGSWinVar> src) {
             window.ResetCinematics();
         }
-    };
+    }
 
     /*
      =========================
@@ -778,5 +770,6 @@ public class GuiScript {
                 window.StartTransition();
             }
         }
-    };
+    }
+
 }

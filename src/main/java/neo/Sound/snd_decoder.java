@@ -21,27 +21,7 @@ import static neo.idlib.math.Simd.SIMDProcessor;
 import static neo.sys.sys_public.CRITICAL_SECTION_ONE;
 import static neo.sys.win_main.Sys_EnterCriticalSection;
 import static neo.sys.win_main.Sys_LeaveCriticalSection;
-import static org.lwjgl.stb.STBVorbis.VORBIS__no_error;
-import static org.lwjgl.stb.STBVorbis.VORBIS_bad_packet_type;
-import static org.lwjgl.stb.STBVorbis.VORBIS_cant_find_last_page;
-import static org.lwjgl.stb.STBVorbis.VORBIS_continued_packet_flag_invalid;
-import static org.lwjgl.stb.STBVorbis.VORBIS_feature_not_supported;
-import static org.lwjgl.stb.STBVorbis.VORBIS_file_open_failure;
-import static org.lwjgl.stb.STBVorbis.VORBIS_incorrect_stream_serial_number;
-import static org.lwjgl.stb.STBVorbis.VORBIS_invalid_api_mixing;
-import static org.lwjgl.stb.STBVorbis.VORBIS_invalid_first_page;
-import static org.lwjgl.stb.STBVorbis.VORBIS_invalid_setup;
-import static org.lwjgl.stb.STBVorbis.VORBIS_invalid_stream;
-import static org.lwjgl.stb.STBVorbis.VORBIS_invalid_stream_structure_version;
-import static org.lwjgl.stb.STBVorbis.VORBIS_missing_capture_pattern;
-import static org.lwjgl.stb.STBVorbis.VORBIS_need_more_data;
-import static org.lwjgl.stb.STBVorbis.VORBIS_ogg_skeleton_not_supported;
-import static org.lwjgl.stb.STBVorbis.VORBIS_outofmem;
-import static org.lwjgl.stb.STBVorbis.VORBIS_seek_failed;
-import static org.lwjgl.stb.STBVorbis.VORBIS_seek_invalid;
-import static org.lwjgl.stb.STBVorbis.VORBIS_seek_without_length;
-import static org.lwjgl.stb.STBVorbis.VORBIS_too_many_channels;
-import static org.lwjgl.stb.STBVorbis.VORBIS_unexpected_eof;
+import static org.lwjgl.stb.STBVorbis.*;
 
 /**
  *
@@ -155,6 +135,56 @@ public class snd_decoder {
         return STBVorbis.stb_vorbis_open_memory(f.GetDataPtr(), error, null);
     }
 
+    private static String getErrorMessage(final int errorCode) {
+        switch (errorCode) {
+            case VORBIS__no_error:
+                return "VORBIS__no_error";
+            case VORBIS_need_more_data:
+                return "VORBIS_need_more_data";
+            case VORBIS_invalid_api_mixing:
+                return "VORBIS_invalid_api_mixing";
+            case VORBIS_outofmem:
+                return "VORBIS_outofmem";
+            case VORBIS_feature_not_supported:
+                return "VORBIS_feature_not_supported";
+            case VORBIS_too_many_channels:
+                return "VORBIS_too_many_channels";
+            case VORBIS_file_open_failure:
+                return "VORBIS_file_open_failure";
+            case VORBIS_seek_without_length:
+                return "VORBIS_seek_without_length";
+            case VORBIS_unexpected_eof:
+                return "VORBIS_unexpected_eof";
+            case VORBIS_seek_invalid:
+                return "VORBIS_seek_invalid";
+            case VORBIS_invalid_setup:
+                return "VORBIS_invalid_setup";
+            case VORBIS_invalid_stream:
+                return "VORBIS_invalid_stream";
+            case VORBIS_missing_capture_pattern:
+                return "VORBIS_missing_capture_pattern";
+            case VORBIS_invalid_stream_structure_version:
+                return "VORBIS_invalid_stream_structure_version";
+            case VORBIS_continued_packet_flag_invalid:
+                return "VORBIS_continued_packet_flag_invalid";
+            case VORBIS_incorrect_stream_serial_number:
+                return "VORBIS_incorrect_stream_serial_number";
+            case VORBIS_invalid_first_page:
+                return "VORBIS_invalid_first_page";
+            case VORBIS_bad_packet_type:
+                return "VORBIS_bad_packet_type";
+            case VORBIS_cant_find_last_page:
+                return "VORBIS_cant_find_last_page";
+            case VORBIS_seek_failed:
+                return "VORBIS_seek_failed";
+            case VORBIS_ogg_skeleton_not_supported:
+                return "VORBIS_ogg_skeleton_not_supported";
+        }
+        return "Unknown error";
+    }
+
+//    static final idBlockAlloc<idSampleDecoderLocal> sampleDecoderAllocator = new idBlockAlloc<>(64);
+
     /*
      ===================================================================================
 
@@ -164,22 +194,21 @@ public class snd_decoder {
      */
     public static class idSampleDecoderLocal extends idSampleDecoder {
 
-        private boolean       failed;             // set if decoding failed
-        private int           lastFormat;         // last format being decoded
+        private static int DBG_Decode = 0;
+        private boolean failed;             // set if decoding failed
+        private final idFile_Memory file;               // encoded file in memory
+        private int lastDecodeTime;     // last time decoding sound
+        private int lastFormat;         // last format being decoded
         private idSoundSample lastSample;         // last sample being decoded
-        private int           lastSampleOffset;   // last offset into the decoded sample
-        private int           lastDecodeTime;     // last time decoding sound
-        private idFile_Memory file;               // encoded file in memory
-        //
-        private Long          ogg;                // OggVorbis file
+        private int lastSampleOffset;   // last offset into the decoded sample
         //
         //
+        //
+        private Long ogg;                // OggVorbis file
 
         idSampleDecoderLocal() {
             this.file = new idFile_Memory();
         }
-
-        private static int DBG_Decode = 0;
 
         @Override
         public void Decode(idSoundSample sample, int sampleOffset44k, int sampleCount44k, FloatBuffer dest) {
@@ -307,7 +336,7 @@ public class snd_decoder {
         public int DecodeOGG(idSoundSample sample, int sampleOffset44k, int sampleCount44k, FloatBuffer dest) {
             int readSamples, totalSamples;
 
-            int shift = (int) (22050 / sample.objectInfo.nSamplesPerSec);
+            int shift = 22050 / sample.objectInfo.nSamplesPerSec;
             int sampleOffset = sampleOffset44k >> shift;
             int sampleCount = sampleCount44k >> shift;
 
@@ -378,55 +407,5 @@ public class snd_decoder {
 
             return (readSamples << shift);
         }
-    }
-
-//    static final idBlockAlloc<idSampleDecoderLocal> sampleDecoderAllocator = new idBlockAlloc<>(64);
-
-    private static String getErrorMessage(final int errorCode) {
-        switch (errorCode) {
-            case VORBIS__no_error:
-                return "VORBIS__no_error";
-            case VORBIS_need_more_data:
-                return "VORBIS_need_more_data";
-            case VORBIS_invalid_api_mixing:
-                return "VORBIS_invalid_api_mixing";
-            case VORBIS_outofmem:
-                return "VORBIS_outofmem";
-            case VORBIS_feature_not_supported:
-                return "VORBIS_feature_not_supported";
-            case VORBIS_too_many_channels:
-                return "VORBIS_too_many_channels";
-            case VORBIS_file_open_failure:
-                return "VORBIS_file_open_failure";
-            case VORBIS_seek_without_length:
-                return "VORBIS_seek_without_length";
-            case VORBIS_unexpected_eof:
-                return "VORBIS_unexpected_eof";
-            case VORBIS_seek_invalid:
-                return "VORBIS_seek_invalid";
-            case VORBIS_invalid_setup:
-                return "VORBIS_invalid_setup";
-            case VORBIS_invalid_stream:
-                return "VORBIS_invalid_stream";
-            case VORBIS_missing_capture_pattern:
-                return "VORBIS_missing_capture_pattern";
-            case VORBIS_invalid_stream_structure_version:
-                return "VORBIS_invalid_stream_structure_version";
-            case VORBIS_continued_packet_flag_invalid:
-                return "VORBIS_continued_packet_flag_invalid";
-            case VORBIS_incorrect_stream_serial_number:
-                return "VORBIS_incorrect_stream_serial_number";
-            case VORBIS_invalid_first_page:
-                return "VORBIS_invalid_first_page";
-            case VORBIS_bad_packet_type:
-                return "VORBIS_bad_packet_type";
-            case VORBIS_cant_find_last_page:
-                return "VORBIS_cant_find_last_page";
-            case VORBIS_seek_failed:
-                return "VORBIS_seek_failed";
-            case VORBIS_ogg_skeleton_not_supported:
-                return "VORBIS_ogg_skeleton_not_supported";
-        }
-        return "Unknown error";
     }
 }

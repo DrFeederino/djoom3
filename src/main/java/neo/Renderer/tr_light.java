@@ -1,67 +1,13 @@
 package neo.Renderer;
 
-import static java.lang.Math.random;
-import static neo.Game.Game_local.game;
 import neo.Renderer.Interaction.idInteraction;
-import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
-import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
-import neo.Renderer.Model.idRenderModel;
-import neo.Renderer.Model.lightingCache_s;
-import neo.Renderer.Model.modelSurface_s;
-import neo.Renderer.Model.shadowCache_s;
-import neo.Renderer.Model.srfTriangles_s;
+import neo.Renderer.Model.*;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import static neo.Renderer.RenderSystem_init.r_checkBounds;
-import static neo.Renderer.RenderSystem_init.r_lightSourceRadius;
-import static neo.Renderer.RenderSystem_init.r_showEntityScissors;
-import static neo.Renderer.RenderSystem_init.r_showLightScissors;
-import static neo.Renderer.RenderSystem_init.r_singleSurface;
-import static neo.Renderer.RenderSystem_init.r_skipOverlays;
-import static neo.Renderer.RenderSystem_init.r_skipSpecular;
-import static neo.Renderer.RenderSystem_init.r_skipSuppress;
-import static neo.Renderer.RenderSystem_init.r_useClippedLightScissors;
-import static neo.Renderer.RenderSystem_init.r_useEntityScissors;
-import static neo.Renderer.RenderSystem_init.r_useIndexBuffers;
-import static neo.Renderer.RenderSystem_init.r_useLightScissors;
-import static neo.Renderer.RenderSystem_init.r_useOptimizedShadows;
-import static neo.Renderer.RenderSystem_init.r_useShadowCulling;
-import static neo.Renderer.RenderSystem_init.r_useShadowSurfaceScissor;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
-import static neo.Renderer.RenderWorld.R_GlobalShaderOverride;
-import static neo.Renderer.RenderWorld.R_RemapShaderBySkin;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.tr_deform.R_DeformDrawSurf;
-import static neo.Renderer.tr_guisurf.R_RenderGuiSurf;
-import static neo.Renderer.tr_lightrun.R_ClearEntityDefDynamicModel;
-import static neo.Renderer.tr_local.DSF_VIEW_INSIDE_SHADOW;
-import static neo.Renderer.tr_local.INITIAL_DRAWSURFS;
-import neo.Renderer.tr_local.areaReference_s;
-import static neo.Renderer.tr_local.backEndName_t.BE_ARB;
-import neo.Renderer.tr_local.drawSurf_s;
-import neo.Renderer.tr_local.idRenderEntityLocal;
-import neo.Renderer.tr_local.idRenderLightLocal;
-import neo.Renderer.tr_local.idScreenRect;
-import static neo.Renderer.tr_local.tr;
-import neo.Renderer.tr_local.viewEntity_s;
-import neo.Renderer.tr_local.viewLight_s;
-import static neo.Renderer.tr_main.R_AxisToModelMatrix;
-import static neo.Renderer.tr_main.R_CullLocalBox;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.Renderer.tr_main.R_LocalPointToGlobal;
-import static neo.Renderer.tr_main.R_ScreenRectFromViewFrustumBounds;
-import static neo.Renderer.tr_main.R_ShowColoredScreenRect;
-import static neo.Renderer.tr_main.R_TransformClipToDevice;
-import static neo.Renderer.tr_main.R_TransformModelToClip;
-import static neo.Renderer.tr_main.myGlMultMatrix;
-import static neo.Renderer.tr_subview.R_PreciseCullSurface;
-import static neo.Renderer.tr_trisurf.R_DeriveTangents;
-import static neo.TempDump.NOT;
-import static neo.framework.Common.common;
+import neo.Renderer.RenderWorld.*;
+import neo.Renderer.tr_local.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.CmdArgs.idCmdArgs;
@@ -71,13 +17,32 @@ import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
-import static neo.idlib.precompiled.MAX_EXPRESSION_REGISTERS;
 import neo.ui.UserInterface.idUserInterface;
 
 import java.util.stream.Stream;
+
+import static java.lang.Math.random;
+import static neo.Game.Game_local.game;
+import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
+import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
+import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.RenderWorld.*;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.tr_deform.R_DeformDrawSurf;
+import static neo.Renderer.tr_guisurf.R_RenderGuiSurf;
+import static neo.Renderer.tr_lightrun.R_ClearEntityDefDynamicModel;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_local.backEndName_t.BE_ARB;
+import static neo.Renderer.tr_main.*;
+import static neo.Renderer.tr_subview.R_PreciseCullSurface;
+import static neo.Renderer.tr_trisurf.R_DeriveTangents;
+import static neo.TempDump.NOT;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Simd.SIMDProcessor;
+import static neo.idlib.precompiled.MAX_EXPRESSION_REGISTERS;
 
 /**
  *
@@ -85,6 +50,39 @@ import java.util.stream.Stream;
 public class tr_light {
 
     public static final float CHECK_BOUNDS_EPSILON = 1.0f;
+    /*
+     ====================
+     R_TestPointInViewLight
+     ====================
+     */
+    static final float INSIDE_LIGHT_FRUSTUM_SLOP = 32;
+    /*
+     =================
+     R_AddDrawSurf
+     =================
+     */
+    private static final float[] refRegs = new float[MAX_EXPRESSION_REGISTERS];    // don't put on stack, or VC++ will do a page touch
+    //==================================================================================================================================================================================================
+    /*
+     =============
+     R_SetEntityDefViewEntity
+
+     If the entityDef isn't already on the viewEntity list, create
+     a viewEntity and add it to the list with an empty scissor rect.
+
+     This does not instantiate dynamic models for the entity yet.
+     =============
+     */static int DBG_R_SetEntityDefViewEntity = 0;
+    static int DEBUG_drawZurf = 0;
+    /*
+     ==================
+     R_CalcLightScissorRectangle
+
+     The light screen bounds will be used to crop the scissor rect during
+     stencil clears and interaction drawing
+     ==================
+     */
+    static int c_clippedLight, c_unclippedLight;
 
     /*
      ======================================================================================================================================================================================
@@ -110,10 +108,7 @@ public class tr_light {
         }
 
         tri.ambientCache = vertexCache.Alloc(tri.verts, tri.numVerts * idDrawVert.BYTES);
-        if (NOT(tri.ambientCache)) {
-            return false;
-        }
-        return true;
+        return !NOT(tri.ambientCache);
     }
 
     /*
@@ -172,10 +167,7 @@ public class tr_light {
         }
 
         tri.lightingCache = vertexCache.Alloc(cache, size);
-        if (NOT(tri.lightingCache)) {
-            return false;
-        }
-        return true;
+        return !NOT(tri.lightingCache);
     }
 
     /*
@@ -250,6 +242,7 @@ public class tr_light {
 
         surf.dynamicTexCoords = vertexCache.AllocFrameTemp(texCoords, size);
     }
+// this needs to be greater than the dist from origin to corner of near clip plane
 
     /*
      ==================
@@ -262,9 +255,9 @@ public class tr_light {
 
         final int[] parms = surf.material.GetTexGenRegisters();
 
-        float wobbleDegrees = surf.shaderRegisters[ parms[0]];
-        float wobbleSpeed = surf.shaderRegisters[ parms[1]];
-        float rotateSpeed = surf.shaderRegisters[ parms[2]];
+        float wobbleDegrees = surf.shaderRegisters[parms[0]];
+        float wobbleSpeed = surf.shaderRegisters[parms[1]];
+        float rotateSpeed = surf.shaderRegisters[parms[2]];
 
         wobbleDegrees = wobbleDegrees * idMath.PI / 180;
         wobbleSpeed = wobbleSpeed * 2 * idMath.PI / 60;
@@ -298,16 +291,16 @@ public class tr_light {
         s = (float) Math.sin(rotateSpeed * tr.viewDef.floatTime);
         c = (float) Math.cos(rotateSpeed * tr.viewDef.floatTime);
 
-        transform[ 0] = axis[0].oGet(0) * c + axis[1].oGet(0) * s;
-        transform[ 4] = axis[0].oGet(1) * c + axis[1].oGet(1) * s;
-        transform[ 8] = axis[0].oGet(2) * c + axis[1].oGet(2) * s;
+        transform[0] = axis[0].oGet(0) * c + axis[1].oGet(0) * s;
+        transform[4] = axis[0].oGet(1) * c + axis[1].oGet(1) * s;
+        transform[8] = axis[0].oGet(2) * c + axis[1].oGet(2) * s;
 
-        transform[ 1] = axis[1].oGet(0) * c - axis[0].oGet(0) * s;
-        transform[ 5] = axis[1].oGet(1) * c - axis[0].oGet(1) * s;
-        transform[ 9] = axis[1].oGet(2) * c - axis[0].oGet(2) * s;
+        transform[1] = axis[1].oGet(0) * c - axis[0].oGet(0) * s;
+        transform[5] = axis[1].oGet(1) * c - axis[0].oGet(1) * s;
+        transform[9] = axis[1].oGet(2) * c - axis[0].oGet(2) * s;
 
-        transform[ 2] = axis[2].oGet(0);
-        transform[ 6] = axis[2].oGet(1);
+        transform[2] = axis[2].oGet(0);
+        transform[6] = axis[2].oGet(1);
         transform[10] = axis[2].oGet(2);
 
         transform[3] = transform[7] = transform[11] = 0.0f;
@@ -401,17 +394,6 @@ public class tr_light {
         surf.dynamicTexCoords = vertexCache.AllocFrameTemp(texCoords, size);
     }
 
-//==================================================================================================================================================================================================
-    /*
-     =============
-     R_SetEntityDefViewEntity
-
-     If the entityDef isn't already on the viewEntity list, create
-     a viewEntity and add it to the list with an empty scissor rect.
-
-     This does not instantiate dynamic models for the entity yet.
-     =============
-     */static int DBG_R_SetEntityDefViewEntity=0;
     static viewEntity_s R_SetEntityDefViewEntity(idRenderEntityLocal def) {
         viewEntity_s vModel;
 
@@ -428,7 +410,7 @@ public class tr_light {
 
         // the scissorRect will be expanded as the model bounds is accepted into visible portal chains
         vModel.scissorRect.Clear();
-                
+
 
         // copy the model and weapon depth hack for back-end use
         vModel.modelDepthHack = def.parms.modelDepthHack;
@@ -449,13 +431,7 @@ public class tr_light {
 
         return vModel;
     }
-    /*
-     ====================
-     R_TestPointInViewLight
-     ====================
-     */
-    static final float INSIDE_LIGHT_FRUSTUM_SLOP = 32;
-// this needs to be greater than the dist from origin to corner of near clip plane
+    //=============================================================================================================================================================================================
 
     public static boolean R_TestPointInViewLight(final idVec3 org, final idRenderLightLocal light) {
         int i;
@@ -540,7 +516,7 @@ public class tr_light {
         vLight.frustumTris = light.frustumTris;
         vLight.falloffImage = light.falloffImage;
         vLight.lightShader = light.lightShader;
-        vLight.shaderRegisters = null;		// allocated and evaluated in R_AddLightSurfaces
+        vLight.shaderRegisters = null;        // allocated and evaluated in R_AddLightSurfaces
 
         // link the view light
         vLight.next = tr.viewDef.viewLights;
@@ -550,7 +526,6 @@ public class tr_light {
 
         return vLight;
     }
-    //=============================================================================================================================================================================================
 
     /*
      =================
@@ -558,7 +533,7 @@ public class tr_light {
      =================
      */
     public static void R_LinkLightSurf(drawSurf_s[] link, final srfTriangles_s tri, final viewEntity_s spaceView,
-            final idRenderLightLocal light, final idMaterial shader, final idScreenRect scissor, boolean viewInsideShadow) {
+                                       final idRenderLightLocal light, final idMaterial shader, final idScreenRect scissor, boolean viewInsideShadow) {
         drawSurf_s drawSurf;
         viewEntity_s space = spaceView;//TODO:should a back reference be set here?
 
@@ -654,7 +629,7 @@ public class tr_light {
                 R_TransformModelToClip(w.oGet(j).ToVec3(), tr.viewDef.worldSpace.modelViewMatrix, tr.viewDef.projectionMatrix, eye, clip);
 
                 if (clip.oGet(3) <= 0.01f) {
-                    clip.oSet(3, 0.01f);;
+                    clip.oSet(3, 0.01f);
                 }
 
                 R_TransformClipToDevice(clip, tr.viewDef, ndc);
@@ -682,16 +657,7 @@ public class tr_light {
 
         return r;
     }
-
-    /*
-     ==================
-     R_CalcLightScissorRectangle
-
-     The light screen bounds will be used to crop the scissor rect during
-     stencil clears and interaction drawing
-     ==================
-     */
-    static int c_clippedLight, c_unclippedLight;
+    //================================================================================================================================================================================================
 
     public static idScreenRect R_CalcLightScissorRectangle(viewLight_s vLight) {
         idScreenRect r = new idScreenRect();
@@ -825,21 +791,21 @@ public class tr_light {
                     final shaderStage_t lightStage = lightShader.GetStage(lightStageNum);
 
                     // ignore stages that fail the condition
-                    if (0 == lightRegs[ lightStage.conditionRegister]) {
+                    if (0 == lightRegs[lightStage.conditionRegister]) {
                         continue;
                     }
 
                     final int[] registers = lightStage.color.registers;
 
                     // snap tiny values to zero to avoid lights showing up with the wrong color
-                    if (lightRegs[ registers[0]] < 0.001f) {
-                        lightRegs[ registers[0]] = 0.0f;
+                    if (lightRegs[registers[0]] < 0.001f) {
+                        lightRegs[registers[0]] = 0.0f;
                     }
-                    if (lightRegs[ registers[1]] < 0.001f) {
-                        lightRegs[ registers[1]] = 0.0f;
+                    if (lightRegs[registers[1]] < 0.001f) {
+                        lightRegs[registers[1]] = 0.0f;
                     }
-                    if (lightRegs[ registers[2]] < 0.001f) {
-                        lightRegs[ registers[2]] = 0.0f;
+                    if (lightRegs[registers[2]] < 0.001f) {
+                        lightRegs[registers[2]] = 0.0f;
                     }
 
                     // FIXME:	when using the following values the light shows up bright red when using nvidia drivers/hardware
@@ -847,9 +813,9 @@ public class tr_light {
                     //lightRegs[ registers[0] ] = 1.5143074e-005f;
                     //lightRegs[ registers[1] ] = 1.5483369e-005f;
                     //lightRegs[ registers[2] ] = 1.7014690e-005f;
-                    if (lightRegs[ registers[0]] > 0.0f
-                            || lightRegs[ registers[1]] > 0.0f
-                            || lightRegs[ registers[2]] > 0.0f) {
+                    if (lightRegs[registers[0]] > 0.0f
+                            || lightRegs[registers[1]] > 0.0f
+                            || lightRegs[registers[2]] > 0.0f) {
                         break;
                     }
                 }
@@ -958,7 +924,6 @@ public class tr_light {
             }
         }
     }
-    //================================================================================================================================================================================================
 
     /*
      ==================
@@ -973,7 +938,7 @@ public class tr_light {
             oldBounds = def.referenceBounds;
         }
 
-        def.archived = false;		// will need to be written to the demo file
+        def.archived = false;        // will need to be written to the demo file
         tr.pc.c_entityDefCallbacks++;
         if (tr.viewDef != null) {
             update = def.parms.callback.run(def.parms, tr.viewDef.renderView);
@@ -1081,16 +1046,9 @@ public class tr_light {
         // undeformed surfaces.  This would allow deforms to be light interacting.
         return def.dynamicModel;
     }
-    /*
-     =================
-     R_AddDrawSurf
-     =================
-     */
-    private static final float[] refRegs = new float[MAX_EXPRESSION_REGISTERS];	// don't put on stack, or VC++ will do a page touch
-    static int DEBUG_drawZurf = 0;
 
     public static void R_AddDrawSurf(final srfTriangles_s tri, final viewEntity_s space, final renderEntity_s renderEntity,
-            final idMaterial shader, final idScreenRect scissor) {
+                                     final idMaterial shader, final idScreenRect scissor) {
         DEBUG_drawZurf++;
 //        TempDump.printCallStack("" + drawZurf);
         drawSurf_s drawSurf;
@@ -1201,7 +1159,7 @@ public class tr_light {
         } else {
             int guiNum = shader.GetEntityGui() - 1;
             if (guiNum >= 0 && guiNum < MAX_RENDERENTITY_GUI) {
-                gui = renderEntity.gui[ guiNum];
+                gui = renderEntity.gui[guiNum];
             }
             if (gui == null) {
                 gui = shader.GlobalGui();
@@ -1465,7 +1423,7 @@ public class tr_light {
 
         // clear the ambient surface list
         tr.viewDef.numDrawSurfs = 0;
-        tr.viewDef.maxDrawSurfs = 0;	// will be set to INITIAL_DRAWSURFS on R_AddDrawSurf
+        tr.viewDef.maxDrawSurfs = 0;    // will be set to INITIAL_DRAWSURFS on R_AddDrawSurf
 
         // go through each entity that is either visible to the view, or to
         // any light that intersects the view (for shadows)

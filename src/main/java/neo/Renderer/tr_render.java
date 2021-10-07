@@ -1,99 +1,34 @@
 package neo.Renderer;
 
 import neo.Renderer.Cinematic.cinData_t;
-import static neo.Renderer.Image.globalImages;
 import neo.Renderer.Image.idImage;
-import static neo.Renderer.Material.cullType_t.CT_FRONT_SIDED;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
-import static neo.Renderer.Material.texgen_t.TG_DIFFUSE_CUBE;
-import static neo.Renderer.Material.texgen_t.TG_REFLECT_CUBE;
-import static neo.Renderer.Material.texgen_t.TG_SKYBOX_CUBE;
-import static neo.Renderer.Material.texgen_t.TG_WOBBLESKY_CUBE;
 import neo.Renderer.Material.textureStage_t;
-import static neo.Renderer.Model.GL_INDEX_TYPE;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderSystem_init.r_lightScale;
-import static neo.Renderer.RenderSystem_init.r_singleTriangle;
-import static neo.Renderer.RenderSystem_init.r_skipBump;
-import static neo.Renderer.RenderSystem_init.r_skipDiffuse;
-import static neo.Renderer.RenderSystem_init.r_skipDynamicTextures;
-import static neo.Renderer.RenderSystem_init.r_skipInteractions;
-import static neo.Renderer.RenderSystem_init.r_skipRender;
-import static neo.Renderer.RenderSystem_init.r_skipRenderContext;
-import static neo.Renderer.RenderSystem_init.r_skipSpecular;
-import static neo.Renderer.RenderSystem_init.r_useIndexBuffers;
-import static neo.Renderer.RenderSystem_init.r_useScissor;
-import neo.Renderer.VertexCache.vertCache_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.draw_common.RB_BakeTextureMatrixIntoTexgen;
-import static neo.Renderer.draw_common.RB_STD_DrawView;
-import static neo.Renderer.qgl.qglBegin;
-import static neo.Renderer.qgl.qglClear;
-import static neo.Renderer.qgl.qglClearStencil;
-import static neo.Renderer.qgl.qglDepthRange;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglDisableClientState;
-import static neo.Renderer.qgl.qglDrawElements;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnableClientState;
-import static neo.Renderer.qgl.qglEnd;
-import static neo.Renderer.qgl.qglLoadIdentity;
-import static neo.Renderer.qgl.qglLoadMatrixf;
-import static neo.Renderer.qgl.qglMatrixMode;
-import static neo.Renderer.qgl.qglNormalPointer;
-import static neo.Renderer.qgl.qglScissor;
-import static neo.Renderer.qgl.qglStencilMask;
-import static neo.Renderer.qgl.qglTexCoord2fv;
-import static neo.Renderer.qgl.qglTexCoordPointer;
-import static neo.Renderer.qgl.qglTexGenf;
-import static neo.Renderer.qgl.qglVertex3fv;
-import static neo.Renderer.qgl.qglVertexPointer;
-import static neo.Renderer.qgl.qglViewport;
-import static neo.Renderer.tr_backend.GL_Cull;
-import static neo.Renderer.tr_backend.GL_State;
-import static neo.Renderer.tr_backend.RB_LogComment;
-import static neo.Renderer.tr_backend.RB_SetDefaultGLState;
-import static neo.Renderer.tr_local.GLS_DEFAULT;
-import static neo.Renderer.tr_local.backEnd;
-import neo.Renderer.tr_local.drawInteraction_t;
-import neo.Renderer.tr_local.drawSurf_s;
-import neo.Renderer.tr_local.drawSurfsCommand_t;
-import static neo.Renderer.tr_local.glConfig;
-import static neo.Renderer.tr_local.tr;
-
-import neo.Renderer.tr_local.idScreenRect;
-import neo.Renderer.tr_local.viewLight_s;
-import static neo.Renderer.tr_main.R_GlobalPlaneToLocal;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.Renderer.tr_main.R_TransposeGLMatrix;
-import static neo.Renderer.tr_rendertools.RB_ShowOverdraw;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-
+import neo.Renderer.tr_local.*;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.Renderer.Image.globalImages;
+import static neo.Renderer.Material.cullType_t.CT_FRONT_SIDED;
+import static neo.Renderer.Material.texgen_t.*;
+import static neo.Renderer.Model.GL_INDEX_TYPE;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.draw_common.RB_BakeTextureMatrixIntoTexgen;
+import static neo.Renderer.draw_common.RB_STD_DrawView;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_backend.*;
+import static neo.Renderer.tr_local.*;
+import static neo.Renderer.tr_main.*;
+import static neo.Renderer.tr_rendertools.RB_ShowOverdraw;
+import static neo.TempDump.NOT;
+import static neo.TempDump.btoi;
 import static neo.sys.win_glimp.GLimp_ActivateContext;
 import static neo.sys.win_glimp.GLimp_DeactivateContext;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_NORMAL_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_OBJECT_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.GL_R;
-import static org.lwjgl.opengl.GL11.GL_S;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
-import static org.lwjgl.opengl.GL11.GL_T;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_MODE;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_R;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_S;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_T;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_REFLECTION_MAP;
 
 /**
@@ -112,15 +47,35 @@ public class tr_render {
 //    
 //    
 
-    static abstract class DrawInteraction {
+    /*
+     ================
+     RB_DrawElementsWithCounters
+     ================
+     */    static int DEBUG_RB_DrawElementsWithCounters = 0;
 
-        abstract void run(final drawInteraction_t din);
-    };
+    /*
+     ======================
+     RB_BindVariableStageImage
 
-    static abstract class triFunc {
+     Handles generating a cinematic frame if needed
+     ======================
+     */ private static int DBG_RB_BindVariableStageImage = 0;
 
-        abstract void run(final drawSurf_s surf);
-    };
+    /*
+     ======================
+     RB_GetShaderTextureMatrix
+     ======================
+     */private static int DBG_RB_GetShaderTextureMatrix = 0;
+    /*
+     ======================
+     RB_RenderDrawSurfChainWithFunction
+     ======================
+     */private static int DBG_RB_RenderDrawSurfChainWithFunction = 0;
+    /*
+     =================
+     RB_SubmittInteraction
+     =================
+     */private static int DBG_RB_SubmittInteraction = 0;
 
     /*
      =================
@@ -152,12 +107,6 @@ public class tr_render {
         qglEnd();
     }
 
-
-    /*
-     ================
-     RB_DrawElementsWithCounters
-     ================
-     */    static int DEBUG_RB_DrawElementsWithCounters = 0;
     public static void RB_DrawElementsWithCounters(final srfTriangles_s tri) {
 
         backEnd.pc.c_drawElements++;
@@ -217,7 +166,6 @@ public class tr_render {
         }
     }
 
-
     /*
      ===============
      RB_RenderTriangleSurface
@@ -237,25 +185,6 @@ public class tr_render {
 
         RB_DrawElementsWithCounters(tri);
     }
-
-    /*
-     ===============
-     RB_T_RenderTriangleSurface
-
-     ===============
-     */
-    public static class RB_T_RenderTriangleSurface extends triFunc {
-
-        static final triFunc INSTANCE = new RB_T_RenderTriangleSurface();
-
-        private RB_T_RenderTriangleSurface() {
-        }
-
-        @Override
-        void run(final drawSurf_s surf) {
-            RB_RenderTriangleSurface(surf.geo);
-        }
-    };
 
     /*
      ===============
@@ -360,13 +289,9 @@ public class tr_render {
         }
     }
 
-    /*
-     ======================
-     RB_RenderDrawSurfChainWithFunction
-     ======================
-     */private static int DBG_RB_RenderDrawSurfChainWithFunction = 0;
     public static void RB_RenderDrawSurfChainWithFunction(final drawSurf_s drawSurfs, triFunc triFunc_) {
-        drawSurf_s drawSurf;DBG_RB_RenderDrawSurfChainWithFunction++;
+        drawSurf_s drawSurf;
+        DBG_RB_RenderDrawSurfChainWithFunction++;
 
         backEnd.currentSpace = null;
 
@@ -404,17 +329,12 @@ public class tr_render {
         }
     }
 
-    /*
-     ======================
-     RB_GetShaderTextureMatrix
-     ======================
-     */private static int DBG_RB_GetShaderTextureMatrix = 0;
     public static void RB_GetShaderTextureMatrix(final float[] shaderRegisters, final textureStage_t texture, float[] matrix/*[16]*/) {
         matrix[0] = shaderRegisters[texture.matrix[0][0]];
         matrix[4] = shaderRegisters[texture.matrix[0][1]];
         matrix[8] = 0;
         matrix[12] = shaderRegisters[texture.matrix[0][2]];
-        
+
         DBG_RB_GetShaderTextureMatrix++;
 //        System.out.println(">>>>>>" + DBG_RB_GetShaderTextureMatrix);
 //        System.out.println("0:" + Arrays.toString(texture.matrix[0]));
@@ -459,20 +379,13 @@ public class tr_render {
 //        System.out.printf("RB_LoadShaderTextureMatrix("
 //                + "%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)\n",
 //                m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11], m[12], m[13], m[14], m[15]);
-        
+
 //        TempDump.printCallStack("------->" + (DBG_RB_LoadShaderTextureMatrix++));
         qglMatrixMode(GL_TEXTURE);
         qglLoadMatrixf(matrix);
         qglMatrixMode(GL_MODELVIEW);
     }
-    
-    /*
-     ======================
-     RB_BindVariableStageImage
 
-     Handles generating a cinematic frame if needed
-     ======================
-     */ private static int DBG_RB_BindVariableStageImage = 0;
     public static void RB_BindVariableStageImage(final textureStage_t texture, final float[] shaderRegisters) {
         DBG_RB_BindVariableStageImage++;
 //        if (DBG_RB_BindVariableStageImage == 50) {
@@ -591,7 +504,7 @@ public class tr_render {
         }
     }
 
-//=============================================================================================
+    //=============================================================================================
     /*
      =================
      RB_DetermineLightScale
@@ -653,7 +566,6 @@ public class tr_render {
         }
     }
 
-
     /*
      =================
      RB_BeginDrawingView
@@ -697,7 +609,7 @@ public class tr_render {
             qglDisable(GL_STENCIL_TEST);
         }
 
-        backEnd.glState.faceCulling = -1;		// force face culling to set next time
+        backEnd.glState.faceCulling = -1;        // force face culling to set next time
         GL_Cull(CT_FRONT_SIDED);
     }
 
@@ -754,11 +666,6 @@ public class tr_render {
         }
     }
 
-    /*
-     =================
-     RB_SubmittInteraction
-     =================
-     */private static int DBG_RB_SubmittInteraction=0;
     public static void RB_SubmittInteraction(drawInteraction_t din, DrawInteraction drawInteraction) {
         if (null == din.bumpImage) {
             return;
@@ -1007,6 +914,35 @@ public class tr_render {
         if (r_skipRenderContext.GetBool() && backEnd.viewDef.viewEntitys != null) {
             GLimp_ActivateContext();
             RB_SetDefaultGLState();
+        }
+    }
+
+    static abstract class DrawInteraction {
+
+        abstract void run(final drawInteraction_t din);
+    }
+
+    static abstract class triFunc {
+
+        abstract void run(final drawSurf_s surf);
+    }
+
+    /*
+     ===============
+     RB_T_RenderTriangleSurface
+
+     ===============
+     */
+    public static class RB_T_RenderTriangleSurface extends triFunc {
+
+        static final triFunc INSTANCE = new RB_T_RenderTriangleSurface();
+
+        private RB_T_RenderTriangleSurface() {
+        }
+
+        @Override
+        void run(final drawSurf_s surf) {
+            RB_RenderTriangleSurface(surf.geo);
         }
     }
 }

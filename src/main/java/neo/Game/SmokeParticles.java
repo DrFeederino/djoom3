@@ -1,36 +1,33 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.stream.Stream;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import neo.Game.SmokeParticles.activeSmokeStage_t;
-import neo.Game.SmokeParticles.idSmokeParticles;
-import neo.Game.SmokeParticles.singleSmoke_t;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import neo.Renderer.RenderWorld.deferredEntityCallback_t;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderView_s;
+import neo.Renderer.RenderWorld.*;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclParticle.idParticleStage;
 import neo.framework.DeclParticle.particleGen_t;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 
 /**
  *
  */
 public class SmokeParticles {
+
+    public static final String smokeParticle_SnapshotName = "_SmokeParticle_Snapshot_";
 
     /*
      ===============================================================================
@@ -55,35 +52,34 @@ public class SmokeParticles {
      */
     public static class singleSmoke_t {
 
-        singleSmoke_t next;
-        int privateStartTime;	// start time for this particular particle
-        int index;				// particle index in system, 0 <= index < stage->totalParticles
-        idRandom random;
-        idVec3 origin;
         idMat3 axis;
-    };
+        int index;                // particle index in system, 0 <= index < stage->totalParticles
+        singleSmoke_t next;
+        idVec3 origin;
+        int privateStartTime;    // start time for this particular particle
+        idRandom random;
+    }
 
     public static class activeSmokeStage_t {
 
-        idParticleStage stage;
         singleSmoke_t smokes;
-    };
-    public static final String smokeParticle_SnapshotName = "_SmokeParticle_Snapshot_";
+        idParticleStage stage;
+    }
 
     public static class idSmokeParticles {
 
-        private boolean        initialized;
+        //
+        private static final int MAX_SMOKE_PARTICLES = 10000;
+        //
+        private final idList<activeSmokeStage_t> activeStages;
+        private int currentParticleTime;    // don't need to recalculate if == view time
+        private singleSmoke_t freeSmokes;
+        private boolean initialized;
+        private int numActiveSmokes;
         //
         private renderEntity_s renderEntity;              // used to present a model to the renderer
-        private int            renderEntityHandle;        // handle to static renderer model
-        //
-        private static final int             MAX_SMOKE_PARTICLES = 10000;
-        private              singleSmoke_t[] smokes;
-        //
-        private idList<activeSmokeStage_t> activeStages;
-        private singleSmoke_t              freeSmokes;
-        private int                        numActiveSmokes;
-        private int                        currentParticleTime;    // don't need to recalculate if == view time
+        private int renderEntityHandle;        // handle to static renderer model
+        private final singleSmoke_t[] smokes;
         //
         //
 
@@ -118,9 +114,9 @@ public class SmokeParticles {
 
             renderEntity.bounds.Clear();
             renderEntity.axis.oSet(getMat3_identity());
-            renderEntity.shaderParms[ SHADERPARM_RED] = 1;
-            renderEntity.shaderParms[ SHADERPARM_GREEN] = 1;
-            renderEntity.shaderParms[ SHADERPARM_BLUE] = 1;
+            renderEntity.shaderParms[SHADERPARM_RED] = 1;
+            renderEntity.shaderParms[SHADERPARM_GREEN] = 1;
+            renderEntity.shaderParms[SHADERPARM_BLUE] = 1;
             renderEntity.shaderParms[3] = 1;
 
             renderEntity.hModel = renderModelManager.AllocModel();
@@ -274,7 +270,7 @@ public class SmokeParticles {
                     newSmoke.next = active.smokes;
                     active.smokes = newSmoke;
 
-                    steppingRandom.RandomInt();	// advance the random
+                    steppingRandom.RandomInt();    // advance the random
                 }
             }
 
@@ -401,7 +397,7 @@ public class SmokeParticles {
                     last = smoke;
                 }
                 if (tri.numVerts > quads * 4) {
-                    gameLocal.Error("idSmokeParticles::UpdateRenderEntity: miscounted verts");
+                    Game_local.idGameLocal.Error("idSmokeParticles::UpdateRenderEntity: miscounted verts");
                 }
 
                 if (tri.numVerts == 0) {
@@ -474,6 +470,8 @@ public class SmokeParticles {
             public ByteBuffer Write() {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
-        };
-    };
+        }
+
+    }
+
 }

@@ -5,6 +5,19 @@ package neo.Tools.Compilers.RoqVQ;
  */
 public class GDefs {
 
+    static final float BIEMULT = 0.50000f;
+    static final float BMULT = 0.1140f;
+    static final float BQEMULT = -0.08131f;
+    static final float GIEMULT = -0.33126f;
+    static final float GMULT = 0.5870f;
+    static final float GQEMULT = -0.41869f;
+    //
+    static final float RIEMULT = -0.16874f;
+    //
+    //
+    static final float RMULT = 0.2990f;                // use these for televisions
+    static final float RQEMULT = 0.50000f;
+
     /*==================*
      * TYPE DEFINITIONS *
      *==================*/
@@ -40,17 +53,4 @@ public class GDefs {
                 + (src0[i0 + 2] - src1[i1 + 2]) * (src0[i0 + 2] - src1[i1 + 2])
                 + (src0[i0 + 3] - src1[i1 + 3]) * (src0[i0 + 3] - src1[i1 + 3]));
     }
-
-    //
-    //
-    static final float RMULT   = 0.2990f;                // use these for televisions
-    static final float GMULT   = 0.5870f;
-    static final float BMULT   = 0.1140f;
-    //
-    static final float RIEMULT = -0.16874f;
-    static final float RQEMULT = 0.50000f;
-    static final float GIEMULT = -0.33126f;
-    static final float GQEMULT = -0.41869f;
-    static final float BIEMULT = 0.50000f;
-    static final float BQEMULT = -0.08131f;
 }

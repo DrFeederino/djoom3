@@ -1,15 +1,8 @@
 package neo.idlib.Text;
 
-import java.nio.ByteBuffer;
-import java.nio.file.Paths;
-import java.util.Objects;
 import neo.TempDump.CPP_class.Char;
 import neo.TempDump.CPP_class.Pointer;
-import neo.TempDump.SERiAL;
-import neo.TempDump.TODO_Exception;
-import static neo.TempDump.ctos;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.strLen;
+import neo.TempDump.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idLib;
@@ -17,69 +10,103 @@ import neo.idlib.Text.Token.idToken;
 import neo.idlib.math.Math_h;
 import neo.idlib.math.Vector.idVec4;
 
+import java.nio.ByteBuffer;
+import java.nio.file.Paths;
+import java.util.Objects;
+
+import static neo.TempDump.*;
+
 /**
  *
  */
 public class Str {
 
-    public static final int    FILE_HASH_SIZE  = 1024;
+    public static final int C_COLOR_BLACK = '9';
+    public static final int C_COLOR_BLUE = '4';
+    public static final int C_COLOR_CYAN = '5';
+    public static final int C_COLOR_DEFAULT = '0';
     // color escape character
-    public static final int    C_COLOR_ESCAPE  = '^';
-    public static final int    C_COLOR_DEFAULT = '0';
-    public static final int    C_COLOR_RED     = '1';
-    public static final int    C_COLOR_GREEN   = '2';
-    public static final int    C_COLOR_YELLOW  = '3';
-    public static final int    C_COLOR_BLUE    = '4';
-    public static final int    C_COLOR_CYAN    = '5';
-    public static final int    C_COLOR_MAGENTA = '6';
-    public static final int    C_COLOR_WHITE   = '7';
-    public static final int    C_COLOR_GRAY    = '8';
-    public static final int    C_COLOR_BLACK   = '9';
+    public static final int C_COLOR_ESCAPE = '^';
+    public static final int C_COLOR_GRAY = '8';
+    public static final int C_COLOR_GREEN = '2';
+    public static final int C_COLOR_MAGENTA = '6';
+    public static final int C_COLOR_RED = '1';
+    public static final int C_COLOR_WHITE = '7';
+    public static final int C_COLOR_YELLOW = '3';
+    public static final int FILE_HASH_SIZE = 1024;
+    public static final String S_COLOR_BLACK = "^9";
+    public static final String S_COLOR_BLUE = "^4";
+    public static final String S_COLOR_CYAN = "^5";
     // color escape string
     public static final String S_COLOR_DEFAULT = "^0";
-    public static final String S_COLOR_RED     = "^1";
-    public static final String S_COLOR_GREEN   = "^2";
-    public static final String S_COLOR_YELLOW  = "^3";
-    public static final String S_COLOR_BLUE    = "^4";
-    public static final String S_COLOR_CYAN    = "^5";
+    public static final String S_COLOR_GRAY = "^8";
+    public static final String S_COLOR_GREEN = "^2";
     public static final String S_COLOR_MAGENTA = "^6";
-    public static final String S_COLOR_WHITE   = "^7";
-    public static final String S_COLOR_GRAY    = "^8";
-    public static final String S_COLOR_BLACK   = "^9";
+    public static final String S_COLOR_RED = "^1";
+    public static final String S_COLOR_WHITE = "^7";
+    public static final String S_COLOR_YELLOW = "^3";
     // make idStr a multiple of 16 bytes long
 // don't make too large to keep memory requirements to a minimum
-    static final        int    STR_ALLOC_BASE  = 20;
-    static final        int    STR_ALLOC_GRAN  = 32;
+    static final int STR_ALLOC_BASE = 20;
+    static final int STR_ALLOC_GRAN = 32;
+    //
+//    static idDynamicBlockAlloc<Character> stringDataAllocator = new idDynamicBlockAlloc<>(1 << 18, 128);
+//
+    static final idVec4[] g_color_table = {
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
+            new idVec4(1.0f, 0.0f, 0.0f, 1.0f), // S_COLOR_RED
+            new idVec4(0.0f, 1.0f, 0.0f, 1.0f), // S_COLOR_GREEN
+            new idVec4(1.0f, 1.0f, 0.0f, 1.0f), // S_COLOR_YELLOW
+            new idVec4(0.0f, 0.0f, 1.0f, 1.0f), // S_COLOR_BLUE
+            new idVec4(0.0f, 1.0f, 1.0f, 1.0f), // S_COLOR_CYAN
+            new idVec4(1.0f, 0.0f, 1.0f, 1.0f), // S_COLOR_MAGENTA
+            new idVec4(1.0f, 1.0f, 1.0f, 1.0f), // S_COLOR_WHITE
+            new idVec4(0.5f, 0.5f, 0.5f, 1.0f), // S_COLOR_GRAY
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f), // S_COLOR_BLACK
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
+            new idVec4(0.0f, 0.0f, 0.0f, 1.0f),};
+
+    static final String[][] units = {
+            {"B", "KB", "MB", "GB"},
+            {"B/s", "KB/s", "MB/s", "GB/s"}
+    };
+
+    /*
+     ============
+     va
+
+     does a varargs printf into a temp buffer
+     NOTE: not thread safe
+     ============
+     */
+//    @Deprecated
+    public static String va(final String fmt, Object... args) {
+//////	va_list argptr;
+////        char[] argptr;
+////        int index = 0;
+////        char[][] string = new char[4][16384];	// in case called by nested functions
+////        char[] buf;
+////
+////        buf = string[index];
+////        index = (index + 1) & 3;
+////
+//////	va_start( argptr, fmt );
+//////	vsprintf( buf, fmt, argptr );
+//////	va_end( argptr );
+////
+//        return new String(buf);
+        return String.format(fmt, args);
+    }
 
     public enum Measure_t {
 
         MEASURE_SIZE,
         MEASURE_BANDWIDTH
-    };
-//
-//    static idDynamicBlockAlloc<Character> stringDataAllocator = new idDynamicBlockAlloc<>(1 << 18, 128);
-//    
-    static final idVec4[] g_color_table = {
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
-        new idVec4(1.0f, 0.0f, 0.0f, 1.0f), // S_COLOR_RED
-        new idVec4(0.0f, 1.0f, 0.0f, 1.0f), // S_COLOR_GREEN
-        new idVec4(1.0f, 1.0f, 0.0f, 1.0f), // S_COLOR_YELLOW
-        new idVec4(0.0f, 0.0f, 1.0f, 1.0f), // S_COLOR_BLUE
-        new idVec4(0.0f, 1.0f, 1.0f, 1.0f), // S_COLOR_CYAN
-        new idVec4(1.0f, 0.0f, 1.0f, 1.0f), // S_COLOR_MAGENTA
-        new idVec4(1.0f, 1.0f, 1.0f, 1.0f), // S_COLOR_WHITE
-        new idVec4(0.5f, 0.5f, 0.5f, 1.0f), // S_COLOR_GRAY
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f), // S_COLOR_BLACK
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),
-        new idVec4(0.0f, 0.0f, 0.0f, 1.0f),};
-    static final String[][] units = {
-        {"B", "KB", "MB", "GB"},
-        {"B/s", "KB/s", "MB/s", "GB/s"}
-    };
+    }
 
     public static class idStr implements SERiAL {
 
@@ -89,17 +116,20 @@ public class Str {
                 + Integer.SIZE
                 + (Char.SIZE * STR_ALLOC_BASE);//TODO:char size
         public static final transient int BYTES = SIZE / Byte.SIZE;
-
-        protected int len;//TODO:data is a pointer in the original class.
-        protected String data = "";//i·ro·ny: when your program breaks because of two measly double quotes. stu·pid·i·ty: when it takes you 2 days to find said "bug".
+        // elements of list need to decend in size
+        static formatList_t[] formatList = {new formatList_t(1000000000, 0),
+                new formatList_t(1000000, 0),
+                new formatList_t(1000, 0)};
+        static int index = 0;
+        //int numFormatList = sizeof(formatList) / sizeof( formatList[0] );
+        static int numFormatList = formatList.length;
+        static StringBuilder[] str = new StringBuilder[4];    // in case called by nested functions
+        //
+        //
+        protected final char[] baseBuffer = new char[STR_ALLOC_BASE];
         protected int alloced;
-        protected final char baseBuffer[] = new char[STR_ALLOC_BASE];
-        //
-        //
-
-        public static idStr parseStr(final String str) {
-            return new idStr(str);
-        }
+        protected String data = "";//i·ro·ny: when your program breaks because of two measly double quotes. stu·pid·i·ty: when it takes you 2 days to find said "bug".
+        protected int len;//TODO:data is a pointer in the original class.
 
         public idStr() {
             Init();
@@ -217,6 +247,10 @@ public class Str {
 //	data+= '\0';
             len = 1;
         }
+//public						~idStr( void ) {
+//	FreeData();
+//}
+//
 
         public idStr(final int i) {
 //	char []text=new char[ 64 ];
@@ -244,6 +278,9 @@ public class Str {
             data = text;
             len = l;
         }
+//public	operator			const char *( void ) const;
+//public	operator			const char *( void );
+//
 
         public idStr(final float f) {
             String text = Float.toString(f);
@@ -259,10 +296,917 @@ public class Str {
             data = text;
             len = l;
         }
-//public						~idStr( void ) {
-//	FreeData();
-//}
+
+        public static idStr parseStr(final String str) {
+            return new idStr(str);
+        }
+//public	char &				operator[]( int index );
 //
+//public	void				operator=( const idStr &text );
+
+        //public	friend idStr		operator+( const char *a, const idStr &b );
+        public static idStr oPlus(final String a, final idStr b) {
+            idStr result = new idStr(a);
+            result.Append(b.data);
+            return result;
+        }
+
+        // char * methods to replace library functions
+        public static int Length(final char[] s) {
+            int i;
+            for (i = 0; i < s.length && s[i] != 0; i++) ;
+
+            return i;
+        }
+
+        public static char[] ToLower(char[] s) {
+            for (int i = 0; i < s.length && s[i] != 0; i++) {
+                if (CharIsUpper(s[i])) {
+                    s[i] += ('a' - 'A');
+                }
+            }
+            return s;
+        }
+
+        public static char[] ToUpper(char[] s) {
+            for (int i = 0; i < s.length && s[i] != 0; i++) {
+                if (CharIsLower(s[i])) {
+                    s[i] -= ('a' - 'A');
+                }
+            }
+            return s;
+        }
+
+        public static boolean IsNumeric(final String s) {
+            try {
+                Double.parseDouble(s);
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+
+        static boolean isdigit(char c) {
+            return '0' >= c && c <= '9';
+        }
+
+        public static boolean IsColor(final String s) {
+            char[] sArray = s.toCharArray();
+            return (sArray[0] == C_COLOR_ESCAPE && sArray.length > 1 && sArray[1] != ' ');
+        }
+
+        public static boolean HasLower(final String s) {
+            if (s == null) {
+                return false;
+            }
+
+            return !s.toUpperCase().equals(s);
+//	while ( *s ) {
+//		if ( CharIsLower( *s ) ) {
+//			return true;
+//		}
+//		s++;
+//	}
+        }
+//public	friend idStr		operator+( const idStr &a, const bool b );
+
+        public static boolean HasUpper(final String s) {
+            if (s == null) {
+                return false;
+            }
+
+            return !s.toLowerCase().equals(s);
+//	while ( *s ) {
+//		if ( CharIsLower( *s ) ) {
+//			return true;
+//		}
+//		s++;
+//	}
+        }
+
+        public static int LengthWithoutColors(final String s) {
+            int len;
+            int p = 0;
+
+            if (s == null) {
+                return 0;
+            }
+//char[]sArray=s.toCharArray();
+
+            len = s.length();
+//	p = s;
+//	while( sArray[p]!=0 ) {
+            if (idStr.IsColor(s)) {
+                p += 2;
+//			continue;
+            }
+//		p++;
+//		len++;
+//	}
+
+            return len - p;
+        }
+
+        public static String RemoveColors(String s) {
+            String string = "";
+
+            for (int a = 0; a < s.length(); a++) {
+                if (idStr.IsColor(s.substring(a))) {
+                    a++;
+                } else {
+                    string += s.charAt(a);
+                }
+            }
+//	*d = '\0';
+
+            return string;
+        }
+
+        public static int Cmp(final char[] s1, final char[] s2) {
+            return Cmp(ctos(s1), ctos(s2));
+        }
+
+        public static int Cmp(final idStr s1, final idStr s2) {
+            return Cmp(s1.toString(), s2.toString());
+        }
+
+        public static int Cmp(final String s1, final String s2) {
+            return ("" + s1).compareTo("" + s2);
+        }
+//public	idStr &				operator+=( const int a );
+//public	idStr &				operator+=( const unsigned a );
+
+        public static int Cmpn(final String s1, final String s2, int n) {//TODO:see if we can return booleans
+            if (isNotNullOrEmpty(s1) && isNotNullOrEmpty(s2)) {
+                if (s1.length() >= n && s2.length() >= n) {
+                    return Cmp(s1.substring(0, n), s2.substring(0, n));
+                }
+            }
+            return 1;//not equal
+        }
+//public	idStr &				operator+=( const bool a );
+
+        public static int Icmp(final idToken t1, final String s2) {
+            return Icmp(t1.data, s2);
+        }
+//
+//						// case sensitive compare
+//public	friend bool			operator==( const idStr &a, const idStr &b );
+//public	friend bool			operator==( const idStr &a, const char *b );
+//public	friend bool			operator==( const char *a, const idStr &b );
+//
+//public	friend bool			operator!=( const idStr &a, const idStr &b );
+//public	friend bool			operator!=( const idStr &a, const char *b );
+//public	friend bool			operator!=( const char *a, const idStr &b );
+
+        public static int Icmp(final idStr t1, final String s2) {
+            return Icmp(t1.data, s2);
+        }
+
+        public static int Icmp(final idStr t1, final idStr s2) {
+            return Icmp(t1.data, s2.data);
+        }
+
+        public static int Icmp(final char[] t1, final char[] s2) {
+            return Icmp(ctos(t1), ctos(s2));
+        }
+
+        public static int Icmp(final String s1, final String s2) {
+            return ("" + s1).compareToIgnoreCase("" + s2);
+        }
+
+        public static int Icmpn(final String s1, final String s2, int n) {
+            if (isNotNullOrEmpty(s1) && isNotNullOrEmpty(s2)) {
+                if (s1.length() >= n && s2.length() >= n) {
+                    return Icmp(s1.substring(0, n), s2.substring(0, n));
+                }
+            }
+            return 1;//not equal
+        }
+
+        public static int Icmpn(final idStr s1, final idStr s2, int n) {
+            return Icmpn(s1.toString(), s2.toString(), n);
+        }
+
+        public static int Icmpn(final idStr s1, final String s2, int n) {
+            return Icmpn(s1.toString(), s2, n);
+        }
+
+        public static int IcmpNoColor(final String s1, final String s2) {
+            char[] s1Array = s1.toCharArray();
+            char[] s2Array = s2.toCharArray();
+            int c1 = 0, c2 = 0, d;
+
+            do {
+                while (idStr.IsColor(s1)) {
+                    c1 += 2;
+                }
+                while (idStr.IsColor(s2)) {
+                    c2 += 2;
+                }
+                c1++;
+                c2++;
+
+                d = s1Array[c1] - s2Array[c2];
+                while (d != 0) {
+                    if (c1 <= 'Z' && c1 >= 'A') {
+                        d += ('a' - 'A');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    if (c2 <= 'Z' && c2 >= 'A') {
+                        d -= ('a' - 'A');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    return (Math_h.INTSIGNBITNOTSET(d) << 1) - 1;
+                }
+            } while (c1 != 0);
+
+            return 0;        // strings are equal
+        }
+
+        // compares paths and makes sure folders come first
+        public static int IcmpPath(final String s1, final String s2) {
+            return Paths.get(s1).compareTo(Paths.get(s2));//TODO: whats the "make sure fodlers come first" all about?
+
+//            char[] s1Array = s1.toCharArray();
+//            char[] s2Array = s2.toCharArray();
+//            int i1 = 0, i2 = 0, d;
+//            char c1, c2;
+//
+////#if 0
+////#if !defined( _WIN32 )
+////	idLib.common.Printf( "WARNING: IcmpPath used on a case-sensitive filesystem?\n" );
+////#endif
+//            do {
+//                c1 = s1Array[i1++];
+//                c2 = s2Array[i2++];
+//
+//                d = c1 - c2;
+//                while (d != 0) {
+//                    if (c1 <= 'Z' && c1 >= 'A') {
+//                        d += ('a' - 'A');
+//                        if (0 == d) {
+//                            break;
+//                        }
+//                    }
+//                    if (c1 == '\\') {
+//                        d += ('/' - '\\');
+//                        if (0 == d) {
+//                            break;
+//                        }
+//                    }
+//                    if (c2 <= 'Z' && c2 >= 'A') {
+//                        d -= ('a' - 'A');
+//                        if (0 == d) {
+//                            break;
+//                        }
+//                    }
+//                    if (c2 == '\\') {
+//                        d -= ('/' - '\\');
+//                        if (0 == d) {
+//                            break;
+//                        }
+//                    }
+//                    // make sure folders come first
+//                    while (c1 != 0) {
+//                        if (c1 == '/' || c1 == '\\') {
+//                            break;
+//                        }
+//                        c1 = s1Array[i1++];
+//                    }
+//                    while (c2 != 0) {
+//                        if (c2 == '/' || c2 == '\\') {
+//                            break;
+//                        }
+//                        c2 = s2Array[i2++];
+//                    }
+//                    if (c1 != 0 && c2 == 0) {
+//                        return -1;
+//                    } else if (c1 == 0 && c2 != 0) {
+//                        return 1;
+//                    }
+//                    // same folder depth so use the regular compare
+//                    return (Math_h.INTSIGNBITNOTSET(d) << 1) - 1;
+//                }
+//            } while (c1 != 0);
+//
+//            return 0;
+        }
+
+        public static int IcmpnPath(final String s1, final String s2, int n) {// compares paths and makes sure folders come first
+            char[] s1Array = s1.toCharArray();
+            char[] s2Array = s2.toCharArray();
+            int c1 = 0, c2 = 0, d;
+
+//#if 0
+//#if !defined( _WIN32 )
+//	idLib.common.Printf( "WARNING: IcmpPath used on a case-sensitive filesystem?\n" );
+//#endif
+            assert (n >= 0);
+
+            do {
+                c1++;
+                c2++;
+
+                if (0 == n--) {
+                    return 0;        // strings are equal until end point
+                }
+
+                d = s1Array[c1] - s2Array[c2];
+                while (d != 0) {
+                    if (c1 <= 'Z' && c1 >= 'A') {
+                        d += ('a' - 'A');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    if (c1 == '\\') {
+                        d += ('/' - '\\');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    if (c2 <= 'Z' && c2 >= 'A') {
+                        d -= ('a' - 'A');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    if (c2 == '\\') {
+                        d -= ('/' - '\\');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    // make sure folders come first
+                    while (c1 != 0) {
+                        if (c1 == '/' || c1 == '\\') {
+                            break;
+                        }
+                        c1++;
+                    }
+                    while (c2 != 0) {
+                        if (c2 == '/' || c2 == '\\') {
+                            break;
+                        }
+                        c2++;
+                    }
+                    if (c1 != 0 && c2 == 0) {
+                        return -1;
+                    } else if (c1 == 0 && c2 != 0) {
+                        return 1;
+                    }
+                    // same folder depth so use the regular compare
+                    return (Math_h.INTSIGNBITNOTSET(d) << 1) - 1;
+                }
+            } while (c1 != 0);
+
+            return 0;
+        }
+
+        /*
+         ================
+         idStr::Append
+
+         never goes past bounds or leaves without a terminating 0
+         ================
+         */
+        public static void Append(char[] dest, int size, final String src) {
+            int l1;
+
+            l1 = strLen(dest);
+            if (l1 >= size) {
+                idLib.common.Error("idStr::Append: already overflowed");
+            }
+            idStr.Copynz(dest, src, size - l1);
+        }
+
+        public static String Append(String dest, int size, final String src) {
+            int l1, l2;
+
+            l1 = dest.length();
+            if (l1 >= size) {
+                idLib.common.Error("idStr::Append: already overflowed");
+                return null;
+            }
+
+            l2 = dest.length() + src.length();
+            if (l2 > size) {
+                return (dest + src).substring(0, size - l1);
+            }
+
+            return dest + src;
+        }
+
+        public static char[] Copynz(char[] dest, final String src, int destsize) {
+            return Copynz(dest, 0, src, destsize);
+        }
+
+        /*
+         =============
+         idStr::Copynz
+
+         Safe strncpy that ensures a trailing zero
+         =============
+         */
+        public static char[] Copynz(char[] dest, int offset, final String src, int destsize) {
+            if (null == src) {
+                idLib.common.Warning("idStr::Copynz: NULL src");
+                return null;
+            }
+            if (destsize < 1) {
+                idLib.common.Warning("idStr::Copynz: destsize < 1");
+                return null;
+            }
+
+//	strncpy( dest, src, destsize-1 );
+            final int len = Math.min(destsize - 1, src.length());
+            System.arraycopy(src.toCharArray(), 0, dest, offset, len);
+            dest[offset + len] = 0;
+
+            return dest;
+        }
+
+        public static void Copynz(char[] dest, final char[] src, int destsize) {
+            Copynz(dest, ctos(src), destsize);
+        }
+
+        //        @Deprecated
+//        public static void Copynz(String dest, final String src, int destsize) {
+//            if (null == src) {
+//                idLib.common.Warning("idStr::Copynz: NULL src");
+//                return;
+//            }
+//            if (destsize < 1) {
+//                idLib.common.Warning("idStr::Copynz: destsize < 1");
+//                return;
+//            }
+//
+//            idStr.Copynz(dest.toCharArray(), src, destsize);
+//        }
+        public static void Copynz(String[] dest, final String src, int destsize) {
+            if (null == src) {
+                idLib.common.Warning("idStr::Copynz: NULL src");
+                return;
+            }
+            if (destsize < 1) {
+                idLib.common.Warning("idStr::Copynz: destsize < 1");
+                return;
+            }
+
+            dest[0] = new String(idStr.Copynz((char[]) null, src, destsize));
+        }
+
+        public static void Copynz(StringBuilder dest, final String... src) {
+            if (null == src) {
+                idLib.common.Warning("idStr::Copynz: NULL src");
+                return;
+            }
+            if (null == dest) {
+                idLib.common.Warning("idStr::Copynz: NULL dest");
+                return;
+            }
+
+            for (String s : src) {
+                dest.append(s);
+            }
+        }
+
+        public static int snPrintf(StringBuilder dest, int size, final String fmt, Object... args) {
+            int len;
+            final int bufferSize = 32000;
+            StringBuilder buffer = new StringBuilder(bufferSize);
+//
+//	va_start( argptr, fmt );
+//	len = vsprintf( buffer, fmt, argptr );
+//	va_end( argptr );
+            len = buffer.append(String.format(fmt, args)).length();
+            if (len >= bufferSize) {
+                idLib.common.Error("idStr::snPrintf: overflowed buffer");
+            }
+            if (len >= size) {
+                idLib.common.Warning("idStr::snPrintf: overflow of %d in %d\n", len, size);
+                len = size;
+            }
+//            idStr.Copynz(dest, buffer, size);
+            dest.delete(0, dest.capacity());//clear
+            dest.append(buffer);//TODO: use replace instead?
+            return len;
+        }
+
+        public static int snPrintf(String[] dest, int size, final String fmt, Object... args) {
+            throw new TODO_Exception();
+//	int len;
+//	va_list argptr;
+//	char buffer[32000];	// big, but small enough to fit in PPC stack
+//
+//	va_start( argptr, fmt );
+//	len = vsprintf( buffer, fmt, argptr );
+//	va_end( argptr );
+//	if ( len >= sizeof( buffer ) ) {
+//		idLib::common->Error( "idStr::snPrintf: overflowed buffer" );
+//	}
+//	if ( len >= size ) {
+//		idLib::common->Warning( "idStr::snPrintf: overflow of %i in %i\n", len, size );
+//		len = size;
+//	}
+//	idStr::Copynz( dest, buffer, size );
+//	return len;
+        }
+
+        public static int snPrintf(char[] dest, int size, final String fmt, Object... args) {
+            return snPrintf(0, dest, size, fmt, args);
+        }
+
+        public static int snPrintf(int offset, char[] dest, int size, final String fmt, Object... args) {
+            int length;
+//            char[] argptr;
+            StringBuilder buffer = new StringBuilder(32000);    // big, but small enough to fit in PPC stack
+
+//	va_start( argptr, fmt );
+//	len = vsprintf( buffer, fmt, argptr );
+//	va_end( argptr );
+            length = buffer.append(String.format(fmt, args)).length();
+            if (length >= dest.length) {
+                idLib.common.Error("idStr::snPrintf: overflowed buffer");
+            }
+            if (length >= size) {
+                idLib.common.Warning("idStr::snPrintf: overflow of %d in %d\n", length, size);
+                length = size;
+            }
+            idStr.Copynz(dest, offset, buffer.toString(), size);
+            return length;
+        }
+
+        /*
+         ============
+         idStr::vsnPrintf
+
+         vsnprintf portability:
+
+         C99 standard: vsnprintf returns the number of characters (excluding the trailing
+         '\0') which would have been written to the final string if enough space had been available
+         snprintf and vsnprintf do not write more than size bytes (including the trailing '\0')
+
+         win32: _vsnprintf returns the number of characters written, not including the terminating null character,
+         or a negative value if an output error occurs. If the number of characters to write exceeds count, then count
+         characters are written and -1 is returned and no trailing '\0' is added.
+
+         idStr::vsnPrintf: always appends a trailing '\0', returns number of characters written (not including terminal \0)
+         or returns -1 on failure or if the buffer would be overflowed.
+         ============
+         */
+        public static int vsnPrintf(String[] dest, int size, final String fmt, Object... args) {
+            int ret = 0;
+
+//#ifdef _WIN32
+//#undef _vsnprintf
+//	ret = _vsnprintf( dest, size-1, fmt, argptr );
+//#define _vsnprintf	use_idStr_vsnPrintf
+//#else
+//#undef vsnprintf
+//	ret = vsnprintf( dest, size, fmt, argptr );
+//#define vsnprintf	use_idStr_vsnPrintf
+//#endif
+//            dest[size - 1] = '\0';
+            ret = (dest[0] = String.format(fmt, args)).length();
+            if (ret < 0 || ret >= size) {
+                dest[0] = null;
+                return -1;
+            }
+            return ret;
+        }
+
+        /*
+         ============
+         idStr::FindChar
+
+         returns -1 if not found otherwise the index of the char
+         ============
+         */
+        public static int FindChar(final String str, final char c) {
+            return FindChar(str, c, 0);
+        }
+
+        public static int FindChar(final String str, final char c, int start) {
+            return FindChar(str, c, start, -1);
+        }
+//public	void				Append( const char *text );
+
+        public static int FindChar(final String str, final char c, int start, int end) {
+            char[] strArray = str.toCharArray();
+            int i;
+
+            if (end == -1) {
+//		end = strlen( str ) - 1;
+                end = str.length();
+            }
+            for (i = start; i < end; i++) {
+                if (strArray[i] == c) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /*
+         ============
+         idStr::FindText
+
+         returns -1 if not found otherwise the index of the text
+         ============
+         */
+        public static int FindText(final String str, final String text) {
+            return FindText(str, text, true);
+        }
+
+        public static int FindText(final String str, final String text, boolean casesensitive) {
+            return FindText(str, text, casesensitive, 0);
+        }
+
+        public static int FindText(final String str, final String text, boolean casesensitive, int start) {
+            return FindText(str, text, casesensitive, start, -1);
+        }
+
+        public static int FindText(final String str, final String text, boolean casesensitive, int start, int end) {
+            if (end == -1) {
+                end = str.length();
+            }
+            if (casesensitive) {
+                return str.substring(start, end).indexOf(text);
+            } else {
+                return str.substring(start, end).toLowerCase().indexOf(text.toLowerCase());
+            }
+        }
+
+        /*
+         =============
+         idStr::StripMediaName
+
+         makes the string lower case, replaces backslashes with forward slashes, and removes extension
+         =============
+         */
+        public static void StripMediaName(final String name, idStr mediaName) {
+//	char c;
+
+            mediaName.Empty();
+
+            for (char c : name.toCharArray()) {
+                // truncate at an extension
+                if (c == '.') {
+                    break;
+                }
+                // convert backslashes to forward slashes
+                if (c == '\\') {
+                    mediaName.Append('/');
+                } else {
+                    mediaName.Append(idStr.ToLower(c));
+                }
+            }
+        }
+
+        public static boolean CheckExtension(final String name, final String ext) {
+            int c1 = name.length() - 1, c2 = ext.length() - 1, d;
+//TODO:double check if its working
+            do {
+                d = name.charAt(c1) - ext.charAt(c2);
+                while (d != 0) {
+                    if (c1 <= 'Z' && c1 >= 'A') {
+                        d += ('a' - 'A');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    if (c2 <= 'Z' && c2 >= 'A') {
+                        d -= ('a' - 'A');
+                        if (0 == d) {
+                            break;
+                        }
+                    }
+                    return false;
+                }
+                c1--;
+                c2--;
+            } while (c1 > 0 && c2 > 0);
+
+            return (c1 >= 0);
+        }
+
+        public static String FloatArrayToString(final float[] array, final int length, final int precision) {
+
+            int i, n;
+            String format;
+            StringBuilder s;
+
+            // use an array of string so that multiple calls won't collide
+            s = str[index] = new StringBuilder(16384);
+            index = (index + 1) & 3;
+
+            format = String.format("%%.%df", precision);
+            n = snPrintf(s, s.capacity(), format, array[0]);
+//	if ( precision > 0 ) {
+//		while( n > 0 && s[n-1] == '0' ) s[--n] = '\0';
+//		while( n > 0 && s[n-1] == '.' ) s[--n] = '\0';
+//	}
+            format = String.format(" %%.%df", precision);
+            for (i = 1; i < length; i++) {
+                s.append(String.format(format, array[i]));
+//                n += this.snPrintf(s + n, sizeof(str[0]) - n, format, array[i]);
+//		if ( precision > 0 ) {
+//			while( n > 0 && s[n-1] == '0' ) s[--n] = '\0';
+//			while( n > 0 && s[n-1] == '.' ) s[--n] = '\0';
+//		}
+            }
+            return s.toString();
+        }
+
+        // hash keys
+        public static int Hash(final char[] string) {
+            int i, hash = 0;
+            for (i = 0; i < string.length && string[i] != '\0'; i++) {
+                hash += (string[i]) * (i + 119);
+            }
+            return hash;
+        }
+
+        public static int Hash(final String string) {
+            return Hash(string.toCharArray());
+        }
+
+        public static int Hash(final char[] string, int length) {
+            int i, hash = 0;
+            for (i = 0; i < length; i++) {
+                hash += (string[i]) * (i + 119);
+            }
+            return hash;
+        }
+
+        // case insensitive
+        public static int IHash(final char[] string) {
+            int i, hash = 0;
+            for (i = 0; i < string.length && string[i] != '\0'; i++) {//TODO:eliminate '\0' from char strings.
+                hash += ToLower(string[i]) * (i + 119);
+            }
+            return hash;
+        }
+
+        // case insensitive
+        public static int IHash(final char[] string, int length) {
+            int i, hash = 0;
+            for (i = 0; i < length; i++) {
+                hash += ToLower(string[i]) * (i + 119);
+            }
+            return hash;
+        }
+
+        // character methods
+        public static char ToLower(char c) {
+            if (c <= 'Z' && c >= 'A') {
+                return (char) (c + ('a' - 'A'));
+            }
+            return c;
+        }
+
+        public static char ToUpper(char c) {
+            if (c >= 'a' && c <= 'z') {
+                return (char) (c - ('a' - 'A'));
+            }
+            return c;
+        }
+
+        public static boolean CharIsPrintable(int c) {
+            // test for regular ascii and western European high-ascii chars
+            return (c >= 0x20 && c <= 0x7E) || (c >= 0xA1 && c <= 0xFF);
+        }
+
+        public static boolean CharIsLower(int c) {
+            // test for regular ascii and western European high-ascii chars
+            return (c >= 'a' && c <= 'z') || (c >= 0xE0 && c <= 0xFF);
+        }
+
+        public static boolean CharIsUpper(int c) {
+            // test for regular ascii and western European high-ascii chars
+            return (c <= 'Z' && c >= 'A') || (c >= 0xC0 && c <= 0xDF);
+        }
+
+        public static boolean CharIsAlpha(int c) {
+            // test for regular ascii and western European high-ascii chars
+            return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+                    || (c >= 0xC0 && c <= 0xFF));
+        }
+
+        public static boolean CharIsNumeric(int c) {
+            return (c <= '9' && c >= '0');
+        }
+
+        public static boolean CharIsNewLine(char c) {
+            return (c == '\n' || c == '\r' /*|| c == '\v'*/);
+        }
+        /*
+         ============
+         idStr::Last
+
+         returns -1 if not found otherwise the index of the char
+         ============
+         */
+
+        public static boolean CharIsTab(char c) {
+            return (c == '\t');
+        }
+
+        public static int ColorIndex(int c) {
+            return (c & 15);
+        }
+
+        public static idVec4 ColorForIndex(int i) {
+            return g_color_table[i & 15];
+        }
+
+        public static void InitMemory() {
+//#ifdef USE_STRING_DATA_ALLOCATOR
+//	stringDataAllocator.Init();
+//#endif
+        }
+
+        public static void ShutdownMemory() {
+//#ifdef USE_STRING_DATA_ALLOCATOR
+//	stringDataAllocator.Shutdown();
+//#endif
+        }
+
+        public static void PurgeMemory() {
+//#ifdef USE_STRING_DATA_ALLOCATOR
+//	stringDataAllocator.FreeEmptyBaseBlocks();
+//#endif
+        }
+
+        public static idStr FormatNumber(int number) {
+            idStr string = new idStr();
+            boolean hit;
+
+            // reset
+            for (int i = 0; i < numFormatList; i++) {
+                formatList_t li = formatList[i];
+                li.count = 0;
+            }
+
+            // main loop
+            do {
+                hit = false;
+
+                for (int i = 0; i < numFormatList; i++) {
+                    formatList_t li = formatList[i];
+
+                    if (number >= li.gran) {
+                        li.count++;
+                        number -= li.gran;
+                        hit = true;
+                        break;
+                    }
+                }
+            } while (hit);
+
+            // print out
+            boolean found = false;
+
+            for (int i = 0; i < numFormatList; i++) {
+                formatList_t li = formatList[i];
+
+                if (li.count != 0) {
+                    if (!found) {
+                        string.oPluSet(va("%d,", li.count));
+                    } else {
+//				string += va( "%3.3i,", li.count );
+                        string.oPluSet(va("%3.3i,", li.count));
+                    }
+                    found = true;
+                } else if (found) {
+//			string += va( "%3.3i,", li->count );
+                    string.oPluSet(va("%3.3i,", li.count));
+                }
+            }
+
+            if (found) {
+//		string += va( "%3.3i", number );
+                string.oPluSet(va("%3.3i,", number));
+            } else {
+//		string += va( "%d", number );
+                string.oPluSet(va("%d,", number));
+            }
+
+            // pad to proper size
+            int count = 11 - string.Length();
+
+            for (int i = 0; i < count; i++) {
+                string.Insert(" ", 0);
+            }
+
+            return string;
+        }
 
         public int/*size_t*/ Size() {
             return /*sizeof( *this ) +*/ Allocated();
@@ -272,9 +1216,6 @@ public class Str {
         public char[] c_str() {
             return data.toCharArray();
         }
-//public	operator			const char *( void ) const;
-//public	operator			const char *( void );
-//
 
         public char oGet(int index) {
             assert ((index >= 0) && (index <= len));
@@ -291,9 +1232,6 @@ public class Str {
             }
             return value;
         }
-//public	char &				operator[]( int index );
-//
-//public	void				operator=( const idStr &text );
 
         public void oSet(final idStr text) {
             int l;
@@ -306,7 +1244,7 @@ public class Str {
             len = l;
         }
 
-//public	void				operator=( const char *text );
+        //public	void				operator=( const char *text );
         public idStr oSet(final String text) {
             int l;
 
@@ -328,28 +1266,28 @@ public class Str {
             return this.oSet(ctos(text));
         }
 
-//public	friend idStr		operator+( const idStr &a, const idStr &b );
+        //public	friend idStr		operator+( const idStr &a, const idStr &b );
         public idStr oPlus(final idStr b) {
             idStr result = new idStr(this.data);
             result.Append(b.data);
             return result;
         }
 
-//public	friend idStr		operator+( const idStr &a, const char *b );
+        //public	friend idStr		operator+( const idStr &a, const char *b );
         public idStr oPlus(final String b) {
             idStr result = new idStr(this.data);
             result.Append(b);
             return result;
         }
+        /*
+         ============
+         idStr::StripQuotes
 
-//public	friend idStr		operator+( const char *a, const idStr &b );
-        public static idStr oPlus(final String a, final idStr b) {
-            idStr result = new idStr(a);
-            result.Append(b.data);
-            return result;
-        }
+         Removes the quotes from the beginning and end of the string
+         ============
+         */
 
-//public	friend idStr		operator+( const idStr &a, const float b );
+        //public	friend idStr		operator+( const idStr &a, const float b );
         public idStr oPlus(final float b) {
             String text;
             idStr result = new idStr(this.data);
@@ -360,7 +1298,7 @@ public class Str {
             return result;
         }
 
-//public	friend idStr		operator+( const idStr &a, const int b );
+        //public	friend idStr		operator+( const idStr &a, const int b );
 //public	friend idStr		operator+( const idStr &a, const unsigned b );
         public idStr oPlus(final long b) {
             String text;
@@ -371,7 +1309,6 @@ public class Str {
 
             return result;
         }
-//public	friend idStr		operator+( const idStr &a, const bool b );
 
         public idStr oPlus(final boolean b) {
             idStr result = new idStr(this.data);
@@ -379,59 +1316,47 @@ public class Str {
             return result;
         }
 
-//public	friend idStr		operator+( const idStr &a, const char b );
+        //public	friend idStr		operator+( const idStr &a, const char b );
         public idStr oPlus(final char b) {
             idStr result = new idStr(this.data);
             result.Append(b);
             return result;
         }
 
-//public	 idStr		plus( final idStr a, final int b ){return plus(a, b);}
+        //public	 idStr		plus( final idStr a, final int b ){return plus(a, b);}
 //public	idStr &				operator+=( const idStr &a );
         public idStr oPluSet(final idStr a) {
             Append(a);
             return this;
         }
 
-//public	idStr &				operator+=( const char *a );
+        //public	idStr &				operator+=( const char *a );
         public idStr oPluSet(final String a) {
             Append(a);
             return this;
         }
 
-//public	idStr &				operator+=( const float a );
+        //public	idStr &				operator+=( const float a );
         public idStr oPluSet(final float a) {
             Append("" + a);
             return this;
         }
 
-//public	idStr &				operator+=( const char a );
+        //public	idStr &				operator+=( const char a );
         public idStr oPluSet(final char a) {
             Append(a);
             return this;
         }
-//public	idStr &				operator+=( const int a );
-//public	idStr &				operator+=( const unsigned a );
 
         public idStr oPluSet(final long a) {
             Append("" + a);
             return this;
         }
-//public	idStr &				operator+=( const bool a );
 
         public idStr oPluSet(final boolean a) {
             Append(Boolean.toString(a));
             return this;
         }
-//
-//						// case sensitive compare
-//public	friend bool			operator==( const idStr &a, const idStr &b );
-//public	friend bool			operator==( const idStr &a, const char *b );
-//public	friend bool			operator==( const char *a, const idStr &b );
-//
-//public	friend bool			operator!=( const idStr &a, const idStr &b );
-//public	friend bool			operator!=( const idStr &a, const char *b );
-//public	friend bool			operator!=( const char *a, const idStr &b );
 
         @Override
         public int hashCode() {
@@ -444,9 +1369,9 @@ public class Str {
          * The idStr equals basically compares to see if the string begins with
          * the other string.
          *
-         * @see java.lang.String#startsWith(java.lang.String)
          * @param obj the <b>other</b> string.
          * @return
+         * @see java.lang.String#startsWith(java.lang.String)
          */
         @Override
         public boolean equals(Object obj) {
@@ -476,7 +1401,7 @@ public class Str {
         // case sensitive compare
         public int Cmp(final String text) {
             assert (text != null);
-            return this.Cmp(data, text);
+            return Cmp(data, text);
         }
 
         public int Cmp(final idStr text) {
@@ -485,18 +1410,18 @@ public class Str {
 
         public int Cmpn(final String text, int n) {
             assert (text != null);
-            return this.Cmpn(data, text, n);
+            return Cmpn(data, text, n);
         }
 
         public int CmpPrefix(final String text) {
             assert (null != text);
-            return this.Cmpn(data, text, /*strlen( text )*/ text.length());
+            return Cmpn(data, text, /*strlen( text )*/ text.length());
         }
 
         // case insensitive compare
         public int Icmp(final String text) {
             assert (text != null);
-            return this.Icmp(data, text);
+            return Icmp(data, text);
         }
 
         public int Icmp(final idStr text) {
@@ -505,18 +1430,18 @@ public class Str {
 
         public int Icmpn(final String text, int n) {
             assert (text != null);
-            return this.Icmpn(data, text, n);
+            return Icmpn(data, text, n);
         }
 
         public int IcmpPrefix(final String text) {
             assert (text != null);
-            return this.Icmpn(data, text, text.length());
+            return Icmpn(data, text, text.length());
         }
 
         // case insensitive compare ignoring color
         public int IcmpNoColor(final String text) {
             assert (text != null);
-            return this.IcmpNoColor(data, text);
+            return IcmpNoColor(data, text);
         }
 
         public int IcmpNoColor(final idStr text) {
@@ -527,17 +1452,17 @@ public class Str {
         // compares paths and makes sure folders come first
         public int IcmpPath(final String text) {
             assert (text != null);
-            return this.IcmpPath(data, text);
+            return IcmpPath(data, text);
         }
 
         public int IcmpnPath(final String text, int n) {
             assert (text != null);
-            return this.IcmpnPath(data, text, n);
+            return IcmpnPath(data, text, n);
         }
 
         public int IcmpPrefixPath(final String text) {
             assert (text != null);
-            return this.IcmpnPath(data, text, text.length());
+            return IcmpnPath(data, text, text.length());
         }
 
         public int Length() {
@@ -597,7 +1522,6 @@ public class Str {
         public void Append(final char[] text) {
             Append(ctos(text));
         }
-//public	void				Append( const char *text );
 
         public void Append(final String text, int l) {
             int newLen;
@@ -630,7 +1554,7 @@ public class Str {
 //		data[i+l] = data[i];
 //	}
 //	data[index] = a;
-            data = data.substring(0, index) + a + data.substring(index, data.length());
+            data = data.substring(0, index) + a + data.substring(index);
             len++;
         }
 
@@ -652,7 +1576,7 @@ public class Str {
 //	for ( i = 0; i < l; i++ ) {
 //		data[index+i] = text[i];
 //	}
-            data = data.substring(0, index) + text + data.substring(index, data.length());
+            data = data.substring(0, index) + text + data.substring(index);
             len += l;
         }
 
@@ -675,27 +1599,27 @@ public class Str {
         }
 
         public boolean IsNumeric() {
-            return this.IsNumeric(data);
+            return IsNumeric(data);
         }
 
         public boolean IsColor() {
-            return this.IsColor(data);
+            return IsColor(data);
         }
 
         public boolean HasLower() {
-            return this.HasLower(data);
+            return HasLower(data);
         }
 
         public boolean HasUpper() {
-            return this.HasUpper(data);
+            return HasUpper(data);
         }
 
         public int LengthWithoutColors() {
-            return this.LengthWithoutColors(data);
+            return LengthWithoutColors(data);
         }
 
         public idStr RemoveColors() {
-            data = this.RemoveColors(data);
+            data = RemoveColors(data);
 //            len = Length( data );
             len = data.length();
             return this;
@@ -734,12 +1658,13 @@ public class Str {
             if (end == -1) {
                 end = len;
             }
-            return this.FindChar(data, c, start, end);
+            return FindChar(data, c, start, end);
         }
 
         public int Find(final String text) {
             return Find(text, true);
         }
+//public	static int			snPrintf( char *dest, int size, const char *fmt, ... ) id_attribute((format(printf,3,4)));
 
         public int Find(final String text, boolean casesensitive) {
             return Find(text, casesensitive, 0);
@@ -753,23 +1678,16 @@ public class Str {
             if (end == -1) {
                 end = len;
             }
-            return this.FindText(data, text, casesensitive, start, end);
+            return FindText(data, text, casesensitive, start, end);
         }
 
         public boolean Filter(final String filter, boolean casesensitive) {
             return this.Filter(filter, data, casesensitive);
         }
-        /*
-         ============
-         idStr::Last
-
-         returns -1 if not found otherwise the index of the char
-         ============
-         */
 
         public int Last(final char c) {// return the index to the last occurance of 'c', returns -1 if not found
 //	int i;
-//	
+//
 //	for( i = Length(); i > 0; i-- ) {
 //		if ( data[ i - 1 ] == c ) {
 //			return i - 1;
@@ -946,13 +1864,6 @@ public class Str {
             data = data.trim();
             len = data.length();
         }
-        /*
-         ============
-         idStr::StripQuotes
-
-         Removes the quotes from the beginning and end of the string
-         ============
-         */
 
         public idStr StripQuotes() {// strip quotes around string
             if (data.charAt(0) != '\"') {
@@ -1014,7 +1925,6 @@ public class Str {
 //	}
         }
 
-
         /*
          =====================================================================
 
@@ -1032,9 +1942,9 @@ public class Str {
             i = 0;
 //	while( data[i] != '\0' ) {
             while (i < data.length()) {
-                letter = this.ToLower(data.charAt(i));
+                letter = ToLower(data.charAt(i));
                 if (letter == '.') {
-                    break;				// don't include extension
+                    break;                // don't include extension
                 }
                 if (letter == '\\') {
                     letter = '/';
@@ -1267,641 +2177,10 @@ public class Str {
                 Right(Length() - pos, dest);
             }
         }
+        // format value in the requested unit and measurement
 
         public boolean CheckExtension(final String ext) {
-            return this.CheckExtension(data, ext);
-        }
-
-        // char * methods to replace library functions
-        public static int Length(final char[] s) {
-            int i;
-            for (i = 0; i < s.length && s[i] != 0; i++) ;
-
-            return i;
-        }
-
-        public static char[] ToLower(char[] s) {
-            for (int i = 0; i < s.length && s[i] != 0; i++) {
-                if (CharIsUpper(s[i])) {
-                    s[i] += ('a' - 'A');
-                }
-            }
-            return s;
-        }
-
-        public static char[] ToUpper(char[] s) {
-            for (int i = 0; i < s.length && s[i] != 0; i++) {
-                if (CharIsLower(s[i])) {
-                    s[i] -= ('a' - 'A');
-                }
-            }
-            return s;
-        }
-
-        public static boolean IsNumeric(final String s) {
-            try {
-                Double.parseDouble(s);
-                return true;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-
-        static boolean isdigit(char c) {
-            if ('0' >= c && c <= '9') {
-                return true;
-            }
-            return false;
-        }
-
-        public static boolean IsColor(final String s) {
-            char[] sArray = s.toCharArray();
-            return (sArray[0] == C_COLOR_ESCAPE && sArray.length > 1 && sArray[1] != ' ');
-        }
-
-        public static boolean HasLower(final String s) {
-            if (s == null) {
-                return false;
-            }
-
-            if (s.toUpperCase().equals(s)) {
-                return false;
-            }
-//	while ( *s ) {
-//		if ( CharIsLower( *s ) ) {
-//			return true;
-//		}
-//		s++;
-//	}
-
-            return true;
-        }
-
-        public static boolean HasUpper(final String s) {
-            if (s == null) {
-                return false;
-            }
-
-            if (s.toLowerCase().equals(s)) {
-                return false;
-            }
-//	while ( *s ) {
-//		if ( CharIsLower( *s ) ) {
-//			return true;
-//		}
-//		s++;
-//	}
-
-            return true;
-        }
-
-        public static int LengthWithoutColors(final String s) {
-            int len;
-            int p = 0;
-
-            if (s == null) {
-                return 0;
-            }
-//char[]sArray=s.toCharArray();	
-
-            len = s.length();
-//	p = s;
-//	while( sArray[p]!=0 ) {
-            if (idStr.IsColor(s)) {
-                p += 2;
-//			continue;
-            }
-//		p++;
-//		len++;
-//	}
-
-            return len - p;
-        }
-
-        public static String RemoveColors(String s) {
-            String string = "";
-
-            for (int a = 0; a < s.length(); a++) {
-                if (idStr.IsColor(s.substring(a))) {
-                    a++;
-                } else {
-                    string += s.charAt(a);
-                }
-            }
-//	*d = '\0';
-
-            return string;
-        }
-
-        public static int Cmp(final char[] s1, final char[] s2) {
-            return Cmp(ctos(s1), ctos(s2));
-        }
-
-        public static int Cmp(final idStr s1, final idStr s2) {
-            return Cmp(s1.toString(), s2.toString());
-        }
-
-        public static int Cmp(final String s1, final String s2) {
-            return ("" + s1).compareTo("" + s2);
-        }
-
-        public static int Cmpn(final String s1, final String s2, int n) {//TODO:see if we can return booleans
-            if (isNotNullOrEmpty(s1) && isNotNullOrEmpty(s2)) {
-                if (s1.length() >= n && s2.length() >= n) {
-                    return Cmp(s1.substring(0, n), s2.substring(0, n));
-                }
-            }
-            return 1;//not equal
-        }
-
-        public static int Icmp(final idToken t1, final String s2) {
-            return Icmp(t1.data, s2);
-        }
-
-        public static int Icmp(final idStr t1, final String s2) {
-            return Icmp(t1.data, s2);
-        }
-
-        public static int Icmp(final idStr t1, final idStr s2) {
-            return Icmp(t1.data, s2.data);
-        }
-
-        public static int Icmp(final char[] t1, final char[] s2) {
-            return Icmp(ctos(t1), ctos(s2));
-        }
-
-        public static int Icmp(final String s1, final String s2) {
-            return ("" + s1).compareToIgnoreCase("" + s2);
-        }
-
-        public static int Icmpn(final String s1, final String s2, int n) {
-            if (isNotNullOrEmpty(s1) && isNotNullOrEmpty(s2)) {
-                if (s1.length() >= n && s2.length() >= n) {
-                    return Icmp(s1.substring(0, n), s2.substring(0, n));
-                }
-            }
-            return 1;//not equal
-        }
-
-        public static int Icmpn(final idStr s1, final idStr s2, int n) {
-            return Icmpn(s1.toString(), s2.toString(), n);
-        }
-
-        public static int Icmpn(final idStr s1, final String s2, int n) {
-            return Icmpn(s1.toString(), s2, n);
-        }
-
-        public static int IcmpNoColor(final String s1, final String s2) {
-            char[] s1Array = s1.toCharArray();
-            char[] s2Array = s2.toCharArray();
-            int c1 = 0, c2 = 0, d;
-
-            do {
-                while (idStr.IsColor(s1)) {
-                    c1 += 2;
-                }
-                while (idStr.IsColor(s2)) {
-                    c2 += 2;
-                }
-                c1++;
-                c2++;
-
-                d = s1Array[c1] - s2Array[c2];
-                while (d != 0) {
-                    if (c1 <= 'Z' && c1 >= 'A') {
-                        d += ('a' - 'A');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    if (c2 <= 'Z' && c2 >= 'A') {
-                        d -= ('a' - 'A');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    return (Math_h.INTSIGNBITNOTSET(d) << 1) - 1;
-                }
-            } while (c1 != 0);
-
-            return 0;		// strings are equal
-        }
-
-        // compares paths and makes sure folders come first
-        public static int IcmpPath(final String s1, final String s2) {
-            return Paths.get(s1).compareTo(Paths.get(s2));//TODO: whats the "make sure fodlers come first" all about?
-
-//            char[] s1Array = s1.toCharArray();
-//            char[] s2Array = s2.toCharArray();
-//            int i1 = 0, i2 = 0, d;
-//            char c1, c2;
-//
-////#if 0
-////#if !defined( _WIN32 )
-////	idLib.common.Printf( "WARNING: IcmpPath used on a case-sensitive filesystem?\n" );
-////#endif
-//            do {
-//                c1 = s1Array[i1++];
-//                c2 = s2Array[i2++];
-//
-//                d = c1 - c2;
-//                while (d != 0) {
-//                    if (c1 <= 'Z' && c1 >= 'A') {
-//                        d += ('a' - 'A');
-//                        if (0 == d) {
-//                            break;
-//                        }
-//                    }
-//                    if (c1 == '\\') {
-//                        d += ('/' - '\\');
-//                        if (0 == d) {
-//                            break;
-//                        }
-//                    }
-//                    if (c2 <= 'Z' && c2 >= 'A') {
-//                        d -= ('a' - 'A');
-//                        if (0 == d) {
-//                            break;
-//                        }
-//                    }
-//                    if (c2 == '\\') {
-//                        d -= ('/' - '\\');
-//                        if (0 == d) {
-//                            break;
-//                        }
-//                    }
-//                    // make sure folders come first
-//                    while (c1 != 0) {
-//                        if (c1 == '/' || c1 == '\\') {
-//                            break;
-//                        }
-//                        c1 = s1Array[i1++];
-//                    }
-//                    while (c2 != 0) {
-//                        if (c2 == '/' || c2 == '\\') {
-//                            break;
-//                        }
-//                        c2 = s2Array[i2++];
-//                    }
-//                    if (c1 != 0 && c2 == 0) {
-//                        return -1;
-//                    } else if (c1 == 0 && c2 != 0) {
-//                        return 1;
-//                    }
-//                    // same folder depth so use the regular compare
-//                    return (Math_h.INTSIGNBITNOTSET(d) << 1) - 1;
-//                }
-//            } while (c1 != 0);
-//
-//            return 0;
-        }
-
-        public static int IcmpnPath(final String s1, final String s2, int n) {// compares paths and makes sure folders come first
-            char[] s1Array = s1.toCharArray();
-            char[] s2Array = s2.toCharArray();
-            int c1 = 0, c2 = 0, d;
-
-//#if 0
-//#if !defined( _WIN32 )
-//	idLib.common.Printf( "WARNING: IcmpPath used on a case-sensitive filesystem?\n" );
-//#endif
-            assert (n >= 0);
-
-            do {
-                c1++;
-                c2++;
-
-                if (0 == n--) {
-                    return 0;		// strings are equal until end point
-                }
-
-                d = s1Array[c1] - s2Array[c2];
-                while (d != 0) {
-                    if (c1 <= 'Z' && c1 >= 'A') {
-                        d += ('a' - 'A');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    if (c1 == '\\') {
-                        d += ('/' - '\\');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    if (c2 <= 'Z' && c2 >= 'A') {
-                        d -= ('a' - 'A');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    if (c2 == '\\') {
-                        d -= ('/' - '\\');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    // make sure folders come first
-                    while (c1 != 0) {
-                        if (c1 == '/' || c1 == '\\') {
-                            break;
-                        }
-                        c1++;
-                    }
-                    while (c2 != 0) {
-                        if (c2 == '/' || c2 == '\\') {
-                            break;
-                        }
-                        c2++;
-                    }
-                    if (c1 != 0 && c2 == 0) {
-                        return -1;
-                    } else if (c1 == 0 && c2 != 0) {
-                        return 1;
-                    }
-                    // same folder depth so use the regular compare
-                    return (Math_h.INTSIGNBITNOTSET(d) << 1) - 1;
-                }
-            } while (c1 != 0);
-
-            return 0;
-        }
-
-        /*
-         ================
-         idStr::Append
-
-         never goes past bounds or leaves without a terminating 0
-         ================
-         */
-        public static void Append(char[] dest, int size, final String src) {
-            int l1;
-
-            l1 = strLen(dest);
-            if (l1 >= size) {
-                idLib.common.Error("idStr::Append: already overflowed");
-            }
-            idStr.Copynz(dest, src, size - l1);
-        }
-
-        public static String Append(String dest, int size, final String src) {
-            int l1, l2;
-
-            l1 = dest.length();
-            if (l1 >= size) {
-                idLib.common.Error("idStr::Append: already overflowed");
-                return null;
-            }
-
-            l2 = dest.length() + src.length();
-            if (l2 > size) {
-                return (dest + src).substring(0, size - l1);
-            }
-
-            return dest + src;
-        }
-
-        public static char[] Copynz(char[] dest, final String src, int destsize) {
-            return Copynz(dest, 0, src, destsize);
-        }
-
-        /*
-         =============
-         idStr::Copynz
- 
-         Safe strncpy that ensures a trailing zero
-         =============
-         */
-        public static char[] Copynz(char[] dest, int offset, final String src, int destsize) {
-            if (null == src) {
-                idLib.common.Warning("idStr::Copynz: NULL src");
-                return null;
-            }
-            if (destsize < 1) {
-                idLib.common.Warning("idStr::Copynz: destsize < 1");
-                return null;
-            }
-
-//	strncpy( dest, src, destsize-1 );
-            final int len = Math.min(destsize - 1, src.length());
-            System.arraycopy(src.toCharArray(), 0, dest, offset, len);
-            dest[offset + len] = 0;
-
-            return dest;
-        }
-
-        public static void Copynz(char[] dest, final char[] src, int destsize) {
-            Copynz(dest, ctos(src), destsize);
-        }
-
-//        @Deprecated
-//        public static void Copynz(String dest, final String src, int destsize) {
-//            if (null == src) {
-//                idLib.common.Warning("idStr::Copynz: NULL src");
-//                return;
-//            }
-//            if (destsize < 1) {
-//                idLib.common.Warning("idStr::Copynz: destsize < 1");
-//                return;
-//            }
-//
-//            idStr.Copynz(dest.toCharArray(), src, destsize);
-//        }
-        public static void Copynz(String[] dest, final String src, int destsize) {
-            if (null == src) {
-                idLib.common.Warning("idStr::Copynz: NULL src");
-                return;
-            }
-            if (destsize < 1) {
-                idLib.common.Warning("idStr::Copynz: destsize < 1");
-                return;
-            }
-
-            dest[0] = new String(idStr.Copynz((char[]) null, src, destsize));
-        }
-
-        public static void Copynz(StringBuilder dest, final String... src) {
-            if (null == src) {
-                idLib.common.Warning("idStr::Copynz: NULL src");
-                return;
-            }
-            if (null == dest) {
-                idLib.common.Warning("idStr::Copynz: NULL dest");
-                return;
-            }
-
-            for (String s : src) {
-                dest.append(s);
-            }
-        }
-//public	static int			snPrintf( char *dest, int size, const char *fmt, ... ) id_attribute((format(printf,3,4)));
-
-        public static int snPrintf(StringBuilder dest, int size, final String fmt, Object... args) {
-            int len;
-            final int bufferSize = 32000;
-            StringBuilder buffer = new StringBuilder(bufferSize);
-//
-//	va_start( argptr, fmt );
-//	len = vsprintf( buffer, fmt, argptr );
-//	va_end( argptr );
-            len = buffer.append(String.format(fmt, args)).length();
-            if (len >= bufferSize) {
-                idLib.common.Error("idStr::snPrintf: overflowed buffer");
-            }
-            if (len >= size) {
-                idLib.common.Warning("idStr::snPrintf: overflow of %d in %d\n", len, size);
-                len = size;
-            }
-//            idStr.Copynz(dest, buffer, size);
-            dest.delete(0, dest.capacity());//clear
-            dest.append(buffer);//TODO: use replace instead?
-            return len;
-        }
-
-        public static int snPrintf(String[] dest, int size, final String fmt, Object... args) {
-            throw new TODO_Exception();
-//	int len;
-//	va_list argptr;
-//	char buffer[32000];	// big, but small enough to fit in PPC stack
-//
-//	va_start( argptr, fmt );
-//	len = vsprintf( buffer, fmt, argptr );
-//	va_end( argptr );
-//	if ( len >= sizeof( buffer ) ) {
-//		idLib::common->Error( "idStr::snPrintf: overflowed buffer" );
-//	}
-//	if ( len >= size ) {
-//		idLib::common->Warning( "idStr::snPrintf: overflow of %i in %i\n", len, size );
-//		len = size;
-//	}
-//	idStr::Copynz( dest, buffer, size );
-//	return len;
-        }
-
-        public static int snPrintf(char[] dest, int size, final String fmt, Object... args) {
-            return snPrintf(0, dest, size, fmt, args);
-        }
-
-        public static int snPrintf(int offset, char[] dest, int size, final String fmt, Object... args) {
-            int length;
-//            char[] argptr;
-            StringBuilder buffer = new StringBuilder(32000);	// big, but small enough to fit in PPC stack
-
-//	va_start( argptr, fmt );
-//	len = vsprintf( buffer, fmt, argptr );
-//	va_end( argptr );
-            length = buffer.append(String.format(fmt, args)).length();
-            if (length >= dest.length) {
-                idLib.common.Error("idStr::snPrintf: overflowed buffer");
-            }
-            if (length >= size) {
-                idLib.common.Warning("idStr::snPrintf: overflow of %d in %d\n", length, size);
-                length = size;
-            }
-            idStr.Copynz(dest, offset, buffer.toString(), size);
-            return length;
-        }
-
-        /*
-         ============
-         idStr::vsnPrintf
-
-         vsnprintf portability:
-
-         C99 standard: vsnprintf returns the number of characters (excluding the trailing
-         '\0') which would have been written to the final string if enough space had been available
-         snprintf and vsnprintf do not write more than size bytes (including the trailing '\0')
-
-         win32: _vsnprintf returns the number of characters written, not including the terminating null character,
-         or a negative value if an output error occurs. If the number of characters to write exceeds count, then count 
-         characters are written and -1 is returned and no trailing '\0' is added.
-
-         idStr::vsnPrintf: always appends a trailing '\0', returns number of characters written (not including terminal \0)
-         or returns -1 on failure or if the buffer would be overflowed.
-         ============
-         */
-        public static int vsnPrintf(String[] dest, int size, final String fmt, Object... args) {
-            int ret = 0;
-
-//#ifdef _WIN32
-//#undef _vsnprintf
-//	ret = _vsnprintf( dest, size-1, fmt, argptr );
-//#define _vsnprintf	use_idStr_vsnPrintf
-//#else
-//#undef vsnprintf
-//	ret = vsnprintf( dest, size, fmt, argptr );
-//#define vsnprintf	use_idStr_vsnPrintf
-//#endif
-//            dest[size - 1] = '\0';
-            ret = (dest[0] = String.format(fmt, args)).length();
-            if (ret < 0 || ret >= size) {
-                dest[0] = null;
-                return -1;
-            }
-            return ret;
-        }
-
-
-        /*
-         ============
-         idStr::FindChar
-
-         returns -1 if not found otherwise the index of the char
-         ============
-         */
-        public static int FindChar(final String str, final char c) {
-            return FindChar(str, c, 0);
-        }
-
-        public static int FindChar(final String str, final char c, int start) {
-            return FindChar(str, c, start, -1);
-        }
-
-        public static int FindChar(final String str, final char c, int start, int end) {
-            char[] strArray = str.toCharArray();
-            int i;
-
-            if (end == -1) {
-//		end = strlen( str ) - 1;
-                end = str.length();
-            }
-            for (i = start; i < end; i++) {
-                if (strArray[i] == c) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-
-        /*
-         ============
-         idStr::FindText
-
-         returns -1 if not found otherwise the index of the text
-         ============
-         */
-        public static int FindText(final String str, final String text) {
-            return FindText(str, text, true);
-        }
-
-        public static int FindText(final String str, final String text, boolean casesensitive) {
-            return FindText(str, text, casesensitive, 0);
-        }
-
-        public static int FindText(final String str, final String text, boolean casesensitive, int start) {
-            return FindText(str, text, casesensitive, start, -1);
-        }
-
-        public static int FindText(final String str, final String text, boolean casesensitive, int start, int end) {
-            if (end == -1) {
-                end = str.length();
-            }
-            if (casesensitive) {
-                return str.substring(start, end).indexOf(text);
-            } else {
-                return str.substring(start, end).toLowerCase().indexOf(text.toLowerCase());
-            }
+            return CheckExtension(data, ext);
         }
 
         /*
@@ -2023,187 +2302,6 @@ public class Str {
             return true;
         }
 
-
-        /*
-         =============
-         idStr::StripMediaName
-
-         makes the string lower case, replaces backslashes with forward slashes, and removes extension
-         =============
-         */
-        public static void StripMediaName(final String name, idStr mediaName) {
-//	char c;
-
-            mediaName.Empty();
-
-            for (char c : name.toCharArray()) {
-                // truncate at an extension
-                if (c == '.') {
-                    break;
-                }
-                // convert backslashes to forward slashes
-                if (c == '\\') {
-                    mediaName.Append('/');
-                } else {
-                    mediaName.Append(idStr.ToLower(c));
-                }
-            }
-        }
-
-        public static boolean CheckExtension(final String name, final String ext) {
-            int c1 = name.length() - 1, c2 = ext.length() - 1, d;
-//TODO:double check if its working
-            do {
-                d = name.charAt(c1) - ext.charAt(c2);
-                while (d != 0) {
-                    if (c1 <= 'Z' && c1 >= 'A') {
-                        d += ('a' - 'A');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    if (c2 <= 'Z' && c2 >= 'A') {
-                        d -= ('a' - 'A');
-                        if (0 == d) {
-                            break;
-                        }
-                    }
-                    return false;
-                }
-                c1--;
-                c2--;
-            } while (c1 > 0 && c2 > 0);
-
-            return (c1 >= 0);
-        }
-
-        static int index = 0;
-        static StringBuilder[] str = new StringBuilder[4];	// in case called by nested functions
-
-        public static String FloatArrayToString(final float[] array, final int length, final int precision) {
-
-            int i, n;
-            String format;
-            StringBuilder s;
-
-            // use an array of string so that multiple calls won't collide
-            s = str[index] = new StringBuilder(16384);
-            index = (index + 1) & 3;
-
-            format = String.format("%%.%df", precision);
-            n = snPrintf(s, s.capacity(), format, array[0]);
-//	if ( precision > 0 ) {
-//		while( n > 0 && s[n-1] == '0' ) s[--n] = '\0';
-//		while( n > 0 && s[n-1] == '.' ) s[--n] = '\0';
-//	}
-            format = String.format(" %%.%df", precision);
-            for (i = 1; i < length; i++) {
-                s.append(String.format(format, array[i]));
-//                n += this.snPrintf(s + n, sizeof(str[0]) - n, format, array[i]);
-//		if ( precision > 0 ) {
-//			while( n > 0 && s[n-1] == '0' ) s[--n] = '\0';
-//			while( n > 0 && s[n-1] == '.' ) s[--n] = '\0';
-//		}
-            }
-            return s.toString();
-        }
-
-        // hash keys
-        public static int Hash(final char[] string) {
-            int i, hash = 0;
-            for (i = 0; i < string.length && string[i] != '\0'; i++) {
-                hash += (string[i]) * (i + 119);
-            }
-            return hash;
-        }
-
-        public static int Hash(final String string) {
-            return Hash(string.toCharArray());
-        }
-
-        public static int Hash(final char[] string, int length) {
-            int i, hash = 0;
-            for (i = 0; i < length; i++) {
-                hash += (string[i]) * (i + 119);
-            }
-            return hash;
-        }
-
-        // case insensitive
-        public static int IHash(final char[] string) {
-            int i, hash = 0;
-            for (i = 0; i < string.length && string[i] != '\0'; i++) {//TODO:eliminate '\0' from char strings.
-                hash += ToLower(string[i]) * (i + 119);
-            }
-            return hash;
-        }
-
-        // case insensitive
-        public static int IHash(final char[] string, int length) {
-            int i, hash = 0;
-            for (i = 0; i < length; i++) {
-                hash += ToLower(string[i]) * (i + 119);
-            }
-            return hash;
-        }
-
-        // character methods
-        public static char ToLower(char c) {
-            if (c <= 'Z' && c >= 'A') {
-                return (char) (c + ('a' - 'A'));
-            }
-            return c;
-        }
-
-        public static char ToUpper(char c) {
-            if (c >= 'a' && c <= 'z') {
-                return (char) (c - ('a' - 'A'));
-            }
-            return c;
-        }
-
-        public static boolean CharIsPrintable(int c) {
-            // test for regular ascii and western European high-ascii chars
-            return (c >= 0x20 && c <= 0x7E) || (c >= 0xA1 && c <= 0xFF);
-        }
-
-        public static boolean CharIsLower(int c) {
-            // test for regular ascii and western European high-ascii chars
-            return (c >= 'a' && c <= 'z') || (c >= 0xE0 && c <= 0xFF);
-        }
-
-        public static boolean CharIsUpper(int c) {
-            // test for regular ascii and western European high-ascii chars
-            return (c <= 'Z' && c >= 'A') || (c >= 0xC0 && c <= 0xDF);
-        }
-
-        public static boolean CharIsAlpha(int c) {
-            // test for regular ascii and western European high-ascii chars
-            return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-                    || (c >= 0xC0 && c <= 0xFF));
-        }
-
-        public static boolean CharIsNumeric(int c) {
-            return (c <= '9' && c >= '0');
-        }
-
-        public static boolean CharIsNewLine(char c) {
-            return (c == '\n' || c == '\r' /*|| c == '\v'*/);
-        }
-
-        public static boolean CharIsTab(char c) {
-            return (c == '\t');
-        }
-
-        public static int ColorIndex(int c) {
-            return (c & 15);
-        }
-
-        public static idVec4 ColorForIndex(int i) {
-            return g_color_table[i & 15];
-        }
-
-
         /*
          ============
          sprintf
@@ -2219,7 +2317,7 @@ public class Str {
 //	int l = 0;
 //	char[] argptr;
 //	char []buffer=new char[32000];
-//	
+//
 //	va_start( argptr, fmt );
 //	l = idStr.vsnPrintf( buffer, sizeof(buffer)-1, fmt, argptr );
 //	va_end( argptr );
@@ -2240,7 +2338,7 @@ public class Str {
             int l;
             String[] buffer = {null};//new char[32000];
 
-            l = this.vsnPrintf(buffer, 32000, fmt, args);
+            l = vsnPrintf(buffer, 32000, fmt, args);
 //	buffer[buffer.length-1] = '\0';
 
 //	string = buffer;
@@ -2310,7 +2408,6 @@ public class Str {
             data += units[measure.ordinal()][unit];//TODO:ordinal??
             return unit;
         }
-        // format value in the requested unit and measurement
 
         public void SetUnit(final String format, float value, int unit, Measure_t measure) {
             value /= 1 << (unit * 10);
@@ -2318,24 +2415,6 @@ public class Str {
             data = String.format(format, value);
             data += " ";
             data += units[measure.ordinal()][unit];
-        }
-
-        public static void InitMemory() {
-//#ifdef USE_STRING_DATA_ALLOCATOR
-//	stringDataAllocator.Init();
-//#endif
-        }
-
-        public static void ShutdownMemory() {
-//#ifdef USE_STRING_DATA_ALLOCATOR
-//	stringDataAllocator.Shutdown();
-//#endif
-        }
-
-        public static void PurgeMemory() {
-//#ifdef USE_STRING_DATA_ALLOCATOR
-//	stringDataAllocator.FreeEmptyBaseBlocks();
-//#endif
         }
 
         @Override
@@ -2356,111 +2435,9 @@ public class Str {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        public static class ShowMemoryUsage_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new ShowMemoryUsage_f();
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-//#ifdef USE_STRING_DATA_ALLOCATOR
-                idLib.common.Printf("%6d KB string memory (%d KB free in %d blocks, %d empty base blocks)\n");
-//                        stringDataAllocator.GetBaseBlockMemory() >> 10,
-//                        stringDataAllocator.GetFreeBlockMemory() >> 10,
-//                        stringDataAllocator.GetNumFreeBlocks(),
-//                        stringDataAllocator.GetNumEmptyBaseBlocks());
-//#endif
-            }
-        };
-
         public int DynamicMemoryUsed() {
 //	return ( data == baseBuffer ) ? 0 : alloced;
             return alloced;
-        }
-
-        static class formatList_t {
-
-            int gran;
-            int count;
-
-            public formatList_t(int gran, int count) {
-                this.gran = gran;
-                this.count = count;
-            }
-        }
-        // elements of list need to decend in size
-        static formatList_t formatList[] = {new formatList_t(1000000000, 0),
-            new formatList_t(1000000, 0),
-            new formatList_t(1000, 0)};
-
-        //int numFormatList = sizeof(formatList) / sizeof( formatList[0] );
-        static int numFormatList = formatList.length;
-
-        public static idStr FormatNumber(int number) {
-            idStr string = new idStr();
-            boolean hit;
-
-            // reset
-            for (int i = 0; i < numFormatList; i++) {
-                formatList_t li = formatList[i];
-                li.count = 0;
-            }
-
-            // main loop
-            do {
-                hit = false;
-
-                for (int i = 0; i < numFormatList; i++) {
-                    formatList_t li = formatList[i];
-
-                    if (number >= li.gran) {
-                        li.count++;
-                        number -= li.gran;
-                        hit = true;
-                        break;
-                    }
-                }
-            } while (hit);
-
-            // print out
-            boolean found = false;
-
-            for (int i = 0; i < numFormatList; i++) {
-                formatList_t li = formatList[i];
-
-                if (li.count != 0) {
-                    if (!found) {
-                        string.oPluSet(va("%d,", li.count));
-                    } else {
-//				string += va( "%3.3i,", li.count );
-                        string.oPluSet(va("%3.3i,", li.count));
-                    }
-                    found = true;
-                } else if (found) {
-//			string += va( "%3.3i,", li->count );
-                    string.oPluSet(va("%3.3i,", li.count));
-                }
-            }
-
-            if (found) {
-//		string += va( "%3.3i", number );
-                string.oPluSet(va("%3.3i,", number));
-            } else {
-//		string += va( "%d", number );
-                string.oPluSet(va("%d,", number));
-            }
-
-            // pad to proper size
-            int count = 11 - string.Length();
-
-            for (int i = 0; i < count; i++) {
-                string.Insert(" ", 0);
-            }
-
-            return string;
         }
 
         protected void Init() {
@@ -2472,7 +2449,7 @@ public class Str {
 //#ifdef ID_DEBUG_UNINITIALIZED_MEMORY
 //	memset( baseBuffer, 0, sizeof( baseBuffer ) );
 //#endif
-        }									// initialize string using base buffer
+        }                                    // initialize string using base buffer
 
         protected void EnsureAlloced(int amount) {
             EnsureAlloced(amount, true);
@@ -2493,32 +2470,36 @@ public class Str {
         public String toString() {
             return data;
         }
-    }
 
-    /*
-     ============
-     va
+        public static class ShowMemoryUsage_f extends cmdFunction_t {
 
-     does a varargs printf into a temp buffer
-     NOTE: not thread safe
-     ============
-     */
-//    @Deprecated
-    public static String va(final String fmt, Object... args) {
-//////	va_list argptr;
-////        char[] argptr;
-////        int index = 0;
-////        char[][] string = new char[4][16384];	// in case called by nested functions
-////        char[] buf;
-////
-////        buf = string[index];
-////        index = (index + 1) & 3;
-////
-//////	va_start( argptr, fmt );
-//////	vsprintf( buf, fmt, argptr );
-//////	va_end( argptr );
-////
-//        return new String(buf);
-        return String.format(fmt, args);
+            private static final cmdFunction_t instance = new ShowMemoryUsage_f();
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+//#ifdef USE_STRING_DATA_ALLOCATOR
+                idLib.common.Printf("%6d KB string memory (%d KB free in %d blocks, %d empty base blocks)\n");
+//                        stringDataAllocator.GetBaseBlockMemory() >> 10,
+//                        stringDataAllocator.GetFreeBlockMemory() >> 10,
+//                        stringDataAllocator.GetNumFreeBlocks(),
+//                        stringDataAllocator.GetNumEmptyBaseBlocks());
+//#endif
+            }
+        }
+
+        static class formatList_t {
+
+            int count;
+            int gran;
+
+            public formatList_t(int gran, int count) {
+                this.gran = gran;
+                this.count = count;
+            }
+        }
     }
 }

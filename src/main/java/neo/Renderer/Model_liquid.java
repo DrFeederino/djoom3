@@ -1,40 +1,38 @@
 package neo.Renderer;
 
-import java.util.Arrays;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.dynamicModel_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.tr_local.deformInfo_s;
-import static neo.Renderer.tr_local.tr;
 import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_BoundTriSurf;
-import static neo.Renderer.tr_trisurf.R_BuildDeformInfo;
-import static neo.Renderer.tr_trisurf.R_DeriveTangents;
-import static neo.TempDump.NOT;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.containers.List.idSwap;
 import neo.idlib.geometry.DrawVert.idDrawVert;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Random.idRandom;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
+
+import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.NOT;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
+import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
+import static neo.idlib.containers.List.idSwap;
+import static neo.idlib.math.Math_h.SEC2MS;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
@@ -54,33 +52,33 @@ public class Model_liquid {
      */
     public static class idRenderModelLiquid extends idRenderModelStatic {
 
-        private int verts_x;
-        private int verts_y;
-        private float scale_x;
-        private float scale_y;
-        private int time;
-        private int liquid_type;
-        private int update_tics;
-        private int seed;
         //
-        private idRandom random;
-        //						
-        private idMaterial shader;
-        private deformInfo_s deformInfo;		// used to create srfTriangles_s from base frames and new vertexes
-        //        
-        //						
+        int nextDropTime;
+        private deformInfo_s deformInfo;        // used to create srfTriangles_s from base frames and new vertexes
+        //
+        //
         private float density;
+        private float drop_delay;
         private float drop_height;
         private int drop_radius;
-        private float drop_delay;
-        //
-        private idList<Float> pages;
+        private int liquid_type;
         private Float[] page1;
         private Float[] page2;
         //
-        private idList<idDrawVert> verts;
+        private idList<Float> pages;
         //
-        int nextDropTime;
+        private idRandom random;
+        private float scale_x;
+        private float scale_y;
+        private int seed;
+        //
+        private idMaterial shader;
+        private int time;
+        private int update_tics;
+        //
+        private idList<idDrawVert> verts;
+        private int verts_x;
+        private int verts_y;
         //
         //
 
@@ -156,7 +154,7 @@ public class Model_liquid {
                 } else if (0 == token.Icmp("drop_radius")) {
                     drop_radius = parser.ParseInt();
                 } else if (0 == token.Icmp("drop_delay")) {
-                    drop_delay = (float) SEC2MS(parser.ParseFloat());
+                    drop_delay = SEC2MS(parser.ParseFloat());
                 } else if (0 == token.Icmp("shader")) {
                     parser.ReadToken(token);
                     shader = declManager.FindMaterial(token);
@@ -181,14 +179,14 @@ public class Model_liquid {
             scale_y = size_y / (verts_y - 1);
 
             pages.SetNum(2 * verts_x * verts_y);
-            page1 = pages.Ptr();
+            page1 = pages.getList();
             page2 = Arrays.copyOfRange(page1, verts_x * verts_y, page1.length);
 
             verts.SetNum(verts_x * verts_y);
             for (i = 0, y = 0; y < verts_y; y++) {
                 for (x = 0; x < verts_x; x++, i++) {
-                    page1[ i] = 0.0f;
-                    page2[ i] = 0.0f;
+                    page1[i] = 0.0f;
+                    page2[i] = 0.0f;
                     verts.oGet(i).Clear();
                     verts.oGet(i).xyz.Set(x * scale_x, y * scale_y, 0.0f);
                     verts.oGet(i).st.Set((float) x / (float) (verts_x - 1), (float) -y / (float) (verts_y - 1));
@@ -210,7 +208,7 @@ public class Model_liquid {
 
             // build the information that will be common to all animations of this mesh:
             // sil edge connectivity and normal / tangent generation information
-            deformInfo = R_BuildDeformInfo(verts.Num(), verts.Ptr(), tris.Num(), tris, true);
+            deformInfo = R_BuildDeformInfo(verts.Num(), verts.getList(), tris.Num(), tris, true);
 
             bounds.Clear();
             bounds.AddPoint(new idVec3(0.0f, 0.0f, drop_height * -10.0f));
@@ -292,13 +290,13 @@ public class Model_liquid {
             time = 0;
             random.SetSeed(seed);
 
-            page1 = pages.Ptr();
+            page1 = pages.getList();
             page2 = Arrays.copyOfRange(page1, verts_x * verts_y, page1.length);
 
             for (i = 0, y = 0; y < verts_y; y++) {
                 for (x = 0; x < verts_x; x++, i++) {
-                    page1[ i] = 0.0f;
-                    page2[ i] = 0.0f;
+                    page1[i] = 0.0f;
+                    page2[i] = 0.0f;
                     verts.oGet(i).xyz.z = 0.0f;
                 }
             }
@@ -337,9 +335,9 @@ public class Model_liquid {
 
             for (cy = top; cy < bottom; cy++) {
                 for (cx = left; cx < right; cx++) {
-                    pos = page1[ verts_x * cy + cx];
+                    pos = page1[verts_x * cy + cx];
                     if (pos > down) {//&& ( *pos < up ) ) {
-                        page1[ verts_x * cy + cx] = down;
+                        page1[verts_x * cy + cx] = down;
                     }
                 }
             }
@@ -355,7 +353,7 @@ public class Model_liquid {
             inv_lerp = 1.0f - lerp;
             vert = verts.oGet(0);
             for (i = 0; i < verts.Num(); vert = verts.oGet(++i)) {
-                vert.xyz.z = page1[ i] * lerp + page2[ i] * inv_lerp;
+                vert.xyz.z = page1[i] * lerp + page2[i] * inv_lerp;
             }
 
             tr.pc.c_deformedSurfaces++;
@@ -380,7 +378,7 @@ public class Model_liquid {
 
             tri.numVerts = deformInfo.numOutputVerts;
             R_AllocStaticTriSurfVerts(tri, tri.numVerts);
-            SIMDProcessor.Memcpy(tri.verts, verts.Ptr(), deformInfo.numSourceVerts);
+            SIMDProcessor.Memcpy(tri.verts, verts.getList(), deformInfo.numSourceVerts);
 
             // replicate the mirror seam vertexes
             base = deformInfo.numOutputVerts - deformInfo.numMirroredVerts;
@@ -536,5 +534,6 @@ public class Model_liquid {
                     break;
             }
         }
-    };
+    }
+
 }

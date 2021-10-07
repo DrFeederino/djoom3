@@ -22,12 +22,11 @@ public class Curve {
      */
     static class idCurve<type extends Vector.idVec> {
 
-        protected idList<Float> times  = new idList<>();   // knots
-        protected idList<type>  values = new idList<>();   // knot values
-        protected int           currentIndex;              // cached index for fast lookup
-        protected boolean       changed;
-
         protected final Class<type> clazz;
+        protected boolean changed;
+        protected int currentIndex;              // cached index for fast lookup
+        protected idList<Float> times = new idList<>();   // knots
+        protected idList<type> values = new idList<>();   // knot values
 
 
         public idCurve(final Class<type> clazz) {
@@ -808,14 +807,12 @@ public class Curve {
      */
     public static class idCurve_Spline<type extends Vector.idVec> extends idCurve<type> {
 
-        protected int   boundaryType;
-        protected float closeTime;
-
-
         /**
          * enum	boundary_t { BT_FREE, BT_CLAMPED, BT_CLOSED };
          */
         public static final int BT_FREE = 0, BT_CLAMPED = 1, BT_CLOSED = 2;
+        protected int boundaryType;
+        protected float closeTime;
 
         public idCurve_Spline(final Class<type> clazz) {
             super(clazz);
@@ -929,6 +926,10 @@ public class Curve {
      */
     static class idCurve_NaturalCubicSpline<type extends Vector.idVec> extends idCurve_Spline<type> {
 
+        protected idList<type> b;
+        protected idList<type> c;
+        protected idList<type> d;
+
         public idCurve_NaturalCubicSpline(final Class<type> clazz) {
             super(clazz);
         }
@@ -996,10 +997,6 @@ public class Curve {
             final type d = (type) this.d.oGet(i).oMultiply(6.0f * s);
             return (type) c.oPlus(d);
         }
-
-        protected idList<type> b;
-        protected idList<type> c;
-        protected idList<type> d;
 
         protected void Setup() {
             if (this.changed) {
@@ -1370,9 +1367,9 @@ public class Curve {
      */
     static class idCurve_KochanekBartelsSpline<type extends Vector.idVec> extends idCurve_Spline<type> {
 
-        protected idList<Float> tension;
-        protected idList<Float> continuity;
         protected idList<Float> bias;
+        protected idList<Float> continuity;
+        protected idList<Float> tension;
 
         public idCurve_KochanekBartelsSpline(final Class<type> clazz) {
             super(clazz);

@@ -6,10 +6,11 @@ import neo.idlib.Lib.idLib;
 import neo.idlib.MapFile.idMapPrimitive;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Surface.idSurface;
-import static neo.idlib.math.Math_h.Square;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Vector.getVec3_origin;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.idlib.math.Math_h.Square;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
@@ -25,18 +26,32 @@ public class Surface_Patch {
      */
     public static class idSurface_Patch extends idSurface {
 
-        protected int width;			// width of patch
-        protected int height;			// height of patch
+        //
+        static final float COPLANAR_EPSILON = 0.1f;
+        //
+//
+//
+//
+//
+//
+//
+//
+        public idDict epairs;
+        protected boolean expanded;        // true if vertices are spaced out
+        protected int height;            // height of patch
+        protected int maxHeight;        // maximum height allocated for
+        //
+        //
         protected int maxWidth;                 // maximum width allocated for
-        protected int maxHeight;		// maximum height allocated for
-        protected boolean expanded;		// true if vertices are spaced out
-        //
-        //
+        protected int type;
+        protected int width;            // width of patch
 
         public idSurface_Patch() {
             height = width = maxHeight = maxWidth = 0;
             expanded = false;
         }
+//public						~idSurface_Patch( void );
+//
 
         public idSurface_Patch(int maxPatchWidth, int maxPatchHeight) {
             width = height = 0;
@@ -53,8 +68,6 @@ public class Surface_Patch {
         public idSurface_Patch(final idMapPrimitive patch) {
             this.oSet(patch);
         }
-//public						~idSurface_Patch( void );
-//
 
         public void SetSize(int patchWidth, int patchHeight) throws Exception {
             if (patchWidth < 1 || patchWidth > maxWidth) {
@@ -93,9 +106,9 @@ public class Surface_Patch {
                 GenerateNormals();
             }
 
-            maxHorizontalErrorSqr = (float) Square(maxHorizontalError);
-            maxVerticalErrorSqr = (float) Square(maxVerticalError);
-            maxLengthSqr = (float) Square(maxLength);
+            maxHorizontalErrorSqr = Square(maxHorizontalError);
+            maxVerticalErrorSqr = Square(maxVerticalError);
+            maxLengthSqr = Square(maxLength);
 
             Expand();
 
@@ -123,7 +136,7 @@ public class Surface_Patch {
                 }
 
                 if (i == height) {
-                    continue;	// didn't need subdivision
+                    continue;    // didn't need subdivision
                 }
 
                 if (width + 2 >= maxWidth) {
@@ -175,7 +188,7 @@ public class Surface_Patch {
                 }
 
                 if (i == width) {
-                    continue;	// didn't need subdivision
+                    continue;    // didn't need subdivision
                 }
 
                 if (height + 2 >= maxHeight) {
@@ -217,6 +230,8 @@ public class Surface_Patch {
 
             GenerateIndexes();
         }
+//						
+//		
 
         public void SubdivideExplicit(int horzSubdivisions, int vertSubdivisions, boolean genNormals) throws idException {
             this.SubdivideExplicit(horzSubdivisions, vertSubdivisions, genNormals, false);
@@ -304,8 +319,6 @@ public class Surface_Patch {
                 }
             }
         }
-//						
-//		
 
         /*
          ================
@@ -431,8 +444,6 @@ public class Surface_Patch {
             // project onto the directional vector for this segment
             vProj.oSet(vStart.oPlus(vec.oMultiply(pVec.oMultiply(vec))));
         }
-//				
-        static final float COPLANAR_EPSILON = 0.1f;
 
         /*
          =================
@@ -455,7 +466,7 @@ public class Surface_Patch {
             boolean[] good = new boolean[8];
             boolean wrapWidth, wrapHeight;
             final int[][] neighbors = {
-                {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
+                    {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
             };
 
             assert (expanded == false);
@@ -548,15 +559,15 @@ public class Surface_Patch {
                             }
 
                             if (x < 0 || x >= width || y < 0 || y >= height) {
-                                break;					// edge of patch
+                                break;                    // edge of patch
                             }
                             temp = verts.oGet(y * width + x).xyz.oMinus(base);
                             if (temp.Normalize() == 0.0f) {
-                                continue;				// degenerate edge, get more dist
+                                continue;                // degenerate edge, get more dist
                             } else {
                                 good[k] = true;
                                 around[k] = temp;
-                                break;					// good edge
+                                break;                    // good edge
                             }
                         }
                     }
@@ -564,7 +575,7 @@ public class Surface_Patch {
                     sum.oSet(getVec3_origin());
                     for (k = 0; k < 8; k++) {
                         if (!good[k] || !good[(k + 1) & 7]) {
-                            continue;	// didn't get two points
+                            continue;    // didn't get two points
                         }
                         norm = around[(k + 1) & 7].Cross(around[k]);
                         if (norm.Normalize() == 0.0f) {
@@ -620,7 +631,7 @@ public class Surface_Patch {
         }
 
         // sample a single 3x3 patch
-        private void SampleSinglePatchPoint(final idDrawVert ctrl[][], float u, float v, idDrawVert out) {
+        private void SampleSinglePatchPoint(final idDrawVert[][] ctrl, float u, float v, idDrawVert out) {
             float[][] vCtrl = new float[3][8];
             int vPoint;
             int axis;
@@ -672,7 +683,7 @@ public class Surface_Patch {
             }
         }
 
-        private void SampleSinglePatch(final idDrawVert ctrl[][], int baseCol, int baseRow, int width, int horzSub, int vertSub, idDrawVert[] outVerts) {
+        private void SampleSinglePatch(final idDrawVert[][] ctrl, int baseCol, int baseRow, int width, int horzSub, int vertSub, idDrawVert[] outVerts) {
             int i, j;
             float u, v;
 
@@ -695,20 +706,11 @@ public class Surface_Patch {
             this.verts.SetNum(maxWidth * maxHeight);
             this.expanded = patch.expanded;
         }
-//        
-//        
-//        
-//        
-//        
-//        
-//        
-//      
-        public idDict epairs;
-        protected int type;
 
         private void oSet(final idMapPrimitive patch) {
             this.type = patch.GetType();
             this.epairs = patch.epairs;
         }
-    };
+    }
+
 }

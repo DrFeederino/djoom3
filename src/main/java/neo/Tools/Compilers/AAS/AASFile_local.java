@@ -1,69 +1,41 @@
 package neo.Tools.Compilers.AAS;
 
-import static java.lang.Math.abs;
 import neo.TempDump;
-import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.AAS.AASFile.AAS_FILEID;
-import static neo.Tools.Compilers.AAS.AASFile.AAS_FILEVERSION;
-import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_WATER;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_LIQUID;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_FLY;
-import static neo.Tools.Compilers.AAS.AASFile.AREA_REACHABLE_WALK;
-import static neo.Tools.Compilers.AAS.AASFile.FACE_FLOOR;
-import static neo.Tools.Compilers.AAS.AASFile.FACE_LADDER;
-import static neo.Tools.Compilers.AAS.AASFile.MAX_AAS_TREE_DEPTH;
-import static neo.Tools.Compilers.AAS.AASFile.Reachability_Read;
-import static neo.Tools.Compilers.AAS.AASFile.Reachability_Special_Read;
-import static neo.Tools.Compilers.AAS.AASFile.Reachability_Special_Write;
-import static neo.Tools.Compilers.AAS.AASFile.Reachability_Write;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_AIR;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_SPECIAL;
-import static neo.Tools.Compilers.AAS.AASFile.TFL_WATER;
-import neo.Tools.Compilers.AAS.AASFile.aasArea_s;
-import neo.Tools.Compilers.AAS.AASFile.aasCluster_s;
-import neo.Tools.Compilers.AAS.AASFile.aasEdge_s;
-import neo.Tools.Compilers.AAS.AASFile.aasFace_s;
-import neo.Tools.Compilers.AAS.AASFile.aasNode_s;
-import neo.Tools.Compilers.AAS.AASFile.aasPortal_s;
-import neo.Tools.Compilers.AAS.AASFile.aasTrace_s;
-import neo.Tools.Compilers.AAS.AASFile.idAASFile;
-import neo.Tools.Compilers.AAS.AASFile.idReachability;
-import neo.Tools.Compilers.AAS.AASFile.idReachability_Special;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
+import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Token.TT_INTEGER;
-import static neo.idlib.Text.Token.TT_NUMBER;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.INTSIGNBITSET;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static java.lang.Math.abs;
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.AAS.AASFile.*;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Token.TT_INTEGER;
+import static neo.idlib.Text.Token.TT_NUMBER;
+import static neo.idlib.math.Math_h.INTSIGNBITSET;
+import static neo.idlib.math.Plane.*;
+import static neo.idlib.math.Vector.getVec3_origin;
 
 /**
  *
  */
 public class AASFile_local {
 
-    static final int   AAS_LIST_GRANULARITY   = 1024;
-    static final int   AAS_INDEX_GRANULARITY  = 4096;
-    static final int   AAS_PLANE_GRANULARITY  = 4096;
-    static final int   AAS_VERTEX_GRANULARITY = 4096;
-    static final int   AAS_EDGE_GRANULARITY   = 4096;
+    static final int AAS_EDGE_GRANULARITY = 4096;
+    static final int AAS_INDEX_GRANULARITY = 4096;
+    static final int AAS_LIST_GRANULARITY = 1024;
+    static final int AAS_PLANE_GRANULARITY = 4096;
+    static final int AAS_VERTEX_GRANULARITY = 4096;
     //
-    static final float TRACEPLANE_EPSILON     = 0.125f;
+    static final float TRACEPLANE_EPSILON = 0.125f;
 
     /*
      ===============================================================================
@@ -164,7 +136,7 @@ public class AASFile_local {
             for (i = 0; i < face.numEdges; i++) {
                 edgeNum = edgeIndex.oGet(face.firstEdge + i);
                 edge = edges.oGet(abs(edgeNum));
-                bounds.AddPoint(vertices.oGet(edge.vertexNum[ INTSIGNBITSET(edgeNum)]));
+                bounds.AddPoint(vertices.oGet(edge.vertexNum[INTSIGNBITSET(edgeNum)]));
             }
             return bounds;
         }
@@ -313,7 +285,7 @@ public class AASFile_local {
             tracestack[tstack_p].start = start;
             tracestack[tstack_p].end = end;
             tracestack[tstack_p].planeNum = 0;
-            tracestack[tstack_p].nodeNum = 1;		//start with the root of the tree
+            tracestack[tstack_p].nodeNum = 1;        //start with the root of the tree
             tstack_p++;
 
             while (true) {
@@ -383,7 +355,7 @@ public class AASFile_local {
                         trace.fraction = v2.Length() / v1.Length();
                     }
                     trace.endpos = tracestack[tstack_p].start;
-                    trace.blockingAreaNum = 0;	// hit solid leaf
+                    trace.blockingAreaNum = 0;    // hit solid leaf
                     trace.planeNum = tracestack[tstack_p].planeNum;
                     // always take the plane with normal facing towards the trace start
                     plane = planeList.oGet(trace.planeNum);
@@ -956,10 +928,7 @@ public class AASFile_local {
                 src.ExpectTokenString(")");
                 indexes.Append(index);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParsePlanes(idLexer src) {
@@ -979,10 +948,7 @@ public class AASFile_local {
                 plane.SetDist(vec.oGet(3));
                 planeList.Append(plane);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParseVertices(idLexer src) {
@@ -999,10 +965,7 @@ public class AASFile_local {
                 }
                 vertices.Append(vec);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParseEdges(idLexer src) {
@@ -1020,10 +983,7 @@ public class AASFile_local {
                 src.ExpectTokenString(")");
                 edges.Append(edge);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParseFaces(idLexer src) {
@@ -1045,10 +1005,7 @@ public class AASFile_local {
                 src.ExpectTokenString(")");
                 faces.Append(face);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParseReachabilities(idLexer src, int areaNum) {
@@ -1132,10 +1089,7 @@ public class AASFile_local {
                 src.ExpectTokenString(")");
                 nodes.Append(node);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParsePortals(idLexer src) {
@@ -1156,10 +1110,7 @@ public class AASFile_local {
                 src.ExpectTokenString(")");
                 portals.Append(portal);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private boolean ParseClusters(idLexer src) {
@@ -1179,10 +1130,7 @@ public class AASFile_local {
                 src.ExpectTokenString(")");
                 clusters.Append(cluster);
             }
-            if (!src.ExpectTokenString("}")) {
-                return false;
-            }
-            return true;
+            return src.ExpectTokenString("}");
         }
 
         private int BoundsReachableAreaNum_r(int nodeNum, final idBounds bounds, final int areaFlags, final int excludeTravelFlags) {
@@ -1295,18 +1243,19 @@ public class AASFile_local {
             }
             return num;
         }
-    };
+    }
 
     public static class aasTraceStack_s {
 
-        idVec3 start;
         idVec3 end;
-        int    planeNum;
-        int    nodeNum;
+        int nodeNum;
+        int planeNum;
+        idVec3 start;
 
         public aasTraceStack_s() {
             start = new idVec3();
             end = new idVec3();
         }
-    };
+    }
+
 }

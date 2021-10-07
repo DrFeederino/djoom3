@@ -1,59 +1,21 @@
 package neo.Game;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.cos;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
-
-import static neo.Game.AFEntity.EV_Gib;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_Touch;
-import static neo.Game.Entity.TH_PHYSICS;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEPARTICLES;
-import neo.Game.Entity.idAnimatedEntity;
-import neo.Game.Entity.idEntity;
+import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Class;
-import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Class.eventCallback_t1;
-import neo.Game.GameSys.Class.eventCallback_t2;
-import neo.Game.GameSys.Class.idEventArg;
+import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_dropItemRotation;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ITEM;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
-import static neo.Renderer.Material.CONTENTS_CORPSE;
-import static neo.Renderer.Material.CONTENTS_MOVEABLECLIP;
-import static neo.Renderer.Material.CONTENTS_RENDERMODEL;
-import static neo.Renderer.Material.CONTENTS_TRIGGER;
-import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem.renderSystem;
+import neo.Renderer.Material.*;
 import neo.Renderer.RenderWorld.deferredEntityCallback_t;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.BV.Bounds.idBounds;
@@ -62,28 +24,47 @@ import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+import static java.lang.Math.ceil;
+import static java.lang.Math.cos;
+import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
+import static neo.Game.AFEntity.EV_Gib;
+import static neo.Game.Entity.*;
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.g_dropItemRotation;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ITEM;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.RenderSystem.*;
+import static neo.TempDump.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
+import static neo.idlib.Text.Str.va;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
  */
 public class Item {
 
-    static final idEventDef EV_DropToFloor   = new idEventDef("<dropToFloor>");
-    static final idEventDef EV_RespawnItem   = new idEventDef("respawn");
-    static final idEventDef EV_RespawnFx     = new idEventDef("<respawnFx>");
-    static final idEventDef EV_GetPlayerPos  = new idEventDef("<getplayerpos>");
+    static final idEventDef EV_CamShot = new idEventDef("<camshot>");
+    static final idEventDef EV_DropToFloor = new idEventDef("<dropToFloor>");
+    static final idEventDef EV_GetPlayerPos = new idEventDef("<getplayerpos>");
     static final idEventDef EV_HideObjective = new idEventDef("<hideobjective>", "e");
-    static final idEventDef EV_CamShot       = new idEventDef("<camshot>");
-
+    static final idEventDef EV_RespawnFx = new idEventDef("<respawnFx>");
+    static final idEventDef EV_RespawnItem = new idEventDef("respawn");
 
     /*
      ===============================================================================
@@ -93,8 +74,14 @@ public class Item {
      ===============================================================================
      */
     public static class idItem extends idEntity {
+        // enum {
+        public static final int EVENT_PICKUP = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_MAXEVENTS = EVENT_PICKUP + 3;
+        public static final int EVENT_RESPAWN = EVENT_PICKUP + 1;
+        public static final int EVENT_RESPAWNFX = EVENT_PICKUP + 2;
         // public	CLASS_PROTOTYPE( idItem );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_DropToFloor, (eventCallback_t0<idItem>) idItem::Event_DropToFloor);
@@ -104,27 +91,21 @@ public class Item {
             eventCallbacks.put(EV_RespawnFx, (eventCallback_t0<idItem>) idItem::Event_RespawnFx);
         }
 
-
-        // enum {
-        public static final int EVENT_PICKUP    = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_RESPAWN   = EVENT_PICKUP + 1;
-        public static final int EVENT_RESPAWNFX = EVENT_PICKUP + 2;
-        public static final int EVENT_MAXEVENTS = EVENT_PICKUP + 3;
-        // };
-        private idVec3     orgOrigin;
-        private boolean    spin;
-        private boolean    pulse;
-        private boolean    canPickUp;
-        //
-        // for item pulse effect
-        private int        itemShellHandle;
-        private idMaterial shellMaterial;
+        private boolean canPickUp;
         //
         // used to update the item pulse effect
-        private boolean    inView;
-        private int        inViewTime;
-        private int        lastCycle;
-        private int        lastRenderViewTime;
+        private boolean inView;
+        private int inViewTime;
+        //
+        // for item pulse effect
+        private int itemShellHandle;
+        private int lastCycle;
+        private int lastRenderViewTime;
+        // };
+        private idVec3 orgOrigin;
+        private boolean pulse;
+        private idMaterial shellMaterial;
+        private boolean spin;
         //
         //
 
@@ -141,6 +122,10 @@ public class Item {
             fl.networkSync = true;
         }
         // virtual					~idItem();
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         @Override
         public void Save(idSaveGame savefile) {
@@ -178,7 +163,7 @@ public class Item {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             String giveTo;
             idEntity ent;
             float[] tsize = {0};
@@ -203,7 +188,7 @@ public class Item {
             if (giveTo.length() != 0) {
                 ent = gameLocal.FindEntity(giveTo);
                 if (NOT(ent)) {
-                    gameLocal.Error("Item couldn't find owner '%s'", giveTo);
+                    idGameLocal.Error("Item couldn't find owner '%s'", giveTo);
                 }
                 PostEventMS(EV_Touch, 0, ent, null);
             }
@@ -441,7 +426,7 @@ public class Item {
                 }
             }
 
-            // fade down after the last pulse finishes 
+            // fade down after the last pulse finishes
             if (!inView && cycle > lastCycle) {
                 renderEntity.shaderParms[4] = 0.0f;
             } else {
@@ -467,50 +452,6 @@ public class Item {
         public Class.idClass CreateInstance() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-
-        public static class ModelCallback extends deferredEntityCallback_t {
-
-            public static final deferredEntityCallback_t instance = new ModelCallback();
-
-            private ModelCallback() {
-            }
-
-            public static deferredEntityCallback_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public boolean run(renderEntity_s e, renderView_s v) {
-                idItem ent;
-
-                // this may be triggered by a model trace or other non-view related source
-                if (null == v) {
-                    return false;
-                }
-
-                ent = (idItem) gameLocal.entities[ e.entityNum];
-                if (null == ent) {
-                    gameLocal.Error("idItem::ModelCallback: callback with NULL game entity");
-                }
-
-                return ent.UpdateRenderEntity(e, v);
-            }
-
-            @Override
-            public ByteBuffer AllocBuffer() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public void Read(ByteBuffer buffer) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public ByteBuffer Write() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        };
 
         private void Event_DropToFloor() {
             trace_s[] trace = {null};
@@ -578,11 +519,51 @@ public class Item {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
+        public static class ModelCallback extends deferredEntityCallback_t {
+
+            public static final deferredEntityCallback_t instance = new ModelCallback();
+
+            private ModelCallback() {
+            }
+
+            public static deferredEntityCallback_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public boolean run(renderEntity_s e, renderView_s v) {
+                idItem ent;
+
+                // this may be triggered by a model trace or other non-view related source
+                if (null == v) {
+                    return false;
+                }
+
+                ent = (idItem) gameLocal.entities[e.entityNum];
+                if (null == ent) {
+                    idGameLocal.Error("idItem::ModelCallback: callback with NULL game entity");
+                }
+
+                return ent.UpdateRenderEntity(e, v);
+            }
+
+            @Override
+            public ByteBuffer AllocBuffer() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void Read(ByteBuffer buffer) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public ByteBuffer Write() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
         }
 
-    };
+    }
 
     /*
      ===============================================================================
@@ -633,7 +614,7 @@ public class Item {
             return true;
         }
 
-    };
+    }
 
     /*
      ===============================================================================
@@ -644,7 +625,8 @@ public class Item {
      */
     public static class idObjective extends idItem {
         //public 	CLASS_PROTOTYPE( idObjective );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idItem.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idObjective>) idObjective::Event_Trigger);
@@ -661,6 +643,10 @@ public class Item {
             playerPos = new idVec3();
         }
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Save(idSaveGame savefile) {
             savefile.WriteVec3(playerPos);
@@ -675,7 +661,7 @@ public class Item {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             Hide();
             PostEventMS(EV_CamShot, 250);
         }
@@ -700,9 +686,9 @@ public class Item {
 
                         // a tad slow but keeps from having to update all objectives in all maps with a name ptr
                         for (int i = 0; i < gameLocal.num_entities; i++) {
-                            if (gameLocal.entities[ i] != null && gameLocal.entities[ i].IsType(idObjectiveComplete.class)) {
-                                if (idStr.Icmp(spawnArgs.GetString("objectivetitle"), gameLocal.entities[ i].spawnArgs.GetString("objectivetitle")) == 0) {
-                                    gameLocal.entities[ i].spawnArgs.SetBool("objEnabled", true);
+                            if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idObjectiveComplete.class)) {
+                                if (idStr.Icmp(spawnArgs.GetString("objectivetitle"), gameLocal.entities[i].spawnArgs.GetString("objectivetitle")) == 0) {
+                                    gameLocal.entities[i].spawnArgs.SetBool("objEnabled", true);
                                     break;
                                 }
                             }
@@ -763,11 +749,7 @@ public class Item {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -788,7 +770,7 @@ public class Item {
             }
             return true;
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -809,7 +791,7 @@ public class Item {
             }
             return true;
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -820,17 +802,18 @@ public class Item {
      */
     public static class idMoveableItem extends idItem {
         // public 	CLASS_PROTOTYPE( idMoveableItem );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idItem.getEventCallBacks());
             eventCallbacks.put(EV_DropToFloor, (eventCallback_t0<idMoveableItem>) idMoveableItem::Event_DropToFloor);
             eventCallbacks.put(EV_Gib, (eventCallback_t1<idMoveableItem>) idMoveableItem::Event_Gib);
         }
 
-        private idPhysics_RigidBody physicsObj;
-        private idClipModel         trigger;
-        private idDeclParticle      smoke;
-        private int                 smokeTime;
+        private final idPhysics_RigidBody physicsObj;
+        private idDeclParticle smoke;
+        private int smokeTime;
+        private idClipModel trigger;
         //
         //
 
@@ -839,127 +822,6 @@ public class Item {
             trigger = null;
             smoke = null;
             smokeTime = 0;
-        }
-
-        // virtual					~idMoveableItem();
-        @Override
-        protected void _deconstructor() {
-            if (trigger != null) {
-                idClipModel.delete(trigger);
-            }
-            super._deconstructor();
-        }
-
-        @Override
-        public void Save(idSaveGame savefile) {
-            savefile.WriteStaticObject(physicsObj);
-
-            savefile.WriteClipModel(trigger);
-
-            savefile.WriteParticle(smoke);
-            savefile.WriteInt(smokeTime);
-        }
-
-        @Override
-        public void Restore(idRestoreGame savefile) {
-            savefile.ReadStaticObject(physicsObj);
-            RestorePhysics(physicsObj);
-
-            savefile.ReadClipModel(trigger);
-
-            savefile.ReadParticle(smoke);
-            this.smokeTime = savefile.ReadInt();
-        }
-
-        @Override
-        public void Spawn() {
-            super.Spawn();
-            
-            idTraceModel trm = new idTraceModel();
-            float[] density = {0}, friction = {0}, bouncyness = {0}, tsize = {0};
-            idStr clipModelName = new idStr();
-//            idBounds bounds = new idBounds();
-
-            // create a trigger for item pickup
-            spawnArgs.GetFloat("triggersize", "16.0", tsize);
-            trigger = new idClipModel(new idTraceModel(new idBounds(getVec3_origin()).Expand(tsize[0])));
-            trigger.Link(gameLocal.clip, this, 0, GetPhysics().GetOrigin(), GetPhysics().GetAxis());
-            trigger.SetContents(CONTENTS_TRIGGER);
-
-            // check if a clip model is set
-            spawnArgs.GetString("clipmodel", "", clipModelName);
-            if (!isNotNullOrEmpty(clipModelName)) {
-                clipModelName.oSet(spawnArgs.GetString("model"));		// use the visual model
-            }
-
-            // load the trace model
-            if (!CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)) {
-                gameLocal.Error("idMoveableItem '%s': cannot load collision model %s", name, clipModelName);
-                return;
-            }
-
-            // if the model should be shrinked
-            if (spawnArgs.GetBool("clipshrink")) {
-                trm.Shrink(CM_CLIP_EPSILON);
-            }
-
-            // get rigid body properties
-            spawnArgs.GetFloat("density", "0.5", density);
-            density[0] = idMath.ClampFloat(0.001f, 1000.0f, density[0]);
-            spawnArgs.GetFloat("friction", "0.05", friction);
-            friction[0] = idMath.ClampFloat(0.0f, 1.0f, friction[0]);
-            spawnArgs.GetFloat("bouncyness", "0.6", bouncyness);
-            bouncyness[0] = idMath.ClampFloat(0.0f, 1.0f, bouncyness[0]);
-
-            // setup the physics
-            physicsObj.SetSelf(this);
-            physicsObj.SetClipModel(new idClipModel(trm), density[0]);
-            physicsObj.SetOrigin(GetPhysics().GetOrigin());
-            physicsObj.SetAxis(GetPhysics().GetAxis());
-            physicsObj.SetBouncyness(bouncyness[0]);
-            physicsObj.SetFriction(0.6f, 0.6f, friction[0]);
-            physicsObj.SetGravity(gameLocal.GetGravity());
-            physicsObj.SetContents(CONTENTS_RENDERMODEL);
-            physicsObj.SetClipMask(MASK_SOLID | CONTENTS_MOVEABLECLIP);
-            SetPhysics(physicsObj);
-
-            smoke = null;
-            smokeTime = 0;
-            final String smokeName = spawnArgs.GetString("smoke_trail");
-            if (!smokeName.isEmpty()) {// != '\0' ) {
-                smoke = (idDeclParticle) declManager.FindType(DECL_PARTICLE, smokeName);
-                smokeTime = gameLocal.time;
-                BecomeActive(TH_UPDATEPARTICLES);
-            }
-        }
-
-        @Override
-        public void Think() {
-
-            RunPhysics();
-
-            if ((thinkFlags & TH_PHYSICS) != 0) {
-                // update trigger position
-                trigger.Link(gameLocal.clip, this, 0, GetPhysics().GetOrigin(), getMat3_identity());
-            }
-
-            if ((thinkFlags & TH_UPDATEPARTICLES) != 0) {
-                if (!gameLocal.smokeParticles.EmitSmoke(smoke, smokeTime, gameLocal.random.CRandomFloat(), GetPhysics().GetOrigin(), GetPhysics().GetAxis())) {
-                    smokeTime = 0;
-                    BecomeInactive(TH_UPDATEPARTICLES);
-                }
-            }
-
-            Present();
-        }
-
-        @Override
-        public boolean Pickup(idPlayer player) {
-            boolean ret = super.Pickup(player);
-            if (ret) {
-                trigger.SetContents(0);
-            }
-            return ret;
         }
 
         /*
@@ -1076,6 +938,131 @@ public class Item {
             return item[0];
         }
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
+        // virtual					~idMoveableItem();
+        @Override
+        protected void _deconstructor() {
+            if (trigger != null) {
+                idClipModel.delete(trigger);
+            }
+            super._deconstructor();
+        }
+
+        @Override
+        public void Save(idSaveGame savefile) {
+            savefile.WriteStaticObject(physicsObj);
+
+            savefile.WriteClipModel(trigger);
+
+            savefile.WriteParticle(smoke);
+            savefile.WriteInt(smokeTime);
+        }
+
+        @Override
+        public void Restore(idRestoreGame savefile) {
+            savefile.ReadStaticObject(physicsObj);
+            RestorePhysics(physicsObj);
+
+            savefile.ReadClipModel(trigger);
+
+            savefile.ReadParticle(smoke);
+            this.smokeTime = savefile.ReadInt();
+        }
+
+        @Override
+        public void Spawn() {
+            super.Spawn();
+
+            idTraceModel trm = new idTraceModel();
+            float[] density = {0}, friction = {0}, bouncyness = {0}, tsize = {0};
+            idStr clipModelName = new idStr();
+//            idBounds bounds = new idBounds();
+
+            // create a trigger for item pickup
+            spawnArgs.GetFloat("triggersize", "16.0", tsize);
+            trigger = new idClipModel(new idTraceModel(new idBounds(getVec3_origin()).Expand(tsize[0])));
+            trigger.Link(gameLocal.clip, this, 0, GetPhysics().GetOrigin(), GetPhysics().GetAxis());
+            trigger.SetContents(CONTENTS_TRIGGER);
+
+            // check if a clip model is set
+            spawnArgs.GetString("clipmodel", "", clipModelName);
+            if (!isNotNullOrEmpty(clipModelName)) {
+                clipModelName.oSet(spawnArgs.GetString("model"));        // use the visual model
+            }
+
+            // load the trace model
+            if (!CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)) {
+                idGameLocal.Error("idMoveableItem '%s': cannot load collision model %s", name, clipModelName);
+                return;
+            }
+
+            // if the model should be shrinked
+            if (spawnArgs.GetBool("clipshrink")) {
+                trm.Shrink(CM_CLIP_EPSILON);
+            }
+
+            // get rigid body properties
+            spawnArgs.GetFloat("density", "0.5", density);
+            density[0] = idMath.ClampFloat(0.001f, 1000.0f, density[0]);
+            spawnArgs.GetFloat("friction", "0.05", friction);
+            friction[0] = idMath.ClampFloat(0.0f, 1.0f, friction[0]);
+            spawnArgs.GetFloat("bouncyness", "0.6", bouncyness);
+            bouncyness[0] = idMath.ClampFloat(0.0f, 1.0f, bouncyness[0]);
+
+            // setup the physics
+            physicsObj.SetSelf(this);
+            physicsObj.SetClipModel(new idClipModel(trm), density[0]);
+            physicsObj.SetOrigin(GetPhysics().GetOrigin());
+            physicsObj.SetAxis(GetPhysics().GetAxis());
+            physicsObj.SetBouncyness(bouncyness[0]);
+            physicsObj.SetFriction(0.6f, 0.6f, friction[0]);
+            physicsObj.SetGravity(gameLocal.GetGravity());
+            physicsObj.SetContents(CONTENTS_RENDERMODEL);
+            physicsObj.SetClipMask(MASK_SOLID | CONTENTS_MOVEABLECLIP);
+            SetPhysics(physicsObj);
+
+            smoke = null;
+            smokeTime = 0;
+            final String smokeName = spawnArgs.GetString("smoke_trail");
+            if (!smokeName.isEmpty()) {// != '\0' ) {
+                smoke = (idDeclParticle) declManager.FindType(DECL_PARTICLE, smokeName);
+                smokeTime = gameLocal.time;
+                BecomeActive(TH_UPDATEPARTICLES);
+            }
+        }
+
+        @Override
+        public void Think() {
+
+            RunPhysics();
+
+            if ((thinkFlags & TH_PHYSICS) != 0) {
+                // update trigger position
+                trigger.Link(gameLocal.clip, this, 0, GetPhysics().GetOrigin(), getMat3_identity());
+            }
+
+            if ((thinkFlags & TH_UPDATEPARTICLES) != 0) {
+                if (!gameLocal.smokeParticles.EmitSmoke(smoke, smokeTime, gameLocal.random.CRandomFloat(), GetPhysics().GetOrigin(), GetPhysics().GetAxis())) {
+                    smokeTime = 0;
+                    BecomeInactive(TH_UPDATEPARTICLES);
+                }
+            }
+
+            Present();
+        }
+
+        @Override
+        public boolean Pickup(idPlayer player) {
+            boolean ret = super.Pickup(player);
+            if (ret) {
+                trigger.SetContents(0);
+            }
+            return ret;
+        }
+
         @Override
         public void WriteToSnapshot(idBitMsgDelta msg) {
             physicsObj.WriteToSnapshot(msg);
@@ -1113,11 +1100,7 @@ public class Item {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -1137,7 +1120,7 @@ public class Item {
             }
             return true;
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -1155,10 +1138,15 @@ public class Item {
      */
     public static class idItemRemover extends idEntity {
         //public 	CLASS_PROTOTYPE( idItemRemover );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idItemRemover>) idItemRemover::Event_Trigger);
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         public void RemoveItem(idPlayer player) {
@@ -1190,11 +1178,7 @@ public class Item {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -1205,7 +1189,8 @@ public class Item {
      */
     public static class idObjectiveComplete extends idItemRemover {
         // public 	CLASS_PROTOTYPE( idObjectiveComplete );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idItemRemover.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idObjectiveComplete>) idObjectiveComplete::Event_Trigger);
@@ -1213,11 +1198,16 @@ public class Item {
             eventCallbacks.put(EV_GetPlayerPos, (eventCallback_t0<idObjectiveComplete>) idObjectiveComplete::Event_GetPlayerPos);
         }
 
-        private idVec3 playerPos;
-//
+        private final idVec3 playerPos;
+
+        //
 //
         public idObjectiveComplete() {
             playerPos = new idVec3();
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -1233,7 +1223,7 @@ public class Item {
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             spawnArgs.SetBool("objEnabled", false);
             Hide();
         }
@@ -1285,9 +1275,6 @@ public class Item {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

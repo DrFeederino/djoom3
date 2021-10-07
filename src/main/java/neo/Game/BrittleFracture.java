@@ -1,23 +1,8 @@
 package neo.Game;
 
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-
-import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 import neo.CM.CollisionModel.trace_s;
-
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_Touch;
-import static neo.Game.Entity.TH_PHYSICS;
-import static neo.Game.Entity.TH_THINK;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
-import neo.Game.Entity.idEntity;
+import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
-import static neo.Game.GameSys.Class.EV_Remove;
-
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t1;
 import neo.Game.GameSys.Class.eventCallback_t2;
@@ -25,55 +10,56 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.MAX_EVENT_PARAM_SIZE;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Physics.Physics_StaticMulti.idPhysics_StaticMulti;
-import static neo.Renderer.Material.CONTENTS_MOVEABLECLIP;
-import static neo.Renderer.Material.CONTENTS_RENDERMODEL;
-import static neo.Renderer.Material.CONTENTS_TRIGGER;
-import neo.Renderer.Material.idMaterial;
+import neo.Renderer.Material.*;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import neo.Renderer.RenderWorld.deferredEntityCallback_t;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderView_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
-import static neo.framework.DeclManager.declManager;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
-import static neo.idlib.Lib.LittleBitField;
-import static neo.idlib.Lib.PackColor;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.TraceModel.idTraceModel;
-import static neo.idlib.geometry.Winding.MAX_POINTS_ON_WINDING;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import static neo.idlib.math.Math_h.Square;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
+import static neo.Game.Entity.*;
+import static neo.Game.GameSys.Class.EV_Remove;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.etoi;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.LittleBitField;
+import static neo.idlib.Lib.PackColor;
+import static neo.idlib.geometry.Winding.MAX_POINTS_ON_WINDING;
+import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
+import static neo.idlib.math.Math_h.Square;
+import static neo.idlib.math.Plane.SIDE_FRONT;
+import static neo.idlib.math.Plane.SIDE_ON;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
@@ -88,68 +74,69 @@ public class BrittleFracture {
      ===============================================================================
      */
 
+    //
+    public static final int SHARD_ALIVE_TIME = 5000;
+
+    public static final int SHARD_FADE_START = 2000;
+    //
+    public static final String brittleFracture_SnapshotName = "_BrittleFracture_Snapshot_";
+
     public static class shard_s {
 
-        idClipModel            clipModel;
-        idFixedWinding         winding;
+        boolean atEdge;
+        idClipModel clipModel;
         idList<idFixedWinding> decals;
-        idList<Boolean>        edgeHasNeighbour;
-        idList<shard_s>        neighbours;
-        idPhysics_RigidBody    physicsObj;
-        int                    droppedTime;
-        boolean                atEdge;
-        int                    islandNum;
-    };
-//
-    public static final int SHARD_ALIVE_TIME = 5000;
-    public static final int SHARD_FADE_START = 2000;
-//
-    public static final String brittleFracture_SnapshotName = "_BrittleFracture_Snapshot_";
+        int droppedTime;
+        idList<Boolean> edgeHasNeighbour;
+        int islandNum;
+        idList<shard_s> neighbours;
+        idPhysics_RigidBody physicsObj;
+        idFixedWinding winding;
+    }
 //
 
     public static class idBrittleFracture extends idEntity {
+        //
+        // enum {
+        public static final int EVENT_PROJECT_DECAL = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_MAXEVENTS = 2 + EVENT_PROJECT_DECAL;
+        public static final int EVENT_SHATTER = 1 + EVENT_PROJECT_DECAL;
         // public CLASS_PROTOTYPE( idBrittleFracture );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idBrittleFracture>) idBrittleFracture::Event_Activate);
             eventCallbacks.put(EV_Touch, (eventCallback_t2<idBrittleFracture>) idBrittleFracture::Event_Touch);
         }
-
-
-        //        
-        // enum {
-        public static final int EVENT_PROJECT_DECAL = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_SHATTER       = 1 + EVENT_PROJECT_DECAL;
-        public static final int EVENT_MAXEVENTS     = 2 + EVENT_PROJECT_DECAL;
         // };
         //        
 
+        private float angularVelocityScale;
+        private float bouncyness;
+        private final idBounds bounds;
+        private boolean changed;
+        private idMaterial decalMaterial;
+        private float decalSize;
+        private float density;
+        private boolean disableFracture;
+        private float friction;
+        private final idStr fxFracture;
+        //
+        // for rendering
+        private int lastRenderEntityUpdate;
+        private float linearVelocityScale;
         //
         // setttings
-        private idMaterial            material;
-        private idMaterial            decalMaterial;
-        private float                 decalSize;
-        private float                 maxShardArea;
-        private float                 maxShatterRadius;
-        private float                 minShatterRadius;
-        private float                 linearVelocityScale;
-        private float                 angularVelocityScale;
-        private float                 shardMass;
-        private float                 density;
-        private float                 friction;
-        private float                 bouncyness;
-        private idStr                 fxFracture;
+        private idMaterial material;
+        private float maxShardArea;
+        private float maxShatterRadius;
+        private float minShatterRadius;
         //
         // state
         private idPhysics_StaticMulti physicsObj;
-        private idList<shard_s>       shards;
-        private idBounds              bounds;
-        private boolean               disableFracture;
-        //
-        // for rendering
-        private int                   lastRenderEntityUpdate;
-        private boolean               changed;
+        private float shardMass;
+        private final idList<shard_s> shards;
         //
         //
 
@@ -176,6 +163,10 @@ public class BrittleFracture {
             changed = false;
 
             fl.networkSync = true;
+        }
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         @Override
@@ -707,8 +698,8 @@ public class BrittleFracture {
                     }
                 }
                 packedColor = (int) PackColor(new idVec4(renderEntity.shaderParms[SHADERPARM_RED] * fade,
-                        renderEntity.shaderParms[ SHADERPARM_GREEN] * fade,
-                        renderEntity.shaderParms[ SHADERPARM_BLUE] * fade,
+                        renderEntity.shaderParms[SHADERPARM_GREEN] * fade,
+                        renderEntity.shaderParms[SHADERPARM_BLUE] * fade,
                         fade));
 
                 final idWinding winding = shards.oGet(i).winding;
@@ -831,45 +822,6 @@ public class BrittleFracture {
 
             return true;
         }
-
-        public static class ModelCallback extends deferredEntityCallback_t {
-
-            public static final deferredEntityCallback_t instance = new ModelCallback();
-
-            private ModelCallback() {
-            }
-
-            public static deferredEntityCallback_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public boolean run(renderEntity_s e, renderView_s v) {
-                final idBrittleFracture ent;
-
-                ent = (idBrittleFracture) gameLocal.entities[e.entityNum];
-                if (null == ent) {
-                    gameLocal.Error("idBrittleFracture::ModelCallback: callback with NULL game entity");
-                }
-
-                return ent.UpdateRenderEntity(e, v);
-            }
-
-            @Override
-            public ByteBuffer AllocBuffer() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public void Read(ByteBuffer buffer) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public ByteBuffer Write() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        };
 
         private void AddShard(idClipModel clipModel, idFixedWinding w) {
             shard_s shard = new shard_s();
@@ -1037,11 +989,8 @@ public class BrittleFracture {
                 queueEnd = 1;
                 queue[0] = shards.oGet(i);
                 shards.oGet(i).islandNum = numIslands + 1;
-                touchesEdge = false;
 
-                if (shards.oGet(i).atEdge) {
-                    touchesEdge = true;
-                }
+                touchesEdge = shards.oGet(i).atEdge;
 
                 for (curShard = queue[queueStart]; queueStart < queueEnd; curShard = queue[++queueStart]) {
 
@@ -1172,7 +1121,7 @@ public class BrittleFracture {
                 for (j = 0; j < surf.geometry.numIndexes; j += 3) {
                     w.Clear();
                     for (k = 0; k < 3; k++) {
-                        v = surf.geometry.verts[ surf.geometry.indexes[ j + 2 - k]];
+                        v = surf.geometry.verts[surf.geometry.indexes[j + 2 - k]];
                         w.AddPoint(v.xyz);
                         w.oGet(k).s = v.st.oGet(0);
                         w.oGet(k).t = v.st.oGet(1);
@@ -1259,11 +1208,7 @@ public class BrittleFracture {
                         break;
                     }
                 }
-                if (k < w1.GetNumPoints()) {
-                    shard1.atEdge = true;
-                } else {
-                    shard1.atEdge = false;
-                }
+                shard1.atEdge = k < w1.GetNumPoints();
             }
         }
 
@@ -1298,10 +1243,6 @@ public class BrittleFracture {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
         // virtual						~idBrittleFracture( void );
         @Override
         protected void _deconstructor() {
@@ -1318,5 +1259,45 @@ public class BrittleFracture {
 
             super._deconstructor();
         }
-    };
+
+        public static class ModelCallback extends deferredEntityCallback_t {
+
+            public static final deferredEntityCallback_t instance = new ModelCallback();
+
+            private ModelCallback() {
+            }
+
+            public static deferredEntityCallback_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public boolean run(renderEntity_s e, renderView_s v) {
+                final idBrittleFracture ent;
+
+                ent = (idBrittleFracture) gameLocal.entities[e.entityNum];
+                if (null == ent) {
+                    idGameLocal.Error("idBrittleFracture::ModelCallback: callback with NULL game entity");
+                }
+
+                return ent.UpdateRenderEntity(e, v);
+            }
+
+            @Override
+            public ByteBuffer AllocBuffer() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void Read(ByteBuffer buffer) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public ByteBuffer Write() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        }
+    }
+
 }

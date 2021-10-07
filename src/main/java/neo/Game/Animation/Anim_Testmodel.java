@@ -1,6 +1,36 @@
 package neo.Game.Animation;
 
 import neo.Game.Actor.copyJoints_t;
+import neo.Game.Animation.Anim_Blend.idAnim;
+import neo.Game.Animation.Anim_Blend.idAnimator;
+import neo.Game.Animation.Anim_Import.idModelExport;
+import neo.Game.Entity.idAnimatedEntity;
+import neo.Game.Entity.idEntity;
+import neo.Game.GameSys.Class;
+import neo.Game.GameSys.Class.eventCallback_t;
+import neo.Game.GameSys.Class.eventCallback_t0;
+import neo.Game.GameSys.Event.idEventDef;
+import neo.Game.GameSys.SaveGame.idRestoreGame;
+import neo.Game.GameSys.SaveGame.idSaveGame;
+import neo.Game.Game_local.idEntityPtr;
+import neo.Game.Physics.Clip.idClipModel;
+import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
+import neo.Game.Player.idPlayer;
+import neo.TempDump.*;
+import neo.framework.CmdSystem.argCompletion_t;
+import neo.framework.CmdSystem.cmdFunction_t;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Dict_h.idDict;
+import neo.idlib.Dict_h.idKeyValue;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.idList;
+import neo.idlib.math.Angles.idAngles;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Vector.idVec3;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static neo.Game.Actor.EV_FootstepLeft;
 import static neo.Game.Actor.EV_FootstepRight;
@@ -8,66 +38,29 @@ import static neo.Game.Animation.Anim.ANIMCHANNEL_ALL;
 import static neo.Game.Animation.Anim.FRAME2MS;
 import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE;
 import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
-import neo.Game.Animation.Anim_Blend.idAnim;
-import neo.Game.Animation.Anim_Blend.idAnimator;
-import neo.Game.Animation.Anim_Import.idModelExport;
-import neo.Game.Animation.Anim_Testmodel.idTestModel;
 import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idAnimatedEntity;
-import neo.Game.Entity.idEntity;
-import neo.Game.GameSys.Class;
 import static neo.Game.GameSys.Class.EV_Remove;
-
-import neo.Game.GameSys.Class.eventCallback_t;
-import neo.Game.GameSys.Class.eventCallback_t0;
-import neo.Game.GameSys.Event.idEventDef;
-import neo.Game.GameSys.SaveGame.idRestoreGame;
-import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_showTestModelFrame;
-import static neo.Game.GameSys.SysCvar.g_testModelAnimate;
-import static neo.Game.GameSys.SysCvar.g_testModelBlend;
-import static neo.Game.GameSys.SysCvar.g_testModelRotate;
+import static neo.Game.GameSys.SysCvar.*;
 import static neo.Game.Game_local.gameLocal;
 import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
 import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import neo.Game.Game_local.idEntityPtr;
-import neo.Game.Physics.Clip.idClipModel;
-import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
-import neo.Game.Player.idPlayer;
 import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import static neo.Renderer.Model.INVALID_JOINT;
 import static neo.Renderer.Model.MD5_MESH_EXT;
 import static neo.Renderer.ModelManager.renderModelManager;
 import static neo.Renderer.RenderWorld.SHADERPARM_PARTICLE_STOPTIME;
 import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.TempDump.NOT;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import neo.TempDump.void_callback;
-import neo.framework.CmdSystem.argCompletion_t;
-import neo.framework.CmdSystem.cmdFunction_t;
+import static neo.TempDump.*;
 import static neo.framework.CmdSystem.cmdSystem;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
 import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
-import neo.idlib.BV.Bounds.idBounds;
-import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.Dict_h.idDict;
-import neo.idlib.Dict_h.idKeyValue;
 import static neo.idlib.Lib.idLib.common;
-import neo.idlib.Text.Str.idStr;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.containers.List.idList;
 import static neo.idlib.math.Angles.getAng_zero;
-import neo.idlib.math.Angles.idAngles;
 import static neo.idlib.math.Extrapolate.EXTRAPOLATION_LINEAR;
 import static neo.idlib.math.Extrapolate.EXTRAPOLATION_NOSTOP;
 import static neo.idlib.math.Math_h.MS2SEC;
-import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Vector.idVec3;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /*
  =============================================================================
@@ -102,27 +95,27 @@ public class Anim_Testmodel {
      */
     public static class idTestModel extends idAnimatedEntity {
         // CLASS_PROTOTYPE( idTestModel );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idAnimatedEntity.getEventCallBacks());
             eventCallbacks.put(EV_FootstepLeft, (eventCallback_t0<idTestModel>) idTestModel::Event_Footstep);
             eventCallbacks.put(EV_FootstepRight, (eventCallback_t0<idTestModel>) idTestModel::Event_Footstep);
         }
 
-
-        private idEntityPtr<idEntity> head;
-        private idAnimator            headAnimator;
-        private idAnim                customAnim;
-        private idPhysics_Parametric  physicsObj;
-        private idStr                 animName;
-        private int                   anim;
-        private int                   headAnim;
-        private int                   mode;
-        private int                   frame;
-        private int                   startTime;
-        private int                   animTime;
+        private int anim;
+        private idStr animName;
+        private int animTime;
         //
-        private idList<copyJoints_t>  copyJoints;
+        private idList<copyJoints_t> copyJoints;
+        private idAnim customAnim;
+        private int frame;
+        private final idEntityPtr<idEntity> head;
+        private int headAnim;
+        private idAnimator headAnimator;
+        private int mode;
+        private idPhysics_Parametric physicsObj;
+        private int startTime;
         //
         //
 
@@ -137,6 +130,10 @@ public class Anim_Testmodel {
             frame = 0;
         }
         // ~idTestModel();
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         @Override
         public void Save(idSaveGame savefile) {
@@ -241,7 +238,7 @@ public class Anim_Testmodel {
             }
 
             // start any shader effects based off of the spawn time
-            renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
 
             SetPhysics(physicsObj);
 
@@ -429,6 +426,12 @@ public class Anim_Testmodel {
             mode = -1;
         }
 
+        /* **********************************************************************
+
+         Testmodel console commands
+
+         ***********************************************************************/
+
         public void BlendAnim(final idCmdArgs args) {
             int anim1;
             int anim2;
@@ -457,479 +460,6 @@ public class Anim_Testmodel {
             anim = anim2;
             headAnim = 0;
         }
-
-        /* **********************************************************************
-
-         Testmodel console commands
-
-         ***********************************************************************/
-
-        /*
-         =================
-         idTestModel::KeepTestModel_f
-
-         Makes the current test model permanent, allowing you to place
-         multiple test models
-         =================
-         */
-        public static class KeepTestModel_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new KeepTestModel_f();
-
-            private KeepTestModel_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No active testModel.\n");
-                    return;
-                }
-
-                gameLocal.Printf("modelDef %p kept\n", gameLocal.testmodel.renderEntity.hModel);
-
-                gameLocal.testmodel = null;
-            }
-        };
-
-        /*
-         =================
-         idTestModel::TestSkin_f
-
-         Sets a skin on an existing testModel
-         =================
-         */
-        public static class TestSkin_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestSkin_f();
-
-            private TestSkin_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                idVec3 offset;
-                idStr name = new idStr();
-                idPlayer player;
-                idDict dict;
-
-                player = gameLocal.GetLocalPlayer();
-                if (null == player || !gameLocal.CheatsOk()) {
-                    return;
-                }
-
-                // delete the testModel if active
-                if (NOT(gameLocal.testmodel)) {
-                    common.Printf("No active testModel\n");
-                    return;
-                }
-
-                if (args.Argc() < 2) {
-                    common.Printf("removing testSkin.\n");
-                    gameLocal.testmodel.SetSkin(null);
-                    return;
-                }
-
-                name.oSet(args.Argv(1));
-                gameLocal.testmodel.SetSkin(declManager.FindSkin(name));
-            }
-        };
-
-        /*
-         =================
-         idTestModel::TestShaderParm_f
-
-         Sets a shaderParm on an existing testModel
-         =================
-         */
-        public static class TestShaderParm_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestShaderParm_f();
-
-            private TestShaderParm_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                idVec3 offset;
-                idStr name;
-                idPlayer player;
-                idDict dict;
-
-                player = gameLocal.GetLocalPlayer();
-                if (null == player || !gameLocal.CheatsOk()) {
-                    return;
-                }
-
-                // delete the testModel if active
-                if (NOT(gameLocal.testmodel)) {
-                    common.Printf("No active testModel\n");
-                    return;
-                }
-
-                if (args.Argc() != 3) {
-                    common.Printf("USAGE: testShaderParm <parmNum> <float | \"time\">\n");
-                    return;
-                }
-
-                int parm = Integer.parseInt(args.Argv(1));
-                if (parm < 0 || parm >= MAX_ENTITY_SHADER_PARMS) {
-                    common.Printf("parmNum %d out of range\n", parm);
-                    return;
-                }
-
-                float value;
-                if (NOT(idStr.Icmp(args.Argv(2), "time"))) {
-                    value = gameLocal.time * -0.001f;
-                } else {
-                    value = Float.parseFloat(args.Argv(2));
-                }
-
-                gameLocal.testmodel.SetShaderParm(parm, value);
-            }
-        };
-
-        /*
-         =================
-         idTestModel::TestModel_f
-
-         Creates a static modelDef in front of the current position, which
-         can then be moved around
-         =================
-         */
-        public static class TestModel_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestModel_f();
-
-            private TestModel_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                idVec3 offset;
-                idStr name = new idStr();
-                idPlayer player;
-                idDict entityDef;
-                idDict dict = new idDict();
-
-                player = gameLocal.GetLocalPlayer();
-                if (null == player || !gameLocal.CheatsOk()) {
-                    return;
-                }
-
-                // delete the testModel if active
-                if (gameLocal.testmodel != null) {
-//		delete gameLocal.testmodel;
-                    gameLocal.testmodel = null;
-                }
-
-                if (args.Argc() < 2) {
-                    return;
-                }
-
-                name.oSet(args.Argv(1));
-
-                entityDef = gameLocal.FindEntityDefDict(name.toString(), false);
-                if (entityDef != null) {
-                    dict = entityDef;
-                } else {
-                    if (declManager.FindType(DECL_MODELDEF, name, false) != null) {
-                        dict.Set("model", name);
-                    } else {
-                        // allow map models with underscore prefixes to be tested during development
-                        // without appending an ase
-                        if (name.oGet(0) != '_') {
-                            name.DefaultFileExtension(".ase");
-                        }
-
-                        if (name.toString().contains(".ma") || name.toString().contains(".mb")) {
-                            idModelExport exporter = new idModelExport();
-                            exporter.ExportModel(name.toString());
-                            name.SetFileExtension(MD5_MESH_EXT);
-                        }
-
-                        if (NOT(renderModelManager.CheckModel(name.toString()))) {
-                            gameLocal.Printf("Can't register model\n");
-                            return;
-                        }
-                        dict.Set("model", name);
-                    }
-                }
-
-                offset = player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f));
-
-                dict.Set("origin", offset.ToString());
-                dict.Set("angle", va("%f", player.viewAngles.yaw + 180.0f));
-                gameLocal.testmodel = (idTestModel) gameLocal.SpawnEntityType(idTestModel.class, dict);
-                gameLocal.testmodel.renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::ArgCompletion_TestModel
-         =====================
-         */
-        public static class ArgCompletion_TestModel extends argCompletion_t {
-
-            private static final argCompletion_t instance = new ArgCompletion_TestModel();
-
-            private ArgCompletion_TestModel() {
-            }
-
-            public static argCompletion_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args, void_callback<String> callback) {
-                int i, num;
-
-                num = declManager.GetNumDecls(DECL_ENTITYDEF);
-                for (i = 0; i < num; i++) {
-                    callback.run((new idStr(args.Argv(0)) + " " + declManager.DeclByIndex(DECL_ENTITYDEF, i, false).GetName()));
-                }
-                num = declManager.GetNumDecls(DECL_MODELDEF);
-                for (i = 0; i < num; i++) {
-                    callback.run((new idStr(args.Argv(0)) + " " + declManager.DeclByIndex(DECL_MODELDEF, i, false).GetName()));
-                }
-                cmdSystem.ArgCompletion_FolderExtension(args, callback, "models/", false, ".lwo", ".ase", ".md5mesh", ".ma", ".mb", null);
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestParticleStopTime_f
-         =====================
-         */
-        public static class TestParticleStopTime_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestParticleStopTime_f();
-
-            private TestParticleStopTime_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME] = MS2SEC(gameLocal.time);
-                gameLocal.testmodel.UpdateVisuals();
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestAnim_f
-         =====================
-         */
-        public static class TestAnim_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestAnim_f();
-
-            private TestAnim_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.TestAnim(args);
-            }
-        };
-
-
-        /*
-         =====================
-         idTestModel::ArgCompletion_TestAnim
-         =====================
-         */
-        public static class ArgCompletion_TestAnim extends argCompletion_t {
-
-            private static final argCompletion_t instance = new ArgCompletion_TestAnim();
-
-            private ArgCompletion_TestAnim() {
-            }
-
-            public static argCompletion_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args, void_callback<String> callback) {
-                if (gameLocal.testmodel != null) {
-                    idAnimator animator = gameLocal.testmodel.GetAnimator();
-                    for (int i = 0; i < animator.NumAnims(); i++) {
-                        callback.run(va("%s %s", args.Argv(0), animator.AnimFullName(i)));
-                    }
-                }
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestBlend_f
-         =====================
-         */
-        public static class TestBlend_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestBlend_f();
-
-            private TestBlend_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.BlendAnim(args);
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestModelNextAnim_f
-         =====================
-         */
-        public static class TestModelNextAnim_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestModelNextAnim_f();
-
-            private TestModelNextAnim_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.NextAnim(args);
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestModelPrevAnim_f
-         =====================
-         */
-        public static class TestModelPrevAnim_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestModelPrevAnim_f();
-
-            private TestModelPrevAnim_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.PrevAnim(args);
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestModelNextFrame_f
-         =====================
-         */
-        public static class TestModelNextFrame_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestModelNextFrame_f();
-
-            private TestModelNextFrame_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.NextFrame(args);
-            }
-        };
-
-        /*
-         =====================
-         idTestModel::TestModelPrevFrame_f
-         =====================
-         */
-        public static class TestModelPrevFrame_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new TestModelPrevFrame_f();
-
-            private TestModelPrevFrame_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                if (NOT(gameLocal.testmodel)) {
-                    gameLocal.Printf("No testModel active.\n");
-                    return;
-                }
-
-                gameLocal.testmodel.PrevFrame(args);
-            }
-        };
 
         @Override
         public void Think() {
@@ -1096,9 +626,472 @@ public class Anim_Testmodel {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
+        /*
+         =================
+         idTestModel::KeepTestModel_f
+
+         Makes the current test model permanent, allowing you to place
+         multiple test models
+         =================
+         */
+        public static class KeepTestModel_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new KeepTestModel_f();
+
+            private KeepTestModel_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No active testModel.\n");
+                    return;
+                }
+
+                gameLocal.Printf("modelDef %p kept\n", gameLocal.testmodel.renderEntity.hModel);
+
+                gameLocal.testmodel = null;
+            }
         }
 
-    };
+        /*
+         =================
+         idTestModel::TestSkin_f
+
+         Sets a skin on an existing testModel
+         =================
+         */
+        public static class TestSkin_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestSkin_f();
+
+            private TestSkin_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                idVec3 offset;
+                idStr name = new idStr();
+                idPlayer player;
+                idDict dict;
+
+                player = gameLocal.GetLocalPlayer();
+                if (null == player || !gameLocal.CheatsOk()) {
+                    return;
+                }
+
+                // delete the testModel if active
+                if (NOT(gameLocal.testmodel)) {
+                    common.Printf("No active testModel\n");
+                    return;
+                }
+
+                if (args.Argc() < 2) {
+                    common.Printf("removing testSkin.\n");
+                    gameLocal.testmodel.SetSkin(null);
+                    return;
+                }
+
+                name.oSet(args.Argv(1));
+                gameLocal.testmodel.SetSkin(declManager.FindSkin(name));
+            }
+        }
+
+        /*
+         =================
+         idTestModel::TestShaderParm_f
+
+         Sets a shaderParm on an existing testModel
+         =================
+         */
+        public static class TestShaderParm_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestShaderParm_f();
+
+            private TestShaderParm_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                idVec3 offset;
+                idStr name;
+                idPlayer player;
+                idDict dict;
+
+                player = gameLocal.GetLocalPlayer();
+                if (null == player || !gameLocal.CheatsOk()) {
+                    return;
+                }
+
+                // delete the testModel if active
+                if (NOT(gameLocal.testmodel)) {
+                    common.Printf("No active testModel\n");
+                    return;
+                }
+
+                if (args.Argc() != 3) {
+                    common.Printf("USAGE: testShaderParm <parmNum> <float | \"time\">\n");
+                    return;
+                }
+
+                int parm = Integer.parseInt(args.Argv(1));
+                if (parm < 0 || parm >= MAX_ENTITY_SHADER_PARMS) {
+                    common.Printf("parmNum %d out of range\n", parm);
+                    return;
+                }
+
+                float value;
+                if (NOT(idStr.Icmp(args.Argv(2), "time"))) {
+                    value = gameLocal.time * -0.001f;
+                } else {
+                    value = Float.parseFloat(args.Argv(2));
+                }
+
+                gameLocal.testmodel.SetShaderParm(parm, value);
+            }
+        }
+
+        /*
+         =================
+         idTestModel::TestModel_f
+
+         Creates a static modelDef in front of the current position, which
+         can then be moved around
+         =================
+         */
+        public static class TestModel_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestModel_f();
+
+            private TestModel_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                idVec3 offset;
+                idStr name = new idStr();
+                idPlayer player;
+                idDict entityDef;
+                idDict dict = new idDict();
+
+                player = gameLocal.GetLocalPlayer();
+                if (null == player || !gameLocal.CheatsOk()) {
+                    return;
+                }
+
+                // delete the testModel if active
+                if (gameLocal.testmodel != null) {
+//		delete gameLocal.testmodel;
+                    gameLocal.testmodel = null;
+                }
+
+                if (args.Argc() < 2) {
+                    return;
+                }
+
+                name.oSet(args.Argv(1));
+
+                entityDef = gameLocal.FindEntityDefDict(name.toString(), false);
+                if (entityDef != null) {
+                    dict = entityDef;
+                } else {
+                    if (declManager.FindType(DECL_MODELDEF, name, false) != null) {
+                        dict.Set("model", name);
+                    } else {
+                        // allow map models with underscore prefixes to be tested during development
+                        // without appending an ase
+                        if (name.oGet(0) != '_') {
+                            name.DefaultFileExtension(".ase");
+                        }
+
+                        if (name.toString().contains(".ma") || name.toString().contains(".mb")) {
+                            idModelExport exporter = new idModelExport();
+                            exporter.ExportModel(name.toString());
+                            name.SetFileExtension(MD5_MESH_EXT);
+                        }
+
+                        if (NOT(renderModelManager.CheckModel(name.toString()))) {
+                            gameLocal.Printf("Can't register model\n");
+                            return;
+                        }
+                        dict.Set("model", name);
+                    }
+                }
+
+                offset = player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f));
+
+                dict.Set("origin", offset.ToString());
+                dict.Set("angle", va("%f", player.viewAngles.yaw + 180.0f));
+                gameLocal.testmodel = (idTestModel) gameLocal.SpawnEntityType(idTestModel.class, dict);
+                gameLocal.testmodel.renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::ArgCompletion_TestModel
+         =====================
+         */
+        public static class ArgCompletion_TestModel extends argCompletion_t {
+
+            private static final argCompletion_t instance = new ArgCompletion_TestModel();
+
+            private ArgCompletion_TestModel() {
+            }
+
+            public static argCompletion_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args, void_callback<String> callback) {
+                int i, num;
+
+                num = declManager.GetNumDecls(DECL_ENTITYDEF);
+                for (i = 0; i < num; i++) {
+                    callback.run((new idStr(args.Argv(0)) + " " + declManager.DeclByIndex(DECL_ENTITYDEF, i, false).GetName()));
+                }
+                num = declManager.GetNumDecls(DECL_MODELDEF);
+                for (i = 0; i < num; i++) {
+                    callback.run((new idStr(args.Argv(0)) + " " + declManager.DeclByIndex(DECL_MODELDEF, i, false).GetName()));
+                }
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "models/", false, ".lwo", ".ase", ".md5mesh", ".ma", ".mb", null);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestParticleStopTime_f
+         =====================
+         */
+        public static class TestParticleStopTime_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestParticleStopTime_f();
+
+            private TestParticleStopTime_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME] = MS2SEC(gameLocal.time);
+                gameLocal.testmodel.UpdateVisuals();
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestAnim_f
+         =====================
+         */
+        public static class TestAnim_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestAnim_f();
+
+            private TestAnim_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.TestAnim(args);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::ArgCompletion_TestAnim
+         =====================
+         */
+        public static class ArgCompletion_TestAnim extends argCompletion_t {
+
+            private static final argCompletion_t instance = new ArgCompletion_TestAnim();
+
+            private ArgCompletion_TestAnim() {
+            }
+
+            public static argCompletion_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args, void_callback<String> callback) {
+                if (gameLocal.testmodel != null) {
+                    idAnimator animator = gameLocal.testmodel.GetAnimator();
+                    for (int i = 0; i < animator.NumAnims(); i++) {
+                        callback.run(va("%s %s", args.Argv(0), animator.AnimFullName(i)));
+                    }
+                }
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestBlend_f
+         =====================
+         */
+        public static class TestBlend_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestBlend_f();
+
+            private TestBlend_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.BlendAnim(args);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestModelNextAnim_f
+         =====================
+         */
+        public static class TestModelNextAnim_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestModelNextAnim_f();
+
+            private TestModelNextAnim_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.NextAnim(args);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestModelPrevAnim_f
+         =====================
+         */
+        public static class TestModelPrevAnim_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestModelPrevAnim_f();
+
+            private TestModelPrevAnim_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.PrevAnim(args);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestModelNextFrame_f
+         =====================
+         */
+        public static class TestModelNextFrame_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestModelNextFrame_f();
+
+            private TestModelNextFrame_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.NextFrame(args);
+            }
+        }
+
+        /*
+         =====================
+         idTestModel::TestModelPrevFrame_f
+         =====================
+         */
+        public static class TestModelPrevFrame_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new TestModelPrevFrame_f();
+
+            private TestModelPrevFrame_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                if (NOT(gameLocal.testmodel)) {
+                    gameLocal.Printf("No testModel active.\n");
+                    return;
+                }
+
+                gameLocal.testmodel.PrevFrame(args);
+            }
+        }
+
+    }
+
 }

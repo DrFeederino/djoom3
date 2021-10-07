@@ -1,25 +1,15 @@
 package neo.ui;
 
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.framework.CVarSystem.CVAR_FLOAT;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.File_h.idFile;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.Session.session;
-import static neo.idlib.Lib.colorWhite;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.RAD2DEG;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.SimpleWindow.drawWin_t;
@@ -28,43 +18,54 @@ import neo.ui.Window.idWindow;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinVar;
 
+import static neo.Renderer.Material.SS_GUI;
+import static neo.framework.CVarSystem.CVAR_FLOAT;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.KeyInput.K_MOUSE1;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.colorWhite;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.DEG2RAD;
+import static neo.idlib.math.Math_h.RAD2DEG;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+
 /**
  *
  */
 public class GameBearShootWindow {
 
     public static final int BEAR_GRAVITY = 240;
-    public static final float BEAR_SIZE = 24.f;
     public static final float BEAR_SHRINK_TIME = 2000.f;
-//
+    public static final float BEAR_SIZE = 24.f;
+    //
     public static final float MAX_WINDFORCE = 100.f;
-//
+    //
     public static final idCVar bearTurretAngle = new idCVar("bearTurretAngle", "0", CVAR_FLOAT, "");
     public static final idCVar bearTurretForce = new idCVar("bearTurretForce", "200", CVAR_FLOAT, "");
 //
 
     /*
      *****************************************************************************
-     * BSEntity	
+     * BSEntity
      ****************************************************************************
      */
     public static class BSEntity {
 
+        //
+        public idVec4 entColor;
+        //
+        public boolean fadeIn;
+        public boolean fadeOut;
+        //
+        public idGameBearShootWindow game;
         public idMaterial material;
         public idStr materialName;
-        public float width, height;
-        public boolean visible;
-//
-        public idVec4 entColor;
         public idVec2 position;
         public float rotation;
         public float rotationSpeed;
         public idVec2 velocity;
-//
-        public boolean fadeIn;
-        public boolean fadeOut;
-//
-        public idGameBearShootWindow game;
+        public boolean visible;
+        public float width, height;
 //
 
         public BSEntity(idGameBearShootWindow _game) {
@@ -170,10 +171,10 @@ public class GameBearShootWindow {
 
         public void Draw(idDeviceContext dc) {
             if (visible) {
-                dc.DrawMaterialRotated(position.x, position.y, width, height, material, entColor, 1.0f, 1.0f, (float) DEG2RAD(rotation));
+                dc.DrawMaterialRotated(position.x, position.y, width, height, material, entColor, 1.0f, 1.0f, DEG2RAD(rotation));
             }
         }
-    };
+    }
 
     /*
      *****************************************************************************
@@ -182,19 +183,52 @@ public class GameBearShootWindow {
      */
     public static class idGameBearShootWindow extends idWindow {
 
+        private BSEntity bear;
+        private boolean bearHitTarget;
+        // ~idGameBearShootWindow();
+        private boolean bearIsShrinking;
+        //
+        private float bearScale;
+        private int bearShrinkStartTime;
+        //
+        private int currentLevel;
+        //
+        private idList<BSEntity> entities;
+        private boolean gameOver;
+        //
+//
+        private idWinBool gamerunning;
+        private BSEntity goal;
+        private int goalsHit;
+        private BSEntity gunblast;
+        private BSEntity helicopter;
+        private idWinBool onContinue;
+        private idWinBool onFire;
+        private idWinBool onNewGame;
+        private float timeRemaining;
+        //
+        private float timeSlice;
+        //
+        private BSEntity turret;
+        //
+        private float turretAngle;
+        private float turretForce;
+        private boolean updateScore;
+        private BSEntity wind;
+        //
+        private float windForce;
+        private int windUpdateTime;
         public idGameBearShootWindow(idUserInterfaceLocal gui) {
             super(gui);
             this.gui = gui;
             CommonInit();
         }
-
         public idGameBearShootWindow(idDeviceContext dc, idUserInterfaceLocal gui) {
             super(dc, gui);
             this.dc = dc;
             this.gui = gui;
             CommonInit();
         }
-        // ~idGameBearShootWindow();
 
         @Override
         public void WriteToSaveGame(idFile savefile) {
@@ -316,7 +350,7 @@ public class GameBearShootWindow {
                     return ret;
                 }
                 if (key == K_MOUSE1) {
-                    // Mouse was clicked	
+                    // Mouse was clicked
                 } else {
                     return ret;
                 }
@@ -803,39 +837,6 @@ public class GameBearShootWindow {
 
             return super.ParseInternalVar(_name, src);
         }
-//
-//
-        private idWinBool gamerunning;
-        private idWinBool onFire;
-        private idWinBool onContinue;
-        private idWinBool onNewGame;
-//
-        private float timeSlice;
-        private float timeRemaining;
-        private boolean gameOver;
-//
-        private int currentLevel;
-        private int goalsHit;
-        private boolean updateScore;
-        private boolean bearHitTarget;
-//
-        private float bearScale;
-        private boolean bearIsShrinking;
-        private int bearShrinkStartTime;
-//
-        private float turretAngle;
-        private float turretForce;
-//
-        private float windForce;
-        private int windUpdateTime;
-//
-        private idList<BSEntity> entities;
-//
-        private BSEntity turret;
-        private BSEntity bear;
-        private BSEntity helicopter;
-        private BSEntity goal;
-        private BSEntity wind;
-        private BSEntity gunblast;
-    };
+    }
+
 }

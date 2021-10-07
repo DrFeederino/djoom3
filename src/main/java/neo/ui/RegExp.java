@@ -1,8 +1,5 @@
 package neo.ui;
 
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.framework.Common.common;
 import neo.framework.DemoFile.idDemoFile;
 import neo.framework.File_h.idFile;
 import neo.idlib.Text.Parser.idParser;
@@ -14,25 +11,14 @@ import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.ui.Rectangle.idRectangle;
-import neo.ui.RegExp.idRegister;
-import static neo.ui.RegExp.idRegister.REGTYPE.BOOL;
-import static neo.ui.RegExp.idRegister.REGTYPE.FLOAT;
-import static neo.ui.RegExp.idRegister.REGTYPE.INT;
-import static neo.ui.RegExp.idRegister.REGTYPE.NUMTYPES;
-import static neo.ui.RegExp.idRegister.REGTYPE.RECTANGLE;
-import static neo.ui.RegExp.idRegister.REGTYPE.STRING;
-import static neo.ui.RegExp.idRegister.REGTYPE.VEC2;
-import static neo.ui.RegExp.idRegister.REGTYPE.VEC3;
-import static neo.ui.RegExp.idRegister.REGTYPE.VEC4;
 import neo.ui.Window.idWindow;
-import neo.ui.Winvar.idWinBool;
-import neo.ui.Winvar.idWinFloat;
-import neo.ui.Winvar.idWinInt;
-import neo.ui.Winvar.idWinRectangle;
-import neo.ui.Winvar.idWinVar;
-import neo.ui.Winvar.idWinVec2;
-import neo.ui.Winvar.idWinVec3;
-import neo.ui.Winvar.idWinVec4;
+import neo.ui.Winvar.*;
+
+import static neo.TempDump.btoi;
+import static neo.TempDump.etoi;
+import static neo.framework.Common.common;
+import static neo.ui.RegExp.idRegister.REGTYPE.NUMTYPES;
+import static neo.ui.RegExp.idRegister.REGTYPE.STRING;
 
 /**
  *
@@ -41,24 +27,23 @@ public class RegExp {
 
     public static class idRegister {
 
-        public enum REGTYPE {
-
-            VEC4 /*= 0*/, FLOAT, BOOL, INT, STRING, VEC2, VEC3, RECTANGLE, NUMTYPES
-        };
         public static final int[] REGCOUNT = new int[etoi(NUMTYPES)];
+
+        private static int DBG_GetFromRegs = 0;
 
         static {
             final int[] bv = {4, 1, 1, 1, 0, 2, 3, 4};
             System.arraycopy(bv, 0, REGCOUNT, 0, REGCOUNT.length);
         }
+
+        public /*unsigned*/ final short[] regs = new short[4];
+        public boolean DBG_D3_KEY = false;
         //
         public boolean enabled;
-        public short   type;
-        public idStr   name;
-        public int     regCount;
-        public /*unsigned*/ final short[] regs = new short[4];
+        public idStr name;
+        public int regCount;
+        public short type;
         public idWinVar var;
-        public boolean DBG_D3_KEY = false;
         //
         //
 
@@ -133,8 +118,8 @@ public class RegExp {
             }
         }
 
-        private static int DBG_GetFromRegs = 0;
-        public void GetFromRegs(float[] registers) {DBG_GetFromRegs++;
+        public void GetFromRegs(float[] registers) {
+            DBG_GetFromRegs++;
             idVec4 v = new idVec4();
             idRectangle rect = new idRectangle();
 
@@ -246,12 +231,17 @@ public class RegExp {
 
             var.ReadFromSaveGame(savefile);
         }
-    };
+
+        public enum REGTYPE {
+
+            VEC4 /*= 0*/, FLOAT, BOOL, INT, STRING, VEC2, VEC3, RECTANGLE, NUMTYPES
+        }
+    }
 
     static class idRegisterList {
 
-        private idList<idRegister> regs;
-        private idHashIndex regHash;
+        private final idHashIndex regHash;
+        private final idList<idRegister> regs;
         //
         //
 
@@ -275,7 +265,7 @@ public class RegExp {
                 if (type == idRegister.REGTYPE.STRING.ordinal()) {
                     idToken tok = new idToken();
                     if (src.ReadToken(tok)) {
-                        if("#str_07184".equals(tok.toString())){
+                        if ("#str_07184".equals(tok.toString())) {
                             reg.DBG_D3_KEY = true;
                         }
                         tok.oSet(common.GetLanguageDict().GetString(tok.toString()));
@@ -394,5 +384,6 @@ public class RegExp {
             }
         }
 
-    };
+    }
+
 }

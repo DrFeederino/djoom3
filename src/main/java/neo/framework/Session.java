@@ -1,41 +1,38 @@
 package neo.framework;
 
+import neo.Renderer.RenderWorld.idRenderWorld;
+import neo.Sound.sound.idSoundWorld;
+import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
+import neo.framework.CmdSystem.cmdFunction_t;
+import neo.framework.DemoFile.idDemoFile;
+import neo.framework.FileSystem_h.backgroundDownload_s;
+import neo.framework.FileSystem_h.findFile_t;
+import neo.framework.File_h.idFile;
+import neo.framework.Session_local.idSessionLocal;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Str.idStr;
+import neo.sys.sys_public.sysEvent_s;
+import neo.ui.UserInterface.idUserInterface;
+
 import java.nio.ByteBuffer;
+
 import static neo.Game.Game_local.game;
 import static neo.Renderer.ModelManager.renderModelManager;
-import neo.Renderer.RenderWorld.idRenderWorld;
 import static neo.Sound.snd_system.soundSystem;
-import neo.Sound.sound.idSoundWorld;
-
 import static neo.TempDump.*;
-
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
 import static neo.framework.CVarSystem.CVAR_SERVERINFO;
 import static neo.framework.CVarSystem.cvarSystem;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
-import neo.framework.CmdSystem.cmdFunction_t;
 import static neo.framework.CmdSystem.cmdSystem;
 import static neo.framework.Common.common;
 import static neo.framework.Console.console;
 import static neo.framework.DeclManager.declManager;
-import neo.framework.DemoFile.idDemoFile;
-import neo.framework.FileSystem_h.backgroundDownload_s;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.FileSystem_h.findFile_t;
-import neo.framework.File_h.idFile;
-
-import neo.framework.Session_local.idSessionLocal;
 import static neo.framework.Session_local.timeDemo_t.TD_YES;
 import static neo.framework.Session_local.timeDemo_t.TD_YES_THEN_QUIT;
-import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.Lib.idException;
-import neo.idlib.Text.Str.idStr;
 import static neo.idlib.Text.Str.va;
-import neo.sys.sys_public.sysEvent_s;
-import static neo.sys.win_main.Sys_EnterCriticalSection;
-import static neo.sys.win_main.Sys_LeaveCriticalSection;
-import static neo.sys.win_main.Sys_Sleep;
-import neo.ui.UserInterface.idUserInterface;
+import static neo.sys.win_main.*;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -43,8 +40,8 @@ import static neo.ui.UserInterface.uiManager;
  */
 public class Session {
 
+    public static final int MAX_LOGGED_STATS = 60 * 120;        // log every half second
     public static final idSessionLocal sessLocal = new idSessionLocal();
-    public static final idSession session = sessLocal;
     /*
      ===============================================================================
 
@@ -52,16 +49,89 @@ public class Session {
 
      ===============================================================================
      */
+    public static final idSession session = sessLocal;
+
+    static int PREVIEW_HEIGHT = 298;
+    static int PREVIEW_WIDTH = 398;
+
+    //
+//
+//
+////    idCVar	idSessionLocal::com_showAngles( "com_showAngles", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
+//idCVar	idSessionLocal::com_minTics( "com_minTics", "1", CVAR_SYSTEM, "" );
+//idCVar	idSessionLocal::com_showTics( "com_showTics", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
+//idCVar	idSessionLocal::com_fixedTic( "com_fixedTic", "0", CVAR_SYSTEM | CVAR_INTEGER, "", 0, 10 );
+//idCVar	idSessionLocal::com_showDemo( "com_showDemo", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
+//idCVar	idSessionLocal::com_skipGameDraw( "com_skipGameDraw", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
+//idCVar	idSessionLocal::com_aviDemoSamples( "com_aviDemoSamples", "16", CVAR_SYSTEM, "" );
+//idCVar	idSessionLocal::com_aviDemoWidth( "com_aviDemoWidth", "256", CVAR_SYSTEM, "" );
+//idCVar	idSessionLocal::com_aviDemoHeight( "com_aviDemoHeight", "256", CVAR_SYSTEM, "" );
+//idCVar	idSessionLocal::com_aviDemoTics( "com_aviDemoTics", "2", CVAR_SYSTEM | CVAR_INTEGER, "", 1, 60 );
+//idCVar	idSessionLocal::com_wipeSeconds( "com_wipeSeconds", "1", CVAR_SYSTEM, "" );
+//idCVar	idSessionLocal::com_guid( "com_guid", "", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "" );
+//
+//
+// these must be kept up to date with window Levelshot in guis/mainmenu.gui
+    static int PREVIEW_X = 211;
+    static int PREVIEW_Y = 31;
+
+    /*
+     ===================
+     Session_PromptKey_f
+     ===================
+     */ static boolean recursed = false;
+
+    /*
+     ================
+     FindUnusedFileName
+     ================
+     */
+    static String FindUnusedFileName(final String format) {
+        int i;
+        String filename = "";//=new char[1024];
+
+        for (i = 0; i < 999; i++) {
+            filename = String.format(format, i);
+            int len = fileSystem.ReadFile(filename, null, null);
+            if (len <= 0) {
+                return filename;    // file doesn't exist
+            }
+        }
+
+        return filename;
+    }
+
+    void RandomizeStack() {
+        // attempt to force uninitialized stack memory bugs
+        int bytes = 4000000;
+        byte[] buf = new byte[bytes];
+
+        byte fill = (byte) ((int) (Math.random()) & 255);
+        for (int i = 0; i < bytes; i++) {
+            buf[i] = fill;
+        }
+    }
+    public enum msgBoxType_t {
+
+        MSG_OK,
+        MSG_ABORT,
+        MSG_OKCANCEL,
+        MSG_YESNO,
+        MSG_PROMPT,
+        MSG_CDKEY,
+        MSG_INFO,
+        MSG_WAIT
+    }
+//
 
     // needed by the gui system for the load game menu
     public static class logStats_t implements SERiAL {
 
         public static final transient int SIZE = SERIAL_SIZE(new logStats_t());
-
+        public int combat;
         public int health;
         public int heartRate;
         public int stamina;
-        public int combat;
 
         @Override
         public ByteBuffer AllocBuffer() {
@@ -77,22 +147,13 @@ public class Session {
         public ByteBuffer Write() {
             throw new TODO_Exception();
         }
-    };
-    public static final int MAX_LOGGED_STATS = 60 * 120;		// log every half second 
+    }
+//
+//    
+//    
+//    
 
-    public enum msgBoxType_t {
-
-        MSG_OK,
-        MSG_ABORT,
-        MSG_OKCANCEL,
-        MSG_YESNO,
-        MSG_PROMPT,
-        MSG_CDKEY,
-        MSG_INFO,
-        MSG_WAIT
-    };
-
-//typedef const char * (*HandleGuiCommand_t)( const char * );
+    //typedef const char * (*HandleGuiCommand_t)( const char * );
     public static abstract class HandleGuiCommand_t {
 
         public abstract String run(final String input);
@@ -100,16 +161,16 @@ public class Session {
 
     public static abstract class idSession {
 
-        // The render world and sound world used for this session.
-        public idRenderWorld rw;
-        public idSoundWorld sw;
         // The renderer and sound system will write changes to writeDemo.
         // Demos can be recorded and played at the same time when splicing.
         public idDemoFile readDemo;
-        public idDemoFile writeDemo;
         public int renderdemoVersion;
+        // The render world and sound world used for this session.
+        public idRenderWorld rw;
+        public idSoundWorld sw;
+        public idDemoFile writeDemo;
 
-//	public abstract			~idSession() {}
+        //	public abstract			~idSession() {}
         // Called in an orderly fashion at system startup,
         // so commands, cvars, files, etc are all available.
         public abstract void Init() throws idException;
@@ -218,45 +279,7 @@ public class Session {
         public abstract String GetCurrentMapName();
 
         public abstract int GetSaveGameVersion();
-    };
-//    
-//    
-//    
-////    idCVar	idSessionLocal::com_showAngles( "com_showAngles", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
-//idCVar	idSessionLocal::com_minTics( "com_minTics", "1", CVAR_SYSTEM, "" );
-//idCVar	idSessionLocal::com_showTics( "com_showTics", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
-//idCVar	idSessionLocal::com_fixedTic( "com_fixedTic", "0", CVAR_SYSTEM | CVAR_INTEGER, "", 0, 10 );
-//idCVar	idSessionLocal::com_showDemo( "com_showDemo", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
-//idCVar	idSessionLocal::com_skipGameDraw( "com_skipGameDraw", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
-//idCVar	idSessionLocal::com_aviDemoSamples( "com_aviDemoSamples", "16", CVAR_SYSTEM, "" );
-//idCVar	idSessionLocal::com_aviDemoWidth( "com_aviDemoWidth", "256", CVAR_SYSTEM, "" );
-//idCVar	idSessionLocal::com_aviDemoHeight( "com_aviDemoHeight", "256", CVAR_SYSTEM, "" );
-//idCVar	idSessionLocal::com_aviDemoTics( "com_aviDemoTics", "2", CVAR_SYSTEM | CVAR_INTEGER, "", 1, 60 );
-//idCVar	idSessionLocal::com_wipeSeconds( "com_wipeSeconds", "1", CVAR_SYSTEM, "" );
-//idCVar	idSessionLocal::com_guid( "com_guid", "", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "" );
-//
-//
-// these must be kept up to date with window Levelshot in guis/mainmenu.gui
-    static int PREVIEW_X = 211;
-    static int PREVIEW_Y = 31;
-    static int PREVIEW_WIDTH = 398;
-    static int PREVIEW_HEIGHT = 298;
-//
-
-    void RandomizeStack() {
-        // attempt to force uninitialized stack memory bugs
-        int bytes = 4000000;
-        byte[] buf = new byte[bytes];
-
-        byte fill = (byte) ((int) (Math.random()) & 255);
-        for (int i = 0; i < bytes; i++) {
-            buf[i] = fill;
-        }
     }
-//
-//    
-//    
-//    
 
     /*
      =================
@@ -278,7 +301,7 @@ public class Session {
                 game.SetServerInfo(sessLocal.mapSpawnData.serverInfo);
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -311,7 +334,7 @@ public class Session {
             // make sure the level exists before trying to change, so that
             // a typo at the server console won't end the game
             // handle addon packs through reloadEngine
-            string = String.format("maps/%s.map", map.toString());
+            string = String.format("maps/%s.map", map);
             ff = fileSystem.FindFile(string, true);
             switch (ff) {
                 case FIND_NO:
@@ -330,7 +353,7 @@ public class Session {
             cvarSystem.SetCVarBool("developer", false);
             sessLocal.StartNewGame(map.toString(), true);
         }
-    };
+    }
 
     /*
      ==================
@@ -363,7 +386,7 @@ public class Session {
             // make sure the level exists before trying to change, so that
             // a typo at the server console won't end the game
             // handle addon packs through reloadEngine
-            string = String.format("maps/%s.map", map.toString());
+            string = String.format("maps/%s.map", map);
             ff = fileSystem.FindFile(string, true);
             switch (ff) {
                 case FIND_NO:
@@ -382,7 +405,7 @@ public class Session {
             cvarSystem.SetCVarBool("developer", true);
             sessLocal.StartNewGame(map.toString(), true);
         }
-    };
+    }
 
     /*
      ==================
@@ -410,13 +433,13 @@ public class Session {
 
             cmdSystem.BufferCommandText(CMD_EXEC_NOW, "disconnect");
 
-            string = String.format("dmap maps/%s.map", map.toString());
+            string = String.format("dmap maps/%s.map", map);
             cmdSystem.BufferCommandText(CMD_EXEC_NOW, string);
 
             string = String.format("devmap %s", map);//TODO:can this shit format char*?
             cmdSystem.BufferCommandText(CMD_EXEC_NOW, string);
         }
-    };
+    }
 
     /*
      ==================
@@ -446,12 +469,7 @@ public class Session {
 
             fileSystem.CloseFile(f);
         }
-    };
-    /*
-     ===================
-     Session_PromptKey_f
-     ===================
-     */ static boolean recursed = false;
+    }
 
     static class Session_PromptKey_f extends cmdFunction_t {
 
@@ -525,7 +543,7 @@ public class Session {
 //            } while (retkey != null);
             recursed = false;
         }
-    };
+    }
 
     /*
      ================
@@ -549,7 +567,7 @@ public class Session {
                 sessLocal.DemoShot(va("demos/shot_%s.demo", args.Argv(1)));
             }
         }
-    };
+    }
 
     /*
      ================
@@ -573,7 +591,7 @@ public class Session {
                 sessLocal.StartRecordingRenderDemo(va("demos/%s.demo", args.Argv(1)));
             }
         }
-    };
+    }
 
     /*
      ================
@@ -598,7 +616,7 @@ public class Session {
                 common.Printf("use: CompressDemo <file> [scheme]\nscheme is the same as com_compressDemo, defaults to 2");
             }
         }
-    };
+    }
 
     /*
      ================
@@ -617,7 +635,7 @@ public class Session {
         public void run(idCmdArgs args) {
             sessLocal.StopRecordingRenderDemo();
         }
-    };
+    }
 
     /*
      ================
@@ -638,7 +656,7 @@ public class Session {
                 sessLocal.StartPlayingRenderDemo(va("demos/%s", args.Argv(1)));
             }
         }
-    };
+    }
 
     /*
      ================
@@ -659,7 +677,7 @@ public class Session {
                 sessLocal.TimeRenderDemo(va("demos/%s", args.Argv(1)), (args.Argc() > 2));
             }
         }
-    };
+    }
 
     /*
      ================
@@ -682,7 +700,7 @@ public class Session {
                 sessLocal.timeDemo = TD_YES_THEN_QUIT;
             }
         }
-    };
+    }
 
     /*
      ================
@@ -701,7 +719,7 @@ public class Session {
         public void run(idCmdArgs args) {
             sessLocal.AVIRenderDemo(va("demos/%s", args.Argv(1)));
         }
-    };
+    }
 
     /*
      ================
@@ -726,7 +744,7 @@ public class Session {
                 args.oSet(Argv[0]);
             }
         }
-    };
+    }
 
     /*
      ================
@@ -745,7 +763,7 @@ public class Session {
         public void run(idCmdArgs args) {
             sessLocal.AVICmdDemo(args.Argv(1));
         }
-    };
+    }
 
     /*
      ================
@@ -771,7 +789,7 @@ public class Session {
                 common.Printf("usage: writeCmdDemo [demoName]\n");
             }
         }
-    };
+    }
 
     /*
      ================
@@ -790,7 +808,7 @@ public class Session {
         public void run(idCmdArgs args) {
             sessLocal.StartPlayingCmdDemo(args.Argv(1));
         }
-    };
+    }
 
     /*
      ================
@@ -809,7 +827,7 @@ public class Session {
         public void run(idCmdArgs args) {
             sessLocal.TimeCmdDemo(args.Argv(1));
         }
-    };
+    }
 
     /*
      ================
@@ -832,7 +850,7 @@ public class Session {
                 soundSystem.SetMute(false);
             }
         }
-    };
+    }
 
     /*
      ================
@@ -858,7 +876,7 @@ public class Session {
                 sessLocal.guiActive.HandleNamedEvent("endOfDemo");
             }
         }
-    };
+    }
 
     /*
      ================
@@ -883,7 +901,7 @@ public class Session {
             common.Printf("Command demo exited at logIndex %d\n", sessLocal.logIndex);
             sessLocal.cmdDemoFile = null;
         }
-    };
+    }
 
     /*
      ================
@@ -902,7 +920,7 @@ public class Session {
         public void run(idCmdArgs args) {
             sessLocal.TestGUI(args.Argv(1));
         }
-    };
+    }
 
     /*
      ===============
@@ -927,7 +945,7 @@ public class Session {
                 sessLocal.LoadGame(args.Argv(1));
             }
         }
-    };
+    }
 
     /*
      ===============
@@ -955,7 +973,7 @@ public class Session {
                 }
             }
         }
-    };
+    }
 
     /*
      ===============
@@ -975,7 +993,7 @@ public class Session {
             final String p = (args.Argc() > 1) ? args.Argv(1) : "";
             sessLocal.TakeNotes(p);
         }
-    };
+    }
 
     /*
      ===============
@@ -995,7 +1013,11 @@ public class Session {
             final String p = (args.Argc() > 1) ? args.Argv(1) : "";
             sessLocal.TakeNotes(p, true);
         }
-    };
+    }
+
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+//
 
     /*
      ===============
@@ -1029,29 +1051,5 @@ public class Session {
                 soundSystem.SetMute(false);
             }
         }
-    };
-
-//
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-    /*
-     ================
-     FindUnusedFileName
-     ================
-     */
-    static String FindUnusedFileName(final String format) {
-        int i;
-        String filename = "";//=new char[1024];
-
-        for (i = 0; i < 999; i++) {
-            filename = String.format(format, i);
-            int len = fileSystem.ReadFile(filename, null, null);
-            if (len <= 0) {
-                return filename;	// file doesn't exist
-            }
-        }
-
-        return filename;
     }
 }

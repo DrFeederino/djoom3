@@ -2,13 +2,16 @@ package neo.Renderer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import neo.TempDump.TODO_Exception;
-import static neo.framework.BuildDefines.__ppc__;
 
 /**
  *
  */
 public class tr_font {
+
+    static final boolean BUILD_FREETYPE = false;
+    public static byte[] fdFile;
+    //    static FT_Library ftLibrary = null;
+    public static int fdOffset;
 
     static int _FLOOR(int x) {
         return (x & -64);
@@ -21,10 +24,6 @@ public class tr_font {
     static int _TRUNC(int x) {
         return (x >> 6);
     }
-    static final boolean BUILD_FREETYPE = false;
-//    static FT_Library ftLibrary = null;
-    public static int fdOffset;
-    public static byte[] fdFile;
 
     //
 //    /*
@@ -224,23 +223,6 @@ public class tr_font {
         return i;
     }
 
-    private static class poor {//mistreated me.
-
-        private final ByteBuffer fred = ByteBuffer.allocate(4);
-
-        public poor() {
-            fred.order(ByteOrder.LITTLE_ENDIAN);
-        }
-
-        public float getFfred() {
-            return fred.getFloat(0);
-        }
-
-        public void setFfred(byte[] fred, int offset) {
-            this.fred.put(fred, offset, 4).flip();
-        }
-    };
-
     /*
      ============
      readFloat
@@ -248,19 +230,7 @@ public class tr_font {
      */
     public static float readFloat() {
         poor me = new poor();
-        if (__ppc__) {
-//            me.fred[0] = fdFile[fdOffset + 3];
-//            me.fred[1] = fdFile[fdOffset + 2];
-//            me.fred[2] = fdFile[fdOffset + 1];
-//            me.fred[3] = fdFile[fdOffset + 0];
-            throw new TODO_Exception();
-        } else {
-//            me.fred[0] = fdFile[fdOffset + 0];
-//            me.fred[1] = fdFile[fdOffset + 1];
-//            me.fred[2] = fdFile[fdOffset + 2];
-//            me.fred[3] = fdFile[fdOffset + 3];
-            me.setFfred(fdFile, fdOffset);
-        }
+        me.setFfred(fdFile, fdOffset);
         fdOffset += 4;
         return me.getFfred();
     }
@@ -292,5 +262,22 @@ public class tr_font {
 //            }
         }
 //	registeredFontCount = 0;
+    }
+
+    private static class poor {//mistreated me.
+
+        private final ByteBuffer fred = ByteBuffer.allocate(4);
+
+        public poor() {
+            fred.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        public float getFfred() {
+            return fred.getFloat(0);
+        }
+
+        public void setFfred(byte[] fred, int offset) {
+            this.fred.put(fred, offset, 4).flip();
+        }
     }
 }

@@ -1,29 +1,11 @@
 package neo.Game.GameSys;
 
-import static neo.Game.Entity.EV_Activate;
-
-import neo.CM.CollisionModel;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AI.AI.idAI;
 import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.Class.idEventArg.toArg;
-import static neo.Game.GameSys.Event.D_EVENT_ENTITY;
-import static neo.Game.GameSys.Event.D_EVENT_FLOAT;
-import static neo.Game.GameSys.Event.D_EVENT_INTEGER;
-import static neo.Game.GameSys.Event.D_EVENT_MAXARGS;
-
-import neo.Game.GameSys.Event.idEvent;
-import neo.Game.GameSys.Event.idEventDef;
+import neo.Game.GameSys.Event.*;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-
-import static neo.Game.GameSys.Event.D_EVENT_STRING;
-import static neo.Game.GameSys.Event.D_EVENT_TRACE;
-import static neo.Game.GameSys.Event.D_EVENT_VECTOR;
-import static neo.Game.GameSys.Event.D_EVENT_VOID;
-import static neo.Game.GameSys.SysCvar.g_debugTriggers;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
 import neo.Game.Projectile.idBFGProjectile;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Thread.idThread;
@@ -31,38 +13,43 @@ import neo.Game.Target.idTarget_Remove;
 import neo.Game.Trigger.idTrigger_Multi;
 import neo.TempDump;
 import neo.TempDump.Deprecation_Exception;
-import static neo.TempDump.NOT;
 import neo.TempDump.TODO_Exception;
-import static neo.TempDump.sizeof;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.Hierarchy.idHierarchy;
 import neo.idlib.containers.List.idList;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Vector;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static neo.Game.Entity.EV_Activate;
+import static neo.Game.GameSys.Class.idEventArg.toArg;
+import static neo.Game.GameSys.Event.*;
+import static neo.Game.GameSys.SysCvar.g_debugTriggers;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
+import static neo.TempDump.NOT;
+import static neo.TempDump.sizeof;
+import static neo.idlib.math.Math_h.SEC2MS;
 
 /**
  *
  */
 public class Class {
 
-    public static final idEventDef EV_Remove     = new idEventDef("<immediateremove>", null);
+    public static final idEventDef EV_Remove = new idEventDef("<immediateremove>", null);
     public static final idEventDef EV_SafeRemove = new idEventDef("remove", null);
-
+    static idHierarchy<idTypeInfo> classHierarchy = new idHierarchy<>();
+    static int eventCallbackMemory = 0;
     // this is the head of a singly linked list of all the idTypes
-    static idTypeInfo              typelist            = null;
-    static idHierarchy<idTypeInfo> classHierarchy      = new idHierarchy<>();
-    static int                     eventCallbackMemory = 0;
+    static idTypeInfo typelist = null;
 
     @FunctionalInterface
     public interface eventCallback_t<T extends idClass> {
-        void accept(T t, idEventArg...args);
+        void accept(T t, idEventArg... args);
     }
 
     @FunctionalInterface
@@ -152,26 +139,26 @@ public class Class {
 
     public static class idEventFunc<type> {
 
-        idEventDef      event;
+        idEventDef event;
         eventCallback_t function;
-    };
+    }
 
     public static class idEventArg<T> {
 
         public final int type;
-        public final T   value;
+        public final T value;
 //
 //
 
         private idEventArg(T data) {
-            if(data instanceof Integer)         type = D_EVENT_INTEGER;
-            else if(data instanceof Enum)       type = D_EVENT_INTEGER;
-            else if(data instanceof Float)      type = D_EVENT_FLOAT;
-            else if(data instanceof idVec3)     type = D_EVENT_VECTOR;
-            else if(data instanceof idStr)      type = D_EVENT_STRING;
-            else if(data instanceof String)     type = D_EVENT_STRING;
-            else if(data instanceof idEntity)   type = D_EVENT_ENTITY;
-            else if(data instanceof trace_s)    type = D_EVENT_TRACE;
+            if (data instanceof Integer) type = D_EVENT_INTEGER;
+            else if (data instanceof Enum) type = D_EVENT_INTEGER;
+            else if (data instanceof Float) type = D_EVENT_FLOAT;
+            else if (data instanceof idVec3) type = D_EVENT_VECTOR;
+            else if (data instanceof idStr) type = D_EVENT_STRING;
+            else if (data instanceof String) type = D_EVENT_STRING;
+            else if (data instanceof idEntity) type = D_EVENT_ENTITY;
+            else if (data instanceof trace_s) type = D_EVENT_TRACE;
             else {
 //                type = D_EVENT_VOID;
                 throw new TempDump.TypeErasure_Expection();
@@ -215,15 +202,16 @@ public class Class {
         public static idEventArg<trace_s> toArg(trace_s data) {
             return new idEventArg(D_EVENT_TRACE, data);
         }
-    };
+    }
 
     public static class idAllocError extends neo.idlib.Lib.idException {
 
         public idAllocError(final String text /*= ""*/) {
             super(text);
         }
-    };
-//    /*
+    }
+
+    //    /*
 //================
 //ABSTRACT_PROTOTYPE
 //
@@ -271,32 +259,130 @@ public class Class {
     public static abstract class idClass/*<nameOfClass>*/ {
 
         //        public static final idTypeInfo Type = null;
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        //
+        private static boolean initialized = false;
+        private static final int memused = 0;
+        private static final int numobjects = 0;
+        private static int typeNumBits = 0;
+        // typenum order
+        private static final idList<idTypeInfo> typenums = new idList<>();
+        // alphabetical order
+        private static final idList<idTypeInfo> types = new idList<>();
+
         static {
             eventCallbacks.put(EV_Remove, (eventCallback_t0<idClass>) idClass::Event_Remove);
             eventCallbacks.put(EV_SafeRemove, (eventCallback_t0<idClass>) idClass::Event_SafeRemove);
         }
-
-        //
-        private static boolean            initialized = false;
-        // alphabetical order
-        private static idList<idTypeInfo> types       = new idList<>();
-        // typenum order
-        private static idList<idTypeInfo> typenums    = new idList<>();
-        private static int                typeNumBits = 0;
-        private static int                memused     = 0;
-        private static int                numobjects  = 0;
         //
         //
-
-        public abstract idClass CreateInstance();
-
-        public abstract java.lang.Class/*idTypeInfo*/ GetType();
-
-        public abstract eventCallback_t getEventCallBack(idEventDef event);
 
         public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
             return eventCallbacks;
+        }
+
+        public static void INIT() {
+            idTypeInfo c;
+            int num;
+
+            gameLocal.Printf("Initializing class hierarchy\n");
+
+            if (initialized) {
+                gameLocal.Printf("...already initialized\n");
+                return;
+            }
+
+            // init the event callback tables for all the classes
+            for (c = typelist; c != null; c = c.next) {
+                c.Init();
+            }
+
+            // number the types according to the class hierarchy so we can quickly determine if a class
+            // is a subclass of another
+            num = 0;
+            for (c = classHierarchy.GetNext(); c != null; c = c.node.GetNext(), num++) {
+                c.typeNum = num;
+                c.lastChild += num;
+            }
+
+            // number of bits needed to send types over network
+            typeNumBits = idMath.BitsForInteger(num);
+
+            // create a list of the types so we can do quick lookups
+            // one list in alphabetical order, one in typenum order
+            types.SetGranularity(1);
+            types.SetNum(num);
+            typenums.SetGranularity(1);
+            typenums.SetNum(num);
+            num = 0;
+            for (c = typelist; c != null; c = c.next, num++) {
+                types.oSet(num, c);
+                typenums.oSet(c.typeNum, c);
+            }
+
+            initialized = true;
+
+            gameLocal.Printf("...%d classes, %d bytes for event callbacks\n", types.Num(), eventCallbackMemory);
+        }
+
+        public static void Shutdown() {
+            idTypeInfo c;
+
+            for (c = typelist; c != null; c = c.next) {
+                c.Shutdown();
+            }
+            types.Clear();
+            typenums.Clear();
+
+            initialized = false;
+        }
+
+        /*
+         ================
+         idClass::GetClass
+
+         Returns the idTypeInfo for the name of the class passed in.  This is a static function
+         so it must be called as idClass::GetClass( classname )
+         ================
+         */
+        @Deprecated
+        public static idTypeInfo GetClass(final String name) {
+            switch (name) {
+                case "idWorldspawn":
+            }
+            throw new Deprecation_Exception();
+//            idTypeInfo c;
+//            int order;
+//            int mid;
+//            int min;
+//            int max;
+//
+//            if (!initialized) {
+//                // idClass::Init hasn't been called yet, so do a slow lookup
+//                for (c = typelist; c != null; c = c.next) {
+//                    if (NOT(idStr.Cmp(c.classname, name))) {
+//                        return c;
+//                    }
+//                }
+//            } else {
+//                // do a binary search through the list of types
+//                min = 0;
+//                max = types.Num() - 1;
+//                while (min <= max) {
+//                    mid = (min + max) / 2;
+//                    c = types.oGet(mid);
+//                    order = idStr.Cmp(c.classname, name);
+//                    if (0 == order) {
+//                        return c;
+//                    } else if (order > 0) {
+//                        max = mid - 1;
+//                    } else {
+//                        min = mid + 1;
+//                    }
+//                }
+//            }
+//
+//            return null;
         }
 
 // #ifdef ID_REDIRECT_NEWDELETE
@@ -309,6 +395,55 @@ public class Class {
 // #ifdef ID_REDIRECT_NEWDELETE
 // #define new ID_DEBUG_NEW
 // #endif
+
+        public static idClass CreateInstance(final String name) {
+//            idTypeInfo type;
+//            idClass obj;
+//
+//            type = idClass.GetClass(name);
+//            if (NOT(type)) {
+//                return null;
+//            }
+//
+//            obj = type.CreateInstance();
+//            return obj;
+
+            throw new TODO_Exception();
+        }
+
+        public static int GetNumTypes() {
+            return types.Num();
+        }
+
+        public static int GetTypeNumBits() {
+            return typeNumBits;
+        }
+
+        public static idTypeInfo GetType(int typeNum) {
+            idTypeInfo c;
+
+            if (!initialized) {
+                for (c = typelist; c != null; c = c.next) {
+                    if (c.typeNum == typeNum) {
+                        return c;
+                    }
+                }
+            } else if ((typeNum >= 0) && (typeNum < types.Num())) {
+                return typenums.oGet(typeNum);
+            }
+
+            return null;
+        }
+
+        public static void delete(final idClass clazz) {
+            if (clazz != null) clazz._deconstructor();
+        }
+
+        public abstract idClass CreateInstance();
+
+        public abstract java.lang.Class/*idTypeInfo*/ GetType();
+
+        public abstract eventCallback_t getEventCallBack(idEventDef event);
 
         // virtual						~idClass();
         protected void _deconstructor() {
@@ -481,6 +616,7 @@ public class Class {
         public boolean ProcessEvent(final idEventDef ev, Object arg1) {
             return ProcessEventArgs(ev, 1, toArg(arg1));
         }
+
         public boolean ProcessEvent(final idEventDef ev, idEntity arg1) {
             return ProcessEventArgs(ev, 1, toArg(arg1));
         }
@@ -624,12 +760,12 @@ public class Class {
 
         public void Event_Remove() {
             //	delete this;//if only
-            if (this instanceof idBFGProjectile) idBFGProjectile.delete((idBFGProjectile) this);
-            else if (this instanceof idProjectile) idProjectile.delete((idProjectile) this);
-            else if (this instanceof idTrigger_Multi) idTrigger_Multi.delete((idTrigger_Multi) this);
-            else if (this instanceof idTarget_Remove) idTarget_Remove.delete((idTarget_Remove) this);
-            else if (this instanceof idAI) idAI.delete((idAI) this);
-            else if (this instanceof idEntity) idEntity.delete((idEntity) this);
+            if (this instanceof idBFGProjectile) idBFGProjectile.delete(this);
+            else if (this instanceof idProjectile) idProjectile.delete(this);
+            else if (this instanceof idTrigger_Multi) idTrigger_Multi.delete(this);
+            else if (this instanceof idTarget_Remove) idTarget_Remove.delete(this);
+            else if (this instanceof idAI) idAI.delete(this);
+            else if (this instanceof idEntity) idEntity.delete(this);
             else if (this instanceof idThread) idThread.delete((idThread) this);
             else throw new TODO_Exception();
         }
@@ -649,204 +785,7 @@ public class Class {
             INIT();
         }
 
-        public static void INIT() {
-            idTypeInfo c;
-            int num;
-
-            gameLocal.Printf("Initializing class hierarchy\n");
-
-            if (initialized) {
-                gameLocal.Printf("...already initialized\n");
-                return;
-            }
-
-            // init the event callback tables for all the classes
-            for (c = typelist; c != null; c = c.next) {
-                c.Init();
-            }
-
-            // number the types according to the class hierarchy so we can quickly determine if a class
-            // is a subclass of another
-            num = 0;
-            for (c = classHierarchy.GetNext(); c != null; c = c.node.GetNext(), num++) {
-                c.typeNum = num;
-                c.lastChild += num;
-            }
-
-            // number of bits needed to send types over network
-            typeNumBits = idMath.BitsForInteger(num);
-
-            // create a list of the types so we can do quick lookups
-            // one list in alphabetical order, one in typenum order
-            types.SetGranularity(1);
-            types.SetNum(num);
-            typenums.SetGranularity(1);
-            typenums.SetNum(num);
-            num = 0;
-            for (c = typelist; c != null; c = c.next, num++) {
-                types.oSet(num, c);
-                typenums.oSet(c.typeNum, c);
-            }
-
-            initialized = true;
-
-            gameLocal.Printf("...%d classes, %d bytes for event callbacks\n", types.Num(), eventCallbackMemory);
-        }
-
-        public static void Shutdown() {
-            idTypeInfo c;
-
-            for (c = typelist; c != null; c = c.next) {
-                c.Shutdown();
-            }
-            types.Clear();
-            typenums.Clear();
-
-            initialized = false;
-        }
-
-        /*
-         ================
-         idClass::GetClass
-
-         Returns the idTypeInfo for the name of the class passed in.  This is a static function
-         so it must be called as idClass::GetClass( classname )
-         ================
-         */@Deprecated
-        public static idTypeInfo GetClass(final String name) {
-            switch (name) {
-                    case "idWorldspawn":
-                }
-            throw new Deprecation_Exception();
-//            idTypeInfo c;
-//            int order;
-//            int mid;
-//            int min;
-//            int max;
-//
-//            if (!initialized) {
-//                // idClass::Init hasn't been called yet, so do a slow lookup
-//                for (c = typelist; c != null; c = c.next) {
-//                    if (NOT(idStr.Cmp(c.classname, name))) {
-//                        return c;
-//                    }
-//                }
-//            } else {
-//                // do a binary search through the list of types
-//                min = 0;
-//                max = types.Num() - 1;
-//                while (min <= max) {
-//                    mid = (min + max) / 2;
-//                    c = types.oGet(mid);
-//                    order = idStr.Cmp(c.classname, name);
-//                    if (0 == order) {
-//                        return c;
-//                    } else if (order > 0) {
-//                        max = mid - 1;
-//                    } else {
-//                        min = mid + 1;
-//                    }
-//                }
-//            }
-//
-//            return null;
-        }
-
         public abstract void oSet(idClass oGet);
-
-        /*
-         ================
-         idClass::DisplayInfo_f
-         ================
-         */
-        public static class DisplayInfo_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new DisplayInfo_f();
-
-            private DisplayInfo_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                gameLocal.Printf("Class memory status: %d bytes allocated in %d objects\n", memused, numobjects);
-            }
-        };
-
-        /*
-         ================
-         idClass::ListClasses_f
-         ================
-         */
-        public static class ListClasses_f extends cmdFunction_t {
-
-            private static final cmdFunction_t instance = new ListClasses_f();
-
-            private ListClasses_f() {
-            }
-
-            public static cmdFunction_t getInstance() {
-                return instance;
-            }
-
-            @Override
-            public void run(idCmdArgs args) {
-                int i;
-                idTypeInfo type;
-
-                gameLocal.Printf("%-24s %-24s %-6s %-6s\n", "Classname", "Superclass", "Type", "Subclasses");
-                gameLocal.Printf("----------------------------------------------------------------------\n");
-
-                for (i = 0; i < types.Num(); i++) {
-                    type = types.oGet(i);
-                    gameLocal.Printf("%-24s %-24s %6d %6d\n", type.classname, type.superclass, type.typeNum, type.lastChild - type.typeNum);
-                }
-
-                gameLocal.Printf("...%d classes", types.Num());
-            }
-        };
-
-        public static idClass CreateInstance(final String name) {
-//            idTypeInfo type;
-//            idClass obj;
-//
-//            type = idClass.GetClass(name);
-//            if (NOT(type)) {
-//                return null;
-//            }
-//
-//            obj = type.CreateInstance();
-//            return obj;
-
-            throw new TODO_Exception();
-        }
-
-        public static int GetNumTypes() {
-            return types.Num();
-        }
-
-        public static int GetTypeNumBits() {
-            return typeNumBits;
-        }
-
-        public static idTypeInfo GetType(int typeNum) {
-            idTypeInfo c;
-
-            if (!initialized) {
-                for (c = typelist; c != null; c = c.next) {
-                    if (c.typeNum == typeNum) {
-                        return c;
-                    }
-                }
-            } else if ((typeNum >= 0) && (typeNum < types.Num())) {
-                return typenums.oGet(typeNum);
-            }
-
-            return null;
-        }
 
         private classSpawnFunc_t CallSpawnFunc(idTypeInfo cls) {
             classSpawnFunc_t func;
@@ -876,7 +815,7 @@ public class Class {
             if (!idEvent.initialized) {
                 return false;
             }
-                                                            
+
             //TODO:disabled for medicinal reasons
             c = this.getClass();
             if (NOT(this.getEventCallBack(ev))) {
@@ -932,14 +871,65 @@ public class Class {
             PostEventMS(EV_Remove, 0);
         }
 
-        public static void delete(final idClass clazz){
-            if (clazz != null) clazz._deconstructor();
+        /*
+         ================
+         idClass::DisplayInfo_f
+         ================
+         */
+        public static class DisplayInfo_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new DisplayInfo_f();
+
+            private DisplayInfo_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                gameLocal.Printf("Class memory status: %d bytes allocated in %d objects\n", memused, numobjects);
+            }
         }
-    };
+
+        /*
+         ================
+         idClass::ListClasses_f
+         ================
+         */
+        public static class ListClasses_f extends cmdFunction_t {
+
+            private static final cmdFunction_t instance = new ListClasses_f();
+
+            private ListClasses_f() {
+            }
+
+            public static cmdFunction_t getInstance() {
+                return instance;
+            }
+
+            @Override
+            public void run(idCmdArgs args) {
+                int i;
+                idTypeInfo type;
+
+                gameLocal.Printf("%-24s %-24s %-6s %-6s\n", "Classname", "Superclass", "Type", "Subclasses");
+                gameLocal.Printf("----------------------------------------------------------------------\n");
+
+                for (i = 0; i < types.Num(); i++) {
+                    type = types.oGet(i);
+                    gameLocal.Printf("%-24s %-24s %6d %6d\n", type.classname, type.superclass, type.typeNum, type.lastChild - type.typeNum);
+                }
+
+                gameLocal.Printf("...%d classes", types.Num());
+            }
+        }
+    }
 
     /**
      * *********************************************************************
-     *
+     * <p>
      * idTypeInfo
      *
      * @deprecated use the native java classes instead.
@@ -948,29 +938,29 @@ public class Class {
     @Deprecated
     public static class idTypeInfo {
 
+        //
+        public classSpawnFunc_t CreateInstance;
+        public idClass_Restore Restore;
+        public idClass_Save Save;
+        public classSpawnFunc_t Spawn;
         public String classname;
-        public String superclass;
-//
+        //
         public idEventFunc<idClass>[] eventCallbacks;
         public eventCallback_t[] eventMap;
-        public idTypeInfo zuper;
-        public idTypeInfo next;
         public boolean freeEventMap;
-        public int typeNum;
         public int lastChild;
-//
+        public idTypeInfo next;
+        //
         public idHierarchy<idTypeInfo> node;
-//
-        public classSpawnFunc_t CreateInstance;
-        public classSpawnFunc_t Spawn;
-        public idClass_Save Save;
-        public idClass_Restore Restore;
+        public String superclass;
+        public int typeNum;
+        public idTypeInfo zuper;
 //
 //
 
         public idTypeInfo(final String classname, final String superclass,
-                idEventFunc<idClass>[] eventCallbacks, classSpawnFunc_t CreateInstance, classSpawnFunc_t Spawn,
-                idClass_Save Save, idClass_Restore Restore) {
+                          idEventFunc<idClass>[] eventCallbacks, classSpawnFunc_t CreateInstance, classSpawnFunc_t Spawn,
+                          idClass_Save Save, idClass_Restore Restore) {
 
             idTypeInfo type;
             idTypeInfo insert;
@@ -1083,14 +1073,14 @@ public class Class {
                 }
 
                 // go through each entry until we hit the NULL terminator
-                for (i = 0; def[ i].event != null; i++) {
-                    ev = def[ i].event.GetEventNum();
+                for (i = 0; def[i].event != null; i++) {
+                    ev = def[i].event.GetEventNum();
 
-                    if (set[ ev]) {
+                    if (set[ev]) {
                         continue;
                     }
-                    set[ ev] = true;
-                    eventMap[ ev] = def[ i].function;
+                    set[ev] = true;
+                    eventMap[ev] = def[i].function;
                 }
             }
 
@@ -1136,12 +1126,9 @@ public class Class {
 
         public boolean RespondsTo(final idEventDef ev) {
             assert (idEvent.initialized);
-            if (null == eventMap[ ev.GetEventNum()]) {
-                // we don't respond to this event
-                return false;
-            }
-
-            return true;
+            // we don't respond to this event
+            return null != eventMap[ev.GetEventNum()];
         }
-    };
+    }
+
 }

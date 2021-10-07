@@ -1,31 +1,27 @@
 package neo.Renderer;
 
-import static neo.Renderer.Interaction.LIGHT_CULL_ALL_FRONT;
-import static neo.Renderer.Interaction.R_CalcInteractionCullBits;
-import static neo.Renderer.Interaction.R_CalcInteractionFacing;
-import neo.Renderer.Interaction.srfCullInfo_t;
-import static neo.Renderer.Model.SHADOW_CAP_INFINITE;
+import neo.Renderer.Interaction.*;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.tr_local.USE_TRI_DATA_ALLOCATOR;
 import neo.Renderer.tr_local.idRenderEntityLocal;
 import neo.Renderer.tr_local.idRenderLightLocal;
-import static neo.Renderer.tr_main.R_GlobalPointToLocal;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfShadowVerts;
-import static neo.Renderer.tr_trisurf.R_ResizeStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_ResizeStaticTriSurfShadowVerts;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.Renderer.Interaction.*;
+import static neo.Renderer.Model.SHADOW_CAP_INFINITE;
+import static neo.Renderer.tr_local.USE_TRI_DATA_ALLOCATOR;
+import static neo.Renderer.tr_main.R_GlobalPointToLocal;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
  */
 public class tr_turboshadow {
 
+    static int c_turboUnusedVerts;
     /*
      ============================================================
 
@@ -39,8 +35,6 @@ public class tr_turboshadow {
      ============================================================
      */
     static int c_turboUsedVerts;
-    static int c_turboUnusedVerts;
-
 
     /*
      =====================

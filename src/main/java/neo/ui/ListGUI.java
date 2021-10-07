@@ -29,7 +29,7 @@ public class ListGUI {
 
         public abstract boolean Del(int id);
 
-//        public abstract void Clear();
+        //        public abstract void Clear();
 //
 //        public abstract int Num();
 //        
@@ -49,5 +49,6 @@ public class ListGUI {
         public abstract void SetStateChanges(boolean enable);
 
         public abstract void Shutdown();
-    };
+    }
+
 }

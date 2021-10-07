@@ -1,199 +1,107 @@
 package neo.framework;
 
+import neo.Game.Game.escReply_t;
+import neo.Game.Game.gameReturn_t;
+import neo.Renderer.Material.idMaterial;
+import neo.Renderer.RenderWorld.renderView_s;
+import neo.Sound.sound.idSoundWorld;
+import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.*;
+import neo.framework.DeclEntityDef.idDeclEntityDef;
+import neo.framework.DeclManager.idDecl;
+import neo.framework.DemoFile.idDemoFile;
+import neo.framework.FileSystem_h.backgroundDownload_s;
+import neo.framework.FileSystem_h.idFileList;
+import neo.framework.FileSystem_h.idModList;
+import neo.framework.File_h.idFile;
+import neo.framework.KeyInput.*;
+import neo.framework.Session.*;
+import neo.framework.Session_menu.idListSaveGameCompare;
+import neo.framework.UsercmdGen.*;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Dict_h.idDict;
+import neo.idlib.Dict_h.idKeyValue;
+import neo.idlib.Lib.*;
+import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.List.idList;
+import neo.idlib.containers.StrList.idStrList;
+import neo.sys.sys_public.sysEvent_s;
+import neo.sys.win_main;
+import neo.ui.ListGUI.idListGUI;
+import neo.ui.UserInterface.idUserInterface;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import neo.Game.Game.escReply_t;
 import static neo.Game.Game.escReply_t.ESC_GUI;
 import static neo.Game.Game.escReply_t.ESC_IGNORE;
-import neo.Game.Game.gameReturn_t;
 import static neo.Game.Game_local.game;
-import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem.renderSystem;
+import static neo.Renderer.RenderSystem.*;
 import static neo.Renderer.RenderSystem_init.R_ScreenshotFilename;
-import neo.Renderer.RenderWorld.renderView_s;
 import static neo.Sound.snd_system.soundSystem;
-import neo.Sound.sound.idSoundWorld;
-
 import static neo.TempDump.*;
-
 import static neo.framework.Async.AsyncNetwork.MAX_ASYNC_CLIENTS;
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_GAME;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_GAMETYPE;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_MAP;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_PING;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_PLAYERS;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_SERVERNAME;
-import static neo.framework.BuildDefines.ID_CONSOLE_LOCK;
-import static neo.framework.BuildDefines.ID_DEDICATED;
-import static neo.framework.BuildDefines.ID_DEMO_BUILD;
-import static neo.framework.BuildDefines.ID_ENFORCE_KEY;
-import static neo.framework.BuildDefines._WIN32;
-import static neo.framework.BuildDefines.__linux__;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_GUI;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_NETWORKSYNC;
-import static neo.framework.CVarSystem.CVAR_ROM;
-import static neo.framework.CVarSystem.CVAR_SERVERINFO;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import static neo.framework.CVarSystem.CVAR_USERINFO;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.CMD_FL_CHEAT;
-import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_INSERT;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
-import static neo.framework.CmdSystem.cmdSystem;
-import neo.framework.CmdSystem.idCmdSystem;
-import static neo.framework.Common.EDITOR_GUI;
-import static neo.framework.Common.EDITOR_RADIANT;
-import static neo.framework.Common.com_allowConsole;
-import static neo.framework.Common.com_asyncInput;
-import static neo.framework.Common.com_asyncSound;
-import static neo.framework.Common.com_editorActive;
-import static neo.framework.Common.com_editors;
-import static neo.framework.Common.com_frameTime;
-import static neo.framework.Common.com_machineSpec;
-import static neo.framework.Common.com_speeds;
-import static neo.framework.Common.com_ticNumber;
-import static neo.framework.Common.com_updateLoadSize;
-import static neo.framework.Common.common;
-import static neo.framework.Common.time_gameDraw;
-import static neo.framework.Common.time_gameFrame;
+import static neo.framework.Async.ServerScan.serverSort_t.*;
+import static neo.framework.BuildDefines.*;
+import static neo.framework.CVarSystem.*;
+import static neo.framework.CmdSystem.*;
+import static neo.framework.CmdSystem.cmdExecution_t.*;
+import static neo.framework.Common.*;
 import static neo.framework.Console.console;
-import neo.framework.DeclEntityDef.idDeclEntityDef;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
 import static neo.framework.DeclManager.declType_t.DECL_MAPDEF;
-import neo.framework.DeclManager.idDecl;
-import static neo.framework.DemoFile.demoSystem_t.DS_FINISHED;
-import static neo.framework.DemoFile.demoSystem_t.DS_RENDER;
-import static neo.framework.DemoFile.demoSystem_t.DS_SOUND;
-import static neo.framework.DemoFile.demoSystem_t.DS_VERSION;
-import neo.framework.DemoFile.idDemoFile;
+import static neo.framework.DemoFile.demoSystem_t.*;
 import static neo.framework.EventLoop.eventLoop;
-import neo.framework.FileSystem_h.backgroundDownload_s;
 import static neo.framework.FileSystem_h.dlStatus_t.DL_ABORTING;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.FileSystem_h.idFileList;
-import neo.framework.FileSystem_h.idModList;
-import neo.framework.File_h.idFile;
-
-import static neo.framework.KeyInput.K_ESCAPE;
-import static neo.framework.KeyInput.K_F1;
-import static neo.framework.KeyInput.K_F12;
-import neo.framework.KeyInput.idKeyInput;
-import static neo.framework.Licensee.BASE_GAMEDIR;
-import static neo.framework.Licensee.CDKEY_FILE;
-import static neo.framework.Licensee.CDKEY_TEXT;
-import static neo.framework.Licensee.GAME_NAME;
-import static neo.framework.Licensee.RENDERDEMO_VERSION;
-import static neo.framework.Licensee.SAVEGAME_VERSION;
-import static neo.framework.Licensee.XPKEY_FILE;
-import static neo.framework.Session.FindUnusedFileName;
-import neo.framework.Session.HandleGuiCommand_t;
-import neo.framework.Session.LoadGame_f;
-import static neo.framework.Session.MAX_LOGGED_STATS;
-import neo.framework.Session.SaveGame_f;
-import neo.framework.Session.Sess_WritePrecache_f;
-import neo.framework.Session.Session_AVICmdDemo_f;
-import neo.framework.Session.Session_AVIDemo_f;
-import neo.framework.Session.Session_AVIGame_f;
-import neo.framework.Session.Session_CompressDemo_f;
-import neo.framework.Session.Session_DemoShot_f;
-import neo.framework.Session.Session_DevMap_f;
-import neo.framework.Session.Session_Disconnect_f;
-import neo.framework.Session.Session_EndOfDemo_f;
-import neo.framework.Session.Session_ExitCmdDemo_f;
-import neo.framework.Session.Session_Hitch_f;
-import neo.framework.Session.Session_Map_f;
-import neo.framework.Session.Session_PlayCmdDemo_f;
-import neo.framework.Session.Session_PlayDemo_f;
-import neo.framework.Session.Session_PromptKey_f;
-import neo.framework.Session.Session_RecordDemo_f;
-import neo.framework.Session.Session_RescanSI_f;
-import neo.framework.Session.Session_StopRecordingDemo_f;
-import neo.framework.Session.Session_TestGUI_f;
-import neo.framework.Session.Session_TestMap_f;
-import neo.framework.Session.Session_TimeCmdDemo_f;
-import neo.framework.Session.Session_TimeDemoQuit_f;
-import neo.framework.Session.Session_TimeDemo_f;
-import neo.framework.Session.Session_WriteCmdDemo_f;
-import neo.framework.Session.TakeViewNotes2_f;
-import neo.framework.Session.TakeViewNotes_f;
-import neo.framework.Session.idSession;
-import neo.framework.Session.logStats_t;
-import neo.framework.Session.msgBoxType_t;
-import static neo.framework.Session.msgBoxType_t.MSG_CDKEY;
-import static neo.framework.Session.msgBoxType_t.MSG_OK;
-import static neo.framework.Session.msgBoxType_t.MSG_OKCANCEL;
-import static neo.framework.Session.msgBoxType_t.MSG_PROMPT;
-import static neo.framework.Session.msgBoxType_t.MSG_WAIT;
-import static neo.framework.Session.msgBoxType_t.MSG_YESNO;
-import static neo.framework.Session.sessLocal;
-import static neo.framework.Session.session;
-import static neo.framework.Session_local.idSessionLocal.cdKeyState_t.CDKEY_CHECKING;
-import static neo.framework.Session_local.idSessionLocal.cdKeyState_t.CDKEY_INVALID;
-import static neo.framework.Session_local.idSessionLocal.cdKeyState_t.CDKEY_NA;
-import static neo.framework.Session_local.idSessionLocal.cdKeyState_t.CDKEY_OK;
-import static neo.framework.Session_local.idSessionLocal.cdKeyState_t.CDKEY_UNKNOWN;
+import static neo.framework.KeyInput.*;
+import static neo.framework.Licensee.*;
+import static neo.framework.Session.*;
+import static neo.framework.Session.msgBoxType_t.*;
+import static neo.framework.Session_local.idSessionLocal.cdKeyState_t.*;
 import static neo.framework.Session_local.timeDemo_t.TD_NO;
 import static neo.framework.Session_local.timeDemo_t.TD_YES;
-import neo.framework.Session_menu.idListSaveGameCompare;
-import static neo.framework.UsercmdGen.MAX_BUFFERED_USERCMD;
-import static neo.framework.UsercmdGen.USERCMD_MSEC;
+import static neo.framework.UsercmdGen.*;
 import static neo.framework.UsercmdGen.inhibit_t.INHIBIT_SESSION;
-import static neo.framework.UsercmdGen.usercmdGen;
-import neo.framework.UsercmdGen.usercmd_t;
-import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.Dict_h.idDict;
-import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.LittleLong;
-import static neo.idlib.Lib.MAX_STRING_CHARS;
-import static neo.idlib.Lib.Max;
-import static neo.idlib.Lib.Min;
-import static neo.idlib.Lib.colorBlack;
-import neo.idlib.Lib.idException;
+import static neo.idlib.Lib.*;
 import static neo.idlib.Text.Lexer.LEXFL_NOERRORS;
 import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import neo.idlib.Text.Lexer.idLexer;
 import static neo.idlib.Text.Str.Measure_t.MEASURE_BANDWIDTH;
 import static neo.idlib.Text.Str.Measure_t.MEASURE_SIZE;
-import neo.idlib.Text.Str.idStr;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
 import static neo.idlib.hashing.CRC32.CRC32_BlockChecksum;
 import static neo.sys.sys_local.Sys_TimeStampToStr;
 import static neo.sys.sys_public.TRIGGER_EVENT_ONE;
 import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import static neo.sys.sys_public.sysEventType_t.SE_NONE;
-import neo.sys.sys_public.sysEvent_s;
 import static neo.sys.win_input.Sys_GrabMouseCursor;
-import neo.sys.win_main;
-import static neo.sys.win_main.Sys_ClearEvents;
-import static neo.sys.win_main.Sys_GenerateEvents;
-import static neo.sys.win_main.Sys_IsWindowVisible;
-import static neo.sys.win_main.Sys_Sleep;
-import static neo.sys.win_main.Sys_WaitForEvent;
+import static neo.sys.win_main.*;
 import static neo.sys.win_shared.Sys_Milliseconds;
-
-import neo.ui.ListGUI.idListGUI;
-import neo.ui.UserInterface.idUserInterface;
 import static neo.ui.UserInterface.uiManager;
 
 /**
  *
  */
 public class Session_local {
+
+    static int CONNECT_TRANSMIT_TIME = 1000;
+
+    static int MAX_LOGGED_USERCMDS = 60 * 60 * 60;    // one hour of single player, 15 minutes of four player
+
+    //
+    static int USERCMD_PER_DEMO_FRAME = 2;
+
+    enum timeDemo_t {
+
+        TD_NO,
+        TD_YES,
+        TD_YES_THEN_QUIT
+    }
 
     static class logCmd_t implements SERiAL {
 
@@ -216,22 +124,22 @@ public class Session_local {
         public ByteBuffer Write() {
             throw new TODO_Exception();
         }
-    };
+    }
 
     static class fileTIME_T {
 
         int index;
         long/*ID_TIME_T*/ timeStamp;
 //					operator int() const { return timeStamp; }
-    };
+    }
 
     public static class mapSpawnData_t {
 
-        public idDict      serverInfo           = new idDict();
-        public idDict      syncedCVars          = new idDict();
-        public idDict[]    userInfo             = new idDict[MAX_ASYNC_CLIENTS];
-        public idDict[]    persistentPlayerInfo = new idDict[MAX_ASYNC_CLIENTS];
-        public usercmd_t[] mapSpawnUsercmd      = new usercmd_t[MAX_ASYNC_CLIENTS];        // needed for tracking delta angles
+        public usercmd_t[] mapSpawnUsercmd = new usercmd_t[MAX_ASYNC_CLIENTS];        // needed for tracking delta angles
+        public idDict[] persistentPlayerInfo = new idDict[MAX_ASYNC_CLIENTS];
+        public idDict serverInfo = new idDict();
+        public idDict syncedCVars = new idDict();
+        public idDict[] userInfo = new idDict[MAX_ASYNC_CLIENTS];
 
         public mapSpawnData_t() {
             for (int a = 0; a < MAX_ASYNC_CLIENTS; a++) {
@@ -240,18 +148,7 @@ public class Session_local {
                 mapSpawnUsercmd[a] = new usercmd_t();
             }
         }
-    };
-
-    enum timeDemo_t {
-
-        TD_NO,
-        TD_YES,
-        TD_YES_THEN_QUIT
-    };
-//
-    static int USERCMD_PER_DEMO_FRAME = 2;
-    static int CONNECT_TRANSMIT_TIME  = 1000;
-    static int MAX_LOGGED_USERCMDS    = 60 * 60 * 60;    // one hour of single player, 15 minutes of four player
+    }
 
     /*
      ===============================================================================
@@ -262,135 +159,151 @@ public class Session_local {
      */
     public static class idSessionLocal extends idSession {
 
+        public static final idCVar com_aviDemoHeight = new idCVar("com_aviDemoHeight", "256", CVAR_SYSTEM, "");
+        public static final idCVar com_aviDemoSamples = new idCVar("com_aviDemoSamples", "16", CVAR_SYSTEM, "");
+        public static final idCVar com_aviDemoTics = new idCVar("com_aviDemoTics", "2", CVAR_SYSTEM | CVAR_INTEGER, "", 1, 60);
+        public static final idCVar com_aviDemoWidth = new idCVar("com_aviDemoWidth", "256", CVAR_SYSTEM, "");
+        public static final idCVar com_fixedTic = new idCVar("com_fixedTic", "0", CVAR_SYSTEM | CVAR_INTEGER, "", 0, 10);
+        public static final idCVar com_guid = new idCVar("com_guid", "", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "");
+        public static final idCVar com_minTics = new idCVar("com_minTics", "1", CVAR_SYSTEM, "");
         //
         //=====================================
         //
-        public static final idCVar com_showAngles       = new idCVar("com_showAngles", "0", CVAR_SYSTEM | CVAR_BOOL, "");
-        public static final idCVar com_showTics         = new idCVar("com_showTics", "0", CVAR_SYSTEM | CVAR_BOOL, "");
-        public static final idCVar com_minTics          = new idCVar("com_minTics", "1", CVAR_SYSTEM, "");
-        public static final idCVar com_fixedTic         = new idCVar("com_fixedTic", "0", CVAR_SYSTEM | CVAR_INTEGER, "", 0, 10);
-        public static final idCVar com_showDemo         = new idCVar("com_showDemo", "0", CVAR_SYSTEM | CVAR_BOOL, "");
-        public static final idCVar com_skipGameDraw     = new idCVar("com_skipGameDraw", "0", CVAR_SYSTEM | CVAR_BOOL, "");
-        public static final idCVar com_aviDemoWidth     = new idCVar("com_aviDemoWidth", "256", CVAR_SYSTEM, "");
-        public static final idCVar com_aviDemoHeight    = new idCVar("com_aviDemoHeight", "256", CVAR_SYSTEM, "");
-        public static final idCVar com_aviDemoSamples   = new idCVar("com_aviDemoSamples", "16", CVAR_SYSTEM, "");
-        public static final idCVar com_aviDemoTics      = new idCVar("com_aviDemoTics", "2", CVAR_SYSTEM | CVAR_INTEGER, "", 1, 60);
-        public static final idCVar com_wipeSeconds      = new idCVar("com_wipeSeconds", "1", CVAR_SYSTEM, "");
-        public static final idCVar com_guid             = new idCVar("com_guid", "", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "");
+        public static final idCVar com_showAngles = new idCVar("com_showAngles", "0", CVAR_SYSTEM | CVAR_BOOL, "");
+        public static final idCVar com_showDemo = new idCVar("com_showDemo", "0", CVAR_SYSTEM | CVAR_BOOL, "");
+        public static final idCVar com_showTics = new idCVar("com_showTics", "0", CVAR_SYSTEM | CVAR_BOOL, "");
+        public static final idCVar com_skipGameDraw = new idCVar("com_skipGameDraw", "0", CVAR_SYSTEM | CVAR_BOOL, "");
+        public static final idCVar com_wipeSeconds = new idCVar("com_wipeSeconds", "1", CVAR_SYSTEM, "");
         //
         public static final idCVar gui_configServerRate = new idCVar("gui_configServerRate", "0", CVAR_GUI | CVAR_ARCHIVE | CVAR_ROM | CVAR_INTEGER, "");
         //
-        public int          timeHitch;
+        static final int ANGLE_GRAPH_HEIGHT = 128;
+        static final int ANGLE_GRAPH_STRETCH = 3;
+        // digits to letters table
+        static final String CDKEY_DIGITS = "TWSBJCGD7PA23RLH";
+        static final String NOTEDATFILE = "C:/notenumber.dat";
+        static final int bufferSize = 65535;
+        private static final int CDKEY_AUTH_TIMEOUT = 5000;
         //
-        public boolean      menuActive;
-        public idSoundWorld menuSoundWorld;             // so the game soundWorld can be muted
+        private static final int CDKEY_BUF_LEN = 17;
+        private static final String[] PEOPLE = {
+                "Tim", "Kenneth", "Robert",
+                "Matt", "Mal", "Jerry", "Steve", "Pat",
+                "Xian", "Ed", "Fred", "James", "Eric", "Andy", "Seneca", "Patrick", "Kevin",
+                "MrElusive", "Jim", "Brian", "John", "Adrian", "Nobody"
+        };
+        private static final int NUM_PEOPLE = PEOPLE.length;
+        static int DBG_Draw = 0;
+        static int frameEvents = 0;
+        private static int DBG_EndFrame = 0;
+        private static char[] cmd;//TODO:stringify?
         //
-        public boolean      insideExecuteMapChange;     // draw loading screen and update screen on prints
-        public int          bytesNeededForMapLoad;      //
-        //
-        // we don't want to redraw the loading screen for every single
-        // console print that happens
-        public int          lastPacifierTime;
-        //
-        // this is the information required to be set before ExecuteMapChange() is called,
-        // which can be saved off at any time with the following commands so it can all be played back
-        public mapSpawnData_t mapSpawnData   = new mapSpawnData_t();
-        public idStr          currentMapName = new idStr();// for checking reload on same level
-        public boolean mapSpawned;                      // cleared on Stop()
-        //
-        public int     numClients;                      // from serverInfo
-        //
-        public int     logIndex;
-        public logCmd_t[] loggedUsercmds;
-        public int statIndex;
-        public logStats_t[] loggedStats;
-        public int     lastSaveIndex;
-        // each game tic, numClients usercmds will be added, until full
-        //
-        public boolean insideUpdateScreen;              // true while inside ::UpdateScreen()
-        //
-        public boolean loadingSaveGame;                 // currently loading map from a SaveGame
-        public idFile  savegameFile;                    // this is the savegame file to load from
-        public int     savegameVersion;
-        //
-        public idFile  cmdDemoFile;                     // if non-zero, we are reading commands from a file
-        //
-        public int     latchedTicNumber;                // set to com_ticNumber each frame
-        public int     lastGameTic;                     // while latchedTicNumber > lastGameTic, run game frames
-        public int     lastDemoTic;
-        public boolean syncNextGameFrame;
+        private final char[] cdkey = new char[CDKEY_BUF_LEN];
+        private final char[] xpkey = new char[CDKEY_BUF_LEN];
         //
         //
         public boolean aviCaptureMode;                  // if true, screenshots will be taken and sound captured
+        public float aviDemoFrameCount;
         public idStr aviDemoShortName = new idStr();    //
-        public float              aviDemoFrameCount;
-        public int                aviTicStart;
+        public int aviTicStart;
+        public int bytesNeededForMapLoad;      //
         //
-        public timeDemo_t         timeDemo;
-        public int                timeDemoStartTime;
-        public int                numDemoFrames;        // for timeDemo and demoShot
-        public int                demoTimeOffset;
-        public renderView_s       currentDemoRenderView;
-        // the next one will be read when 
-        // com_frameTime + demoTimeOffset > currentDemoRenderView.
-        //        
-        // TODO: make this private (after sync networking removal and idnet tweaks)
-        public idUserInterface    guiActive;
-        public HandleGuiCommand_t guiHandle;
-        //        
-        public idUserInterface    guiInGame;
-        public idUserInterface    guiMainMenu;
-        public idListGUI          guiMainMenu_MapList;  // easy map list handling
-        public idUserInterface    guiRestartMenu;
-        public idUserInterface    guiLoading;
-        public idUserInterface    guiIntro;
-        public idUserInterface    guiGameOver;
-        public idUserInterface    guiTest;
-        public idUserInterface    guiTakeNotes;
-        // 
-        public idUserInterface    guiMsg;
-        public idUserInterface    guiMsgRestore;        // store the calling GUI for restore
-        public idStr[] msgFireBack = {new idStr(), new idStr()};
-        public           boolean    msgRunning;
-        public           int        msgRetIndex;
-        public           boolean    msgIgnoreButtons;
-        // 
-        public           boolean    waitingOnBind;
-        // 
-        public /*const*/ idMaterial whiteMaterial;
-        // 
-        public /*const*/ idMaterial wipeMaterial;
-        public           int        wipeStartTic;
-        public           int        wipeStopTic;
-        public           boolean    wipeHold;
+        public idFile cmdDemoFile;                     // if non-zero, we are reading commands from a file
+        public renderView_s currentDemoRenderView;
+        public idStr currentMapName = new idStr();// for checking reload on same level
+        public int demoTimeOffset;
         //
         // #if ID_CONSOLE_LOCK
-        public           int        emptyDrawCount;     // watchdog to force the main menu to restart
+        public int emptyDrawCount;     // watchdog to force the main menu to restart
+        // the next one will be read when
+        // com_frameTime + demoTimeOffset > currentDemoRenderView.
+        //
+        // TODO: make this private (after sync networking removal and idnet tweaks)
+        public idUserInterface guiActive;
+        public idUserInterface guiGameOver;
+        public HandleGuiCommand_t guiHandle;
+        //
+        public idUserInterface guiInGame;
+        public idUserInterface guiIntro;
+        public idUserInterface guiLoading;
+        public idUserInterface guiMainMenu;
+        public idListGUI guiMainMenu_MapList;  // easy map list handling
+        //
+        public idUserInterface guiMsg;
+        public idUserInterface guiMsgRestore;        // store the calling GUI for restore
+        public idUserInterface guiRestartMenu;
+        public idUserInterface guiTakeNotes;
+        public idUserInterface guiTest;
+        //
+        public boolean insideExecuteMapChange;     // draw loading screen and update screen on prints
+        // each game tic, numClients usercmds will be added, until full
+        //
+        public boolean insideUpdateScreen;              // true while inside ::UpdateScreen()
+        public int lastDemoTic;
+        public int lastGameTic;                     // while latchedTicNumber > lastGameTic, run game frames
+        //
+        // we don't want to redraw the loading screen for every single
+        // console print that happens
+        public int lastPacifierTime;
+        public int lastSaveIndex;
+        //
+        public int latchedTicNumber;                // set to com_ticNumber each frame
+        //
+//	//------------------
+//	// Session_menu.cpp
+//
+        public idStrList loadGameList = new idStrList();
+        //
+        public boolean loadingSaveGame;                 // currently loading map from a SaveGame
+        //
+        public int logIndex;
+        public logStats_t[] loggedStats;
+        public logCmd_t[] loggedUsercmds;
+        //
+        // this is the information required to be set before ExecuteMapChange() is called,
+        // which can be saved off at any time with the following commands so it can all be played back
+        public mapSpawnData_t mapSpawnData = new mapSpawnData_t();
+        public boolean mapSpawned;                      // cleared on Stop()
+        //
+        public boolean menuActive;
+        public idSoundWorld menuSoundWorld;             // so the game soundWorld can be muted
+        public idStrList modsList = new idStrList();
+        public idStr[] msgFireBack = {new idStr(), new idStr()};
+        public boolean msgIgnoreButtons;
         // #endif
         //	
+        public int msgRetIndex;
 
-        enum cdKeyState_t {
-
-            CDKEY_UNKNOWN, // need to perform checks on the key
-            CDKEY_INVALID, // that key is wrong
-            CDKEY_OK,      // valid
-            CDKEY_CHECKING,// sent a check request ( gameAuth only )
-            CDKEY_NA	   // does not apply, xp key when xp is not present
-        };
+        public boolean msgRunning;
         //
-        private static final int    CDKEY_BUF_LEN      = 17;
-        private static final int    CDKEY_AUTH_TIMEOUT = 5000;
+        public int numClients;                      // from serverInfo
+        public int numDemoFrames;        // for timeDemo and demoShot
+        public idFile savegameFile;                    // this is the savegame file to load from
+        public int savegameVersion;
+        public int statIndex;
+        public boolean syncNextGameFrame;
         //
-        private final        char[] cdkey              = new char[CDKEY_BUF_LEN];
-        private cdKeyState_t cdkey_state;
-        private final char[] xpkey = new char[CDKEY_BUF_LEN];
-        private cdKeyState_t xpkey_state;
-        private int          authEmitTimeout;
-        private boolean      authWaitBox;
-        //
-        private idStr authMsg = new idStr();
+        public timeDemo_t timeDemo;
+        public int timeDemoStartTime;
         //
         //=====================================
+        //
+        public int timeHitch;
+        //
+        public boolean waitingOnBind;
+        //
+        public /*const*/ idMaterial whiteMaterial;
+        public boolean wipeHold;
+        //
+        public /*const*/ idMaterial wipeMaterial;
+        public int wipeStartTic;
+        public int wipeStopTic;
+        private int authEmitTimeout;
+        //
+        private idStr authMsg = new idStr();
+        private boolean authWaitBox;
+        private cdKeyState_t cdkey_state;
+        private cdKeyState_t xpkey_state;
 
         public idSessionLocal() {
             guiInGame = guiMainMenu = guiIntro
@@ -420,24 +333,24 @@ public class Session_local {
             cmdSystem.AddCommand("writePrecache", Sess_WritePrecache_f.getInstance(), CMD_FL_SYSTEM | CMD_FL_CHEAT, "writes precache commands");
 
 //            if (ID_DEDICATED) {
-                cmdSystem.AddCommand("map", Session_Map_f.getInstance(), CMD_FL_SYSTEM, "loads a map", idCmdSystem.ArgCompletion_MapName.getInstance());
-                cmdSystem.AddCommand("devmap", Session_DevMap_f.getInstance(), CMD_FL_SYSTEM, "loads a map in developer mode", idCmdSystem.ArgCompletion_MapName.getInstance());
-                cmdSystem.AddCommand("testmap", Session_TestMap_f.getInstance(), CMD_FL_SYSTEM, "tests a map", idCmdSystem.ArgCompletion_MapName.getInstance());
+            cmdSystem.AddCommand("map", Session_Map_f.getInstance(), CMD_FL_SYSTEM, "loads a map", idCmdSystem.ArgCompletion_MapName.getInstance());
+            cmdSystem.AddCommand("devmap", Session_DevMap_f.getInstance(), CMD_FL_SYSTEM, "loads a map in developer mode", idCmdSystem.ArgCompletion_MapName.getInstance());
+            cmdSystem.AddCommand("testmap", Session_TestMap_f.getInstance(), CMD_FL_SYSTEM, "tests a map", idCmdSystem.ArgCompletion_MapName.getInstance());
 
-                cmdSystem.AddCommand("writeCmdDemo", Session_WriteCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "writes a command demo");
-                cmdSystem.AddCommand("playCmdDemo", Session_PlayCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "plays back a command demo");
-                cmdSystem.AddCommand("timeCmdDemo", Session_TimeCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "times a command demo");
-                cmdSystem.AddCommand("exitCmdDemo", Session_ExitCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "exits a command demo");
-                cmdSystem.AddCommand("aviCmdDemo", Session_AVICmdDemo_f.getInstance(), CMD_FL_SYSTEM, "writes AVIs for a command demo");
-                cmdSystem.AddCommand("aviGame", Session_AVIGame_f.getInstance(), CMD_FL_SYSTEM, "writes AVIs for the current game");
+            cmdSystem.AddCommand("writeCmdDemo", Session_WriteCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "writes a command demo");
+            cmdSystem.AddCommand("playCmdDemo", Session_PlayCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "plays back a command demo");
+            cmdSystem.AddCommand("timeCmdDemo", Session_TimeCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "times a command demo");
+            cmdSystem.AddCommand("exitCmdDemo", Session_ExitCmdDemo_f.getInstance(), CMD_FL_SYSTEM, "exits a command demo");
+            cmdSystem.AddCommand("aviCmdDemo", Session_AVICmdDemo_f.getInstance(), CMD_FL_SYSTEM, "writes AVIs for a command demo");
+            cmdSystem.AddCommand("aviGame", Session_AVIGame_f.getInstance(), CMD_FL_SYSTEM, "writes AVIs for the current game");
 
-                cmdSystem.AddCommand("recordDemo", Session_RecordDemo_f.getInstance(), CMD_FL_SYSTEM, "records a demo");
-                cmdSystem.AddCommand("stopRecording", Session_StopRecordingDemo_f.getInstance(), CMD_FL_SYSTEM, "stops demo recording");
-                cmdSystem.AddCommand("playDemo", Session_PlayDemo_f.getInstance(), CMD_FL_SYSTEM, "plays back a demo", idCmdSystem.ArgCompletion_DemoName.getInstance());
-                cmdSystem.AddCommand("timeDemo", Session_TimeDemo_f.getInstance(), CMD_FL_SYSTEM, "times a demo", idCmdSystem.ArgCompletion_DemoName.getInstance());
-                cmdSystem.AddCommand("timeDemoQuit", Session_TimeDemoQuit_f.getInstance(), CMD_FL_SYSTEM, "times a demo and quits", idCmdSystem.ArgCompletion_DemoName.getInstance());
-                cmdSystem.AddCommand("aviDemo", Session_AVIDemo_f.getInstance(), CMD_FL_SYSTEM, "writes AVIs for a demo", idCmdSystem.ArgCompletion_DemoName.getInstance());
-                cmdSystem.AddCommand("compressDemo", Session_CompressDemo_f.getInstance(), CMD_FL_SYSTEM, "compresses a demo file", idCmdSystem.ArgCompletion_DemoName.getInstance());
+            cmdSystem.AddCommand("recordDemo", Session_RecordDemo_f.getInstance(), CMD_FL_SYSTEM, "records a demo");
+            cmdSystem.AddCommand("stopRecording", Session_StopRecordingDemo_f.getInstance(), CMD_FL_SYSTEM, "stops demo recording");
+            cmdSystem.AddCommand("playDemo", Session_PlayDemo_f.getInstance(), CMD_FL_SYSTEM, "plays back a demo", idCmdSystem.ArgCompletion_DemoName.getInstance());
+            cmdSystem.AddCommand("timeDemo", Session_TimeDemo_f.getInstance(), CMD_FL_SYSTEM, "times a demo", idCmdSystem.ArgCompletion_DemoName.getInstance());
+            cmdSystem.AddCommand("timeDemoQuit", Session_TimeDemoQuit_f.getInstance(), CMD_FL_SYSTEM, "times a demo and quits", idCmdSystem.ArgCompletion_DemoName.getInstance());
+            cmdSystem.AddCommand("aviDemo", Session_AVIDemo_f.getInstance(), CMD_FL_SYSTEM, "writes AVIs for a demo", idCmdSystem.ArgCompletion_DemoName.getInstance());
+            cmdSystem.AddCommand("compressDemo", Session_CompressDemo_f.getInstance(), CMD_FL_SYSTEM, "compresses a demo file", idCmdSystem.ArgCompletion_DemoName.getInstance());
 //            }
 
             cmdSystem.AddCommand("disconnect", Session_Disconnect_f.getInstance(), CMD_FL_SYSTEM, "disconnects from a game");
@@ -577,8 +490,6 @@ public class Session_local {
             UpdateScreen(true);
         }
 
-        private static int DBG_EndFrame = 0;
-
         @Override
         public void UpdateScreen(boolean outOfSequence) {
 
@@ -671,11 +582,7 @@ public class Session_local {
 
             // if the console is down, we don't need to hold
             // the mouse cursor
-            if (console.Active() || com_editorActive) {
-                Sys_GrabMouseCursor(false);
-            } else {
-                Sys_GrabMouseCursor(true);
-            }
+            Sys_GrabMouseCursor(!console.Active() && !com_editorActive);
 
             // save the screenshot and audio from the last draw if needed
             if (aviCaptureMode) {
@@ -722,7 +629,7 @@ public class Session_local {
                     minTic = latchedTicNumber;
                 }
             } else if (writeDemo != null) {
-                minTic = lastGameTic + USERCMD_PER_DEMO_FRAME;		// demos are recorded at 30 hz
+                minTic = lastGameTic + USERCMD_PER_DEMO_FRAME;        // demos are recorded at 30 hz
             }
 
             // fixedTic lets us run a forced number of usercmd each frame without timing
@@ -949,7 +856,6 @@ public class Session_local {
 
             return false;
         }
-        private static char[] cmd;//TODO:stringify?
 
         @Override
         public void StartMenu(boolean playIntro) throws idException {
@@ -1023,7 +929,6 @@ public class Session_local {
             cmd = guiActive.HandleEvent(ev, com_frameTime);
             guiActive.Activate(true, com_frameTime);
         }
-        static int frameEvents = 0;
 
         @Override
         public void GuiFrameEvents() {
@@ -1034,11 +939,7 @@ public class Session_local {
 
             // stop generating move and button commands when a local console or menu is active
             // running here so SP, async networking and no game all go through it
-            if (console.Active() || guiActive != null) {
-                usercmdGen.InhibitUsercmd(INHIBIT_SESSION, true);
-            } else {
-                usercmdGen.InhibitUsercmd(INHIBIT_SESSION, false);
-            }
+            usercmdGen.InhibitUsercmd(INHIBIT_SESSION, console.Active() || guiActive != null);
 
             if (guiTest != null) {
                 gui = guiTest;
@@ -1151,7 +1052,7 @@ public class Session_local {
                     guiMsg.SetStateString("visible_msgbox", "0");
                     guiMsg.SetStateString("visible_cdkey", "1");
                     guiMsg.SetStateString("visible_hasxp", fileSystem.HasD3XP() ? "1" : "0");
-		    // the current cdkey / xpkey values may have bad/random data in them
+                    // the current cdkey / xpkey values may have bad/random data in them
                     // it's best to avoid printing them completely, unless the key is good
                     if (cdkey_state == CDKEY_OK) {
                         guiMsg.SetStateString("str_cdkey", new String(cdkey));
@@ -1292,16 +1193,16 @@ public class Session_local {
                         if (dltotal != 0) {
                             sTotal.BestUnit("%.2f", dltotal, MEASURE_SIZE);
                             if (lapsed < 2000) {
-                                sMsg = String.format("%s / %s", sNow.toString(), sTotal.toString());
+                                sMsg = String.format("%s / %s", sNow, sTotal);
                             } else {
                                 sETA = String.format("%.0f sec", ((float) dltotal / (float) dlnow - 1.0f) * lapsed / 1000);
-                                sMsg = String.format("%s / %s ( %s - %s )", sNow.toString(), sTotal.toString(), sBW.toString(), sETA);
+                                sMsg = String.format("%s / %s ( %s - %s )", sNow, sTotal, sBW, sETA);
                             }
                         } else {
                             if (lapsed < 2000) {
                                 sMsg = sNow.toString();
                             } else {
-                                sMsg = String.format("%s - %s", sNow.toString(), sBW.toString());
+                                sMsg = String.format("%s - %s", sNow, sBW);
                             }
                         }
                         if (dltotal != 0) {
@@ -1331,7 +1232,6 @@ public class Session_local {
                 soundSystem.SetPlayingSoundWorld(sw);
             }
         }
-
 
         /*
          ===============
@@ -1421,8 +1321,12 @@ public class Session_local {
             }
             return null;
         }
-        // digits to letters table
-        static final String CDKEY_DIGITS = "TWSBJCGD7PA23RLH";
+//        
+//        
+//        
+//        
+        //=====================================
+//
 
         /*
          ================
@@ -1437,7 +1341,8 @@ public class Session_local {
             char[][] l_chk = new char[2][3];
             char[] s_chk = new char[3];
             int imax, i_key;
-            /*unsigned*/ int checksum, chk8;//TODO:bitwise ops on longs!?
+            /*unsigned*/
+            int checksum, chk8;//TODO:bitwise ops on longs!?
             boolean[] edited_key = new boolean[2];
 
             // make sure have a right input string
@@ -1584,6 +1489,7 @@ public class Session_local {
             }
             WriteCDKey();
         }
+        // loads a map and starts a new game on it
 
         @Override
         public void SetCDKeyGuiVars() {
@@ -1593,6 +1499,14 @@ public class Session_local {
             guiMainMenu.SetStateString("str_d3key_state", common.GetLanguageDict().GetString(va("#str_071%d", 86 + cdkey_state.ordinal())));
             guiMainMenu.SetStateString("str_xpkey_state", common.GetLanguageDict().GetString(va("#str_071%d", 86 + xpkey_state.ordinal())));
         }
+
+//        public void PlayIntroGui();
+//
+//
+//        public void LoadSession(final String name);
+//
+//        public void SaveSession(final String name);
+//
 
         @Override
         public boolean WaitingForGameAuth() {
@@ -1638,12 +1552,6 @@ public class Session_local {
         public int GetSaveGameVersion() {
             return savegameVersion;
         }
-//        
-//        
-//        
-//        
-        //=====================================
-//
 
         public int GetLocalClientNum() {
             if (idAsyncNetwork.client.IsActive()) {
@@ -1684,7 +1592,6 @@ public class Session_local {
         public void StartNewGame(final String mapName) {
             StartNewGame(mapName, false);
         }
-        // loads a map and starts a new game on it
 
         public void StartNewGame(final String mapName, boolean devmap/*= false*/) {
             if (ID_DEDICATED) {
@@ -1738,14 +1645,6 @@ public class Session_local {
                 MoveToNewMap(mapName);
             }
         }
-
-//        public void PlayIntroGui();
-//
-//
-//        public void LoadSession(final String name);
-//
-//        public void SaveSession(final String name);
-//
 
         /*
          ===============
@@ -1866,7 +1765,7 @@ public class Session_local {
 
             int len = inFileName.Length();
             for (i = 0; i < len; i++) {
-                if ("',.~!@#$%^&*()[]{}<>\\|/=?+;:-\'\"".indexOf(inFileName.oGet(i)) > -1) {
+                if ("',.~!@#$%^&*()[]{}<>\\|/=?+;:-'\"".indexOf(inFileName.oGet(i)) > -1) {
                     // random junk
                     saveFileName.Append('_');
                 } else if (inFileName.oGet(i) >= 128) {
@@ -1958,7 +1857,7 @@ public class Session_local {
                 // but still load the map with the persistant playerInfo from the header
                 // so that the player doesn't lose too much progress.
                 if (savegameVersion != SAVEGAME_VERSION
-                        && !(savegameVersion == 16 && SAVEGAME_VERSION == 17)) {	// handle savegame v16 in v17
+                        && !(savegameVersion == 16 && SAVEGAME_VERSION == 17)) {    // handle savegame v16 in v17
                     common.Warning("Savegame Version mismatch: aborting loadgame and starting level with persistent data");
                     loadingSaveGame = false;
                     fileSystem.CloseFile(savegameFile);
@@ -2200,9 +2099,6 @@ public class Session_local {
 
             authMsg.Clear();
         }
-//
-        static final int ANGLE_GRAPH_HEIGHT = 128;
-        static final int ANGLE_GRAPH_STRETCH = 3;
 
         /*
          ===============
@@ -2227,7 +2123,6 @@ public class Session_local {
             }
         }
 
-        static int DBG_Draw=0;
         public void Draw() throws idException {
             boolean fullConsole = false;
 
@@ -2270,7 +2165,7 @@ public class Session_local {
                     int start = Sys_Milliseconds();
                     gameDraw = game.Draw(GetLocalClientNum());
                     int end = Sys_Milliseconds();
-                    time_gameDraw += (end - start);	// note time used for com_speeds
+                    time_gameDraw += (end - start);    // note time used for com_speeds
                 }
                 if (!gameDraw) {
                     renderSystem.SetColor(colorBlack);
@@ -2323,7 +2218,6 @@ public class Session_local {
                 console.Draw(false);
             }
         }
-
 
         /*
          ==============
@@ -2637,7 +2531,6 @@ public class Session_local {
             common.SetRefreshOnPrint(false);
 
         }
-        static final int bufferSize = 65535;
 
         public void TimeRenderDemo(final String demoName, boolean twice /*= false*/) throws idException {
             idStr demo = new idStr(demoName);
@@ -2673,7 +2566,7 @@ public class Session_local {
         }
 
         public void AVIRenderDemo(final String _demoName) {
-            idStr demoName = new idStr(_demoName);	// copy off from va() buffer
+            idStr demoName = new idStr(_demoName);    // copy off from va() buffer
 
             StartPlayingRenderDemo(demoName);
             if (null == readDemo) {
@@ -2686,6 +2579,7 @@ public class Session_local {
             // strange with the nvidia swapbuffers?
             UpdateScreen();
         }
+//
 
         public void AVICmdDemo(final String demoName) {
             StartPlayingCmdDemo(demoName);
@@ -2751,7 +2645,6 @@ public class Session_local {
 
             aviCaptureMode = false;
         }
-//
 
         public void AdvanceRenderDemo(boolean singleFrameOnly) throws idException {
             if (lastDemoTic == -1) {
@@ -2817,6 +2710,7 @@ public class Session_local {
             }
 
         }
+//
 
         public void RunGameTic() throws idException {
             logCmd_t logCmd = new logCmd_t();
@@ -2858,7 +2752,7 @@ public class Session_local {
             gameReturn_t ret = game.RunFrame(cmd);
 
             int end = Sys_Milliseconds();
-            time_gameFrame += end - start;	// note time used for com_speeds
+            time_gameFrame += end - start;    // note time used for com_speeds
 
             // check for constency failure from a recorded command
             if (cmdDemoFile != null) {
@@ -2916,6 +2810,7 @@ public class Session_local {
                 }
             }
         }
+//
 
         public void FinishCmdLoad() {
         }
@@ -2935,8 +2830,9 @@ public class Session_local {
             }
             guiLoading.SetStateFloat("map_loading", 0.0f);
         }
-
 //
+
+        //
         /*
          ================
          idSessionLocal::DemoShot
@@ -2952,7 +2848,6 @@ public class Session_local {
 
             StopRecordingRenderDemo();
         }
-//
 
         public void TestGUI(final String guiName) {
             if (guiName != null) {
@@ -2961,7 +2856,6 @@ public class Session_local {
                 guiTest = null;
             }
         }
-//
 
         public int GetBytesNeededForMapLoad(final String mapName) throws idException {
             final idDecl mapDecl = declManager.FindType(DECL_MAPDEF, mapName, false);
@@ -2976,6 +2870,7 @@ public class Session_local {
                 }
             }
         }
+//
 
         public void SetBytesNeededForMapLoad(final String mapName, int bytesNeeded) throws idException {
             idDecl mapDecl = /*const_cast<idDecl *>*/ (declManager.FindType(DECL_MAPDEF, mapName, false));
@@ -3000,7 +2895,6 @@ public class Session_local {
                 mapDef.ReplaceSourceFileText();
             }
         }
-//
 
         /*
          ===============
@@ -3085,7 +2979,7 @@ public class Session_local {
             // and draw the loading gui instead of game draws
             insideExecuteMapChange = true;
 
-            // if this works out we will probably want all the sizes in a def file although this solution will 
+            // if this works out we will probably want all the sizes in a def file although this solution will
             // work for new maps etc. after the first load. we can also drop the sizes into the default.cfg
             fileSystem.ResetReadCount();
             if (!reloadingSameMap) {
@@ -3233,6 +3127,7 @@ public class Session_local {
             mapSpawned = true;
             Sys_ClearEvents();
         }
+//
 
         /*
          ===============
@@ -3273,18 +3168,10 @@ public class Session_local {
             }
             return false;
         }
-//
-//	//------------------
-//	// Session_menu.cpp
-//
-        public idStrList loadGameList = new idStrList();
-        public idStrList modsList = new idStrList();
-//
 
         public idUserInterface GetActiveMenu() {
             return guiActive;
         }
-//
 
         public void DispatchCommand(idUserInterface gui, final String menuCommand, boolean doIngame /*= true*/) throws idException {
 
@@ -3494,7 +3381,8 @@ public class Session_local {
 
             args.TokenizeString(menuCommand, false);
 
-            /*final*/ String cmd = args.Argv(0);
+            /*final*/
+            String cmd = args.Argv(0);
             if (0 == idStr.Icmp(cmd, "close")) {
                 if (guiActive != null) {
                     sysEvent_s ev = new sysEvent_s();
@@ -3521,7 +3409,7 @@ public class Session_local {
 
             args.TokenizeString(menuCommand, false);
 
-            for (icmd = 0; icmd < args.Argc();) {
+            for (icmd = 0; icmd < args.Argc(); ) {
                 final String cmd = args.Argv(icmd++);
 
                 if (HandleSaveGameMenuCommand(args, icmd)) {
@@ -3544,7 +3432,7 @@ public class Session_local {
                             StartNewGame("game/demo_mars_city1");
                         }
                     }
-                    // need to do this here to make sure com_frameTime is correct or the gui activates with a time that 
+                    // need to do this here to make sure com_frameTime is correct or the gui activates with a time that
                     // is "however long map load took" time in the past
                     common.GUIFrame(false, false);
                     SetGUI(guiIntro, null);
@@ -3634,7 +3522,8 @@ public class Session_local {
                 }
 
                 if (0 == idStr.Icmp(cmd, "MAPScan")) {
-                    /*final*/ String gametype = cvarSystem.GetCVarString("si_gameType");
+                    /*final*/
+                    String gametype = cvarSystem.GetCVarString("si_gameType");
                     if (gametype == null || gametype.isEmpty() || idStr.Icmp(gametype, "singleplayer") == 0) {
                         gametype = "Deathmatch";
                     }
@@ -3649,7 +3538,8 @@ public class Session_local {
                     for (i = 0; i < num; i++) {
                         dict = fileSystem.GetMapDecl(i);
                         if (dict != null && dict.GetBool(gametype)) {
-                            /*final*/ String mapName = dict.GetString("name");
+                            /*final*/
+                            String mapName = dict.GetString("name");
                             if (!isNotNullOrEmpty(mapName)) {
                                 mapName = dict.GetString("path");
                             }
@@ -4016,7 +3906,7 @@ public class Session_local {
 
             args.TokenizeString(menuCommand, false);
 
-            for (i = 0; i < args.Argc();) {
+            for (i = 0; i < args.Argc(); ) {
                 final String cmd = args.Argv(i++);
 
                 if (idStr.Icmp(cmd, "chatactive") == 0) {
@@ -4039,7 +3929,6 @@ public class Session_local {
             }
         }
 
-
         /*
          ==============
          idSessionLocal::HandleIntroMenuCommands
@@ -4054,7 +3943,7 @@ public class Session_local {
 
             args.TokenizeString(menuCommand, false);
 
-            for (i = 0; i < args.Argc();) {
+            for (i = 0; i < args.Argc(); ) {
                 final String cmd = args.Argv(i++);
 
                 if (0 == idStr.Icmp(cmd, "startGame")) {
@@ -4087,7 +3976,7 @@ public class Session_local {
 
             args.TokenizeString(menuCommand, false);
 
-            for (icmd = 0; icmd < args.Argc();) {
+            for (icmd = 0; icmd < args.Argc(); ) {
                 final String cmd = args.Argv(icmd++);
 
                 if (HandleSaveGameMenuCommand(args, icmd)) {
@@ -4151,7 +4040,6 @@ public class Session_local {
                 DispatchCommand(guiActive, msgFireBack[1].toString());
             }
         }
-        static final String NOTEDATFILE = "C:/notenumber.dat";
 
         public void HandleNoteCommands(final String menuCommand) throws idException {
             guiActive = null;
@@ -4203,7 +4091,7 @@ public class Session_local {
 
                     int count = guiTakeNotes.State().GetInt("person_numsel");
                     if (count == 0) {
-                        fileList.Append(new idStr(fileName.toString() + "/Nobody"));
+                        fileList.Append(new idStr(fileName + "/Nobody"));
                     } else {
                         for (i = 0; i < count; i++) {
                             int person = guiTakeNotes.State().GetInt(va("person_sel_%d", i));
@@ -4237,7 +4125,7 @@ public class Session_local {
                         workName.Append("viewNotes");
                     }
 
-                    str = new idStr(String.format("recordViewNotes \"%s\" \"%s\" \"%s\"\n", workName.toString(), noteNum.toString(), guiTakeNotes.State().GetString("note")));
+                    str = new idStr(String.format("recordViewNotes \"%s\" \"%s\" \"%s\"\n", workName, noteNum, guiTakeNotes.State().GetString("note")));
 
                     cmdSystem.BufferCommandText(CMD_EXEC_NOW, str.toString());
                     cmdSystem.ExecuteCommandBuffer();
@@ -4295,15 +4183,6 @@ public class Session_local {
             fileTimes.Sort(new idListSaveGameCompare());
         }
 
-        private static final String[] PEOPLE = {
-            "Tim", "Kenneth", "Robert",
-            "Matt", "Mal", "Jerry", "Steve", "Pat",
-            "Xian", "Ed", "Fred", "James", "Eric", "Andy", "Seneca", "Patrick", "Kevin",
-            "MrElusive", "Jim", "Brian", "John", "Adrian", "Nobody"
-        };
-
-        private static final int NUM_PEOPLE = PEOPLE.length;
-
         public void TakeNotes(final String p, boolean extended /*= false*/) {
             if (!mapSpawned) {
                 common.Printf("No map loaded!\n");
@@ -4327,7 +4206,7 @@ public class Session_local {
 //                        "MrElusive", "Jim", "Brian", "John", "Adrian", "Nobody"
 //                    };
 //                }
-//                
+//
 //                final int numPeople = PEOPLE.length;
 //
                 idListGUI guiList_people = uiManager.AllocListGUI();
@@ -4531,5 +4410,15 @@ public class Session_local {
                 }
             }
         }
-    };
+
+        enum cdKeyState_t {
+
+            CDKEY_UNKNOWN, // need to perform checks on the key
+            CDKEY_INVALID, // that key is wrong
+            CDKEY_OK,      // valid
+            CDKEY_CHECKING,// sent a check request ( gameAuth only )
+            CDKEY_NA       // does not apply, xp key when xp is not present
+        }
+    }
+
 }

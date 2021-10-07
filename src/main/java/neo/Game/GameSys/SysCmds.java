@@ -1,9 +1,5 @@
 package neo.Game.GameSys;
 
-import static java.lang.Math.tan;
-import java.nio.ByteBuffer;
-import java.util.stream.Stream;
-
 import neo.CM.CollisionModel_local;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.AFEntity.idAFEntity_Generic;
@@ -13,89 +9,80 @@ import neo.Game.AI.AI.idAI;
 import neo.Game.Animation.Anim.idAnimManager;
 import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.Animation.Anim_Import.idModelExport;
-import static neo.Game.Entity.EV_Activate;
 import neo.Game.Entity.idEntity;
-import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
 import neo.Game.FX.idEntityFx;
-import static neo.Game.Game.SCRIPT_DEFAULT;
-import static neo.Game.GameSys.Class.EV_Remove;
-import static neo.Game.GameSys.SysCvar.aas_test;
-import static neo.Game.GameSys.SysCvar.g_testDeath;
-import static neo.Game.GameSys.SysCvar.pm_normalviewheight;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_CHAT;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_KILL;
-import static neo.Game.Game_local.GAME_RELIABLE_MESSAGE_TCHAT;
-import static neo.Game.Game_local.MAX_GAME_MESSAGE_SIZE;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.animationLib;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
 import neo.Game.Light.idLight;
 import neo.Game.Misc.idStaticEntity;
 import neo.Game.Moveable.idMoveable;
-import static neo.Game.Player.BERSERK;
-import static neo.Game.Player.EV_Player_SelectWeapon;
-import static neo.Game.Player.INVISIBILITY;
-import static neo.Game.Player.MAX_WEAPONS;
-import neo.Game.Player.idPlayer;
+import neo.Game.Player.*;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.Game.Weapon.AMMO_NUMTYPES;
 import neo.Game.Weapon.idWeapon;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Model.INVALID_JOINT;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.NOT;
 import neo.TempDump.void_callback;
-import static neo.framework.Async.NetworkSystem.networkSystem;
 import neo.framework.CmdSystem.argCompletion_t;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.STRTABLE_ID;
-import static neo.framework.Common.STRTABLE_ID_LENGTH;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.BIT;
-import static neo.idlib.Lib.idLib.cvarSystem;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
-import static neo.idlib.Text.Str.S_COLOR_WHITE;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.idStr.parseStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.DEG2RAD;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_default;
 import neo.idlib.math.Matrix.idMat4;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import java.nio.ByteBuffer;
+import java.util.stream.Stream;
+
+import static java.lang.Math.tan;
+import static neo.Game.Entity.EV_Activate;
+import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
+import static neo.Game.Game.SCRIPT_DEFAULT;
+import static neo.Game.GameSys.Class.EV_Remove;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Player.*;
+import static neo.Game.Weapon.AMMO_NUMTYPES;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
+import static neo.TempDump.NOT;
+import static neo.framework.Async.NetworkSystem.networkSystem;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.*;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.Lib.idLib.cvarSystem;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Str.S_COLOR_WHITE;
+import static neo.idlib.Text.Str.idStr.parseStr;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.math.Math_h.DEG2RAD;
+import static neo.idlib.math.Math_h.SEC2MS;
+import static neo.idlib.math.Matrix.idMat3.getMat3_default;
 
 /**
  *
  */
 public class SysCmds {
+
+    static final int MAX_DEBUGLINES = 128;
+    static gameDebugLine_t[] debugLines = Stream.generate(gameDebugLine_t::new).limit(MAX_DEBUGLINES).toArray(gameDebugLine_t[]::new);
 
     /*
      ==================
@@ -108,211 +95,6 @@ public class SysCmds {
         value = args.Argv(argNum[0]++);
         return Float.parseFloat(value);
     }
-
-    /*
-     ===================
-     Cmd_EntityList_f
-     ===================
-     */
-    public static class Cmd_EntityList_f extends cmdFunction_t {
-
-        private static final cmdFunction_t instance = new Cmd_EntityList_f();
-
-        private Cmd_EntityList_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-            int e;
-            idEntity check;
-            int count;
-            int/*size_t*/ size;
-            String match;
-
-            if (args.Argc() > 1) {
-                match = args.Args();
-                match = match.replaceAll(" ", "");
-            } else {
-                match = "";
-            }
-
-            count = 0;
-            size = 0;
-
-            gameLocal.Printf("%-4s  %-20s %-20s %s\n", " Num", "EntityDef", "Class", "Name");
-            gameLocal.Printf("--------------------------------------------------------------------\n");
-            for (e = 0; e < MAX_GENTITIES; e++) {
-                check = gameLocal.entities[ e];
-
-                if (null == check) {
-                    continue;
-                }
-
-                if (!check.name.Filter(match, true)) {
-                    continue;
-                }
-
-                gameLocal.Printf("%4d: %-20s %-20s %s\n", e,
-                        check.GetEntityDefName(), check.GetClassname(), check.name);
-
-                count++;
-                size += check.spawnArgs.Allocated();
-            }
-
-            gameLocal.Printf("...%d entities\n...%d bytes of spawnargs\n", count, size);
-        }
-    };
-
-    /*
-     ===================
-     Cmd_ActiveEntityList_f
-     ===================
-     */
-    public static class Cmd_ActiveEntityList_f extends cmdFunction_t {
-
-        private static final cmdFunction_t instance = new Cmd_ActiveEntityList_f();
-
-        private Cmd_ActiveEntityList_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-            idEntity check;
-            int count;
-
-            count = 0;
-
-            gameLocal.Printf("%-4s  %-20s %-20s %s\n", " Num", "EntityDef", "Class", "Name");
-            gameLocal.Printf("--------------------------------------------------------------------\n");
-            for (check = gameLocal.activeEntities.Next(); check != null; check = check.activeNode.Next()) {
-                char dormant = check.fl.isDormant ? '-' : ' ';
-                gameLocal.Printf("%4d:%c%-20s %-20s %s\n", check.entityNumber, dormant, check.GetEntityDefName(), check.GetClassname(), check.name);
-                count++;
-            }
-
-            gameLocal.Printf("...%d active entities\n", count);
-        }
-    };
-
-    /*
-     ===================
-     Cmd_ListSpawnArgs_f
-     ===================
-     */
-    public static class Cmd_ListSpawnArgs_f extends cmdFunction_t {
-
-        private static final cmdFunction_t instance = new Cmd_ListSpawnArgs_f();
-
-        private Cmd_ListSpawnArgs_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-            int i;
-            idEntity ent;
-
-            ent = gameLocal.FindEntity(args.Argv(1));
-            if (null == ent) {
-                gameLocal.Printf("entity not found\n");
-                return;
-            }
-
-            for (i = 0; i < ent.spawnArgs.GetNumKeyVals(); i++) {
-                final idKeyValue kv = ent.spawnArgs.GetKeyVal(i);
-                gameLocal.Printf("\"%s\"  " + S_COLOR_WHITE + "\"%s\"\n", kv.GetKey(), kv.GetValue());
-            }
-        }
-    };
-
-    /*
-     ===================
-     Cmd_ReloadScript_f
-     ===================
-     */
-    public static class Cmd_ReloadScript_f extends cmdFunction_t {
-
-        private static final cmdFunction_t instance = new Cmd_ReloadScript_f();
-
-        private Cmd_ReloadScript_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-            // shutdown the map because entities may point to script objects
-            gameLocal.MapShutdown();
-
-            // recompile the scripts
-            gameLocal.program.Startup(SCRIPT_DEFAULT);
-
-            // error out so that the user can rerun the scripts
-            gameLocal.Error("Exiting map to reload scripts");
-        }
-    };
-
-    /*
-     ===================
-     Cmd_Script_f
-     ===================
-     */
-    public static class Cmd_Script_f extends cmdFunction_t {
-
-        private static int funcCount = 0;
-        private static final cmdFunction_t instance = new Cmd_Script_f();
-
-        private Cmd_Script_f() {
-        }
-
-        public static cmdFunction_t getInstance() {
-            return instance;
-        }
-
-        @Override
-        public void run(idCmdArgs args) {
-            String script;
-            String text;
-            String funcname;
-            idThread thread;
-            function_t func;
-            idEntity ent;
-
-            if (!gameLocal.CheatsOk()) {
-                return;
-            }
-
-            funcname = String.format("ConsoleFunction_%d", funcCount++);
-
-            script = args.Args();
-            text = String.format("void %s() {%s;}\n", funcname, script);
-            if (gameLocal.program.CompileText("console", text, true)) {
-                func = gameLocal.program.FindFunction(funcname);
-                if (func != null) {
-                    // set all the entity names in case the user named one in the script that wasn't referenced in the default script
-                    for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                        gameLocal.program.SetEntity(ent.name.toString(), ent);
-                    }
-
-                    thread = new idThread(func);
-                    thread.Start();
-                }
-            }
-        }
-    };
 
     /*
      ==================
@@ -353,6 +135,321 @@ public class SysCmds {
 
     /*
      ==================
+     Cmd_Say
+     ==================
+     */
+    static void Cmd_Say(boolean team, final idCmdArgs args) {
+        String name;
+        idStr text;
+        final String cmd = team ? "sayTeam" : "say";
+
+        if (!gameLocal.isMultiplayer) {
+            gameLocal.Printf("%s can only be used in a multiplayer game\n", cmd);
+            return;
+        }
+
+        if (args.Argc() < 2) {
+            gameLocal.Printf("usage: %s <text>\n", cmd);
+            return;
+        }
+
+        text = new idStr(args.Args());
+        if (text.Length() == 0) {
+            return;
+        }
+
+        if (text.oGet(text.Length() - 1) == '\n') {
+            text.oSet(text.Length() - 1, '\0');
+        }
+        name = "player";
+
+        idPlayer player;
+
+        // here we need to special case a listen server to use the real client name instead of "server"
+        // "server" will only appear on a dedicated server
+        if (gameLocal.isClient || cvarSystem.GetCVarInteger("net_serverDedicated") == 0) {
+            player = gameLocal.localClientNum >= 0 ? (idPlayer) gameLocal.entities[gameLocal.localClientNum] : null;
+            if (player != null) {
+                name = player.GetUserInfo().GetString("ui_name", "player");
+            }
+        } else {
+            name = "server";
+        }
+
+        if (gameLocal.isClient) {
+            idBitMsg outMsg = new idBitMsg();
+            ByteBuffer msgBuf = ByteBuffer.allocate(256);
+            outMsg.Init(msgBuf, msgBuf.capacity());
+            outMsg.WriteByte(team ? GAME_RELIABLE_MESSAGE_TCHAT : GAME_RELIABLE_MESSAGE_CHAT);
+            outMsg.WriteString(name);
+            outMsg.WriteString(text.toString(), -1, false);
+            networkSystem.ClientSendReliableMessage(outMsg);
+        } else {
+            gameLocal.mpGame.ProcessChatMessage(gameLocal.localClientNum, team, name, text.toString(), null);
+        }
+    }
+
+    /*
+     ==================
+     PrintFloat
+     ==================
+     */
+    static void PrintFloat(float f) {
+//        char[] buf = new char[128];
+//        char i;
+//
+//        for (i = sprintf(buf, "%3.2f", f); i < 7; i++) {
+//            buf[i] = ' ';
+//        }
+//        buf[i] = '\0';
+//        gameLocal.Printf(buf);
+        gameLocal.Printf(String.format("%3.2f", f));
+    }
+
+    /*
+     ==================
+     D_DrawDebugLines
+     ==================
+     */
+    public static void D_DrawDebugLines() {
+        int i;
+        idVec3 forward, right = new idVec3(), up = new idVec3(), p1, p2;
+        idVec4 color;
+        float l;
+
+        for (i = 0; i < MAX_DEBUGLINES; i++) {
+            if (debugLines[i].used) {
+                if (!debugLines[i].blink || ((gameLocal.time & (1 << 9)) != 0)) {
+                    color = new idVec4(debugLines[i].color & 1, (debugLines[i].color >> 1) & 1, (debugLines[i].color >> 2) & 1, 1);
+                    gameRenderWorld.DebugLine(color, debugLines[i].start, debugLines[i].end);
+                    //
+                    if (debugLines[i].arrow) {
+                        // draw a nice arrow
+                        forward = debugLines[i].end.oMinus(debugLines[i].start);
+                        l = forward.Normalize() * 0.2f;
+                        forward.NormalVectors(right, up);
+
+                        if (l > 3.0f) {
+                            l = 3.0f;
+                        }
+                        p1 = debugLines[i].end.oMinus(forward.oMultiply(l).oPlus(right.oMultiply(l * 0.4f)));
+                        p2 = debugLines[i].end.oMinus(forward.oMultiply(l).oMinus(right.oMultiply(l * 0.4f)));
+                        gameRenderWorld.DebugLine(color, debugLines[i].end, p1);
+                        gameRenderWorld.DebugLine(color, debugLines[i].end, p2);
+                        gameRenderWorld.DebugLine(color, p1, p2);
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+     ===================
+     Cmd_EntityList_f
+     ===================
+     */
+    public static class Cmd_EntityList_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new Cmd_EntityList_f();
+
+        private Cmd_EntityList_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+            int e;
+            idEntity check;
+            int count;
+            int/*size_t*/ size;
+            String match;
+
+            if (args.Argc() > 1) {
+                match = args.Args();
+                match = match.replaceAll(" ", "");
+            } else {
+                match = "";
+            }
+
+            count = 0;
+            size = 0;
+
+            gameLocal.Printf("%-4s  %-20s %-20s %s\n", " Num", "EntityDef", "Class", "Name");
+            gameLocal.Printf("--------------------------------------------------------------------\n");
+            for (e = 0; e < MAX_GENTITIES; e++) {
+                check = gameLocal.entities[e];
+
+                if (null == check) {
+                    continue;
+                }
+
+                if (!check.name.Filter(match, true)) {
+                    continue;
+                }
+
+                gameLocal.Printf("%4d: %-20s %-20s %s\n", e,
+                        check.GetEntityDefName(), check.GetClassname(), check.name);
+
+                count++;
+                size += check.spawnArgs.Allocated();
+            }
+
+            gameLocal.Printf("...%d entities\n...%d bytes of spawnargs\n", count, size);
+        }
+    }
+
+    /*
+     ===================
+     Cmd_ActiveEntityList_f
+     ===================
+     */
+    public static class Cmd_ActiveEntityList_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new Cmd_ActiveEntityList_f();
+
+        private Cmd_ActiveEntityList_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+            idEntity check;
+            int count;
+
+            count = 0;
+
+            gameLocal.Printf("%-4s  %-20s %-20s %s\n", " Num", "EntityDef", "Class", "Name");
+            gameLocal.Printf("--------------------------------------------------------------------\n");
+            for (check = gameLocal.activeEntities.Next(); check != null; check = check.activeNode.Next()) {
+                char dormant = check.fl.isDormant ? '-' : ' ';
+                gameLocal.Printf("%4d:%c%-20s %-20s %s\n", check.entityNumber, dormant, check.GetEntityDefName(), check.GetClassname(), check.name);
+                count++;
+            }
+
+            gameLocal.Printf("...%d active entities\n", count);
+        }
+    }
+
+    /*
+     ===================
+     Cmd_ListSpawnArgs_f
+     ===================
+     */
+    public static class Cmd_ListSpawnArgs_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new Cmd_ListSpawnArgs_f();
+
+        private Cmd_ListSpawnArgs_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+            int i;
+            idEntity ent;
+
+            ent = gameLocal.FindEntity(args.Argv(1));
+            if (null == ent) {
+                gameLocal.Printf("entity not found\n");
+                return;
+            }
+
+            for (i = 0; i < ent.spawnArgs.GetNumKeyVals(); i++) {
+                final idKeyValue kv = ent.spawnArgs.GetKeyVal(i);
+                gameLocal.Printf("\"%s\"  " + S_COLOR_WHITE + "\"%s\"\n", kv.GetKey(), kv.GetValue());
+            }
+        }
+    }
+
+    /*
+     ===================
+     Cmd_ReloadScript_f
+     ===================
+     */
+    public static class Cmd_ReloadScript_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new Cmd_ReloadScript_f();
+
+        private Cmd_ReloadScript_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+            // shutdown the map because entities may point to script objects
+            gameLocal.MapShutdown();
+
+            // recompile the scripts
+            gameLocal.program.Startup(SCRIPT_DEFAULT);
+
+            // error out so that the user can rerun the scripts
+            idGameLocal.Error("Exiting map to reload scripts");
+        }
+    }
+
+    /*
+     ===================
+     Cmd_Script_f
+     ===================
+     */
+    public static class Cmd_Script_f extends cmdFunction_t {
+
+        private static final cmdFunction_t instance = new Cmd_Script_f();
+        private static int funcCount = 0;
+
+        private Cmd_Script_f() {
+        }
+
+        public static cmdFunction_t getInstance() {
+            return instance;
+        }
+
+        @Override
+        public void run(idCmdArgs args) {
+            String script;
+            String text;
+            String funcname;
+            idThread thread;
+            function_t func;
+            idEntity ent;
+
+            if (!gameLocal.CheatsOk()) {
+                return;
+            }
+
+            funcname = String.format("ConsoleFunction_%d", funcCount++);
+
+            script = args.Args();
+            text = String.format("void %s() {%s;}\n", funcname, script);
+            if (gameLocal.program.CompileText("console", text, true)) {
+                func = gameLocal.program.FindFunction(funcname);
+                if (func != null) {
+                    // set all the entity names in case the user named one in the script that wasn't referenced in the default script
+                    for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
+                        gameLocal.program.SetEntity(ent.name.toString(), ent);
+                    }
+
+                    thread = new idThread(func);
+                    thread.Start();
+                }
+            }
+        }
+    }
+
+    /*
+     ==================
      Cmd_KillMonsters_f
 
      Kills all the monsters in a level.
@@ -377,7 +474,7 @@ public class SysCmds {
             // kill any projectiles as well since they have pointers to the monster that created them
             KillEntities(args, idProjectile.class);
         }
-    };
+    }
 
     /*
      ==================
@@ -404,7 +501,7 @@ public class SysCmds {
             }
             KillEntities(args, idMoveable.class);
         }
-    };
+    }
 
     /*
      ==================
@@ -432,7 +529,7 @@ public class SysCmds {
             KillEntities(args, idAFEntity_Generic.class);
             KillEntities(args, idAFEntity_WithAttachedHead.class);
         }
-    };
+    }
 
     /*
      ==================
@@ -466,18 +563,14 @@ public class SysCmds {
 
             name = args.Argv(1);
 
-            if (idStr.Icmp(name, "all") == 0) {
-                give_all = true;
-            } else {
-                give_all = false;
-            }
+            give_all = idStr.Icmp(name, "all") == 0;
 
             if (give_all || (idStr.Cmpn(name, "weapon", 6) == 0)) {
                 if (gameLocal.world.spawnArgs.GetBool("no_Weapons")) {
                     gameLocal.world.spawnArgs.SetBool("no_Weapons", false);
                     for (i = 0; i < gameLocal.numClients; i++) {
                         if (gameLocal.entities[i] != null) {
-                            gameLocal.entities[i].PostEventSec(EV_Player_SelectWeapon, 0.5f, gameLocal.entities[ i].spawnArgs.GetString("def_weapon1"));
+                            gameLocal.entities[i].PostEventSec(EV_Player_SelectWeapon, 0.5f, gameLocal.entities[i].spawnArgs.GetString("def_weapon1"));
                         }
                     }
                 }
@@ -506,7 +599,7 @@ public class SysCmds {
 
             if (give_all || idStr.Icmp(name, "ammo") == 0) {
                 for (i = 0; i < AMMO_NUMTYPES; i++) {
-                    player.inventory.ammo[ i] = player.inventory.MaxAmmoForAmmoClass(player, idWeapon.GetAmmoNameForNum(i));
+                    player.inventory.ammo[i] = player.inventory.MaxAmmoForAmmoClass(player, idWeapon.GetAmmoNameForNum(i));
                 }
                 if (!give_all) {
                     return;
@@ -544,7 +637,7 @@ public class SysCmds {
                 gameLocal.Printf("unknown item\n");
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -578,7 +671,7 @@ public class SysCmds {
             ang.pitch = 0.0f;
             player.SetViewAngles(ang);
         }
-    };
+    }
 
     /*
      ==================
@@ -620,7 +713,7 @@ public class SysCmds {
 
             gameLocal.Printf("%s", msg);
         }
-    };
+    }
 
     /*
      ==================
@@ -662,7 +755,7 @@ public class SysCmds {
 
             gameLocal.Printf("%s", msg);
         }
-    };
+    }
 
     /*
      ==================
@@ -701,7 +794,7 @@ public class SysCmds {
 
             gameLocal.Printf("%s", msg);
         }
-    };
+    }
 
     /*
      =================
@@ -737,7 +830,7 @@ public class SysCmds {
                         return;
                     }
                     player.Kill(false, false);
-                    cmdSystem.BufferCommandText(CMD_EXEC_NOW, va("say killed client %d '%s^0'\n", player.entityNumber, gameLocal.userInfo[ player.entityNumber].GetString("ui_name")));
+                    cmdSystem.BufferCommandText(CMD_EXEC_NOW, va("say killed client %d '%s^0'\n", player.entityNumber, gameLocal.userInfo[player.entityNumber].GetString("ui_name")));
                 }
             } else {
                 player = gameLocal.GetLocalPlayer();
@@ -747,7 +840,7 @@ public class SysCmds {
                 player.Kill(false, false);
             }
         }
-    };
+    }
 
     /*
      =================
@@ -789,62 +882,6 @@ public class SysCmds {
             ang = new idAngles(player.viewAngles);
             player.SpawnToPoint(pos, ang);
         }
-    };
-
-    /*
-     ==================
-     Cmd_Say
-     ==================
-     */
-    static void Cmd_Say(boolean team, final idCmdArgs args) {
-        String name;
-        idStr text;
-        final String cmd = team ? "sayTeam" : "say";
-
-        if (!gameLocal.isMultiplayer) {
-            gameLocal.Printf("%s can only be used in a multiplayer game\n", cmd);
-            return;
-        }
-
-        if (args.Argc() < 2) {
-            gameLocal.Printf("usage: %s <text>\n", cmd);
-            return;
-        }
-
-        text = new idStr(args.Args());
-        if (text.Length() == 0) {
-            return;
-        }
-
-        if (text.oGet(text.Length() - 1) == '\n') {
-            text.oSet(text.Length() - 1, '\0');
-        }
-        name = "player";
-
-        idPlayer player;
-
-        // here we need to special case a listen server to use the real client name instead of "server"
-        // "server" will only appear on a dedicated server
-        if (gameLocal.isClient || cvarSystem.GetCVarInteger("net_serverDedicated") == 0) {
-            player = gameLocal.localClientNum >= 0 ? (idPlayer) gameLocal.entities[ gameLocal.localClientNum] : null;
-            if (player != null) {
-                name = player.GetUserInfo().GetString("ui_name", "player");
-            }
-        } else {
-            name = "server";
-        }
-
-        if (gameLocal.isClient) {
-            idBitMsg outMsg = new idBitMsg();
-            ByteBuffer msgBuf = ByteBuffer.allocate(256);
-            outMsg.Init(msgBuf, msgBuf.capacity());
-            outMsg.WriteByte(team ? GAME_RELIABLE_MESSAGE_TCHAT : GAME_RELIABLE_MESSAGE_CHAT);
-            outMsg.WriteString(name);
-            outMsg.WriteString(text.toString(), -1, false);
-            networkSystem.ClientSendReliableMessage(outMsg);
-        } else {
-            gameLocal.mpGame.ProcessChatMessage(gameLocal.localClientNum, team, name, text.toString(), null);
-        }
     }
 
     /*
@@ -867,7 +904,7 @@ public class SysCmds {
         public void run(idCmdArgs args) {
             Cmd_Say(false, args);
         }
-    };
+    }
 
     /*
      ==================
@@ -889,7 +926,7 @@ public class SysCmds {
         public void run(idCmdArgs args) {
             Cmd_Say(true, args);
         }
-    };
+    }
 
     /*
      ==================
@@ -911,7 +948,7 @@ public class SysCmds {
         public void run(idCmdArgs args) {
             gameLocal.mpGame.AddChatLine(args.Argv(1));
         }
-    };
+    }
 
     /*
      ==================
@@ -948,10 +985,10 @@ public class SysCmds {
                 gameLocal.Printf("usage: kick <client nickname> or kick <client index>\n");
                 return;
             }
-            cmdSystem.BufferCommandText(CMD_EXEC_NOW, va("say kicking out client %d '%s^0'\n", player.entityNumber, gameLocal.userInfo[ player.entityNumber].GetString("ui_name")));
+            cmdSystem.BufferCommandText(CMD_EXEC_NOW, va("say kicking out client %d '%s^0'\n", player.entityNumber, gameLocal.userInfo[player.entityNumber].GetString("ui_name")));
             cmdSystem.BufferCommandText(CMD_EXEC_NOW, va("kick %d\n", player.entityNumber));
         }
-    };
+    }
 
     /*
      ==================
@@ -988,7 +1025,7 @@ public class SysCmds {
                 gameLocal.Printf("(%s) %.1f\n", origin.ToString(), axis.oGet(0).ToYaw());
             }
         }
-    };
+    }
 
     /*
      =================
@@ -1035,7 +1072,7 @@ public class SysCmds {
 
             player.Teleport(origin, angels, null);
         }
-    };
+    }
 
     /*
      =================
@@ -1082,7 +1119,7 @@ public class SysCmds {
 
             player.Teleport(origin, angles, ent);
         }
-    };
+    }
 
     /*
      =================
@@ -1127,7 +1164,7 @@ public class SysCmds {
             ent.ProcessEvent(EV_Activate, player);
             ent.TriggerGuis();
         }
-    };
+    }
 
     /*
      ===================
@@ -1159,7 +1196,7 @@ public class SysCmds {
                 return;
             }
 
-            if ((args.Argc() & 1) != 0) {	// must always have an even number of arguments
+            if ((args.Argc() & 1) != 0) {    // must always have an even number of arguments
                 gameLocal.Printf("usage: spawn classname [key/value pairs]\n");
                 return;
             }
@@ -1183,7 +1220,7 @@ public class SysCmds {
 
             gameLocal.SpawnEntityDef(dict);
         }
-    };
+    }
 
     /*
      ==================
@@ -1221,8 +1258,7 @@ public class SysCmds {
 
             ent.Damage(gameLocal.world, gameLocal.world, new idVec3(0, 0, 1), "damage_moverCrush", Integer.parseInt(args.Argv(2)), INVALID_JOINT);
         }
-    };
-
+    }
 
     /*
      ==================
@@ -1260,7 +1296,7 @@ public class SysCmds {
 
 //        delete ent;
         }
-    };
+    }
 
     /*
      ===================
@@ -1320,7 +1356,7 @@ public class SysCmds {
             }
 
             for (i = 0; i < MAX_GENTITIES; i++) {
-                name = va("spawned_light_%d", i);		// not just light_, or it might pick up a prelight shadow
+                name = va("spawned_light_%d", i);        // not just light_, or it might pick up a prelight shadow
                 if (NOT(gameLocal.FindEntity(name))) {
                     break;
                 }
@@ -1331,7 +1367,7 @@ public class SysCmds {
 
             gameLocal.Printf("Created new light\n");
         }
-    };
+    }
 
     /*
      ===================
@@ -1391,7 +1427,7 @@ public class SysCmds {
 
             gameLocal.Printf("Created new point light\n");
         }
-    };
+    }
 
     /*
      ==================
@@ -1430,8 +1466,8 @@ public class SysCmds {
                     continue;
                 }
 
-                if (gameLocal.spawnIds[ ent.entityNumber] > last) {
-                    last = gameLocal.spawnIds[ ent.entityNumber];
+                if (gameLocal.spawnIds[ent.entityNumber] > last) {
+                    last = gameLocal.spawnIds[ent.entityNumber];
                     lastLight = (idLight) ent;
                 }
             }
@@ -1449,7 +1485,7 @@ public class SysCmds {
                 gameLocal.Printf("No lights to clear.\n");
             }
         }
-    };
+    }
 
     /*
      ====================
@@ -1494,7 +1530,7 @@ public class SysCmds {
 //            delete light;
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -1543,20 +1579,16 @@ public class SysCmds {
             dict.Set("fx", name);
             gameLocal.testFx = (idEntityFx) gameLocal.SpawnEntityType(idEntityFx.class, dict);
         }
-    };
-
-    static final int MAX_DEBUGLINES = 128;
+    }
 
     public static class gameDebugLine_t {
 
-        boolean used;
-        idVec3  start = new idVec3(), end = new idVec3();
-        int     color;
-        boolean blink;
         boolean arrow;
-    };
-    static gameDebugLine_t[] debugLines = Stream.generate(gameDebugLine_t::new).limit(MAX_DEBUGLINES).toArray(gameDebugLine_t[]::new);
-
+        boolean blink;
+        int color;
+        idVec3 start = new idVec3(), end = new idVec3();
+        boolean used;
+    }
 
     /*
      ==================
@@ -1598,11 +1630,7 @@ public class SysCmds {
                 return;
             }
             value = args.Argv(0);
-            if (NOT(idStr.Icmp(value, "addarrow"))) {
-                debugLines[i].arrow = true;
-            } else {
-                debugLines[i].arrow = false;
-            }
+            debugLines[i].arrow = NOT(idStr.Icmp(value, "addarrow"));
             debugLines[i].used = true;
             debugLines[i].blink = false;
             argNum[0] = 1;
@@ -1614,7 +1642,7 @@ public class SysCmds {
             debugLines[i].end.z = Cmd_GetFloatArg(args, argNum);
             debugLines[i].color = (int) Cmd_GetFloatArg(args, argNum);
         }
-    };
+    }
 
     /*
      ==================
@@ -1660,7 +1688,7 @@ public class SysCmds {
             }
             debugLines[i].used = false;
         }
-    };
+    }
 
     /*
      ==================
@@ -1706,23 +1734,6 @@ public class SysCmds {
             }
             debugLines[i].blink = !debugLines[i].blink;
         }
-    };
-
-    /*
-     ==================
-     PrintFloat
-     ==================
-     */
-    static void PrintFloat(float f) {
-//        char[] buf = new char[128];
-//        char i;
-//
-//        for (i = sprintf(buf, "%3.2f", f); i < 7; i++) {
-//            buf[i] = ' ';
-//        }
-//        buf[i] = '\0';
-//        gameLocal.Printf(buf);
-        gameLocal.Printf(String.format("%3.2f", f));
     }
 
     /*
@@ -1768,43 +1779,6 @@ public class SysCmds {
                 gameLocal.Printf("no debug lines\n");
             }
         }
-    };
-
-    /*
-     ==================
-     D_DrawDebugLines
-     ==================
-     */
-    public static void D_DrawDebugLines() {
-        int i;
-        idVec3 forward, right = new idVec3(), up = new idVec3(), p1, p2;
-        idVec4 color;
-        float l;
-
-        for (i = 0; i < MAX_DEBUGLINES; i++) {
-            if (debugLines[i].used) {
-                if (!debugLines[i].blink || ((gameLocal.time & (1 << 9)) != 0)) {
-                    color = new idVec4(debugLines[i].color & 1, (debugLines[i].color >> 1) & 1, (debugLines[i].color >> 2) & 1, 1);
-                    gameRenderWorld.DebugLine(color, debugLines[i].start, debugLines[i].end);
-                    //
-                    if (debugLines[i].arrow) {
-                        // draw a nice arrow
-                        forward = debugLines[i].end.oMinus(debugLines[i].start);
-                        l = forward.Normalize() * 0.2f;
-                        forward.NormalVectors(right, up);
-
-                        if (l > 3.0f) {
-                            l = 3.0f;
-                        }
-                        p1 = debugLines[i].end.oMinus(forward.oMultiply(l).oPlus(right.oMultiply(l * 0.4f)));
-                        p2 = debugLines[i].end.oMinus(forward.oMultiply(l).oMinus(right.oMultiply(l * 0.4f)));
-                        gameRenderWorld.DebugLine(color, debugLines[i].end, p1);
-                        gameRenderWorld.DebugLine(color, debugLines[i].end, p2);
-                        gameRenderWorld.DebugLine(color, p1, p2);
-                    }
-                }
-            }
-        }
     }
 
     /*
@@ -1831,7 +1805,7 @@ public class SysCmds {
 
             CollisionModel_local.collisionModelManager.ListModels();
         }
-    };
+    }
 
     /*
      ==================
@@ -1869,7 +1843,7 @@ public class SysCmds {
                 CollisionModel_local.collisionModelManager.ModelInfo(Integer.parseInt(value));
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -1907,7 +1881,7 @@ public class SysCmds {
                 exporter.ExportDefFile(name.toString());
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -1947,7 +1921,7 @@ public class SysCmds {
             }
             idAnimManager.forceExport = false;
         }
-    };
+    }
 
     /*
      ==================
@@ -1975,7 +1949,7 @@ public class SysCmds {
 
             animationLib.ReloadAnims();
         }
-    };
+    }
 
     /*
      ==================
@@ -2039,7 +2013,7 @@ public class SysCmds {
                 gameLocal.Printf("%d memory used in %d entity animators\n", size, num);
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2073,7 +2047,7 @@ public class SysCmds {
                 aas.Stats();
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2113,7 +2087,7 @@ public class SysCmds {
                 float angle = Float.parseFloat(args.Argv(2));
 
                 float[] d1 = {0}, d0 = {0};
-                idMath.SinCos((float) DEG2RAD(angle), d1, d0);
+                idMath.SinCos(DEG2RAD(angle), d1, d0);
                 dir = new idVec3(d0[0], d1[0], 0);
             } else {
                 dir = new idVec3();
@@ -2126,7 +2100,7 @@ public class SysCmds {
             player.Damage(null, null, dir, damageDefName, 1.0f, INVALID_JOINT);
             player.health = player.inventory.maxHealth;
         }
-    };
+    }
 
     /*
      ==================
@@ -2164,7 +2138,7 @@ public class SysCmds {
 
             player.StartFxOnBone(fx, bone);
         }
-    };
+    }
 
     /*
      ==================
@@ -2193,7 +2167,7 @@ public class SysCmds {
 
             idVec3 dir;
             float[] d1 = {0}, d0 = {0};
-            idMath.SinCos((float) DEG2RAD(45.0f), d1, d0);
+            idMath.SinCos(DEG2RAD(45.0f), d1, d0);
             dir = new idVec3(d0[0], d1[0], 0);
 
             g_testDeath.SetBool(true);
@@ -2202,7 +2176,7 @@ public class SysCmds {
                 player.SpawnGibs(dir, "damage_triggerhurt_1000");
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2231,7 +2205,7 @@ public class SysCmds {
 
             player.weapon.GetEntity().BloodSplat(2.0f);
         }
-    };
+    }
 
     /*
      ==================
@@ -2310,7 +2284,7 @@ public class SysCmds {
             // write out the map file
             mapFile.Write(mapName.toString(), ".map");
         }
-    };
+    }
 
     /*
      ==================
@@ -2341,7 +2315,7 @@ public class SysCmds {
                 player.dragEntity.DeleteSelected();
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2373,7 +2347,7 @@ public class SysCmds {
             }
 
             for (e = 0; e < MAX_GENTITIES; e++) {
-                m = ((idMoveable) gameLocal.entities[ e]);
+                m = ((idMoveable) gameLocal.entities[e]);
 
                 if (NOT(m) || !m.IsType(idMoveable.class)) {
                     continue;
@@ -2389,7 +2363,7 @@ public class SysCmds {
             }
 
             if (e < MAX_GENTITIES) {
-                gameLocal.Warning("map not saved because the moveable entity %s is not at rest", gameLocal.entities[ e].name);
+                gameLocal.Warning("map not saved because the moveable entity %s is not at rest", gameLocal.entities[e].name);
                 return;
             }
 
@@ -2401,7 +2375,7 @@ public class SysCmds {
             }
 
             for (e = 0; e < MAX_GENTITIES; e++) {
-                m = ((idMoveable) gameLocal.entities[ e]);
+                m = ((idMoveable) gameLocal.entities[e]);
 
                 if (NOT(m) || !m.IsType(idMoveable.class)) {
                     continue;
@@ -2435,7 +2409,7 @@ public class SysCmds {
             // write out the map file
             mapFile.Write(mapName.toString(), ".map");
         }
-    };
+    }
 
     /*
      ==================
@@ -2475,7 +2449,7 @@ public class SysCmds {
             }
 
             for (e = 0; e < MAX_GENTITIES; e++) {
-                af = ((idAFEntity_Base) gameLocal.entities[ e]);
+                af = ((idAFEntity_Base) gameLocal.entities[e]);
 
                 if (NOT(af)) {
                     continue;
@@ -2490,7 +2464,7 @@ public class SysCmds {
                 }
 
                 if (!af.IsAtRest()) {
-                    gameLocal.Warning("the articulated figure for entity %s is not at rest", gameLocal.entities[ e].name);
+                    gameLocal.Warning("the articulated figure for entity %s is not at rest", gameLocal.entities[e].name);
                 }
 
                 dict.Clear();
@@ -2519,7 +2493,7 @@ public class SysCmds {
             // write out the map file
             mapFile.Write(mapName.toString(), ".map");
         }
-    };
+    }
 
     /*
      ==================
@@ -2550,7 +2524,7 @@ public class SysCmds {
                 player.dragEntity.BindSelected();
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2581,7 +2555,7 @@ public class SysCmds {
                 player.dragEntity.UnbindSelected();
             }
         }
-    };
+    }
 
     /*
      ==================
@@ -2601,9 +2575,9 @@ public class SysCmds {
 
         @Override
         public void run(idCmdArgs args) {
-            gameLocal.Error("game error");
+            idGameLocal.Error("game error");
         }
-    };
+    }
 
     /*
      ==================
@@ -2643,7 +2617,7 @@ public class SysCmds {
             }
 
             for (e = 0; e < MAX_GENTITIES; e++) {
-                light = ((idLight) gameLocal.entities[ e]);
+                light = ((idLight) gameLocal.entities[e]);
 
                 if (NOT(light) || !light.IsType(idLight.class)) {
                     continue;
@@ -2675,7 +2649,7 @@ public class SysCmds {
             // write out the map file
             mapFile.Write(mapName.toString(), ".map");
         }
-    };
+    }
 
 
     /*
@@ -2716,7 +2690,7 @@ public class SysCmds {
 
             for (e = 0; e < MAX_GENTITIES; e++) {
 
-                ent = ((idStaticEntity) gameLocal.entities[ e]);
+                ent = gameLocal.entities[e];
 
                 if (NOT(ent)) {
                     continue;
@@ -2742,7 +2716,7 @@ public class SysCmds {
             // write out the map file
             mapFile.Write(mapName.toString(), ".map");
         }
-    };
+    }
 
 
     /*
@@ -2765,7 +2739,7 @@ public class SysCmds {
         public void run(idCmdArgs args) {
             gameLocal.program.Disassemble();
         }
-    };
+    }
 
     /*
      ==================
@@ -2791,7 +2765,7 @@ public class SysCmds {
             gameLocal.SaveGame(f);
             fileSystem.CloseFile(f);
         }
-    };
+    }
 
     /*
      ==================
@@ -2847,7 +2821,7 @@ public class SysCmds {
             player.hud.SetStateString("viewcomments", viewComments.toString());
             player.hud.HandleNamedEvent("showViewComments");
         }
-    };
+    }
 
     /*
      ==================
@@ -2876,7 +2850,7 @@ public class SysCmds {
             player.hud.SetStateString("viewcomments", "");
             player.hud.HandleNamedEvent("hideViewComments");
         }
-    };
+    }
 
     /*
      ==================
@@ -2936,7 +2910,7 @@ public class SysCmds {
                 return;
             }
         }
-    };
+    }
 
     /*
      =================
@@ -3044,7 +3018,7 @@ public class SysCmds {
 
             renderEnt = ent.GetRenderEntity();
             surfIndex = gameLocal.lastGUI++;
-            geom = surfaces[ surfIndex].geometry;
+            geom = surfaces[surfIndex].geometry;
             if (geom == null) {
                 gameLocal.Printf("Entity \"%s\" has gui surface %d without geometry!\n", ent.name, surfIndex);
                 return;
@@ -3103,13 +3077,13 @@ public class SysCmds {
                     continue;
                 }
                 if (shader.GetEntityGui() > 0) {
-                    surfaces[ guiSurfaces[0]++] = surf;
+                    surfaces[guiSurfaces[0]++] = surf;
                 }
             }
 
             return (guiSurfaces[0] != 0);
         }
-    };
+    }
 
     public static class ArgCompletion_DefFile extends argCompletion_t {
 
@@ -3126,7 +3100,7 @@ public class SysCmds {
         public void run(idCmdArgs args, void_callback<String> callback) {
             cmdSystem.ArgCompletion_FolderExtension(args, callback, "def/", true, ".def", null);
         }
-    };
+    }
 
     /*
      ===============
@@ -3162,5 +3136,6 @@ public class SysCmds {
             }
             gameLocal.mpGame.AddChatLine(common.GetLanguageDict().GetString(id), "<nothing>", "<nothing>", "<nothing>");
         }
-    };
+    }
+
 }

@@ -5,6 +5,18 @@ package neo.Game.GameSys;
  */
 public class NoGameTypeInfo {
 
+    static classTypeInfo_t[] classTypeInfo = {
+            new classTypeInfo_t(null, null, 0, null)
+    };
+
+    static constantInfo_t[] constantInfo = {
+            new constantInfo_t(null, null, null)
+    };
+
+    static enumTypeInfo_t[] enumTypeInfo = {
+            new enumTypeInfo_t(null, null)
+    };
+
     /*
      ===================================================================================
 
@@ -23,7 +35,7 @@ public class NoGameTypeInfo {
             this.type = type;
             this.value = value;
         }
-    };
+    }
 
     static class enumValueInfo_t {
 
@@ -34,7 +46,7 @@ public class NoGameTypeInfo {
             this.name = name;
             this.value = value;
         }
-    };
+    }
 
     static class enumTypeInfo_t {
 
@@ -45,21 +57,21 @@ public class NoGameTypeInfo {
             this.typeName = typeName;
             this.values = values;
         }
-    };
+    }
 
     static class classVariableInfo_t {
 
-        String type;
         String name;
         int offset;
         int size;
-    };
+        String type;
+    }
 
     static class classTypeInfo_t {
 
-        String typeName;
-        String superType;
         int size;
+        String superType;
+        String typeName;
         classVariableInfo_t[] variables;
 
         public classTypeInfo_t(String typeName, String superType, int size, classVariableInfo_t[] variables) {
@@ -68,17 +80,5 @@ public class NoGameTypeInfo {
             this.size = size;
             this.variables = variables;
         }
-    };
-    
-    static constantInfo_t[] constantInfo = {
-        new constantInfo_t(null, null, null)
-    };
-    
-    static enumTypeInfo_t[] enumTypeInfo = {
-        new enumTypeInfo_t(null, null)
-    };
-    
-    static classTypeInfo_t[] classTypeInfo = {
-        new classTypeInfo_t(null, null, 0, null)
-    };
+    }
 }

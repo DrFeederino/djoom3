@@ -23,12 +23,16 @@ public class Surface_SweptSpline {
      */
     class idSurface_SweptSpline extends idSurface {
 
+        //
+        protected idCurve_Spline<idVec4> spline;
+//	public						~idSurface_SweptSpline( void );
+//
+        protected idCurve_Spline<idVec4> sweptSpline;
+
         public idSurface_SweptSpline() {
             spline = null;
             sweptSpline = null;
         }
-//	public						~idSurface_SweptSpline( void );
-//
 
         public void SetSpline(idCurve_Spline<idVec4> spline) {
 //            if (null != this.spline) {
@@ -37,6 +41,7 @@ public class Surface_SweptSpline {
 //            }
             this.spline = spline;
         }
+//
 
         public void SetSweptSpline(idCurve_Spline<idVec4> sweptSpline) {
 //            if (null != this.sweptSpline) {
@@ -68,7 +73,6 @@ public class Surface_SweptSpline {
 //            }
             sweptSpline = nurbs;
         }
-//
 
         /*
          ====================
@@ -167,10 +171,6 @@ public class Surface_SweptSpline {
             sweptSpline = null;
             sweptSpline = null;
         }
-
-        //
-        protected idCurve_Spline<idVec4> spline;
-        protected idCurve_Spline<idVec4> sweptSpline;
 //
 
         protected void GetFrame(final idMat3 previousFrame, final idVec3 dir, idMat3 newFrame) {
@@ -229,5 +229,4 @@ public class Surface_SweptSpline {
         }
     }
 
-    ;
 }

@@ -1,23 +1,11 @@
 package neo.Game;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-
-import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.EV_SetAngularVelocity;
-import static neo.Game.Entity.EV_SetLinearVelocity;
-import static neo.Game.Entity.EV_SetOwner;
-import static neo.Game.Entity.TH_THINK;
-import neo.Game.Entity.idEntity;
+import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Class;
-import static neo.Game.GameSys.Class.EV_Remove;
-
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t0;
 import neo.Game.GameSys.Class.eventCallback_t1;
@@ -25,45 +13,13 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.MASK_SOLID;
-import static neo.Game.Game_local.MAX_EVENT_PARAM_SIZE;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Moveable.idExplodingBarrel.explode_state_t.BURNEXPIRED;
-import static neo.Game.Moveable.idExplodingBarrel.explode_state_t.BURNING;
-import static neo.Game.Moveable.idExplodingBarrel.explode_state_t.EXPLODING;
-import static neo.Game.Moveable.idExplodingBarrel.explode_state_t.NORMAL;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
-import static neo.Game.Projectile.EV_Explode;
 import neo.Game.Projectile.idDebris;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_CORPSE;
-import static neo.Renderer.Material.CONTENTS_MOVEABLECLIP;
-import static neo.Renderer.Material.CONTENTS_RENDERMODEL;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.Renderer.RenderWorld.SHADERPARM_ALPHA;
-import static neo.Renderer.RenderWorld.SHADERPARM_BLUE;
-import static neo.Renderer.RenderWorld.SHADERPARM_DIVERSITY;
-import static neo.Renderer.RenderWorld.SHADERPARM_GREEN;
-import static neo.Renderer.RenderWorld.SHADERPARM_RED;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIME_OF_DEATH;
-import neo.Renderer.RenderWorld.renderEntity_s;
-import neo.Renderer.RenderWorld.renderLight_s;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
-import static neo.framework.UsercmdGen.USERCMD_HZ;
+import neo.Renderer.Material.*;
+import neo.Renderer.RenderWorld.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
@@ -72,20 +28,43 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Curve.idCurve_Spline;
-import static neo.idlib.math.Math_h.MS2SEC;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Rotation.idRotation;
+import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
+import static neo.Game.Entity.*;
+import static neo.Game.GameSys.Class.EV_Remove;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
+import static neo.Game.Moveable.idExplodingBarrel.explode_state_t.*;
+import static neo.Game.Projectile.EV_Explode;
+import static neo.Renderer.Material.*;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.Renderer.RenderWorld.*;
+import static neo.TempDump.*;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
+import static neo.framework.UsercmdGen.USERCMD_HZ;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
  */
 public class Moveable {
 
+    public static final float BOUNCE_SOUND_MAX_VELOCITY = 200.0f;
+    //
+    public static final float BOUNCE_SOUND_MIN_VELOCITY = 80.0f;
     /*
      ===============================================================================
 
@@ -97,21 +76,31 @@ public class Moveable {
      ===============================================================================
 
      idMoveable
-	
+
      ===============================================================================
      */
     public static final idEventDef EV_BecomeNonSolid = new idEventDef("becomeNonSolid");
-    public static final idEventDef EV_SetOwnerFromSpawnArgs = new idEventDef("<setOwnerFromSpawnArgs>");
-    public static final idEventDef EV_IsAtRest = new idEventDef("isAtRest", null, 'd');
     public static final idEventDef EV_EnableDamage = new idEventDef("enableDamage", "f");
-//    
-    public static final float BOUNCE_SOUND_MIN_VELOCITY = 80.0f;
-    public static final float BOUNCE_SOUND_MAX_VELOCITY = 200.0f;
+    public static final idEventDef EV_IsAtRest = new idEventDef("isAtRest", null, 'd');
+    /*
+     ===============================================================================
+
+     A barrel using rigid body physics and special handling of the view model
+     orientation to make it look like it rolls instead of slides. The barrel
+     can burn and explode when damaged.
+
+     ===============================================================================
+     */
+    public static final idEventDef EV_Respawn = new idEventDef("<respawn>");
 //
+    public static final idEventDef EV_SetOwnerFromSpawnArgs = new idEventDef("<setOwnerFromSpawnArgs>");
+
+    public static final idEventDef EV_TriggerTargets = new idEventDef("<triggertargets>");
 
     public static class idMoveable extends idEntity {
         // CLASS_PROTOTYPE( idMoveable );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idMoveable>) idMoveable::Event_Activate);
@@ -121,22 +110,21 @@ public class Moveable {
             eventCallbacks.put(EV_EnableDamage, (eventCallback_t1<idMoveable>) idMoveable::Event_EnableDamage);
         }
 
-
-        protected idPhysics_RigidBody    physicsObj;       // physics object
-        protected idStr                  brokenModel;      // model set when health drops down to or below zero
-        protected idStr                  damage;           // if > 0 apply damage to hit entities
-        protected idStr                  fxCollide;        // fx system to start when collides with something
-        protected int                    nextCollideFxTime;// next time it is ok to spawn collision fx
-        protected float                  minDamageVelocity;// minimum velocity before moveable applies damage
-        protected float                  maxDamageVelocity;// velocity at which the maximum damage is applied
+        protected boolean allowStep;        // allow monsters to step on the object
+        protected idStr brokenModel;      // model set when health drops down to or below zero
+        protected boolean canDamage;        // only apply damage when this is set
+        protected idStr damage;           // if > 0 apply damage to hit entities
+        protected boolean explode;          // entity explodes when health drops down to or below zero
+        protected idStr fxCollide;        // fx system to start when collides with something
         protected idCurve_Spline<idVec3> initialSpline;    // initial spline path the moveable follows
-        protected idVec3                 initialSplineDir; // initial relative direction along the spline path
-        protected boolean                explode;          // entity explodes when health drops down to or below zero
-        protected boolean                unbindOnDeath;    // unbind from master when health drops down to or below zero
-        protected boolean                allowStep;        // allow monsters to step on the object
-        protected boolean                canDamage;        // only apply damage when this is set
-        protected int                    nextDamageTime;   // next time the movable can hurt the player
-        protected int                    nextSoundTime;    // next time the moveable can make a sound
+        protected idVec3 initialSplineDir; // initial relative direction along the spline path
+        protected float maxDamageVelocity;// velocity at which the maximum damage is applied
+        protected float minDamageVelocity;// minimum velocity before moveable applies damage
+        protected int nextCollideFxTime;// next time it is ok to spawn collision fx
+        protected int nextDamageTime;   // next time the movable can hurt the player
+        protected int nextSoundTime;    // next time the moveable can make a sound
+        protected idPhysics_RigidBody physicsObj;       // physics object
+        protected boolean unbindOnDeath;    // unbind from master when health drops down to or below zero
         //
         //
 
@@ -157,10 +145,14 @@ public class Moveable {
         }
         // ~idMoveable( void );
 
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
+
         @Override
         public void Spawn() {
             super.Spawn();
-            
+
             idTraceModel trm = new idTraceModel();
             float[] density = {0}, friction = {0}, bouncyness = {0}, mass = {0};
             int clipShrink;
@@ -169,11 +161,11 @@ public class Moveable {
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", clipModelName);
             if (!isNotNullOrEmpty(clipModelName)) {
-                clipModelName.oSet(spawnArgs.GetString("model"));		// use the visual model
+                clipModelName.oSet(spawnArgs.GetString("model"));        // use the visual model
             }
 
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)) {
-                gameLocal.Error("idMoveable '%s': cannot load collision model %s", name, clipModelName);
+                idGameLocal.Error("idMoveable '%s': cannot load collision model %s", name, clipModelName);
                 return;
             }
 
@@ -209,7 +201,7 @@ public class Moveable {
 
             if (health != 0) {
                 if (!brokenModel.IsEmpty() && NOT(renderModelManager.CheckModel(brokenModel.toString()))) {
-                    gameLocal.Error("idMoveable '%s' at (%s): cannot load broken model '%s'", name, GetPhysics().GetOrigin().ToString(0), brokenModel);
+                    idGameLocal.Error("idMoveable '%s' at (%s): cannot load broken model '%s'", name, GetPhysics().GetOrigin().ToString(0), brokenModel);
                 }
             }
 
@@ -352,7 +344,7 @@ public class Moveable {
             }
 
             if (canDamage && damage.Length() != 0 && gameLocal.time > nextDamageTime) {
-                ent = gameLocal.entities[ collision.c.entityNum];
+                ent = gameLocal.entities[collision.c.entityNum];
                 if (ent != null && v > minDamageVelocity) {
                     f = v > maxDamageVelocity ? 1.0f : idMath.Sqrt(v - minDamageVelocity) * (1.0f / idMath.Sqrt(maxDamageVelocity - minDamageVelocity));
                     dir = velocity;
@@ -386,8 +378,8 @@ public class Moveable {
                 }
             }
 
-            if (renderEntity.gui[ 0] != null) {
-                renderEntity.gui[ 0] = null;
+            if (renderEntity.gui[0] != null) {
+                renderEntity.gui[0] = null;
             }
 
             ActivateTargets(this);
@@ -531,11 +523,7 @@ public class Moveable {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
-
-    };
+    }
 
     /*
      ===============================================================================
@@ -549,18 +537,18 @@ public class Moveable {
      ===============================================================================
 
      idBarrel
-	
+
      ===============================================================================
      */
     public static class idBarrel extends idMoveable {
         // CLASS_PROTOTYPE( idBarrel );
 
-        private float  radius;              // radius of barrel
-        private int    barrelAxis;          // one of the coordinate axes the barrel cylinder is parallel to
-        private idVec3 lastOrigin;          // origin of the barrel the last think frame
-        private idMat3 lastAxis;            // axis of the barrel the last think frame
-        private float  additionalRotation;  // additional rotation of the barrel about it's axis
         private idMat3 additionalAxis;      // additional rotation axis
+        private float additionalRotation;  // additional rotation of the barrel about it's axis
+        private int barrelAxis;          // one of the coordinate axes the barrel cylinder is parallel to
+        private idMat3 lastAxis;            // axis of the barrel the last think frame
+        private idVec3 lastOrigin;          // origin of the barrel the last think frame
+        private float radius;              // radius of barrel
         //
         //
 
@@ -703,19 +691,7 @@ public class Moveable {
             Think();
         }
 
-    };
-
-    /*
-     ===============================================================================
-
-     A barrel using rigid body physics and special handling of the view model
-     orientation to make it look like it rolls instead of slides. The barrel
-     can burn and explode when damaged.
-
-     ===============================================================================
-     */
-    public static final idEventDef EV_Respawn = new idEventDef("<respawn>");
-    public static final idEventDef EV_TriggerTargets = new idEventDef("<triggertargets>");
+    }
 
     /*
      ===============================================================================
@@ -725,8 +701,12 @@ public class Moveable {
      ===============================================================================
      */
     public static class idExplodingBarrel extends idBarrel {
+        // enum {
+        public static final int EVENT_EXPLODE = idEntity.EVENT_MAXEVENTS;
+        public static final int EVENT_MAXEVENTS = EVENT_EXPLODE + 1;
         // CLASS_PROTOTYPE( idExplodingBarrel );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idBarrel.getEventCallBacks());
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idExplodingBarrel>) idExplodingBarrel::Event_Activate);
@@ -734,34 +714,21 @@ public class Moveable {
             eventCallbacks.put(EV_Explode, (eventCallback_t0<idExplodingBarrel>) idExplodingBarrel::Event_Explode);
             eventCallbacks.put(EV_TriggerTargets, (eventCallback_t0<idExplodingBarrel>) idExplodingBarrel::Event_TriggerTargets);
         }
-
-        // enum {
-        public static final int EVENT_EXPLODE = idEntity.EVENT_MAXEVENTS;
-        public static final int EVENT_MAXEVENTS = EVENT_EXPLODE + 1;
         // };
 //
 //
 
-        protected enum explode_state_t {
+        private renderLight_s light;
 
-            NORMAL,//= 0,
-            BURNING,
-            BURNEXPIRED,
-            EXPLODING
-        };
-        private explode_state_t  state;
-        private idVec3           spawnOrigin;
-        private idMat3           spawnAxis;
-        private int/*qhandle_t*/ particleModelDefHandle;
         private int/*qhandle_t*/ lightDefHandle;
-        private renderEntity_s   particleRenderEntity;
-        private renderLight_s    light;
-        private int              particleTime;
-        private int              lightTime;
-        private float            time;
-        //
-        //
-
+        private int lightTime;
+        private int/*qhandle_t*/ particleModelDefHandle;
+        private renderEntity_s particleRenderEntity;
+        private int particleTime;
+        private idMat3 spawnAxis;
+        private idVec3 spawnOrigin;
+        private explode_state_t state;
+        private float time;
         public idExplodingBarrel() {
             spawnOrigin = new idVec3();
             spawnAxis = new idMat3();
@@ -775,6 +742,12 @@ public class Moveable {
             particleTime = 0;
             lightTime = 0;
             time = 0.0f;
+        }
+        //
+        //
+
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
         }
 
         // ~idExplodingBarrel();
@@ -854,10 +827,10 @@ public class Moveable {
                     }
                     light.origin = physicsObj.GetAbsBounds().GetCenter();
                     light.axis = getMat3_identity();
-                    light.shaderParms[ SHADERPARM_RED] = pct;
-                    light.shaderParms[ SHADERPARM_GREEN] = pct;
-                    light.shaderParms[ SHADERPARM_BLUE] = pct;
-                    light.shaderParms[ SHADERPARM_ALPHA] = pct;
+                    light.shaderParms[SHADERPARM_RED] = pct;
+                    light.shaderParms[SHADERPARM_GREEN] = pct;
+                    light.shaderParms[SHADERPARM_BLUE] = pct;
+                    light.shaderParms[SHADERPARM_ALPHA] = pct;
                     gameRenderWorld.UpdateLightDef(lightDefHandle, light);
                 } else {
                     if (gameLocal.time - lightTime > 250) {
@@ -882,11 +855,11 @@ public class Moveable {
 
         @Override
         public void Damage(idEntity inflictor, idEntity attacker, final idVec3 dir,
-                final String damageDefName, final float damageScale, final int location) {
+                           final String damageDefName, final float damageScale, final int location) {
 
             final idDict damageDef = gameLocal.FindEntityDefDict(damageDefName);
             if (null == damageDef) {
-                gameLocal.Error("Unknown damageDef '%s'\n", damageDefName);
+                idGameLocal.Error("Unknown damageDef '%s'\n", damageDefName);
             }
             if (damageDef.FindKey("radius") != null && GetPhysics().GetContents() != 0 && GetBindMaster() == null) {
                 PostEventMS(EV_Explode, 400);
@@ -953,13 +926,13 @@ public class Moveable {
 
                     gameLocal.SpawnEntityDef(debris_args, ent, false);
                     if (null == ent[0] || !ent[0].IsType(idDebris.class)) {
-                        gameLocal.Error("'projectile_debris' is not an idDebris");
+                        idGameLocal.Error("'projectile_debris' is not an idDebris");
                     }
 
                     debris = (idDebris) ent[0];
                     debris.Create(this, physicsObj.GetOrigin(), dir2.ToMat3());
                     debris.Launch();
-                    debris.GetRenderEntity().shaderParms[ SHADERPARM_TIME_OF_DEATH] = (gameLocal.time + 1500) * 0.001f;
+                    debris.GetRenderEntity().shaderParms[SHADERPARM_TIME_OF_DEATH] = (gameLocal.time + 1500) * 0.001f;
                     debris.UpdateVisuals();
 
                 }
@@ -1029,12 +1002,12 @@ public class Moveable {
                     particleRenderEntity.axis.oSet(getMat3_identity());
                     particleRenderEntity.hModel = modelDef.ModelHandle();
                     float rgb = (burn) ? 0.0f : 1.0f;
-                    particleRenderEntity.shaderParms[ SHADERPARM_RED] = rgb;
-                    particleRenderEntity.shaderParms[ SHADERPARM_GREEN] = rgb;
-                    particleRenderEntity.shaderParms[ SHADERPARM_BLUE] = rgb;
-                    particleRenderEntity.shaderParms[ SHADERPARM_ALPHA] = rgb;
-                    particleRenderEntity.shaderParms[ SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.realClientTime);
-                    particleRenderEntity.shaderParms[ SHADERPARM_DIVERSITY] = (burn) ? 1.0f : gameLocal.random.RandomInt(90);
+                    particleRenderEntity.shaderParms[SHADERPARM_RED] = rgb;
+                    particleRenderEntity.shaderParms[SHADERPARM_GREEN] = rgb;
+                    particleRenderEntity.shaderParms[SHADERPARM_BLUE] = rgb;
+                    particleRenderEntity.shaderParms[SHADERPARM_ALPHA] = rgb;
+                    particleRenderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.realClientTime);
+                    particleRenderEntity.shaderParms[SHADERPARM_DIVERSITY] = (burn) ? 1.0f : gameLocal.random.RandomInt(90);
                     if (null == particleRenderEntity.hModel) {
                         particleRenderEntity.hModel = renderModelManager.FindModel(name);
                     }
@@ -1060,10 +1033,10 @@ public class Moveable {
             light.origin.z += 128;
             light.pointLight = true;
             light.shader = declManager.FindMaterial(name);
-            light.shaderParms[ SHADERPARM_RED] = 2.0f;
-            light.shaderParms[ SHADERPARM_GREEN] = 2.0f;
-            light.shaderParms[ SHADERPARM_BLUE] = 2.0f;
-            light.shaderParms[ SHADERPARM_ALPHA] = 2.0f;
+            light.shaderParms[SHADERPARM_RED] = 2.0f;
+            light.shaderParms[SHADERPARM_GREEN] = 2.0f;
+            light.shaderParms[SHADERPARM_BLUE] = 2.0f;
+            light.shaderParms[SHADERPARM_ALPHA] = 2.0f;
             lightDefHandle = gameRenderWorld.AddLightDef(light);
             lightTime = gameLocal.realClientTime;
             BecomeActive(TH_THINK);
@@ -1152,9 +1125,14 @@ public class Moveable {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
+        protected enum explode_state_t {
+
+            NORMAL,//= 0,
+            BURNING,
+            BURNEXPIRED,
+            EXPLODING
         }
 
-    };
+    }
+
 }

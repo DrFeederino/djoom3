@@ -1,23 +1,19 @@
 package neo.idlib.BV;
 
-import java.util.Objects;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Sphere.idSphere;
-import static neo.idlib.math.Math_h.FLOATNOTZERO;
-import static neo.idlib.math.Math_h.FLOATSIGNBITNOTSET;
-import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
-import static neo.idlib.math.Math_h.Min3Index;
-import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMatX;
-import static neo.idlib.math.Plane.ON_EPSILON;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVecX;
+
+import java.util.Objects;
+
+import static neo.idlib.math.Math_h.*;
+import static neo.idlib.math.Plane.*;
 
 /**
  *
@@ -45,7 +41,6 @@ public class Box {
 //      3 = max y
 //      4 = min z
 //      5 = max z
-
 
 
     /*
@@ -110,71 +105,98 @@ public class Box {
      };
      */
     static final int[][] boxPlaneBitsSilVerts = {
-        {0, 0, 0, 0, 0, 0, 0}, // 000000 = 0
-        {4, 7, 4, 0, 3, 0, 0}, // 000001 = 1
-        {4, 5, 6, 2, 1, 0, 0}, // 000010 = 2
-        {0, 0, 0, 0, 0, 0, 0}, // 000011 = 3
-        {4, 4, 5, 1, 0, 0, 0}, // 000100 = 4
-        {6, 3, 7, 4, 5, 1, 0}, // 000101 = 5
-        {6, 4, 5, 6, 2, 1, 0}, // 000110 = 6
-        {0, 0, 0, 0, 0, 0, 0}, // 000111 = 7
-        {4, 6, 7, 3, 2, 0, 0}, // 001000 = 8
-        {6, 6, 7, 4, 0, 3, 2}, // 001001 = 9
-        {6, 5, 6, 7, 3, 2, 1}, // 001010 = 10
-        {0, 0, 0, 0, 0, 0, 0}, // 001011 = 11
-        {0, 0, 0, 0, 0, 0, 0}, // 001100 = 12
-        {0, 0, 0, 0, 0, 0, 0}, // 001101 = 13
-        {0, 0, 0, 0, 0, 0, 0}, // 001110 = 14
-        {0, 0, 0, 0, 0, 0, 0}, // 001111 = 15
-        {4, 0, 1, 2, 3, 0, 0}, // 010000 = 16
-        {6, 0, 1, 2, 3, 7, 4}, // 010001 = 17
-        {6, 3, 2, 6, 5, 1, 0}, // 010010 = 18
-        {0, 0, 0, 0, 0, 0, 0}, // 010011 = 19
-        {6, 1, 2, 3, 0, 4, 5}, // 010100 = 20
-        {6, 1, 2, 3, 7, 4, 5}, // 010101 = 21
-        {6, 2, 3, 0, 4, 5, 6}, // 010110 = 22
-        {0, 0, 0, 0, 0, 0, 0}, // 010111 = 23
-        {6, 0, 1, 2, 6, 7, 3}, // 011000 = 24
-        {6, 0, 1, 2, 6, 7, 4}, // 011001 = 25
-        {6, 0, 1, 5, 6, 7, 3}, // 011010 = 26
-        {0, 0, 0, 0, 0, 0, 0}, // 011011 = 27
-        {0, 0, 0, 0, 0, 0, 0}, // 011100 = 28
-        {0, 0, 0, 0, 0, 0, 0}, // 011101 = 29
-        {0, 0, 0, 0, 0, 0, 0}, // 011110 = 30
-        {0, 0, 0, 0, 0, 0, 0}, // 011111 = 31
-        {4, 7, 6, 5, 4, 0, 0}, // 100000 = 32
-        {6, 7, 6, 5, 4, 0, 3}, // 100001 = 33
-        {6, 5, 4, 7, 6, 2, 1}, // 100010 = 34
-        {0, 0, 0, 0, 0, 0, 0}, // 100011 = 35
-        {6, 4, 7, 6, 5, 1, 0}, // 100100 = 36
-        {6, 3, 7, 6, 5, 1, 0}, // 100101 = 37
-        {6, 4, 7, 6, 2, 1, 0}, // 100110 = 38
-        {0, 0, 0, 0, 0, 0, 0}, // 100111 = 39
-        {6, 6, 5, 4, 7, 3, 2}, // 101000 = 40
-        {6, 6, 5, 4, 0, 3, 2}, // 101001 = 41
-        {6, 5, 4, 7, 3, 2, 1}, // 101010 = 42
-        {0, 0, 0, 0, 0, 0, 0}, // 101011 = 43
-        {0, 0, 0, 0, 0, 0, 0}, // 101100 = 44
-        {0, 0, 0, 0, 0, 0, 0}, // 101101 = 45
-        {0, 0, 0, 0, 0, 0, 0}, // 101110 = 46
-        {0, 0, 0, 0, 0, 0, 0}, // 101111 = 47
-        {0, 0, 0, 0, 0, 0, 0}, // 110000 = 48
-        {0, 0, 0, 0, 0, 0, 0}, // 110001 = 49
-        {0, 0, 0, 0, 0, 0, 0}, // 110010 = 50
-        {0, 0, 0, 0, 0, 0, 0}, // 110011 = 51
-        {0, 0, 0, 0, 0, 0, 0}, // 110100 = 52
-        {0, 0, 0, 0, 0, 0, 0}, // 110101 = 53
-        {0, 0, 0, 0, 0, 0, 0}, // 110110 = 54
-        {0, 0, 0, 0, 0, 0, 0}, // 110111 = 55
-        {0, 0, 0, 0, 0, 0, 0}, // 111000 = 56
-        {0, 0, 0, 0, 0, 0, 0}, // 111001 = 57
-        {0, 0, 0, 0, 0, 0, 0}, // 111010 = 58
-        {0, 0, 0, 0, 0, 0, 0}, // 111011 = 59
-        {0, 0, 0, 0, 0, 0, 0}, // 111100 = 60
-        {0, 0, 0, 0, 0, 0, 0}, // 111101 = 61
-        {0, 0, 0, 0, 0, 0, 0}, // 111110 = 62
-        {0, 0, 0, 0, 0, 0, 0}, // 111111 = 63
+            {0, 0, 0, 0, 0, 0, 0}, // 000000 = 0
+            {4, 7, 4, 0, 3, 0, 0}, // 000001 = 1
+            {4, 5, 6, 2, 1, 0, 0}, // 000010 = 2
+            {0, 0, 0, 0, 0, 0, 0}, // 000011 = 3
+            {4, 4, 5, 1, 0, 0, 0}, // 000100 = 4
+            {6, 3, 7, 4, 5, 1, 0}, // 000101 = 5
+            {6, 4, 5, 6, 2, 1, 0}, // 000110 = 6
+            {0, 0, 0, 0, 0, 0, 0}, // 000111 = 7
+            {4, 6, 7, 3, 2, 0, 0}, // 001000 = 8
+            {6, 6, 7, 4, 0, 3, 2}, // 001001 = 9
+            {6, 5, 6, 7, 3, 2, 1}, // 001010 = 10
+            {0, 0, 0, 0, 0, 0, 0}, // 001011 = 11
+            {0, 0, 0, 0, 0, 0, 0}, // 001100 = 12
+            {0, 0, 0, 0, 0, 0, 0}, // 001101 = 13
+            {0, 0, 0, 0, 0, 0, 0}, // 001110 = 14
+            {0, 0, 0, 0, 0, 0, 0}, // 001111 = 15
+            {4, 0, 1, 2, 3, 0, 0}, // 010000 = 16
+            {6, 0, 1, 2, 3, 7, 4}, // 010001 = 17
+            {6, 3, 2, 6, 5, 1, 0}, // 010010 = 18
+            {0, 0, 0, 0, 0, 0, 0}, // 010011 = 19
+            {6, 1, 2, 3, 0, 4, 5}, // 010100 = 20
+            {6, 1, 2, 3, 7, 4, 5}, // 010101 = 21
+            {6, 2, 3, 0, 4, 5, 6}, // 010110 = 22
+            {0, 0, 0, 0, 0, 0, 0}, // 010111 = 23
+            {6, 0, 1, 2, 6, 7, 3}, // 011000 = 24
+            {6, 0, 1, 2, 6, 7, 4}, // 011001 = 25
+            {6, 0, 1, 5, 6, 7, 3}, // 011010 = 26
+            {0, 0, 0, 0, 0, 0, 0}, // 011011 = 27
+            {0, 0, 0, 0, 0, 0, 0}, // 011100 = 28
+            {0, 0, 0, 0, 0, 0, 0}, // 011101 = 29
+            {0, 0, 0, 0, 0, 0, 0}, // 011110 = 30
+            {0, 0, 0, 0, 0, 0, 0}, // 011111 = 31
+            {4, 7, 6, 5, 4, 0, 0}, // 100000 = 32
+            {6, 7, 6, 5, 4, 0, 3}, // 100001 = 33
+            {6, 5, 4, 7, 6, 2, 1}, // 100010 = 34
+            {0, 0, 0, 0, 0, 0, 0}, // 100011 = 35
+            {6, 4, 7, 6, 5, 1, 0}, // 100100 = 36
+            {6, 3, 7, 6, 5, 1, 0}, // 100101 = 37
+            {6, 4, 7, 6, 2, 1, 0}, // 100110 = 38
+            {0, 0, 0, 0, 0, 0, 0}, // 100111 = 39
+            {6, 6, 5, 4, 7, 3, 2}, // 101000 = 40
+            {6, 6, 5, 4, 0, 3, 2}, // 101001 = 41
+            {6, 5, 4, 7, 3, 2, 1}, // 101010 = 42
+            {0, 0, 0, 0, 0, 0, 0}, // 101011 = 43
+            {0, 0, 0, 0, 0, 0, 0}, // 101100 = 44
+            {0, 0, 0, 0, 0, 0, 0}, // 101101 = 45
+            {0, 0, 0, 0, 0, 0, 0}, // 101110 = 46
+            {0, 0, 0, 0, 0, 0, 0}, // 101111 = 47
+            {0, 0, 0, 0, 0, 0, 0}, // 110000 = 48
+            {0, 0, 0, 0, 0, 0, 0}, // 110001 = 49
+            {0, 0, 0, 0, 0, 0, 0}, // 110010 = 50
+            {0, 0, 0, 0, 0, 0, 0}, // 110011 = 51
+            {0, 0, 0, 0, 0, 0, 0}, // 110100 = 52
+            {0, 0, 0, 0, 0, 0, 0}, // 110101 = 53
+            {0, 0, 0, 0, 0, 0, 0}, // 110110 = 54
+            {0, 0, 0, 0, 0, 0, 0}, // 110111 = 55
+            {0, 0, 0, 0, 0, 0, 0}, // 111000 = 56
+            {0, 0, 0, 0, 0, 0, 0}, // 111001 = 57
+            {0, 0, 0, 0, 0, 0, 0}, // 111010 = 58
+            {0, 0, 0, 0, 0, 0, 0}, // 111011 = 59
+            {0, 0, 0, 0, 0, 0, 0}, // 111100 = 60
+            {0, 0, 0, 0, 0, 0, 0}, // 111101 = 61
+            {0, 0, 0, 0, 0, 0, 0}, // 111110 = 62
+            {0, 0, 0, 0, 0, 0, 0}, // 111111 = 63
     };
+
+    /*
+     ============
+     BoxPlaneClip
+     ============
+     */
+    static boolean BoxPlaneClip(final float denom, final float numer, float[] scale0, float[] scale1) {
+        if (denom > 0.0f) {
+            if (numer > denom * scale1[0]) {
+                return false;
+            }
+            if (numer > denom * scale0[0]) {
+                scale0[0] = numer / denom;
+            }
+            return true;
+        } else if (denom < 0.0f) {
+            if (numer > denom * scale0[0]) {
+                return false;
+            }
+            if (numer > denom * scale1[0]) {
+                scale1[0] = numer / denom;
+            }
+            return true;
+        } else {
+            return (numer <= 0.0f);
+        }
+    }
 
     /*
      ===============================================================================
@@ -185,9 +207,9 @@ public class Box {
      */
     public static class idBox {
 
-        private idVec3 center  = new idVec3();
+        private idMat3 axis = new idMat3();
+        private idVec3 center = new idVec3();
         private idVec3 extents = new idVec3();
-        private idMat3 axis    = new idMat3();
         //
         //
 
@@ -303,10 +325,7 @@ public class Box {
             if (!Objects.equals(this.extents, other.extents)) {
                 return false;
             }
-            if (!Objects.equals(this.axis, other.axis)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(this.axis, other.axis);
         }
 //
 
@@ -476,31 +495,31 @@ public class Box {
             return false;
         }
 
-        public idBox Expand(final float d) {					// return box expanded in all directions with the given value
+        public idBox Expand(final float d) {                    // return box expanded in all directions with the given value
             return new idBox(center, extents.oPlus(new idVec3(d, d, d)), axis);
         }
 
-        public idBox ExpandSelf(final float d) {					// expand box in all directions with the given value 
+        public idBox ExpandSelf(final float d) {                    // expand box in all directions with the given value
             extents.oPluSet(0, d);
             extents.oPluSet(1, d);
             extents.oPluSet(2, d);
             return this;
         }
 
-        public idBox Translate(final idVec3 translation) {	// return translated box
+        public idBox Translate(final idVec3 translation) {    // return translated box
             return new idBox(center.oPlus(translation), extents, axis);
         }
 
-        public idBox TranslateSelf(final idVec3 translation) {		// translate this box
+        public idBox TranslateSelf(final idVec3 translation) {        // translate this box
             center.oPluSet(translation);
             return this;
         }
 
-        public idBox Rotate(final idMat3 rotation) {			// return rotated box
+        public idBox Rotate(final idMat3 rotation) {            // return rotated box
             return new idBox(center.oMultiply(rotation), extents, axis.oMultiply(rotation));
         }
 
-        public idBox RotateSelf(final idMat3 rotation) {			// rotate this box
+        public idBox RotateSelf(final idMat3 rotation) {            // rotate this box
             center.oMulSet(rotation);
             axis.oMulSet(rotation);
             return this;
@@ -546,22 +565,19 @@ public class Box {
         }
 //
 
-        public boolean ContainsPoint(final idVec3 p) {			// includes touching
+        public boolean ContainsPoint(final idVec3 p) {            // includes touching
             idVec3 lp = p.oMinus(center);
-            if (idMath.Fabs(lp.oMultiply(axis.oGet(0))) > extents.oGet(0)
-                    || idMath.Fabs(lp.oMultiply(axis.oGet(1))) > extents.oGet(1)
-                    || idMath.Fabs(lp.oMultiply(axis.oGet(2))) > extents.oGet(2)) {
-                return false;
-            }
-            return true;
+            return !(idMath.Fabs(lp.oMultiply(axis.oGet(0))) > extents.oGet(0))
+                    && !(idMath.Fabs(lp.oMultiply(axis.oGet(1))) > extents.oGet(1))
+                    && !(idMath.Fabs(lp.oMultiply(axis.oGet(2))) > extents.oGet(2));
         }
 
-        public boolean IntersectsBox(final idBox a) {			// includes touching
-            idVec3 dir;			// vector between centers
-            final float[][] c = new float[3][3];		// matrix c = axis.Transpose() * a.axis
-            final float[][] ac = new float[3][3];		// absolute values of c
-            final float[] axisdir = new float[3];	// axis[i] * dir
-            float d, e0, e1;	// distance between centers and projected extents
+        public boolean IntersectsBox(final idBox a) {            // includes touching
+            idVec3 dir;            // vector between centers
+            final float[][] c = new float[3][3];        // matrix c = axis.Transpose() * a.axis
+            final float[][] ac = new float[3][3];        // absolute values of c
+            final float[] axisdir = new float[3];    // axis[i] * dir
+            float d, e0, e1;    // distance between centers and projected extents
 
             dir = a.center.oMinus(center);
 
@@ -705,10 +721,7 @@ public class Box {
             d = idMath.Fabs(axisdir[1] * c[0][2] - axisdir[0] * c[1][2]);
             e0 = extents.oGet(0) * ac[1][2] + extents.oGet(1) * ac[0][2];
             e1 = a.extents.oGet(0) * ac[2][1] + a.extents.oGet(1) * ac[2][0];
-            if (d > e0 + e1) {
-                return false;
-            }
-            return true;
+            return !(d > e0 + e1);
         }
 
         /*
@@ -749,11 +762,7 @@ public class Box {
                 return false;
             }
 
-            if (idMath.Fabs(cross.oMultiply(axis.oGet(2))) > extents.oGet(0) * ld[1] + extents.oGet(1) * ld[0]) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(cross.oMultiply(axis.oGet(2))) > extents.oGet(0) * ld[1] + extents.oGet(1) * ld[0]);
         }
 
         /*
@@ -994,32 +1003,5 @@ public class Box {
             return index[0];
         }
 
-    };
-
-    /*
-     ============
-     BoxPlaneClip
-     ============
-     */
-    static boolean BoxPlaneClip(final float denom, final float numer, float[] scale0, float[] scale1) {
-        if (denom > 0.0f) {
-            if (numer > denom * scale1[0]) {
-                return false;
-            }
-            if (numer > denom * scale0[0]) {
-                scale0[0] = numer / denom;
-            }
-            return true;
-        } else if (denom < 0.0f) {
-            if (numer > denom * scale0[0]) {
-                return false;
-            }
-            if (numer > denom * scale1[0]) {
-                scale1[0] = numer / denom;
-            }
-            return true;
-        } else {
-            return (numer <= 0.0f);
-        }
     }
 }

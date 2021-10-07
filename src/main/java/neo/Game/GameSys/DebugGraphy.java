@@ -1,12 +1,13 @@
 package neo.Game.GameSys;
 
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-
+import neo.Game.Game_local;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameRenderWorld;
 
 /**
  *
@@ -15,8 +16,8 @@ public class DebugGraphy {
 
     public static class idDebugGraph {
 
+        private int index;
         private idList<Float> samples;
-        private int           index;
         //
         //
 
@@ -55,10 +56,11 @@ public class DebugGraphy {
                 vec1 = pos.oPlus(axis.oGet(2).oMultiply(value1).oMinus(axis.oGet(1).oMultiply(i - 1).oPlus(axis.oGet(0).oMultiply(samples.Num()))));
                 vec2 = pos.oPlus(axis.oGet(2).oMultiply(value2).oMinus(axis.oGet(1).oMultiply(i).oPlus(axis.oGet(0).oMultiply(samples.Num()))));
 
-                gameRenderWorld.DebugLine(color, vec1, vec2, gameLocal.msec, false);
+                gameRenderWorld.DebugLine(color, vec1, vec2, Game_local.idGameLocal.msec, false);
                 value1 = value2;
             }
         }
 
-    };
+    }
+
 }

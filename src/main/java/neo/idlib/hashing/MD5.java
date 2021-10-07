@@ -1,6 +1,7 @@
 package neo.idlib.hashing;
 
 import java.nio.ByteBuffer;
+
 import static neo.idlib.hashing.MD4.BlockChecksum;
 
 /**

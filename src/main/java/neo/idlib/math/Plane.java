@@ -1,43 +1,44 @@
 package neo.idlib.math;
 
-import java.util.stream.Stream;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat2;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
+import java.util.stream.Stream;
+
 /**
  *
  */
 public class Plane {
 
-    public static final float ON_EPSILON = 0.1f;
     public static final float DEGENERATE_DIST_EPSILON = 1e-4f;
-    //                                                    
-    public static final int SIDE_FRONT = 0;
-    public static final int SIDE_BACK = 1;
-    public static final int SIDE_ON = 2;
-    public static final int SIDE_CROSS = 3;
-    //                                                    
-    // plane sides                                      
-    public static final int PLANESIDE_FRONT = 0;
+    public static final float ON_EPSILON = 0.1f;
     public static final int PLANESIDE_BACK = 1;
-    private static final int PLANESIDE_ON = 2;
     public static final int PLANESIDE_CROSS = 3;
-    // plane types                                            
+    //
+    // plane sides
+    public static final int PLANESIDE_FRONT = 0;
+    public static final int PLANETYPE_NEGX = 3;
+    public static final int PLANETYPE_TRUEAXIAL = 6;
+    public static final int SIDE_BACK = 1;
+    public static final int SIDE_CROSS = 3;
+    //
+    public static final int SIDE_FRONT = 0;
+    public static final int SIDE_ON = 2;
+    private static final int PLANESIDE_ON = 2;
+    private static final int PLANETYPE_NEGY = 4;
+    private static final int PLANETYPE_NEGZ = 5;
+    private static final int PLANETYPE_NONAXIAL = 9;
+    // plane types
     private static final int PLANETYPE_X = 0;
     private static final int PLANETYPE_Y = 1;
     private static final int PLANETYPE_Z = 2;
-    public static final int PLANETYPE_NEGX = 3;
-    private static final int PLANETYPE_NEGY = 4;
-    private static final int PLANETYPE_NEGZ = 5;
-    public static final int PLANETYPE_TRUEAXIAL = 6;
     // all types < 6 are true axial planes
     private static final int PLANETYPE_ZEROX = 6;
     private static final int PLANETYPE_ZEROY = 7;
     private static final int PLANETYPE_ZEROZ = 8;
-    private static final int PLANETYPE_NONAXIAL = 9;
 
     /*
      ===============================================================================
@@ -94,6 +95,13 @@ public class Plane {
 //public	float			operator[]( int index ) const;
 //public	float &			operator[]( int index );
 
+        public static idPlane[] generateArray(final int length) {
+            return Stream.
+                    generate(idPlane::new).
+                    limit(length).
+                    toArray(idPlane[]::new);
+        }
+
         public float oGet(int index) {
             switch (index) {
                 case 0:
@@ -145,6 +153,7 @@ public class Plane {
                     return d -= value;
             }
         }
+//public	idPlane			operator-() const;						// flips plane
 
         public float oDivSet(int index, final float value) {
             switch (index) {
@@ -158,13 +167,12 @@ public class Plane {
                     return d /= value;
             }
         }
-//public	idPlane			operator-() const;						// flips plane
+//public	idPlane &		operator=( const idVec3 &v );			// sets normal and sets idPlane::d to zero
 
         // flips plane
         public idPlane oNegative() {
             return new idPlane(-abc.x, -abc.y, -abc.z, -d);
         }
-//public	idPlane &		operator=( const idVec3 &v );			// sets normal and sets idPlane::d to zero
 
         // sets normal and sets idPlane::d to zero
         public idPlane oSet(final idVec3 v) {
@@ -172,25 +180,25 @@ public class Plane {
             d = 0;
             return this;
         }
-        
+//public	idPlane			operator+( const idPlane &p ) const;	// add plane equations
+
         public idPlane oSet(final idPlane p) {
             abc.oSet(p.abc);
             this.d = p.d;
             return this;
         }
-//public	idPlane			operator+( const idPlane &p ) const;	// add plane equations
+//public	idPlane			operator-( const idPlane &p ) const;	// subtract plane equations
 
         // add plane equations
         public idPlane oPlus(final idPlane p) {
             return new idPlane(abc.x + p.abc.x, abc.y + p.abc.y, abc.z + p.abc.z, d + p.d);
         }
-//public	idPlane			operator-( const idPlane &p ) const;	// subtract plane equations
+//public	idPlane &		operator*=( const idMat3 &m );			// Normal() *= m
 
         // subtract plane equations
         public idPlane oMinus(final idPlane p) {
             return new idPlane(abc.x - p.abc.x, abc.y - p.abc.y, abc.z - p.abc.z, d - p.d);
         }
-//public	idPlane &		operator*=( const idMat3 &m );			// Normal() *= m
 
         // Normal() *= m
         public idPlane oMulSet(final idMat3 m) {
@@ -217,25 +225,18 @@ public class Plane {
                 return false;
             }
 
-            if (idMath.Fabs(d - p.d) > epsilon) {
-                return false;
-            }
-
-            return true;
+            return !(idMath.Fabs(d - p.d) > epsilon);
         }
+//public	boolean			operator==(	const idPlane &p ) const;					// exact compare, no epsilon
+//public	boolean			operator!=(	const idPlane &p ) const;					// exact compare, no epsilon
 
         // compare with epsilon
         public boolean Compare(final idPlane p, final float normalEps, final float distEps) {
             if (idMath.Fabs(d - p.d) > distEps) {
                 return false;
             }
-            if (!Normal().Compare(p.Normal(), normalEps)) {
-                return false;
-            }
-            return true;
+            return Normal().Compare(p.Normal(), normalEps);
         }
-//public	boolean			operator==(	const idPlane &p ) const;					// exact compare, no epsilon
-//public	boolean			operator!=(	const idPlane &p ) const;					// exact compare, no epsilon
 
         @Override
         public int hashCode() {
@@ -265,10 +266,7 @@ public class Plane {
             if (Float.floatToIntBits(this.abc.z) != Float.floatToIntBits(other.abc.z)) {
                 return false;
             }
-            if (Float.floatToIntBits(this.d) != Float.floatToIntBits(other.d)) {
-                return false;
-            }
-            return true;
+            return Float.floatToIntBits(this.d) == Float.floatToIntBits(other.d);
         }
 
         // zero plane
@@ -297,6 +295,7 @@ public class Plane {
         public float NormalZ(final float value) {
             return abc.z = value;
         }
+//public	idVec3 &		Normal( void );							// reference to normal
 
         /**
          * sets the normal <b>ONLY</b>; a, b and c. d is ignored.
@@ -305,7 +304,6 @@ public class Plane {
             abc.oSet(v);
             return this;
         }
-//public	idVec3 &		Normal( void );							// reference to normal
 
         // only normalizes the plane normal, does not adjust d
         public float Normalize() {
@@ -579,12 +577,12 @@ public class Plane {
             start.oSet(Normal().oMultiply(f0).oPlus(plane.Normal().oMultiply(f1)));
             return true;
         }
+//
+//public	const idVec4 &	ToVec4( void ) const;
 
         public int GetDimension() {
             return 4;
         }
-//
-//public	const idVec4 &	ToVec4( void ) const;
 
         public idVec4 ToVec4() {
             return new idVec4(abc.x, abc.y, abc.z, d);
@@ -604,17 +602,10 @@ public class Plane {
         public void ToVec4_ToVec3_Normalize() {
             abc.Normalize();
         }
+//public	float *			ToFloatPtr( void );
 
         public float[] ToFloatPtr() {
             return new float[]{abc.x, abc.y, abc.z, d};
-        }
-//public	float *			ToFloatPtr( void );
-        
-        public static idPlane[] generateArray(final int length) {
-            return Stream.
-                    generate(idPlane::new).
-                    limit(length).
-                    toArray(idPlane[]::new);
         }
 
         @Override
@@ -625,5 +616,6 @@ public class Plane {
                     + ", c=" + abc.z
                     + ", d=" + d + "}";
         }
-    };
+    }
+
 }

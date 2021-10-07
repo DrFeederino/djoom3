@@ -1,165 +1,67 @@
 package neo.Game.Animation;
 
-import static java.lang.Character.isDigit;
-import java.util.stream.Stream;
-import static neo.Game.AI.AI_Events.AI_AttackMelee;
-import static neo.Game.AI.AI_Events.AI_AttackMissile;
-import static neo.Game.AI.AI_Events.AI_BeginAttack;
-import static neo.Game.AI.AI_Events.AI_CreateMissile;
-import static neo.Game.AI.AI_Events.AI_DirectDamage;
-import static neo.Game.AI.AI_Events.AI_DisableClip;
-import static neo.Game.AI.AI_Events.AI_DisableGravity;
-import static neo.Game.AI.AI_Events.AI_EnableClip;
-import static neo.Game.AI.AI_Events.AI_EnableGravity;
-import static neo.Game.AI.AI_Events.AI_EndAttack;
-import static neo.Game.AI.AI_Events.AI_FireMissileAtTarget;
-import static neo.Game.AI.AI_Events.AI_JumpFrame;
-import static neo.Game.AI.AI_Events.AI_MuzzleFlash;
-import static neo.Game.AI.AI_Events.AI_TriggerParticles;
-import static neo.Game.Actor.AI_DisableEyeFocus;
-import static neo.Game.Actor.AI_EnableEyeFocus;
-import static neo.Game.Actor.EV_DisableLegIK;
-import static neo.Game.Actor.EV_DisableWalkIK;
-import static neo.Game.Actor.EV_EnableLegIK;
-import static neo.Game.Actor.EV_EnableWalkIK;
-import static neo.Game.Actor.EV_Footstep;
-import static neo.Game.Actor.EV_FootstepLeft;
-import static neo.Game.Actor.EV_FootstepRight;
-import neo.Game.Animation.Anim.AFJointModType_t;
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_AXIS;
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_BOTH;
-import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_ORIGIN;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_ALL;
-import static neo.Game.Animation.Anim.ANIMCHANNEL_EYELIDS;
-import static neo.Game.Animation.Anim.ANIM_MaxAnimsPerChannel;
-import static neo.Game.Animation.Anim.ANIM_MaxSyncedAnims;
-import static neo.Game.Animation.Anim.ANIM_NumAnimChannels;
-import static neo.Game.Animation.Anim.FRAME2MS;
-import neo.Game.Animation.Anim.animFlags_t;
-import neo.Game.Animation.Anim.frameBlend_t;
-import neo.Game.Animation.Anim.frameCommandType_t;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_AVIGAME;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_BEGINATTACK;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_CREATEMISSILE;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_DIRECTDAMAGE;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_DISABLE_CLIP;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_DISABLE_EYE_FOCUS;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_DISABLE_GRAVITY;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_DISABLE_LEG_IK;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_DISABLE_WALK_IK;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_ENABLE_CLIP;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_ENABLE_EYE_FOCUS;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_ENABLE_GRAVITY;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_ENABLE_LEG_IK;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_ENABLE_WALK_IK;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_ENDATTACK;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_EVENTFUNCTION;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_FIREMISSILEATTARGET;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_FOOTSTEP;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_FX;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_JUMP;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_LAUNCHMISSILE;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_LEFTFOOT;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_MELEE;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_MUZZLEFLASH;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_RECORDDEMO;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_RIGHTFOOT;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SCRIPTFUNCTION;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SCRIPTFUNCTIONOBJECT;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SKIN;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_BODY;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_BODY2;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_BODY3;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_CHATTER;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_GLOBAL;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_ITEM;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_VOICE;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_VOICE2;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_SOUND_WEAPON;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_TRIGGER;
-import static neo.Game.Animation.Anim.frameCommandType_t.FC_TRIGGER_SMOKE_PARTICLE;
-import neo.Game.Animation.Anim.frameCommand_t;
-import neo.Game.Animation.Anim.frameLookup_t;
-import neo.Game.Animation.Anim.idAFPoseJointMod;
-import neo.Game.Animation.Anim.idMD5Anim;
-import neo.Game.Animation.Anim.jointInfo_t;
-import neo.Game.Animation.Anim.jointModTransform_t;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_LOCAL;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_NONE;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD;
-import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_WORLD_OVERRIDE;
-import neo.Game.Animation.Anim.jointMod_t;
-import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import static neo.Game.Entity.EV_Activate;
-import static neo.Game.Entity.TH_ANIMATE;
-import static neo.Game.Entity.TH_UPDATEVISUALS;
-import neo.Game.Entity.idEntity;
-import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
+import neo.Game.Animation.Anim.*;
+import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_debugAnim;
-import static neo.Game.GameSys.SysCvar.g_debugBounds;
-import static neo.Game.Game_local.animationLib;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ANY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY2;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_BODY3;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_ITEM;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_VOICE;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_VOICE2;
-import static neo.Game.Game_local.gameSoundChannel_t.SND_CHANNEL_WEAPON;
-import static neo.Game.Sound.SSF_GLOBAL;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.Model.MD5_MESH_EXT;
+import neo.Game.Game_local;
 import neo.Renderer.Model.idMD5Joint;
 import neo.Renderer.Model.idRenderModel;
-import static neo.Renderer.ModelManager.renderModelManager;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atoi;
-import static neo.TempDump.etoi;
-import static neo.TempDump.indexOf;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itoi;
-import static neo.TempDump.sizeof;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_RENDERER;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
-import static neo.framework.CmdSystem.cmdSystem;
 import neo.framework.CmdSystem.idCmdSystem;
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
-import static neo.framework.DeclManager.declType_t.DECL_FX;
-import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
 import neo.framework.DeclManager.idDecl;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_FLOAT;
-import static neo.idlib.Text.Token.TT_NUMBER;
-import static neo.idlib.Text.Token.TT_PUNCTUATION;
-import neo.idlib.Text.Token.idToken;
-import static neo.idlib.containers.BinSearch.idBinSearch_GreaterEqual;
+import neo.idlib.Text.Token.*;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idQuat;
+import neo.idlib.math.Vector.idVec3;
+
+import java.util.stream.Stream;
+
+import static java.lang.Character.isDigit;
+import static neo.Game.AI.AI_Events.*;
+import static neo.Game.Actor.*;
+import static neo.Game.Animation.Anim.*;
+import static neo.Game.Animation.Anim.frameCommandType_t.*;
+import static neo.Game.Animation.Anim.jointModTransform_t.JOINTMOD_NONE;
+import static neo.Game.Entity.*;
+import static neo.Game.Entity.signalNum_t.SIG_TRIGGER;
+import static neo.Game.GameSys.SysCvar.g_debugAnim;
+import static neo.Game.GameSys.SysCvar.g_debugBounds;
+import static neo.Game.Game_local.animationLib;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Game_local.gameSoundChannel_t.*;
+import static neo.Game.Sound.SSF_GLOBAL;
+import static neo.Renderer.Model.INVALID_JOINT;
+import static neo.Renderer.Model.MD5_MESH_EXT;
+import static neo.Renderer.ModelManager.renderModelManager;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.CVAR_INTEGER;
+import static neo.framework.CVarSystem.CVAR_RENDERER;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
+import static neo.framework.DeclManager.declType_t.DECL_FX;
+import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.*;
+import static neo.idlib.containers.BinSearch.idBinSearch_GreaterEqual;
 import static neo.idlib.math.Simd.SIMDProcessor;
 import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
 
 /**
  *
@@ -167,10 +69,22 @@ import neo.idlib.math.Vector.idVec3;
 public class Anim_Blend {
 
     public static final String[] channelNames/*[ ANIM_NumAnimChannels ]*/ = {
-                "all", "torso", "legs", "head", "eyelids"
-            };
+            "all", "torso", "legs", "head", "eyelids"
+    };
 
     static final boolean VELOCITY_MOVE = false;
+
+    public static idDeclModelDef ANIM_GetModelDefFromEntityDef(final idDict args) {
+        idDeclModelDef modelDef;
+
+        String name = args.GetString("model");
+        modelDef = (idDeclModelDef) declManager.FindType(DECL_MODELDEF, name, false);
+        if (modelDef != null && modelDef.ModelHandle() != null) {
+            return modelDef;
+        }
+
+        return null;
+    }
 
     /*
      ==============================================================================================
@@ -181,14 +95,14 @@ public class Anim_Blend {
      */
     public static class idAnim {
 
-        private idDeclModelDef modelDef;
         private idMD5Anim[] anims = new idMD5Anim[ANIM_MaxSyncedAnims];
-        private int                   numAnims;
-        private idStr                 name = new idStr();
-        private idStr                 realname = new idStr();
-        private idList<frameLookup_t> frameLookup = new idList();
-        private idList<frameCommand_t> frameCommands = new idList<>(frameCommand_t.class);
         private animFlags_t flags;
+        private final idList<frameCommand_t> frameCommands = new idList<>(frameCommand_t.class);
+        private final idList<frameLookup_t> frameLookup = new idList();
+        private idDeclModelDef modelDef;
+        private idStr name = new idStr();
+        private int numAnims;
+        private idStr realname = new idStr();
 //
 //
 
@@ -217,7 +131,7 @@ public class Anim_Blend {
 
             frameLookup.SetNum(anim.frameLookup.Num());
             if (frameLookup.Num() > 0) {
-                System.arraycopy(anim.frameLookup.Ptr(), 0, frameLookup.Ptr(), 0, frameLookup.MemoryUsed());
+                System.arraycopy(anim.frameLookup.getList(), 0, frameLookup.getList(), 0, frameLookup.MemoryUsed());
             }
 
             frameCommands.SetNum(anim.frameCommands.Num());
@@ -718,7 +632,7 @@ public class Anim_Blend {
                 frameLookup.oGet(i).firstCommand++;
             }
 
-            // store the new command 
+            // store the new command
             frameCommands.oSet(index, fc);
 
             // increase the number of commands on this frame
@@ -734,7 +648,7 @@ public class Anim_Blend {
             int frame;
             int numframes;
 
-            numframes = anims[ 0].NumFrames();
+            numframes = anims[0].NumFrames();
 
             frame = from;
             while (frame != to) {
@@ -1023,7 +937,7 @@ public class Anim_Blend {
                 return -1;
             }
 
-            numframes = anims[ 0].NumFrames();
+            numframes = anims[0].NumFrames();
             for (frame = 0; frame < numframes; frame++) {
                 end = frameLookup.oGet(frame).firstCommand + frameLookup.oGet(frame).num;
                 for (index = frameLookup.oGet(frame).firstCommand; index < end; index++) {
@@ -1050,7 +964,7 @@ public class Anim_Blend {
         public animFlags_t GetAnimFlags() {
             return flags;
         }
-    };
+    }
 
     /*
      ==============================================================================================
@@ -1061,15 +975,17 @@ public class Anim_Blend {
      */
     public static class idDeclModelDef extends idDecl {
 
-        private idVec3 offset;
-        private idList<jointInfo_t> joints;
-        private idList<Integer> jointParents;
-        private idList<Integer>[] channelJoints = new idList[ANIM_NumAnimChannels];
+        private static final int MAX_ANIMS = 64;
+        private final idList<idAnim> anims;
+        private final idList<Integer>[] channelJoints = new idList[ANIM_NumAnimChannels];
+        private final idList<Integer> jointParents;
+        private final idList<jointInfo_t> joints;
         private idRenderModel modelHandle;
-        private idList<idAnim> anims;
+        private idVec3 offset;
+        //
+        //
         private idDeclSkin skin;
-        //
-        //
+        // ~idDeclModelDef();
 
         public idDeclModelDef() {
             offset = new idVec3();
@@ -1082,7 +998,6 @@ public class Anim_Blend {
             anims = new idList<>();
             skin = null;
         }
-        // ~idDeclModelDef();
 
         @Override
         public long/*size_t*/ Size() {
@@ -1269,7 +1184,7 @@ public class Anim_Blend {
                     }
 
                     for (i = ANIMCHANNEL_ALL + 1; i < ANIM_NumAnimChannels; i++) {
-                        if (0 == idStr.Icmp(channelNames[ i], token2.toString())) {
+                        if (0 == idStr.Icmp(channelNames[i], token2.toString())) {
                             break;
                         }
                     }
@@ -1297,7 +1212,7 @@ public class Anim_Blend {
 
                     GetJointList(jointnames, jointList);
 
-                    channelJoints[ channel].SetNum(jointList.Num());
+                    channelJoints[channel].SetNum(jointList.Num());
                     for (num = i = 0; i < jointList.Num(); i++) {
                         jointnum = jointList.oGet(i);
                         if (joints.oGet(jointnum).channel != ANIMCHANNEL_ALL) {
@@ -1305,9 +1220,9 @@ public class Anim_Blend {
                             continue;
                         }
                         joints.oGet(jointnum).channel = channel;
-                        channelJoints[ channel].oSet(num++, jointnum);
+                        channelJoints[channel].oSet(num++, jointnum);
                     }
-                    channelJoints[ channel].SetNum(num);
+                    channelJoints[channel].SetNum(num);
                 } else {
                     src.Warning("unknown token '%s'", token);
                     MakeDefault();
@@ -1365,7 +1280,7 @@ public class Anim_Blend {
             num = modelHandle.NumJoints();
 
             if (0 == num) {
-                gameLocal.Error("model '%s' has no joints", modelHandle.Name());
+                Game_local.idGameLocal.Error("model '%s' has no joints", modelHandle.Name());
             }
 
             // set up initial pose for model (with no pose, model is just a jumbled mess)
@@ -1383,11 +1298,11 @@ public class Anim_Blend {
                     list[0].SetTranslation(offset);
                 }
             } else {
-                list[ 0].SetTranslation(pose[0].t.oPlus(offset));
+                list[0].SetTranslation(pose[0].t.oPlus(offset));
             }
 
             // transform the joint hierarchy
-            SIMDProcessor.TransformJoints(list, itoi(jointParents.Ptr(Integer[].class)), 1, joints.Num() - 1);
+            SIMDProcessor.TransformJoints(list, itoi(jointParents.getList(Integer[].class)), 1, joints.Num() - 1);
 
             numJoints[0] = num;
             jointList[0] = list;
@@ -1503,7 +1418,6 @@ public class Anim_Blend {
             return anims.oGet(index - 1);
         }
 
-
         /*
          =====================
          idDeclModelDef::GetSpecificAnim
@@ -1524,7 +1438,6 @@ public class Anim_Blend {
             // didn't find it
             return 0;
         }
-        private static final int MAX_ANIMS = 64;
 
         public int GetAnim(final String name) {
             int i;
@@ -1543,7 +1456,7 @@ public class Anim_Blend {
             numAnims = 0;
             for (i = 0; i < anims.Num(); i++) {
                 if (anims.oGet(i).Name().equals(name)) {
-                    animList[ numAnims++] = i;
+                    animList[numAnims++] = i;
                     if (numAnims >= MAX_ANIMS) {
                         break;
                     }
@@ -1557,7 +1470,7 @@ public class Anim_Blend {
             // get a random anim
             //FIXME: don't access gameLocal here?
             which = gameLocal.random.RandomInt(numAnims);
-            return animList[ which] + 1;
+            return animList[which] + 1;
         }
 
         public boolean HasAnim(final String name) {
@@ -1590,7 +1503,7 @@ public class Anim_Blend {
         }
 
         public Integer[] JointParents() {
-            return jointParents.Ptr(Integer[].class);
+            return jointParents.getList(Integer[].class);
         }
 
         public int NumJoints() {
@@ -1599,7 +1512,7 @@ public class Anim_Blend {
 
         public jointInfo_t GetJoint(int jointHandle) {
             if ((jointHandle < 0) || (jointHandle > joints.Num())) {
-                gameLocal.Error("idDeclModelDef::GetJoint : joint handle out of range");
+                Game_local.idGameLocal.Error("idDeclModelDef::GetJoint : joint handle out of range");
             }
             return joints.oGet(jointHandle);
         }
@@ -1612,25 +1525,25 @@ public class Anim_Blend {
             }
 
             if ((jointHandle < 0) || (jointHandle > joints.Num())) {
-                gameLocal.Error("idDeclModelDef::GetJointName : joint handle out of range");
+                Game_local.idGameLocal.Error("idDeclModelDef::GetJointName : joint handle out of range");
             }
 
             joint = modelHandle.GetJoints();
-            return joint[ jointHandle].name.toString();
+            return joint[jointHandle].name.toString();
         }
 
         public int NumJointsOnChannel(int channel) {
             if ((channel < 0) || (channel >= ANIM_NumAnimChannels)) {
-                gameLocal.Error("idDeclModelDef::NumJointsOnChannel : channel out of range");
+                Game_local.idGameLocal.Error("idDeclModelDef::NumJointsOnChannel : channel out of range");
             }
-            return channelJoints[ channel].Num();
+            return channelJoints[channel].Num();
         }
 
         public Integer[] GetChannelJoints(int channel) {
             if ((channel < 0) || (channel >= ANIM_NumAnimChannels)) {
-                gameLocal.Error("idDeclModelDef::GetChannelJoints : channel out of range");
+                Game_local.idGameLocal.Error("idDeclModelDef::GetChannelJoints : channel out of range");
             }
-            return channelJoints[channel].Ptr(Integer[].class);
+            return channelJoints[channel].getList(Integer[].class);
         }
 
         public idVec3 GetVisualOffset() {
@@ -1653,10 +1566,10 @@ public class Anim_Blend {
 
             joints.SetNum(decl.joints.Num());
 //            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
-            System.arraycopy(decl.joints.Ptr(), 0, joints.Ptr(), 0, decl.joints.Num());
+            System.arraycopy(decl.joints.getList(), 0, joints.getList(), 0, decl.joints.Num());
             jointParents.SetNum(decl.jointParents.Num());
 //            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
-            System.arraycopy(decl.jointParents.Ptr(), 0, jointParents.Ptr(), 0, decl.jointParents.Num());
+            System.arraycopy(decl.jointParents.getList(), 0, jointParents.getList(), 0, decl.jointParents.Num());
             for (i = 0; i < ANIM_NumAnimChannels; i++) {
                 channelJoints[i] = decl.channelJoints[i];
             }
@@ -1742,7 +1655,7 @@ public class Anim_Blend {
 
                 if (numAnims > 0) {
                     // make sure it's the same length as the other anims
-                    if (md5anim.Length() != md5anims[ 0].Length()) {
+                    if (md5anim.Length() != md5anims[0].Length()) {
                         src.Warning("Anim '%s' does not match length of anim '%s'", md5anim.Name(), md5anims[0].Name());
                         MakeDefault();
                         return false;
@@ -1756,7 +1669,7 @@ public class Anim_Blend {
                 }
 
                 // add it to our list
-                md5anims[ numAnims] = md5anim;
+                md5anims[numAnims] = md5anim;
                 numAnims++;
             } while (src.CheckTokenString(","));
 
@@ -1833,7 +1746,7 @@ public class Anim_Blend {
         public void oSet(idDeclModelDef idDeclModelDef) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-    };
+    }
 
     /*
      ==============================================================================================
@@ -1845,28 +1758,28 @@ public class Anim_Blend {
     public static class idAnimBlend {
         // friend class				idAnimator;
 
-        private idDeclModelDef modelDef;
-        private int starttime;
-        private int endtime;
-        private int timeOffset;
-        private float rate;
-//
-        private int blendStartTime;
-        private int blendDuration;
-        private float blendStartValue;
-        private float blendEndValue;
-//
-        private float[] animWeights = new float[ANIM_MaxSyncedAnims];
-        private short cycle;
-        private short frame;
-        private short animNum;
-        private boolean allowMove;
-        private boolean allowFrameCommands;
         //
         //
         private static int DBG_counter;
-        private final  int DBG_count = DBG_counter++;
-        
+        private final int DBG_count = DBG_counter++;
+        private boolean allowFrameCommands;
+        private boolean allowMove;
+        private short animNum;
+        //
+        private float[] animWeights = new float[ANIM_MaxSyncedAnims];
+        private int blendDuration;
+        private float blendEndValue;
+        //
+        private int blendStartTime;
+        private float blendStartValue;
+        private short cycle;
+        private int endtime;
+        private short frame;
+        private idDeclModelDef modelDef;
+        private float rate;
+        private int starttime;
+        private int timeOffset;
+
         public idAnimBlend() {
             Reset(null);
         }
@@ -1971,7 +1884,7 @@ public class Anim_Blend {
             starttime = currentTime;
             endtime = -1;
             cycle = -1;
-            animWeights[ 0] = 1.0f;
+            animWeights[0] = 1.0f;
             frame = (short) _frame;
 
             // a frame of 0 means it's not a single frame blend, so we set it to frame + 1
@@ -2006,7 +1919,7 @@ public class Anim_Blend {
             }
 
             animNum = (short) _animNum;
-            animWeights[ 0] = 1.0f;
+            animWeights[0] = 1.0f;
             endtime = -1;
             cycle = -1;
             if (_anim.GetAnimFlags().random_cycle_start) {
@@ -2044,7 +1957,7 @@ public class Anim_Blend {
             starttime = currentTime;
             endtime = starttime + _anim.Length();
             cycle = 1;
-            animWeights[ 0] = 1.0f;
+            animWeights[0] = 1.0f;
 
             // set up blend
             blendEndValue = 1.0f;
@@ -2116,9 +2029,9 @@ public class Anim_Blend {
                 ptr = jointFrame;
                 mixWeight = 0.0f;
                 for (i = 0; i < numAnims; i++) {
-                    if (animWeights[ i] > 0.0f) {
-                        mixWeight += animWeights[ i];
-                        lerp = animWeights[ i] / mixWeight;
+                    if (animWeights[i] > 0.0f) {
+                        mixWeight += animWeights[i];
+                        lerp = animWeights[i] / mixWeight;
                         md5anim = anim.MD5Anim(i);
                         if (frame != 0) {
                             md5anim.GetSingleFrame(frame - 1, ptr, itoi(modelDef.GetChannelJoints(channel)), modelDef.NumJointsOnChannel(channel));
@@ -2143,14 +2056,14 @@ public class Anim_Blend {
             if (removeOriginOffset) {
                 if (allowMove) {
                     if (VELOCITY_MOVE) {
-                        jointFrame[ 0].t.x = 0.0f;
+                        jointFrame[0].t.x = 0.0f;
                     } else {
-                        jointFrame[ 0].t.Zero();
+                        jointFrame[0].t.Zero();
                     }
                 }
 
                 if (anim.GetAnimFlags().anim_turn) {
-                    jointFrame[ 0].q.Set(-0.70710677f, 0.0f, 0.0f, 0.70710677f);
+                    jointFrame[0].q.Set(-0.70710677f, 0.0f, 0.0f, 0.70710677f);
                 }
             }
 
@@ -2173,9 +2086,9 @@ public class Anim_Blend {
 
             if (printInfo) {
                 if (frame != 0) {
-                    gameLocal.Printf("  %s: '%s', %d, %.2f%%\n", channelNames[ channel], anim.FullName(), frame, weight * 100.0f);
+                    gameLocal.Printf("  %s: '%s', %d, %.2f%%\n", channelNames[channel], anim.FullName(), frame, weight * 100.0f);
                 } else {
-                    gameLocal.Printf("  %s: '%s', %.3f, %.2f%%\n", channelNames[ channel], anim.FullName(), (float) frametime.frame1 + frametime.backlerp, weight * 100.0f);
+                    gameLocal.Printf("  %s: '%s', %.3f, %.2f%%\n", channelNames[channel], anim.FullName(), (float) frametime.frame1 + frametime.backlerp, weight * 100.0f);
                 }
             }
 
@@ -2214,7 +2127,7 @@ public class Anim_Blend {
             num = anim.NumAnims();
             for (i = 0; i < num; i++) {
                 anim.GetOrigin(animpos, i, time, cycle);
-                pos.oPluSet(animpos.oMultiply(animWeights[ i]));
+                pos.oPluSet(animpos.oMultiply(animWeights[i]));
             }
 
             if (0 == blendWeight[0]) {
@@ -2264,10 +2177,10 @@ public class Anim_Blend {
             pos2.Zero();
             for (i = 0; i < num; i++) {
                 anim.GetOrigin(animpos, i, time1, cycle);
-                pos1.oPluSet(animpos.oMultiply(animWeights[ i]));
+                pos1.oPluSet(animpos.oMultiply(animWeights[i]));
 
                 anim.GetOrigin(animpos, i, time2, cycle);
-                pos2.oPluSet(animpos.oMultiply(animWeights[ i]));
+                pos2.oPluSet(animpos.oMultiply(animWeights[i]));
             }
 
             delta = pos2.oMinus(pos1);
@@ -2318,13 +2231,13 @@ public class Anim_Blend {
             mixWeight = 0.0f;
             num = anim.NumAnims();
             for (i = 0; i < num; i++) {
-                if (animWeights[ i] > 0.0f) {
-                    mixWeight += animWeights[ i];
-                    if (animWeights[ i] == mixWeight) {
+                if (animWeights[i] > 0.0f) {
+                    mixWeight += animWeights[i];
+                    if (animWeights[i] == mixWeight) {
                         anim.GetOriginRotation(q1, i, time1, cycle);
                         anim.GetOriginRotation(q2, i, time2, cycle);
                     } else {
-                        lerp = animWeights[ i] / mixWeight;
+                        lerp = animWeights[i] / mixWeight;
                         anim.GetOriginRotation(q3, i, time1, cycle);
                         q1.Slerp(q1, q3, lerp);
 
@@ -2398,7 +2311,7 @@ public class Anim_Blend {
             savefile.WriteFloat(blendEndValue);
 
             for (i = 0; i < ANIM_MaxSyncedAnims; i++) {
-                savefile.WriteFloat(animWeights[ i]);
+                savefile.WriteFloat(animWeights[i]);
             }
             savefile.WriteShort(cycle);
             savefile.WriteShort(frame);
@@ -2515,7 +2428,7 @@ public class Anim_Blend {
                 return false;
             }
 
-            animWeights[ num] = weight;
+            animWeights[num] = weight;
             return true;
         }
 
@@ -2532,11 +2445,7 @@ public class Anim_Blend {
                 return true;
             }
 
-            if ((blendEndValue <= 0.0f) && (currentTime >= (blendStartTime + blendDuration))) {
-                return true;
-            }
-
-            return false;
+            return (blendEndValue <= 0.0f) && (currentTime >= (blendStartTime + blendDuration));
         }
 
         public boolean FrameHasChanged(int currentTime) {
@@ -2556,11 +2465,7 @@ public class Anim_Blend {
             }
 
             // if we're a single frame anim and this isn't the frame we started on, we don't need to update
-            if ((frame != 0 || (NumFrames() == 1)) && (currentTime != starttime)) {
-                return false;
-            }
-
-            return true;
+            return (frame == 0 && (NumFrames() != 1)) || (currentTime == starttime);
         }
 
         public int GetCycleCount() {
@@ -2688,7 +2593,7 @@ public class Anim_Blend {
                 }
 
                 // given enough time, we can easily wrap time around in our frame calculations, so
-                // keep cycling animations' time within the length of the 
+                // keep cycling animations' time within the length of the
                 length = Length();
                 if ((cycle < 0) && (length > 0)) {
                     time %= length;
@@ -2755,7 +2660,18 @@ public class Anim_Blend {
         public int AnimNum() {
             return animNum;
         }
-    };
+    }
+
+    /* **********************************************************************
+
+     Util functions
+
+     ***********************************************************************/
+    /*
+     =====================
+     ANIM_GetModelDefFromEntityDef
+     =====================
+     */
 
     /*
      ==============================================================================================
@@ -2766,29 +2682,31 @@ public class Anim_Blend {
      */
     public static class idAnimator {
 
-        private idDeclModelDef modelDef;
+        private static final idCVar r_showSkel = new idCVar("r_showSkel", "0", CVAR_RENDERER | CVAR_INTEGER, "", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
+        //
+        private float AFPoseBlendWeight;
+        private final idBounds AFPoseBounds;
+        private final idList<idJointQuat> AFPoseJointFrame;
+        private final idList<idAFPoseJointMod> AFPoseJointMods;
+        private final idList<Integer> AFPoseJoints;
+        private int AFPoseTime;
+        //
+        private final idAnimBlend[][] channels = new idAnimBlend[ANIM_NumAnimChannels][ANIM_MaxAnimsPerChannel];
         private idEntity entity;
-        //
-        private idAnimBlend[][] channels = new idAnimBlend[ANIM_NumAnimChannels][ANIM_MaxAnimsPerChannel];
-        private idList<jointMod_t> jointMods;
-        private int numJoints;
-        private idJointMat[] joints;
-        //
-        private int lastTransformTime;		// mutable because the value is updated in CreateFrame
-        private boolean stoppedAnimatingUpdate;
-        private boolean removeOriginOffset;
         private boolean forceUpdate;
         //
         private idBounds frameBounds;
+        private final idList<jointMod_t> jointMods;
+        private idJointMat[] joints;
         //
-        private float AFPoseBlendWeight;
-        private idList<Integer> AFPoseJoints;
-        private idList<idAFPoseJointMod> AFPoseJointMods;
-        private idList<idJointQuat> AFPoseJointFrame;
-        private idBounds AFPoseBounds;
-        private int AFPoseTime;
+        private int lastTransformTime;        // mutable because the value is updated in CreateFrame
+        private idDeclModelDef modelDef;
+        private int numJoints;
+        private boolean removeOriginOffset;
         //
         //
+        private boolean stoppedAnimatingUpdate;
+        // ~idAnimator();
 
         public idAnimator() {
             int i, j;
@@ -2819,7 +2737,6 @@ public class Anim_Blend {
                 }
             }
         }
-        // ~idAnimator();
 
         public int/*size_t*/ Allocated() {
             int/*size_t*/ size;
@@ -2832,7 +2749,6 @@ public class Anim_Blend {
             return sizeof(this) + Allocated();
         }
 
-
         /*
          =====================
          idAnimator::Save
@@ -2840,7 +2756,7 @@ public class Anim_Blend {
          archives object for save game file
          =====================
          */
-        public void Save(idSaveGame savefile) {				// archives object for save game file
+        public void Save(idSaveGame savefile) {                // archives object for save game file
             int i;
             int j;
 
@@ -2899,7 +2815,7 @@ public class Anim_Blend {
 
             for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
                 for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                    channels[ i][ j].Save(savefile);
+                    channels[i][j].Save(savefile);
                 }
             }
         }
@@ -2911,7 +2827,7 @@ public class Anim_Blend {
          unarchives object from save game file
          =====================
          */
-        public void Restore(idRestoreGame savefile) {					// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                    // unarchives object from save game file
             int i;
             int j;
             int[] num = {0};
@@ -2980,7 +2896,7 @@ public class Anim_Blend {
 
             for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
                 for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                    channels[ i][ j].Restore(savefile, modelDef);
+                    channels[i][j].Restore(savefile, modelDef);
                 }
             }
         }
@@ -3115,1097 +3031,1076 @@ public class Anim_Blend {
         }
 
         public int/*jointHandle_t*/ GetFirstChild(int/*jointHandle_t*/ jointnum) {
-                    int i;
-                    int num;
-                    jointInfo_t joint;
+            int i;
+            int num;
+            jointInfo_t joint;
 
-                    if (null == modelDef) {
-                        return INVALID_JOINT;
-                    }
+            if (null == modelDef) {
+                return INVALID_JOINT;
+            }
 
-                    num = modelDef.NumJoints();
-                    if (0 == num) {
-                        return jointnum;
-                    }
-                    joint = modelDef.GetJoint(0);
-                    for (i = 0; i < num; joint = modelDef.GetJoint(++i)) {
-                        if (joint.parentNum == jointnum) {
-                            return joint.num;
-                        }
-                    }
-                    return jointnum;
+            num = modelDef.NumJoints();
+            if (0 == num) {
+                return jointnum;
+            }
+            joint = modelDef.GetJoint(0);
+            for (i = 0; i < num; joint = modelDef.GetJoint(++i)) {
+                if (joint.parentNum == jointnum) {
+                    return joint.num;
                 }
+            }
+            return jointnum;
+        }
 
-                public int/*jointHandle_t*/ GetFirstChild(final String name) {
-                    return GetFirstChild(GetJointHandle(name));
+        public int/*jointHandle_t*/ GetFirstChild(final String name) {
+            return GetFirstChild(GetJointHandle(name));
+        }
+
+        public idRenderModel SetModel(final String modelname) {
+            int i, j;
+            int[] numJoints = {0};
+
+            FreeData();
+
+            // check if we're just clearing the model
+            if (!isNotNullOrEmpty(modelname)) {
+                return null;
+            }
+
+            modelDef = (idDeclModelDef) (declManager.FindType(DECL_MODELDEF, modelname, false));
+            if (null == modelDef) {
+                return null;
+            }
+
+            idRenderModel renderModel = modelDef.ModelHandle();
+            if (null == renderModel) {
+                modelDef = null;
+                return null;
+            }
+
+            // make sure model hasn't been purged
+            modelDef.Touch();
+
+            {
+                idJointMat[][] joints = {null};
+                modelDef.SetupJoints(numJoints, joints, frameBounds, removeOriginOffset);
+                this.joints = joints[0];
+                this.numJoints = numJoints[0];
+            }
+            modelDef.ModelHandle().Reset();
+
+            // set the modelDef on all channels
+            for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
+                for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
+                    channels[i][j].Reset(modelDef);
                 }
+            }
 
-                public idRenderModel SetModel(final String modelname) {
-                    int i, j;
-                    int[] numJoints = {0};
+            return modelDef.ModelHandle();
+        }
 
-                    FreeData();
+        public idRenderModel ModelHandle() {
+            if (null == modelDef) {
+                return null;
+            }
 
-                    // check if we're just clearing the model
-                    if (!isNotNullOrEmpty(modelname)) {
-                        return null;
-                    }
+            return modelDef.ModelHandle();
+        }
 
-                    modelDef = (idDeclModelDef) (declManager.FindType(DECL_MODELDEF, modelname, false));
-                    if (null == modelDef) {
-                        return null;
-                    }
-
-                    idRenderModel renderModel = modelDef.ModelHandle();
-                    if (null == renderModel) {
-                        modelDef = null;
-                        return null;
-                    }
-
-                    // make sure model hasn't been purged
-                    modelDef.Touch();
-
-                    {
-                        idJointMat[][] joints = {null};
-                        modelDef.SetupJoints(numJoints, joints, frameBounds, removeOriginOffset);
-                        this.joints = joints[0];
-                        this.numJoints = numJoints[0];
-                    }
-                    modelDef.ModelHandle().Reset();
-
-                    // set the modelDef on all channels
-                    for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
-                        for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                            channels[ i][ j].Reset(modelDef);
-                        }
-                    }
-
-                    return modelDef.ModelHandle();
-                }
-
-                public idRenderModel ModelHandle() {
-                    if (null == modelDef) {
-                        return null;
-                    }
-
-                    return modelDef.ModelHandle();
-                }
-
-                public idDeclModelDef ModelDef() {
-                    return modelDef;
-                }
-
-                public void ForceUpdate() {
-                    lastTransformTime = -1;
-                    forceUpdate = true;
-                }
-
-                public void ClearForceUpdate() {
-                    forceUpdate = false;
-                }
-                private static final idCVar r_showSkel = new idCVar("r_showSkel", "0", CVAR_RENDERER | CVAR_INTEGER, "", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
-
-                public boolean CreateFrame(int currentTime, boolean force) {
-                    int i, j;
-                    int numJoints;
-                    int parentNum;
-                    boolean hasAnim;
-                    boolean debugInfo;
-                    float[] baseBlend = {0};
-                    float[] blendWeight = {0};
-                    idAnimBlend[] blend;
-                    Integer[] jointParent;
-                    jointMod_t jointMod;
-                    idJointQuat[] defaultPose;
-
-                    if (gameLocal.inCinematic && gameLocal.skipCinematic) {
-                        return false;
-                    }
-
-                    if (null == modelDef || null == modelDef.ModelHandle()) {
-                        return false;
-                    }
-
-                    if (!force && 0 == r_showSkel.GetInteger()) {
-                        if (lastTransformTime == currentTime) {
-                            return false;
-                        }
-                        if (lastTransformTime != -1 && !stoppedAnimatingUpdate && !IsAnimating(currentTime)) {
-                            return false;
-                        }
-                    }
-
-                    lastTransformTime = currentTime;
-                    stoppedAnimatingUpdate = false;
-                    numJoints = modelDef.Joints().Num();
-
-                    if (entity != null && ((g_debugAnim.GetInteger() == entity.entityNumber) || (g_debugAnim.GetInteger() == -2))) {
-                        debugInfo = true;
-                        gameLocal.Printf("---------------\n%d: entity '%s':\n", gameLocal.time, entity.GetName());
-                        gameLocal.Printf("model '%s':\n", modelDef.GetModelName());
-                    } else {
-                        debugInfo = false;
-                    }
-
-                    // init the joint buffer
-                    if (AFPoseJoints.Num() != 0) {
-                        // initialize with AF pose anim for the case where there are no other animations and no AF pose joint modifications
-                        defaultPose = AFPoseJointFrame.Ptr(idJointQuat[].class);
-                    } else {
-                        defaultPose = modelDef.GetDefaultPose();
-                    }
-
-                    if (null == defaultPose) {
-                        //gameLocal.Warning( "idAnimator::CreateFrame: no defaultPose on '%s'", modelDef.Name() );
-                        return false;
-                    }
-
-                    idJointQuat[] jointFrame = new idJointQuat[numJoints];
-                    SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
-
-                    hasAnim = false;
-
-                    // blend the all channel
-                    baseBlend[0] = 0.0f;
-                    blend = channels[ANIMCHANNEL_ALL];
-                    for (j = ANIMCHANNEL_ALL; j < ANIM_MaxAnimsPerChannel; j++) {
-                        if (blend[j].BlendAnim(currentTime, ANIMCHANNEL_ALL, numJoints, jointFrame, baseBlend, removeOriginOffset, false, debugInfo)) {
-                            hasAnim = true;
-                            if (baseBlend[0] >= 1.0f) {
-                                break;
-                            }
-                        }
-                    }
-
-                    // only blend other channels if there's enough space to blend into
-                    if (baseBlend[0] < 1.0f) {
-                        for (i = ANIMCHANNEL_ALL + 1; i < ANIM_NumAnimChannels; i++) {
-                            if (0 == modelDef.NumJointsOnChannel(i)) {
-                                continue;
-                            }
-                            if (i == ANIMCHANNEL_EYELIDS) {
-                                // eyelids blend over any previous anims, so skip it and blend it later
-                                continue;
-                            }
-                            blendWeight[0] = baseBlend[0];
-                            blend = channels[i];
-                            for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                                if (blend[j].BlendAnim(currentTime, i, numJoints, jointFrame, blendWeight, removeOriginOffset, false, debugInfo)) {
-                                    hasAnim = true;
-                                    if (blendWeight[0] >= 1.0f) {
-                                        // fully blended
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (debugInfo && 0 == AFPoseJoints.Num() && 0 == blendWeight[0]) {
-                                gameLocal.Printf("%d: %s using default pose in model '%s'\n", gameLocal.time, channelNames[ i], modelDef.GetModelName());
-                            }
-                        }
-                    }
-
-                    // blend in the eyelids
-                    if (modelDef.NumJointsOnChannel(ANIMCHANNEL_EYELIDS) != 0) {
-                        blend = channels[ANIMCHANNEL_EYELIDS];
-                        blendWeight[0] = baseBlend[0];
-                        for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                            if (blend[j].BlendAnim(currentTime, ANIMCHANNEL_EYELIDS, numJoints, jointFrame, blendWeight, removeOriginOffset, true, debugInfo)) {
-                                hasAnim = true;
-                                if (blendWeight[0] >= 1.0f) {
-                                    // fully blended
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // blend the articulated figure pose
-                    if (BlendAFPose(jointFrame)) {
-                        hasAnim = true;
-                    }
-
-                    if (!hasAnim && 0 == jointMods.Num()) {
-                        // no animations were updated
-                        return false;
-                    }
-
-                    // convert the joint quaternions to rotation matrices
-                    SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints);
-
-                    // check if we need to modify the origin
-                    if (jointMods.Num() != 0 && (jointMods.oGet(0).jointnum == 0)) {
-                        jointMod = jointMods.oGet(0);
-
-                        switch (jointMod.transform_axis) {
-                            case JOINTMOD_NONE:
-                                break;
-
-                            case JOINTMOD_LOCAL:
-                                joints[0].SetRotation(jointMod.mat.oMultiply(joints[0].ToMat3()));
-                                break;
-
-                            case JOINTMOD_WORLD:
-                                joints[0].SetRotation(joints[0].ToMat3().oMultiply(jointMod.mat));
-                                break;
-
-                            case JOINTMOD_LOCAL_OVERRIDE:
-                            case JOINTMOD_WORLD_OVERRIDE:
-                                joints[0].SetRotation(jointMod.mat);
-                                break;
-                        }
-
-                        switch (jointMod.transform_pos) {
-                            case JOINTMOD_NONE:
-                                break;
-
-                            case JOINTMOD_LOCAL:
-                                joints[0].SetTranslation(joints[0].ToVec3().oPlus(jointMod.pos));
-                                break;
-
-                            case JOINTMOD_LOCAL_OVERRIDE:
-                            case JOINTMOD_WORLD:
-                            case JOINTMOD_WORLD_OVERRIDE:
-                                joints[0].SetTranslation(jointMod.pos);
-                                break;
-                        }
-                        j = 1;
-                    } else {
-                        j = 0;
-                    }
-
-                    // add in the model offset
-                    joints[0].SetTranslation(joints[0].ToVec3().oPlus(modelDef.GetVisualOffset()));
-
-                    // pointer to joint info
-                    jointParent = modelDef.JointParents();
-
-                    // add in any joint modifications
-                    for (i = 1; j < jointMods.Num(); j++, i++) {
-                        jointMod = jointMods.oGet(j);
-
-                        // transform any joints preceding the joint modifier
-                        SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, jointMod.jointnum - 1);
-                        i = jointMod.jointnum;
-
-                        parentNum = jointParent[i];
-
-                        // modify the axis
-                        switch (jointMod.transform_axis) {
-                            case JOINTMOD_NONE:
-                                joints[i].SetRotation(joints[i].ToMat3().oMultiply(joints[ parentNum].ToMat3()));
-                                break;
-
-                            case JOINTMOD_LOCAL:
-                                joints[i].SetRotation(jointMod.mat.oMultiply(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3())));
-                                break;
-
-                            case JOINTMOD_LOCAL_OVERRIDE:
-                                joints[i].SetRotation(jointMod.mat.oMultiply(joints[parentNum].ToMat3()));
-                                break;
-
-                            case JOINTMOD_WORLD:
-                                joints[i].SetRotation((joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3())).oMultiply(jointMod.mat));
-                                break;
-
-                            case JOINTMOD_WORLD_OVERRIDE:
-                                joints[i].SetRotation(jointMod.mat);
-                                break;
-                        }
-
-                        // modify the position
-                        switch (jointMod.transform_pos) {
-                            case JOINTMOD_NONE:
-                                joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())));
-                                break;
-
-                            case JOINTMOD_LOCAL:
-                                joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oPlus(jointMod.pos)).oMultiply(joints[parentNum].ToMat3()));
-                                break;
-
-                            case JOINTMOD_LOCAL_OVERRIDE:
-                                joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(jointMod.pos.oMultiply(joints[parentNum].ToMat3())));
-                                break;
-
-                            case JOINTMOD_WORLD:
-                                joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3()).oMultiply(joints[parentNum].ToMat3()).oPlus(jointMod.pos));
-                                break;
-
-                            case JOINTMOD_WORLD_OVERRIDE:
-                                joints[i].SetTranslation(jointMod.pos);
-                                break;
-                        }
-                    }
-
-                    // transform the rest of the hierarchy
-                    SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, numJoints - 1);
-
-                    return true;
-                }
-
-                public boolean FrameHasChanged(int currentTime) {
-                    int i, j;
-                    idAnimBlend[][] blend;
-
-                    if (null == modelDef || null == modelDef.ModelHandle()) {
-                        return false;
-                    }
-
-                    // if animating with an articulated figure
-                    if (AFPoseJoints.Num() != 0 && currentTime <= AFPoseTime) {
-                        return true;
-                    }
-
-                    blend = channels;
-                    for (i = 0; i < ANIM_NumAnimChannels; i++) {
-                        for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                            if (blend[i][j].FrameHasChanged(currentTime)) {
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (forceUpdate && IsAnimating(currentTime)) {
-                        return true;
-                    }
-
-                    return false;
-                }
-
-                public void GetDelta(int fromtime, int totime, idVec3 delta) {
-                    int i;
-                    idAnimBlend[] blend;
-                    float[] blendWeight = {0};
-
-                    if (null == modelDef || null == modelDef.ModelHandle() || (fromtime == totime)) {
-                        delta.Zero();
-                        return;
-                    }
-
-                    delta.Zero();
-                    blendWeight[0] = 0.0f;
-
-                    blend = channels[ANIMCHANNEL_ALL];
-                    for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                        blend[i].BlendDelta(fromtime, totime, delta, blendWeight);
-                    }
-
-                    if (modelDef.Joints().oGet(0).channel != 0) {
-                        final int c = modelDef.Joints().oGet(0).channel;
-                        blend = channels[c];
-                        for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                            blend[i].BlendDelta(fromtime, totime, delta, blendWeight);
-                        }
-                    }
-                }
-
-                public boolean GetDeltaRotation(int fromtime, int totime, idMat3 delta) {
-                    int i;
-                    idAnimBlend[] blend;
-                    float[] blendWeight = {0};
-                    idQuat q;
-
-                    if (null == modelDef || null == modelDef.ModelHandle() || (fromtime == totime)) {
-                        delta.Identity();
-                        return false;
-                    }
-
-                    q = new idQuat(0.0f, 0.0f, 0.0f, 1.0f);
-                    blendWeight[0] = 0.0f;
-
-                    blend = channels[ANIMCHANNEL_ALL];
-                    for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                        blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight);
-                    }
-
-                    if (modelDef.Joints().oGet(0).channel != 0) {
-                        final int c = modelDef.Joints().oGet(0).channel;
-                        blend = channels[c];
-                        for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                            blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight);
-                        }
-                    }
-
-                    if (blendWeight[0] > 0.0f) {
-                        delta.oSet(q.ToMat3());
-                        return true;
-                    } else {
-                        delta.Identity();
-                        return false;
-                    }
-                }
-
-                public void GetOrigin(int currentTime, idVec3 pos) {
-                    int i;
-                    idAnimBlend[] blend;
-                    float[] blendWeight = {0};
-
-                    if (null == modelDef || null == modelDef.ModelHandle()) {
-                        pos.Zero();
-                        return;
-                    }
-
-                    pos.Zero();
-                    blendWeight[0] = 0.0f;
-
-                    blend = channels[ANIMCHANNEL_ALL];
-                    for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                        blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset);
-                    }
-
-                    if (modelDef.Joints().oGet(0).channel != 0) {
-                        final int k = modelDef.Joints().oGet(0).channel;
-                        blend = channels[ k];
-                        for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                            blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset);
-                        }
-                    }
-
-                    pos.oPluSet(modelDef.GetVisualOffset());
-                }
-
-                public boolean GetBounds(int currentTime, idBounds bounds) {
-                    int i, j;
-                    idAnimBlend[][] blend;
-                    int count;
-
-                    if (null == modelDef || null == modelDef.ModelHandle()) {
-                        return false;
-                    }
-
-                    if (AFPoseJoints.Num() != 0) {
-                        bounds = AFPoseBounds;
-                        count = 1;
-                    } else {
-                        bounds.Clear();
-                        count = 0;
-                    }
-
-                    blend = channels;
-                    for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
-                        for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                            if (blend[i][j].AddBounds(currentTime, bounds, removeOriginOffset)) {
-                                count++;
-                            }
-                        }
-                    }
-
-                    if (0 == count) {
-                        if (!frameBounds.IsCleared()) {
-                            bounds.oSet(frameBounds);
-                            return true;
-                        } else {
-                            bounds.Zero();
-                            return false;
-                        }
-                    }
-
-                    bounds.TranslateSelf(modelDef.GetVisualOffset());
-
-                    if (g_debugBounds.GetBool()) {
-                        if (bounds.oGet(1, 0) - bounds.oGet(0, 0) > 2048 || bounds.oGet(1, 1) - bounds.oGet(0, 1) > 2048) {
-                            if (entity != null) {
-                                gameLocal.Warning("big frameBounds on entity '%s' with model '%s': %f,%f", entity.name, modelDef.ModelHandle().Name(), bounds.oGet(1, 0) - bounds.oGet(0, 0), bounds.oGet(1, 1) - bounds.oGet(0, 1));
-                            } else {
-                                gameLocal.Warning("big frameBounds on model '%s': %f,%f", modelDef.ModelHandle().Name(), bounds.oGet(1, 0) - bounds.oGet(0, 0), bounds.oGet(1, 1) - bounds.oGet(0, 1));
-                            }
-                        }
-                    }
-
-                    frameBounds = bounds;
-
-                    return true;
-                }
-
-                public idAnimBlend CurrentAnim(int channelNum) {
-                    if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
-                        gameLocal.Error("idAnimator::CurrentAnim : channel out of range");
-                    }
-
-                    return channels[ channelNum][ 0];
-                }
-
-                public void Clear(int channelNum, int currentTime, int cleartime) {
-                    int i;
-                    idAnimBlend[] blend;
-
-                    if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
-                        gameLocal.Error("idAnimator::Clear : channel out of range");
-                    }
-
-                    blend = channels[channelNum];
-                    for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
-                        blend[i].Clear(currentTime, cleartime);
-                    }
-                    ForceUpdate();
-                }
-
-                public void SetFrame(int channelNum, int animNum, int frame, int currentTime, int blendTime) {
-                    if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
-                        gameLocal.Error("idAnimator::SetFrame : channel out of range");
-                    }
-
-                    if (null == modelDef || null == modelDef.GetAnim(animNum)) {
-                        return;
-                    }
-
-                    PushAnims(channelNum, currentTime, blendTime);
-                    channels[ channelNum][ 0].SetFrame(modelDef, animNum, frame, currentTime, blendTime);
-                    if (entity != null) {
-                        entity.BecomeActive(TH_ANIMATE);
-                    }
-                }
-
-                public void CycleAnim(int channelNum, int animNum, int currentTime, int blendTime) {
-                    if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
-                        gameLocal.Error("idAnimator::CycleAnim : channel out of range");
-                    }
-
-                    if (null == modelDef || null == modelDef.GetAnim(animNum)) {
-                        return;
-                    }
-
-                    PushAnims(channelNum, currentTime, blendTime);
-                    channels[ channelNum][ 0].CycleAnim(modelDef, animNum, currentTime, blendTime);
-                    if (entity != null) {
-                        entity.BecomeActive(TH_ANIMATE);
-                    }
-                }
-
-                public void PlayAnim(int channelNum, int animNum, int currentTime, int blendTime) {
-                    if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
-                        gameLocal.Error("idAnimator::PlayAnim : channel out of range");
-                    }
-
-                    if (null == modelDef || null == modelDef.GetAnim(animNum)) {
-                        return;
-                    }
-
-                    PushAnims(channelNum, currentTime, blendTime);
-                    channels[ channelNum][ 0].PlayAnim(modelDef, animNum, currentTime, blendTime);
-                    if (entity != null) {
-                        entity.BecomeActive(TH_ANIMATE);
-                    }
-                }
-
-                // copies the current anim from fromChannelNum to channelNum.
-                // the copied anim will have frame commands disabled to avoid executing them twice.
-                public void SyncAnimChannels(int channelNum, int fromChannelNum, int currentTime, int blendTime) {
-                    if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels) || (fromChannelNum < 0) || (fromChannelNum >= ANIM_NumAnimChannels)) {
-                        gameLocal.Error("idAnimator::SyncToChannel : channel out of range");
-                    }
-
-                    idAnimBlend fromBlend = channels[ fromChannelNum][ 0];
-                    idAnimBlend toBlend = channels[ channelNum][ 0];
-
-                    float weight = fromBlend.blendEndValue;
-                    if ((fromBlend.Anim() != toBlend.Anim()) || (fromBlend.GetStartTime() != toBlend.GetStartTime()) || (fromBlend.GetEndTime() != toBlend.GetEndTime())) {
-                        PushAnims(channelNum, currentTime, blendTime);
-                        SIMDProcessor.Memcpy(channels[channelNum], channels[fromChannelNum], ANIM_MaxAnimsPerChannel);
-                        toBlend = fromBlend;
-                        toBlend.blendStartValue = 0.0f;
-                        toBlend.blendEndValue = 0.0f;
-                    }
-                    toBlend.SetWeight(weight, currentTime - 1, blendTime);
-
-                    // disable framecommands on the current channel so that commands aren't called twice
-                    toBlend.AllowFrameCommands(false);
-
-                    if (entity != null) {
-                        entity.BecomeActive(TH_ANIMATE);
-                    }
-                }
-
-                public void SetJointPos(int/*jointHandle_t*/ jointnum, jointModTransform_t transform_type, final idVec3 pos) {
-                    int i;
-                    jointMod_t jointMod;
-
-                    if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
-                        return;
-                    }
-
-                    jointMod = null;
-                    for (i = 0; i < jointMods.Num(); i++) {
-                        if (jointMods.oGet(i).jointnum == jointnum) {
-                            jointMod = jointMods.oGet(i);
-                            break;
-                        } else if (jointMods.oGet(i).jointnum > jointnum) {
-                            break;
-                        }
-                    }
-
-                    if (null == jointMod) {
-                        jointMod = new jointMod_t();
-                        jointMod.jointnum = jointnum;
-                        jointMod.mat.Identity();
-                        jointMod.transform_axis = JOINTMOD_NONE;
-                        jointMods.Insert(jointMod, i);
-                    }
-
-                    jointMod.pos.oSet(pos);
-                    jointMod.transform_pos = transform_type;
-
-                    if (entity != null) {
-                        entity.BecomeActive(TH_ANIMATE);
-                    }
-                    ForceUpdate();
-                }
-
-                public void SetJointAxis(int/*jointHandle_t*/ jointnum, jointModTransform_t transform_type, final idMat3 mat) {
-                    int i;
-                    jointMod_t jointMod;
-
-                    if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
-                        return;
-                    }
-
-                    jointMod = null;
-                    for (i = 0; i < jointMods.Num(); i++) {
-                        if (jointMods.oGet(i).jointnum == jointnum) {
-                            jointMod = jointMods.oGet(i);
-                            break;
-                        } else if (jointMods.oGet(i).jointnum > jointnum) {
-                            break;
-                        }
-                    }
-
-                    if (null == jointMod) {
-                        jointMod = new jointMod_t();
-                        jointMod.jointnum = jointnum;
-                        jointMod.pos.Zero();
-                        jointMod.transform_pos = JOINTMOD_NONE;
-                        jointMods.Insert(jointMod, i);
-                    }
-
-                    jointMod.mat.oSet(mat);
-                    jointMod.transform_axis = transform_type;
-
-                    if (entity != null) {
-                        entity.BecomeActive(TH_ANIMATE);
-                    }
-                    ForceUpdate();
-                }
-
-                public void ClearJoint(int/*jointHandle_t*/ jointnum) {
-                    int i;
-
-                    if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
-                        return;
-                    }
-
-                    for (i = 0; i < jointMods.Num(); i++) {
-                        if (jointMods.oGet(i).jointnum == jointnum) {
-//			delete jointMods[ i ];
-                            jointMods.RemoveIndex(i);
-                            ForceUpdate();
-                            break;
-                        } else if (jointMods.oGet(i).jointnum > jointnum) {
-                            break;
-                        }
-                    }
-                }
-
-                public void ClearAllJoints() {
-                    if (jointMods.Num() != 0) {
-                        ForceUpdate();
-                    }
-                    jointMods.DeleteContents(true);
-                }
-
-                public void InitAFPose() {
-
-                    if (null == modelDef) {
-                        return;
-                    }
-
-                    AFPoseJoints.SetNum(modelDef.Joints().Num(), false);
-                    AFPoseJoints.SetNum(0, false);
-                    AFPoseJointMods.SetNum(modelDef.Joints().Num(), false);
-                    AFPoseJointFrame.SetNum(modelDef.Joints().Num(), false);
-                }
-
-                public void SetAFPoseJointMod(final int/*jointHandle_t*/ jointNum, final AFJointModType_t mod, final idMat3 axis, final idVec3 origin) {
-                    AFPoseJointMods.oSet(jointNum, new idAFPoseJointMod());
-                    AFPoseJointMods.oGet(jointNum).mod = mod;
-                    AFPoseJointMods.oGet(jointNum).axis = axis;
-                    AFPoseJointMods.oGet(jointNum).origin = origin;
-
-                    int index = idBinSearch_GreaterEqual(AFPoseJoints.Ptr(), AFPoseJoints.Num(), jointNum);
-                    if (index >= AFPoseJoints.Num() || jointNum != AFPoseJoints.oGet(index)) {
-                        AFPoseJoints.Insert(jointNum, index);
-                    }
-                }
-
-                public void FinishAFPose(int animNum, final idBounds bounds, final int time) {
-                    int i, j;
-                    int numJoints;
-                    int parentNum;
-                    int jointMod;
-                    int jointNum;
-                    Integer[] jointParent;
-
-                    if (null == modelDef) {
-                        return;
-                    }
-
-                    final idAnim anim = modelDef.GetAnim(animNum);
-                    if (null == anim) {
-                        return;
-                    }
-
-                    numJoints = modelDef.Joints().Num();
-                    if (0 == numJoints) {
-                        return;
-                    }
-
-                    idRenderModel md5 = modelDef.ModelHandle();
-                    final idMD5Anim md5anim = anim.MD5Anim(0);
-
-                    if (numJoints != md5anim.NumJoints()) {
-                        gameLocal.Warning("Model '%s' has different # of joints than anim '%s'", md5.Name(), md5anim.Name());
-                        return;
-                    }
-
-                    idJointQuat[] jointFrame = new idJointQuat[numJoints];
-                    md5anim.GetSingleFrame(0, jointFrame, itoi(modelDef.GetChannelJoints(ANIMCHANNEL_ALL)), modelDef.NumJointsOnChannel(ANIMCHANNEL_ALL));
-
-                    if (removeOriginOffset) {
-                        if (VELOCITY_MOVE) {
-                            jointFrame[ 0].t.x = 0.0f;
-                        } else {
-                            jointFrame[ 0].t.Zero();
-                        }
-                    }
-
-                    idJointMat[] joints = Stream.generate(idJointMat::new).limit(numJoints).toArray(idJointMat[]::new);
-
-                    // convert the joint quaternions to joint matrices
-                    SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints);
-
-                    // first joint is always root of entire hierarchy
-                    if (AFPoseJoints.Num() != 0 && AFPoseJoints.oGet(0) == 0) {
-                        switch (AFPoseJointMods.oGet(0).mod) {
-                            case AF_JOINTMOD_AXIS: {
-                                joints[0].SetRotation(AFPoseJointMods.oGet(0).axis);
-                                break;
-                            }
-                            case AF_JOINTMOD_ORIGIN: {
-                                joints[0].SetTranslation(AFPoseJointMods.oGet(0).origin);
-                                break;
-                            }
-                            case AF_JOINTMOD_BOTH: {
-                                joints[0].SetRotation(AFPoseJointMods.oGet(0).axis);
-                                joints[0].SetTranslation(AFPoseJointMods.oGet(0).origin);
-                                break;
-                            }
-                        }
-                        j = 1;
-                    } else {
-                        j = 0;
-                    }
-
-                    // pointer to joint info
-                    jointParent = modelDef.JointParents();
-
-                    // transform the child joints
-                    for (i = 1; j < AFPoseJoints.Num(); j++, i++) {
-                        jointMod = AFPoseJoints.oGet(j);
-
-                        // transform any joints preceding the joint modifier
-                        SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, jointMod - 1);
-                        i = jointMod;
-
-                        parentNum = jointParent[i];
-
-                        switch (AFPoseJointMods.oGet(jointMod).mod) {
-                            case AF_JOINTMOD_AXIS: {
-                                joints[i].SetRotation(AFPoseJointMods.oGet(jointMod).axis);
-                                joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())));
-                                break;
-                            }
-                            case AF_JOINTMOD_ORIGIN: {
-                                joints[i].SetRotation(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3()));
-                                joints[i].SetTranslation(AFPoseJointMods.oGet(jointMod).origin);
-                                break;
-                            }
-                            case AF_JOINTMOD_BOTH: {
-                                joints[i].SetRotation(AFPoseJointMods.oGet(jointMod).axis);
-                                joints[i].SetTranslation(AFPoseJointMods.oGet(jointMod).origin);
-                                break;
-                            }
-                        }
-                    }
-
-                    // transform the rest of the hierarchy
-                    SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, numJoints - 1);
-
-                    // untransform hierarchy
-                    SIMDProcessor.UntransformJoints(joints, itoi(jointParent), 1, numJoints - 1);
-
-                    // convert joint matrices back to joint quaternions
-                    SIMDProcessor.ConvertJointMatsToJointQuats(AFPoseJointFrame, joints, numJoints);
-
-                    // find all modified joints and their parents
-                    boolean[] blendJoints = new boolean[numJoints];//memset( blendJoints, 0, numJoints * sizeof( bool ) );
-
-                    // mark all modified joints and their parents
-                    for (i = 0; i < AFPoseJoints.Num(); i++) {
-                        for (jointNum = AFPoseJoints.oGet(i); jointNum != INVALID_JOINT; jointNum = jointParent[jointNum]) {
-                            blendJoints[jointNum] = true;
-                        }
-                    }
-
-                    // lock all parents of modified joints
-                    AFPoseJoints.SetNum(0, false);
-                    for (i = 0; i < numJoints; i++) {
-                        if (blendJoints[i]) {
-                            AFPoseJoints.Append(i);
-                        }
-                    }
-
-                    AFPoseBounds.oSet(bounds);
-                    AFPoseTime = time;
-
-                    ForceUpdate();
-                }
-
-                public void SetAFPoseBlendWeight(float blendWeight) {
-                    AFPoseBlendWeight = blendWeight;
-                }
-
-                public boolean BlendAFPose(idJointQuat[] blendFrame) {
-
-                    if (0 == AFPoseJoints.Num()) {
-                        return false;
-                    }
-
-                    SIMDProcessor.BlendJoints(blendFrame, AFPoseJointFrame.Ptr(idJointQuat[].class), AFPoseBlendWeight, itoi(AFPoseJoints.Ptr(Integer[].class)), AFPoseJoints.Num());
-
-                    return true;
-                }
-
-                public void ClearAFPose() {
-                    if (AFPoseJoints.Num() != 0) {
-                        ForceUpdate();
-                    }
-                    AFPoseBlendWeight = 1.0f;
-                    AFPoseJoints.SetNum(0, false);
-                    AFPoseBounds.Clear();
-                    AFPoseTime = 0;
-                }
-
-                public void ClearAllAnims(int currentTime, int cleartime) {
-                    int i;
-
-                    for (i = 0; i < ANIM_NumAnimChannels; i++) {
-                        Clear(i, currentTime, cleartime);
-                    }
-
-                    ClearAFPose();
-                    ForceUpdate();
-                }
-
-                public int/*jointHandle_t*/ GetJointHandle(final String name) {
-                    if (null == modelDef || null == modelDef.ModelHandle()) {
-                        return INVALID_JOINT;
-                    }
-
-                    return modelDef.ModelHandle().GetJointHandle(name);
-                }
-
-                public int/*jointHandle_t*/ GetJointHandle(final idStr name) {
-                    return GetJointHandle(name.toString());
-                }
-
-                public String GetJointName(int/*jointHandle_t*/ handle) {
-                    if (null == modelDef || null == modelDef.ModelHandle()) {
-                        return "";
-                    }
-
-                    return modelDef.ModelHandle().GetJointName(handle);
-                }
-
-                public int GetChannelForJoint(int/*jointHandle_t*/ joint) {
-                    if (null == modelDef) {
-                        gameLocal.Error("idAnimator::GetChannelForJoint: NULL model");
-                    }
-
-                    if ((joint < 0) || (joint >= numJoints)) {
-                        gameLocal.Error("idAnimator::GetChannelForJoint: invalid joint num (%d)", joint);
-                    }
-
-                    return modelDef.GetJoint(joint).channel;
-                }
-
-                public boolean GetJointTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
-                    if (null == modelDef || (jointHandle < 0) || (jointHandle >= modelDef.NumJoints())) {
-                        return false;
-                    }
-
-                    CreateFrame(currentTime, false);
-
-                    offset.oSet(joints[ jointHandle].ToVec3());
-                    axis.oSet(joints[ jointHandle].ToMat3());
-
-                    return true;
-                }
-
-                public boolean GetJointLocalTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
-                    if (null == modelDef) {
-                        return false;
-                    }
-
-                    final idList<jointInfo_t> modelJoints = modelDef.Joints();
-
-                    if ((jointHandle < 0) || (jointHandle >= modelJoints.Num())) {
-                        return false;
-                    }
-
-                    // FIXME: overkill
-                    CreateFrame(currentTime, false);
-
-                    if (jointHandle > 0) {
-                        idJointMat m = new idJointMat(joints[ jointHandle]);
-                        m.oDivSet(joints[ modelJoints.oGet(jointHandle).parentNum]);
-                        offset.oSet(m.ToVec3());
-                        axis.oSet(m.ToMat3());
-                    } else {
-                        offset.oSet(joints[ jointHandle].ToVec3());
-                        axis.oSet(joints[ jointHandle].ToMat3());
-                    }
-
-                    return true;
-                }
-
-                public animFlags_t GetAnimFlags(int animNum) {
-                    animFlags_t result;
-
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.GetAnimFlags();
-                    }
-
-//	memset( &result, 0, sizeof( result ) );
-                    result = new animFlags_t();
-                    return result;
-                }
-
-                public int NumFrames(int animNum) {
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.NumFrames();
-                    } else {
-                        return 0;
-                    }
-                }
-
-                public int NumSyncedAnims(int animNum) {
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.NumAnims();
-                    } else {
-                        return 0;
-                    }
-                }
-
-                public String AnimName(int animNum) {
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.Name();
-                    } else {
-                        return "";
-                    }
-                }
-
-                public String AnimFullName(int animNum) {
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.FullName();
-                    } else {
-                        return "";
-                    }
-                }
-
-                public int AnimLength(int animNum) {
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.Length();
-                    } else {
-                        return 0;
-                    }
-                }
-
-                public idVec3 TotalMovementDelta(int animNum) {
-                    final idAnim anim = GetAnim(animNum);
-                    if (anim != null) {
-                        return anim.TotalMovementDelta();
-                    } else {
-                        return getVec3_origin();
-                    }
-                }
-
-                private void FreeData() {
-                    int i, j;
-
-                    if (entity != null) {
-                        entity.BecomeInactive(TH_ANIMATE);
-                    }
-
-                    for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
-                        for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                            channels[ i][ j].Reset(null);
-                        }
-                    }
-
-                    jointMods.DeleteContents(true);
-
-//	Mem_Free16( joints );
-                    joints = null;
-                    numJoints = 0;
-
-                    modelDef = null;
-
-                    ForceUpdate();
-                }
-
-                private void PushAnims(int channelNum, int currentTime, int blendTime) {
-                    int i;
-                    idAnimBlend[] channel;
-
-                    channel = channels[ channelNum];
-                    if (0 == channel[ 0].GetWeight(currentTime) || (channel[ 0].starttime == currentTime)) {
-                        return;
-                    }
-
-                    for (i = ANIM_MaxAnimsPerChannel - 1; i > 0; i--) {
-                        channel[ i] = channel[ i - 1];
-                    }
-
-                    channel[ 0].Reset(modelDef);
-                    channel[ 1].Clear(currentTime, blendTime);
-                    ForceUpdate();
-                }
-    };
-    /* **********************************************************************
-
-     Util functions
-
-     ***********************************************************************/
-    /*
-     =====================
-     ANIM_GetModelDefFromEntityDef
-     =====================
-     */
-
-    public static idDeclModelDef ANIM_GetModelDefFromEntityDef(final idDict args) {
-        idDeclModelDef modelDef;
-
-        String name = args.GetString("model");
-        modelDef = (idDeclModelDef) declManager.FindType(DECL_MODELDEF, name, false);
-        if (modelDef != null && modelDef.ModelHandle() != null) {
+        public idDeclModelDef ModelDef() {
             return modelDef;
         }
 
-        return null;
+        public void ForceUpdate() {
+            lastTransformTime = -1;
+            forceUpdate = true;
+        }
+
+        public void ClearForceUpdate() {
+            forceUpdate = false;
+        }
+
+        public boolean CreateFrame(int currentTime, boolean force) {
+            int i, j;
+            int numJoints;
+            int parentNum;
+            boolean hasAnim;
+            boolean debugInfo;
+            float[] baseBlend = {0};
+            float[] blendWeight = {0};
+            idAnimBlend[] blend;
+            Integer[] jointParent;
+            jointMod_t jointMod;
+            idJointQuat[] defaultPose;
+
+            if (gameLocal.inCinematic && gameLocal.skipCinematic) {
+                return false;
+            }
+
+            if (null == modelDef || null == modelDef.ModelHandle()) {
+                return false;
+            }
+
+            if (!force && 0 == r_showSkel.GetInteger()) {
+                if (lastTransformTime == currentTime) {
+                    return false;
+                }
+                if (lastTransformTime != -1 && !stoppedAnimatingUpdate && !IsAnimating(currentTime)) {
+                    return false;
+                }
+            }
+
+            lastTransformTime = currentTime;
+            stoppedAnimatingUpdate = false;
+            numJoints = modelDef.Joints().Num();
+
+            if (entity != null && ((g_debugAnim.GetInteger() == entity.entityNumber) || (g_debugAnim.GetInteger() == -2))) {
+                debugInfo = true;
+                gameLocal.Printf("---------------\n%d: entity '%s':\n", gameLocal.time, entity.GetName());
+                gameLocal.Printf("model '%s':\n", modelDef.GetModelName());
+            } else {
+                debugInfo = false;
+            }
+
+            // init the joint buffer
+            if (AFPoseJoints.Num() != 0) {
+                // initialize with AF pose anim for the case where there are no other animations and no AF pose joint modifications
+                defaultPose = AFPoseJointFrame.getList(idJointQuat[].class);
+            } else {
+                defaultPose = modelDef.GetDefaultPose();
+            }
+
+            if (null == defaultPose) {
+                //gameLocal.Warning( "idAnimator::CreateFrame: no defaultPose on '%s'", modelDef.Name() );
+                return false;
+            }
+
+            idJointQuat[] jointFrame = new idJointQuat[numJoints];
+            SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
+
+            hasAnim = false;
+
+            // blend the all channel
+            baseBlend[0] = 0.0f;
+            blend = channels[ANIMCHANNEL_ALL];
+            for (j = ANIMCHANNEL_ALL; j < ANIM_MaxAnimsPerChannel; j++) {
+                if (blend[j].BlendAnim(currentTime, ANIMCHANNEL_ALL, numJoints, jointFrame, baseBlend, removeOriginOffset, false, debugInfo)) {
+                    hasAnim = true;
+                    if (baseBlend[0] >= 1.0f) {
+                        break;
+                    }
+                }
+            }
+
+            // only blend other channels if there's enough space to blend into
+            if (baseBlend[0] < 1.0f) {
+                for (i = ANIMCHANNEL_ALL + 1; i < ANIM_NumAnimChannels; i++) {
+                    if (0 == modelDef.NumJointsOnChannel(i)) {
+                        continue;
+                    }
+                    if (i == ANIMCHANNEL_EYELIDS) {
+                        // eyelids blend over any previous anims, so skip it and blend it later
+                        continue;
+                    }
+                    blendWeight[0] = baseBlend[0];
+                    blend = channels[i];
+                    for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
+                        if (blend[j].BlendAnim(currentTime, i, numJoints, jointFrame, blendWeight, removeOriginOffset, false, debugInfo)) {
+                            hasAnim = true;
+                            if (blendWeight[0] >= 1.0f) {
+                                // fully blended
+                                break;
+                            }
+                        }
+                    }
+
+                    if (debugInfo && 0 == AFPoseJoints.Num() && 0 == blendWeight[0]) {
+                        gameLocal.Printf("%d: %s using default pose in model '%s'\n", gameLocal.time, channelNames[i], modelDef.GetModelName());
+                    }
+                }
+            }
+
+            // blend in the eyelids
+            if (modelDef.NumJointsOnChannel(ANIMCHANNEL_EYELIDS) != 0) {
+                blend = channels[ANIMCHANNEL_EYELIDS];
+                blendWeight[0] = baseBlend[0];
+                for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
+                    if (blend[j].BlendAnim(currentTime, ANIMCHANNEL_EYELIDS, numJoints, jointFrame, blendWeight, removeOriginOffset, true, debugInfo)) {
+                        hasAnim = true;
+                        if (blendWeight[0] >= 1.0f) {
+                            // fully blended
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // blend the articulated figure pose
+            if (BlendAFPose(jointFrame)) {
+                hasAnim = true;
+            }
+
+            if (!hasAnim && 0 == jointMods.Num()) {
+                // no animations were updated
+                return false;
+            }
+
+            // convert the joint quaternions to rotation matrices
+            SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints);
+
+            // check if we need to modify the origin
+            if (jointMods.Num() != 0 && (jointMods.oGet(0).jointnum == 0)) {
+                jointMod = jointMods.oGet(0);
+
+                switch (jointMod.transform_axis) {
+                    case JOINTMOD_NONE:
+                        break;
+
+                    case JOINTMOD_LOCAL:
+                        joints[0].SetRotation(jointMod.mat.oMultiply(joints[0].ToMat3()));
+                        break;
+
+                    case JOINTMOD_WORLD:
+                        joints[0].SetRotation(joints[0].ToMat3().oMultiply(jointMod.mat));
+                        break;
+
+                    case JOINTMOD_LOCAL_OVERRIDE:
+                    case JOINTMOD_WORLD_OVERRIDE:
+                        joints[0].SetRotation(jointMod.mat);
+                        break;
+                }
+
+                switch (jointMod.transform_pos) {
+                    case JOINTMOD_NONE:
+                        break;
+
+                    case JOINTMOD_LOCAL:
+                        joints[0].SetTranslation(joints[0].ToVec3().oPlus(jointMod.pos));
+                        break;
+
+                    case JOINTMOD_LOCAL_OVERRIDE:
+                    case JOINTMOD_WORLD:
+                    case JOINTMOD_WORLD_OVERRIDE:
+                        joints[0].SetTranslation(jointMod.pos);
+                        break;
+                }
+                j = 1;
+            } else {
+                j = 0;
+            }
+
+            // add in the model offset
+            joints[0].SetTranslation(joints[0].ToVec3().oPlus(modelDef.GetVisualOffset()));
+
+            // pointer to joint info
+            jointParent = modelDef.JointParents();
+
+            // add in any joint modifications
+            for (i = 1; j < jointMods.Num(); j++, i++) {
+                jointMod = jointMods.oGet(j);
+
+                // transform any joints preceding the joint modifier
+                SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, jointMod.jointnum - 1);
+                i = jointMod.jointnum;
+
+                parentNum = jointParent[i];
+
+                // modify the axis
+                switch (jointMod.transform_axis) {
+                    case JOINTMOD_NONE:
+                        joints[i].SetRotation(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3()));
+                        break;
+
+                    case JOINTMOD_LOCAL:
+                        joints[i].SetRotation(jointMod.mat.oMultiply(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3())));
+                        break;
+
+                    case JOINTMOD_LOCAL_OVERRIDE:
+                        joints[i].SetRotation(jointMod.mat.oMultiply(joints[parentNum].ToMat3()));
+                        break;
+
+                    case JOINTMOD_WORLD:
+                        joints[i].SetRotation((joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3())).oMultiply(jointMod.mat));
+                        break;
+
+                    case JOINTMOD_WORLD_OVERRIDE:
+                        joints[i].SetRotation(jointMod.mat);
+                        break;
+                }
+
+                // modify the position
+                switch (jointMod.transform_pos) {
+                    case JOINTMOD_NONE:
+                        joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())));
+                        break;
+
+                    case JOINTMOD_LOCAL:
+                        joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oPlus(jointMod.pos)).oMultiply(joints[parentNum].ToMat3()));
+                        break;
+
+                    case JOINTMOD_LOCAL_OVERRIDE:
+                        joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(jointMod.pos.oMultiply(joints[parentNum].ToMat3())));
+                        break;
+
+                    case JOINTMOD_WORLD:
+                        joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3()).oMultiply(joints[parentNum].ToMat3()).oPlus(jointMod.pos));
+                        break;
+
+                    case JOINTMOD_WORLD_OVERRIDE:
+                        joints[i].SetTranslation(jointMod.pos);
+                        break;
+                }
+            }
+
+            // transform the rest of the hierarchy
+            SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, numJoints - 1);
+
+            return true;
+        }
+
+        public boolean FrameHasChanged(int currentTime) {
+            int i, j;
+            idAnimBlend[][] blend;
+
+            if (null == modelDef || null == modelDef.ModelHandle()) {
+                return false;
+            }
+
+            // if animating with an articulated figure
+            if (AFPoseJoints.Num() != 0 && currentTime <= AFPoseTime) {
+                return true;
+            }
+
+            blend = channels;
+            for (i = 0; i < ANIM_NumAnimChannels; i++) {
+                for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
+                    if (blend[i][j].FrameHasChanged(currentTime)) {
+                        return true;
+                    }
+                }
+            }
+
+            return forceUpdate && IsAnimating(currentTime);
+        }
+
+        public void GetDelta(int fromtime, int totime, idVec3 delta) {
+            int i;
+            idAnimBlend[] blend;
+            float[] blendWeight = {0};
+
+            if (null == modelDef || null == modelDef.ModelHandle() || (fromtime == totime)) {
+                delta.Zero();
+                return;
+            }
+
+            delta.Zero();
+            blendWeight[0] = 0.0f;
+
+            blend = channels[ANIMCHANNEL_ALL];
+            for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                blend[i].BlendDelta(fromtime, totime, delta, blendWeight);
+            }
+
+            if (modelDef.Joints().oGet(0).channel != 0) {
+                final int c = modelDef.Joints().oGet(0).channel;
+                blend = channels[c];
+                for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                    blend[i].BlendDelta(fromtime, totime, delta, blendWeight);
+                }
+            }
+        }
+
+        public boolean GetDeltaRotation(int fromtime, int totime, idMat3 delta) {
+            int i;
+            idAnimBlend[] blend;
+            float[] blendWeight = {0};
+            idQuat q;
+
+            if (null == modelDef || null == modelDef.ModelHandle() || (fromtime == totime)) {
+                delta.Identity();
+                return false;
+            }
+
+            q = new idQuat(0.0f, 0.0f, 0.0f, 1.0f);
+            blendWeight[0] = 0.0f;
+
+            blend = channels[ANIMCHANNEL_ALL];
+            for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight);
+            }
+
+            if (modelDef.Joints().oGet(0).channel != 0) {
+                final int c = modelDef.Joints().oGet(0).channel;
+                blend = channels[c];
+                for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                    blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight);
+                }
+            }
+
+            if (blendWeight[0] > 0.0f) {
+                delta.oSet(q.ToMat3());
+                return true;
+            } else {
+                delta.Identity();
+                return false;
+            }
+        }
+
+        public void GetOrigin(int currentTime, idVec3 pos) {
+            int i;
+            idAnimBlend[] blend;
+            float[] blendWeight = {0};
+
+            if (null == modelDef || null == modelDef.ModelHandle()) {
+                pos.Zero();
+                return;
+            }
+
+            pos.Zero();
+            blendWeight[0] = 0.0f;
+
+            blend = channels[ANIMCHANNEL_ALL];
+            for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset);
+            }
+
+            if (modelDef.Joints().oGet(0).channel != 0) {
+                final int k = modelDef.Joints().oGet(0).channel;
+                blend = channels[k];
+                for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                    blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset);
+                }
+            }
+
+            pos.oPluSet(modelDef.GetVisualOffset());
+        }
+
+        public boolean GetBounds(int currentTime, idBounds bounds) {
+            int i, j;
+            idAnimBlend[][] blend;
+            int count;
+
+            if (null == modelDef || null == modelDef.ModelHandle()) {
+                return false;
+            }
+
+            if (AFPoseJoints.Num() != 0) {
+                bounds = AFPoseBounds;
+                count = 1;
+            } else {
+                bounds.Clear();
+                count = 0;
+            }
+
+            blend = channels;
+            for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
+                for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
+                    if (blend[i][j].AddBounds(currentTime, bounds, removeOriginOffset)) {
+                        count++;
+                    }
+                }
+            }
+
+            if (0 == count) {
+                if (!frameBounds.IsCleared()) {
+                    bounds.oSet(frameBounds);
+                    return true;
+                } else {
+                    bounds.Zero();
+                    return false;
+                }
+            }
+
+            bounds.TranslateSelf(modelDef.GetVisualOffset());
+
+            if (g_debugBounds.GetBool()) {
+                if (bounds.oGet(1, 0) - bounds.oGet(0, 0) > 2048 || bounds.oGet(1, 1) - bounds.oGet(0, 1) > 2048) {
+                    if (entity != null) {
+                        gameLocal.Warning("big frameBounds on entity '%s' with model '%s': %f,%f", entity.name, modelDef.ModelHandle().Name(), bounds.oGet(1, 0) - bounds.oGet(0, 0), bounds.oGet(1, 1) - bounds.oGet(0, 1));
+                    } else {
+                        gameLocal.Warning("big frameBounds on model '%s': %f,%f", modelDef.ModelHandle().Name(), bounds.oGet(1, 0) - bounds.oGet(0, 0), bounds.oGet(1, 1) - bounds.oGet(0, 1));
+                    }
+                }
+            }
+
+            frameBounds = bounds;
+
+            return true;
+        }
+
+        public idAnimBlend CurrentAnim(int channelNum) {
+            if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
+                Game_local.idGameLocal.Error("idAnimator::CurrentAnim : channel out of range");
+            }
+
+            return channels[channelNum][0];
+        }
+
+        public void Clear(int channelNum, int currentTime, int cleartime) {
+            int i;
+            idAnimBlend[] blend;
+
+            if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
+                Game_local.idGameLocal.Error("idAnimator::Clear : channel out of range");
+            }
+
+            blend = channels[channelNum];
+            for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
+                blend[i].Clear(currentTime, cleartime);
+            }
+            ForceUpdate();
+        }
+
+        public void SetFrame(int channelNum, int animNum, int frame, int currentTime, int blendTime) {
+            if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
+                Game_local.idGameLocal.Error("idAnimator::SetFrame : channel out of range");
+            }
+
+            if (null == modelDef || null == modelDef.GetAnim(animNum)) {
+                return;
+            }
+
+            PushAnims(channelNum, currentTime, blendTime);
+            channels[channelNum][0].SetFrame(modelDef, animNum, frame, currentTime, blendTime);
+            if (entity != null) {
+                entity.BecomeActive(TH_ANIMATE);
+            }
+        }
+
+        public void CycleAnim(int channelNum, int animNum, int currentTime, int blendTime) {
+            if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
+                Game_local.idGameLocal.Error("idAnimator::CycleAnim : channel out of range");
+            }
+
+            if (null == modelDef || null == modelDef.GetAnim(animNum)) {
+                return;
+            }
+
+            PushAnims(channelNum, currentTime, blendTime);
+            channels[channelNum][0].CycleAnim(modelDef, animNum, currentTime, blendTime);
+            if (entity != null) {
+                entity.BecomeActive(TH_ANIMATE);
+            }
+        }
+
+        public void PlayAnim(int channelNum, int animNum, int currentTime, int blendTime) {
+            if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
+                Game_local.idGameLocal.Error("idAnimator::PlayAnim : channel out of range");
+            }
+
+            if (null == modelDef || null == modelDef.GetAnim(animNum)) {
+                return;
+            }
+
+            PushAnims(channelNum, currentTime, blendTime);
+            channels[channelNum][0].PlayAnim(modelDef, animNum, currentTime, blendTime);
+            if (entity != null) {
+                entity.BecomeActive(TH_ANIMATE);
+            }
+        }
+
+        // copies the current anim from fromChannelNum to channelNum.
+        // the copied anim will have frame commands disabled to avoid executing them twice.
+        public void SyncAnimChannels(int channelNum, int fromChannelNum, int currentTime, int blendTime) {
+            if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels) || (fromChannelNum < 0) || (fromChannelNum >= ANIM_NumAnimChannels)) {
+                Game_local.idGameLocal.Error("idAnimator::SyncToChannel : channel out of range");
+            }
+
+            idAnimBlend fromBlend = channels[fromChannelNum][0];
+            idAnimBlend toBlend = channels[channelNum][0];
+
+            float weight = fromBlend.blendEndValue;
+            if ((fromBlend.Anim() != toBlend.Anim()) || (fromBlend.GetStartTime() != toBlend.GetStartTime()) || (fromBlend.GetEndTime() != toBlend.GetEndTime())) {
+                PushAnims(channelNum, currentTime, blendTime);
+                SIMDProcessor.Memcpy(channels[channelNum], channels[fromChannelNum], ANIM_MaxAnimsPerChannel);
+                toBlend = fromBlend;
+                toBlend.blendStartValue = 0.0f;
+                toBlend.blendEndValue = 0.0f;
+            }
+            toBlend.SetWeight(weight, currentTime - 1, blendTime);
+
+            // disable framecommands on the current channel so that commands aren't called twice
+            toBlend.AllowFrameCommands(false);
+
+            if (entity != null) {
+                entity.BecomeActive(TH_ANIMATE);
+            }
+        }
+
+        public void SetJointPos(int/*jointHandle_t*/ jointnum, jointModTransform_t transform_type, final idVec3 pos) {
+            int i;
+            jointMod_t jointMod;
+
+            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
+                return;
+            }
+
+            jointMod = null;
+            for (i = 0; i < jointMods.Num(); i++) {
+                if (jointMods.oGet(i).jointnum == jointnum) {
+                    jointMod = jointMods.oGet(i);
+                    break;
+                } else if (jointMods.oGet(i).jointnum > jointnum) {
+                    break;
+                }
+            }
+
+            if (null == jointMod) {
+                jointMod = new jointMod_t();
+                jointMod.jointnum = jointnum;
+                jointMod.mat.Identity();
+                jointMod.transform_axis = JOINTMOD_NONE;
+                jointMods.Insert(jointMod, i);
+            }
+
+            jointMod.pos.oSet(pos);
+            jointMod.transform_pos = transform_type;
+
+            if (entity != null) {
+                entity.BecomeActive(TH_ANIMATE);
+            }
+            ForceUpdate();
+        }
+
+        public void SetJointAxis(int/*jointHandle_t*/ jointnum, jointModTransform_t transform_type, final idMat3 mat) {
+            int i;
+            jointMod_t jointMod;
+
+            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
+                return;
+            }
+
+            jointMod = null;
+            for (i = 0; i < jointMods.Num(); i++) {
+                if (jointMods.oGet(i).jointnum == jointnum) {
+                    jointMod = jointMods.oGet(i);
+                    break;
+                } else if (jointMods.oGet(i).jointnum > jointnum) {
+                    break;
+                }
+            }
+
+            if (null == jointMod) {
+                jointMod = new jointMod_t();
+                jointMod.jointnum = jointnum;
+                jointMod.pos.Zero();
+                jointMod.transform_pos = JOINTMOD_NONE;
+                jointMods.Insert(jointMod, i);
+            }
+
+            jointMod.mat.oSet(mat);
+            jointMod.transform_axis = transform_type;
+
+            if (entity != null) {
+                entity.BecomeActive(TH_ANIMATE);
+            }
+            ForceUpdate();
+        }
+
+        public void ClearJoint(int/*jointHandle_t*/ jointnum) {
+            int i;
+
+            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
+                return;
+            }
+
+            for (i = 0; i < jointMods.Num(); i++) {
+                if (jointMods.oGet(i).jointnum == jointnum) {
+//			delete jointMods[ i ];
+                    jointMods.RemoveIndex(i);
+                    ForceUpdate();
+                    break;
+                } else if (jointMods.oGet(i).jointnum > jointnum) {
+                    break;
+                }
+            }
+        }
+
+        public void ClearAllJoints() {
+            if (jointMods.Num() != 0) {
+                ForceUpdate();
+            }
+            jointMods.DeleteContents(true);
+        }
+
+        public void InitAFPose() {
+
+            if (null == modelDef) {
+                return;
+            }
+
+            AFPoseJoints.SetNum(modelDef.Joints().Num(), false);
+            AFPoseJoints.SetNum(0, false);
+            AFPoseJointMods.SetNum(modelDef.Joints().Num(), false);
+            AFPoseJointFrame.SetNum(modelDef.Joints().Num(), false);
+        }
+
+        public void SetAFPoseJointMod(final int/*jointHandle_t*/ jointNum, final AFJointModType_t mod, final idMat3 axis, final idVec3 origin) {
+            AFPoseJointMods.oSet(jointNum, new idAFPoseJointMod());
+            AFPoseJointMods.oGet(jointNum).mod = mod;
+            AFPoseJointMods.oGet(jointNum).axis = axis;
+            AFPoseJointMods.oGet(jointNum).origin = origin;
+
+            Object[] ptr = AFPoseJoints.getList();
+
+            if (ptr == null || ptr.length == 0) {
+                return;
+            }
+
+            int index = idBinSearch_GreaterEqual(ptr, AFPoseJoints.Num(), jointNum);
+            if (index >= AFPoseJoints.Num() || jointNum != AFPoseJoints.oGet(index)) {
+                AFPoseJoints.Insert(jointNum, index);
+            }
+        }
+
+        public void FinishAFPose(int animNum, final idBounds bounds, final int time) {
+            int i, j;
+            int numJoints;
+            int parentNum;
+            int jointMod;
+            int jointNum;
+            Integer[] jointParent;
+
+            if (null == modelDef) {
+                return;
+            }
+
+            final idAnim anim = modelDef.GetAnim(animNum);
+            if (null == anim) {
+                return;
+            }
+
+            numJoints = modelDef.Joints().Num();
+            if (0 == numJoints) {
+                return;
+            }
+
+            idRenderModel md5 = modelDef.ModelHandle();
+            final idMD5Anim md5anim = anim.MD5Anim(0);
+
+            if (numJoints != md5anim.NumJoints()) {
+                gameLocal.Warning("Model '%s' has different # of joints than anim '%s'", md5.Name(), md5anim.Name());
+                return;
+            }
+
+            idJointQuat[] jointFrame = new idJointQuat[numJoints];
+            md5anim.GetSingleFrame(0, jointFrame, itoi(modelDef.GetChannelJoints(ANIMCHANNEL_ALL)), modelDef.NumJointsOnChannel(ANIMCHANNEL_ALL));
+
+            if (removeOriginOffset) {
+                if (VELOCITY_MOVE) {
+                    jointFrame[0].t.x = 0.0f;
+                } else {
+                    jointFrame[0].t.Zero();
+                }
+            }
+
+            idJointMat[] joints = Stream.generate(idJointMat::new).limit(numJoints).toArray(idJointMat[]::new);
+
+            // convert the joint quaternions to joint matrices
+            SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints);
+
+            // first joint is always root of entire hierarchy
+            if (AFPoseJoints.Num() != 0 && AFPoseJoints.oGet(0) == 0) {
+                switch (AFPoseJointMods.oGet(0).mod) {
+                    case AF_JOINTMOD_AXIS: {
+                        joints[0].SetRotation(AFPoseJointMods.oGet(0).axis);
+                        break;
+                    }
+                    case AF_JOINTMOD_ORIGIN: {
+                        joints[0].SetTranslation(AFPoseJointMods.oGet(0).origin);
+                        break;
+                    }
+                    case AF_JOINTMOD_BOTH: {
+                        joints[0].SetRotation(AFPoseJointMods.oGet(0).axis);
+                        joints[0].SetTranslation(AFPoseJointMods.oGet(0).origin);
+                        break;
+                    }
+                }
+                j = 1;
+            } else {
+                j = 0;
+            }
+
+            // pointer to joint info
+            jointParent = modelDef.JointParents();
+
+            // transform the child joints
+            for (i = 1; j < AFPoseJoints.Num(); j++, i++) {
+                jointMod = AFPoseJoints.oGet(j);
+
+                // transform any joints preceding the joint modifier
+                SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, jointMod - 1);
+                i = jointMod;
+
+                parentNum = jointParent[i];
+
+                switch (AFPoseJointMods.oGet(jointMod).mod) {
+                    case AF_JOINTMOD_AXIS: {
+                        joints[i].SetRotation(AFPoseJointMods.oGet(jointMod).axis);
+                        joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())));
+                        break;
+                    }
+                    case AF_JOINTMOD_ORIGIN: {
+                        joints[i].SetRotation(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3()));
+                        joints[i].SetTranslation(AFPoseJointMods.oGet(jointMod).origin);
+                        break;
+                    }
+                    case AF_JOINTMOD_BOTH: {
+                        joints[i].SetRotation(AFPoseJointMods.oGet(jointMod).axis);
+                        joints[i].SetTranslation(AFPoseJointMods.oGet(jointMod).origin);
+                        break;
+                    }
+                }
+            }
+
+            // transform the rest of the hierarchy
+            SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, numJoints - 1);
+
+            // untransform hierarchy
+            SIMDProcessor.UntransformJoints(joints, itoi(jointParent), 1, numJoints - 1);
+
+            // convert joint matrices back to joint quaternions
+            SIMDProcessor.ConvertJointMatsToJointQuats(AFPoseJointFrame, joints, numJoints);
+
+            // find all modified joints and their parents
+            boolean[] blendJoints = new boolean[numJoints];//memset( blendJoints, 0, numJoints * sizeof( bool ) );
+
+            // mark all modified joints and their parents
+            for (i = 0; i < AFPoseJoints.Num(); i++) {
+                for (jointNum = AFPoseJoints.oGet(i); jointNum != INVALID_JOINT; jointNum = jointParent[jointNum]) {
+                    blendJoints[jointNum] = true;
+                }
+            }
+
+            // lock all parents of modified joints
+            AFPoseJoints.SetNum(0, false);
+            for (i = 0; i < numJoints; i++) {
+                if (blendJoints[i]) {
+                    AFPoseJoints.Append(i);
+                }
+            }
+
+            AFPoseBounds.oSet(bounds);
+            AFPoseTime = time;
+
+            ForceUpdate();
+        }
+
+        public void SetAFPoseBlendWeight(float blendWeight) {
+            AFPoseBlendWeight = blendWeight;
+        }
+
+        public boolean BlendAFPose(idJointQuat[] blendFrame) {
+
+            if (0 == AFPoseJoints.Num()) {
+                return false;
+            }
+
+            SIMDProcessor.BlendJoints(blendFrame, AFPoseJointFrame.getList(idJointQuat[].class), AFPoseBlendWeight, itoi(AFPoseJoints.getList(Integer[].class)), AFPoseJoints.Num());
+
+            return true;
+        }
+
+        public void ClearAFPose() {
+            if (AFPoseJoints.Num() != 0) {
+                ForceUpdate();
+            }
+            AFPoseBlendWeight = 1.0f;
+            AFPoseJoints.SetNum(0, false);
+            AFPoseBounds.Clear();
+            AFPoseTime = 0;
+        }
+
+        public void ClearAllAnims(int currentTime, int cleartime) {
+            int i;
+
+            for (i = 0; i < ANIM_NumAnimChannels; i++) {
+                Clear(i, currentTime, cleartime);
+            }
+
+            ClearAFPose();
+            ForceUpdate();
+        }
+
+        public int/*jointHandle_t*/ GetJointHandle(final String name) {
+            if (null == modelDef || null == modelDef.ModelHandle()) {
+                return INVALID_JOINT;
+            }
+
+            return modelDef.ModelHandle().GetJointHandle(name);
+        }
+
+        public int/*jointHandle_t*/ GetJointHandle(final idStr name) {
+            return GetJointHandle(name.toString());
+        }
+
+        public String GetJointName(int/*jointHandle_t*/ handle) {
+            if (null == modelDef || null == modelDef.ModelHandle()) {
+                return "";
+            }
+
+            return modelDef.ModelHandle().GetJointName(handle);
+        }
+
+        public int GetChannelForJoint(int/*jointHandle_t*/ joint) {
+            if (null == modelDef) {
+                Game_local.idGameLocal.Error("idAnimator::GetChannelForJoint: NULL model");
+            }
+
+            if ((joint < 0) || (joint >= numJoints)) {
+                Game_local.idGameLocal.Error("idAnimator::GetChannelForJoint: invalid joint num (%d)", joint);
+            }
+
+            return modelDef.GetJoint(joint).channel;
+        }
+
+        public boolean GetJointTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
+            if (null == modelDef || (jointHandle < 0) || (jointHandle >= modelDef.NumJoints())) {
+                return false;
+            }
+
+            CreateFrame(currentTime, false);
+
+            offset.oSet(joints[jointHandle].ToVec3());
+            axis.oSet(joints[jointHandle].ToMat3());
+
+            return true;
+        }
+
+        public boolean GetJointLocalTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
+            if (null == modelDef) {
+                return false;
+            }
+
+            final idList<jointInfo_t> modelJoints = modelDef.Joints();
+
+            if ((jointHandle < 0) || (jointHandle >= modelJoints.Num())) {
+                return false;
+            }
+
+            // FIXME: overkill
+            CreateFrame(currentTime, false);
+
+            if (jointHandle > 0) {
+                idJointMat m = new idJointMat(joints[jointHandle]);
+                m.oDivSet(joints[modelJoints.oGet(jointHandle).parentNum]);
+                offset.oSet(m.ToVec3());
+                axis.oSet(m.ToMat3());
+            } else {
+                offset.oSet(joints[jointHandle].ToVec3());
+                axis.oSet(joints[jointHandle].ToMat3());
+            }
+
+            return true;
+        }
+
+        public animFlags_t GetAnimFlags(int animNum) {
+            animFlags_t result;
+
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.GetAnimFlags();
+            }
+
+//	memset( &result, 0, sizeof( result ) );
+            result = new animFlags_t();
+            return result;
+        }
+
+        public int NumFrames(int animNum) {
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.NumFrames();
+            } else {
+                return 0;
+            }
+        }
+
+        public int NumSyncedAnims(int animNum) {
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.NumAnims();
+            } else {
+                return 0;
+            }
+        }
+
+        public String AnimName(int animNum) {
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.Name();
+            } else {
+                return "";
+            }
+        }
+
+        public String AnimFullName(int animNum) {
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.FullName();
+            } else {
+                return "";
+            }
+        }
+
+        public int AnimLength(int animNum) {
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.Length();
+            } else {
+                return 0;
+            }
+        }
+
+        public idVec3 TotalMovementDelta(int animNum) {
+            final idAnim anim = GetAnim(animNum);
+            if (anim != null) {
+                return anim.TotalMovementDelta();
+            } else {
+                return getVec3_origin();
+            }
+        }
+
+        private void FreeData() {
+            int i, j;
+
+            if (entity != null) {
+                entity.BecomeInactive(TH_ANIMATE);
+            }
+
+            for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
+                for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
+                    channels[i][j].Reset(null);
+                }
+            }
+
+            jointMods.DeleteContents(true);
+
+//	Mem_Free16( joints );
+            joints = null;
+            numJoints = 0;
+
+            modelDef = null;
+
+            ForceUpdate();
+        }
+
+        private void PushAnims(int channelNum, int currentTime, int blendTime) {
+            int i;
+            idAnimBlend[] channel;
+
+            channel = channels[channelNum];
+            if (0 == channel[0].GetWeight(currentTime) || (channel[0].starttime == currentTime)) {
+                return;
+            }
+
+            for (i = ANIM_MaxAnimsPerChannel - 1; i > 0; i--) {
+                channel[i] = channel[i - 1];
+            }
+
+            channel[0].Reset(modelDef);
+            channel[1].Clear(currentTime, blendTime);
+            ForceUpdate();
+        }
     }
 }

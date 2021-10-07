@@ -1,19 +1,13 @@
 package neo.Game;
 
 import neo.Game.Game_local.entityNetEvent_s;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.idCmdSystem;
+
 import static neo.Game.Game_local.gameLocal;
 import static neo.Game.Game_network.idEventQueue.outOfOrderBehaviour_t.OUTOFORDER_DROP;
 import static neo.Game.Game_network.idEventQueue.outOfOrderBehaviour_t.OUTOFORDER_SORT;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_FLOAT;
-import static neo.framework.CVarSystem.CVAR_GAME;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_NOCHEAT;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import neo.framework.CVarSystem.idCVar;
-import neo.framework.CmdSystem.idCmdSystem;
-
+import static neo.framework.CVarSystem.*;
 import static neo.idlib.Lib.idLib.common;
 
 /**
@@ -34,30 +28,23 @@ public class Game_network {
 // NOTE: this changes the network protocol
 //#ifndef ASYNC_WRITE_TAGS
     public static final boolean ASYNC_WRITE_TAGS = false;
-//#endif
-//    
+    public static final idCVar net_clientLagOMeter = new idCVar("net_clientLagOMeter", "1", CVAR_GAME | CVAR_BOOL | CVAR_NOCHEAT | CVAR_ARCHIVE, "draw prediction graph");
+    public static final idCVar net_clientMaxPrediction = new idCVar("net_clientMaxPrediction", "1000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "maximum number of milliseconds a client can predict ahead of server.");
+    public static final idCVar net_clientSelfSmoothing = new idCVar("net_clientSelfSmoothing", "0.6", CVAR_GAME | CVAR_FLOAT, "smooth self position if network causes prediction error.", 0.0f, 0.95f);
+    //#endif
+//
     public static final idCVar net_clientShowSnapshot = new idCVar("net_clientShowSnapshot", "0", CVAR_GAME | CVAR_INTEGER, "", 0, 3, new idCmdSystem.ArgCompletion_Integer(0, 3));
     public static final idCVar net_clientShowSnapshotRadius = new idCVar("net_clientShowSnapshotRadius", "128", CVAR_GAME | CVAR_FLOAT, "");
     public static final idCVar net_clientSmoothing = new idCVar("net_clientSmoothing", "0.8", CVAR_GAME | CVAR_FLOAT, "smooth other clients angles and position.", 0.0f, 0.95f);
-    public static final idCVar net_clientSelfSmoothing = new idCVar("net_clientSelfSmoothing", "0.6", CVAR_GAME | CVAR_FLOAT, "smooth self position if network causes prediction error.", 0.0f, 0.95f);
-    public static final idCVar net_clientMaxPrediction = new idCVar("net_clientMaxPrediction", "1000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "maximum number of milliseconds a client can predict ahead of server.");
-    public static final idCVar net_clientLagOMeter = new idCVar("net_clientLagOMeter", "1", CVAR_GAME | CVAR_BOOL | CVAR_NOCHEAT | CVAR_ARCHIVE, "draw prediction graph");
 //    
 
     public static class idEventQueue {
 
-        private entityNetEvent_s start;
         private entityNetEvent_s end;
+        private entityNetEvent_s start;
 //        private idBlockAlloc<entityNetEvent_s> eventAllocator = new idBlockAlloc<>(32);
         //
         //
-
-        public enum outOfOrderBehaviour_t {
-
-            OUTOFORDER_IGNORE,
-            OUTOFORDER_DROP,
-            OUTOFORDER_SORT
-        };
 
         public idEventQueue() {//: start( NULL ), end( NULL ) {}
         }
@@ -173,6 +160,14 @@ public class Game_network {
         public entityNetEvent_s Start() {
             return start;
         }
-    };
-//============================================================================
+
+        public enum outOfOrderBehaviour_t {
+
+            OUTOFORDER_IGNORE,
+            OUTOFORDER_DROP,
+            OUTOFORDER_SORT
+        }
+    }
+
+    //============================================================================
 }

@@ -1,83 +1,27 @@
 package neo.Renderer;
 
+import neo.Renderer.Model.lightingCache_s;
+import neo.Renderer.Model.srfTriangles_s;
+import neo.Renderer.tr_local.*;
+import neo.Renderer.tr_render.DrawInteraction;
+import neo.idlib.geometry.DrawVert.idDrawVert;
+import neo.idlib.math.Vector.idVec4;
+
 import static neo.Renderer.Image.globalImages;
 import static neo.Renderer.Material.stageVertexColor_t.SVC_IGNORE;
 import static neo.Renderer.Material.stageVertexColor_t.SVC_INVERSE_MODULATE;
-import neo.Renderer.Model.lightingCache_s;
-import neo.Renderer.Model.srfTriangles_s;
 import static neo.Renderer.RenderSystem_init.r_useTripleTextureARB;
 import static neo.Renderer.VertexCache.vertexCache;
 import static neo.Renderer.draw_common.RB_StencilShadowPass;
-import static neo.Renderer.qgl.qglClear;
-import static neo.Renderer.qgl.qglColor3f;
-import static neo.Renderer.qgl.qglColor4fv;
-import static neo.Renderer.qgl.qglColorPointer;
-import static neo.Renderer.qgl.qglDisable;
-import static neo.Renderer.qgl.qglDisableClientState;
-import static neo.Renderer.qgl.qglEnable;
-import static neo.Renderer.qgl.qglEnableClientState;
-import static neo.Renderer.qgl.qglScissor;
-import static neo.Renderer.qgl.qglStencilFunc;
-import static neo.Renderer.qgl.qglTexCoord2f;
-import static neo.Renderer.qgl.qglTexCoordPointer;
-import static neo.Renderer.qgl.qglTexEnvi;
-import static neo.Renderer.qgl.qglTexGenfv;
-import static neo.Renderer.qgl.qglVertexPointer;
-import static neo.Renderer.tr_backend.GL_SelectTexture;
-import static neo.Renderer.tr_backend.GL_State;
-import static neo.Renderer.tr_backend.GL_TexEnv;
-import static neo.Renderer.tr_backend.RB_LogComment;
-import static neo.Renderer.tr_local.GLS_ALPHAMASK;
-import static neo.Renderer.tr_local.GLS_COLORMASK;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_EQUAL;
-import static neo.Renderer.tr_local.GLS_DEPTHFUNC_LESS;
-import static neo.Renderer.tr_local.GLS_DEPTHMASK;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ONE;
-import static neo.Renderer.tr_local.GLS_DSTBLEND_ZERO;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_DST_ALPHA;
-import static neo.Renderer.tr_local.GLS_SRCBLEND_ONE;
-import static neo.Renderer.tr_local.backEnd;
-import neo.Renderer.tr_local.drawInteraction_t;
-import neo.Renderer.tr_local.drawSurf_s;
-import static neo.Renderer.tr_local.glConfig;
-import neo.Renderer.tr_local.idScreenRect;
-import neo.Renderer.tr_local.viewLight_s;
-import neo.Renderer.tr_render.DrawInteraction;
+import static neo.Renderer.qgl.*;
+import static neo.Renderer.tr_backend.*;
+import static neo.Renderer.tr_local.*;
 import static neo.Renderer.tr_render.RB_CreateSingleDrawInteractions;
 import static neo.Renderer.tr_render.RB_DrawElementsWithCounters;
 import static neo.TempDump.NOT;
-import neo.idlib.geometry.DrawVert.idDrawVert;
-import neo.idlib.math.Vector.idVec4;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_COMBINE_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_COMBINE_RGB_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_OPERAND0_RGB_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_OPERAND1_RGB_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_PREVIOUS_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_PRIMARY_COLOR_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_RGB_SCALE_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_SOURCE0_RGB_ARB;
-import static org.lwjgl.opengl.ARBTextureEnvCombine.GL_SOURCE1_RGB_ARB;
+import static org.lwjgl.opengl.ARBTextureEnvCombine.*;
 import static org.lwjgl.opengl.ARBTextureEnvDot3.GL_DOT3_RGBA_ARB;
-import static org.lwjgl.opengl.GL11.GL_ALPHA_SCALE;
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
-import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_MODULATE;
-import static org.lwjgl.opengl.GL11.GL_OBJECT_PLANE;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_COLOR;
-import static org.lwjgl.opengl.GL11.GL_Q;
-import static org.lwjgl.opengl.GL11.GL_S;
-import static org.lwjgl.opengl.GL11.GL_SRC_COLOR;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
-import static org.lwjgl.opengl.GL11.GL_T;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_ENV;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_Q;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_S;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_GEN_T;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.*;
 
 /**
  *
@@ -119,6 +63,101 @@ public class draw_arb {
      diffuse
 
      */
+
+    /*
+     ==================
+     RB_CreateDrawInteractions
+     ==================
+     */
+    public static void RB_CreateDrawInteractions(final drawSurf_s surfs) {
+        drawSurf_s surf = surfs;
+        if (NOT(surf)) {
+            return;
+        }
+
+        // force a space calculation
+        backEnd.currentSpace = null;
+
+        if (r_useTripleTextureARB.GetBool() && glConfig.maxTextureUnits >= 3) {
+            for (; surf != null; surf = surf.nextOnLight) {
+                // break it up into multiple primitive draw interactions if necessary
+                RB_CreateSingleDrawInteractions(surf, RB_ARB_DrawThreeTextureInteraction.INSTANCE);
+            }
+        } else {
+            for (; surf != null; surf = surf.nextOnLight) {
+                // break it up into multiple primitive draw interactions if necessary
+                RB_CreateSingleDrawInteractions(surf, RB_ARB_DrawInteraction.INSTANCE);
+            }
+        }
+    }
+
+    /*
+     ==================
+     RB_RenderViewLight
+
+     ==================
+     */
+    public static void RB_RenderViewLight(viewLight_s vLight) {
+        backEnd.vLight = vLight;
+
+        // do fogging later
+        if (vLight.lightShader.IsFogLight()) {
+            return;
+        }
+        if (vLight.lightShader.IsBlendLight()) {
+            return;
+        }
+
+        RB_LogComment("---------- RB_RenderViewLight 0x%p ----------\n", vLight);
+
+        // clear the stencil buffer if needed
+        if (vLight.globalShadows[0] != null || vLight.localShadows[0] != null) {
+            backEnd.currentScissor = new idScreenRect(vLight.scissorRect);
+            if (RenderSystem_init.r_useScissor.GetBool()) {
+                qglScissor(backEnd.viewDef.viewport.x1 + backEnd.currentScissor.x1,
+                        backEnd.viewDef.viewport.y1 + backEnd.currentScissor.y1,
+                        backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
+                        backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1);
+            }
+            qglClear(GL_STENCIL_BUFFER_BIT);
+        } else {
+            // no shadows, so no need to read or write the stencil buffer
+            // we might in theory want to use GL_ALWAYS instead of disabling
+            // completely, to satisfy the invarience rules
+            qglStencilFunc(GL_ALWAYS, 128, 255);
+        }
+
+        backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
+        RB_StencilShadowPass(vLight.globalShadows[0]);
+        RB_CreateDrawInteractions(vLight.localInteractions[0]);
+        RB_StencilShadowPass(vLight.localShadows[0]);
+        RB_CreateDrawInteractions(vLight.globalInteractions[0]);
+
+        if (RenderSystem_init.r_skipTranslucent.GetBool()) {
+            return;
+        }
+
+        // disable stencil testing for translucent interactions, because
+        // the shadow isn't calculated at their point, and the shadow
+        // behind them may be depth fighting with a back side, so there
+        // isn't any reasonable thing to do
+        qglStencilFunc(GL_ALWAYS, 128, 255);
+        backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
+        RB_CreateDrawInteractions(vLight.translucentInteractions[0]);
+    }
+
+    /*
+     ==================
+     RB_ARB_DrawInteractions
+     ==================
+     */
+    public static void RB_ARB_DrawInteractions() {
+        qglEnable(GL_STENCIL_TEST);
+
+        for (viewLight_s vLight = backEnd.viewDef.viewLights; vLight != null; vLight = vLight.next) {
+            RB_RenderViewLight(vLight);
+        }
+    }
 
     /*
      ==================
@@ -200,7 +239,7 @@ public class draw_arb {
             }
 
 //if (false){
-//GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHMASK 
+//GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHMASK
 //			| backEnd.depthFunc );
 //// the texccords are the non-normalized vector towards the light origin
 //GL_SelectTexture( 0 );
@@ -229,7 +268,7 @@ public class draw_arb {
                 // the texccords are the non-normalized vector towards the light origin
                 GL_SelectTexture(1);
                 if (din.ambientLight != 0) {
-                    globalImages.ambientNormalMap.Bind();	// fixed value
+                    globalImages.ambientNormalMap.Bind();    // fixed value
                 } else {
                     globalImages.normalCubeMapImage.Bind();
                 }
@@ -326,7 +365,7 @@ public class draw_arb {
 
 //	RB_FinishStageTexture( &surfaceStage.texture, surf );
         }
-    };
+    }
 
     /*
      ==================
@@ -376,7 +415,7 @@ public class draw_arb {
             // the texccords are the non-normalized vector towards the light origin
             GL_SelectTexture(1);
             if (din.ambientLight != 0) {
-                globalImages.ambientNormalMap.Bind();	// fixed value
+                globalImages.ambientNormalMap.Bind();    // fixed value
             } else {
                 globalImages.normalCubeMapImage.Bind();
             }
@@ -499,103 +538,6 @@ public class draw_arb {
             }
 
 //	RB_FinishStageTexture( &surfaceStage.texture, surf );
-        }
-    };
-
-
-    /*
-     ==================
-     RB_CreateDrawInteractions
-     ==================
-     */
-    public static void RB_CreateDrawInteractions(final drawSurf_s surfs) {
-        drawSurf_s surf = surfs;
-        if (NOT(surf)) {
-            return;
-        }
-
-        // force a space calculation
-        backEnd.currentSpace = null;
-
-        if (r_useTripleTextureARB.GetBool() && glConfig.maxTextureUnits >= 3) {
-            for (; surf != null; surf = surf.nextOnLight) {
-                // break it up into multiple primitive draw interactions if necessary
-                RB_CreateSingleDrawInteractions(surf, RB_ARB_DrawThreeTextureInteraction.INSTANCE);
-            }
-        } else {
-            for (; surf != null; surf = surf.nextOnLight) {
-                // break it up into multiple primitive draw interactions if necessary
-                RB_CreateSingleDrawInteractions(surf, RB_ARB_DrawInteraction.INSTANCE);
-            }
-        }
-    }
-
-    /*
-     ==================
-     RB_RenderViewLight
-
-     ==================
-     */
-    public static void RB_RenderViewLight(viewLight_s vLight) {
-        backEnd.vLight = vLight;
-
-        // do fogging later
-        if (vLight.lightShader.IsFogLight()) {
-            return;
-        }
-        if (vLight.lightShader.IsBlendLight()) {
-            return;
-        }
-
-        RB_LogComment("---------- RB_RenderViewLight 0x%p ----------\n", vLight);
-
-        // clear the stencil buffer if needed
-        if (vLight.globalShadows[0] != null || vLight.localShadows[0] != null) {
-            backEnd.currentScissor = new idScreenRect(vLight.scissorRect);
-            if (RenderSystem_init.r_useScissor.GetBool()) {
-                qglScissor(backEnd.viewDef.viewport.x1 + backEnd.currentScissor.x1,
-                        backEnd.viewDef.viewport.y1 + backEnd.currentScissor.y1,
-                        backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
-                        backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1);
-            }
-            qglClear(GL_STENCIL_BUFFER_BIT);
-        } else {
-            // no shadows, so no need to read or write the stencil buffer
-            // we might in theory want to use GL_ALWAYS instead of disabling
-            // completely, to satisfy the invarience rules
-            qglStencilFunc(GL_ALWAYS, 128, 255);
-        }
-
-        backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
-        RB_StencilShadowPass(vLight.globalShadows[0]);
-        RB_CreateDrawInteractions(vLight.localInteractions[0]);
-        RB_StencilShadowPass(vLight.localShadows[0]);
-        RB_CreateDrawInteractions(vLight.globalInteractions[0]);
-
-        if (RenderSystem_init.r_skipTranslucent.GetBool()) {
-            return;
-        }
-
-        // disable stencil testing for translucent interactions, because
-        // the shadow isn't calculated at their point, and the shadow
-        // behind them may be depth fighting with a back side, so there
-        // isn't any reasonable thing to do
-        qglStencilFunc(GL_ALWAYS, 128, 255);
-        backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
-        RB_CreateDrawInteractions(vLight.translucentInteractions[0]);
-    }
-
-
-    /*
-     ==================
-     RB_ARB_DrawInteractions
-     ==================
-     */
-    public static void RB_ARB_DrawInteractions() {
-        qglEnable(GL_STENCIL_TEST);
-
-        for (viewLight_s vLight = backEnd.viewDef.viewLights; vLight != null; vLight = vLight.next) {
-            RB_RenderViewLight(vLight);
         }
     }
 }

@@ -1,5 +1,12 @@
 package neo.Renderer;
 
+import neo.Renderer.Image.cubeFiles_t;
+import neo.TempDump.TODO_Exception;
+import neo.framework.File_h.idFile;
+import neo.idlib.Text.Str.idStr;
+import org.lwjgl.BufferUtils;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
@@ -8,97 +15,24 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
+
 import static neo.Renderer.Image.MAX_IMAGE_NAME;
-import neo.Renderer.Image.cubeFiles_t;
 import static neo.Renderer.Image.cubeFiles_t.CF_CAMERA;
 import static neo.Renderer.Image.globalImages;
-import static neo.Renderer.Image_process.R_HorizontalFlip;
-import static neo.Renderer.Image_process.R_ResampleTexture;
-import static neo.Renderer.Image_process.R_RotatePic;
-import static neo.Renderer.Image_process.R_VerticalFlip;
+import static neo.Renderer.Image_process.*;
 import static neo.Renderer.Image_program.R_LoadImageProgram;
 import static neo.TempDump.NOT;
-import neo.TempDump.TODO_Exception;
 import static neo.TempDump.ctos;
 import static neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.File_h.idFile;
 import static neo.idlib.Lib.LittleLong;
 import static neo.idlib.Lib.LittleShort;
 import static neo.idlib.Lib.idLib.common;
-import neo.idlib.Text.Str.idStr;
-import org.lwjgl.BufferUtils;
 
 /**
  *
  */
 public class Image_files {
-
-    /*
-     ========================================================================
-
-     PCX files are used for 8 bit images
-
-     ========================================================================
-     */
-    private static class pcx_t {
-
-        char manufacturer;
-        char version;
-        char encoding;
-        char bits_per_pixel;
-        /*unsigned*/ short xmin, ymin, xmax, ymax;
-        /*unsigned*/ short hres, vres;
-        /*unsigned*/ char[] palette = new char[48];
-        char reserved;
-        char color_planes;
-        /*unsigned*/ short bytes_per_line;
-        /*unsigned*/ short palette_type;
-        char[] filler = new char[58];
-//        unsigned char data;			// unbounded
-        int dataPosition;			// unbounded
-
-        private pcx_t(ByteBuffer byteBuffer) {
-            throw new TODO_Exception();
-        }
-    };
-
-
-    /*
-     ========================================================================
-
-     TGA files are used for 24/32 bit images
-
-     ========================================================================
-     */
-    private static class TargaHeader {
-        /*unsigned*/ byte id_length, colormap_type, image_type;
-        /*unsigned*/ short colormap_index, colormap_length;
-        /*unsigned*/ byte colormap_size;
-        /*unsigned*/ short x_origin, y_origin, width, height;
-        /*unsigned*/ byte pixel_size, attributes;
-    };
-
-    private static class BMPHeader_t {
-
-        char[] id = new char[2];
-        /*unsigned*/ long fileSize;
-        /*unsigned*/ long reserved0;
-        /*unsigned*/ long bitmapDataOffset;
-        /*unsigned*/ long bitmapHeaderSize;
-        /*unsigned*/ long width;
-        /*unsigned*/ long height;
-        /*unsigned*/ short planes;
-        /*unsigned*/ short bitsPerPixel;
-        /*unsigned*/ long compression;
-        /*unsigned*/ long bitmapDataSize;
-        /*unsigned*/ long hRes;
-        /*unsigned*/ long vRes;
-        /*unsigned*/ long colors;
-        /*unsigned*/ long importantColors;
-        /*unsigned*/ char[][] palette = new char[256][4];
-    };
 
     /*
      ================
@@ -164,22 +98,22 @@ public class Image_files {
 
         buffer = ByteBuffer.allocate(bufferSize);// Mem_Alloc(bufferSize);
 //	memset( buffer, 0, 18 );
-        buffer.put(2, (byte) 2);		// uncompressed type
+        buffer.put(2, (byte) 2);        // uncompressed type
         buffer.put(12, (byte) (width & 255));
         buffer.put(13, (byte) (width >> 8));
         buffer.put(14, (byte) (height & 255));
         buffer.put(15, (byte) (height >> 8));
-        buffer.put(16, (byte) 32);	// pixel size
+        buffer.put(16, (byte) 32);    // pixel size
         if (!flipVertical) {
-            buffer.put(17, (byte) (1 << 5));	// flip bit, for normal top to bottom raster order
+            buffer.put(17, (byte) (1 << 5));    // flip bit, for normal top to bottom raster order
         }
 
         // swap rgb to bgr
         for (i = imgStart; i < bufferSize; i += 4) {
-            buffer.put(i, data.get(i - imgStart + 2));		// blue
-            buffer.put(i + 1, data.get(i - imgStart + 1));		// green
-            buffer.put(i + 2, data.get(i - imgStart + 0));		// red
-            buffer.put(i + 3, data.get(i - imgStart + 3));		// alpha
+            buffer.put(i, data.get(i - imgStart + 2));        // blue
+            buffer.put(i + 1, data.get(i - imgStart + 1));        // green
+            buffer.put(i + 2, data.get(i - imgStart + 0));        // red
+            buffer.put(i + 3, data.get(i - imgStart + 3));        // alpha
         }
 
         fileSystem.WriteFile(filename, buffer, bufferSize);
@@ -219,7 +153,7 @@ public class Image_files {
 
         if (NOT(width, height)) {
             fileSystem.ReadFile(name, null, timestamp);
-            return null;	// just getting timestamp
+            return null;    // just getting timestamp
         }
 
         //
@@ -293,9 +227,11 @@ public class Image_files {
             pixbuf.position(row * columns * 4);
 
             for (column = 0; column < columns; column++) {
-                /*unsigned*/ byte red, green, blue, alpha;
+                /*unsigned*/
+                byte red, green, blue, alpha;
                 int palIndex;
-                /*unsigned*/ short shortPixel;
+                /*unsigned*/
+                short shortPixel;
 
                 switch (bmpHeader.bitsPerPixel) {
                     case 8:
@@ -339,7 +275,7 @@ public class Image_files {
                 }
             }
         }
-        return  bmpRGBA;
+        return bmpRGBA;
 //	fileSystem->FreeFile( buffer );
     }
 
@@ -367,7 +303,7 @@ public class Image_files {
 
         if (NOT(pic)) {
             fileSystem.ReadFile(filename, null, timestamp);
-            return;	// just getting timestamp
+            return;    // just getting timestamp
         }
 
         pic[0] = null;
@@ -420,7 +356,7 @@ public class Image_files {
 // FIXME: use bytes_per_line here?
 
         for (y = 0; y <= ymax; y++, pix.position(pix.position() + xmax + 1)) {
-            for (x = 0; x <= xmax;) {
+            for (x = 0; x <= xmax; ) {
                 dataByte = raw[0].get();
 
                 if ((dataByte & 0xC0) == 0xC0) {
@@ -447,7 +383,6 @@ public class Image_files {
 //	fileSystem->FreeFile( pcx );
     }
 
-
     /*
      ==============
      LoadPCX32
@@ -461,7 +396,7 @@ public class Image_files {
 
         if (NOT(width, height)) {
             fileSystem.ReadFile(filename, null, timestamp);
-            return null;	// just getting timestamp
+            return null;    // just getting timestamp
         }
         LoadPCX(filename, pic8, palette, width, height, timestamp);
         if (NOT(pic8[0])) {
@@ -483,14 +418,6 @@ public class Image_files {
 //	R_StaticFree( palette );
         return pic;
     }
-
-    /*
-     ========================================================================================================
-
-     TARGA LOADING
-
-     ========================================================================================================
-     */
 
     /*
      =============
@@ -629,7 +556,7 @@ public class Image_files {
             for (row = rows - 1; row >= 0; row--) {
                 pixbuf = targa_rgba.duplicate();
                 pixbuf.position(row * columns * 4);
-                for (column = 0; column < columns;) {
+                for (column = 0; column < columns; ) {
                     packetHeader = buf_p.get();
                     packetSize = 1 + (packetHeader & 0x7f);
                     if ((packetHeader & 0x80) != 0) {        // run-length packet
@@ -712,7 +639,7 @@ public class Image_files {
             }
         }
 
-        if ((targa_header.attributes & (1 << 5)) != 0) {			// image flp bit
+        if ((targa_header.attributes & (1 << 5)) != 0) {            // image flp bit
             R_VerticalFlip(targa_rgba, width[0], height[0]);
         }
 
@@ -720,16 +647,6 @@ public class Image_files {
 
         return targa_rgba;
     }
-
-    /*
-     ========================================================================================================
-
-     JPG LOADING
-
-     Interfaces with the huge libjpeg
-     EDIT: not anymore    
-     ========================================================================================================
-     */
 
     /*
      =============
@@ -754,9 +671,9 @@ public class Image_files {
          * struct, to avoid dangling-pointer problems.
          */
 //  struct jpeg_error_mgr jerr;
-  /* More stuff */
-        BufferedImage /*JSAMPARRAY*/ buffer;		// Output row buffer
-//  int row_stride;		// physical row width in output buffer 
+        /* More stuff */
+        BufferedImage /*JSAMPARRAY*/ buffer;        // Output row buffer
+//  int row_stride;		// physical row width in output buffer
 //  unsigned char *out;
         ByteBuffer fbuffer;
 //  byte  *bbuf;
@@ -843,12 +760,12 @@ public class Image_files {
 //   * output image dimensions available, as well as the output colormap
 //   * if we asked for color quantization.
 //   * In this example, we need to make an output work buffer of the right size.
-//   */ 
+//   */
 //  /* JSAMPLEs per row in output buffer */
 //  row_stride = cinfo.output_width * cinfo.output_components;
 //
 //  if (cinfo.output_components!=4) {
-//		common.DWarning( "JPG %s is unsupported color depth (%d)", 
+//		common.DWarning( "JPG %s is unsupported color depth (%d)",
 //			filename, cinfo.output_components);
 //  }
 //  out = (byte *)R_StaticAlloc(cinfo.output_width*cinfo.output_height*4);
@@ -913,7 +830,7 @@ public class Image_files {
 //  /* And we're done! */
     }
 
-//===================================================================
+    //===================================================================
     /*
      =================
      R_LoadImage
@@ -996,15 +913,15 @@ public class Image_files {
             w = width[0];
             h = height[0];
 
-            for (scaled_width = 1; scaled_width < w; scaled_width <<= 1);
+            for (scaled_width = 1; scaled_width < w; scaled_width <<= 1) ;
 
-            for (scaled_height = 1; scaled_height < h; scaled_height <<= 1);
+            for (scaled_height = 1; scaled_height < h; scaled_height <<= 1) ;
 
             if (scaled_width != w || scaled_height != h) {
-                if (globalImages.image_roundDown.GetBool() && scaled_width > w) {
+                if (Image.idImageManager.image_roundDown.GetBool() && scaled_width > w) {
                     scaled_width >>= 1;
                 }
-                if (globalImages.image_roundDown.GetBool() && scaled_height > h) {
+                if (Image.idImageManager.image_roundDown.GetBool() && scaled_height > h) {
                     scaled_height >>= 1;
                 }
 
@@ -1018,6 +935,14 @@ public class Image_files {
 
         return pic;
     }
+
+    /*
+     ========================================================================================================
+
+     TARGA LOADING
+
+     ========================================================================================================
+     */
 
     /*
      =======================
@@ -1059,7 +984,7 @@ public class Image_files {
                 // just checking timestamps
                 R_LoadImageProgram(ctos(fullName), width, height, thisTime);
             } else {
-                pics[i] = R_LoadImageProgram(ctos(fullName),width, height, thisTime);
+                pics[i] = R_LoadImageProgram(ctos(fullName), width, height, thisTime);
             }
             if (thisTime[0] == FILE_NOT_FOUND_TIMESTAMP) {
                 break;
@@ -1079,21 +1004,21 @@ public class Image_files {
             if (pics != null && extensions == CF_CAMERA) {
                 // convert from "camera" images to native cube map images
                 switch (i) {
-                    case 0:	// forward
+                    case 0:    // forward
                         R_RotatePic(pics[i], width[0]);
                         break;
-                    case 1:	// back
+                    case 1:    // back
                         R_RotatePic(pics[i], width[0]);
                         R_HorizontalFlip(pics[i], width[0], height[0]);
                         R_VerticalFlip(pics[i], width[0], height[0]);
                         break;
-                    case 2:	// left
+                    case 2:    // left
                         R_VerticalFlip(pics[i], width[0], height[0]);
                         break;
-                    case 3:	// right
+                    case 3:    // right
                         R_HorizontalFlip(pics[i], width[0], height[0]);
                         break;
-                    case 4:	// up
+                    case 4:    // up
                         R_RotatePic(pics[i], width[0]);
                         break;
                     case 5:     // down
@@ -1123,8 +1048,82 @@ public class Image_files {
         return true;
     }
 
+    /*
+     ========================================================================================================
+
+     JPG LOADING
+
+     Interfaces with the huge libjpeg
+     EDIT: not anymore    
+     ========================================================================================================
+     */
+
     @Deprecated
     public static void R_LoadImage(final String cname, byte[] pic, int[] width, int[] height, long[] timestamp, boolean makePowerOf2) {
         throw new TODO_Exception();
+    }
+
+    /*
+     ========================================================================
+
+     PCX files are used for 8 bit images
+
+     ========================================================================
+     */
+    private static class pcx_t {
+
+        char bits_per_pixel;
+        /*unsigned*/ short bytes_per_line;
+        char color_planes;
+        //        unsigned char data;			// unbounded
+        int dataPosition;            // unbounded
+        char encoding;
+        char[] filler = new char[58];
+        /*unsigned*/ short hres, vres;
+        char manufacturer;
+        /*unsigned*/ char[] palette = new char[48];
+        /*unsigned*/ short palette_type;
+        char reserved;
+        char version;
+        /*unsigned*/ short xmin, ymin, xmax, ymax;
+
+        private pcx_t(ByteBuffer byteBuffer) {
+            throw new TODO_Exception();
+        }
+    }
+
+    /*
+     ========================================================================
+
+     TGA files are used for 24/32 bit images
+
+     ========================================================================
+     */
+    private static class TargaHeader {
+        /*unsigned*/ short colormap_index, colormap_length;
+        /*unsigned*/ byte colormap_size;
+        /*unsigned*/ byte id_length, colormap_type, image_type;
+        /*unsigned*/ byte pixel_size, attributes;
+        /*unsigned*/ short x_origin, y_origin, width, height;
+    }
+
+    private static class BMPHeader_t {
+
+        /*unsigned*/ long bitmapDataOffset;
+        /*unsigned*/ long bitmapDataSize;
+        /*unsigned*/ long bitmapHeaderSize;
+        /*unsigned*/ short bitsPerPixel;
+        /*unsigned*/ long colors;
+        /*unsigned*/ long compression;
+        /*unsigned*/ long fileSize;
+        /*unsigned*/ long hRes;
+        /*unsigned*/ long height;
+        char[] id = new char[2];
+        /*unsigned*/ long importantColors;
+        /*unsigned*/ char[][] palette = new char[256][4];
+        /*unsigned*/ short planes;
+        /*unsigned*/ long reserved0;
+        /*unsigned*/ long vRes;
+        /*unsigned*/ long width;
     }
 }

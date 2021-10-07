@@ -1,85 +1,47 @@
 package neo.framework;
 
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem.BIGCHAR_HEIGHT;
-import static neo.Renderer.RenderSystem.BIGCHAR_WIDTH;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem.SMALLCHAR_HEIGHT;
-import static neo.Renderer.RenderSystem.SMALLCHAR_WIDTH;
-import static neo.Renderer.RenderSystem.renderSystem;
-import static neo.Sound.snd_system.soundSystem;
 import neo.Sound.sound.soundDecoderInfo_t;
-import static neo.TempDump.NOT;
-import static neo.TempDump.ctos;
-import static neo.TempDump.strLen;
+import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
+import neo.framework.CVarSystem.*;
+import neo.framework.CmdSystem.cmdFunction_t;
+import neo.framework.EditField.idEditField;
+import neo.framework.File_h.idFile;
+import neo.framework.KeyInput.*;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Lib.*;
+import neo.idlib.Text.Str.*;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Vector.idVec4;
+import neo.sys.sys_public.sysEvent_s;
+import neo.sys.win_main;
+
+import static neo.Renderer.RenderSystem.*;
+import static neo.Sound.snd_system.soundSystem;
+import static neo.TempDump.*;
 import static neo.Tools.edit_public.MaterialEditorPrintConsole;
 import static neo.Tools.edit_public.RadiantPrint;
 import static neo.framework.Async.AsyncNetwork.MAX_ASYNC_CLIENTS;
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
 import static neo.framework.BuildDefines.ID_ALLOW_TOOLS;
 import static neo.framework.BuildDefines.ID_CONSOLE_LOCK;
 import static neo.framework.BuildVersion.BUILD_NUMBER;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_NOCHEAT;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import static neo.framework.CVarSystem.cvarSystem;
-import neo.framework.CVarSystem.idCVar;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.CmdSystem.CMD_FL_SYSTEM;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
-import neo.framework.CmdSystem.cmdFunction_t;
 import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.EDITOR_MATERIAL;
-import static neo.framework.Common.com_allowConsole;
-import static neo.framework.Common.com_editors;
-import static neo.framework.Common.com_frameTime;
-import static neo.framework.Common.com_showAsyncStats;
-import static neo.framework.Common.com_showMemoryUsage;
-import static neo.framework.Common.com_showSoundDecoders;
-import static neo.framework.Common.common;
+import static neo.framework.Common.*;
 import static neo.framework.DeclManager.declManager;
-import neo.framework.EditField.idEditField;
 import static neo.framework.EventLoop.eventLoop;
 import static neo.framework.FileSystem_h.fileSystem;
-import neo.framework.File_h.idFile;
-import static neo.framework.KeyInput.K_ALT;
-import static neo.framework.KeyInput.K_CTRL;
-import static neo.framework.KeyInput.K_DOWNARROW;
-import static neo.framework.KeyInput.K_END;
-import static neo.framework.KeyInput.K_ENTER;
-import static neo.framework.KeyInput.K_F1;
-import static neo.framework.KeyInput.K_F12;
-import static neo.framework.KeyInput.K_HOME;
-import static neo.framework.KeyInput.K_KP_ENTER;
-import static neo.framework.KeyInput.K_MWHEELDOWN;
-import static neo.framework.KeyInput.K_MWHEELUP;
-import static neo.framework.KeyInput.K_PGDN;
-import static neo.framework.KeyInput.K_PGUP;
-import static neo.framework.KeyInput.K_SHIFT;
-import static neo.framework.KeyInput.K_TAB;
-import static neo.framework.KeyInput.K_UPARROW;
-import neo.framework.KeyInput.idKeyInput;
+import static neo.framework.KeyInput.*;
 import static neo.framework.Licensee.ENGINE_VERSION;
 import static neo.framework.Session.session;
-import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.Heap.memoryStats_t;
-import static neo.idlib.Lib.MAX_STRING_CHARS;
-import static neo.idlib.Lib.colorCyan;
-import static neo.idlib.Lib.colorWhite;
-import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Str.C_COLOR_CYAN;
-import static neo.idlib.Text.Str.C_COLOR_DEFAULT;
-import static neo.idlib.Text.Str.C_COLOR_WHITE;
-import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Vector.idVec4;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Text.Str.*;
 import static neo.sys.sys_public.sysEventType_t.SE_CHAR;
 import static neo.sys.sys_public.sysEventType_t.SE_KEY;
-import neo.sys.sys_public.sysEvent_s;
 import static neo.sys.win_input.Sys_GetConsoleKey;
 import static neo.sys.win_input.Sys_GrabMouseCursor;
-import neo.sys.win_main;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -87,8 +49,207 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class Console {
 
+    //
+    static final int COMMAND_HISTORY = 64;
+    static final int CONSOLE_FIRSTREPEAT = 200;
+    static final int CONSOLE_REPEAT = 100;
+
+    static final int CON_TEXTSIZE = 0x30000;
+    /*
+     ==================
+     SCR_DrawFPS
+     ==================
+     */
+    static final int FPS_FRAMES = 4;
+    /**
+     *
+     */
+    static final int LINE_WIDTH = 78;
+    static final int NUM_CON_TIMES = 4;
+    static final int TOTAL_LINES = (CON_TEXTSIZE / LINE_WIDTH);
     static final idConsoleLocal localConsole = new idConsoleLocal();
-    public static final idConsole console = localConsole;	// statically initialized to an idConsoleLocal
+    public static final idConsole console = localConsole;    // statically initialized to an idConsoleLocal
+    //    
+    static int index;
+
+
+    /*
+     =============================================================================
+
+     Misc stats
+
+     =============================================================================
+     */
+    static int previous;
+    static int[] previousTimes = new int[FPS_FRAMES];
+
+    /*
+     ==================
+     SCR_DrawTextLeftAlign
+     ==================
+     */
+    static void SCR_DrawTextLeftAlign(float[] y, final String fmt, Object... text) {
+        String[] string = {null};//new char[MAX_STRING_CHARS];
+//	va_list argptr;
+//	va_start( argptr, text );
+        idStr.vsnPrintf(string, MAX_STRING_CHARS, fmt, text);
+//	va_end( argptr );
+        renderSystem.DrawSmallStringExt(0, (int) (y[0] + 2), string[0].toCharArray(), colorWhite, true, localConsole.charSetShader);
+        y[0] += SMALLCHAR_HEIGHT + 4;
+    }
+
+    /*
+     ==================
+     SCR_DrawTextRightAlign
+     ==================
+     */
+    static void SCR_DrawTextRightAlign(float[] y, final String fmt, Object... text) {
+        String[] string = {null};//new char[MAX_STRING_CHARS];
+//	va_list argptr;
+//	va_start( argptr, text );
+        int i = idStr.vsnPrintf(string, MAX_STRING_CHARS, fmt, text);
+//	va_end( argptr );
+        renderSystem.DrawSmallStringExt(635 - i * SMALLCHAR_WIDTH, (int) (y[0] + 2), string[0].toCharArray(), colorWhite, true, localConsole.charSetShader);
+        y[0] += SMALLCHAR_HEIGHT + 4;
+    }
+
+    static float SCR_DrawFPS(float y) {
+        String s;
+        int w;
+        int i, total;
+        int fps;
+        int t, frameTime;
+
+        // don't use serverTime, because that will be drifting to
+        // correct for internet lag changes, timescales, timedemos, etc
+        t = Sys_Milliseconds();
+        frameTime = t - previous;
+        previous = t;
+
+        previousTimes[index % FPS_FRAMES] = frameTime;
+        index++;
+        if (index > FPS_FRAMES) {
+            // average multiple frames together to smooth changes out a bit
+            total = 0;
+            for (i = 0; i < FPS_FRAMES; i++) {
+                total += previousTimes[i];
+            }
+            if (0 == total) {
+                total = 1;
+            }
+            fps = 10000 * FPS_FRAMES / total;
+            fps = (fps + 5) / 10;
+
+            s = va("%dfps", fps);
+            w = s.length() * BIGCHAR_WIDTH;
+
+            renderSystem.DrawBigStringExt(635 - w, idMath.FtoiFast(y) + 2, s, colorWhite, true, localConsole.charSetShader);
+        }
+
+        return y + BIGCHAR_HEIGHT + 4;
+    }
+
+    /*
+     ==================
+     SCR_DrawMemoryUsage
+     ==================
+     */
+    static float SCR_DrawMemoryUsage(float y) {
+        //memoryStats_t[] allocs = new memoryStats_t[1], frees = new memoryStats_t[1];
+        float[] yy = {y};
+
+//        Mem_GetStats(allocs);
+//        SCR_DrawTextRightAlign(yy, "total allocated memory: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10);
+//
+//        Mem_GetFrameStats(allocs, frees);
+//        SCR_DrawTextRightAlign(yy, "frame alloc: %4d, %4dkB  frame free: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10, frees[0].num, frees[0].totalSize >> 10);
+//
+//        Mem_ClearFrameStats();
+        return yy[0];
+    }
+
+    /*
+     ==================
+     SCR_DrawAsyncStats
+     ==================
+     */
+    static float SCR_DrawAsyncStats(float y) {
+        int i, outgoingRate, incomingRate;
+        float outgoingCompression, incomingCompression;
+        float[] yy = {y};
+
+        if (idAsyncNetwork.server.IsActive()) {
+
+            SCR_DrawTextRightAlign(yy, "server delay = %d msec", idAsyncNetwork.server.GetDelay());
+            SCR_DrawTextRightAlign(yy, "total outgoing rate = %d KB/s", idAsyncNetwork.server.GetOutgoingRate() >> 10);
+            SCR_DrawTextRightAlign(yy, "total incoming rate = %d KB/s", idAsyncNetwork.server.GetIncomingRate() >> 10);
+
+            for (i = 0; i < MAX_ASYNC_CLIENTS; i++) {
+
+                outgoingRate = idAsyncNetwork.server.GetClientOutgoingRate(i);
+                incomingRate = idAsyncNetwork.server.GetClientIncomingRate(i);
+                outgoingCompression = idAsyncNetwork.server.GetClientOutgoingCompression(i);
+                incomingCompression = idAsyncNetwork.server.GetClientIncomingCompression(i);
+
+                if (outgoingRate != -1 && incomingRate != -1) {
+                    SCR_DrawTextRightAlign(yy, "client %d: out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)", i, outgoingRate, outgoingCompression, incomingRate, incomingCompression);
+                }
+            }
+
+            idStr msg = new idStr();
+            idAsyncNetwork.server.GetAsyncStatsAvgMsg(msg);
+            SCR_DrawTextRightAlign(yy, msg.toString());
+
+        } else if (idAsyncNetwork.client.IsActive()) {
+
+            outgoingRate = idAsyncNetwork.client.GetOutgoingRate();
+            incomingRate = idAsyncNetwork.client.GetIncomingRate();
+            outgoingCompression = idAsyncNetwork.client.GetOutgoingCompression();
+            incomingCompression = idAsyncNetwork.client.GetIncomingCompression();
+
+            if (outgoingRate != -1 && incomingRate != -1) {
+                SCR_DrawTextRightAlign(yy, "out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)", outgoingRate, outgoingCompression, incomingRate, incomingCompression);
+            }
+
+            SCR_DrawTextRightAlign(yy, "packet loss = %d%%, client prediction = %d", (int) idAsyncNetwork.client.GetIncomingPacketLoss(), idAsyncNetwork.client.GetPrediction());
+
+            SCR_DrawTextRightAlign(yy, "predicted frames: %d", idAsyncNetwork.client.GetPredictedFrames());
+
+        }
+
+        return yy[0];
+    }
+
+    /*
+     ==================
+     SCR_DrawSoundDecoders
+     ==================
+     */
+    static float SCR_DrawSoundDecoders(float y) {
+        int index, numActiveDecoders;
+        soundDecoderInfo_t decoderInfo = new soundDecoderInfo_t();
+        float[] yy = {y};
+
+        index = -1;
+        numActiveDecoders = 0;
+        while ((index = soundSystem.GetSoundDecoderInfo(index, decoderInfo)) != -1) {
+            int localTime = decoderInfo.current44kHzTime - decoderInfo.start44kHzTime;
+            int sampleTime = decoderInfo.num44kHzSamples / decoderInfo.numChannels;
+            int percent;
+            if (localTime > sampleTime) {
+                if (decoderInfo.looping) {
+                    percent = (localTime % sampleTime) * 100 / sampleTime;
+                } else {
+                    percent = 100;
+                }
+            } else {
+                percent = localTime * 100 / sampleTime;
+            }
+            SCR_DrawTextLeftAlign(yy, "%3d: %3d%% (%1.2f) %s: %s (%dkB)", numActiveDecoders, percent, decoderInfo.lastVolume, decoderInfo.format.toString(), decoderInfo.name.toString(), decoderInfo.numBytes >> 10);
+            numActiveDecoders++;
+        }
+        return yy[0];
+    }
 
     /*
      ===============================================================================
@@ -104,7 +265,7 @@ public class Console {
      */
     public static abstract class idConsole {
 
-//	virtual			~idConsole( void ) {}
+        //	virtual			~idConsole( void ) {}
         public abstract void Init() throws idException;
 
         public abstract void Shutdown();
@@ -126,63 +287,23 @@ public class Console {
         public abstract void Draw(boolean forceFullScreen);
 
         public abstract void Print(final String text);
-    };
-    /**
-     *
-     *
-     *
-     */
-    static final int LINE_WIDTH = 78;
-    static final int NUM_CON_TIMES = 4;
-    static final int CON_TEXTSIZE = 0x30000;
-    static final int TOTAL_LINES = (CON_TEXTSIZE / LINE_WIDTH);
-    static final int CONSOLE_FIRSTREPEAT = 200;
-    static final int CONSOLE_REPEAT = 100;
-    //                                     
-    static final int COMMAND_HISTORY = 64;
-    //    
+    }
 
     // the console will query the cvar and command systems for
     // command completion information
     static class idConsoleLocal extends idConsole {
 
-        //
-        //============================
-        //
-        private boolean keyCatching;
-        //
-        private final short[] text = new short[CON_TEXTSIZE];
-        private int current;		// line where next message will be printed
-        private int x;			    // offset in current line for next print
-        private int display;		// bottom of console displays this line
-        private int lastKeyEvent;	// time of last key event for scroll delay
-        private int nextKeyEvent;	// keyboard repeat rate
-        //
-        private float displayFrac;	// approaches finalFrac at scr_conspeed
-        private float finalFrac;	// 0.0 to 1.0 lines of console to display
-        private int fracTime;		// time of last displayFrac update
-        //
-        private int vislines;		// in scanlines
-        //
-        private final int[] times = new int[NUM_CON_TIMES];	// cls.realtime time the line was generated for transparent notify lines
-        //
-        private idVec4 color;
-        //
-        private final idEditField[] historyEditLines = new idEditField[COMMAND_HISTORY];
-        //
-        private int nextHistoryLine;// the last line in the history buffer, not masked
-        private int historyLine;	// the line being displayed from history buffer will be <= nextHistoryLine
-        //
-        private idEditField consoleField;
-        //
-        private static final idCVar con_speed      = new idCVar("con_speed", "3", CVAR_SYSTEM, "speed at which the console moves up and down");
-        private static final idCVar con_notifyTime = new idCVar("con_notifyTime", "3", CVAR_SYSTEM, "time messages are displayed onscreen when console is pulled up");
         private static final idCVar con_noPrint;
+        private static final idCVar con_notifyTime = new idCVar("con_notifyTime", "3", CVAR_SYSTEM, "time messages are displayed onscreen when console is pulled up");
         //
-        private idMaterial whiteShader;
-        private idMaterial consoleShader;
-        //
-        //
+        private static final idCVar con_speed = new idCVar("con_speed", "3", CVAR_SYSTEM, "speed at which the console moves up and down");
+        /*
+         ================
+         DrawNotify
+
+         Draws the last few lines of output transparently over the game top
+         ================
+         */static int drawNotifyTotal = 0;
 
         static {
             if (win_main.DEBUG) {
@@ -191,6 +312,42 @@ public class Console {
                 con_noPrint = new idCVar("con_noPrint", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "print on the console but not onscreen when console is pulled up");
             }
         }
+
+        //
+        private final idEditField[] historyEditLines = new idEditField[COMMAND_HISTORY];
+        //
+        private final short[] text = new short[CON_TEXTSIZE];
+        //
+        private final int[] times = new int[NUM_CON_TIMES];    // cls.realtime time the line was generated for transparent notify lines
+        //============================
+        public idMaterial charSetShader;
+        //
+        private idVec4 color;
+        //
+        private idEditField consoleField;
+        private idMaterial consoleShader;
+        private int current;        // line where next message will be printed
+        private int display;        // bottom of console displays this line
+        //
+        private float displayFrac;    // approaches finalFrac at scr_conspeed
+        private float finalFrac;    // 0.0 to 1.0 lines of console to display
+        private int fracTime;        // time of last displayFrac update
+        private int historyLine;    // the line being displayed from history buffer will be <= nextHistoryLine
+        //
+        //============================
+        //
+        private boolean keyCatching;
+        private int lastKeyEvent;    // time of last key event for scroll delay
+        //
+        private int nextHistoryLine;// the last line in the history buffer, not masked
+        private int nextKeyEvent;    // keyboard repeat rate
+        //
+        //
+        //
+        private int vislines;        // in scanlines
+        //
+        private idMaterial whiteShader;
+        private int x;                // offset in current line for next print
 
         @Override
         public void Init() throws idException {
@@ -323,7 +480,7 @@ public class Console {
         public void Close() {
             keyCatching = false;
             SetDisplayFraction(0);
-            displayFrac = 0;	// don't scroll to that point, go immediately
+            displayFrac = 0;    // don't scroll to that point, go immediately
             ClearNotifyLines();
         }
 
@@ -401,7 +558,7 @@ public class Console {
                     case '\r':
                         x = 0;
                         break;
-                    default:	// display character and advance
+                    default:    // display character and advance
                         text[y * LINE_WIDTH + x] = (short) ((color << 8) | c);
                         x++;
                         if (x >= LINE_WIDTH) {
@@ -434,7 +591,7 @@ public class Console {
             }
 
             if (forceFullScreen) {
-                // if we are forced full screen because of a disconnect, 
+                // if we are forced full screen because of a disconnect,
                 // we want the console closed when we go back to a session state
                 Close();
                 // we are however catching keyboard input
@@ -458,7 +615,7 @@ public class Console {
             }
 
 //            if (com_showFPS.GetBool()) {
-                y = SCR_DrawFPS(0);
+            y = SCR_DrawFPS(0);
 //            }
 
             if (com_showMemoryUsage.GetBool()) {
@@ -531,6 +688,8 @@ public class Console {
 
             fileSystem.CloseFile(f);
         }
+//
+//
 
         public void Clear() {
             int i;
@@ -539,12 +698,8 @@ public class Console {
                 text[i] = (short) ((idStr.ColorIndex(C_COLOR_CYAN) << 8) | ' ');
             }
 
-            Bottom();		// go to end
+            Bottom();        // go to end
         }
-        //============================
-        public idMaterial charSetShader;
-//
-//
 
         /*
          ====================
@@ -573,7 +728,7 @@ public class Console {
 
                 common.Printf("]%s\n", buffer);
 
-                cmdSystem.BufferCommandText(CMD_EXEC_APPEND, buffer);	// valid command
+                cmdSystem.BufferCommandText(CMD_EXEC_APPEND, buffer);    // valid command
                 cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "\n");
 
                 // copy line to history buffer
@@ -655,8 +810,9 @@ public class Console {
             // pass to the normal editline routine
             consoleField.KeyDownEvent(key);
         }
-
 //
+
+        //
         private void Linefeed() {
             int i;
 
@@ -674,7 +830,6 @@ public class Console {
                 text[(current % TOTAL_LINES) * LINE_WIDTH + i] = (short) ((idStr.ColorIndex(C_COLOR_CYAN) << 8) | ' ');
             }
         }
-//
 
         private void PageUp() {
             display -= 2;
@@ -693,11 +848,11 @@ public class Console {
         private void Top() {
             display = 0;
         }
+//
 
         private void Bottom() {
             display = current;
         }
-//
 
         /*
          ================
@@ -730,13 +885,6 @@ public class Console {
             consoleField.Draw(2 * SMALLCHAR_WIDTH, y, SCREEN_WIDTH - 3 * SMALLCHAR_WIDTH, true, charSetShader);
         }
 
-        /*
-         ================
-         DrawNotify
-
-         Draws the last few lines of output transparently over the game top
-         ================
-         */static int drawNotifyTotal = 0;
         private void DrawNotify() {
             int x, v;
             int text_p;
@@ -836,7 +984,7 @@ public class Console {
 
             // draw the text
             vislines = lines;
-            rows = (lines - SMALLCHAR_WIDTH) / SMALLCHAR_WIDTH;		// rows of text to draw
+            rows = (lines - SMALLCHAR_WIDTH) / SMALLCHAR_WIDTH;        // rows of text to draw
 
             y = lines - (SMALLCHAR_HEIGHT * 3);
 
@@ -958,192 +1106,6 @@ public class Console {
             }
         }
 
-    };
-
-
-    /*
-     =============================================================================
-
-     Misc stats
-
-     =============================================================================
-     */
-
-    /*
-     ==================
-     SCR_DrawTextLeftAlign
-     ==================
-     */
-    static void SCR_DrawTextLeftAlign(float[] y, final String fmt, Object... text) {
-        String[] string = {null};//new char[MAX_STRING_CHARS];
-//	va_list argptr;
-//	va_start( argptr, text );
-        idStr.vsnPrintf(string, MAX_STRING_CHARS, fmt, text);
-//	va_end( argptr );
-        renderSystem.DrawSmallStringExt(0, (int) (y[0] + 2), string[0].toCharArray(), colorWhite, true, localConsole.charSetShader);
-        y[0] += SMALLCHAR_HEIGHT + 4;
-    }
-
-    /*
-     ==================
-     SCR_DrawTextRightAlign
-     ==================
-     */
-    static void SCR_DrawTextRightAlign(float[] y, final String fmt, Object... text) {
-        String[] string = {null};//new char[MAX_STRING_CHARS];
-//	va_list argptr;
-//	va_start( argptr, text );
-        int i = idStr.vsnPrintf(string, MAX_STRING_CHARS, fmt, text);
-//	va_end( argptr );
-        renderSystem.DrawSmallStringExt(635 - i * SMALLCHAR_WIDTH, (int) (y[0] + 2), string[0].toCharArray(), colorWhite, true, localConsole.charSetShader);
-        y[0] += SMALLCHAR_HEIGHT + 4;
-    }
-    /*
-     ==================
-     SCR_DrawFPS
-     ==================
-     */
-    static final int FPS_FRAMES = 4;
-    static int[] previousTimes = new int[FPS_FRAMES];
-    static int index;
-    static int previous;
-
-    static float SCR_DrawFPS(float y) {
-        String s;
-        int w;
-        int i, total;
-        int fps;
-        int t, frameTime;
-
-        // don't use serverTime, because that will be drifting to
-        // correct for internet lag changes, timescales, timedemos, etc
-        t = Sys_Milliseconds();
-        frameTime = t - previous;
-        previous = t;
-
-        previousTimes[index % FPS_FRAMES] = frameTime;
-        index++;
-        if (index > FPS_FRAMES) {
-            // average multiple frames together to smooth changes out a bit
-            total = 0;
-            for (i = 0; i < FPS_FRAMES; i++) {
-                total += previousTimes[i];
-            }
-            if (0 == total) {
-                total = 1;
-            }
-            fps = 10000 * FPS_FRAMES / total;
-            fps = (fps + 5) / 10;
-
-            s = va("%dfps", fps);
-            w = s.length() * BIGCHAR_WIDTH;
-
-            renderSystem.DrawBigStringExt(635 - w, idMath.FtoiFast(y) + 2, s, colorWhite, true, localConsole.charSetShader);
-        }
-
-        return y + BIGCHAR_HEIGHT + 4;
-    }
-
-    /*
-     ==================
-     SCR_DrawMemoryUsage
-     ==================
-     */
-    static float SCR_DrawMemoryUsage(float y) {
-        memoryStats_t[] allocs = new memoryStats_t[1], frees = new memoryStats_t[1];
-        float[] yy = {y};
-
-//        Mem_GetStats(allocs);
-//        SCR_DrawTextRightAlign(yy, "total allocated memory: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10);
-//
-//        Mem_GetFrameStats(allocs, frees);
-//        SCR_DrawTextRightAlign(yy, "frame alloc: %4d, %4dkB  frame free: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10, frees[0].num, frees[0].totalSize >> 10);
-//
-//        Mem_ClearFrameStats();
-        return yy[0];
-    }
-
-    /*
-     ==================
-     SCR_DrawAsyncStats
-     ==================
-     */
-    static float SCR_DrawAsyncStats(float y) {
-        int i, outgoingRate, incomingRate;
-        float outgoingCompression, incomingCompression;
-        float[] yy = {y};
-
-        if (idAsyncNetwork.server.IsActive()) {
-
-            SCR_DrawTextRightAlign(yy, "server delay = %d msec", idAsyncNetwork.server.GetDelay());
-            SCR_DrawTextRightAlign(yy, "total outgoing rate = %d KB/s", idAsyncNetwork.server.GetOutgoingRate() >> 10);
-            SCR_DrawTextRightAlign(yy, "total incoming rate = %d KB/s", idAsyncNetwork.server.GetIncomingRate() >> 10);
-
-            for (i = 0; i < MAX_ASYNC_CLIENTS; i++) {
-
-                outgoingRate = idAsyncNetwork.server.GetClientOutgoingRate(i);
-                incomingRate = idAsyncNetwork.server.GetClientIncomingRate(i);
-                outgoingCompression = idAsyncNetwork.server.GetClientOutgoingCompression(i);
-                incomingCompression = idAsyncNetwork.server.GetClientIncomingCompression(i);
-
-                if (outgoingRate != -1 && incomingRate != -1) {
-                    SCR_DrawTextRightAlign(yy, "client %d: out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)", i, outgoingRate, outgoingCompression, incomingRate, incomingCompression);
-                }
-            }
-
-            idStr msg = new idStr();
-            idAsyncNetwork.server.GetAsyncStatsAvgMsg(msg);
-            SCR_DrawTextRightAlign(yy, msg.toString());
-
-        } else if (idAsyncNetwork.client.IsActive()) {
-
-            outgoingRate = idAsyncNetwork.client.GetOutgoingRate();
-            incomingRate = idAsyncNetwork.client.GetIncomingRate();
-            outgoingCompression = idAsyncNetwork.client.GetOutgoingCompression();
-            incomingCompression = idAsyncNetwork.client.GetIncomingCompression();
-
-            if (outgoingRate != -1 && incomingRate != -1) {
-                SCR_DrawTextRightAlign(yy, "out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)", outgoingRate, outgoingCompression, incomingRate, incomingCompression);
-            }
-
-            SCR_DrawTextRightAlign(yy, "packet loss = %d%%, client prediction = %d", (int) idAsyncNetwork.client.GetIncomingPacketLoss(), idAsyncNetwork.client.GetPrediction());
-
-            SCR_DrawTextRightAlign(yy, "predicted frames: %d", idAsyncNetwork.client.GetPredictedFrames());
-
-        }
-
-        return yy[0];
-    }
-
-    /*
-     ==================
-     SCR_DrawSoundDecoders
-     ==================
-     */
-    static float SCR_DrawSoundDecoders(float y) {
-        int index, numActiveDecoders;
-        soundDecoderInfo_t decoderInfo = new soundDecoderInfo_t();
-        float[] yy = {y};
-
-        index = -1;
-        numActiveDecoders = 0;
-        while ((index = soundSystem.GetSoundDecoderInfo(index, decoderInfo)) != -1) {
-            int localTime = decoderInfo.current44kHzTime - decoderInfo.start44kHzTime;
-            int sampleTime = decoderInfo.num44kHzSamples / decoderInfo.numChannels;
-            int percent;
-            if (localTime > sampleTime) {
-                if (decoderInfo.looping) {
-                    percent = (localTime % sampleTime) * 100 / sampleTime;
-                } else {
-                    percent = 100;
-                }
-            } else {
-                percent = localTime * 100 / sampleTime;
-            }
-            SCR_DrawTextLeftAlign(yy, "%3d: %3d%% (%1.2f) %s: %s (%dkB)", numActiveDecoders, percent, decoderInfo.lastVolume, decoderInfo.format.toString(), decoderInfo.name.toString(), decoderInfo.numBytes >> 10);
-            numActiveDecoders++;
-        }
-        return yy[0];
     }
 //=========================================================================
 

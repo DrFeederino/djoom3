@@ -1,14 +1,15 @@
 package neo.Tools.Compilers.DMap;
 
-import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
 import neo.Tools.Compilers.DMap.dmap.node_s;
 import neo.Tools.Compilers.DMap.dmap.tree_s;
 import neo.Tools.Compilers.DMap.dmap.uPortal_s;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.idlib.geometry.Winding.idWinding;
+
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
 
 /**
  *
@@ -16,12 +17,13 @@ import neo.idlib.geometry.Winding.idWinding;
 public class glfile {
 
     static int c_glfaces;
+    private static int level = 128;
 
     static int PortalVisibleSides(uPortal_s p) {
         boolean fcon, bcon;
 
         if (NOT(p.onnode)) {
-            return 0;		// outside
+            return 0;        // outside
         }
         fcon = p.nodes[0].opaque;
         bcon = p.nodes[1].opaque;
@@ -39,7 +41,6 @@ public class glfile {
         }
         return 0;
     }
-    private static int level = 128;
 
     static void OutputWinding(idWinding w, idFile glview) {
         float light;
@@ -78,7 +79,7 @@ public class glfile {
 
         w = p.winding;
 
-        if (sides == 2) {		// back side
+        if (sides == 2) {        // back side
             w = w.Reverse();
         }
 

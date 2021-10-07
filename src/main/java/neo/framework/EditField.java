@@ -1,34 +1,23 @@
 package neo.framework;
 
 import neo.Renderer.Material.idMaterial;
+import neo.TempDump.void_callback;
+import neo.framework.KeyInput.*;
+import neo.idlib.CmdArgs.idCmdArgs;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Str.idStr;
+
 import static neo.Renderer.RenderSystem.SMALLCHAR_WIDTH;
 import static neo.Renderer.RenderSystem.renderSystem;
 import static neo.TempDump.ctos;
 import static neo.TempDump.strLen;
-import neo.TempDump.void_callback;
 import static neo.framework.CVarSystem.cvarSystem;
 import static neo.framework.CmdSystem.cmdSystem;
 import static neo.framework.Common.com_ticNumber;
 import static neo.framework.Common.common;
-import neo.framework.EditField.FindMatches;
-import static neo.framework.KeyInput.K_ALT;
-import static neo.framework.KeyInput.K_BACKSPACE;
-import static neo.framework.KeyInput.K_CAPSLOCK;
-import static neo.framework.KeyInput.K_CTRL;
-import static neo.framework.KeyInput.K_DEL;
-import static neo.framework.KeyInput.K_END;
-import static neo.framework.KeyInput.K_HOME;
-import static neo.framework.KeyInput.K_INS;
-import static neo.framework.KeyInput.K_KP_INS;
-import static neo.framework.KeyInput.K_LEFTARROW;
-import static neo.framework.KeyInput.K_RIGHTARROW;
-import static neo.framework.KeyInput.K_SHIFT;
-import neo.framework.KeyInput.idKeyInput;
-import neo.idlib.CmdArgs.idCmdArgs;
+import static neo.framework.KeyInput.*;
 import static neo.idlib.Lib.colorWhite;
-import neo.idlib.Lib.idException;
 import static neo.idlib.Text.Str.S_COLOR_WHITE;
-import neo.idlib.Text.Str.idStr;
 import static neo.sys.win_main.Sys_GetClipboardData;
 
 /**
@@ -48,22 +37,22 @@ public class EditField {
 
     static class autoComplete_s {
 
-        boolean valid;
-        int length;
         char[] completionString = new char[MAX_EDIT_LINE];
         char[] currentMatch = new char[MAX_EDIT_LINE];
+        int findMatchIndex;
+        int length;
         int matchCount;
         int matchIndex;
-        int findMatchIndex;
-    } /*autoComplete_t*/;
+        boolean valid;
+    } /*autoComplete_t*/
 
     public static class idEditField {
 
+        private autoComplete_s autoComplete;
+        private final char[] buffer = new char[MAX_EDIT_LINE];
         private int cursor;
         private int scroll;
         private int widthInChars;
-        private char[] buffer = new char[MAX_EDIT_LINE];
-        private autoComplete_s autoComplete;
         //
         //
 
@@ -138,7 +127,7 @@ public class EditField {
                 autoComplete = globalAutoComplete;
 
                 if (autoComplete.matchCount == 0) {
-                    return;	// no matches
+                    return;    // no matches
                 }
 
                 // when there's only one match or there's an argument
@@ -209,7 +198,7 @@ public class EditField {
 
                 // and print it
                 idStr.snPrintf(buffer, buffer.length, ctos(autoComplete.currentMatch));
-                if (autoComplete.length > (int) strLen(buffer)) {
+                if (autoComplete.length > strLen(buffer)) {
                     autoComplete.length = strLen(buffer);
                 }
                 SetCursor(autoComplete.length);
@@ -219,19 +208,19 @@ public class EditField {
         public void CharEvent(int ch) {
             int len;
 
-            if (ch == 'v' - 'a' + 1) {	// ctrl-v is paste
+            if (ch == 'v' - 'a' + 1) {    // ctrl-v is paste
                 Paste();
                 return;
             }
 
-            if (ch == 'c' - 'a' + 1) {	// ctrl-c clears the field
+            if (ch == 'c' - 'a' + 1) {    // ctrl-c clears the field
                 Clear();
                 return;
             }
 
             len = strLen(buffer);
 
-            if (ch == 'h' - 'a' + 1 || ch == K_BACKSPACE) {	// ctrl-h is backspace
+            if (ch == 'h' - 'a' + 1 || ch == K_BACKSPACE) {    // ctrl-h is backspace
                 if (cursor > 0) {
 //			memmove( buffer + cursor - 1, buffer + cursor, len + 1 - cursor );
                     System.arraycopy(buffer, cursor, buffer, cursor - 1, len + 1 - cursor);
@@ -243,13 +232,13 @@ public class EditField {
                 return;
             }
 
-            if (ch == 'a' - 'a' + 1) {	// ctrl-a is home
+            if (ch == 'a' - 'a' + 1) {    // ctrl-a is home
                 cursor = 0;
                 scroll = 0;
                 return;
             }
 
-            if (ch == 'e' - 'a' + 1) {	// ctrl-e is end
+            if (ch == 'e' - 'a' + 1) {    // ctrl-e is end
                 cursor = len;
                 scroll = cursor - widthInChars;
                 return;
@@ -268,7 +257,7 @@ public class EditField {
                 }
                 buffer[cursor] = (char) ch;
                 cursor++;
-            } else {	// insert mode
+            } else {    // insert mode
                 if (len == MAX_EDIT_LINE - 1) {
                     return; // all full
                 }
@@ -476,7 +465,7 @@ public class EditField {
             }
 
             if (((com_ticNumber >> 4) & 1) == 1) {
-                return;		// off blink
+                return;        // off blink
             }
 
             if (idKeyInput.GetOverstrikeMode()) {
@@ -501,7 +490,7 @@ public class EditField {
             idStr.Copynz(buffer, buf, buffer.length);
             SetCursor(strLen(buffer));
         }
-    };
+    }
 
     /*
      ===============
@@ -540,7 +529,7 @@ public class EditField {
             }
             globalAutoComplete.currentMatch[i] = 0;
         }
-    };
+    }
 
     /*
      ===============
@@ -570,7 +559,7 @@ public class EditField {
 
             globalAutoComplete.findMatchIndex++;
         }
-    };
+    }
 
     /*
      ===============
@@ -594,7 +583,7 @@ public class EditField {
                 common.Printf("    %s\n", s);
             }
         }
-    };
+    }
 
     /*
      ===============
@@ -618,5 +607,6 @@ public class EditField {
                 common.Printf("    %s" + S_COLOR_WHITE + " = \"%s\"\n", s, cvarSystem.GetCVarString(s));
             }
         }
-    };
+    }
+
 }

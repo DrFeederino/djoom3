@@ -14,11 +14,11 @@ public class Stack {
 
     class idStackTemplate<type> {
 
-        private int top;
         //        private type bottom;
         //
-        private static final int    STACK_BLOCK_SIZE = 10;
-        private              type[] stack            = (type[]) new Object[10];
+        private static final int STACK_BLOCK_SIZE = 10;
+        private type[] stack = (type[]) new Object[10];
+        private int top;
         //
         //
 
@@ -59,5 +59,6 @@ public class Stack {
 
             System.arraycopy(temp, 0, stack, 0, stack.length);
         }
-    };
+    }
+
 }

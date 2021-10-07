@@ -3,21 +3,22 @@ package neo.idlib;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Timer.State.TS_STARTED;
-import static neo.idlib.Timer.State.TS_STOPPED;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
+
+import static neo.idlib.Timer.State.TS_STARTED;
+import static neo.idlib.Timer.State.TS_STOPPED;
 
 /**
  *
  */
 public class Timer {
 
-    static enum State {
+    enum State {
 
         TS_STARTED,
         TS_STOPPED
-    };
+    }
 
     /*
      ===============================================================================
@@ -28,10 +29,10 @@ public class Timer {
      */
     public static class idTimer {
 
-        private State state;
         private static double base = -1;
-        private double start;
         private double clockTicks;
+        private double start;
+        private State state;
         //
         //
 
@@ -119,7 +120,7 @@ public class Timer {
             }
             base = b;
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -130,9 +131,9 @@ public class Timer {
      */
     class idTimerReport {
 
-        private idList<idTimer> timers;
         private idStrList names;
         private idStr reportName;
+        private idList<idTimer> timers;
         //
         //
 
@@ -195,5 +196,6 @@ public class Timer {
                 }
             }
         }
-    };
+    }
+
 }

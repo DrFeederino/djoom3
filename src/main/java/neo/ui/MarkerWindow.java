@@ -1,33 +1,32 @@
 package neo.ui;
 
-import java.util.Arrays;
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
-import static neo.TempDump.itob;
-import static neo.TempDump.wrapToNativeBuffer;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.FileSystem_h.idFileList;
 import neo.framework.File_h.idFile;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.KeyInput.K_MOUSE2;
-import static neo.framework.KeyInput.K_SPACE;
-import static neo.framework.Session.MAX_LOGGED_STATS;
 import neo.framework.Session.logStats_t;
-import static neo.idlib.Lib.idLib.common;
-import static neo.idlib.Lib.idLib.fileSystem;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
-import neo.ui.MarkerWindow.markerData_t;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
 import neo.ui.Window.idWindow;
+
+import java.util.Arrays;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.itob;
+import static neo.TempDump.wrapToNativeBuffer;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.KeyInput.*;
+import static neo.framework.Session.MAX_LOGGED_STATS;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Lib.idLib.fileSystem;
+import static neo.idlib.Text.Str.va;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 
 /**
  *
@@ -36,26 +35,37 @@ public class MarkerWindow {
 
     public static class markerData_t {
 
-        int time;
         idMaterial mat;
         idRectangle rect;
-    };
+        int time;
+    }
 
     public static class idMarkerWindow extends idWindow {
 
+        static final int COMBAT_MAX = 100;
+        static final int HEALTH_MAX = 100;
+        static final int RATE_MAX = 125;
+        static final int STAMINA_MAX = 12;
         private final logStats_t[] loggedStats = new logStats_t[MAX_LOGGED_STATS];
+        private int currentMarker;
+        private int currentTime;
+        private int/*dword*/[] imageBuff;
+        private idVec4 markerColor;
+        private idMaterial markerMat;
+        private idMaterial markerStop;
+        //
+        //
         private idList<markerData_t> markerTimes;
-        private idStr                statData;
-        private int                  numStats;
-        private int/*dword*/[]       imageBuff;
-        private idMaterial           markerMat;
-        private idMaterial           markerStop;
-        private idVec4               markerColor;
-        private int                  currentMarker;
-        private int                  currentTime;
-        private int                  stopTime;
-        //
-        //
+        private int numStats;
+//virtual ~idMarkerWindow();
+        private idStr statData;
+//
+//        @Override
+//        public idWinVar GetWinVarByName(final String _name, boolean winLookup /*= false*/) {
+//            return super.GetWinVarByName(_name, winLookup);
+//        }
+//
+        private int stopTime;
 
         public idMarkerWindow(idUserInterfaceLocal gui) {
             super(gui);
@@ -69,18 +79,11 @@ public class MarkerWindow {
             this.gui = gui;
             CommonInit();
         }
-//virtual ~idMarkerWindow();
 
         @Override
         public int/*size_t*/ Allocated() {
             return super.Allocated();
         }
-//
-//        @Override
-//        public idWinVar GetWinVarByName(final String _name, boolean winLookup /*= false*/) {
-//            return super.GetWinVarByName(_name, winLookup);
-//        }
-//
 
         public String HandleEvent(final sysEvent_s event, boolean updateVisuals) {
 
@@ -139,11 +142,6 @@ public class MarkerWindow {
         public void PostParse() {
             super.PostParse();
         }
-
-        static final int HEALTH_MAX  = 100;
-        static final int COMBAT_MAX  = 100;
-        static final int RATE_MAX    = 125;
-        static final int STAMINA_MAX = 12;
 
         @Override
         public void Draw(int time, float x, float y) {
@@ -395,5 +393,6 @@ public class MarkerWindow {
                 common.Warning("Out of bounds on point %d : %d", x, y);
             }
         }
-    };
+    }
+
 }

@@ -1,37 +1,30 @@
 package neo.ui;
 
-import static neo.Renderer.Material.SS_GUI;
 import neo.Renderer.Material.idMaterial;
-import static neo.TempDump.NOT;
-import static neo.TempDump.isNotNullOrEmpty;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.KeyInput.K_KP_LEFTARROW;
-import static neo.framework.KeyInput.K_KP_RIGHTARROW;
-import static neo.framework.KeyInput.K_LEFTARROW;
-import static neo.framework.KeyInput.K_MOUSE1;
-import static neo.framework.KeyInput.K_MOUSE2;
-import static neo.framework.KeyInput.K_RIGHTARROW;
-import static neo.idlib.Lib.idLib.cvarSystem;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.WIN_CANFOCUS;
-import static neo.ui.Window.WIN_CAPTURE;
-import static neo.ui.Window.WIN_FOCUS;
-import static neo.ui.Window.WIN_HOLDCAPTURE;
-import neo.ui.Window.idWindow;
+import neo.ui.Window.*;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinFloat;
 import neo.ui.Winvar.idWinStr;
 import neo.ui.Winvar.idWinVar;
+
+import static neo.Renderer.Material.SS_GUI;
+import static neo.TempDump.NOT;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.KeyInput.*;
+import static neo.idlib.Lib.idLib.cvarSystem;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.ui.Window.*;
 
 /**
  *
@@ -40,26 +33,26 @@ public class SliderWindow {
 
     public static class idSliderWindow extends idWindow {
 
-        private idWinFloat value = new idWinFloat();
-        private float low;
-        private float high;
-        private float thumbWidth;
-        private float thumbHeight;
-        private float stepSize;
-        private float lastValue;
-        private idRectangle thumbRect = new idRectangle();
-        private idMaterial thumbMat;
-        private boolean    vertical;
-        private boolean    verticalFlip;
-        private boolean    scrollbar;
-        private idWindow   buddyWin;
-        private idStr    thumbShader = new idStr();
-        //	
-        private idWinStr cvarStr     = new idWinStr();
-        private idCVar  cvar;
-        private boolean cvar_init;
-        private idWinBool liveUpdate = new idWinBool();
+        private idWindow buddyWin;
+        private idCVar cvar;
         private idWinStr cvarGroup;
+        //
+        private final idWinStr cvarStr = new idWinStr();
+        private boolean cvar_init;
+        private float high;
+        private float lastValue;
+        private final idWinBool liveUpdate = new idWinBool();
+        private float low;
+        private boolean scrollbar;
+        private float stepSize;
+        private float thumbHeight;
+        private idMaterial thumbMat;
+        private final idRectangle thumbRect = new idRectangle();
+        private final idStr thumbShader = new idStr();
+        private float thumbWidth;
+        private final idWinFloat value = new idWinFloat();
+        private boolean vertical;
+        private boolean verticalFlip;
         //
         //
 
@@ -452,5 +445,6 @@ public class SliderWindow {
         private void UpdateCvar(boolean read) {
             this.UpdateCvar(read, false);
         }
-    };
+    }
+
 }

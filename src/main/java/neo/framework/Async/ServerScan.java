@@ -1,48 +1,39 @@
 package neo.framework.Async;
 
+import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
+import neo.framework.CVarSystem.*;
+import neo.framework.DeclEntityDef.idDeclEntityDef;
+import neo.framework.DeclManager.idDecl;
+import neo.idlib.Dict_h.idDict;
+import neo.idlib.Dict_h.idKeyValue;
+import neo.idlib.Lib.idException;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.cmp_t;
+import neo.idlib.containers.List.idList;
+import neo.sys.sys_public.netadr_t;
+import neo.ui.ListGUI.idListGUI;
+import neo.ui.UserInterface.idUserInterface;
+
 import static neo.TempDump.NOT;
 import static neo.TempDump.ctos;
 import static neo.framework.Async.AsyncNetwork.MAX_ASYNC_CLIENTS;
 import static neo.framework.Async.AsyncNetwork.MAX_NICKLEN;
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import static neo.framework.Async.ServerScan.scan_state_t.IDLE;
-import static neo.framework.Async.ServerScan.scan_state_t.LAN_SCAN;
-import static neo.framework.Async.ServerScan.scan_state_t.NET_SCAN;
-import static neo.framework.Async.ServerScan.scan_state_t.WAIT_ON_INIT;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_GAME;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_GAMETYPE;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_MAP;
+import static neo.framework.Async.ServerScan.scan_state_t.*;
 import static neo.framework.Async.ServerScan.serverSort_t.SORT_PING;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_PLAYERS;
-import static neo.framework.Async.ServerScan.serverSort_t.SORT_SERVERNAME;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_GUI;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import neo.framework.CVarSystem.idCVar;
+import static neo.framework.CVarSystem.*;
 import static neo.framework.Common.common;
-import neo.framework.DeclEntityDef.idDeclEntityDef;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_MAPDEF;
-import neo.framework.DeclManager.idDecl;
 import static neo.framework.FileSystem_h.fileSystem;
 import static neo.framework.Licensee.GAME_NAME;
 import static neo.framework.Licensee.PORT_SERVER;
-import neo.idlib.Dict_h.idDict;
-import neo.idlib.Dict_h.idKeyValue;
 import static neo.idlib.Lib.MAX_STRING_CHARS;
 import static neo.idlib.Lib.Min;
-import neo.idlib.Lib.idException;
-import neo.idlib.Text.Str.idStr;
 import static neo.idlib.Text.Str.va;
-import neo.idlib.containers.List.cmp_t;
-import neo.idlib.containers.List.idList;
 import static neo.sys.sys_public.BUILD_OS_ID;
-import neo.sys.sys_public.netadr_t;
 import static neo.sys.win_net.Sys_NetAdrToString;
 import static neo.sys.win_net.Sys_StringToNetAdr;
 import static neo.sys.win_shared.Sys_Milliseconds;
-import neo.ui.ListGUI.idListGUI;
-import neo.ui.UserInterface.idUserInterface;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -59,13 +50,13 @@ public class ServerScan {
      ===============================================================================
      */
 
-    static final idCVar       gui_filter_password = new idCVar("gui_filter_password", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Password filter");
-    static final idCVar       gui_filter_players  = new idCVar("gui_filter_players", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Players filter");
-    static final idCVar       gui_filter_gameType = new idCVar("gui_filter_gameType", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Gametype filter");
-    static final idCVar       gui_filter_idle     = new idCVar("gui_filter_idle", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Idle servers filter");
-    static final idCVar       gui_filter_game     = new idCVar("gui_filter_game", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Game filter");
+    static final idCVar gui_filter_game = new idCVar("gui_filter_game", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Game filter");
+    static final idCVar gui_filter_gameType = new idCVar("gui_filter_gameType", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Gametype filter");
+    static final idCVar gui_filter_idle = new idCVar("gui_filter_idle", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Idle servers filter");
+    static final idCVar gui_filter_password = new idCVar("gui_filter_password", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Password filter");
+    static final idCVar gui_filter_players = new idCVar("gui_filter_players", "0", CVAR_GUI | CVAR_INTEGER | CVAR_ARCHIVE, "Players filter");
     //
-    static final String       l_gameTypes[]       = {
+    static final String[] l_gameTypes = {
             "Deathmatch",
             "Tourney",
             "Team DM",
@@ -74,31 +65,16 @@ public class ServerScan {
             null
     };
     //
-    static       idServerScan l_serverScan        = null;
+    static idServerScan l_serverScan = null;
 //    
 
-    // storage for incoming servers / server scan
-    static class inServer_t {
+    public enum scan_state_t {
 
-        netadr_t adr;
-        int      id;
-        int      time;
-    };
-
-    // the menu gui uses a hard-coded control type to display a list of network games
-    static class networkServer_t {
-
-        netadr_t adr;
-        idDict   serverInfo;
-        int      ping;
-        int      id;            // idnet mode sends an id for each server in list
-        int      clients;
-        char[][] nickname = new char[MAX_NICKLEN][MAX_ASYNC_CLIENTS];
-        short[]  pings    = new short[MAX_ASYNC_CLIENTS];
-        int[]    rate     = new int[MAX_ASYNC_CLIENTS];
-        int OSMask;
-        int challenge;
-    };
+        IDLE,
+        WAIT_ON_INIT,
+        LAN_SCAN,
+        NET_SCAN
+    }
 
     public enum serverSort_t {
 
@@ -108,15 +84,30 @@ public class ServerScan {
         SORT_GAMETYPE,
         SORT_MAP,
         SORT_GAME
-    };
+    }
 
-    public enum scan_state_t {
+    // storage for incoming servers / server scan
+    static class inServer_t {
 
-        IDLE,
-        WAIT_ON_INIT,
-        LAN_SCAN,
-        NET_SCAN
-    };
+        netadr_t adr;
+        int id;
+        int time;
+    }
+
+    // the menu gui uses a hard-coded control type to display a list of network games
+    static class networkServer_t {
+
+        int OSMask;
+        netadr_t adr;
+        int challenge;
+        int clients;
+        int id;            // idnet mode sends an id for each server in list
+        char[][] nickname = new char[MAX_NICKLEN][MAX_ASYNC_CLIENTS];
+        int ping;
+        short[] pings = new short[MAX_ASYNC_CLIENTS];
+        int[] rate = new int[MAX_ASYNC_CLIENTS];
+        idDict serverInfo;
+    }
 
     /*
      ================
@@ -125,40 +116,40 @@ public class ServerScan {
      */
     public static class idServerScan extends idList<networkServer_t> {
 
-        private static final int MAX_PINGREQUESTS = 32;     // how many servers to query at once
-        private static final int REPLY_TIMEOUT    = 999;    // how long should we wait for a reply from a game server
         private static final int INCOMING_TIMEOUT = 1500;   // when we got an incoming server list, how long till we decide the list is done
-        private static final int REFRESH_START    = 10000;  // how long to wait when sending the initial refresh request
-        //
-        private scan_state_t       scan_state;
-        //	
-        private boolean            incoming_net;            // set to true while new servers are fed through AddServer
-        private boolean            incoming_useTimeout;
-        private int                incoming_lastTime;
-        //	
-        private int                lan_pingtime;            // holds the time of LAN scan
-        //	
-        // servers we're waiting for a reply from
-        // won't exceed MAX_PINGREQUESTS elements
-        // holds index of net_servers elements, indexed by 'from' string
-        private idDict             net_info;
-        //
-        private idList<inServer_t> net_servers;
+        private static final int MAX_PINGREQUESTS = 32;     // how many servers to query at once
+        private static final int REFRESH_START = 10000;  // how long to wait when sending the initial refresh request
+        private static final int REPLY_TIMEOUT = 999;    // how long should we wait for a reply from a game server
+        private int challenge;                              // challenge for current scan
         // where we are in net_servers list for getInfo emissions ( NET_SCAN only )
         // we may either be waiting on MAX_PINGREQUESTS, or for net_servers to grow some more ( through AddServer )
         private int cur_info;
+        //
+        private int endWaitTime;                            // when to stop waiting on a port init
+        private int incoming_lastTime;
+        //
+        private boolean incoming_net;            // set to true while new servers are fed through AddServer
+        private boolean incoming_useTimeout;
+        //
+        private int lan_pingtime;            // holds the time of LAN scan
+        private idListGUI listGUI;
         ///
         private idUserInterface m_pGUI;
-        private idListGUI listGUI;
         //
         private serverSort_t m_sort;
         private boolean m_sortAscending;
-        private idList<Integer> m_sortedServers;            // use ascending for the walking order
+        private final idList<Integer> m_sortedServers;            // use ascending for the walking order
         //
-        private idStr screenshot;
-        private int challenge;                              // challenge for current scan
-        //	
-        private int endWaitTime;                            // when to stop waiting on a port init
+        // servers we're waiting for a reply from
+        // won't exceed MAX_PINGREQUESTS elements
+        // holds index of net_servers elements, indexed by 'from' string
+        private final idDict net_info;
+        //
+        private final idList<inServer_t> net_servers;
+        //
+        private scan_state_t scan_state;
+        //
+        private final idStr screenshot;
         //
         //
 
@@ -477,8 +468,8 @@ public class ServerScan {
             listGUI.SetStateChanges(false);
             listGUI.Clear();
             for (i = m_sortAscending ? 0 : m_sortedServers.Num() - 1;
-                    m_sortAscending ? i < m_sortedServers.Num() : i >= 0;
-                    i += m_sortAscending ? 1 : -1) {
+                 m_sortAscending ? i < m_sortedServers.Num() : i >= 0;
+                 i += m_sortAscending ? 1 : -1) {
                 serv = this.oGet(m_sortedServers.oGet(i));
                 if (!IsFiltered(serv)) {
                     GUIAdd(m_sortedServers.oGet(i), serv);
@@ -633,13 +624,9 @@ public class ServerScan {
 
             // filter based on the game doom or XP
             if (gui_filter_game.GetInteger() == 1) { //Only Doom
-                if (idStr.Icmp(server.serverInfo.GetString("fs_game"), "") != 0) {
-                    return true;
-                }
+                return idStr.Icmp(server.serverInfo.GetString("fs_game"), "") != 0;
             } else if (gui_filter_game.GetInteger() == 2) { //Only D3XP
-                if (idStr.Icmp(server.serverInfo.GetString("fs_game"), "d3xp") != 0) {
-                    return true;
-                }
+                return idStr.Icmp(server.serverInfo.GetString("fs_game"), "d3xp") != 0;
             }
 
             return false;
@@ -681,6 +668,8 @@ public class ServerScan {
                 }
                 return 0;
             }
-        };
-    };
+        }
+
+    }
+
 }

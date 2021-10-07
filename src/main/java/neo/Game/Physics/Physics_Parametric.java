@@ -1,34 +1,157 @@
 package neo.Game.Physics;
 
 import neo.CM.CollisionModel.trace_s;
-import static neo.Game.Entity.TH_PHYSICS;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.Game_local.gameLocal;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_Base.idPhysics_Base;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
-import static neo.idlib.math.Angles.getAng_zero;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Curve.idCurve_Spline;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_LINEAR;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_NONE;
-import static neo.idlib.math.Extrapolate.EXTRAPOLATION_NOSTOP;
-import neo.idlib.math.Extrapolate.idExtrapolate;
+import neo.idlib.math.Extrapolate.*;
 import neo.idlib.math.Interpolate.idInterpolateAccelDecelLinear;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
-import static neo.idlib.math.Vector.RAD2DEG;
-import static neo.idlib.math.Vector.getVec3_origin;
-import static neo.idlib.math.Vector.getVec3_zero;
-import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.*;
+
+import static neo.Game.Entity.TH_PHYSICS;
+import static neo.Game.Game_local.gameLocal;
+import static neo.idlib.math.Angles.getAng_zero;
+import static neo.idlib.math.Extrapolate.*;
+import static neo.idlib.math.Vector.*;
 
 /**
  *
  */
 public class Physics_Parametric {
+
+    /*
+     ================
+     idPhysics_Parametric_SavePState
+     ================
+     */
+    static void idPhysics_Parametric_SavePState(idSaveGame savefile, final parametricPState_s state) {
+        savefile.WriteInt(state.time);
+        savefile.WriteInt(state.atRest);
+        savefile.WriteBool(state.useSplineAngles);
+        savefile.WriteVec3(state.origin);
+        savefile.WriteAngles(state.angles);
+        savefile.WriteMat3(state.axis);
+        savefile.WriteVec3(state.localOrigin);
+        savefile.WriteAngles(state.localAngles);
+
+        savefile.WriteInt(state.linearExtrapolation.GetExtrapolationType());
+        savefile.WriteFloat(state.linearExtrapolation.GetStartTime());
+        savefile.WriteFloat(state.linearExtrapolation.GetDuration());
+        savefile.WriteVec3(state.linearExtrapolation.GetStartValue());
+        savefile.WriteVec3(state.linearExtrapolation.GetBaseSpeed());
+        savefile.WriteVec3(state.linearExtrapolation.GetSpeed());
+
+        savefile.WriteInt(state.angularExtrapolation.GetExtrapolationType());
+        savefile.WriteFloat(state.angularExtrapolation.GetStartTime());
+        savefile.WriteFloat(state.angularExtrapolation.GetDuration());
+        savefile.WriteAngles(state.angularExtrapolation.GetStartValue());
+        savefile.WriteAngles(state.angularExtrapolation.GetBaseSpeed());
+        savefile.WriteAngles(state.angularExtrapolation.GetSpeed());
+
+        savefile.WriteFloat(state.linearInterpolation.GetStartTime());
+        savefile.WriteFloat(state.linearInterpolation.GetAcceleration());
+        savefile.WriteFloat(state.linearInterpolation.GetDeceleration());
+        savefile.WriteFloat(state.linearInterpolation.GetDuration());
+        savefile.WriteVec3(state.linearInterpolation.GetStartValue());
+        savefile.WriteVec3(state.linearInterpolation.GetEndValue());
+
+        savefile.WriteFloat(state.angularInterpolation.GetStartTime());
+        savefile.WriteFloat(state.angularInterpolation.GetAcceleration());
+        savefile.WriteFloat(state.angularInterpolation.GetDeceleration());
+        savefile.WriteFloat(state.angularInterpolation.GetDuration());
+        savefile.WriteAngles(state.angularInterpolation.GetStartValue());
+        savefile.WriteAngles(state.angularInterpolation.GetEndValue());
+
+        // spline is handled by owner
+        savefile.WriteFloat(state.splineInterpolate.GetStartTime());
+        savefile.WriteFloat(state.splineInterpolate.GetAcceleration());
+        savefile.WriteFloat(state.splineInterpolate.GetDuration());
+        savefile.WriteFloat(state.splineInterpolate.GetDeceleration());
+        savefile.WriteFloat(state.splineInterpolate.GetStartValue());
+        savefile.WriteFloat(state.splineInterpolate.GetEndValue());
+    }
+
+    /*
+     ================
+     idPhysics_Parametric_RestorePState
+     ================
+     */
+    static void idPhysics_Parametric_RestorePState(idRestoreGame savefile, parametricPState_s state) {
+        int[]/*extrapolation_t*/ etype = {0};
+        float[] startTime = {0}, duration = {0}, accelTime = {0}, decelTime = {0}, startValue = {0}, endValue = {0};
+        idVec3 linearStartValue = new idVec3(), linearBaseSpeed = new idVec3(), linearSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
+        idAngles angularStartValue = new idAngles(), angularBaseSpeed = new idAngles(), angularSpeed = new idAngles(), startAng = new idAngles(), endAng = new idAngles();
+        int[] time = {0}, atRest = {0};
+        boolean[] useSplineAngles = {false};
+
+        savefile.ReadInt(time);
+        savefile.ReadInt(atRest);
+        savefile.ReadBool(useSplineAngles);
+
+        state.time = time[0];
+        state.atRest = atRest[0];
+        state.useSplineAngles = useSplineAngles[0];
+
+        savefile.ReadVec3(state.origin);
+        savefile.ReadAngles(state.angles);
+        savefile.ReadMat3(state.axis);
+        savefile.ReadVec3(state.localOrigin);
+        savefile.ReadAngles(state.localAngles);
+
+        savefile.ReadInt(etype);
+        savefile.ReadFloat(startTime);
+        savefile.ReadFloat(duration);
+        savefile.ReadVec3(linearStartValue);
+        savefile.ReadVec3(linearBaseSpeed);
+        savefile.ReadVec3(linearSpeed);
+
+        state.linearExtrapolation.Init(startTime[0], duration[0], linearStartValue, linearBaseSpeed, linearSpeed, etype[0]);
+
+        savefile.ReadInt(etype);
+        savefile.ReadFloat(startTime);
+        savefile.ReadFloat(duration);
+        savefile.ReadAngles(angularStartValue);
+        savefile.ReadAngles(angularBaseSpeed);
+        savefile.ReadAngles(angularSpeed);
+
+        state.angularExtrapolation.Init(startTime[0], duration[0], angularStartValue, angularBaseSpeed, angularSpeed, etype[0]);
+
+        savefile.ReadFloat(startTime);
+        savefile.ReadFloat(accelTime);
+        savefile.ReadFloat(decelTime);
+        savefile.ReadFloat(duration);
+        savefile.ReadVec3(startPos);
+        savefile.ReadVec3(endPos);
+
+        state.linearInterpolation.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startPos, endPos);
+
+        savefile.ReadFloat(startTime);
+        savefile.ReadFloat(accelTime);
+        savefile.ReadFloat(decelTime);
+        savefile.ReadFloat(duration);
+        savefile.ReadAngles(startAng);
+        savefile.ReadAngles(endAng);
+
+        state.angularInterpolation.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startAng, endAng);
+
+        // spline is handled by owner
+        savefile.ReadFloat(startTime);
+        savefile.ReadFloat(accelTime);
+        savefile.ReadFloat(duration);
+        savefile.ReadFloat(decelTime);
+        savefile.ReadFloat(startValue);
+        savefile.ReadFloat(endValue);
+
+        state.splineInterpolate.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startValue[0], endValue[0]);
+    }
 
     /*
      ===================================================================================
@@ -44,43 +167,45 @@ public class Physics_Parametric {
      */
     public static class parametricPState_s {
 
-        int                                     time;                 // physics time
-        int                                     atRest;               // set when simulation is suspended
-        idVec3                                  origin;               // world origin
-        idAngles                                angles;               // world angles
-        idMat3                                  axis;                 // world axis
-        idVec3                                  localOrigin;          // local origin
-        idAngles                                localAngles;          // local angles
-        idExtrapolate<idVec3>                   linearExtrapolation;  // extrapolation based description of the position over time
-        idExtrapolate<idAngles>                 angularExtrapolation; // extrapolation based description of the orientation over time
-        idInterpolateAccelDecelLinear<idVec3>   linearInterpolation;  // interpolation based description of the position over time
+        idAngles angles;               // world angles
+        idExtrapolate<idAngles> angularExtrapolation; // extrapolation based description of the orientation over time
         idInterpolateAccelDecelLinear<idAngles> angularInterpolation; // interpolation based description of the orientation over time
-        idCurve_Spline<idVec3>                  spline;               // spline based description of the position over time
-        idInterpolateAccelDecelLinear<Float>    splineInterpolate;    // position along the spline over time
-        boolean                                 useSplineAngles;      // set the orientation using the spline
-    };
+        int atRest;               // set when simulation is suspended
+        idMat3 axis;                 // world axis
+        idExtrapolate<idVec3> linearExtrapolation;  // extrapolation based description of the position over time
+        idInterpolateAccelDecelLinear<idVec3> linearInterpolation;  // interpolation based description of the position over time
+        idAngles localAngles;          // local angles
+        idVec3 localOrigin;          // local origin
+        idVec3 origin;               // world origin
+        idCurve_Spline<idVec3> spline;               // spline based description of the position over time
+        idInterpolateAccelDecelLinear<Float> splineInterpolate;    // position along the spline over time
+        int time;                 // physics time
+        boolean useSplineAngles;      // set the orientation using the spline
+    }
 
     public static class idPhysics_Parametric extends idPhysics_Base {
         // CLASS_PROTOTYPE( idPhysics_Parametric );
 
+        private static idVec3 curAngularVelocity;
+        private static idVec3 curLinearVelocity;
+        private idClipModel clipModel;
         // parametric physics state
         private parametricPState_s current;
-        private parametricPState_s saved;
-        //
-        // pusher
-        private boolean            isPusher;
-        private idClipModel        clipModel;
-        private int                pushFlags;
-        //
-        // results of last evaluate
-        private trace_s            pushResults;
-        private boolean            isBlocked;
         //
         // master
-        private boolean            hasMaster;
-        private boolean            isOrientated;
+        private boolean hasMaster;
+        private boolean isBlocked;
+        private boolean isOrientated;
+        //
+        // pusher
+        private boolean isPusher;
+        private int pushFlags;
         //
         //
+        //
+        // results of last evaluate
+        private trace_s pushResults;
+        private parametricPState_s saved;
 
         public idPhysics_Parametric() {
 
@@ -119,11 +244,11 @@ public class Physics_Parametric {
 
         // ~idPhysics_Parametric();
         @Override
-        protected void _deconstructor(){
-            if ( clipModel != null ) {
-            idClipModel.delete(clipModel);
+        protected void _deconstructor() {
+            if (clipModel != null) {
+                idClipModel.delete(clipModel);
             }
-            if ( current.spline != null ) {
+            if (current.spline != null) {
 //                delete current.spline;
                 current.spline = null;
             }
@@ -550,20 +675,18 @@ public class Physics_Parametric {
 
             vec = newAngularVelocity;
             angle = vec.Normalize();
-            rotation.Set(getVec3_origin(), vec, (float) RAD2DEG(angle));
+            rotation.Set(getVec3_origin(), vec, RAD2DEG(angle));
 
             SetAngularExtrapolation((EXTRAPOLATION_LINEAR | EXTRAPOLATION_NOSTOP), gameLocal.time, 0, current.angles, rotation.ToAngles(), getAng_zero());
             current.angularInterpolation.Init(0, 0, 0, 0, getAng_zero(), getAng_zero());
             Activate();
         }
-        private static idVec3 curLinearVelocity;
 
         @Override
         public idVec3 GetLinearVelocity(int id /*= 0*/) {
             curLinearVelocity = current.linearExtrapolation.GetCurrentSpeed(gameLocal.time);
             return curLinearVelocity;
         }
-        private static idVec3 curAngularVelocity;
 
         @Override
         public idVec3 GetAngularVelocity(int id /*= 0*/) {
@@ -644,7 +767,7 @@ public class Physics_Parametric {
         @Override
         public idEntity GetBlockingEntity() {
             if (isBlocked) {
-                return gameLocal.entities[ pushResults.c.entityNum];
+                return gameLocal.entities[pushResults.c.entityNum];
             }
             return null;
         }
@@ -846,143 +969,13 @@ public class Physics_Parametric {
                 return false;
             }
 
-            if (current.spline != null && !current.spline.IsDone(current.time)) {
-                return false;
-            }
-
-            return true;
+            return current.spline == null || current.spline.IsDone(current.time);
         }
 
         private void Rest() {
             current.atRest = gameLocal.time;
             self.BecomeInactive(TH_PHYSICS);
         }
-    };
-
-    /*
-     ================
-     idPhysics_Parametric_SavePState
-     ================
-     */
-    static void idPhysics_Parametric_SavePState(idSaveGame savefile, final parametricPState_s state) {
-        savefile.WriteInt(state.time);
-        savefile.WriteInt(state.atRest);
-        savefile.WriteBool(state.useSplineAngles);
-        savefile.WriteVec3(state.origin);
-        savefile.WriteAngles(state.angles);
-        savefile.WriteMat3(state.axis);
-        savefile.WriteVec3(state.localOrigin);
-        savefile.WriteAngles(state.localAngles);
-
-        savefile.WriteInt((int) state.linearExtrapolation.GetExtrapolationType());
-        savefile.WriteFloat(state.linearExtrapolation.GetStartTime());
-        savefile.WriteFloat(state.linearExtrapolation.GetDuration());
-        savefile.WriteVec3(state.linearExtrapolation.GetStartValue());
-        savefile.WriteVec3(state.linearExtrapolation.GetBaseSpeed());
-        savefile.WriteVec3(state.linearExtrapolation.GetSpeed());
-
-        savefile.WriteInt((int) state.angularExtrapolation.GetExtrapolationType());
-        savefile.WriteFloat(state.angularExtrapolation.GetStartTime());
-        savefile.WriteFloat(state.angularExtrapolation.GetDuration());
-        savefile.WriteAngles(state.angularExtrapolation.GetStartValue());
-        savefile.WriteAngles(state.angularExtrapolation.GetBaseSpeed());
-        savefile.WriteAngles(state.angularExtrapolation.GetSpeed());
-
-        savefile.WriteFloat(state.linearInterpolation.GetStartTime());
-        savefile.WriteFloat(state.linearInterpolation.GetAcceleration());
-        savefile.WriteFloat(state.linearInterpolation.GetDeceleration());
-        savefile.WriteFloat(state.linearInterpolation.GetDuration());
-        savefile.WriteVec3(state.linearInterpolation.GetStartValue());
-        savefile.WriteVec3(state.linearInterpolation.GetEndValue());
-
-        savefile.WriteFloat(state.angularInterpolation.GetStartTime());
-        savefile.WriteFloat(state.angularInterpolation.GetAcceleration());
-        savefile.WriteFloat(state.angularInterpolation.GetDeceleration());
-        savefile.WriteFloat(state.angularInterpolation.GetDuration());
-        savefile.WriteAngles(state.angularInterpolation.GetStartValue());
-        savefile.WriteAngles(state.angularInterpolation.GetEndValue());
-
-        // spline is handled by owner
-        savefile.WriteFloat(state.splineInterpolate.GetStartTime());
-        savefile.WriteFloat(state.splineInterpolate.GetAcceleration());
-        savefile.WriteFloat(state.splineInterpolate.GetDuration());
-        savefile.WriteFloat(state.splineInterpolate.GetDeceleration());
-        savefile.WriteFloat(state.splineInterpolate.GetStartValue());
-        savefile.WriteFloat(state.splineInterpolate.GetEndValue());
-    }
-
-    /*
-     ================
-     idPhysics_Parametric_RestorePState
-     ================
-     */
-    static void idPhysics_Parametric_RestorePState(idRestoreGame savefile, parametricPState_s state) {
-        int[]/*extrapolation_t*/ etype = {0};
-        float[] startTime = {0}, duration = {0}, accelTime = {0}, decelTime = {0}, startValue = {0}, endValue = {0};
-        idVec3 linearStartValue = new idVec3(), linearBaseSpeed = new idVec3(), linearSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
-        idAngles angularStartValue = new idAngles(), angularBaseSpeed = new idAngles(), angularSpeed = new idAngles(), startAng = new idAngles(), endAng = new idAngles();
-        int[] time = {0}, atRest = {0};
-        boolean[] useSplineAngles = {false};
-
-        savefile.ReadInt(time);
-        savefile.ReadInt(atRest);
-        savefile.ReadBool(useSplineAngles);
-
-        state.time = time[0];
-        state.atRest = atRest[0];
-        state.useSplineAngles = useSplineAngles[0];
-
-        savefile.ReadVec3(state.origin);
-        savefile.ReadAngles(state.angles);
-        savefile.ReadMat3(state.axis);
-        savefile.ReadVec3(state.localOrigin);
-        savefile.ReadAngles(state.localAngles);
-
-        savefile.ReadInt(etype);
-        savefile.ReadFloat(startTime);
-        savefile.ReadFloat(duration);
-        savefile.ReadVec3(linearStartValue);
-        savefile.ReadVec3(linearBaseSpeed);
-        savefile.ReadVec3(linearSpeed);
-
-        state.linearExtrapolation.Init(startTime[0], duration[0], linearStartValue, linearBaseSpeed, linearSpeed, etype[0]);
-
-        savefile.ReadInt(etype);
-        savefile.ReadFloat(startTime);
-        savefile.ReadFloat(duration);
-        savefile.ReadAngles(angularStartValue);
-        savefile.ReadAngles(angularBaseSpeed);
-        savefile.ReadAngles(angularSpeed);
-
-        state.angularExtrapolation.Init(startTime[0], duration[0], angularStartValue, angularBaseSpeed, angularSpeed, etype[0]);
-
-        savefile.ReadFloat(startTime);
-        savefile.ReadFloat(accelTime);
-        savefile.ReadFloat(decelTime);
-        savefile.ReadFloat(duration);
-        savefile.ReadVec3(startPos);
-        savefile.ReadVec3(endPos);
-
-        state.linearInterpolation.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startPos, endPos);
-
-        savefile.ReadFloat(startTime);
-        savefile.ReadFloat(accelTime);
-        savefile.ReadFloat(decelTime);
-        savefile.ReadFloat(duration);
-        savefile.ReadAngles(startAng);
-        savefile.ReadAngles(endAng);
-
-        state.angularInterpolation.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startAng, endAng);
-
-        // spline is handled by owner
-        savefile.ReadFloat(startTime);
-        savefile.ReadFloat(accelTime);
-        savefile.ReadFloat(duration);
-        savefile.ReadFloat(decelTime);
-        savefile.ReadFloat(startValue);
-        savefile.ReadFloat(endValue);
-
-        state.splineInterpolate.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startValue[0], endValue[0]);
     }
 
 }

@@ -1,16 +1,17 @@
 package neo.Tools.Compilers.DMap;
 
-import static neo.TempDump.NOT;
 import neo.Tools.Compilers.DMap.dmap.mapTri_s;
-import static neo.Tools.Compilers.DMap.gldraw.DrawWinding;
 import neo.Tools.Compilers.DMap.optimize.optVertex_s;
 import neo.Tools.Compilers.DMap.tritjunction.hashVert_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.VectorCopy;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.DMap.gldraw.DrawWinding;
+import static neo.idlib.math.Vector.VectorCopy;
 
 /**
  *
@@ -258,7 +259,7 @@ public class tritools {
 
         denom = idWinding.TriangleArea(original.v[0].xyz, original.v[1].xyz, original.v[2].xyz);
         if (denom == 0) {
-            return;		// original was degenerate, so it doesn't matter
+            return;        // original was degenerate, so it doesn't matter
         }
 
         for (i = 0; i < 3; i++) {
@@ -341,7 +342,7 @@ public class tritools {
      ==================
      */
     static void ClipTriList(final mapTri_s list, final idPlane plane, float epsilon,
-            mapTri_s front, mapTri_s back) {
+                            mapTri_s front, mapTri_s back) {
         mapTri_s tri;
         mapTri_s newList;
         idWinding w, frontW = new idWinding(), backW = new idWinding();

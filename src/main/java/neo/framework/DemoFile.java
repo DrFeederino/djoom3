@@ -1,23 +1,22 @@
 package neo.framework;
 
-import java.nio.ByteBuffer;
-import static neo.framework.CVarSystem.CVAR_ARCHIVE;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_INTEGER;
-import static neo.framework.CVarSystem.CVAR_SYSTEM;
-import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.common;
+import neo.framework.CVarSystem.*;
 import neo.framework.Compressor.idCompressor;
-import static neo.framework.DemoFile.demoSystem_t.DS_FINISHED;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.framework.File_h.idFile_Memory;
-import static neo.framework.Licensee.GAME_NAME;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.idList;
+
+import java.nio.ByteBuffer;
+
+import static neo.framework.CVarSystem.*;
+import static neo.framework.Common.common;
+import static neo.framework.DemoFile.demoSystem_t.DS_FINISHED;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Licensee.GAME_NAME;
+import static neo.idlib.Text.Str.va;
 
 /**
  *
@@ -39,27 +38,29 @@ public class DemoFile {
         DS_RENDER,
         DS_SOUND,
         DS_VERSION
-    };
+    }
 
     public static class idDemoFile extends idFile {
 
-        private boolean writing;
-        private ByteBuffer fileImage;
-        private idFile f;
-        private idCompressor compressor;
-        //
-        private idList<idStr> demoStrings;
-        private idFile fLog;
-        private boolean log;
-        private idStr logStr;
-        //
-        private static final idCVar com_logDemos = new idCVar("com_logDemos", "0", CVAR_SYSTEM | CVAR_BOOL, "Write demo.log with debug information in it");
+        static final int magicLen = DEMO_MAGIC.length();
         private static final idCVar com_compressDemos = new idCVar("com_compressDemos", "1", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE, "Compression scheme for demo files\n0: None    "
                 + "(Fast, large files)\n1: LZW     (Fast to compress, Fast to decompress, medium/small files)\n2: LZSS    (Slow to compress, Fast to decompress, small files)\n3: Huffman "
                 + "(Fast to compress, Slow to decompress, medium files)\nSee also: The 'CompressDemo' command");
+        //
+        private static final idCVar com_logDemos = new idCVar("com_logDemos", "0", CVAR_SYSTEM | CVAR_BOOL, "Write demo.log with debug information in it");
         private static final idCVar com_preloadDemos = new idCVar("com_preloadDemos", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_ARCHIVE, "Load the whole demo in to RAM before running it");
+        private idCompressor compressor;
+        //
+        private idList<idStr> demoStrings;
+        private idFile f;
+        private idFile fLog;
+        private ByteBuffer fileImage;
+        private boolean log;
+        private idStr logStr;
         //
         //
+        private boolean writing;
+//					~idDemoFile();
 
         public idDemoFile() {
             f = null;
@@ -69,7 +70,20 @@ public class DemoFile {
             compressor = null;
             writing = false;
         }
-//					~idDemoFile();
+
+        private static idCompressor AllocCompressor(int type) {
+            switch (type) {
+                case 0:
+                    return idCompressor.AllocNoCompression();
+                default:
+                case 1:
+                    return idCompressor.AllocLZW();
+                case 2:
+                    return idCompressor.AllocLZSS();
+                case 3:
+                    return idCompressor.AllocHuffman();
+            }
+        }
 
         @Override
         public String GetName() {
@@ -93,7 +107,6 @@ public class DemoFile {
                 fLog.WriteString(p/*, strlen(p)*/);
             }
         }
-        static final int magicLen = DEMO_MAGIC.length();
 
         public boolean OpenForReading(final String fileName) {
             ByteBuffer magicBuffer = ByteBuffer.allocate(magicLen);
@@ -281,19 +294,6 @@ public class DemoFile {
             return compressor.Write(buffer, len);
         }
 
-        private static idCompressor AllocCompressor(int type) {
-            switch (type) {
-                case 0:
-                    return idCompressor.AllocNoCompression();
-                default:
-                case 1:
-                    return idCompressor.AllocLZW();
-                case 2:
-                    return idCompressor.AllocLZSS();
-                case 3:
-                    return idCompressor.AllocHuffman();
-            }
-        }
+    }
 
-    };
 }

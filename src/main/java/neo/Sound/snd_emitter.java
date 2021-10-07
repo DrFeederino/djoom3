@@ -1,68 +1,34 @@
 package neo.Sound;
 
+import neo.Renderer.RenderWorld.idRenderWorld;
+import neo.Sound.snd_cache.idSoundSample;
+import neo.Sound.snd_local.*;
+import neo.Sound.snd_shader.*;
+import neo.Sound.snd_system.idSoundSystemLocal;
+import neo.Sound.snd_world.idSoundWorldLocal;
+import neo.Sound.sound.idSoundEmitter;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Vector.idVec3;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL10;
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import neo.Renderer.RenderWorld.idRenderWorld;
-import neo.Sound.snd_cache.idSoundSample;
-
-import static neo.Sound.snd_local.PRIMARYFREQ;
-import static neo.Sound.snd_local.SOUND_DECODER_FREE_DELAY;
-import static neo.Sound.snd_local.SOUND_MAX_CHANNELS;
-
-import neo.Sound.snd_local.idSampleDecoder;
-
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_FADE;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_FREE;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_MODIFY;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_START;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_STOP;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_UPDATE;
-import static neo.Sound.snd_shader.DOOM_TO_METERS;
-import static neo.Sound.snd_shader.METERS_TO_DOOM;
-import static neo.Sound.snd_shader.SSF_LOOPING;
-import static neo.Sound.snd_shader.SSF_NO_DUPS;
-import static neo.Sound.snd_shader.SSF_PLAY_ONCE;
-
-import neo.Sound.snd_shader.idSoundShader;
-import neo.Sound.snd_shader.soundShaderParms_t;
-import neo.Sound.snd_system.idSoundSystemLocal;
-
+import static neo.Sound.snd_local.*;
+import static neo.Sound.snd_local.soundDemoCommand_t.*;
+import static neo.Sound.snd_shader.*;
 import static neo.Sound.snd_system.soundSystemLocal;
-
-import neo.Sound.snd_world.idSoundWorldLocal;
-import neo.Sound.sound.idSoundEmitter;
-
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.indexOf;
+import static neo.TempDump.*;
 import static neo.framework.Common.common;
 import static neo.framework.DemoFile.demoSystem_t.DS_SOUND;
 import static neo.framework.Session.session;
-
-import neo.idlib.math.Math_h.idMath;
-
 import static neo.idlib.math.Simd.MIXBUFFER_SAMPLES;
-
-import neo.idlib.math.Vector.idVec3;
-
 import static neo.sys.win_main.Sys_EnterCriticalSection;
 import static neo.sys.win_main.Sys_LeaveCriticalSection;
 import static neo.sys.win_shared.Sys_Milliseconds;
-import org.lwjgl.BufferUtils;
-
-import org.lwjgl.openal.AL10;
-
-import static org.lwjgl.openal.AL10.AL_BUFFER;
-import static org.lwjgl.openal.AL10.AL_NO_ERROR;
-import static org.lwjgl.openal.AL10.AL_PLAYING;
-import static org.lwjgl.openal.AL10.AL_SOURCE_STATE;
-import static org.lwjgl.openal.AL10.AL_STOPPED;
-import static org.lwjgl.openal.AL10.alGetError;
-import static org.lwjgl.openal.AL10.alIsSource;
-import static org.lwjgl.openal.AL10.alSourceStop;
-import static org.lwjgl.openal.AL10.alSourcei;
+import static org.lwjgl.openal.AL10.*;
 
 /**
  *
@@ -70,18 +36,35 @@ import static org.lwjgl.openal.AL10.alSourcei;
 public class snd_emitter {
 //    typedef enum {
 
-    public static final int REMOVE_STATUS_INVALID            = -1;
-    public static final int REMOVE_STATUS_ALIVE              = 0;
-    public static final int REMOVE_STATUS_WAITSAMPLEFINISHED = 1;
-    public static final int REMOVE_STATUS_SAMPLEFINISHED     = 2;
+    public static final int PLAYBACK_ADVANCING = 1;
+    //enum {
+    public static final int PLAYBACK_RESET = 0;
+    public static final int REMOVE_STATUS_ALIVE = 0;
+    public static final int REMOVE_STATUS_INVALID = -1;
 //} removeStatus_t;
+    public static final int REMOVE_STATUS_SAMPLEFINISHED = 2;
+
+    public static final int REMOVE_STATUS_WAITSAMPLEFINISHED = 1;
+
+    /*
+     ===============================================================================
+
+     SOUND EMITTER
+
+     ===============================================================================
+     */
+    // sound channels
+    static final int SCHANNEL_ANY = 0;    // used in queries and commands to effect every channel at once, in
+
+    // startSound to have it not override any other channel
+    static final int SCHANNEL_ONE = 1;    // any following integer can be used as a channel number
 
     static class idSoundFade {
 
-        public int   fadeStart44kHz;
-        public int   fadeEnd44kHz;
-        public float fadeStartVolume;  // in dB
+        public int fadeEnd44kHz;
         public float fadeEndVolume;    // in dB
+        public int fadeStart44kHz;
+        public float fadeStartVolume;  // in dB
 //
 //
 
@@ -106,17 +89,17 @@ public class snd_emitter {
             }
             return fadeDb;
         }
-    };
+    }
 
     static class SoundFX {
 
-        protected boolean initialized;
-        //
-        protected int     channel;
-        protected int     maxlen;
         //
         protected float[] buffer;
+        //
+        protected int channel;
         protected float[] continuitySamples = new float[4];
+        protected boolean initialized;
+        protected int maxlen;
         //
         protected float param;
 //
@@ -163,7 +146,7 @@ public class snd_emitter {
         public void SetParameter(float val) {
             param = val;
         }
-    };
+    }
 
     static class SoundFX_Lowpass extends SoundFX {
 
@@ -191,16 +174,16 @@ public class snd_emitter {
                     - b1 * out[out_offset + -1]
                     - b2 * out[out_offset + -2];
         }
-    };
+    }
 
     static class SoundFX_LowpassFast extends SoundFX {
 
-        float freq;
-        float res;
         float a1, a2, a3;
         float b1, b2;
-//        
-//        
+        float freq;
+        float res;
+//
+//
 
         @Override
         public void ProcessSample(float[] in, final int inOffset, float[] out, final int outOffset) {
@@ -242,13 +225,14 @@ public class snd_emitter {
         public void SetParms() {
             SetParms(0);
         }
-    };
+    }
+//};
 
     static class SoundFX_Comb extends SoundFX {
 
         int currentTime;
-//        
-//        
+//
+//
 
         @Override
         public void Initialize() {
@@ -279,12 +263,12 @@ public class snd_emitter {
                 currentTime -= len;
             }
         }
-    };
+    }
 
     static class FracTime {
 
-        public int   time;
         public float frac;
+        public int time;
 //
 //
 
@@ -300,28 +284,23 @@ public class snd_emitter {
                 frac--;
             }
         }
-    };
-    
-    //enum {
-    public static final int PLAYBACK_RESET     = 0;
-    public static final int PLAYBACK_ADVANCING = 1;
-//};
+    }
 
     static class idSlowChannel {
 
-        boolean        active;
+        boolean active;
         idSoundChannel chan;
         //
-        int            playbackState;
-        int            triggerOffset;
+        FracTime curPosition = new FracTime();
+        int curSampleOffset;
+        //
+        SoundFX_LowpassFast lowpass;
         //
         FracTime newPosition = new FracTime();
         int newSampleOffset;
         //
-        FracTime curPosition = new FracTime();
-        int                 curSampleOffset;
-        //
-        SoundFX_LowpassFast lowpass;
+        int playbackState;
+        int triggerOffset;
 //
 //
 
@@ -452,29 +431,29 @@ public class snd_emitter {
         public FracTime GetCurrentPosition() {
             return curPosition;
         }
-    };
+    }
 
     static class idSoundChannel {
 
-        public boolean              triggerState;
-        public int                  trigger44kHzTime;        // hardware time sample the channel started
-        public int                  triggerGame44kHzTime;    // game time sample time the channel started
-        public soundShaderParms_t   parms;    // combines the shader parms and the per-channel overrides
-        public idSoundSample        leadinSample;    // if not looped, this is the only sample
-        public int/*s_channelType*/ triggerChannel;
-        public idSoundShader        soundShader;
-        public idSampleDecoder      decoder;
-        public float                diversity;
-        public float                lastVolume;        // last calculated volume based on distance
-        public float[] lastV = new float[6];    // last calculated volume for each speaker, so we can smoothly fade
-        public idSoundFade         channelFade;
-        public boolean             triggered;
-        public int/*ALuint*/       openalSource;
-        public int/*ALuint*/       openalStreamingOffset;
-        public IntBuffer/*ALuint*/ openalStreamingBuffer;
-        public IntBuffer/*ALuint*/ lastopenalStreamingBuffer;
+        public idSoundFade channelFade;
+        public idSampleDecoder decoder;
         //
-        public boolean             disallowSlow;
+        public boolean disallowSlow;
+        public float diversity;
+        public float[] lastV = new float[6];    // last calculated volume for each speaker, so we can smoothly fade
+        public float lastVolume;        // last calculated volume based on distance
+        public IntBuffer/*ALuint*/ lastopenalStreamingBuffer;
+        public idSoundSample leadinSample;    // if not looped, this is the only sample
+        public int/*ALuint*/       openalSource;
+        public IntBuffer/*ALuint*/ openalStreamingBuffer;
+        public int/*ALuint*/       openalStreamingOffset;
+        public soundShaderParms_t parms;    // combines the shader parms and the per-channel overrides
+        public idSoundShader soundShader;
+        public int trigger44kHzTime;        // hardware time sample the channel started
+        public int/*s_channelType*/ triggerChannel;
+        public int triggerGame44kHzTime;    // game time sample time the channel started
+        public boolean triggerState;
+        public boolean triggered;
         //
         //
 
@@ -614,7 +593,7 @@ public class snd_emitter {
             }
         }
 
-        public void ALStop() {			// free OpenAL resources if any
+        public void ALStop() {            // free OpenAL resources if any
             if (idSoundSystemLocal.useOpenAL) {
 
                 if (alIsSource(openalSource)) {
@@ -642,51 +621,39 @@ public class snd_emitter {
                 }
             }
         }
-    };
-    
-    /*
-     ===============================================================================
-
-     SOUND EMITTER
-
-     ===============================================================================
-     */
-    // sound channels
-    static final int SCHANNEL_ANY = 0;    // used in queries and commands to effect every channel at once, in
-    // startSound to have it not override any other channel
-    static final int SCHANNEL_ONE = 1;    // any following integer can be used as a channel number
+    }
     // typedef int s_channelType;	  // the game uses its own series of enums, and we don't want to require casts
 
     static class idSoundEmitterLocal extends idSoundEmitter {
 
-        public idSoundWorldLocal     soundWorld;            // the world that holds this emitter
-        //
-        public int                   index;                 // in world emitter list
-        public int/*removeStatus_t*/ removeStatus;
-        //
-        public idVec3                origin;
-        public int                   listenerId;
-        public soundShaderParms_t    parms;                 // default overrides for all channels
-        //
-        //
-        // the following are calculated in UpdateEmitter, and don't need to be archived
-        public float                 maxDistance;           // greatest of all playing channel distances
-        public int                   lastValidPortalArea;   // so an emitter that slides out of the world continues playing
-        public boolean               playing;               // if false, no channel is active
-        public boolean               hasShakes;
-        public idVec3                spatializedOrigin;     // the virtual sound origin, either the real sound origin,
-        //						    // or a point through a portal chain
-        public float                 realDistance;          // in meters
-        public float                 distance;              // in meters, this may be the straight-line distance, or
-        public idSoundChannel[]      channels;
-        public idSlowChannel[]       slowChannels;
         //
         // this is just used for feedback to the game or rendering system:
         // flashing lights and screen shakes.  Because the material expression
         // evaluation doesn't do common subexpression removal, we cache the
         // last generated value
-        public int   ampTime;
+        public int ampTime;
         public float amplitude;
+        public idSoundChannel[] channels;
+        public float distance;              // in meters, this may be the straight-line distance, or
+        public boolean hasShakes;
+        //
+        public int index;                 // in world emitter list
+        public int lastValidPortalArea;   // so an emitter that slides out of the world continues playing
+        public int listenerId;
+        //
+        //
+        // the following are calculated in UpdateEmitter, and don't need to be archived
+        public float maxDistance;           // greatest of all playing channel distances
+        //
+        public idVec3 origin;
+        public soundShaderParms_t parms;                 // default overrides for all channels
+        public boolean playing;               // if false, no channel is active
+        //						    // or a point through a portal chain
+        public float realDistance;          // in meters
+        public int/*removeStatus_t*/ removeStatus;
+        public idSlowChannel[] slowChannels;
+        public idSoundWorldLocal soundWorld;            // the world that holds this emitter
+        public idVec3 spatializedOrigin;     // the virtual sound origin, either the real sound origin,
         //
         //
 
@@ -786,7 +753,7 @@ public class snd_emitter {
             }
 
             if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
-                common.Printf("StartSound %dms (%d,%d,%s) = ", soundWorld.gameMsec, index, (int) channel, shader.GetName());
+                common.Printf("StartSound %dms (%d,%d,%s) = ", soundWorld.gameMsec, index, channel, shader.GetName());
             }
 
             if (soundWorld != null && soundWorld.writeDemo != null) {
@@ -829,7 +796,7 @@ public class snd_emitter {
                 if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                     common.Printf("no samples in sound shader\n");
                 }
-                return 0;				// no sounds
+                return 0;                // no sounds
             }
             int choice;
 
@@ -975,14 +942,14 @@ public class snd_emitter {
             int length = chan.leadinSample.LengthIn44kHzSamples();
 
             if (chan.leadinSample.objectInfo.nChannels == 2) {
-                length /= 2;	// stereo samples
+                length /= 2;    // stereo samples
             }
 
             // adjust the start time based on diversity for looping sounds, so they don't all start
             // at the same point
             if ((chan.parms.soundShaderFlags & SSF_LOOPING) != 0 && NOT(chan.leadinSample.LengthIn44kHzSamples())) {
                 chan.trigger44kHzTime -= diversity * length;
-                chan.trigger44kHzTime &= ~7;		// so we don't have to worry about the 22kHz and 11kHz expansions
+                chan.trigger44kHzTime &= ~7;        // so we don't have to worry about the 22kHz and 11kHz expansions
                 // starting in fractional samples
                 chan.triggerGame44kHzTime -= diversity * length;
                 chan.triggerGame44kHzTime &= ~7;
@@ -1207,9 +1174,9 @@ public class snd_emitter {
 
             playing = false;
             hasShakes = false;
-            ampTime = 0;								// last time someone queried
+            ampTime = 0;                                // last time someone queried
             amplitude = 0;
-            maxDistance = 10.0f;						// meters
+            maxDistance = 10.0f;                        // meters
             spatializedOrigin.Zero();
 
 //	memset( &parms, 0, sizeof( parms ) );
@@ -1376,16 +1343,16 @@ public class snd_emitter {
             // work out virtual origin and distance, which may be from a portal instead of the actual origin
             //
             distance = maxDistance * METERS_TO_DOOM;
-            if (listenerArea == -1) {		// listener is outside the world
+            if (listenerArea == -1) {        // listener is outside the world
                 return;
             }
             if (rw != null) {
                 // we have a valid renderWorld
                 int soundInArea = rw.PointInArea(origin);
                 if (soundInArea == -1) {
-                    if (lastValidPortalArea == -1) {		// sound is outside the world
+                    if (lastValidPortalArea == -1) {        // sound is outside the world
                         distance = realDistance;
-                        spatializedOrigin = origin;			// sound is in our area
+                        spatializedOrigin = origin;            // sound is in our area
                         return;
                     }
                     soundInArea = lastValidPortalArea;
@@ -1393,7 +1360,7 @@ public class snd_emitter {
                 lastValidPortalArea = soundInArea;
                 if (soundInArea == listenerArea) {
                     distance = realDistance;
-                    spatializedOrigin = origin;			// sound is in our area
+                    spatializedOrigin = origin;            // sound is in our area
                     return;
                 }
 
@@ -1402,7 +1369,7 @@ public class snd_emitter {
             } else {
                 // no portals available
                 distance = realDistance;
-                spatializedOrigin = origin;			// sound is in our area
+                spatializedOrigin = origin;            // sound is in our area
             }
         }
 
@@ -1433,5 +1400,6 @@ public class snd_emitter {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
+
 }

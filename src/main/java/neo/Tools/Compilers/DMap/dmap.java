@@ -4,41 +4,13 @@ import neo.CM.CollisionModel_local;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.tr_local.idRenderLightLocal;
-import static neo.TempDump.NOT;
-import neo.TempDump.TODO_Exception;
-import static neo.TempDump.atoi;
-import static neo.TempDump.isNotNullOrEmpty;
+import neo.TempDump.*;
 import neo.Tools.Compilers.AAS.AASBuild.RunAAS_f;
-import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_MERGE_SURFACES;
-import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_NONE;
-import static neo.Tools.Compilers.DMap.facebsp.FaceBSP;
-import static neo.Tools.Compilers.DMap.facebsp.MakeStructuralBspFaceList;
-import static neo.Tools.Compilers.DMap.leakfile.LeakFile;
-import static neo.Tools.Compilers.DMap.map.FreeDMapFile;
-import static neo.Tools.Compilers.DMap.map.LoadDMapFile;
-import static neo.Tools.Compilers.DMap.optimize.OptimizeEntity;
 import neo.Tools.Compilers.DMap.optimize.optVertex_s;
-import static neo.Tools.Compilers.DMap.output.WriteOutputFile;
-import static neo.Tools.Compilers.DMap.portals.FillOutside;
-import static neo.Tools.Compilers.DMap.portals.FloodAreas;
-import static neo.Tools.Compilers.DMap.portals.FloodEntities;
-import static neo.Tools.Compilers.DMap.portals.MakeTreePortals;
-import static neo.Tools.Compilers.DMap.tritjunction.FixEntityTjunctions;
-import static neo.Tools.Compilers.DMap.tritjunction.FixGlobalTjunctions;
 import neo.Tools.Compilers.DMap.tritjunction.hashVert_s;
-import static neo.Tools.Compilers.DMap.ubrush.FilterBrushesIntoTree;
-import static neo.Tools.Compilers.DMap.usurface.ClipSidesByTree;
-import static neo.Tools.Compilers.DMap.usurface.Prelight;
-import static neo.Tools.Compilers.DMap.usurface.PutPrimitivesInAreas;
-import static neo.framework.BuildDefines._WIN32;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.CmdSystem.cmdSystem;
-import static neo.framework.Common.com_outputMsg;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
@@ -49,6 +21,28 @@ import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.TempDump.*;
+import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_MERGE_SURFACES;
+import static neo.Tools.Compilers.DMap.dmap.shadowOptLevel_t.SO_NONE;
+import static neo.Tools.Compilers.DMap.facebsp.FaceBSP;
+import static neo.Tools.Compilers.DMap.facebsp.MakeStructuralBspFaceList;
+import static neo.Tools.Compilers.DMap.leakfile.LeakFile;
+import static neo.Tools.Compilers.DMap.map.FreeDMapFile;
+import static neo.Tools.Compilers.DMap.map.LoadDMapFile;
+import static neo.Tools.Compilers.DMap.optimize.OptimizeEntity;
+import static neo.Tools.Compilers.DMap.output.WriteOutputFile;
+import static neo.Tools.Compilers.DMap.portals.*;
+import static neo.Tools.Compilers.DMap.tritjunction.FixEntityTjunctions;
+import static neo.Tools.Compilers.DMap.tritjunction.FixGlobalTjunctions;
+import static neo.Tools.Compilers.DMap.ubrush.FilterBrushesIntoTree;
+import static neo.Tools.Compilers.DMap.usurface.*;
+import static neo.framework.BuildDefines._WIN32;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.CmdSystem.cmdSystem;
+import static neo.framework.Common.com_outputMsg;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.idLib.common;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -56,317 +50,15 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class dmap {
 
+    //
+    static final int MAX_GROUP_LIGHTS = 16;
     static final int MAX_PATCH_SIZE = 32;
+    //
+    static final int MAX_QPATH = 256;            // max length of a game pathname
     //
     static final int PLANENUM_LEAF = -1;
     //
-    static final int MAX_QPATH = 256;			// max length of a game pathname
-    //
-    static final int MAX_GROUP_LIGHTS = 16;
-
-    static class primitive_s {
-
-        primitive_s next;
-        //
-        // only one of these will be non-NULL
-        bspbrush_s brush;
-        mapTri_s tris;
-    };
-
-    static class uArea_t {
-
-        optimizeGroup_s groups;
-        // we might want to add other fields later
-    };
-
-    static class uEntity_t {
-
-        idMapEntity mapEntity;                          // points into mapFile_t data
-        //
-        idVec3 origin;
-        primitive_s primitives;
-        tree_s tree;
-        //
-        int numAreas;
-        uArea_t[] areas;
-    };
-
-    // chains of mapTri_t are the general unit of processing
-    static class mapTri_s {
-
-        mapTri_s next;
-        //
-        idMaterial material;
-        Object mergeGroup;		// we want to avoid merging triangles
-        // from different fixed groups, like guiSurfs and mirrors
-        int planeNum;			// not set universally, just in some areas
-        //
-        idDrawVert[] v = new idDrawVert[3];
-        hashVert_s[] hashVert = new hashVert_s[3];
-        optVertex_s[] optVert = new optVertex_s[3];
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        void oSet(mapTri_s next) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    static class mesh_t {
-
-        int width, height;
-        idDrawVert verts;
-    };
-
-    static class parseMesh_s {
-
-        parseMesh_s next;
-        mesh_t mesh;
-        idMaterial material;
-    };
-
-    static class bspface_s {
-
-        bspface_s next;
-        int planenum;
-        boolean portal;			// all portals will be selected before
-        // any non-portals
-        boolean checked;		// used by SelectSplitPlaneNum()
-        idWinding w;
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    static class textureVectors_t {
-
-        idVec4[] v = new idVec4[2];	// the offset value will always be in the 0.0 to 1.0 range
-    };
-
-    static class side_s {
-
-        int planenum;
-        //
-        idMaterial material;
-        textureVectors_t texVec;
-        //
-        idWinding winding;		// only clipped to the other sides of the brush
-        idWinding visibleHull;          // also clipped to the solid parts of the world
-    };
-
-    static class bspbrush_s {
-
-        bspbrush_s next;
-        bspbrush_s original;            // chopped up brushes will reference the originals
-        //
-        int entitynum;			// editor numbering for messages
-        int brushnum;			// editor numbering for messages
-        //
-        idMaterial contentShader;	// one face's shader will determine the volume attributes
-        //
-        int contents;
-        boolean opaque;
-        int outputNumber;		// set when the brush is written to the file list
-        //
-        idBounds bounds;
-        int numsides;
-        side_s[] sides = new side_s[6];	// variably sized
-    };
-
-    static class uBrush_t extends bspbrush_s {
-
-        uBrush_t() {
-        }
-
-        //copy constructor
-        uBrush_t(uBrush_t brush) {
-            this.next = brush.next;
-            this.original = brush.original;
-
-            this.entitynum = brush.entitynum;
-            this.brushnum = brush.brushnum;
-
-            this.contentShader = brush.contentShader;
-
-            this.contents = brush.contents;
-            this.opaque = brush.opaque;
-            this.outputNumber = brush.outputNumber;
-
-            this.bounds = brush.bounds;
-            this.numsides = brush.numsides;
-            System.arraycopy(brush.sides, 0, this.sides, 0, 6);
-        }
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        void oSet(uBrush_t CopyBrush) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    static class drawSurfRef_s {
-
-        drawSurfRef_s nextRef;
-        int outputNumber;
-    };
-
-    static class node_s {
-        // both leafs and nodes
-
-        int planenum;	// -1 = leaf node
-        node_s parent;
-        idBounds bounds;		// valid after portalization
-        //
-        // nodes only
-        side_s side;                    // the side that created the node
-        node_s[] children = new node_s[2];
-        int nodeNumber;                 // set after pruning
-        //
-        // leafs only
-        boolean opaque;                 // view can never be inside
-        //
-        uBrush_t brushlist;             // fragments of all brushes in this leaf
-        // needed for FindSideForPortal
-        //
-        int area;                       // determined by flood filling up to areaportals
-        int occupied;                   // 1 or greater can reach entity
-        uEntity_t occupant;             // for leak file testing
-        //
-        uPortal_s portals;              // also on nodes during construction
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    static class uPortal_s {
-
-        idPlane plane;
-        node_s onnode;                  // NULL = outside box
-        node_s[] nodes = new node_s[2];	// [0] = front side of plane
-        uPortal_s[] next = new uPortal_s[2];
-        idWinding winding;
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    // a tree_t is created by FaceBSP()
-    static class tree_s {
-
-        node_s headnode;
-        node_s outside_node;
-        idBounds bounds;
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    static class mapLight_t {
-
-        idRenderLightLocal def;
-        char[] name = new char[MAX_QPATH];	// for naming the shadow volume surface and interactions
-        srfTriangles_s shadowTris;
-    };
-
-    static class optimizeGroup_s {
-
-        optimizeGroup_s nextGroup;
-        //
-        idBounds bounds;			// set in CarveGroupsByLight
-        //
-        // all of these must match to add a triangle to the triList
-        boolean smoothed;			// curves will never merge with brushes
-        int planeNum;
-        int areaNum;
-        idMaterial material;
-        int numGroupLights;
-        mapLight_t[] groupLights = new mapLight_t[MAX_GROUP_LIGHTS];	// lights effecting this list
-        Object mergeGroup;                      // if this differs (guiSurfs, mirrors, etc), the
-        // groups will not be combined into model surfaces
-        // after optimization
-        textureVectors_t texVec;
-        //
-        boolean surfaceEmited;
-        //
-        mapTri_s triList;
-        mapTri_s regeneratedTris;               // after each island optimization
-        idVec3[] axis = new idVec3[2];		// orthogonal to the plane, so optimization can be 2D
-
-        void clear() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        void oSet(optimizeGroup_s nextGroup) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-    };
-
-    // all primitives from the map are added to optimzeGroups, creating new ones as needed
-    // each optimizeGroup is then split into the map areas, creating groups in each area
-    // each optimizeGroup is then divided by each light, creating more groups
-    // the final list of groups is then tjunction fixed against all groups, then optimized internally
-    // multiple optimizeGroups will be merged together into .proc surfaces, but no further optimization
-    // is done on them
-    //=============================================================================
-    static enum shadowOptLevel_t {
-
-        SO_NONE, // 0
-        SO_MERGE_SURFACES, // 1
-        SO_CULL_OCCLUDED, // 2
-        SO_CLIP_OCCLUDERS, // 3
-        SO_CLIP_SILS, // 4
-        SO_SIL_OPTIMIZE		// 5
-    };
-
-    public static class dmapGlobals_t {
-        // mapFileBase will contain the qpath without any extension: "maps/test_box"
-
-        char[] mapFileBase = new char[1024];
-        //
-        idMapFile dmapFile;
-        //
-        idPlaneSet mapPlanes;
-        //
-        int num_entities;
-        uEntity_t[] uEntities;
-        //
-        int entityNum;
-        //
-        idList<mapLight_t> mapLights;
-        //
-        boolean verbose;
-        //
-        boolean glview;
-        boolean noOptimize;
-        boolean verboseentities;
-        boolean noCurves;
-        boolean fullCarve;
-        boolean noModelBrushes;
-        boolean noTJunc;
-        boolean nomerge;
-        boolean noFlood;
-        boolean noClipSides;		// don't cut sides by solid leafs, use the entire thing
-        boolean noLightCarve;		// extra triangle subdivision by light frustums
-        shadowOptLevel_t shadowOptLevel;
-        boolean noShadow;		// don't create optimized shadow volumes
-        //
-        idBounds drawBounds;
-        boolean drawflag;
-        //
-        int totalShadowTriangles;
-        int totalShadowVerts;
-    };
-    //
     public static dmapGlobals_t dmapGlobals;
-    //=============================================================================
 
     /*
      ============
@@ -483,10 +175,10 @@ public class dmap {
     static void DmapHelp() {
         common.Printf(
                 "Usage: dmap [options] mapfile\n"
-                + "Options:\n"
-                + "noCurves          = don't process curves\n"
-                + "noCM              = don't create collision map\n"
-                + "noAAS             = don't create AAS files\n"
+                        + "Options:\n"
+                        + "noCurves          = don't process curves\n"
+                        + "noCM              = don't create collision map\n"
+                        + "noAAS             = don't create AAS files\n"
         );
     }
 
@@ -547,7 +239,7 @@ public class dmap {
         common.Printf("---- dmap ----\n");
 
         dmapGlobals.fullCarve = true;
-        dmapGlobals.shadowOptLevel = SO_MERGE_SURFACES;		// create shadows by merging all surfaces, but no super optimization
+        dmapGlobals.shadowOptLevel = SO_MERGE_SURFACES;        // create shadows by merging all surfaces, but no super optimization
 //	dmapGlobals.shadowOptLevel = SO_CLIP_OCCLUDERS;		// remove occluders that are completely covered
 //	dmapGlobals.shadowOptLevel = SO_SIL_OPTIMIZE;
 //	dmapGlobals.shadowOptLevel = SO_CULL_OCCLUDED;
@@ -630,7 +322,7 @@ public class dmap {
             common.Error("usage: dmap [options] mapfile");
         }
 
-        passedName.oSet(args.Argv(i));		// may have an extension
+        passedName.oSet(args.Argv(i));        // may have an extension
         passedName.BackSlashesToSlashes();
         if (passedName.Icmpn("maps/", 4) != 0) {
             passedName.oSet("maps/" + passedName);
@@ -719,6 +411,307 @@ public class dmap {
         }
     }
 
+    // all primitives from the map are added to optimzeGroups, creating new ones as needed
+    // each optimizeGroup is then split into the map areas, creating groups in each area
+    // each optimizeGroup is then divided by each light, creating more groups
+    // the final list of groups is then tjunction fixed against all groups, then optimized internally
+    // multiple optimizeGroups will be merged together into .proc surfaces, but no further optimization
+    // is done on them
+    //=============================================================================
+    enum shadowOptLevel_t {
+
+        SO_NONE, // 0
+        SO_MERGE_SURFACES, // 1
+        SO_CULL_OCCLUDED, // 2
+        SO_CLIP_OCCLUDERS, // 3
+        SO_CLIP_SILS, // 4
+        SO_SIL_OPTIMIZE        // 5
+    }
+
+    static class primitive_s {
+
+        //
+        // only one of these will be non-NULL
+        bspbrush_s brush;
+        primitive_s next;
+        mapTri_s tris;
+    }
+
+    static class uArea_t {
+
+        optimizeGroup_s groups;
+        // we might want to add other fields later
+    }
+
+    static class uEntity_t {
+
+        uArea_t[] areas;
+        idMapEntity mapEntity;                          // points into mapFile_t data
+        //
+        int numAreas;
+        //
+        idVec3 origin;
+        primitive_s primitives;
+        tree_s tree;
+    }
+
+    // chains of mapTri_t are the general unit of processing
+    static class mapTri_s {
+
+        hashVert_s[] hashVert = new hashVert_s[3];
+        //
+        idMaterial material;
+        Object mergeGroup;        // we want to avoid merging triangles
+        mapTri_s next;
+        optVertex_s[] optVert = new optVertex_s[3];
+        // from different fixed groups, like guiSurfs and mirrors
+        int planeNum;            // not set universally, just in some areas
+        //
+        idDrawVert[] v = new idDrawVert[3];
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        void oSet(mapTri_s next) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    static class mesh_t {
+
+        idDrawVert verts;
+        int width, height;
+    }
+
+    static class parseMesh_s {
+
+        idMaterial material;
+        mesh_t mesh;
+        parseMesh_s next;
+    }
+
+    static class bspface_s {
+
+        // any non-portals
+        boolean checked;        // used by SelectSplitPlaneNum()
+        bspface_s next;
+        int planenum;
+        boolean portal;            // all portals will be selected before
+        idWinding w;
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    static class textureVectors_t {
+
+        idVec4[] v = new idVec4[2];    // the offset value will always be in the 0.0 to 1.0 range
+    }
+
+    static class side_s {
+
+        //
+        idMaterial material;
+        int planenum;
+        textureVectors_t texVec;
+        idWinding visibleHull;          // also clipped to the solid parts of the world
+        //
+        idWinding winding;        // only clipped to the other sides of the brush
+    }
+
+    static class bspbrush_s {
+
+        //
+        idBounds bounds;
+        int brushnum;            // editor numbering for messages
+        //
+        idMaterial contentShader;    // one face's shader will determine the volume attributes
+        //
+        int contents;
+        //
+        int entitynum;            // editor numbering for messages
+        bspbrush_s next;
+        int numsides;
+        boolean opaque;
+        bspbrush_s original;            // chopped up brushes will reference the originals
+        int outputNumber;        // set when the brush is written to the file list
+        side_s[] sides = new side_s[6];    // variably sized
+    }
+
+    static class uBrush_t extends bspbrush_s {
+
+        uBrush_t() {
+        }
+
+        //copy constructor
+        uBrush_t(uBrush_t brush) {
+            this.next = brush.next;
+            this.original = brush.original;
+
+            this.entitynum = brush.entitynum;
+            this.brushnum = brush.brushnum;
+
+            this.contentShader = brush.contentShader;
+
+            this.contents = brush.contents;
+            this.opaque = brush.opaque;
+            this.outputNumber = brush.outputNumber;
+
+            this.bounds = brush.bounds;
+            this.numsides = brush.numsides;
+            System.arraycopy(brush.sides, 0, this.sides, 0, 6);
+        }
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        void oSet(uBrush_t CopyBrush) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    static class drawSurfRef_s {
+
+        drawSurfRef_s nextRef;
+        int outputNumber;
+    }
+
+    static class node_s {
+        // both leafs and nodes
+
+        // needed for FindSideForPortal
+        //
+        int area;                       // determined by flood filling up to areaportals
+        idBounds bounds;        // valid after portalization
+        //
+        uBrush_t brushlist;             // fragments of all brushes in this leaf
+        node_s[] children = new node_s[2];
+        int nodeNumber;                 // set after pruning
+        uEntity_t occupant;             // for leak file testing
+        int occupied;                   // 1 or greater can reach entity
+        //
+        // leafs only
+        boolean opaque;                 // view can never be inside
+        node_s parent;
+        int planenum;    // -1 = leaf node
+        //
+        uPortal_s portals;              // also on nodes during construction
+        //
+        // nodes only
+        side_s side;                    // the side that created the node
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+    //=============================================================================
+
+    static class uPortal_s {
+
+        uPortal_s[] next = new uPortal_s[2];
+        node_s[] nodes = new node_s[2];    // [0] = front side of plane
+        node_s onnode;                  // NULL = outside box
+        idPlane plane;
+        idWinding winding;
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    // a tree_t is created by FaceBSP()
+    static class tree_s {
+
+        idBounds bounds;
+        node_s headnode;
+        node_s outside_node;
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    static class mapLight_t {
+
+        idRenderLightLocal def;
+        char[] name = new char[MAX_QPATH];    // for naming the shadow volume surface and interactions
+        srfTriangles_s shadowTris;
+    }
+
+    static class optimizeGroup_s {
+
+        int areaNum;
+        idVec3[] axis = new idVec3[2];        // orthogonal to the plane, so optimization can be 2D
+        //
+        idBounds bounds;            // set in CarveGroupsByLight
+        mapLight_t[] groupLights = new mapLight_t[MAX_GROUP_LIGHTS];    // lights effecting this list
+        idMaterial material;
+        Object mergeGroup;                      // if this differs (guiSurfs, mirrors, etc), the
+        optimizeGroup_s nextGroup;
+        int numGroupLights;
+        int planeNum;
+        mapTri_s regeneratedTris;               // after each island optimization
+        //
+        // all of these must match to add a triangle to the triList
+        boolean smoothed;            // curves will never merge with brushes
+        //
+        boolean surfaceEmited;
+        // groups will not be combined into model surfaces
+        // after optimization
+        textureVectors_t texVec;
+        //
+        mapTri_s triList;
+
+        void clear() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        void oSet(optimizeGroup_s nextGroup) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    public static class dmapGlobals_t {
+        // mapFileBase will contain the qpath without any extension: "maps/test_box"
+
+        //
+        idMapFile dmapFile;
+        //
+        idBounds drawBounds;
+        boolean drawflag;
+        //
+        int entityNum;
+        boolean fullCarve;
+        //
+        boolean glview;
+        char[] mapFileBase = new char[1024];
+        //
+        idList<mapLight_t> mapLights;
+        //
+        idPlaneSet mapPlanes;
+        boolean noClipSides;        // don't cut sides by solid leafs, use the entire thing
+        boolean noCurves;
+        boolean noFlood;
+        boolean noLightCarve;        // extra triangle subdivision by light frustums
+        boolean noModelBrushes;
+        boolean noOptimize;
+        boolean noShadow;        // don't create optimized shadow volumes
+        boolean noTJunc;
+        boolean nomerge;
+        //
+        int num_entities;
+        shadowOptLevel_t shadowOptLevel;
+        //
+        int totalShadowTriangles;
+        int totalShadowVerts;
+        uEntity_t[] uEntities;
+        //
+        boolean verbose;
+        boolean verboseentities;
+    }
 
     /*
      ============

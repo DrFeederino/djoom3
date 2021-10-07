@@ -1,13 +1,14 @@
 package neo.ui;
 
-import static neo.TempDump.itob;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.WIN_FOCUS;
 import neo.ui.Window.idWindow;
+
+import static neo.TempDump.itob;
+import static neo.ui.Window.WIN_FOCUS;
 
 /**
  *
@@ -17,11 +18,11 @@ public class FieldWindow {
     static class idFieldWindow extends idWindow {
 
         private int cursorPos;
-        private int lastTextLength;
+        private idStr cursorVar;
         private int lastCursorPos;
+        private int lastTextLength;
         private int paintOffset;
         private boolean showCursor;
-        private idStr cursorVar;
         //
         //
 
@@ -92,5 +93,6 @@ public class FieldWindow {
                 paintOffset++;
             }
         }
-    };
+    }
+
 }

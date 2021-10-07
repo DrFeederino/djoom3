@@ -1,22 +1,11 @@
 package neo.Renderer;
 
 import neo.Renderer.Model.dynamicModel_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import static neo.Renderer.RenderWorld.SHADERPARM_DIVERSITY;
-import static neo.Renderer.RenderWorld.SHADERPARM_PARTICLE_STOPTIME;
-import static neo.Renderer.RenderWorld.SHADERPARM_TIMEOFFSET;
-import neo.Renderer.RenderWorld.renderEntity_s;
+import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfPlanes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurfVertexCaches;
-import static neo.TempDump.sizeof;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclParticle.idParticleStage;
 import neo.framework.DeclParticle.particleGen_t;
@@ -26,6 +15,13 @@ import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Random.idRandom;
 
 import java.util.Arrays;
+
+import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
+import static neo.Renderer.RenderWorld.*;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.sizeof;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 
 /**
  *
@@ -42,6 +38,9 @@ public class Model_prt {
      ===============================================================================
      */
     public static class idRenderModelPrt extends idRenderModelStatic {
+
+        //
+        private idDeclParticle particleSystem;
 
         public idRenderModelPrt() {
             particleSystem = null;
@@ -120,7 +119,7 @@ public class Model_prt {
                 if (0 == stage.cycleMsec) {
                     continue;
                 }
-                if (stage.hidden) {		// just for gui particle editor use
+                if (stage.hidden) {        // just for gui particle editor use
                     staticModel.DeleteSurfaceWithId(stageNum);
                     continue;
                 }
@@ -163,7 +162,7 @@ public class Model_prt {
                     steppingRandom.RandomInt();
                     steppingRandom2.RandomInt();
 
-                    // calculate local age for this index 
+                    // calculate local age for this index
                     int bunchOffset = (int) (stage.particleLife * 1000 * stage.spawnBunching * index / stage.totalParticles);
 
                     int particleAge = stageAge - bunchOffset;
@@ -216,7 +215,8 @@ public class Model_prt {
 
                 // build the indexes
                 int numIndexes = 0;
-                /*glIndex_t*/ int[] indexes = surf.geometry.indexes;
+                /*glIndex_t*/
+                int[] indexes = surf.geometry.indexes;
                 for (int i = 0; i < numVerts; i += 4) {
                     indexes[numIndexes + 0] = i;
                     indexes[numIndexes + 1] = i + 2;
@@ -264,7 +264,6 @@ public class Model_prt {
 
             return total;
         }
-//
-        private idDeclParticle particleSystem;
-    };
+    }
+
 }

@@ -1,29 +1,28 @@
 package neo.Tools.Compilers.AAS;
 
-import java.util.Arrays;
-import static neo.TempDump.NOT;
-import static neo.TempDump.SNOT;
 import neo.Tools.Compilers.AAS.AASBuild.Allowance;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.MAX_WORLD_COORD;
-import static neo.idlib.Lib.MIN_WORLD_COORD;
-import static neo.idlib.MapFile.CURRENT_MAP_VERSION;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Plane.PLANESIDE_BACK;
-import static neo.idlib.math.Plane.PLANESIDE_CROSS;
-import static neo.idlib.math.Plane.PLANESIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
-import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.getVec3_origin;
+import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.Arrays;
+
+import static neo.TempDump.NOT;
+import static neo.TempDump.SNOT;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.MAX_WORLD_COORD;
+import static neo.idlib.Lib.MIN_WORLD_COORD;
+import static neo.idlib.MapFile.CURRENT_MAP_VERSION;
+import static neo.idlib.math.Plane.*;
+import static neo.idlib.math.Vector.getVec3_origin;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -31,6 +30,14 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class Brush {
 
+    //
+    static final int BFL_NO_VALID_SPLITTERS = 0x0001;
+    //
+    static final float BRUSH_BEVEL_EPSILON = 0.1f;
+    //
+    static final float BRUSH_EPSILON = 0.1f;
+    static final int BRUSH_PLANESIDE_BACK = 2;
+    static final int BRUSH_PLANESIDE_FACING = 4;
     /*
      ===============================================================================
 
@@ -38,27 +45,41 @@ public class Brush {
 
      ===============================================================================
      */
-    static final int     BRUSH_PLANESIDE_FRONT      = 1;
-    static final int     BRUSH_PLANESIDE_BACK       = 2;
-    static final int     BRUSH_PLANESIDE_BOTH       = (BRUSH_PLANESIDE_FRONT | BRUSH_PLANESIDE_BACK);
-    static final int     BRUSH_PLANESIDE_FACING     = 4;
+    static final int BRUSH_PLANESIDE_FRONT = 1;
+    static final int BRUSH_PLANESIDE_BOTH = (BRUSH_PLANESIDE_FRONT | BRUSH_PLANESIDE_BACK);
+    static final float BRUSH_PLANE_DIST_EPSILON = 0.01f;
+    static final float BRUSH_PLANE_NORMAL_EPSILON = 0.00001f;
     //
-    static final int     SFL_SPLIT                  = 0x0001;
-    static final int     SFL_BEVEL                  = 0x0002;
-    static final int     SFL_USED_SPLITTER          = 0x0004;
-    static final int     SFL_TESTED_SPLITTER        = 0x0008;
+    static final boolean OUTPUT_CHOP_STATS = false;
     //
-    static final int     BFL_NO_VALID_SPLITTERS     = 0x0001;
+    static final int OUTPUT_UPDATE_TIME = 500;// update every 500 msec
+    static final int SFL_BEVEL = 0x0002;
     //
-    static final float   BRUSH_EPSILON              = 0.1f;
-    static final float   BRUSH_PLANE_NORMAL_EPSILON = 0.00001f;
-    static final float   BRUSH_PLANE_DIST_EPSILON   = 0.01f;
-    //                                                
-    static final int     OUTPUT_UPDATE_TIME         = 500;// update every 500 msec
-    //
-    static final float   BRUSH_BEVEL_EPSILON        = 0.1f;
-    //
-    static final boolean OUTPUT_CHOP_STATS          = false;
+    static final int SFL_SPLIT = 0x0001;
+    static final int SFL_TESTED_SPLITTER = 0x0008;
+    static final int SFL_USED_SPLITTER = 0x0004;
+    private static int lastUpdateTime;
+
+    /*
+     ============
+     DisplayRealTimeString
+     ============
+     */
+    static void DisplayRealTimeString(String format, Object... args) {
+//        va_list argPtr;
+        String buf;//= new char[MAX_STRING_CHARS];
+        int time;
+
+        time = Sys_Milliseconds();
+        if (time > lastUpdateTime + OUTPUT_UPDATE_TIME) {
+//            va_start(argPtr, string);
+//            vsprintf(buf, string, argPtr);
+//            va_end(argPtr);
+            buf = String.format(format, Arrays.toString(args));
+            common.Printf(buf);
+            lastUpdateTime = time;
+        }
+    }
 
     //===============================================================
     //
@@ -67,9 +88,9 @@ public class Brush {
     //===============================================================
     static class idBrushSide {
 
-        private int       flags;
-        private int       planeNum;
-        private idPlane   plane;
+        private int flags;
+        private idPlane plane;
+        private int planeNum;
         private idWinding winding;
 
         // friend class idBrush;
@@ -157,7 +178,7 @@ public class Brush {
                 return PLANESIDE_BACK;
             }
         }
-    };
+    }
 
     //===============================================================
     //
@@ -166,17 +187,17 @@ public class Brush {
     //===============================================================
     static class idBrush {
 
-        private idBrush             next;          // next brush in list
-        private int                 entityNum;     // entity number in editor
-        private int                 primitiveNum;  // primitive number in editor
-        private int                 flags;         // brush flags
-        private boolean             windingsValid; // set when side windings are valid
-        private int                 contents;      // contents of brush
-        private int                 planeSide;     // side of a plane this brush is on
-        private int                 savedPlaneSide;// saved plane side
-        private idBounds            bounds;        // brush bounds
-        private idList<idBrushSide> sides;         // list with sides
         private boolean NULL = true;               // used with the Split(....), see idWinding for more info.
+        private idBounds bounds;        // brush bounds
+        private int contents;      // contents of brush
+        private int entityNum;     // entity number in editor
+        private int flags;         // brush flags
+        private idBrush next;          // next brush in list
+        private int planeSide;     // side of a plane this brush is on
+        private int primitiveNum;  // primitive number in editor
+        private int savedPlaneSide;// saved plane side
+        private idList<idBrushSide> sides;         // list with sides
+        private boolean windingsValid; // set when side windings are valid
         //
         //
         // friend class idBrushList;
@@ -546,7 +567,7 @@ public class Brush {
 //            if (back != null) {
 //                back[0] = null;
 //            }
-//            
+//
             res = bounds.PlaneSide(plane, -BRUSH_EPSILON);
             if (res == PLANESIDE_FRONT) {
                 if (front != null) {
@@ -623,7 +644,7 @@ public class Brush {
                 } else if (mid.IsHuge()) {
                     // if the winding is huge then the brush is unbounded
                     common.Warning("brush %d on entity %d is unbounded"
-                            + "( %1.2f %1.2f %1.2f )-( %1.2f %1.2f %1.2f )-( %1.2f %1.2f %1.2f )", primitiveNum, entityNum,
+                                    + "( %1.2f %1.2f %1.2f )-( %1.2f %1.2f %1.2f )-( %1.2f %1.2f %1.2f )", primitiveNum, entityNum,
                             bounds.oGet(0, 0), bounds.oGet(0, 1), bounds.oGet(0, 2),
                             bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(1, 2),
                             bounds.oGet(1, 0) - bounds.oGet(0, 0), bounds.oGet(1, 1) - bounds.oGet(0, 1), bounds.oGet(1, 2) - bounds.oGet(0, 2));
@@ -909,11 +930,11 @@ public class Brush {
                     }
                     for (k = 0; k < 3; k++) {
                         if (vec.oGet(k) == 1.0f || vec.oGet(k) == -1.0f || (vec.oGet(k) == 0.0f && vec.oGet((k + 1) % 3) == 0.0f)) {
-                            break;	// axial
+                            break;    // axial
                         }
                     }
                     if (k < 3) {
-                        continue;	// only test non-axial edges
+                        continue;    // only test non-axial edges
                     }
 
                     // try the six possible slanted axials from this edge
@@ -948,7 +969,7 @@ public class Brush {
                                 for (l = 0; l < w2.GetNumPoints(); l++) {
                                     d = plane.Distance(w2.oGet(l).ToVec3());
                                     if (d > BRUSH_BEVEL_EPSILON) {
-                                        break;	// point at the front
+                                        break;    // point at the front
                                     }
                                     if (d < minBack) {
                                         minBack = d;
@@ -965,7 +986,7 @@ public class Brush {
                             }
 
                             if (k < sides.Num()) {
-                                continue;	// wasn't part of the outer hull
+                                continue;    // wasn't part of the outer hull
                             }
 
                             // add this plane
@@ -1002,7 +1023,7 @@ public class Brush {
             NULL = false;
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1012,9 +1033,9 @@ public class Brush {
     static class idBrushList {
 
         private idBrush head;
-        private idBrush tail;
-        private int numBrushes;
         private int numBrushSides;
+        private int numBrushes;
+        private idBrush tail;
         //
         //
 
@@ -1452,7 +1473,7 @@ public class Brush {
             map.WriteBrushList(this);
 //	delete map;
         }
-    };
+    }
 
     //===============================================================
     //
@@ -1461,9 +1482,9 @@ public class Brush {
     //===============================================================
     static class idBrushMap {
 
-        private idFile fp;
-        private idStr texture;
         private int brushCount;
+        private final idFile fp;
+        private idStr texture;
         //
         //
 
@@ -1535,27 +1556,5 @@ public class Brush {
                 WriteBrush(b);
             }
         }
-    };
-
-    /*
-     ============
-     DisplayRealTimeString
-     ============
-     */
-    static void DisplayRealTimeString(String format, Object... args) {
-//        va_list argPtr;
-        String buf;//= new char[MAX_STRING_CHARS];
-        int time;
-
-        time = Sys_Milliseconds();
-        if (time > lastUpdateTime + OUTPUT_UPDATE_TIME) {
-//            va_start(argPtr, string);
-//            vsprintf(buf, string, argPtr);
-//            va_end(argPtr);
-            buf = String.format(format, Arrays.toString(args));
-            common.Printf(buf);
-            lastUpdateTime = time;
-        }
     }
-    private static int lastUpdateTime;
 }

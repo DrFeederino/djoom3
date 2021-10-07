@@ -23,13 +23,13 @@ public class Ode {
     //===============================================================
     public static abstract class idODE {
 
-//public					~idODE( void ) {}
-        protected int              dimension;   // dimension in floats allocated for
         protected deriveFunction_t derive;      // derive function
-        protected Object           userData;    // client data
+        //public					~idODE( void ) {}
+        protected int dimension;   // dimension in floats allocated for
+        protected Object userData;    // client data
 
         public abstract float Evaluate(final float[] state, float[] newState, float t0, float t1);
-    };
+    }
 
     //===============================================================
     //
@@ -38,7 +38,7 @@ public class Ode {
     //===============================================================
     public static class idODE_Euler extends idODE {
 
-        protected float[] derivatives;	// space to store derivatives
+        protected float[] derivatives;    // space to store derivatives
         //
         //
 
@@ -62,17 +62,17 @@ public class Ode {
             }
             return delta;
         }
-    };
+    }
 
-//===============================================================
+    //===============================================================
 //
 //	idODE_Midpoint
 //
 //===============================================================
     class idODE_Midpoint extends idODE {
 
+        protected float[] derivatives;    // space to store derivatives
         protected float[] tmpState;
-        protected float[] derivatives;	// space to store derivatives
         //
         //
 
@@ -105,20 +105,20 @@ public class Ode {
             }
             return delta;
         }
-    };
+    }
 
-//===============================================================
+    //===============================================================
 //
 //	idODE_RK4
 //
 //===============================================================
     class idODE_RK4 extends idODE {
 
-        protected float[] tmpState;
-        protected float[] d1;			// derivatives
+        protected float[] d1;            // derivatives
         protected float[] d2;
         protected float[] d3;
         protected float[] d4;
+        protected float[] tmpState;
         //
         //
 
@@ -133,7 +133,7 @@ public class Ode {
             d4 = new float[dim];
         }
 
-//	virtual				~idODE_RK4( void );//TODO:experiment with overriding finalize
+        //	virtual				~idODE_RK4( void );//TODO:experiment with overriding finalize
         @Override
         public float Evaluate(float[] state, float[] newState, float t0, float t1) {
             float delta, halfDelta, sixthDelta;
@@ -165,22 +165,22 @@ public class Ode {
             }
             return delta;
         }
-    };
+    }
 
-//===============================================================
+    //===============================================================
 //
 //	idODE_RK4Adaptive
 //
 //===============================================================
     class idODE_RK4Adaptive extends idODE {
 
-        protected float maxError;		// maximum allowed error
-        protected float[] tmpState;
-        protected float[] d1;			// derivatives
+        protected float[] d1;            // derivatives
         protected float[] d1half;
         protected float[] d2;
         protected float[] d3;
         protected float[] d4;
+        protected float maxError;        // maximum allowed error
+        protected float[] tmpState;
         //
         //
 
@@ -305,5 +305,6 @@ public class Ode {
                 maxError = err;
             }
         }
-    };
+    }
+
 }

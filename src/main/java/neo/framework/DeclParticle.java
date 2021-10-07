@@ -1,33 +1,9 @@
 package neo.framework;
 
-import java.util.Arrays;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.atof;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
-import static neo.framework.DeclManager.declType_t.DECL_TABLE;
 import neo.framework.DeclManager.idDecl;
-import neo.framework.DeclParticle.idParticleStage;
-import neo.framework.DeclParticle.prtCustomPth_t;
-import static neo.framework.DeclParticle.prtCustomPth_t.PPATH_DRIP;
-import static neo.framework.DeclParticle.prtCustomPth_t.PPATH_FLIES;
-import static neo.framework.DeclParticle.prtCustomPth_t.PPATH_HELIX;
-import static neo.framework.DeclParticle.prtCustomPth_t.PPATH_ORBIT;
-import static neo.framework.DeclParticle.prtCustomPth_t.PPATH_STANDARD;
-import static neo.framework.DeclParticle.prtDirection_t.PDIR_CONE;
-import static neo.framework.DeclParticle.prtDirection_t.PDIR_OUTWARD;
-import static neo.framework.DeclParticle.prtDistribution_t.PDIST_CYLINDER;
-import static neo.framework.DeclParticle.prtDistribution_t.PDIST_RECT;
-import static neo.framework.DeclParticle.prtDistribution_t.PDIST_SPHERE;
-import static neo.framework.DeclParticle.prtOrientation_t.POR_AIMED;
-import static neo.framework.DeclParticle.prtOrientation_t.POR_VIEW;
-import static neo.framework.DeclParticle.prtOrientation_t.POR_X;
-import static neo.framework.DeclParticle.prtOrientation_t.POR_Y;
-import static neo.framework.DeclParticle.prtOrientation_t.POR_Z;
 import neo.framework.DeclTable.idDeclTable;
 import neo.framework.File_h.idFile;
 import neo.framework.File_h.idFile_Memory;
@@ -40,16 +16,89 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Vector;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
+import java.util.Arrays;
+
+import static neo.TempDump.atof;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
+import static neo.framework.DeclManager.declType_t.DECL_TABLE;
+import static neo.framework.DeclParticle.prtCustomPth_t.*;
+import static neo.framework.DeclParticle.prtDirection_t.PDIR_CONE;
+import static neo.framework.DeclParticle.prtDirection_t.PDIR_OUTWARD;
+import static neo.framework.DeclParticle.prtDistribution_t.*;
+import static neo.framework.DeclParticle.prtOrientation_t.*;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
+
 /**
  *
  */
 public class DeclParticle {
+
+    static final ParticleParmDesc[] ParticleCustomDesc = {
+            new ParticleParmDesc("standard", 0, "Standard"),
+            new ParticleParmDesc("helix", 5, "sizeX Y Z radialSpeed axialSpeed"),
+            new ParticleParmDesc("flies", 3, "radialSpeed axialSpeed size"),
+            new ParticleParmDesc("orbit", 2, "radius speed"),
+            new ParticleParmDesc("drip", 2, "something something")
+    };
+
+    //const int CustomParticleCount = sizeof( ParticleCustomDesc ) / sizeof( const ParticleParmDesc );
+    static final int CustomParticleCount = ParticleCustomDesc.length;
+    static final ParticleParmDesc[] ParticleDirectionDesc = {
+            new ParticleParmDesc("cone", 1, ""),
+            new ParticleParmDesc("outward", 1, "")
+    };
+    static final ParticleParmDesc[] ParticleDistributionDesc = {
+            new ParticleParmDesc("rect", 3, ""),
+            new ParticleParmDesc("cylinder", 4, ""),
+            new ParticleParmDesc("sphere", 3, "")
+    };
+    static final ParticleParmDesc[] ParticleOrientationDesc = {
+            new ParticleParmDesc("view", 0, ""),
+            new ParticleParmDesc("aimed", 2, ""),
+            new ParticleParmDesc("x", 0, ""),
+            new ParticleParmDesc("y", 0, ""),
+            new ParticleParmDesc("z", 0, "")
+    };
+    enum prtCustomPth_t {
+
+        PPATH_STANDARD,
+        PPATH_HELIX, // ( sizeX sizeY sizeZ radialSpeed climbSpeed )
+        PPATH_FLIES,
+        PPATH_ORBIT,
+        PPATH_DRIP
+    }
+
+    enum prtDirection_t {
+
+        PDIR_CONE,      // parm0 is the solid cone angle
+        PDIR_OUTWARD    // direction is relative to offset from origin, parm0 is an upward bias
+    }
+
+    enum prtDistribution_t {
+
+        PDIST_RECT,     // ( sizeX sizeY sizeZ )
+        PDIST_CYLINDER, // ( sizeX sizeY sizeZ )
+        PDIST_SPHERE    // ( sizeX sizeY sizeZ ringFraction )
+        // a ringFraction of zero allows the entire sphere, 0.9 would only
+        // allow the outer 10% of the sphere
+    }
+
+    enum prtOrientation_t {
+
+        POR_VIEW,
+        POR_AIMED, // angle and aspect are disregarded
+        POR_X,
+        POR_Y,
+        POR_Z
+    }
 
     /*
      ===============================================================================
@@ -59,41 +108,16 @@ public class DeclParticle {
      ===============================================================================
      */
     static class ParticleParmDesc {
+        final String desc;
         final String name;
         int count;
-        final String desc;
 
         public ParticleParmDesc(String name, int count, String desc) {
             this.name = name;
             this.count = count;
             this.desc = desc;
         }
-    };
-    static final ParticleParmDesc ParticleDistributionDesc[] = {
-        new ParticleParmDesc("rect", 3, ""),
-        new ParticleParmDesc("cylinder", 4, ""),
-        new ParticleParmDesc("sphere", 3, "")
-    };
-    static final ParticleParmDesc ParticleDirectionDesc[] = {
-        new ParticleParmDesc("cone", 1, ""),
-        new ParticleParmDesc("outward", 1, "")
-    };
-    static final ParticleParmDesc ParticleOrientationDesc[] = {
-        new ParticleParmDesc("view", 0, ""),
-        new ParticleParmDesc("aimed", 2, ""),
-        new ParticleParmDesc("x", 0, ""),
-        new ParticleParmDesc("y", 0, ""),
-        new ParticleParmDesc("z", 0, "")
-    };
-    static final ParticleParmDesc ParticleCustomDesc[] = {
-        new ParticleParmDesc("standard", 0, "Standard"),
-        new ParticleParmDesc("helix", 5, "sizeX Y Z radialSpeed axialSpeed"),
-        new ParticleParmDesc("flies", 3, "radialSpeed axialSpeed size"),
-        new ParticleParmDesc("orbit", 2, "radius speed"),
-        new ParticleParmDesc("drip", 2, "something something")
-    };
-//const int CustomParticleCount = sizeof( ParticleCustomDesc ) / sizeof( const ParticleParmDesc );
-    static final int CustomParticleCount = ParticleCustomDesc.length;
+    }
 
     /*
      ====================================================================================
@@ -103,9 +127,9 @@ public class DeclParticle {
      ====================================================================================
      */
     static class idParticleParm {
+        public float from;
         public idDeclTable table;
-        public float       from;
-        public float       to;
+        public float to;
         //
         //
 
@@ -128,127 +152,94 @@ public class DeclParticle {
             }
             return (from + frac * (to - from) * 0.5f) * frac;
         }
-    };
-
-    enum prtDistribution_t {
-
-        PDIST_RECT,     // ( sizeX sizeY sizeZ )
-        PDIST_CYLINDER, // ( sizeX sizeY sizeZ )
-        PDIST_SPHERE	// ( sizeX sizeY sizeZ ringFraction )
-                        // a ringFraction of zero allows the entire sphere, 0.9 would only
-                        // allow the outer 10% of the sphere
-    };
-
-    enum prtDirection_t {
-
-        PDIR_CONE,      // parm0 is the solid cone angle
-        PDIR_OUTWARD	// direction is relative to offset from origin, parm0 is an upward bias
-    };
-
-    enum prtCustomPth_t {
-
-        PPATH_STANDARD,
-        PPATH_HELIX, // ( sizeX sizeY sizeZ radialSpeed climbSpeed )
-        PPATH_FLIES,
-        PPATH_ORBIT,
-        PPATH_DRIP
-    };
-
-    enum prtOrientation_t {
-
-        POR_VIEW,
-        POR_AIMED, // angle and aspect are disregarded
-        POR_X,
-        POR_Y,
-        POR_Z
-    };
+    }
 
     public static class particleGen_t {
 
+        //
+        //
+        public float age;                // in seconds, calculated as fraction * stage->particleLife
+        public float animationFrameFrac; // set by ParticleTexCoords, used to make the cross faded version
+        public idMat3 axis;
+        public float frac;               // 0.0 to 1.0
+        public int index;              // particle number in the system
+        public idVec3 origin;             // dynamic smoke particles can have individual origins and axis
+        public idRandom originalRandom;     // needed so aimed particles can reset the random for another origin calculation
+        public idRandom random;
         public renderEntity_s renderEnt;          // for shaderParms, etc
-        public renderView_s   renderView;
-        public int            index;              // particle number in the system
-        public float          frac;               // 0.0 to 1.0
-        public idRandom       random;
-        public idVec3         origin;             // dynamic smoke particles can have individual origins and axis
-        public idMat3         axis;
-        //
-        //
-        public float          age;                // in seconds, calculated as fraction * stage->particleLife
-        public idRandom       originalRandom;     // needed so aimed particles can reset the random for another origin calculation
-        public float          animationFrameFrac; // set by ParticleTexCoords, used to make the cross faded version
+        public renderView_s renderView;
 
-        public particleGen_t(){
+        public particleGen_t() {
             this.origin = new idVec3();
             this.axis = new idMat3();
         }
-    };
+    }
 
     //
     // single particle stage
     //
     public static class idParticleStage {
 
-        public idMaterial        material;
         //
-        public int               totalParticles;  // total number of particles, although some may be invisible at a given time
-        public float             cycles;          // allows things to oneShot ( 1 cycle ) or run for a set number of cycles
-        // on a per stage basis
+        public int animationFrames;  // if > 1, subdivide the texture S axis into frames and crossfade
+        public float animationRate;    // frames per second
+        public idParticleParm aspect;             // greater than 1 makes the T axis longer
         //
-        public int               cycleMsec;       // ( particleLife + deadTime ) in msec
+        public idBounds bounds;             // derived
+        //-----------------------------------
         //
-        public float             spawnBunching;   // 0.0 = all come out at first instant, 1.0 = evenly spaced over cycle time
-        public float             particleLife;    // total seconds of life for each particle
-        public float             timeOffset;      // time offset from system start for the first particle to spawn
-        public float             deadTime;        // time after particleLife before respawning
+        public float boundsExpansion;    // user tweak to fix poorly calculated bounds
         //
-        //-------------------------------	  // standard path parms
-        //		
-        public prtDistribution_t distributionType;
-        public float[] distributionParms = new float[4];
-        //
-        public prtDirection_t directionType;
-        public float[] directionParms = new float[4];
-        //
-        public idParticleParm speed;
-        public float          gravity;            // can be negative to float up
-        public boolean        worldGravity;       // apply gravity in world space
-        public boolean        randomDistribution; // randomly orient the quad on emission ( defaults to true )
-        public boolean        entityColor;        // force color from render entity ( fadeColor is still valid )
-        //
-        //------------------------------	  // custom path will completely replace the standard path calculations
-        //	
-        public prtCustomPth_t customPathType;     // use custom C code routines for determining the origin
+        public idVec4 color;
         public float[] customPathParms = new float[8];
         //
+        //------------------------------	  // custom path will completely replace the standard path calculations
+        //
+        public prtCustomPth_t customPathType;     // use custom C code routines for determining the origin
+        // on a per stage basis
+        //
+        public int cycleMsec;       // ( particleLife + deadTime ) in msec
+        public float cycles;          // allows things to oneShot ( 1 cycle ) or run for a set number of cycles
+        public float deadTime;        // time after particleLife before respawning
+        public float[] directionParms = new float[4];
+        //
+        public prtDirection_t directionType;
+        public float[] distributionParms = new float[4];
+        //
+        //-------------------------------	  // standard path parms
+        //
+        public prtDistribution_t distributionType;
+        public boolean entityColor;        // force color from render entity ( fadeColor is still valid )
+        public idVec4 fadeColor;          // either 0 0 0 0 for additive, or 1 1 1 0 for blended materials
+        public float fadeInFraction;     // in 0.0 to 1.0 range
+        public float fadeIndexFraction;  // in 0.0 to 1.0 range, causes later index smokes to be more faded
+        public float fadeOutFraction;    // in 0.0 to 1.0 range
+        public float gravity;            // can be negative to float up
+        //
+        public boolean hidden;             // for editor use
+        //
+        public float initialAngle;     // in degrees, random angle is used if zero ( default )
+        public idMaterial material;
+        //
         //--------------------------------
-        //	
-        public idVec3           offset;           // offset from origin to spawn all particles, also applies to customPath
         //
-        public int              animationFrames;  // if > 1, subdivide the texture S axis into frames and crossfade
-        public float            animationRate;    // frames per second
-        //
-        public float            initialAngle;     // in degrees, random angle is used if zero ( default )
-        public idParticleParm   rotationSpeed;    // half the particles will have negative rotation speeds
+        public idVec3 offset;           // offset from origin to spawn all particles, also applies to customPath
         //
         public prtOrientation_t orientation;      // view, aimed, or axis fixed
         public float[] orientationParms = new float[4];
+        public float particleLife;    // total seconds of life for each particle
+        public boolean randomDistribution; // randomly orient the quad on emission ( defaults to true )
+        public idParticleParm rotationSpeed;    // half the particles will have negative rotation speeds
         //
         public idParticleParm size;
-        public idParticleParm aspect;             // greater than 1 makes the T axis longer
         //
-        public idVec4         color;
-        public idVec4         fadeColor;          // either 0 0 0 0 for additive, or 1 1 1 0 for blended materials
-        public float          fadeInFraction;     // in 0.0 to 1.0 range
-        public float          fadeOutFraction;    // in 0.0 to 1.0 range
-        public float          fadeIndexFraction;  // in 0.0 to 1.0 range, causes later index smokes to be more faded
+        public float spawnBunching;   // 0.0 = all come out at first instant, 1.0 = evenly spaced over cycle time
         //
-        public boolean        hidden;             // for editor use
-        //-----------------------------------
+        public idParticleParm speed;
+        public float timeOffset;      // time offset from system start for the first particle to spawn
         //
-        public float          boundsExpansion;    // user tweak to fix poorly calculated bounds
-        //
-        public idBounds       bounds;             // derived
+        public int totalParticles;  // total number of particles, although some may be invisible at a given time
+        public boolean worldGravity;       // apply gravity in world space
         //
         //
 
@@ -277,7 +268,7 @@ public class DeclParticle {
             randomDistribution = true;
             entityColor = false;
             initialAngle = 0.0f;
-            rotationSpeed = new idParticleParm(); 
+            rotationSpeed = new idParticleParm();
             orientation = POR_VIEW;
             orientationParms[0] = orientationParms[1] = orientationParms[2] = orientationParms[3] = 0.0f;
             size = new idParticleParm();
@@ -464,13 +455,13 @@ public class DeclParticle {
                 float radiusSqr, angle1, angle2;
 
                 switch (distributionType) {
-                    case PDIST_RECT: {	// ( sizeX sizeY sizeZ )
+                    case PDIST_RECT: {    // ( sizeX sizeY sizeZ )
                         origin.oSet(0, (randomDistribution ? g.random.CRandomFloat() : 1.0f) * distributionParms[0]);
                         origin.oSet(1, (randomDistribution ? g.random.CRandomFloat() : 1.0f) * distributionParms[1]);
                         origin.oSet(2, (randomDistribution ? g.random.CRandomFloat() : 1.0f) * distributionParms[2]);
                         break;
                     }
-                    case PDIST_CYLINDER: {	// ( sizeX sizeY sizeZ ringFraction )
+                    case PDIST_CYLINDER: {    // ( sizeX sizeY sizeZ ringFraction )
                         angle1 = ((randomDistribution) ? g.random.CRandomFloat() : 1.0f) * idMath.TWO_PI;
 
                         float[] origin2 = new float[1];
@@ -499,7 +490,7 @@ public class DeclParticle {
                         origin.oMulSet(2, distributionParms[2]);
                         break;
                     }
-                    case PDIST_SPHERE: {	// ( sizeX sizeY sizeZ ringFraction )
+                    case PDIST_SPHERE: {    // ( sizeX sizeY sizeZ ringFraction )
                         // iterating with rejection is the only way to get an even distribution over a sphere
                         if (randomDistribution) {
                             do {
@@ -577,7 +568,7 @@ public class DeclParticle {
                 //
                 float angle1, angle2, speed1, speed2;
                 switch (customPathType) {
-                    case PPATH_HELIX: {		// ( sizeX sizeY sizeZ radialSpeed axialSpeed )
+                    case PPATH_HELIX: {        // ( sizeX sizeY sizeZ radialSpeed axialSpeed )
                         speed1 = g.random.CRandomFloat();
                         speed2 = g.random.CRandomFloat();
                         angle1 = g.random.RandomFloat() * idMath.TWO_PI + customPathParms[3] * speed1 * g.age;
@@ -591,7 +582,7 @@ public class DeclParticle {
                         origin.oSet(2, g.random.RandomFloat() * customPathParms[2] + customPathParms[4] * speed2 * g.age);
                         break;
                     }
-                    case PPATH_FLIES: {		// ( radialSpeed axialSpeed size )
+                    case PPATH_FLIES: {        // ( radialSpeed axialSpeed size )
                         speed1 = idMath.ClampFloat(0.4f, 1.0f, g.random.CRandomFloat());
 //				speed2 = idMath.ClampFloat( 0.4f, 1.0f, g.random.CRandomFloat() );
                         angle1 = g.random.RandomFloat() * idMath.PI * 2 + customPathParms[0] * speed1 * g.age;
@@ -608,7 +599,7 @@ public class DeclParticle {
                         origin.oMultiply(customPathParms[2]);
                         break;
                     }
-                    case PPATH_ORBIT: {		// ( radius speed axis )
+                    case PPATH_ORBIT: {        // ( radius speed axis )
                         angle1 = g.random.RandomFloat() * idMath.TWO_PI + customPathParms[1] * g.age;
 
                         float[] s1 = new float[1], c1 = new float[1];
@@ -619,7 +610,7 @@ public class DeclParticle {
                         origin.ProjectSelfOntoSphere(customPathParms[0]);
                         break;
                     }
-                    case PPATH_DRIP: {		// ( speed )
+                    case PPATH_DRIP: {        // ( speed )
                         origin.oSet(0, 0.0f);
                         origin.oSet(1, 0.0f);
                         origin.oSet(2, -(g.age * customPathParms[0]));
@@ -677,13 +668,13 @@ public class DeclParticle {
 
                 for (int i = 0; i <= numTrails; i++) {
                     g.random = new idRandom(g.originalRandom);
-                    g.age = currentAge - (i + 1) * trailTime / (numTrails + 1);	// time to back up
+                    g.age = currentAge - (i + 1) * trailTime / (numTrails + 1);    // time to back up
                     g.frac = g.age / particleLife;
 
                     idVec3 oldOrigin = new idVec3();
                     ParticleOrigin(g, oldOrigin);
 
-                    up = stepOrigin.oMinus(oldOrigin);	// along the direction of travel
+                    up = stepOrigin.oMinus(oldOrigin);    // along the direction of travel
 
                     idVec3 forwardDir = new idVec3();
                     g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(0), forwardDir);
@@ -959,20 +950,20 @@ public class DeclParticle {
             boundsExpansion = src.boundsExpansion;
             bounds = src.bounds;
         }
-    };
+    }
 
     //
     // group of particle stages
     //
     public static class idDeclParticle extends idDecl {
 
+        public idBounds bounds;
+        public float depthHack;
         public idList<idParticleStage> stages;
-        public idBounds                bounds;
-        public float                   depthHack;
         //
         //
-        
-        public idDeclParticle(){
+
+        public idDeclParticle() {
             stages = new idList<>();
             bounds = new idBounds();
         }
@@ -1152,7 +1143,7 @@ public class DeclParticle {
                 }
             }
 
-            maxSize += 8;	// just for good measure
+            maxSize += 8;    // just for good measure
             // users can specify a per-stage bounds expansion to handle odd cases
             stage.bounds.ExpandSelf(maxSize + stage.boundsExpansion);
         }
@@ -1519,5 +1510,6 @@ public class DeclParticle {
         public void oSet(idDeclParticle idDeclParticle) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-    };
+    }
+
 }

@@ -4,8 +4,9 @@ import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Physics.Force.idForce;
 import neo.Game.Physics.Physics.idPhysics;
-import static neo.idlib.math.Vector.getVec3_zero;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.idlib.math.Vector.getVec3_zero;
 
 /**
  *
@@ -24,8 +25,8 @@ public class Force_Constant {
 
         // force properties
         private idVec3 force;
-        private idPhysics physics;
         private int id;
+        private idPhysics physics;
         private idVec3 point;
         //
         //
@@ -89,5 +90,6 @@ public class Force_Constant {
                 physics = null;
             }
         }
-    };
+    }
+
 }

@@ -25,9 +25,9 @@ public class sound {
      ===============================================================================
      */
     // sound channels
-    static final int SCHANNEL_ANY = 0;	// used in queries and commands to effect every channel at once, in
+    static final int SCHANNEL_ANY = 0;    // used in queries and commands to effect every channel at once, in
     // startSound to have it not override any other channel
-    static final int SCHANNEL_ONE = 1;	// any following integer can be used as a channel number
+    static final int SCHANNEL_ONE = 1;    // any following integer can be used as a channel number
     // typedef int s_channelType;	// the game uses its own series of enums, and we don't want to require casts
 
     public static abstract class idSoundEmitter implements SERiAL {
@@ -69,7 +69,7 @@ public class sound {
 
         // for save games.  Index will always be > 0
         public abstract int Index();
-    };
+    }
 
     /*
      ===============================================================================
@@ -157,7 +157,7 @@ public class sound {
         public abstract void SetSlowmoSpeed(float speed);
 
         public abstract void SetEnviroSuit(boolean active);
-    };
+    }
 
     /*
      ===============================================================================
@@ -168,17 +168,17 @@ public class sound {
      */
     public static class soundDecoderInfo_t {
 
-        public idStr name;
+        public int current44kHzTime;
         public idStr format;
-        public int numChannels;
-        public long numSamplesPerSecond;
+        public float lastVolume;
+        public boolean looping;
+        public idStr name;
         public int num44kHzSamples;
         public int numBytes;
-        public boolean looping;
-        public float lastVolume;
+        public int numChannels;
+        public long numSamplesPerSecond;
         public int start44kHzTime;
-        public int current44kHzTime;
-    };
+    }
 
     public static abstract class idSoundSystem {
         // virtual					~idSoundSystem( void ) {}
@@ -243,5 +243,6 @@ public class sound {
 
         // is EAX support present - -1: disabled at compile time, 0: no suitable hardware, 1: ok, 2: failed to load OpenAL DLL
         public abstract int IsEAXAvailable();
-    };
+    }
+
 }

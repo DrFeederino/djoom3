@@ -2,20 +2,20 @@ package neo.Renderer;
 
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.tr_local.drawSurf_s;
-
-import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
-import static neo.Renderer.tr_local.tr;
-import static neo.Renderer.tr_main.myGlMultMatrix;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Plane.idPlane;
-import static neo.idlib.math.Vector.VectorMA;
-import static neo.idlib.math.Vector.VectorSubtract;
 import neo.idlib.math.Vector.idVec3;
 import neo.ui.UserInterface.idUserInterface;
+
+import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_main.myGlMultMatrix;
+import static neo.framework.Common.common;
+import static neo.idlib.math.Vector.VectorMA;
+import static neo.idlib.math.Vector.VectorSubtract;
 import static neo.ui.UserInterface.uiManager;
 
 /**
@@ -86,7 +86,7 @@ public class tr_guisurf {
             axis[0].Zero();
             axis[1].Zero();
             axis[2].Zero();
-            return;	// degenerate
+            return;    // degenerate
         }
         inva = 1.0f / area;
 
@@ -232,5 +232,6 @@ public class tr_guisurf {
         public void run(idCmdArgs args) {
             uiManager.ListGuis();
         }
-    };
+    }
+
 }

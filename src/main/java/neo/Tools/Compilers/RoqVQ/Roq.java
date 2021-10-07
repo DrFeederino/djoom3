@@ -1,32 +1,22 @@
 package neo.Tools.Compilers.RoqVQ;
 
-import java.nio.ByteBuffer;
-import static neo.TempDump.NOT;
 import neo.TempDump.TODO_Exception;
 import neo.Tools.Compilers.RoqVQ.Codec.codec;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.CCC;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.DEAD;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.DEP;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.FCC;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.MINSIZE;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.MOT;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.PAT;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.RoQ_ID;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.RoQ_QUAD_CODEBOOK;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.RoQ_QUAD_HANG;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.RoQ_QUAD_INFO;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.RoQ_QUAD_VQ;
-import static neo.Tools.Compilers.RoqVQ.QuadDefs.SLD;
-import neo.Tools.Compilers.RoqVQ.QuadDefs.quadcel;
+import neo.Tools.Compilers.RoqVQ.QuadDefs.*;
 import neo.Tools.Compilers.RoqVQ.RoqParam.roqParam;
 import neo.framework.CmdSystem.cmdFunction_t;
-import static neo.framework.Common.common;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.File_h.idFile;
-import static neo.framework.Session.session;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
+
+import java.nio.ByteBuffer;
+
+import static neo.TempDump.NOT;
+import static neo.Tools.Compilers.RoqVQ.QuadDefs.*;
+import static neo.framework.Common.common;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Session.session;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -34,24 +24,37 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class Roq {
 
+    public static roq theRoQ;                // current roq
+
     static class roq {
 
-        private codec            encoder;
-        private roqParam         paramFile;
+        /*
+         * Terminate destination --- called by jpeg_finish_compress
+         * after all data has been written.  Usually needs to flush buffer.
+         *
+         * NB: *not* called by jpeg_abort or jpeg_destroy; surrounding
+         * application must deal with any cleanup that should happen even
+         * for error exit.
+         */
+        static int hackSize;
+        private static int finit = 0;
         //
-        private idFile           RoQFile;
-        private NSBitmapImageRep image;
-        private int              numQuadCels;
-        private boolean          quietMode;
-        private boolean          lastFrame;
-        private idStr            roqOutfile;
-        private idStr            currentFile;
-        private int              numberOfFrames;
-        private int              previousSize;
-        private byte[] codes = new byte[4096];
+        private idFile RoQFile;
+        private final byte[] codes = new byte[4096];
+        private idStr currentFile;
         private boolean dataStuff;
+        private codec encoder;
+        private NSBitmapImageRep image;
+        private final boolean lastFrame;
+        private int numQuadCels;
+        private int numberOfFrames;
+        private roqParam paramFile;
+        private int previousSize;
         //
         //
+        private boolean quietMode;
+        // ~roq();
+        private idStr roqOutfile;
 
         public roq() {
             image = null;//0;
@@ -61,7 +64,47 @@ public class Roq {
             lastFrame = false;
             dataStuff = false;
         }
-        // ~roq();
+
+        private static void JPEGInitDestination(j_compress_ptr cinfo) {
+            throw new TODO_Exception();
+//            my_dest_ptr dest = (my_dest_ptr) cinfo.dest;
+//
+//            dest.pub.next_output_byte = dest.outfile;
+//            dest.pub.free_in_buffer = dest.size;
+        }
+
+        /*
+         * Empty the output buffer --- called whenever buffer fills up.
+         *
+         * In typical applications, this should write the entire output buffer
+         * (ignoring the current state of next_output_byte & free_in_buffer),
+         * reset the pointer & count to the start of the buffer, and return true
+         * indicating that the buffer has been dumped.
+         *
+         * In applications that need to be able to suspend compression due to output
+         * overrun, a FALSE return indicates that the buffer cannot be emptied now.
+         * In this situation, the compressor will return to its caller (possibly with
+         * an indication that it has not accepted all the supplied scanlines).  The
+         * application should resume compression after it has made more room in the
+         * output buffer.  Note that there are substantial restrictions on the use of
+         * suspension --- see the documentation.
+         *
+         * When suspending, the compressor will back up to a convenient restart point
+         * (typically the start of the current MCU). next_output_byte & free_in_buffer
+         * indicate where the restart point will be if the current call returns FALSE.
+         * Data beyond this point will be regenerated after resumption, so do not
+         * write it out when emptying the buffer externally.
+         */
+        private static boolean JPEGEmptyOutputBuffer(j_compress_ptr cinfo) {
+            return true;
+        }
+
+        private static void JPEGTermDestination(j_compress_ptr cinfo) {
+            throw new TODO_Exception();
+//            my_dest_ptr dest = (my_dest_ptr) cinfo.dest;
+//            size_t datacount = dest.size - dest.pub.free_in_buffer;
+//            hackSize = datacount;
+        }
 
         public void WriteLossless() {
             throw new TODO_Exception();
@@ -221,7 +264,6 @@ public class Roq {
             common.Printf("closeRoQFile: closing RoQ file\n");
             fileSystem.CloseFile(RoQFile);
         }
-        private static int finit = 0;
 
         public void InitRoQFile(final String RoQFilename) {
             int/*word*/ i;
@@ -246,7 +288,7 @@ public class Roq {
                 // on loading this will be noted and converted to 1000 / 30
                 // as with any new sound dump avi demos we need to playback
                 // at the speed the sound engine dumps the audio
-                i = 30;						// framerate
+                i = 30;                        // framerate
                 Write16Word(i, RoQFile);
             }
             roqOutfile.oSet(RoQFilename);
@@ -350,6 +392,9 @@ public class Roq {
         public void EncodeQuietly(boolean which) {
             quietMode = which;
         }
+//
+//        public void WritePuzzleFrame(quadcel pquad);
+//
 
         public boolean IsQuiet() {
             return quietMode;
@@ -365,9 +410,6 @@ public class Roq {
 
         public void MarkQuadx(int xat, int yat, int size, float cerror, int choice) {
         }
-//
-//        public void WritePuzzleFrame(quadcel pquad);
-//
 
         public void WriteFrame(quadcel[] pquad) {
             int/*word*/ action, direct;
@@ -378,7 +420,7 @@ public class Roq {
             int dx, dy, dxMean, dyMean, dimension;
             int[] index2 = new int[256], index4 = new int[256];
 
-            cccList = new byte[numQuadCels * 8];// Mem_Alloc(numQuadCels * 8);					// maximum length 
+            cccList = new byte[numQuadCels * 8];// Mem_Alloc(numQuadCels * 8);					// maximum length
             use2 = new boolean[256];// Mem_Alloc(256);
             use4 = new boolean[256];// Mem_Alloc(256);
 
@@ -389,7 +431,7 @@ public class Roq {
 
             action = 0;
             j = onAction = 0;
-            onCCC = 2;											// onAction going to go at zero
+            onCCC = 2;                                            // onAction going to go at zero
 
             dxMean = encoder.MotMeanX();
             dyMean = encoder.MotMeanY();
@@ -550,7 +592,7 @@ public class Roq {
 
             direct = dyMean;
             direct &= 0xff;
-            direct += (dxMean << 8);		// flags
+            direct += (dxMean << 8);        // flags
 
             Write16Word(direct, RoQFile);
 
@@ -599,7 +641,7 @@ public class Roq {
         }
 
         public boolean MakingVideo() {
-            return true;	//paramFile->timecode];
+            return true;    //paramFile->timecode];
         }
 
         public boolean ParamNoAlpha() {
@@ -645,6 +687,10 @@ public class Roq {
         public int NumberOfFrames() {
             return numberOfFrames;
         }
+        /*
+         * Initialize destination --- called by jpeg_start_compress
+         * before any data is actually written.
+         */
 
         private void Write16Word(int/*word*/ aWord, idFile stream) {
 //            byte a, b;
@@ -670,7 +716,7 @@ public class Roq {
 //            stream.Write(b, 1);
 //            stream.Write(c, 1);
 //            stream.Write(d, 1);
-//            
+//
             ByteBuffer buffer = ByteBuffer.allocate(8);
             buffer.putInt(aWord);
 
@@ -684,61 +730,6 @@ public class Roq {
         private void CloseRoQFile() {
             common.Printf("closeRoQFile: closing RoQ file\n");
             fileSystem.CloseFile(RoQFile);
-        }
-        /*
-         * Initialize destination --- called by jpeg_start_compress
-         * before any data is actually written.
-         */
-
-        private static void JPEGInitDestination(j_compress_ptr cinfo) {
-            throw new TODO_Exception();
-//            my_dest_ptr dest = (my_dest_ptr) cinfo.dest;
-//
-//            dest.pub.next_output_byte = dest.outfile;
-//            dest.pub.free_in_buffer = dest.size;
-        }
-
-        /*
-         * Empty the output buffer --- called whenever buffer fills up.
-         *
-         * In typical applications, this should write the entire output buffer
-         * (ignoring the current state of next_output_byte & free_in_buffer),
-         * reset the pointer & count to the start of the buffer, and return true
-         * indicating that the buffer has been dumped.
-         *
-         * In applications that need to be able to suspend compression due to output
-         * overrun, a FALSE return indicates that the buffer cannot be emptied now.
-         * In this situation, the compressor will return to its caller (possibly with
-         * an indication that it has not accepted all the supplied scanlines).  The
-         * application should resume compression after it has made more room in the
-         * output buffer.  Note that there are substantial restrictions on the use of
-         * suspension --- see the documentation.
-         *
-         * When suspending, the compressor will back up to a convenient restart point
-         * (typically the start of the current MCU). next_output_byte & free_in_buffer
-         * indicate where the restart point will be if the current call returns FALSE.
-         * Data beyond this point will be regenerated after resumption, so do not
-         * write it out when emptying the buffer externally.
-         */
-        private static boolean JPEGEmptyOutputBuffer(j_compress_ptr cinfo) {
-            return true;
-        }
-
-        /*
-         * Terminate destination --- called by jpeg_finish_compress
-         * after all data has been written.  Usually needs to flush buffer.
-         *
-         * NB: *not* called by jpeg_abort or jpeg_destroy; surrounding
-         * application must deal with any cleanup that should happen even
-         * for error exit.
-         */
-        static int hackSize;
-
-        private static void JPEGTermDestination(j_compress_ptr cinfo) {
-            throw new TODO_Exception();
-//            my_dest_ptr dest = (my_dest_ptr) cinfo.dest;
-//            size_t datacount = dest.size - dest.pub.free_in_buffer;
-//            hackSize = datacount;
         }
 
         /*
@@ -861,8 +852,7 @@ public class Roq {
         }
 
 //        private void JPEGSave(String[] filename, int quality, int image_width, int image_height, /*unsigned*/ char[] image_buffer);
-    };
-    public static roq theRoQ;				// current roq 
+    }
 
     public static class RoQFileEncode_f extends cmdFunction_t {
 

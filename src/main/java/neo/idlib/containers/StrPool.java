@@ -20,8 +20,8 @@ public class StrPool {
 //	friend class idStrPool;
 //
 
-        private idStrPool pool;
         private int numUsers;
+        private idStrPool pool;
         //
         //
 
@@ -47,13 +47,13 @@ public class StrPool {
             return pool;
         }
 
-    };
+    }
 
     public static class idStrPool {
 
         private boolean caseSensitive;
-        private idList<idPoolStr> pool;
-        private idHashIndex poolHash;
+        private final idList<idPoolStr> pool;
+        private final idHashIndex poolHash;
 
         public idStrPool() {
             caseSensitive = true;
@@ -178,5 +178,6 @@ public class StrPool {
             pool.DeleteContents(true);
             poolHash.Free();
         }
-    };
+    }
+
 }

@@ -1,47 +1,14 @@
 package neo.Renderer;
 
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.Renderer.Model.MD5_VERSION;
-import static neo.Renderer.Model.MD5_VERSION_STRING;
-import neo.Renderer.Model.dynamicModel_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
-import neo.Renderer.Model.idMD5Joint;
-import neo.Renderer.Model.idRenderModel;
-import neo.Renderer.Model.modelSurface_s;
-import neo.Renderer.Model.srfTriangles_s;
+import neo.Renderer.Model.*;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import static neo.Renderer.RenderSystem_init.r_showSkel;
-import static neo.Renderer.RenderSystem_init.r_skipSuppress;
-import static neo.Renderer.RenderSystem_init.r_useCachedDynamicModels;
-import static neo.Renderer.RenderWorld.R_RemapShaderBySkin;
-import static neo.Renderer.RenderWorld.SHADERPARM_MD5_SKINSCALE;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.tr_local.deformInfo_s;
-import static neo.Renderer.tr_local.tr;
 import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_BoundTriSurf;
-import static neo.Renderer.tr_trisurf.R_BuildDeformInfo;
-import static neo.Renderer.tr_trisurf.R_DeformInfoMemoryUsed;
-import static neo.Renderer.tr_trisurf.R_DeriveTangents;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurfVertexCaches;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.Session.session;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib;
-import static neo.idlib.Lib.colorBlue;
-import static neo.idlib.Lib.colorGreen;
-import static neo.idlib.Lib.colorMagenta;
-import static neo.idlib.Lib.colorRed;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.idLib.fileSystem;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
@@ -49,11 +16,26 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
-import static neo.idlib.math.Simd.SIMDProcessor;
-import static neo.idlib.math.Vector.getVec3_zero;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
+
+import static neo.Renderer.Model.*;
+import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
+import static neo.Renderer.RenderSystem_init.*;
+import static neo.Renderer.RenderWorld.R_RemapShaderBySkin;
+import static neo.Renderer.RenderWorld.SHADERPARM_MD5_SKINSCALE;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.*;
+import static neo.idlib.Lib.idLib.fileSystem;
+import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
+import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
+import static neo.idlib.math.Simd.SIMDProcessor;
+import static neo.idlib.math.Vector.getVec3_zero;
 
 /**
  *
@@ -63,26 +45,26 @@ public class Model_md5 {
     public static final String MD5_SnapshotName = "_MD5_Snapshot_";
     /**
      * *********************************************************************
-     *
+     * <p>
      * idMD5Mesh
-     *
-     **********************************************************************
+     * <p>
+     * *********************************************************************
      */
     static int c_numVerts = 0;
-    static int c_numWeights = 0;
     static int c_numWeightJoints = 0;
+    static int c_numWeights = 0;
 
     static class vertexWeight_s {
 
-        int vert;
         int joint;
-        idVec3 offset;
         float jointWeight;
+        idVec3 offset;
+        int vert;
 
         public vertexWeight_s() {
             offset = new idVec3();
         }
-    };
+    }
 
     /*
      ===============================================================================
@@ -94,14 +76,14 @@ public class Model_md5 {
     public static class idMD5Mesh {
         // friend class				idRenderModelMD5;
 
-        private idList<idVec2> texCoords;    // texture coordinates
-        private int            numWeights;   // number of weights
-        private idVec4[]       scaledWeights;// joint weights
-        private int[]          weightIndex;  // pairs of: joint offset + bool true if next weight is for next vertex
-        private idMaterial     shader;       // material applied to mesh
-        private int            numTris;      // number of triangles
-        private deformInfo_s   deformInfo;   // used to create srfTriangles_t from base frames and new vertexes
-        private int            surfaceNum;   // number of the static surface created for this mesh
+        private deformInfo_s deformInfo;   // used to create srfTriangles_t from base frames and new vertexes
+        private int numTris;      // number of triangles
+        private int numWeights;   // number of weights
+        private idVec4[] scaledWeights;// joint weights
+        private idMaterial shader;       // material applied to mesh
+        private int surfaceNum;   // number of the static surface created for this mesh
+        private final idList<idVec2> texCoords;    // texture coordinates
+        private int[] weightIndex;  // pairs of: joint offset + bool true if next weight is for next vertex
         //
         //
 
@@ -328,8 +310,8 @@ public class Model_md5 {
                 }
             }
 
-            if (ent.shaderParms[ SHADERPARM_MD5_SKINSCALE] != 0.0f) {
-                TransformScaledVerts(tri.verts, entJoints, ent.shaderParms[ SHADERPARM_MD5_SKINSCALE]);
+            if (ent.shaderParms[SHADERPARM_MD5_SKINSCALE] != 0.0f) {
+                TransformScaledVerts(tri.verts, entJoints, ent.shaderParms[SHADERPARM_MD5_SKINSCALE]);
             } else {
                 TransformVerts(tri.verts, entJoints);
             }
@@ -425,14 +407,13 @@ public class Model_md5 {
             SIMDProcessor.Mul(scaledWeights[0].ToFloatPtr(), scale, scaledWeights[0].ToFloatPtr(), numWeights * 4);
             SIMDProcessor.TransformVerts(verts, texCoords.Num(), entJoints, scaledWeights, weightIndex, numWeights);
         }
-    };
+    }
 
     public static class idRenderModelMD5 extends idRenderModelStatic {
         public static final int BYTES = Integer.BYTES * 3;
-
-        private idList<idMD5Joint> joints;
-        private idList<idJointQuat> defaultPose;
-        private idList<idMD5Mesh> meshes;
+        private final idList<idJointQuat> defaultPose;
+        private final idList<idMD5Joint> joints;
+        private final idList<idMD5Mesh> meshes;
         //
         //
 
@@ -491,7 +472,7 @@ public class Model_md5 {
             int totalVerts = 0;
             int totalTris = 0;
             int totalWeights = 0;
-            for (final idMD5Mesh mesh : meshes.Ptr()) {
+            for (final idMD5Mesh mesh : meshes.getList()) {
                 totalVerts += mesh.NumVerts();
                 totalTris += mesh.NumTris();
                 totalWeights += mesh.NumWeights();
@@ -509,7 +490,7 @@ public class Model_md5 {
             int totalTris = 0;
             int totalVerts = 0;
 
-            for (final idMD5Mesh mesh : meshes.Ptr()) {
+            for (final idMD5Mesh mesh : meshes.getList()) {
                 totalTris += mesh.numTris;
                 totalVerts += mesh.NumVerts();
             }
@@ -533,7 +514,7 @@ public class Model_md5 {
          */
         @Override
         public void TouchData() {
-            for (final idMD5Mesh mesh : meshes.Ptr(idMD5Mesh[].class)) {
+            for (final idMD5Mesh mesh : meshes.getList(idMD5Mesh[].class)) {
                 declManager.FindMaterial(mesh.shader.GetName());
             }
         }
@@ -633,7 +614,7 @@ public class Model_md5 {
             }
             parser.ExpectTokenString("}");
 
-            for( i = 0; i < meshes.Num(); i++ ) {
+            for (i = 0; i < meshes.Num(); i++) {
                 idMD5Mesh mesh = meshes.oSet(i, new idMD5Mesh());
                 parser.ExpectTokenString("mesh");
                 mesh.ParseMesh(parser, defaultPose.Num(), poseMat3);
@@ -653,21 +634,21 @@ public class Model_md5 {
         public int Memory() {
             int total;
 
-            total = this.BYTES;
+            total = BYTES;
             total += joints.MemoryUsed() + defaultPose.MemoryUsed() + meshes.MemoryUsed();
 
             // count up strings
-            for (idMD5Joint joint : joints.Ptr()) {
+            for (idMD5Joint joint : joints.getList()) {
                 total += joint.name.DynamicMemoryUsed();
             }
 
             // count up meshes
-            for (final idMD5Mesh mesh : meshes.Ptr()) {
+            for (final idMD5Mesh mesh : meshes.getList()) {
 
                 total += mesh.texCoords.MemoryUsed() + mesh.numWeights * idVec4.BYTES + Integer.BYTES * 2;
 
                 // sum up deform info
-                total += mesh.deformInfo.BYTES;
+                total += deformInfo_s.BYTES;
                 total += R_DeformInfoMemoryUsed(mesh.deformInfo);
             }
             return total;
@@ -723,9 +704,9 @@ public class Model_md5 {
 
             // create all the surfaces
             for (int i = 0; i < meshes.Num(); i++) {
-                idMD5Mesh mesh = meshes.Ptr(idMD5Mesh[].class)[i];
-                        
-		// avoid deforming the surface if it will be a nodraw due to a skin remapping
+                idMD5Mesh mesh = meshes.getList(idMD5Mesh[].class)[i];
+
+                // avoid deforming the surface if it will be a nodraw due to a skin remapping
                 // FIXME: may have to still deform clipping hulls
                 idMaterial shader = mesh.shader;
 
@@ -771,14 +752,14 @@ public class Model_md5 {
 
         @Override
         public idMD5Joint[] GetJoints() {
-            return joints.Ptr(idMD5Joint[].class);
+            return joints.getList(idMD5Joint[].class);
         }
 
         @Override
         public int GetJointHandle(final String name) {
             int i = 0;
 
-            for (final idMD5Joint joint : joints.Ptr(idMD5Joint[].class)) {
+            for (final idMD5Joint joint : joints.getList(idMD5Joint[].class)) {
                 if (idStr.Icmp(joint.name, name) == 0) {
                     return i;
                 }
@@ -799,7 +780,7 @@ public class Model_md5 {
 
         @Override
         public idJointQuat[] GetDefaultPose() {
-            return defaultPose.Ptr(idJointQuat[].class);
+            return defaultPose.getList(idJointQuat[].class);
         }
 
         @Override
@@ -808,7 +789,7 @@ public class Model_md5 {
                 common.Error("idRenderModelMD5::NearestJoint: surfaceNum > meshes.Num()");
             }
 
-            for (final idMD5Mesh mesh : meshes.Ptr(idMD5Mesh[].class)) {
+            for (final idMD5Mesh mesh : meshes.getList(idMD5Mesh[].class)) {
                 if (mesh.surfaceNum == surfaceNum) {
                     return mesh.NearestJoint(a, b, c);
                 }
@@ -818,7 +799,7 @@ public class Model_md5 {
 
         private void CalculateBounds(final idJointMat[] entJoints) {
             int i;
-            
+
             bounds.Clear();
             for (i = 0; i < meshes.Num(); ++i) {
                 bounds.AddBounds(meshes.oGet(i).CalcBounds(entJoints));
@@ -826,7 +807,7 @@ public class Model_md5 {
             }
         }
 
-//        private void GetFrameBounds(final renderEntity_t ent, idBounds bounds);
+        //        private void GetFrameBounds(final renderEntity_t ent, idBounds bounds);
         private void DrawJoints(final renderEntity_s ent, final viewDef_s view) {
             int i;
             int num;
@@ -900,5 +881,6 @@ public class Model_md5 {
             parser.Parse1DMatrix(3, defaultPose.q);
             defaultPose.q.w = defaultPose.q.CalcW();
         }
-    };
+    }
+
 }

@@ -3,21 +3,20 @@ package neo.Game;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
-
-import static neo.Game.GameSys.Class.*;
-import static neo.Game.GameSys.SysCvar.g_gravity;
-import static neo.Game.GameSys.SysCvar.pm_stamina;
-import static neo.Game.Game_local.DEFAULT_GRAVITY;
-import static neo.Game.Game_local.gameLocal;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static neo.Game.GameSys.Class.*;
+import static neo.Game.GameSys.SysCvar.g_gravity;
+import static neo.Game.GameSys.SysCvar.pm_stamina;
+import static neo.Game.Game_local.DEFAULT_GRAVITY;
+import static neo.Game.Game_local.gameLocal;
+import static neo.framework.FileSystem_h.fileSystem;
 import static neo.idlib.Text.Str.va;
 
 /*
@@ -39,14 +38,17 @@ public class WorldSpawn {
      */
     public static class idWorldspawn extends idEntity {
         //	CLASS_PROTOTYPE( idWorldspawn );
-        private static Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
+
         static {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Remove, (eventCallback_t0<idWorldspawn>) idWorldspawn::Event_Remove);
             eventCallbacks.put(EV_SafeRemove, (eventCallback_t0<idWorldspawn>) idWorldspawn::Event_Remove);
         }
 
-
+        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
+            return eventCallbacks;
+        }
 
         //					~idWorldspawn();
         @Override
@@ -87,7 +89,7 @@ public class WorldSpawn {
             while (kv != null) {
                 func = gameLocal.program.FindFunction(kv.GetValue().toString());
                 if (func == null) {
-                    gameLocal.Error("Function '%s' not found in script for '%s' key on worldspawn", kv.GetValue(), kv.GetKey());
+                    Game_local.idGameLocal.Error("Function '%s' not found in script for '%s' key on worldspawn", kv.GetValue(), kv.GetKey());
                 }
 
                 thread = new idThread(func);
@@ -113,7 +115,7 @@ public class WorldSpawn {
 
         @Override
         public void Event_Remove() {
-            gameLocal.Error("Tried to remove world");
+            Game_local.idGameLocal.Error("Tried to remove world");
         }
 
         @Override
@@ -136,9 +138,6 @@ public class WorldSpawn {
             return eventCallbacks.get(event);
         }
 
-        public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
-            return eventCallbacks;
-        }
+    }
 
-    };
 }

@@ -1,28 +1,26 @@
 package neo.framework;
 
-import java.nio.ByteBuffer;
-
 import neo.TempDump.void_callback;
-import static neo.framework.CVarSystem.cvarSystem;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_INSERT;
-import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
-import neo.framework.CmdSystem.commandDef_s;
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_ConfigName;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.DeclManager.declType_t;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.framework.FileSystem_h.idFileList;
-import static neo.framework.Session.session;
 import neo.idlib.CmdArgs.idCmdArgs;
-import static neo.idlib.Lib.BIT;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrList.idStrList;
+
+import java.nio.ByteBuffer;
+
+import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
+import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_INSERT;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.framework.Session.session;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.Text.Str.va;
 
 /**
  *
@@ -43,27 +41,30 @@ public class CmdSystem {
      ===============================================================================
      */
 
-    private static idCmdSystemLocal cmdSystemLocal = new idCmdSystemLocal();
-    public static idCmdSystem cmdSystem = cmdSystemLocal;
-
-// command flags
+    // command flags
 //typedef enum {
     public static final long CMD_FL_ALL = -1;
-    public static final long CMD_FL_CHEAT = BIT(0);	// command is considered a cheat
-    public static final long CMD_FL_SYSTEM = BIT(1);	// system command
-    public static final long CMD_FL_RENDERER = BIT(2);	// renderer command
-    public static final long CMD_FL_SOUND = BIT(3);	// sound command
-    public static final long CMD_FL_GAME = BIT(4);	// game command
-    public static final long CMD_FL_TOOL = BIT(5);	// tool command
+    public static final long CMD_FL_CHEAT = BIT(0);    // command is considered a cheat
+    public static final long CMD_FL_GAME = BIT(4);    // game command
+    public static final long CMD_FL_RENDERER = BIT(2);    // renderer command
+    public static final long CMD_FL_SOUND = BIT(3);    // sound command
+    public static final long CMD_FL_SYSTEM = BIT(1);    // system command
+    public static final long CMD_FL_TOOL = BIT(5);    // tool command
+    private static idCmdSystemLocal cmdSystemLocal = new idCmdSystemLocal();
+    public static idCmdSystem cmdSystem = cmdSystemLocal;
 //} cmdFlags_t;
 
-// parameters for command buffer stuffing
+    public static void setCmdSystem(idCmdSystem cmdSystem) {
+        CmdSystem.cmdSystem = CmdSystem.cmdSystemLocal = (idCmdSystemLocal) cmdSystem;
+    }
+
+    // parameters for command buffer stuffing
     public enum cmdExecution_t {
 
         CMD_EXEC_NOW, // don't return until completed
         CMD_EXEC_INSERT, // insert at current position, but don't run yet
-        CMD_EXEC_APPEND						// add to end of the command buffer (normal case)
-    };
+        CMD_EXEC_APPEND                        // add to end of the command buffer (normal case)
+    }
 
     // command function
     public static abstract class cmdFunction_t {
@@ -144,7 +145,7 @@ public class CmdSystem {
                 callback.run(va("%s 0", args.Argv(0)));
                 callback.run(va("%s 1", args.Argv(0)));
             }
-        };
+        }
 
         public static class ArgCompletion_Integer extends argCompletion_t {
 
@@ -161,9 +162,9 @@ public class CmdSystem {
                     callback.run(va("%s %d", args.Argv(0), i));
                 }
             }
-        };
+        }
 
-//	template<final String *strings>
+        //	template<final String *strings>
         public static class ArgCompletion_String extends argCompletion_t {
 
             private final String[] listDeclStrings;
@@ -193,7 +194,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_DeclName(args, callback, type.ordinal());
             }
-        };
+        }
 
         public static class ArgCompletion_FileName extends argCompletion_t {
 
@@ -207,7 +208,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", true, "", null);
             }
-        };
+        }
 
         public static class ArgCompletion_MapName extends argCompletion_t {
 
@@ -221,7 +222,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "maps/", true, ".map", null);
             }
-        };
+        }
 
         public static class ArgCompletion_ModelName extends argCompletion_t {
 
@@ -235,7 +236,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "models/", false, ".lwo", ".ase", ".md5mesh", ".ma", null);
             }
-        };
+        }
 
         public static class ArgCompletion_SoundName extends argCompletion_t {
 
@@ -249,7 +250,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "sound/", false, ".wav", ".ogg", null);
             }
-        };
+        }
 
         public static class ArgCompletion_ImageName extends argCompletion_t {
 
@@ -263,7 +264,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", false, ".tga", ".dds", ".jpg", ".pcx", null);
             }
-        };
+        }
 
         public static class ArgCompletion_VideoName extends argCompletion_t {
 
@@ -277,7 +278,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "video/", false, ".roq", null);
             }
-        };
+        }
 
         public static class ArgCompletion_ConfigName extends argCompletion_t {
 
@@ -291,7 +292,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", true, ".cfg", null);
             }
-        };
+        }
 
         public static class ArgCompletion_SaveGame extends argCompletion_t {
 
@@ -305,7 +306,7 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "SaveGames/", true, ".save", null);
             }
-        };
+        }
 
         public static class ArgCompletion_DemoName extends argCompletion_t {
 
@@ -319,8 +320,9 @@ public class CmdSystem {
             public void run(idCmdArgs args, void_callback<String> callback) throws idException {
                 cmdSystem.ArgCompletion_FolderExtension(args, callback, "demos/", true, ".demo", null);
             }
-        };
-    };
+        }
+
+    }
 
     /*
      ===============================================================================
@@ -331,41 +333,77 @@ public class CmdSystem {
      */
     public static class commandDef_s {
 
-        commandDef_s next;
-        String name;
-        cmdFunction_t function;
         argCompletion_t argCompletion;
-        long flags;
         String description;
+        long flags;
+        cmdFunction_t function;
+        String name;
+        commandDef_s next;
 
         private void oSet(commandDef_s last) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
+    }
 
     static class idCmdSystemLocal extends idCmdSystem {
 
         private static final int MAX_CMD_BUFFER = 0x10000;
+        private static int DBG_ExecuteCommandBuffer = 0;
         //
         private commandDef_s commands;
-        //
-        private int wait;
-        private int textLength;
-        private byte[] textBuf = new byte[MAX_CMD_BUFFER];
+        private final idStrList completionParms;
         private idStr completionString;
-        private idStrList completionParms;
-        // piggybacks on the text buffer, avoids tokenize again and screwing it up
-        private idList<idCmdArgs> tokenizedCmds;
         // a command stored to be executed after a reloadEngine and all associated commands have been processed
         private idCmdArgs postReload;
+        private byte[] textBuf = new byte[MAX_CMD_BUFFER];
+        private int textLength;
+        // piggybacks on the text buffer, avoids tokenize again and screwing it up
+        private final idList<idCmdArgs> tokenizedCmds;
         //
         //
+        //
+        private int wait;
 
         idCmdSystemLocal() {
             this.completionString = new idStr();
             this.completionParms = new idStrList();
             this.tokenizedCmds = new idList<>();
             this.postReload = new idCmdArgs();
+        }
+
+        private static void ListByFlags(final idCmdArgs args, long cmdFlags_t) throws idException {
+            int i;
+            String match;
+            commandDef_s cmd;
+            idList<commandDef_s> cmdList = new idList<>();
+
+            if (args.Argc() > 1) {
+                match = args.Args(1, -1);
+                match = match.replaceAll(" ", "");
+            } else {
+                match = "";
+            }
+
+            for (cmd = cmdSystemLocal.GetCommands(); cmd != null; cmd = cmd.next) {
+                if (0 == (cmd.flags & cmdFlags_t)) {
+                    continue;
+                }
+                if (!match.isEmpty() && new idStr(cmd.name).Filter(match, false)) {
+                    continue;
+                }
+
+                cmdList.Append(cmd);
+            }
+
+            cmdList.Sort();
+
+            for (i = 0; i < cmdList.Num(); i++) {
+                cmd = cmdList.oGet(i);
+
+                common.Printf("  %-21s %s\n", cmd.name, cmd.description);
+            }
+
+            common.Printf("%d commands\n", cmdList.Num());
         }
 
         @Override
@@ -518,7 +556,6 @@ public class CmdSystem {
             }
         }
 
-        private static int DBG_ExecuteCommandBuffer = 0;
         @Override
         public void ExecuteCommandBuffer() throws idException {
             int i;
@@ -526,7 +563,7 @@ public class CmdSystem {
             String txt;
             int quotes;
             idCmdArgs args = new idCmdArgs();
-            
+
 
             while (textLength != 0) {
                 DBG_ExecuteCommandBuffer++;
@@ -539,14 +576,14 @@ public class CmdSystem {
 
                 // find a \n or ; line break
                 text = new String(textBuf).toCharArray();//TODO:??
-                    
+
                 quotes = 0;
                 for (i = 0; i < textLength; i++) {
                     if (text[i] == '"') {
                         quotes++;
                     }
                     if (0 == (quotes & 1) && text[i] == ';') {
-                        break;	// don't break if inside a quoted string
+                        break;    // don't break if inside a quoted string
                     }
                     if (text[i] == '\n' || text[i] == '\r') {
                         break;
@@ -680,6 +717,9 @@ public class CmdSystem {
             BufferCommandText(CMD_EXEC_APPEND, "reloadEngine\n");
             postReload = args;
         }
+//
+//
+//
 
         @Override
         public boolean PostReloadEngine() throws idException {
@@ -690,9 +730,6 @@ public class CmdSystem {
             postReload.Clear();
             return true;
         }
-//        
-//        
-//        
 
         public void SetWait(int numFrames) {
             wait = numFrames;
@@ -707,14 +744,14 @@ public class CmdSystem {
 
             // execute the command line
             if (0 == args.Argc()) {
-                return;		// no tokens
+                return;        // no tokens
             }
 
             if (args.Argv(0).equals("bla1")) {
                 args.oSet("map game/alphalabs1");//HACKME::11
             }
 
-            // check registered command functions	
+            // check registered command functions
             for (prev = cmd = commands; cmd != null; cmd = cmd.next) {
 //                cmd = prev;
                 if (idStr.Icmp(args.Argv(0), cmd.name) == 0) {
@@ -815,41 +852,6 @@ public class CmdSystem {
             textLength += l;
         }
 
-        private static void ListByFlags(final idCmdArgs args, long cmdFlags_t) throws idException {
-            int i;
-            String match;
-            commandDef_s cmd;
-            idList<commandDef_s> cmdList = new idList<>();
-
-            if (args.Argc() > 1) {
-                match = args.Args(1, -1);
-                match = match.replaceAll(" ", "");
-            } else {
-                match = "";
-            }
-
-            for (cmd = cmdSystemLocal.GetCommands(); cmd != null; cmd = cmd.next) {
-                if (0 == (cmd.flags & cmdFlags_t)) {
-                    continue;
-                }
-                if (!match.isEmpty() && new idStr(cmd.name).Filter(match, false)) {
-                    continue;
-                }
-
-                cmdList.Append(cmd);
-            }
-
-            cmdList.Sort();
-
-            for (i = 0; i < cmdList.Num(); i++) {
-                cmd = cmdList.oGet(i);
-
-                common.Printf("  %-21s %s\n", cmd.name, cmd.description);
-            }
-
-            common.Printf("%d commands\n", cmdList.Num());
-        }
-
         private static class List_f extends cmdFunction_t {
 
             private static final cmdFunction_t instance = new List_f();
@@ -865,7 +867,7 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_ALL);
             }
-        };
+        }
 
         private static class SystemList_f extends cmdFunction_t {
 
@@ -882,7 +884,7 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_SYSTEM);
             }
-        };
+        }
 
         private static class RendererList_f extends cmdFunction_t {
 
@@ -899,7 +901,7 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_RENDERER);
             }
-        };
+        }
 
         private static class SoundList_f extends cmdFunction_t {
 
@@ -916,7 +918,7 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_SOUND);
             }
-        };
+        }
 
         private static class GameList_f extends cmdFunction_t {
 
@@ -933,7 +935,7 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_GAME);
             }
-        };
+        }
 
         private static class ToolList_f extends cmdFunction_t {
 
@@ -950,8 +952,9 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_TOOL);
             }
-        };
-//private	static void				Exec_f( const idCmdArgs &args );
+        }
+
+        //private	static void				Exec_f( const idCmdArgs &args );
 
         private static class Exec_f extends cmdFunction_t {
 
@@ -988,7 +991,7 @@ public class CmdSystem {
 
                 fileSystem.FreeFile(f);
             }
-        };
+        }
 
         /*
          ===============
@@ -1021,7 +1024,7 @@ public class CmdSystem {
 
                 cmdSystemLocal.BufferCommandText(CMD_EXEC_APPEND, va("%s\n", v));
             }
-        };
+        }
 
         /*
          ===============
@@ -1050,7 +1053,7 @@ public class CmdSystem {
                 }
                 common.Printf("\n");
             }
-        };
+        }
 
         /*
          ============
@@ -1078,7 +1081,7 @@ public class CmdSystem {
                     common.Printf("%d: %s\n", i, args.Argv(i));
                 }
             }
-        };
+        }
 
         /*
          ============
@@ -1106,8 +1109,9 @@ public class CmdSystem {
                     cmdSystemLocal.SetWait(1);
                 }
             }
-        };
-//private	static void				PrintMemInfo_f( const idCmdArgs &args );
+        }
+
+        //private	static void				PrintMemInfo_f( const idCmdArgs &args );
 
         private static class PrintMemInfo_f extends cmdFunction_t {
 
@@ -1124,8 +1128,9 @@ public class CmdSystem {
             public void run(idCmdArgs args) throws idException {
                 idCmdSystemLocal.ListByFlags(args, CMD_FL_SYSTEM);
             }
-        };
-    };
+        }
+
+    }
 
     /*
      ============
@@ -1139,9 +1144,5 @@ public class CmdSystem {
         public int compare(final commandDef_s a, final commandDef_s b) {
             return idStr.Icmp(a.name, b.name);
         }
-    }
-
-    public static void setCmdSystem(idCmdSystem cmdSystem) {
-        CmdSystem.cmdSystem = CmdSystem.cmdSystemLocal = (idCmdSystemLocal) cmdSystem;
     }
 }

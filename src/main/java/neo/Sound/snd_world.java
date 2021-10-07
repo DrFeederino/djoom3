@@ -1,151 +1,68 @@
 package neo.Sound;
 
-import static java.lang.Math.atan;
+import neo.Renderer.Cinematic.idSndWindow;
+import neo.Renderer.Material.idMaterial;
+import neo.Renderer.Material.shaderStage_t;
+import neo.Renderer.RenderWorld.exitPortal_t;
+import neo.Renderer.RenderWorld.idRenderWorld;
+import neo.Sound.snd_cache.idSoundSample;
+import neo.Sound.snd_emitter.idSlowChannel;
+import neo.Sound.snd_emitter.idSoundChannel;
+import neo.Sound.snd_emitter.idSoundEmitterLocal;
+import neo.Sound.snd_emitter.idSoundFade;
+import neo.Sound.snd_local.*;
+import neo.Sound.snd_shader.*;
+import neo.Sound.snd_system.idSoundSystemLocal;
+import neo.Sound.sound.idSoundEmitter;
+import neo.Sound.sound.idSoundWorld;
+import neo.TempDump.*;
+import neo.framework.DemoFile.idDemoFile;
+import neo.framework.File_h.idFile;
+import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.List.idList;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Matrix.idMat3;
+import neo.idlib.math.Plane.idPlane;
+import neo.idlib.math.Random.idRandom;
+import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.idVec4;
+import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
-import neo.Renderer.Cinematic.idSndWindow;
-import neo.Renderer.Material.idMaterial;
-import neo.Renderer.Material.shaderStage_t;
-import neo.Renderer.RenderWorld.exitPortal_t;
-import neo.Renderer.RenderWorld.idRenderWorld;
-
+import static java.lang.Math.atan;
 import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_AIR;
 import static neo.Renderer.RenderWorld.portalConnection_t.PS_BLOCK_VIEW;
-
-import neo.Sound.snd_cache.idSoundSample;
-
 import static neo.Sound.snd_emitter.REMOVE_STATUS_ALIVE;
 import static neo.Sound.snd_emitter.REMOVE_STATUS_SAMPLEFINISHED;
-
-import neo.Sound.snd_emitter.idSlowChannel;
-import neo.Sound.snd_emitter.idSoundChannel;
-import neo.Sound.snd_emitter.idSoundEmitterLocal;
-import neo.Sound.snd_emitter.idSoundFade;
-
-import static neo.Sound.snd_local.SND_EPSILON;
-import static neo.Sound.snd_local.SOUND_MAX_CHANNELS;
-import static neo.Sound.snd_local.WAVE_FORMAT_TAG_PCM;
-
-import neo.Sound.snd_local.idSampleDecoder;
-import neo.Sound.snd_local.mminfo_s;
-import neo.Sound.snd_local.pcmwaveformat_s;
-import neo.Sound.snd_local.soundDemoCommand_t;
-
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_ALLOC_EMITTER;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_FADE;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_FREE;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_MODIFY;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_PLACE_LISTENER;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_START;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_STATE;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_STOP;
-import static neo.Sound.snd_local.soundDemoCommand_t.SCMD_UPDATE;
-import static neo.Sound.snd_shader.DOOM_TO_METERS;
-import static neo.Sound.snd_shader.SOUND_MAX_CLASSES;
-import static neo.Sound.snd_shader.SSF_ANTI_PRIVATE_SOUND;
-import static neo.Sound.snd_shader.SSF_GLOBAL;
-import static neo.Sound.snd_shader.SSF_LOOPING;
-import static neo.Sound.snd_shader.SSF_NO_FLICKER;
-import static neo.Sound.snd_shader.SSF_NO_OCCLUSION;
-import static neo.Sound.snd_shader.SSF_OMNIDIRECTIONAL;
-import static neo.Sound.snd_shader.SSF_PRIVATE_SOUND;
-import static neo.Sound.snd_shader.SSF_UNCLAMPED;
-
-import neo.Sound.snd_shader.idSoundShader;
-import neo.Sound.snd_shader.soundShaderParms_t;
-import neo.Sound.snd_system.idSoundSystemLocal;
-
+import static neo.Sound.snd_local.*;
+import static neo.Sound.snd_local.soundDemoCommand_t.*;
+import static neo.Sound.snd_shader.*;
 import static neo.Sound.snd_system.idSoundSystemLocal.s_showLevelMeter;
 import static neo.Sound.snd_system.soundSystemLocal;
 import static neo.Sound.snd_wavefile.fourcc_riff;
 import static neo.Sound.snd_wavefile.mmioFOURCC;
 import static neo.Sound.sound.SCHANNEL_ANY;
 import static neo.Sound.sound.SCHANNEL_ONE;
-
-import neo.Sound.sound.idSoundEmitter;
-import neo.Sound.sound.idSoundWorld;
-
-import static neo.TempDump.NOT;
-
-import neo.TempDump.TODO_Exception;
-
-import static neo.TempDump.etoi;
-import static neo.TempDump.isNotNullOrEmpty;
+import static neo.TempDump.*;
 import static neo.framework.BuildDefines.MACOS_X;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DemoFile.demoSystem_t.DS_SOUND;
-
-import neo.framework.DemoFile.idDemoFile;
-
 import static neo.framework.FileSystem_h.fileSystem;
-
-import neo.framework.File_h.idFile;
-
 import static neo.framework.Session.session;
-
-import neo.idlib.BV.Bounds.idBounds;
-
 import static neo.idlib.Lib.colorRed;
-
-import neo.idlib.Text.Str.idStr;
-
 import static neo.idlib.Text.Str.va;
-
-import neo.idlib.containers.List.idList;
-
 import static neo.idlib.math.Math_h.DEG2RAD;
-
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Plane.idPlane;
-import neo.idlib.math.Random.idRandom;
-
 import static neo.idlib.math.Simd.MIXBUFFER_SAMPLES;
 import static neo.idlib.math.Simd.SIMDProcessor;
-
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
-
 import static neo.sys.win_main.Sys_EnterCriticalSection;
 import static neo.sys.win_main.Sys_LeaveCriticalSection;
-
-import org.lwjgl.BufferUtils;
-
-import static org.lwjgl.openal.AL10.AL_BUFFER;
-import static org.lwjgl.openal.AL10.AL_BUFFERS_PROCESSED;
-import static org.lwjgl.openal.AL10.AL_FALSE;
-import static org.lwjgl.openal.AL10.AL_FORMAT_MONO16;
-import static org.lwjgl.openal.AL10.AL_FORMAT_STEREO16;
-import static org.lwjgl.openal.AL10.AL_GAIN;
-import static org.lwjgl.openal.AL10.AL_LOOPING;
-import static org.lwjgl.openal.AL10.AL_MAX_DISTANCE;
-import static org.lwjgl.openal.AL10.AL_ORIENTATION;
-import static org.lwjgl.openal.AL10.AL_PITCH;
-import static org.lwjgl.openal.AL10.AL_POSITION;
-import static org.lwjgl.openal.AL10.AL_REFERENCE_DISTANCE;
-import static org.lwjgl.openal.AL10.AL_SOURCE_RELATIVE;
-import static org.lwjgl.openal.AL10.AL_TRUE;
-import static org.lwjgl.openal.AL10.alBufferData;
-import static org.lwjgl.openal.AL10.alDeleteBuffers;
-import static org.lwjgl.openal.AL10.alGenBuffers;
-import static org.lwjgl.openal.AL10.alGetSourcei;
-import static org.lwjgl.openal.AL10.alIsSource;
-//import static org.lwjgl.openal.AL10.alListener;
-import static org.lwjgl.openal.AL10.alListener3f;
-import static org.lwjgl.openal.AL10.alListenerf;
-import static org.lwjgl.openal.AL10.alListenerfv;
-import static org.lwjgl.openal.AL10.alSource3f;
-import static org.lwjgl.openal.AL10.alSourcePlay;
-import static org.lwjgl.openal.AL10.alSourceQueueBuffers;
-import static org.lwjgl.openal.AL10.alSourceStop;
-import static org.lwjgl.openal.AL10.alSourceUnqueueBuffers;
-import static org.lwjgl.openal.AL10.alSourcef;
-import static org.lwjgl.openal.AL10.alSourcei;
+import static org.lwjgl.openal.AL10.*;
 
 /**
  *
@@ -154,12 +71,12 @@ public class snd_world {
 
     static class s_stats {
 
+        int activeSounds;
+        int missedUpdateWindow;
+        int missedWindow;
         int rinuse;
         int runs;
         int timeinprocess;
-        int missedWindow;
-        int missedUpdateWindow;
-        int activeSounds;
 
         public s_stats() {
             rinuse = 0;
@@ -171,51 +88,115 @@ public class snd_world {
         }
     }
 
-    ;
-
     static class soundPortalTrace_s {
 
-        int                portalArea;
+        int portalArea;
         soundPortalTrace_s prevStack;
     }
 
-    ;
-
     public static class idSoundWorldLocal extends idSoundWorld {
 
-        public idRenderWorld               rw;            // for portals and debug drawing
-        public idDemoFile                  writeDemo;            // if not NULL, archive commands here
-        //
-        public idMat3                      listenerAxis;
-        public idVec3                      listenerPos;                      // position in meters
-        public int                         listenerPrivateId;
-        public idVec3                      listenerQU;            // position in "quake units"
-        public int                         listenerArea;
-        public idStr                       listenerAreaName;
-        public int                         listenerEnvironmentID;
-        //
-        public int                         gameMsec;
-        public int                         game44kHz;
-        public int                         pause44kHz;
-        public int                         lastAVI44kHz;                        // determine when we need to mix and write another block
+        /*
+         ===================
+         idSoundWorldLocal::ResolveOrigin
+
+         Find out of the sound is completely occluded by a closed door portal, or
+         the virtual sound origin position at the portal closest to the listener.
+         this is called by the main thread
+
+         dist is the distance from the orignial sound origin to the current portal that enters soundArea
+         def->distance is the distance we are trying to reduce.
+
+         If there is no path through open portals from the sound to the listener, def->distance will remain
+         set at maxDistance
+         ===================
+         */
+        static final int MAX_PORTAL_TRACE_DEPTH = 10;
+        /*
+         ===============
+         idSoundWorldLocal::FindAmplitude
+
+         this is called from the main thread
+
+         if listenerPosition is NULL, this is being used for shader parameters,
+         like flashing lights and glows based on sound level.  Otherwise, it is being used for
+         the screen-shake on a player.
+
+         This doesn't do the portal-occlusion currently, because it would have to reset all the defs
+         which would be problematic in multiplayer
+         ===============
+         */
+        private static final int AMPLITUDE_SAMPLES = MIXBUFFER_SAMPLES / 8;
+        // background music
+        /*
+         ===============
+         idSoundWorldLocal::PlayShaderDirectly
+
+         start a music track
+
+         this is called from the main thread
+         ===============
+         */
+        private static final idRandom rnd = new idRandom();
+        /*
+         ===============
+         idSoundWorldLocal::CalcEars
+
+         Determine the volumes from each speaker for a given sound emitter
+         ===============
+         */
+        private static final idVec3[] speakerVector = {
+                new idVec3(0.707f, 0.707f, 0.0f), // front left
+                new idVec3(0.707f, -0.707f, 0.0f), // front right
+                new idVec3(0.707f, 0.0f, 0.0f), // front center
+                new idVec3(0.0f, 0.0f, 0.0f), // sub
+                new idVec3(-0.707f, 0.707f, 0.0f), // rear left
+                new idVec3(-0.707f, -0.707f, 0.0f) // rear right
+        };
+        /*
+         ===============
+         idSoundWorldLocal::AddChannelContribution
+
+         Adds the contribution of a single sound channel to finalMixBuffer
+         this is called from the async thread
+
+         Mixes MIXBUFFER_SAMPLES samples starting at current44kHz sample time into
+         finalMixBuffer
+         ===============
+         */private static int DBG_AddChannelContribution = 0;
+        public idStr aviDemoName;
+        public idStr aviDemoPath;
         //
         public idList<idSoundEmitterLocal> emitters;
-        //
-        public idSoundFade[] soundClassFade = new idSoundFade[SOUND_MAX_CLASSES];    // for global sound fading
+        public boolean enviroSuitActive;
         //
         // avi stuff
-        public idFile[]      fpa            = new idFile[6];
-        public idStr               aviDemoPath;
-        public idStr               aviDemoName;
+        public idFile[] fpa = new idFile[6];
+        public int game44kHz;
+        //
+        public int gameMsec;
+        public int lastAVI44kHz;                        // determine when we need to mix and write another block
+        public int listenerArea;
+        public idStr listenerAreaName;
+        //
+        public idMat3 listenerAxis;
+        public int listenerEnvironmentID;
+        public idVec3 listenerPos;                      // position in meters
+        public int listenerPrivateId;
+        public idVec3 listenerQU;            // position in "quake units"
         //
         public idSoundEmitterLocal localSound;        // just for playShaderDirectly()
-        //
-        public boolean             slowmoActive;
-        public float               slowmoSpeed;
-        public boolean             enviroSuitActive;
+        public int pause44kHz;
         //
         //
         //============================================
+        public idRenderWorld rw;            // for portals and debug drawing
+        //
+        public boolean slowmoActive;
+        public float slowmoSpeed;
+        //
+        public idSoundFade[] soundClassFade = new idSoundFade[SOUND_MAX_CLASSES];    // for global sound fading
+        public idDemoFile writeDemo;            // if not NULL, archive commands here
 
         public idSoundWorldLocal() {
             this.listenerAxis = new idMat3();
@@ -610,18 +591,6 @@ public class snd_world {
             }
         }
 
-        // background music
-        /*
-         ===============
-         idSoundWorldLocal::PlayShaderDirectly
-
-         start a music track
-
-         this is called from the main thread
-         ===============
-         */
-        private static final idRandom rnd = new idRandom();
-
         @Override
         public void PlayShaderDirectly(final String shaderName, int channel /*= -1*/) {
 
@@ -773,11 +742,11 @@ public class snd_world {
                 wO.Write(info.Write(), 8);
 
                 format.wBitsPerSample = 16;
-                format.wf.nAvgBytesPerSec = 44100 * 4;		// sample rate * block align
+                format.wf.nAvgBytesPerSec = 44100 * 4;        // sample rate * block align
                 format.wf.nChannels = 2;
                 format.wf.nSamplesPerSec = 44100;
                 format.wf.wFormatTag = WAVE_FORMAT_TAG_PCM;
-                format.wf.nBlockAlign = 4;			// channels * bits/sample / 8
+                format.wf.nBlockAlign = 4;            // channels * bits/sample / 8
 
                 wO.Write(format.Write(), 16);
 
@@ -1349,22 +1318,6 @@ public class snd_world {
             return def;
         }
 
-        /*
-         ===============
-         idSoundWorldLocal::CalcEars
-
-         Determine the volumes from each speaker for a given sound emitter
-         ===============
-         */
-        private static final idVec3[] speakerVector = {
-                new idVec3(0.707f, 0.707f, 0.0f), // front left
-                new idVec3(0.707f, -0.707f, 0.0f), // front right
-                new idVec3(0.707f, 0.0f, 0.0f), // front center
-                new idVec3(0.0f, 0.0f, 0.0f), // sub
-                new idVec3(-0.707f, 0.707f, 0.0f), // rear left
-                new idVec3(-0.707f, -0.707f, 0.0f) // rear right
-        };
-
         public void CalcEars(int numSpeakers, idVec3 spatializedOrigin, idVec3 listenerPos, idMat3 listenerAxis, float[] ears/*[6]*/, float spatialize) {
             idVec3 svec = spatializedOrigin.oMinus(listenerPos);
             idVec3 ovec = new idVec3(svec.oMultiply(listenerAxis.oGet(0)), svec.oMultiply(listenerAxis.oGet(1)), svec.oMultiply(listenerAxis.oGet(2)));
@@ -1404,18 +1357,6 @@ public class snd_world {
                 ears[2] = ears[3] = ears[4] = ears[5] = 0.0f;
             }
         }
-
-        /*
-         ===============
-         idSoundWorldLocal::AddChannelContribution
-
-         Adds the contribution of a single sound channel to finalMixBuffer
-         this is called from the async thread
-
-         Mixes MIXBUFFER_SAMPLES samples starting at current44kHz sample time into
-         finalMixBuffer
-         ===============
-         */private static int DBG_AddChannelContribution = 0;
 
         public void AddChannelContribution(idSoundEmitterLocal sound, idSoundChannel chan, int current44kHz, int numSpeakers, float[] finalMixBuffer) {
             int j;
@@ -1651,7 +1592,7 @@ public class snd_world {
 //                                    System.out.println("<<" + bla);
                                 }
                             }
-                            ByteBuffer d = (ByteBuffer) data.duplicate().position(0);
+                            ByteBuffer d = data.duplicate().position(0);
 //                            System.out.printf(">>\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n", d.get(), d.get(), d.get(), d.get(), d.get(), d.get(), d.get(), d.get(), d.get(), d.get());
 //                            System.out.printf(">>\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n", d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat(), d.getFloat());
                             alBufferData(buffers.get(j), chan.leadinSample.objectInfo.nChannels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, data, 44100);
@@ -1949,23 +1890,6 @@ public class snd_world {
             return;
         }
 
-        /*
-         ===================
-         idSoundWorldLocal::ResolveOrigin
-
-         Find out of the sound is completely occluded by a closed door portal, or
-         the virtual sound origin position at the portal closest to the listener.
-         this is called by the main thread
-
-         dist is the distance from the orignial sound origin to the current portal that enters soundArea
-         def->distance is the distance we are trying to reduce.
-
-         If there is no path through open portals from the sound to the listener, def->distance will remain
-         set at maxDistance
-         ===================
-         */
-        static final int MAX_PORTAL_TRACE_DEPTH = 10;
-
         public void ResolveOrigin(final int stackDepth, final soundPortalTrace_s prevStack, final int soundArea, final float dist, final idVec3 soundOrigin, idSoundEmitterLocal def) {
 
             if (dist >= def.distance) {
@@ -2102,22 +2026,6 @@ public class snd_world {
                 ResolveOrigin(stackDepth + 1, newStack, otherArea, dist + tlenLength + occlusionDistance, source, def);
             }
         }
-
-        /*
-         ===============
-         idSoundWorldLocal::FindAmplitude
-
-         this is called from the main thread
-
-         if listenerPosition is NULL, this is being used for shader parameters,
-         like flashing lights and glows based on sound level.  Otherwise, it is being used for
-         the screen-shake on a player.
-
-         This doesn't do the portal-occlusion currently, because it would have to reset all the defs
-         which would be problematic in multiplayer
-         ===============
-         */
-        private static final int AMPLITUDE_SAMPLES = MIXBUFFER_SAMPLES / 8;
 
         public float FindAmplitude(idSoundEmitterLocal sound, final int localTime, final idVec3 listenerPosition, final int/*s_channelType*/ channel, boolean shakesOnly) {
             int i, j;
@@ -2273,5 +2181,4 @@ public class snd_world {
 
     }
 
-    ;
 }

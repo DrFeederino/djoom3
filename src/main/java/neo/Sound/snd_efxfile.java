@@ -1,12 +1,13 @@
 package neo.Sound;
 
-import java.nio.ByteBuffer;
-
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
+
+import java.nio.ByteBuffer;
+
+import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
 
 /**
  *
@@ -15,9 +16,9 @@ public class snd_efxfile {
 
     static class idSoundEffect {
 
-        public idStr      name;
-        public int        datasize;
         public ByteBuffer data;
+        public int datasize;
+        public idStr name;
 
         public idSoundEffect() {
         }
@@ -27,7 +28,7 @@ public class snd_efxfile {
 //			data = NULL;
 //		}
 //	}
-    };
+    }
 
     static class idEFXFile {
 
@@ -226,5 +227,6 @@ public class snd_efxfile {
             effects.DeleteContents(true);
         }
 
-    };
+    }
+
 }

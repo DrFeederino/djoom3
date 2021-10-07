@@ -1,52 +1,32 @@
 package neo.framework;
 
-import static neo.Renderer.Material.CONTENTS_BODY;
-import static neo.Renderer.Material.CONTENTS_CORPSE;
-import static neo.Renderer.Material.CONTENTS_MONSTERCLIP;
-import static neo.Renderer.Material.CONTENTS_MOVEABLECLIP;
-import static neo.Renderer.Material.CONTENTS_PLAYERCLIP;
-import static neo.Renderer.Material.CONTENTS_SOLID;
-import static neo.framework.Common.common;
-import static neo.framework.DeclAF.declAFConstraintType_t.DECLAF_CONSTRAINT_BALLANDSOCKETJOINT;
-import static neo.framework.DeclAF.declAFConstraintType_t.DECLAF_CONSTRAINT_FIXED;
-import static neo.framework.DeclAF.declAFConstraintType_t.DECLAF_CONSTRAINT_HINGE;
-import static neo.framework.DeclAF.declAFConstraintType_t.DECLAF_CONSTRAINT_SLIDER;
-import static neo.framework.DeclAF.declAFConstraintType_t.DECLAF_CONSTRAINT_SPRING;
-import static neo.framework.DeclAF.declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_AXIS;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_BOTH;
-import static neo.framework.DeclAF.declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN;
-import static neo.framework.DeclAF.idAFVector.type.VEC_BONECENTER;
-import static neo.framework.DeclAF.idAFVector.type.VEC_BONEDIR;
-import static neo.framework.DeclAF.idAFVector.type.VEC_COORDS;
-import static neo.framework.DeclAF.idAFVector.type.VEC_JOINT;
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
 import neo.framework.DeclManager.idDecl;
 import neo.framework.File_h.idFile;
 import neo.framework.File_h.idFile_Memory;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Token.TT_NAME;
-import static neo.idlib.Text.Token.TT_STRING;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.traceModel_t;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_BONE;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_BOX;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_CONE;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_CYLINDER;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_DODECAHEDRON;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_INVALID;
-import static neo.idlib.geometry.TraceModel.traceModel_t.TRM_OCTAHEDRON;
 import neo.idlib.math.Angles;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
-import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import neo.idlib.math.Vector;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
+
+import static neo.Renderer.Material.*;
+import static neo.framework.Common.common;
+import static neo.framework.DeclAF.declAFConstraintType_t.*;
+import static neo.framework.DeclAF.declAFJointMod_t.*;
+import static neo.framework.DeclAF.idAFVector.type.*;
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
+import static neo.idlib.Text.Token.TT_NAME;
+import static neo.idlib.Text.Token.TT_STRING;
+import static neo.idlib.geometry.TraceModel.traceModel_t.*;
+import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 
 /**
  *
@@ -69,41 +49,34 @@ public class DeclAF {
         DECLAF_CONSTRAINT_HINGE,
         DECLAF_CONSTRAINT_SLIDER,
         DECLAF_CONSTRAINT_SPRING
-    };
+    }
 
     public enum declAFJointMod_t {
 
         DECLAF_JOINTMOD_AXIS,
         DECLAF_JOINTMOD_ORIGIN,
         DECLAF_JOINTMOD_BOTH
-    };
+    }
 
     public static abstract class getJointTransform_t {
 
         public abstract boolean run(Object model, final idJointMat[] frame, final String jointName, idVec3 origin, idMat3 axis);
 
         public abstract boolean run(Object model, final idJointMat[] frame, final idStr jointName, idVec3 origin, idMat3 axis);//TODO:phase out overload
-    };
+    }
 
     public static class idAFVector {
 
-        enum type {
-
-            VEC_COORDS,
-            VEC_JOINT,
-            VEC_BONECENTER,
-            VEC_BONEDIR
-        };
-        public  type    type;
-        public  idStr   joint1;
-        public  idStr   joint2;
-        private idVec3  vec;
-        private boolean negate;
         //
         //
         private static int DBG_counter = 0;
-        private final  int DBG_count = DBG_counter++;
 
+        private final int DBG_count = DBG_counter++;
+        public idStr joint1;
+        public idStr joint2;
+        public type type;
+        private boolean negate;
+        private final idVec3 vec;
         public idAFVector() {
             type = VEC_COORDS;
             joint1 = new idStr();
@@ -275,7 +248,7 @@ public class DeclAF {
                 }
             }
             if (negate) {
-                str.oSet("-" + str.toString());//TODO:don't set= idStr reference
+                str.oSet("-" + str);//TODO:don't set= idStr reference
             }
             return str.toString();
         }
@@ -283,31 +256,39 @@ public class DeclAF {
         public idVec3 ToVec3() {
             return vec;
         }
+
+        enum type {
+
+            VEC_COORDS,
+            VEC_JOINT,
+            VEC_BONECENTER,
+            VEC_BONEDIR
+        }
 //public	idVec3 &				ToVec3( void ) { return vec; }
-    };
+    }
 
     public static class idDeclAF_Body {
 
-        public idStr            name;
-        public idStr            jointName;
-        public declAFJointMod_t jointMod;
-        public traceModel_t     modelType;
-        public idAFVector       v1, v2;
-        public int        numSides;
-        public float      width;
-        public float      density;
-        public idAFVector origin;
-        public idAngles   angles;
-        public int[] contents = {0};
+        public idAngles angles;
+        public float angularFriction;
         public int[] clipMask = {0};
-        public boolean    selfCollision;
-        public idMat3     inertiaScale;
-        public float      linearFriction;
-        public float      angularFriction;
-        public float      contactFriction;
-        public idStr      containedJoints;
-        public idAFVector frictionDirection;
+        public float contactFriction;
         public idAFVector contactMotorDirection;
+        public idStr containedJoints;
+        public int[] contents = {0};
+        public float density;
+        public idAFVector frictionDirection;
+        public idMat3 inertiaScale;
+        public declAFJointMod_t jointMod;
+        public idStr jointName;
+        public float linearFriction;
+        public traceModel_t modelType;
+        public idStr name;
+        public int numSides;
+        public idAFVector origin;
+        public boolean selfCollision;
+        public idAFVector v1, v2;
+        public float width;
 //
 
         public idDeclAF_Body() {
@@ -340,33 +321,33 @@ public class DeclAF {
             jointMod = DECLAF_JOINTMOD_AXIS;
             containedJoints.oSet("origin");
         }
-    };
+    }
 
     public static class idDeclAF_Constraint {
 
-        public idStr                  name = new idStr();
-        public idStr                  body1 = new idStr();
-        public idStr                  body2 = new idStr();
-        public declAFConstraintType_t type;
-        public float                  friction;
-        public float                  stretch;
-        public float                  compress;
-        public float                  damping;
-        public float                  restLength;
-        public float                  minLength;
-        public float                  maxLength;
-        public idAFVector             anchor;
-        public idAFVector             anchor2;
-        public              idAFVector[] shaft         = {new idAFVector(), new idAFVector()};
-        public              idAFVector   axis          = new idAFVector();
+        public static final int LIMIT_CONE = 0;
         //
-        public static final int          LIMIT_NONE    = -1;
-        public static final int          LIMIT_CONE    = 0;
-        public static final int          LIMIT_PYRAMID = 1;
-        //			
+        public static final int LIMIT_NONE = -1;
+        public static final int LIMIT_PYRAMID = 1;
+        public idAFVector anchor;
+        public idAFVector anchor2;
+        public idAFVector axis = new idAFVector();
+        public idStr body1 = new idStr();
+        public idStr body2 = new idStr();
+        public float compress;
+        public float damping;
+        public float friction;
+        //
         public int limit;
-        public idAFVector limitAxis   = new idAFVector();
-        public float[]    limitAngles = new float[3];
+        public float[] limitAngles = new float[3];
+        public idAFVector limitAxis = new idAFVector();
+        public float maxLength;
+        public float minLength;
+        public idStr name = new idStr();
+        public float restLength;
+        public idAFVector[] shaft = {new idAFVector(), new idAFVector()};
+        public float stretch;
+        public declAFConstraintType_t type;
         //
         //
 
@@ -389,30 +370,30 @@ public class DeclAF {
             limitAngles[0] = limitAngles[1] = limitAngles[2] = 0.0f;
             limitAxis.ToVec3().Set(0.0f, 0.0f, -1.0f);
         }
-    };
+    }
 
     public static class idDeclAF extends idDecl {
 
+        public final idList<idDeclAF_Body> bodies = new idList<>(idDeclAF_Body.class);
+        public final idList<idDeclAF_Constraint> constraints = new idList<>(idDeclAF_Constraint.class);
+        public int[] clipMask = new int[1];
+        public int[] contents = new int[1];
+        public float defaultAngularFriction;
+        public float defaultConstraintFriction;
+        public float defaultContactFriction;
+        public float defaultLinearFriction;
+        public float maxMoveTime;
+        public float minMoveTime;
+        public idStr model;
         public boolean modified;
-        public idStr   model;
-        public idStr   skin;
-        public float   defaultLinearFriction;
-        public float   defaultAngularFriction;
-        public float   defaultContactFriction;
-        public float   defaultConstraintFriction;
-        public float   totalMass;
-        public idVec2 suspendVelocity     = new idVec2();
-        public idVec2 suspendAcceleration = new idVec2();
+        public float noMoveRotation;
         public float noMoveTime;
         public float noMoveTranslation;
-        public float noMoveRotation;
-        public float minMoveTime;
-        public float maxMoveTime;
-        public int[] contents = new int[1];
-        public int[] clipMask = new int[1];
         public boolean selfCollision;
-        public final idList<idDeclAF_Body>       bodies      = new idList<>(idDeclAF_Body.class);
-        public final idList<idDeclAF_Constraint> constraints = new idList<>(idDeclAF_Constraint.class);
+        public idStr skin;
+        public idVec2 suspendAcceleration = new idVec2();
+        public idVec2 suspendVelocity = new idVec2();
+        public float totalMass;
         //
         //
 
@@ -421,6 +402,101 @@ public class DeclAF {
         }
 //public virtual					~idDeclAF( void );
 // 
+
+        public static int ContentsFromString(final String str) throws idException {
+            int c;
+            idToken token = new idToken();
+            idLexer src = new idLexer(str, str.length(), "idDeclAF::ContentsFromString");
+
+            c = 0;
+            while (src.ReadToken(token)) {
+                if (token.Icmp("none") == 0) {
+                    c = 0;
+                } else if (token.Icmp("solid") == 0) {
+                    c |= CONTENTS_SOLID;
+                } else if (token.Icmp("body") == 0) {
+                    c |= CONTENTS_BODY;
+                } else if (token.Icmp("corpse") == 0) {
+                    c |= CONTENTS_CORPSE;
+                } else if (token.Icmp("playerclip") == 0) {
+                    c |= CONTENTS_PLAYERCLIP;
+                } else if (token.Icmp("monsterclip") == 0) {
+                    c |= CONTENTS_MONSTERCLIP;
+                } else if (token.equals(",")) {
+                    continue;
+                } else {
+                    return c;
+                }
+            }
+            return c;
+        }
+
+        public static String ContentsToString(final int contents, idStr str) {
+            str.oSet("");
+            if ((contents & CONTENTS_SOLID) != 0) {
+                if (str.Length() != 0) {
+                    str.Append(", ");
+                }
+                str.Append("solid");
+            }
+            if ((contents & CONTENTS_BODY) != 0) {
+                if (str.Length() != 0) {
+                    str.Append(", ");
+                }
+                str.Append("body");
+            }
+            if ((contents & CONTENTS_CORPSE) != 0) {
+                if (str.Length() != 0) {
+                    str.Append(", ");
+                }
+                str.Append("corpse");
+            }
+            if ((contents & CONTENTS_PLAYERCLIP) != 0) {
+                if (str.Length() != 0) {
+                    str.Append(", ");
+                }
+                str.Append("playerclip");
+            }
+            if ((contents & CONTENTS_MONSTERCLIP) != 0) {
+                if (str.Length() != 0) {
+                    str.Append(", ");
+                }
+                str.Append("monsterclip");
+            }
+            if (str.IsEmpty()) {
+                str.oSet("none");
+            }
+            return str.toString();
+        }
+
+        public static declAFJointMod_t JointModFromString(final String str) {
+            if (idStr.Icmp(str, "orientation") == 0) {
+                return DECLAF_JOINTMOD_AXIS;
+            }
+            if (idStr.Icmp(str, "position") == 0) {
+                return DECLAF_JOINTMOD_ORIGIN;
+            }
+            if (idStr.Icmp(str, "both") == 0) {
+                return DECLAF_JOINTMOD_BOTH;
+            }
+            return DECLAF_JOINTMOD_AXIS;
+        }
+//public virtual void			FreeData( void );
+
+        public static String JointModToString(declAFJointMod_t jointMod) {
+            switch (jointMod) {
+                case DECLAF_JOINTMOD_AXIS: {
+                    return "orientation";
+                }
+                case DECLAF_JOINTMOD_ORIGIN: {
+                    return "position";
+                }
+                case DECLAF_JOINTMOD_BOTH: {
+                    return "both";
+                }
+            }
+            return "orientation";
+        }
 
         @Override
         public long Size() {
@@ -460,6 +536,7 @@ public class DeclAF {
                     + "\t" + "}\n"
                     + "}\n";
         }
+// 
 
         @Override
         public boolean Parse(String text, int textLength) throws idException {
@@ -552,7 +629,6 @@ public class DeclAF {
 
             return true;
         }
-//public virtual void			FreeData( void );
 
         @Override
         public void FreeData() {
@@ -598,6 +674,7 @@ public class DeclAF {
                 constraint.limitAxis.Finish(name, GetJointTransform, frame, model);
             }
         }
+// 
 
         public boolean Save() throws idException {
             RebuildTextSource();
@@ -605,7 +682,6 @@ public class DeclAF {
             modified = false;
             return true;
         }
-// 
 
         public void NewBody(final String name) {
             idDeclAF_Body body;
@@ -641,6 +717,7 @@ public class DeclAF {
                 }
             }
         }
+// 
 
         /*
          ================
@@ -669,7 +746,6 @@ public class DeclAF {
                 }
             }
         }
-// 
 
         public void NewConstraint(final String name) {
             idDeclAF_Constraint constraint;
@@ -679,6 +755,7 @@ public class DeclAF {
             constraint.name.oSet(name);
             constraints.Append(constraint);
         }
+// 
 
         public void RenameConstraint(final String oldName, final String newName) {
             int i;
@@ -701,102 +778,6 @@ public class DeclAF {
                     return;
                 }
             }
-        }
-// 
-
-        public static int ContentsFromString(final String str) throws idException {
-            int c;
-            idToken token = new idToken();
-            idLexer src = new idLexer(str, str.length(), "idDeclAF::ContentsFromString");
-
-            c = 0;
-            while (src.ReadToken(token)) {
-                if (token.Icmp("none") == 0) {
-                    c = 0;
-                } else if (token.Icmp("solid") == 0) {
-                    c |= CONTENTS_SOLID;
-                } else if (token.Icmp("body") == 0) {
-                    c |= CONTENTS_BODY;
-                } else if (token.Icmp("corpse") == 0) {
-                    c |= CONTENTS_CORPSE;
-                } else if (token.Icmp("playerclip") == 0) {
-                    c |= CONTENTS_PLAYERCLIP;
-                } else if (token.Icmp("monsterclip") == 0) {
-                    c |= CONTENTS_MONSTERCLIP;
-                } else if (token.equals(",")) {
-                    continue;
-                } else {
-                    return c;
-                }
-            }
-            return c;
-        }
-
-        public static String ContentsToString(final int contents, idStr str) {
-            str.oSet("");
-            if ((contents & CONTENTS_SOLID) != 0) {
-                if (str.Length() != 0) {
-                    str.Append(", ");
-                }
-                str.Append("solid");
-            }
-            if ((contents & CONTENTS_BODY) != 0) {
-                if (str.Length() != 0) {
-                    str.Append(", ");
-                }
-                str.Append("body");
-            }
-            if ((contents & CONTENTS_CORPSE) != 0) {
-                if (str.Length() != 0) {
-                    str.Append(", ");
-                }
-                str.Append("corpse");
-            }
-            if ((contents & CONTENTS_PLAYERCLIP) != 0) {
-                if (str.Length() != 0) {
-                    str.Append(", ");
-                }
-                str.Append("playerclip");
-            }
-            if ((contents & CONTENTS_MONSTERCLIP) != 0) {
-                if (str.Length() != 0) {
-                    str.Append(", ");
-                }
-                str.Append("monsterclip");
-            }
-            if (str.IsEmpty()) {
-                str.oSet("none");
-            }
-            return str.toString();
-        }
-// 
-
-        public static declAFJointMod_t JointModFromString(final String str) {
-            if (idStr.Icmp(str, "orientation") == 0) {
-                return DECLAF_JOINTMOD_AXIS;
-            }
-            if (idStr.Icmp(str, "position") == 0) {
-                return DECLAF_JOINTMOD_ORIGIN;
-            }
-            if (idStr.Icmp(str, "both") == 0) {
-                return DECLAF_JOINTMOD_BOTH;
-            }
-            return DECLAF_JOINTMOD_AXIS;
-        }
-
-        public static String JointModToString(declAFJointMod_t jointMod) {
-            switch (jointMod) {
-                case DECLAF_JOINTMOD_AXIS: {
-                    return "orientation";
-                }
-                case DECLAF_JOINTMOD_ORIGIN: {
-                    return "position";
-                }
-                case DECLAF_JOINTMOD_BOTH: {
-                    return "both";
-                }
-            }
-            return "orientation";
         }
 
         private boolean ParseContents(idLexer src, int[] c) throws idException {
@@ -1693,5 +1674,6 @@ public class DeclAF {
 
             return true;
         }
-    };
+    }
+
 }

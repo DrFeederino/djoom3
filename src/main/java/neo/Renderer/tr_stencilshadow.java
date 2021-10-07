@@ -1,9 +1,5 @@
 package neo.Renderer;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
-
-import static neo.Renderer.Interaction.R_CalcInteractionFacing;
 import neo.Renderer.Interaction.srfCullInfo_t;
 import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
@@ -11,49 +7,140 @@ import neo.Renderer.tr_local.idRenderEntityLocal;
 import neo.Renderer.tr_local.idRenderLightLocal;
 import neo.Renderer.tr_local.optimizedShadow_t;
 import neo.Renderer.tr_local.shadowFrustum_t;
+import neo.idlib.math.Plane.*;
+import neo.idlib.math.Vector.idVec3;
+import neo.idlib.math.Vector.idVec4;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import static neo.Renderer.Interaction.R_CalcInteractionFacing;
 import static neo.Renderer.tr_local.tr;
 import static neo.Renderer.tr_main.R_GlobalPlaneToLocal;
 import static neo.Renderer.tr_main.R_GlobalPointToLocal;
 import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_DYNAMIC;
 import static neo.Renderer.tr_stencilshadow.shadowGen_t.SG_OFFLINE;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfShadowVerts;
+import static neo.Renderer.tr_trisurf.*;
 import static neo.Renderer.tr_turboshadow.R_CreateTurboShadowVolume;
 import static neo.Renderer.tr_turboshadow.R_CreateVertexProgramTurboShadowVolume;
 import static neo.Tools.Compilers.DMap.shadowopt3.CleanupOptimizedShadowTris;
 import static neo.Tools.Compilers.DMap.shadowopt3.SuperOptimizeOccluders;
 import static neo.framework.Common.common;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import static neo.idlib.math.Plane.SIDE_ON;
-import neo.idlib.math.Plane.idPlane;
+import static neo.idlib.math.Plane.*;
 import static neo.idlib.math.Simd.SIMDProcessor;
-import neo.idlib.math.Vector.idVec3;
-import neo.idlib.math.Vector.idVec4;
 
 /**
  *
  */
 public class tr_stencilshadow {
 
-    /*
-     ============================================================
-
-     TR_STENCILSHADOWS
-
-     "facing" should have one more element than tri->numIndexes / 3, which should be set to 1
-
-     ============================================================
-     */
-    public enum shadowGen_t {
-
-        SG_DYNAMIC,// use infinite projections
-        SG_STATIC, // clip to bounds
-        SG_OFFLINE // perform very time consuming optimizations
-    };
+    //#define	LIGHT_CLIP_EPSILON	0.001f
+    static final float LIGHT_CLIP_EPSILON = 0.1f;
 
     // tr_stencilShadow.c -- creator of stencil shadow volumes
+    static final int MAX_CLIPPED_POINTS = 20;
+    //
+    static final int MAX_CLIP_SIL_EDGES = 2048;
+    //
+    static final int MAX_SHADOW_INDEXES = 0x18000;
+    static final int MAX_SHADOW_VERTS = 0x18000;
+    static final int[][] clipSilEdges = new int[MAX_CLIP_SIL_EDGES][2];
+    //
+    static final idPlane[][] pointLightFrustums/*[6][6]*/ = {
+            {
+                    new idPlane(1, 0, 0, 0),
+                    new idPlane(1, 1, 0, 0),
+                    new idPlane(1, -1, 0, 0),
+                    new idPlane(1, 0, 1, 0),
+                    new idPlane(1, 0, -1, 0),
+                    new idPlane(-1, 0, 0, 0)
+            },
+            {
+                    new idPlane(-1, 0, 0, 0),
+                    new idPlane(-1, 1, 0, 0),
+                    new idPlane(-1, -1, 0, 0),
+                    new idPlane(-1, 0, 1, 0),
+                    new idPlane(-1, 0, -1, 0),
+                    new idPlane(1, 0, 0, 0)
+            },
+            {
+                    new idPlane(0, 1, 0, 0),
+                    new idPlane(0, 1, 1, 0),
+                    new idPlane(0, 1, -1, 0),
+                    new idPlane(1, 1, 0, 0),
+                    new idPlane(-1, 1, 0, 0),
+                    new idPlane(0, -1, 0, 0)
+            },
+            {
+                    new idPlane(0, -1, 0, 0),
+                    new idPlane(0, -1, 1, 0),
+                    new idPlane(0, -1, -1, 0),
+                    new idPlane(1, -1, 0, 0),
+                    new idPlane(-1, -1, 0, 0),
+                    new idPlane(0, 1, 0, 0)
+            },
+            {
+                    new idPlane(0, 0, 1, 0),
+                    new idPlane(1, 0, 1, 0),
+                    new idPlane(-1, 0, 1, 0),
+                    new idPlane(0, 1, 1, 0),
+                    new idPlane(0, -1, 1, 0),
+                    new idPlane(0, 0, -1, 0)
+            },
+            {
+                    new idPlane(0, 0, -1, 0),
+                    new idPlane(1, 0, -1, 0),
+                    new idPlane(-1, 0, -1, 0),
+                    new idPlane(0, 1, -1, 0),
+                    new idPlane(0, -1, -1, 0),
+                    new idPlane(0, 0, 1, 0)
+            }
+    };
+    static final idVec4[] shadowVerts = Stream.generate(idVec4::new).limit(MAX_SHADOW_VERTS).toArray(idVec4[]::new);
+    /*
+     ===================
+     R_MakeShadowFrustums
+
+     Called at definition derivation time
+     ===================
+     */
+    private static final int[][] faceCorners/*[6][4]*/ = {
+            {7, 5, 1, 3}, // positive X side
+            {4, 6, 2, 0}, // negative X side
+            {6, 7, 3, 2}, // positive Y side
+            {5, 4, 0, 1}, // negative Y side
+            {6, 4, 5, 7}, // positive Z side
+            {3, 1, 0, 2} // negative Z side
+    };
+    private static final int[][] faceEdgeAdjacent/*[6][4]*/ = {
+            {4, 4, 2, 2}, // positive X side
+            {7, 7, 1, 1}, // negative X side
+            {5, 5, 0, 0}, // positive Y side
+            {6, 6, 3, 3}, // negative Y side
+            {0, 0, 3, 3}, // positive Z side
+            {5, 5, 6, 6} // negative Z side
+    };
+    //
+    static int c_caps, c_sils;
+    //
+    static boolean callOptimizer;            // call the preprocessor optimizer after clipping occluders
+    //
+// faceCastsShadow will be 1 if the face is in the projection
+// and facing the apropriate direction
+    static byte[] faceCastsShadow;
+    //
+// facing will be 0 if forward facing, 1 if backwards facing
+// grabbed with alloca
+    static byte[] globalFacing;
+    static int indexFrustumNumber;        // which shadow generating side of a light the indexRef is for
+    static indexRef_t[] indexRef = Stream.generate(indexRef_t::new).limit(6).toArray(indexRef_t[]::new);
+    static int numClipSilEdges;
+    static int numShadowIndexes;
+    static int numShadowVerts;
+    static boolean overflowed;
+    //
+    static int[] remap;
+    static int/*glIndex_t*/[] shadowIndexes = new int[MAX_SHADOW_INDEXES];
 
     /*
 
@@ -95,7 +182,7 @@ public class tr_stencilshadow {
      If a triangle has no points outside the frustum, it does not
      need to be clipped.
 
-  
+
 
      USING THE STENCIL BUFFER FOR SHADOWING
 
@@ -108,7 +195,7 @@ public class tr_stencilshadow {
      issues with silhouette optimizations
 
      the shapes of shadow projections are poor for sphere or box culling
-  
+
      the gouraud shading problem
 
 
@@ -133,13 +220,14 @@ public class tr_stencilshadow {
     static int TRIANGLE_CULLED(final int p1, final int p2, final int p3, final int[] pointCull) {
         return (pointCull[p1] & pointCull[p2] & pointCull[p3] & 0x3f);
     }
+//
 
-//#define TRIANGLE_CLIPPED(p1,p2,p3) ( ( pointCull[p1] | pointCull[p2] | pointCull[p3] ) & 0xfc0 )
+    //#define TRIANGLE_CLIPPED(p1,p2,p3) ( ( pointCull[p1] | pointCull[p2] | pointCull[p3] ) & 0xfc0 )
     static boolean TRIANGLE_CLIPPED(final int p1, final int p2, final int p3, final int[] pointCull) {
         return (pointCull[p1] & pointCull[p2] & pointCull[p3] & 0xfc0) != 0xfc0;
     }
 
-// an edge that is on the plane is NOT culled
+    // an edge that is on the plane is NOT culled
     static int EDGE_CULLED(final int p1, final int p2, final int[] pointCull) {
         return ((pointCull[p1] ^ 0xfc0) & (pointCull[p2] ^ 0xfc0) & 0xfc0);
     }
@@ -147,102 +235,6 @@ public class tr_stencilshadow {
     static boolean EDGE_CLIPPED(final int p1, final int p2, final int[] pointCull) {
         return ((pointCull[p1] & pointCull[p2] & 0xfc0) != 0xfc0);
     }
-
-// a point that is on the plane is NOT culled
-//#define	POINT_CULLED(p1) ( ( pointCull[p1] ^ 0xfc0 ) & 0xfc0 )
-    static boolean POINT_CULLED(final int p1, final int[] pointCull) {
-        return ((pointCull[p1] & 0xfc0) != 0xfc0);
-    }
-//#define	LIGHT_CLIP_EPSILON	0.001f
-    static final float LIGHT_CLIP_EPSILON = 0.1f;
-//
-    static final int MAX_CLIP_SIL_EDGES = 2048;
-    static int numClipSilEdges;
-    static final int[][] clipSilEdges = new int[MAX_CLIP_SIL_EDGES][2];
-//
-// facing will be 0 if forward facing, 1 if backwards facing
-// grabbed with alloca
-    static byte[] globalFacing;
-//
-// faceCastsShadow will be 1 if the face is in the projection
-// and facing the apropriate direction
-    static byte[] faceCastsShadow;
-//
-    static int[] remap;
-//
-    static final int MAX_SHADOW_INDEXES = 0x18000;
-    static final int MAX_SHADOW_VERTS = 0x18000;
-    static int numShadowIndexes;
-    static int/*glIndex_t*/[] shadowIndexes = new int[MAX_SHADOW_INDEXES];
-    static int numShadowVerts;
-    static final idVec4[] shadowVerts = Stream.generate(idVec4::new).limit(MAX_SHADOW_VERTS).toArray(idVec4[]::new);
-    static boolean overflowed;
-//
-    static final idPlane[][] pointLightFrustums/*[6][6]*/ = {
-                {
-                    new idPlane(1, 0, 0, 0),
-                    new idPlane(1, 1, 0, 0),
-                    new idPlane(1, -1, 0, 0),
-                    new idPlane(1, 0, 1, 0),
-                    new idPlane(1, 0, -1, 0),
-                    new idPlane(-1, 0, 0, 0)
-                },
-                {
-                    new idPlane(-1, 0, 0, 0),
-                    new idPlane(-1, 1, 0, 0),
-                    new idPlane(-1, -1, 0, 0),
-                    new idPlane(-1, 0, 1, 0),
-                    new idPlane(-1, 0, -1, 0),
-                    new idPlane(1, 0, 0, 0)
-                },
-                {
-                    new idPlane(0, 1, 0, 0),
-                    new idPlane(0, 1, 1, 0),
-                    new idPlane(0, 1, -1, 0),
-                    new idPlane(1, 1, 0, 0),
-                    new idPlane(-1, 1, 0, 0),
-                    new idPlane(0, -1, 0, 0)
-                },
-                {
-                    new idPlane(0, -1, 0, 0),
-                    new idPlane(0, -1, 1, 0),
-                    new idPlane(0, -1, -1, 0),
-                    new idPlane(1, -1, 0, 0),
-                    new idPlane(-1, -1, 0, 0),
-                    new idPlane(0, 1, 0, 0)
-                },
-                {
-                    new idPlane(0, 0, 1, 0),
-                    new idPlane(1, 0, 1, 0),
-                    new idPlane(-1, 0, 1, 0),
-                    new idPlane(0, 1, 1, 0),
-                    new idPlane(0, -1, 1, 0),
-                    new idPlane(0, 0, -1, 0)
-                },
-                {
-                    new idPlane(0, 0, -1, 0),
-                    new idPlane(1, 0, -1, 0),
-                    new idPlane(-1, 0, -1, 0),
-                    new idPlane(0, 1, -1, 0),
-                    new idPlane(0, -1, -1, 0),
-                    new idPlane(0, 0, 1, 0)
-                }
-            };
-//
-    static int c_caps, c_sils;
-//
-    static boolean callOptimizer;			// call the preprocessor optimizer after clipping occluders
-//
-
-    static class indexRef_t {
-
-        int frontCapStart;
-        int rearCapStart;
-        int silStart;
-        int end;
-    };
-    static indexRef_t[] indexRef = Stream.generate(indexRef_t::new).limit(6).toArray(indexRef_t[]::new);
-    static int indexFrustumNumber;		// which shadow generating side of a light the indexRef is for
 //
 /*
      ===============
@@ -260,6 +252,12 @@ public class tr_stencilshadow {
      other surfaces, we could just compare indexes.
      ===============
      */
+
+    // a point that is on the plane is NOT culled
+//#define	POINT_CULLED(p1) ( ( pointCull[p1] ^ 0xfc0 ) & 0xfc0 )
+    static boolean POINT_CULLED(final int p1, final int[] pointCull) {
+        return ((pointCull[p1] & 0xfc0) != 0xfc0);
+    }
 
     public static boolean PointsOrdered(final idVec3 a, final idVec3 b) {
         final float i, j;
@@ -326,8 +324,8 @@ public class tr_stencilshadow {
      ===================
      */
     public static void R_ProjectPointsToFarPlane(final idRenderEntityLocal ent, final idRenderLightLocal light,
-            final idPlane lightPlaneLocal,
-            int firstShadowVert, int numShadowVerts) {
+                                                 final idPlane lightPlaneLocal,
+                                                 int firstShadowVert, int numShadowVerts) {
         idVec3 lv = new idVec3();
         idVec4[] mat = Stream.generate(idVec4::new).limit(4).toArray(idVec4[]::new);
         int i;
@@ -371,14 +369,6 @@ public class tr_stencilshadow {
 //	}
         }
     }
-    static final int MAX_CLIPPED_POINTS = 20;
-
-    static class clipTri_t {
-
-        int numVerts;
-        idVec3[] verts = new idVec3[MAX_CLIPPED_POINTS];
-        int[] edgeFlags = new int[MAX_CLIPPED_POINTS];
-    };
 
     /*
      =============
@@ -426,7 +416,7 @@ public class tr_stencilshadow {
             return inNum;
         }
         if (0 == counts[SIDE_BACK]) {
-            return inNum;		// inout stays the same
+            return inNum;        // inout stays the same
         }
 
         // avoid wrapping checks by duplicating first value to end
@@ -539,11 +529,11 @@ public class tr_stencilshadow {
                 if (numClipSilEdges == MAX_CLIP_SIL_EDGES) {
                     break;
                 }
-                clipSilEdges[ numClipSilEdges][0] = base + i * 2;
+                clipSilEdges[numClipSilEdges][0] = base + i * 2;
                 if (i == ct.numVerts - 1) {
-                    clipSilEdges[ numClipSilEdges][1] = base;
+                    clipSilEdges[numClipSilEdges][1] = base;
                 } else {
-                    clipSilEdges[ numClipSilEdges][1] = base + (i + 1) * 2;
+                    clipSilEdges[numClipSilEdges][1] = base + (i + 1) * 2;
                 }
                 numClipSilEdges++;
             }
@@ -609,9 +599,8 @@ public class tr_stencilshadow {
             clip[2] = p1.oGet(2) + f * (p2.oGet(2) - p1.oGet(2));
         }
 
-        return true;	// retain a fragment
+        return true;    // retain a fragment
     }
-
 
     /*
      ==================
@@ -639,7 +628,7 @@ public class tr_stencilshadow {
             v2 = clipSilEdges[i][1];
             v1_back = v1 + 1;
             v2_back = v2 + 1;
-            if (PointsOrdered(shadowVerts[ v1].ToVec3(), shadowVerts[ v2].ToVec3())) {
+            if (PointsOrdered(shadowVerts[v1].ToVec3(), shadowVerts[v2].ToVec3())) {
                 shadowIndexes[numShadowIndexes++] = v1;
                 shadowIndexes[numShadowIndexes++] = v2;
                 shadowIndexes[numShadowIndexes++] = v1_back;
@@ -686,7 +675,7 @@ public class tr_stencilshadow {
             // not just that it has the correct facing direction
             // This will cause edges that are exactly on the frustum plane
             // to be considered sil edges if the face inside casts a shadow.
-            if (0 == (faceCastsShadow[ sil.p1] ^ faceCastsShadow[ sil.p2])) {
+            if (0 == (faceCastsShadow[sil.p1] ^ faceCastsShadow[sil.p2])) {
                 continue;
             }
 
@@ -706,16 +695,16 @@ public class tr_stencilshadow {
                 }
                 v1 = numShadowVerts;
                 v2 = v1 + 2;
-                if (!R_ClipLineToLight(tri.verts[ sil.v1].xyz, tri.verts[ sil.v2].xyz,
+                if (!R_ClipLineToLight(tri.verts[sil.v1].xyz, tri.verts[sil.v2].xyz,
                         frustum, shadowVerts[v1].ToVec3(), shadowVerts[v2].ToVec3())) {
-                    continue;	// clipped away
+                    continue;    // clipped away
                 }
 
                 numShadowVerts += 4;
             } else {
                 // use the entire edge
-                v1 = remap[ sil.v1];
-                v2 = remap[ sil.v2];
+                v1 = remap[sil.v1];
+                v2 = remap[sil.v2];
                 if (v1 < 0 || v2 < 0) {
                     common.Error("R_AddSilEdges: bad remap[]");
                 }
@@ -731,8 +720,8 @@ public class tr_stencilshadow {
             // consistantly between any two points, no matter which order they are specified.
             // If this wasn't done, slight rasterization cracks would show in the shadow
             // volume when two sil edges were exactly coincident
-            if (faceCastsShadow[ sil.p2] != 0) {
-                if (PointsOrdered(shadowVerts[ v1].ToVec3(), shadowVerts[ v2].ToVec3())) {
+            if (faceCastsShadow[sil.p2] != 0) {
+                if (PointsOrdered(shadowVerts[v1].ToVec3(), shadowVerts[v2].ToVec3())) {
                     shadowIndexes[numShadowIndexes++] = v1;
                     shadowIndexes[numShadowIndexes++] = v1 + 1;
                     shadowIndexes[numShadowIndexes++] = v2;
@@ -748,7 +737,7 @@ public class tr_stencilshadow {
                     shadowIndexes[numShadowIndexes++] = v2 + 1;
                 }
             } else {
-                if (PointsOrdered(shadowVerts[ v1].ToVec3(), shadowVerts[ v2].ToVec3())) {
+                if (PointsOrdered(shadowVerts[v1].ToVec3(), shadowVerts[v2].ToVec3())) {
                     shadowIndexes[numShadowIndexes++] = v1;
                     shadowIndexes[numShadowIndexes++] = v2;
                     shadowIndexes[numShadowIndexes++] = v1 + 1;
@@ -833,12 +822,12 @@ public class tr_stencilshadow {
      =================
      */
     public static void R_CreateShadowVolumeInFrustum(final idRenderEntityLocal ent,
-            final srfTriangles_s tri,
-            final idRenderLightLocal light,
-            final idVec3 lightOrigin,
-            final idPlane[] frustum/*[6]*/,
-            final idPlane farPlane,
-            boolean makeClippedPlanes) {
+                                                     final srfTriangles_s tri,
+                                                     final idRenderLightLocal light,
+                                                     final idVec3 lightOrigin,
+                                                     final idPlane[] frustum/*[6]*/,
+                                                     final idPlane farPlane,
+                                                     boolean makeClippedPlanes) {
         int i;
         int numTris;
         int[] pointCull;
@@ -863,7 +852,7 @@ public class tr_stencilshadow {
         for (i = 0; i < numTris; i++) {
             int i1, i2, i3;
 
-            faceCastsShadow[i] = 0;	// until shown otherwise
+            faceCastsShadow[i] = 0;    // until shown otherwise
 
             // if it isn't facing the right way, don't add it
             // to the shadow volume
@@ -871,9 +860,9 @@ public class tr_stencilshadow {
                 continue;
             }
 
-            i1 = tri.silIndexes[ i * 3 + 0];
-            i2 = tri.silIndexes[ i * 3 + 1];
-            i3 = tri.silIndexes[ i * 3 + 2];
+            i1 = tri.silIndexes[i * 3 + 0];
+            i2 = tri.silIndexes[i * 3 + 1];
+            i3 = tri.silIndexes[i * 3 + 2];
 
             // if all the verts are off one side of the frustum,
             // don't add any of them
@@ -909,7 +898,7 @@ public class tr_stencilshadow {
 
             // clip the triangle if any points are on the negative sides
             if (TRIANGLE_CLIPPED(i1, i2, i3, pointCull)) {
-                cullBits = ((pointCull[ i1] ^ 0xfc0) | (pointCull[ i2] ^ 0xfc0) | (pointCull[ i3] ^ 0xfc0)) >> 6;
+                cullBits = ((pointCull[i1] ^ 0xfc0) | (pointCull[i2] ^ 0xfc0) | (pointCull[i3] ^ 0xfc0)) >> 6;
                 // this will also define clip edges that will become
                 // silhouette planes
                 if (R_ClipTriangleToLight(tri.verts[i1].xyz, tri.verts[i2].xyz,
@@ -1009,9 +998,9 @@ public class tr_stencilshadow {
             return;
         }
         for (i = 0; i < numCapIndexes; i += 3) {
-            shadowIndexes[ numShadowIndexes + i + 0] = shadowIndexes[ firstShadowIndex + i + 2] + 1;
-            shadowIndexes[ numShadowIndexes + i + 1] = shadowIndexes[ firstShadowIndex + i + 1] + 1;
-            shadowIndexes[ numShadowIndexes + i + 2] = shadowIndexes[ firstShadowIndex + i + 0] + 1;
+            shadowIndexes[numShadowIndexes + i + 0] = shadowIndexes[firstShadowIndex + i + 2] + 1;
+            shadowIndexes[numShadowIndexes + i + 1] = shadowIndexes[firstShadowIndex + i + 1] + 1;
+            shadowIndexes[numShadowIndexes + i + 2] = shadowIndexes[firstShadowIndex + i + 0] + 1;
         }
         numShadowIndexes += numCapIndexes;
 
@@ -1042,30 +1031,6 @@ public class tr_stencilshadow {
         indexRef[indexFrustumNumber].end = numShadowIndexes;
         indexFrustumNumber++;
     }
-
-    /*
-     ===================
-     R_MakeShadowFrustums
-
-     Called at definition derivation time
-     ===================
-     */
-    private static final int[][] faceCorners/*[6][4]*/ = {
-                {7, 5, 1, 3}, // positive X side
-                {4, 6, 2, 0}, // negative X side
-                {6, 7, 3, 2}, // positive Y side
-                {5, 4, 0, 1}, // negative Y side
-                {6, 4, 5, 7}, // positive Z side
-                {3, 1, 0, 2} // negative Z side
-            };
-    private static final int[][] faceEdgeAdjacent/*[6][4]*/ = {
-                {4, 4, 2, 2}, // positive X side
-                {7, 7, 1, 1}, // negative X side
-                {5, 5, 0, 0}, // positive Y side
-                {6, 6, 3, 3}, // negative Y side
-                {0, 0, 3, 3}, // positive Z side
-                {5, 5, 6, 6} // negative Z side
-            };
 
     public static void R_MakeShadowFrustums(idRenderLightLocal light) {
         int i, j;
@@ -1103,18 +1068,15 @@ public class tr_stencilshadow {
 //			light.numShadowFrustums++;
 //		}
             } else {
-                // exact projection,taking into account asymetric frustums when 
+                // exact projection,taking into account asymetric frustums when
                 // globalLightOrigin isn't centered
 
-                boolean centerOutside = false;
+                boolean centerOutside = Math.abs(light.parms.lightCenter.oGet(0)) > light.parms.lightRadius.oGet(0)
+                        || Math.abs(light.parms.lightCenter.oGet(1)) > light.parms.lightRadius.oGet(1)
+                        || Math.abs(light.parms.lightCenter.oGet(2)) > light.parms.lightRadius.oGet(2);
 
                 // if the light center of projection is outside the light bounds,
                 // we will need to build the planes a little differently
-                if (Math.abs(light.parms.lightCenter.oGet(0)) > light.parms.lightRadius.oGet(0)
-                        || Math.abs(light.parms.lightCenter.oGet(1)) > light.parms.lightRadius.oGet(1)
-                        || Math.abs(light.parms.lightCenter.oGet(2)) > light.parms.lightRadius.oGet(2)) {
-                    centerOutside = true;
-                }
 
                 // make the corners
                 idVec3[] corners = new idVec3[8];
@@ -1135,7 +1097,7 @@ public class tr_stencilshadow {
 
                 light.numShadowFrustums = 0;
                 for (int side = 0; side < 6; side++) {
-                    shadowFrustum_t frust = light.shadowFrustums[ light.numShadowFrustums];
+                    shadowFrustum_t frust = light.shadowFrustums[light.numShadowFrustums];
                     idVec3 p1 = corners[faceCorners[side][0]];
                     idVec3 p2 = corners[faceCorners[side][1]];
                     idVec3 p3 = corners[faceCorners[side][2]];
@@ -1152,7 +1114,7 @@ public class tr_stencilshadow {
 
                     frust.numPlanes = 6;
                     frust.planes[5] = new idPlane(backPlane);
-                    frust.planes[4] = new idPlane(backPlane);	// we don't really need the extra plane
+                    frust.planes[4] = new idPlane(backPlane);    // we don't really need the extra plane
 
                     // make planes with positive side facing inwards in light local coordinates
                     for (int edge = 0; edge < 4; edge++) {
@@ -1174,7 +1136,7 @@ public class tr_stencilshadow {
                                 frust.planes[edge] = sidePlane;
                             }
                             // we can't guarantee a neighbor, so add sill planes at edge
-                            light.shadowFrustums[ light.numShadowFrustums].makeClippedPlanes = true;
+                            light.shadowFrustums[light.numShadowFrustums].makeClippedPlanes = true;
                         }
                     }
                     light.numShadowFrustums++;
@@ -1186,7 +1148,7 @@ public class tr_stencilshadow {
 
         // projected light
         light.numShadowFrustums = 1;
-        shadowFrustum_t frust = light.shadowFrustums[ 0];
+        shadowFrustum_t frust = light.shadowFrustums[0];
 
         // flip and transform the frustum planes so the positive side faces
         // inward in local coordinates
@@ -1234,8 +1196,8 @@ public class tr_stencilshadow {
      =================
      */
     public static srfTriangles_s R_CreateShadowVolume(final idRenderEntityLocal ent,
-            final srfTriangles_s tri, final idRenderLightLocal light,
-            shadowGen_t optimize, srfCullInfo_t cullInfo) {
+                                                      final srfTriangles_s tri, final idRenderLightLocal light,
+                                                      shadowGen_t optimize, srfCullInfo_t cullInfo) {
         int i, j;
         idVec3 lightOrigin = new idVec3();
         srfTriangles_s newTri;
@@ -1293,7 +1255,7 @@ public class tr_stencilshadow {
         // the facing information will be the same for all six projections
         // from a point light, as well as for any directed lights
         globalFacing = cullInfo.facing;
-        faceCastsShadow = new byte[tri.numIndexes / 3 + 1];	// + 1 for fake dangling edge face
+        faceCastsShadow = new byte[tri.numIndexes / 3 + 1];    // + 1 for fake dangling edge face
         remap = new int[tri.numVerts];
 
         R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, lightOrigin);
@@ -1399,7 +1361,7 @@ public class tr_stencilshadow {
             }
 
         } else {
-            newTri.shadowCapPlaneBits = 63;	// we don't have optimized index lists
+            newTri.shadowCapPlaneBits = 63;    // we don't have optimized index lists
             SIMDProcessor.Memcpy(newTri.indexes, shadowIndexes, newTri.numIndexes);
         }
 
@@ -1408,5 +1370,35 @@ public class tr_stencilshadow {
         }
 
         return newTri;
+    }
+    /*
+     ============================================================
+
+     TR_STENCILSHADOWS
+
+     "facing" should have one more element than tri->numIndexes / 3, which should be set to 1
+
+     ============================================================
+     */
+    public enum shadowGen_t {
+
+        SG_DYNAMIC,// use infinite projections
+        SG_STATIC, // clip to bounds
+        SG_OFFLINE // perform very time consuming optimizations
+    }
+
+    static class indexRef_t {
+
+        int end;
+        int frontCapStart;
+        int rearCapStart;
+        int silStart;
+    }
+
+    static class clipTri_t {
+
+        int[] edgeFlags = new int[MAX_CLIPPED_POINTS];
+        int numVerts;
+        idVec3[] verts = new idVec3[MAX_CLIPPED_POINTS];
     }
 }

@@ -3,6 +3,7 @@ package neo.idlib.containers;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Math_h.idMath;
+
 import static neo.idlib.math.Plane.*;
 
 /**
@@ -19,7 +20,7 @@ public class PlaneSet {
      */
     public static class idPlaneSet extends idList<idPlane> {
 
-        private idHashIndex hash;
+        private final idHashIndex hash;
         //
         //
 
@@ -33,7 +34,7 @@ public class PlaneSet {
             hash.Free();
         }
 
-//
+        //
         public int FindPlane(final idPlane plane, final float normalEps, final float distEps) {
             int i, border, hashKey;
 
@@ -62,5 +63,6 @@ public class PlaneSet {
                 return (Num() - 2);
             }
         }
-    };
+    }
+
 }

@@ -1,8 +1,5 @@
 package neo.idlib.math;
 
-import java.nio.FloatBuffer;
-import java.util.Arrays;
-
 import neo.Game.Animation.Anim_Blend.idAnimBlend;
 import neo.Renderer.Model.dominantTri_s;
 import neo.Renderer.Model.shadowCache_s;
@@ -23,6 +20,9 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.idlib.math.Vector.idVecX;
 
+import java.nio.FloatBuffer;
+import java.util.Arrays;
+
 import static neo.TempDump.btoi;
 import static neo.TempDump.fbtofa;
 import static neo.sys.sys_public.CPUID_GENERIC;
@@ -33,9 +33,26 @@ import static neo.sys.sys_public.CPUID_NONE;
  */
 public class Simd {
 
-    static idSIMDProcessor processor = null;            // pointer to SIMD processor
-    static idSIMDProcessor generic   = null;            // pointer to generic SIMD implementation
+    //
+//
+    public static final int MIXBUFFER_SAMPLES = 4096;
     public static idSIMDProcessor SIMDProcessor;
+    static long baseClocks = 0;
+    static idSIMDProcessor generic = null;            // pointer to generic SIMD implementation
+
+    static idSIMDProcessor p_generic;
+    //
+    static idSIMDProcessor p_simd;
+    static idSIMDProcessor processor = null;            // pointer to SIMD processor
+    public enum speakerLabel {
+
+        SPEAKER_LEFT,
+        SPEAKER_RIGHT,
+        SPEAKER_CENTER,
+        SPEAKER_LFE,
+        SPEAKER_BACKLEFT,
+        SPEAKER_BACKRIGHT
+    }
 
     /*
      ===============================================================================
@@ -57,7 +74,8 @@ public class Simd {
         }
 
         public static void InitProcessor(final String module, boolean forceGeneric) {
-            /*cpuid_t*/ int cpuid;
+            /*cpuid_t*/
+            int cpuid;
             idSIMDProcessor newProcessor;
 
             cpuid = idLib.sys.GetProcessorId();
@@ -254,33 +272,18 @@ public class Simd {
 //                }/* _WIN32 */
 
             }
-        };
-    };
-//    
-    static idSIMDProcessor p_simd;
-    static idSIMDProcessor p_generic;
-    static long baseClocks = 0;
-//
-//
-    public static final int MIXBUFFER_SAMPLES = 4096;
+        }
 
-    public enum speakerLabel {
-
-        SPEAKER_LEFT,
-        SPEAKER_RIGHT,
-        SPEAKER_CENTER,
-        SPEAKER_LFE,
-        SPEAKER_BACKLEFT,
-        SPEAKER_BACKRIGHT
-    };
+    }
 
     public static abstract class idSIMDProcessor {
+
+        //
+        public /*cpuid_t*/ int cpuid;
 
         public idSIMDProcessor() {
             cpuid = CPUID_NONE;
         }
-//
-        public /*cpuid_t*/ int cpuid;
 //
 
         public abstract String/*char *VPCALL*/ GetName();
@@ -379,7 +382,7 @@ public class Simd {
                 dst[i].oSet(src[i]);
             }
         }
-        
+
         public void /*VPCALL*/ Memcpy(idJointQuat[] dst, final idJointQuat[] src, final int count) {
             for (int i = 0; i < count; i++) {
                 dst[i] = new idJointQuat(src[i]);
@@ -506,18 +509,18 @@ public class Simd {
         public void /*VPCALL*/ UpSampleOGGTo44kHz(float[] dest, final float[][] ogg, final int numSamples, final int kHz, final int numChannels) {
             this.UpSampleOGGTo44kHz(dest, 0, ogg, numSamples, kHz, numChannels);
         }
-        
-        public abstract void /*VPCALL*/ UpSampleOGGTo44kHz(float[] dest, int offset,  final float[][] ogg, final int numSamples, final int kHz, final int numChannels);
-        
-        public abstract void /*VPCALL*/ UpSampleOGGTo44kHz(FloatBuffer dest, int offset,  final float[][] ogg, final int numSamples, final int kHz, final int numChannels);
 
-        public abstract void /*VPCALL*/ MixSoundTwoSpeakerMono(float[] mixBuffer, final float[] samples, final int numSamples, final float lastV[], final float currentV[]);
+        public abstract void /*VPCALL*/ UpSampleOGGTo44kHz(float[] dest, int offset, final float[][] ogg, final int numSamples, final int kHz, final int numChannels);
 
-        public abstract void /*VPCALL*/ MixSoundTwoSpeakerStereo(float[] mixBuffer, final float[] samples, final int numSamples, final float lastV[], final float currentV[]);
+        public abstract void /*VPCALL*/ UpSampleOGGTo44kHz(FloatBuffer dest, int offset, final float[][] ogg, final int numSamples, final int kHz, final int numChannels);
 
-        public abstract void /*VPCALL*/ MixSoundSixSpeakerMono(float[] mixBuffer, final float[] samples, final int numSamples, final float lastV[], final float currentV[]);
+        public abstract void /*VPCALL*/ MixSoundTwoSpeakerMono(float[] mixBuffer, final float[] samples, final int numSamples, final float[] lastV, final float[] currentV);
 
-        public abstract void /*VPCALL*/ MixSoundSixSpeakerStereo(float[] mixBuffer, final float[] samples, final int numSamples, final float lastV[], final float currentV[]);
+        public abstract void /*VPCALL*/ MixSoundTwoSpeakerStereo(float[] mixBuffer, final float[] samples, final int numSamples, final float[] lastV, final float[] currentV);
+
+        public abstract void /*VPCALL*/ MixSoundSixSpeakerMono(float[] mixBuffer, final float[] samples, final int numSamples, final float[] lastV, final float[] currentV);
+
+        public abstract void /*VPCALL*/ MixSoundSixSpeakerStereo(float[] mixBuffer, final float[] samples, final int numSamples, final float[] lastV, final float[] currentV);
 
         public abstract void /*VPCALL*/ MixedSoundToSamples(short[] samples, int offset, final float[] mixBuffer, final int numSamples);
 
@@ -561,6 +564,7 @@ public class Simd {
             System.arraycopy(src, srcOffset, dst, dstOffset, count);
         }
 
-    };
+    }
+
     //TODO:add tests
 }

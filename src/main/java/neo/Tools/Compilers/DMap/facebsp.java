@@ -1,33 +1,21 @@
 package neo.Tools.Compilers.DMap;
 
+import neo.Tools.Compilers.DMap.dmap.*;
+import neo.idlib.geometry.Winding.idWinding;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Plane.*;
+import neo.idlib.math.Vector.idVec3;
+
 import static java.lang.Math.floor;
 import static neo.Renderer.Material.CONTENTS_AREAPORTAL;
 import static neo.TempDump.NOT;
-import static neo.Tools.Compilers.DMap.dmap.PLANENUM_LEAF;
-import neo.Tools.Compilers.DMap.dmap.bspface_s;
-import static neo.Tools.Compilers.DMap.dmap.dmapGlobals;
-import neo.Tools.Compilers.DMap.dmap.node_s;
-import neo.Tools.Compilers.DMap.dmap.primitive_s;
-import neo.Tools.Compilers.DMap.dmap.side_s;
-import neo.Tools.Compilers.DMap.dmap.tree_s;
-import neo.Tools.Compilers.DMap.dmap.uBrush_t;
-import neo.Tools.Compilers.DMap.dmap.uPortal_s;
+import static neo.Tools.Compilers.DMap.dmap.*;
 import static neo.Tools.Compilers.DMap.map.FindFloatPlane;
 import static neo.Tools.Compilers.DMap.portals.FreePortal;
 import static neo.Tools.Compilers.DMap.portals.RemovePortalFromNode;
-import static neo.Tools.Compilers.DMap.ubrush.AllocNode;
-import static neo.Tools.Compilers.DMap.ubrush.AllocTree;
-import static neo.Tools.Compilers.DMap.ubrush.CLIP_EPSILON;
-import static neo.Tools.Compilers.DMap.ubrush.FreeBrushList;
+import static neo.Tools.Compilers.DMap.ubrush.*;
 import static neo.framework.Common.common;
-import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Plane.PLANETYPE_TRUEAXIAL;
-import static neo.idlib.math.Plane.SIDE_BACK;
-import static neo.idlib.math.Plane.SIDE_CROSS;
-import static neo.idlib.math.Plane.SIDE_FRONT;
-import neo.idlib.math.Plane.idPlane;
-import neo.idlib.math.Vector.idVec3;
+import static neo.idlib.math.Plane.*;
 import static neo.sys.win_shared.Sys_Milliseconds;
 
 /**
@@ -35,12 +23,12 @@ import static neo.sys.win_shared.Sys_Milliseconds;
  */
 public class facebsp {
 
-    static int c_faceLeafs;
+    //
+    static final int BLOCK_SIZE = 1024;
     //
     //
     public static int c_nodes;
-    //
-    static final int BLOCK_SIZE = 1024;
+    static int c_faceLeafs;
 
     //void RemovePortalFromNode( uPortal_s *portal, node_s *l );
     static node_s NodeForPoint(node_s node, idVec3 origin) {
@@ -243,7 +231,7 @@ public class facebsp {
             for (check = list; check != null; check = check.next) {
                 if (check.planenum == split.planenum) {
                     facing++;
-                    check.checked = true;	// won't need to test this plane again
+                    check.checked = true;    // won't need to test this plane again
                     continue;
                 }
                 side = check.w.PlaneSide(mapPlane);
@@ -257,7 +245,7 @@ public class facebsp {
             }
             value = 5 * facing - 5 * splits; // - abs(front-back);
             if (mapPlane.Type() < PLANETYPE_TRUEAXIAL) {
-                value += 5;		// axial is better
+                value += 5;        // axial is better
             }
 
             if (value > bestValue) {

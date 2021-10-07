@@ -1,21 +1,22 @@
 package neo.ui;
 
-import static neo.TempDump.NOT;
-import static neo.framework.Common.common;
-import static neo.framework.KeyInput.K_ESCAPE;
-import static neo.framework.KeyInput.K_MOUSE1;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Vector.idVec4;
-import static neo.sys.sys_public.sysEventType_t.SE_KEY;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import static neo.ui.Window.WIN_CANFOCUS;
-import static neo.ui.Window.WIN_HOLDCAPTURE;
 import neo.ui.Window.idWindow;
 import neo.ui.Winvar.idWinStr;
 import neo.ui.Winvar.idWinVar;
+
+import static neo.TempDump.NOT;
+import static neo.framework.Common.common;
+import static neo.framework.KeyInput.K_ESCAPE;
+import static neo.framework.KeyInput.K_MOUSE1;
+import static neo.sys.sys_public.sysEventType_t.SE_KEY;
+import static neo.ui.Window.WIN_CANFOCUS;
+import static neo.ui.Window.WIN_HOLDCAPTURE;
 
 /**
  *
@@ -24,10 +25,11 @@ public class BindWindow {
 
     static class idBindWindow extends idWindow {
 
-        private idWinStr bindName = new idWinStr();
+        private static final StringBuilder ret = new StringBuilder(256);
+        private final idWinStr bindName = new idWinStr();
+        //
+        //
         private boolean waitingOnKey;
-        //
-        //
 
         public idBindWindow(idUserInterfaceLocal gui) {
             super(gui);
@@ -41,8 +43,6 @@ public class BindWindow {
             this.gui = gui;
             CommonInit();
         }
-//	virtual ~idBindWindow();
-        private static final StringBuilder ret = new StringBuilder(256);
 
         @Override
         public String HandleEvent(sysEvent_s event, boolean[] updateVisuals) {
@@ -128,5 +128,6 @@ public class BindWindow {
             bindName.data.oSet("");
             waitingOnKey = false;
         }
-    };
+    }
+
 }

@@ -1,53 +1,40 @@
 package neo.Game;
 
-import static java.lang.Math.sin;
-
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.g_blobSize;
-import static neo.Game.GameSys.SysCvar.g_blobTime;
-import static neo.Game.GameSys.SysCvar.g_doubleVision;
-import static neo.Game.GameSys.SysCvar.g_dvAmplitude;
-import static neo.Game.GameSys.SysCvar.g_dvFrequency;
-import static neo.Game.GameSys.SysCvar.g_dvTime;
-import static neo.Game.GameSys.SysCvar.g_kickAmplitude;
-import static neo.Game.GameSys.SysCvar.g_kickTime;
-import static neo.Game.GameSys.SysCvar.g_skipViewEffects;
-import static neo.Game.GameSys.SysCvar.g_testHealthVision;
-import static neo.Game.GameSys.SysCvar.g_testPostProcess;
-import static neo.Game.GameSys.SysCvar.pm_thirdPerson;
-import static neo.Game.Game_local.LAGO_MATERIAL;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Game_local.gameRenderWorld;
-import static neo.Game.Game_local.gameSoundWorld;
-import static neo.Game.Game_network.net_clientLagOMeter;
-import static neo.Game.Player.BERSERK;
 import neo.Game.Player.idPlayer;
-import neo.Game.PlayerView.screenBlob_t;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.RenderSystem.SCREEN_HEIGHT;
-import static neo.Renderer.RenderSystem.SCREEN_WIDTH;
-import static neo.Renderer.RenderSystem.renderSystem;
 import neo.Renderer.RenderWorld.renderView_s;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.framework.DeclManager.declManager;
 import neo.idlib.Dict_h.idDict;
-import static neo.idlib.Lib.colorWhite;
-import static neo.idlib.Lib.idLib.common;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Angles.idAngles;
-import static neo.idlib.math.Math_h.MS2SEC;
-import static neo.idlib.math.Math_h.SEC2MS;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 import neo.ui.UserInterface.idUserInterface;
 
+import static java.lang.Math.sin;
+import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.Game_local.*;
+import static neo.Game.Game_network.net_clientLagOMeter;
+import static neo.Game.Player.BERSERK;
+import static neo.Renderer.RenderSystem.*;
+import static neo.TempDump.isNotNullOrEmpty;
+import static neo.framework.DeclManager.declManager;
+import static neo.idlib.Lib.colorWhite;
+import static neo.idlib.Lib.idLib.common;
+import static neo.idlib.math.Math_h.MS2SEC;
+import static neo.idlib.math.Math_h.SEC2MS;
+
 /**
  *
  */
 public class PlayerView {
+
+    public static final int IMPULSE_DELAY = 150;
+
+    public static final int MAX_SCREEN_BLOBS = 8;
 
     /*
      ===============================================================================
@@ -59,47 +46,45 @@ public class PlayerView {
 // screenBlob_t is for the on-screen damage claw marks, etc
     public static class screenBlob_t {
 
-        idMaterial material;
-        float x, y, w, h;
-        float s1, t1, s2, t2;
-        int finishTime;
-        int startFadeTime;
         float driftAmount;
-    };
-    public static final int MAX_SCREEN_BLOBS    = 8;
-    public static final int IMPULSE_DELAY       = 150;
+        int finishTime;
+        idMaterial material;
+        float s1, t1, s2, t2;
+        int startFadeTime;
+        float x, y, w, h;
+    }
 
     public static class idPlayerView {
 
         private final screenBlob_t[] screenBlobs = new screenBlob_t[MAX_SCREEN_BLOBS];
+        private final idMaterial armorMaterial;     // armor damage view effect
+        private final idMaterial berserkMaterial;   // berserk effect
+        private final idMaterial bfgMaterial;       // when targeted with BFG
         //
-        private int          dvFinishTime;      // double vision will be stopped at this time
-        private idMaterial   dvMaterial;        // material to take the double vision screen shot
+        private boolean bfgVision;
+        private final idMaterial bloodSprayMaterial;// blood spray
         //
-        private int          kickFinishTime;    // view kick will be stopped at this time
-        private idAngles     kickAngles;
+        private int dvFinishTime;      // double vision will be stopped at this time
+        private final idMaterial dvMaterial;        // material to take the double vision screen shot
         //
-        private boolean      bfgVision;
+        private final idVec4 fadeColor;         // fade color
+        private final idVec4 fadeFromColor;     // color to fade from
+        private float fadeRate;          // fade rate
+        private int fadeTime;          // fade time
+        private final idVec4 fadeToColor;       // color to fade to
+        private final idMaterial irGogglesMaterial; // ir effect
+        private final idAngles kickAngles;
         //
-        private idMaterial   tunnelMaterial;    // health tunnel vision
-        private idMaterial   armorMaterial;     // armor damage view effect
-        private idMaterial   berserkMaterial;   // berserk effect
-        private idMaterial   irGogglesMaterial; // ir effect
-        private idMaterial   bloodSprayMaterial;// blood spray
-        private idMaterial   bfgMaterial;       // when targeted with BFG
-        private idMaterial   lagoMaterial;      // lagometer drawing
-        private float        lastDamageTime;    // accentuate the tunnel effect for a while
+        private int kickFinishTime;    // view kick will be stopped at this time
+        private final idMaterial lagoMaterial;      // lagometer drawing
+        private float lastDamageTime;    // accentuate the tunnel effect for a while
         //
-        private idVec4       fadeColor;         // fade color
-        private idVec4       fadeToColor;       // color to fade to
-        private idVec4       fadeFromColor;     // color to fade from
-        private float        fadeRate;          // fade rate
-        private int          fadeTime;          // fade time
+        private idPlayer player;
         //
-        private idAngles     shakeAng;          // from the sound sources
+        private final idAngles shakeAng;          // from the sound sources
         //
-        private idPlayer     player;
-        private renderView_s view;
+        private final idMaterial tunnelMaterial;    // health tunnel vision
+        private final renderView_s view;
         //
         //
 
@@ -357,7 +342,7 @@ public class PlayerView {
          kickVector, a world space direction that the attack should 
          ===================
          */
-        public idAngles AngleOffset() {			// returns the current kick angle
+        public idAngles AngleOffset() {            // returns the current kick angle
             idAngles ang = new idAngles();
 
             ang.Zero();
@@ -378,7 +363,7 @@ public class PlayerView {
             return ang;
         }
 
-        public idMat3 ShakeAxis() {			// returns the current shake angle
+        public idMat3 ShakeAxis() {            // returns the current shake angle
             return shakeAng.ToMat3();
         }
 
@@ -597,7 +582,7 @@ public class PlayerView {
                 }
 
                 if (player.PowerUpActive(BERSERK)) {
-                    int berserkTime = player.inventory.powerupEndTime[ BERSERK] - gameLocal.time;
+                    int berserkTime = player.inventory.powerupEndTime[BERSERK] - gameLocal.time;
                     if (berserkTime > 0) {
                         // start fading if within 10 seconds of going away
                         alpha = (berserkTime < 10000) ? (float) berserkTime / 10000 : 1.0f;
@@ -648,7 +633,7 @@ public class PlayerView {
 
             // carry red tint if in berserk mode
             idVec4 color = new idVec4(1, 1, 1, 1);
-            if (gameLocal.time < player.inventory.powerupEndTime[ BERSERK]) {
+            if (gameLocal.time < player.inventory.powerupEndTime[BERSERK]) {
                 color.y = 0;
                 color.z = 0;
             }
@@ -730,5 +715,6 @@ public class PlayerView {
             return oldest;
         }
 
-    };
+    }
+
 }

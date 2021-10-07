@@ -1,12 +1,13 @@
 package neo.framework;
 
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
 import neo.framework.DeclManager.idDecl;
 import neo.idlib.Lib;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Math_h.idMath;
+
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
 
 /**
  *
@@ -25,7 +26,7 @@ public class DeclTable {
 
         private boolean clamp;
         private boolean snap;
-        private idList<Float> values = new idList<>();
+        private final idList<Float> values = new idList<>();
         //
         //
 
@@ -101,7 +102,7 @@ public class DeclTable {
 
             // copy the 0 element to the end, so lerping doesn't
             // need to worry about the wrap case
-            float val = values.oGet(0);		// template bug requires this to not be in the Append()?
+            float val = values.oGet(0);        // template bug requires this to not be in the Append()?
             values.Append(val);
 
             return true;
@@ -154,5 +155,6 @@ public class DeclTable {
             return values.oGet(iIndex);
         }
 
-    };
+    }
+
 }

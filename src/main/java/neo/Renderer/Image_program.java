@@ -1,21 +1,20 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import static neo.Renderer.Image.MAX_IMAGE_NAME;
 import neo.Renderer.Image.textureDepth_t;
+import neo.idlib.Text.Lexer.*;
+import neo.idlib.Text.Token.idToken;
+import neo.idlib.math.Math_h.idMath;
+import neo.idlib.math.Vector.idVec3;
+import org.lwjgl.BufferUtils;
+
+import java.nio.ByteBuffer;
+
+import static neo.Renderer.Image.MAX_IMAGE_NAME;
 import static neo.Renderer.Image.textureDepth_t.TD_BUMP;
 import static neo.Renderer.Image_files.R_LoadImage;
 import static neo.Renderer.Image_process.R_Dropsample;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
-import neo.idlib.Text.Token.idToken;
-import neo.idlib.math.Math_h.idMath;
+import static neo.idlib.Text.Lexer.*;
 import static neo.idlib.math.Vector.getVec3_origin;
-import neo.idlib.math.Vector.idVec3;
-import org.lwjgl.BufferUtils;
 
 /**
  *
@@ -26,9 +25,9 @@ public class Image_program {
     final static StringBuffer parseBuffer = new StringBuffer(MAX_IMAGE_NAME);
 
     private static final float[][] factors = {
-        {1, 1, 1},
-        {1, 1, 1},
-        {1, 1, 1}
+            {1, 1, 1},
+            {1, 1, 1},
+            {1, 1, 1}
     };
 
     /*
@@ -361,10 +360,10 @@ public class Image_program {
 
                 // FIXME: look at five points?
                 // look at three points to estimate the gradient
-                a1 = d1 = depth[ (i * width + j)];
-                a2 = d2 = depth[ (i * width + ((j + 1) & (width - 1)))];
-                a3 = d3 = depth[ (((i + 1) & (height - 1)) * width + j)];
-                a4 = d4 = depth[ (((i + 1) & (height - 1)) * width + ((j + 1) & (width - 1)))];
+                a1 = d1 = depth[(i * width + j)];
+                a2 = d2 = depth[(i * width + ((j + 1) & (width - 1)))];
+                a3 = d3 = depth[(((i + 1) & (height - 1)) * width + j)];
+                a4 = d4 = depth[(((i + 1) & (height - 1)) * width + ((j + 1) & (width - 1)))];
 
                 d2 -= d1;
                 d3 -= d1;
@@ -547,7 +546,7 @@ public class Image_program {
         // resample pic2 to the same size as pic1
         if (width2 != width1 || height2 != height1) {
             newMap = R_Dropsample(data2, width2, height2, width1, height1);
-            data2 = (ByteBuffer) BufferUtils.createByteBuffer(newMap.length).put(newMap).flip();
+            data2 = BufferUtils.createByteBuffer(newMap.length).put(newMap).flip();
         } else {
             newMap = null;
         }

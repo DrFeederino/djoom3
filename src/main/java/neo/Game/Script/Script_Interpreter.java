@@ -1,178 +1,29 @@
 package neo.Game.Script;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import neo.Game.Entity.idEntity;
-import static neo.Game.GameSys.Event.D_EVENT_ENTITY;
-import static neo.Game.GameSys.Event.D_EVENT_ENTITY_NULL;
-import static neo.Game.GameSys.Event.D_EVENT_FLOAT;
-import static neo.Game.GameSys.Event.D_EVENT_INTEGER;
-import static neo.Game.GameSys.Event.D_EVENT_MAXARGS;
-import static neo.Game.GameSys.Event.D_EVENT_STRING;
-import static neo.Game.GameSys.Event.D_EVENT_TRACE;
-import static neo.Game.GameSys.Event.D_EVENT_VECTOR;
-
 import neo.Game.GameSys.Class.idEventArg;
-import neo.Game.GameSys.Event.idEventDef;
+import neo.Game.GameSys.Event.*;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import static neo.Game.GameSys.SysCvar.developer;
-import static neo.Game.Game_local.MAX_GENTITIES;
-import static neo.Game.Game_local.gameLocal;
-import static neo.Game.Script.Script_Compiler.OP_ADDRESS;
-import static neo.Game.Script.Script_Compiler.OP_ADD_F;
-import static neo.Game.Script.Script_Compiler.OP_ADD_FS;
-import static neo.Game.Script.Script_Compiler.OP_ADD_S;
-import static neo.Game.Script.Script_Compiler.OP_ADD_SF;
-import static neo.Game.Script.Script_Compiler.OP_ADD_SV;
-import static neo.Game.Script.Script_Compiler.OP_ADD_V;
-import static neo.Game.Script.Script_Compiler.OP_ADD_VS;
-import static neo.Game.Script.Script_Compiler.OP_AND;
-import static neo.Game.Script.Script_Compiler.OP_AND_BOOLBOOL;
-import static neo.Game.Script.Script_Compiler.OP_AND_BOOLF;
-import static neo.Game.Script.Script_Compiler.OP_AND_FBOOL;
-import static neo.Game.Script.Script_Compiler.OP_BITAND;
-import static neo.Game.Script.Script_Compiler.OP_BITOR;
-import static neo.Game.Script.Script_Compiler.OP_BREAK;
-import static neo.Game.Script.Script_Compiler.OP_CALL;
-import static neo.Game.Script.Script_Compiler.OP_COMP_F;
-import static neo.Game.Script.Script_Compiler.OP_CONTINUE;
-import static neo.Game.Script.Script_Compiler.OP_DIV_F;
-import static neo.Game.Script.Script_Compiler.OP_EQ_E;
-import static neo.Game.Script.Script_Compiler.OP_EQ_EO;
-import static neo.Game.Script.Script_Compiler.OP_EQ_F;
-import static neo.Game.Script.Script_Compiler.OP_EQ_OE;
-import static neo.Game.Script.Script_Compiler.OP_EQ_OO;
-import static neo.Game.Script.Script_Compiler.OP_EQ_S;
-import static neo.Game.Script.Script_Compiler.OP_EQ_V;
-import static neo.Game.Script.Script_Compiler.OP_EVENTCALL;
-import static neo.Game.Script.Script_Compiler.OP_GE;
-import static neo.Game.Script.Script_Compiler.OP_GOTO;
-import static neo.Game.Script.Script_Compiler.OP_GT;
-import static neo.Game.Script.Script_Compiler.OP_IF;
-import static neo.Game.Script.Script_Compiler.OP_IFNOT;
-import static neo.Game.Script.Script_Compiler.OP_INDIRECT_BOOL;
-import static neo.Game.Script.Script_Compiler.OP_INDIRECT_ENT;
-import static neo.Game.Script.Script_Compiler.OP_INDIRECT_F;
-import static neo.Game.Script.Script_Compiler.OP_INDIRECT_OBJ;
-import static neo.Game.Script.Script_Compiler.OP_INDIRECT_S;
-import static neo.Game.Script.Script_Compiler.OP_INDIRECT_V;
-import static neo.Game.Script.Script_Compiler.OP_INT_F;
-import static neo.Game.Script.Script_Compiler.OP_LE;
-import static neo.Game.Script.Script_Compiler.OP_LT;
-import static neo.Game.Script.Script_Compiler.OP_MOD_F;
-import static neo.Game.Script.Script_Compiler.OP_MUL_F;
-import static neo.Game.Script.Script_Compiler.OP_MUL_FV;
-import static neo.Game.Script.Script_Compiler.OP_MUL_V;
-import static neo.Game.Script.Script_Compiler.OP_MUL_VF;
-import static neo.Game.Script.Script_Compiler.OP_NEG_F;
-import static neo.Game.Script.Script_Compiler.OP_NEG_V;
-import static neo.Game.Script.Script_Compiler.OP_NE_E;
-import static neo.Game.Script.Script_Compiler.OP_NE_EO;
-import static neo.Game.Script.Script_Compiler.OP_NE_F;
-import static neo.Game.Script.Script_Compiler.OP_NE_OE;
-import static neo.Game.Script.Script_Compiler.OP_NE_OO;
-import static neo.Game.Script.Script_Compiler.OP_NE_S;
-import static neo.Game.Script.Script_Compiler.OP_NE_V;
-import static neo.Game.Script.Script_Compiler.OP_NOT_BOOL;
-import static neo.Game.Script.Script_Compiler.OP_NOT_ENT;
-import static neo.Game.Script.Script_Compiler.OP_NOT_F;
-import static neo.Game.Script.Script_Compiler.OP_NOT_S;
-import static neo.Game.Script.Script_Compiler.OP_NOT_V;
-import static neo.Game.Script.Script_Compiler.OP_OBJECTCALL;
-import static neo.Game.Script.Script_Compiler.OP_OBJTHREAD;
-import static neo.Game.Script.Script_Compiler.OP_OR;
-import static neo.Game.Script.Script_Compiler.OP_OR_BOOLBOOL;
-import static neo.Game.Script.Script_Compiler.OP_OR_BOOLF;
-import static neo.Game.Script.Script_Compiler.OP_OR_FBOOL;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_BTOF;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_BTOS;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_ENT;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_F;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_FTOB;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_FTOS;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_OBJ;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_OBJENT;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_S;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_V;
-import static neo.Game.Script.Script_Compiler.OP_PUSH_VTOS;
-import static neo.Game.Script.Script_Compiler.OP_RETURN;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_BOOL;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_BOOLTOF;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_BTOS;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_ENT;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_F;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_FLD;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_FTOBOOL;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_FTOS;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_OBJ;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_OBJENT;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_S;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_V;
-import static neo.Game.Script.Script_Compiler.OP_STOREP_VTOS;
-import static neo.Game.Script.Script_Compiler.OP_STORE_BOOL;
-import static neo.Game.Script.Script_Compiler.OP_STORE_BOOLTOF;
-import static neo.Game.Script.Script_Compiler.OP_STORE_BTOS;
-import static neo.Game.Script.Script_Compiler.OP_STORE_ENT;
-import static neo.Game.Script.Script_Compiler.OP_STORE_ENTOBJ;
-import static neo.Game.Script.Script_Compiler.OP_STORE_F;
-import static neo.Game.Script.Script_Compiler.OP_STORE_FTOBOOL;
-import static neo.Game.Script.Script_Compiler.OP_STORE_FTOS;
-import static neo.Game.Script.Script_Compiler.OP_STORE_OBJ;
-import static neo.Game.Script.Script_Compiler.OP_STORE_OBJENT;
-import static neo.Game.Script.Script_Compiler.OP_STORE_S;
-import static neo.Game.Script.Script_Compiler.OP_STORE_V;
-import static neo.Game.Script.Script_Compiler.OP_STORE_VTOS;
-import static neo.Game.Script.Script_Compiler.OP_SUB_F;
-import static neo.Game.Script.Script_Compiler.OP_SUB_V;
-import static neo.Game.Script.Script_Compiler.OP_SYSCALL;
-import static neo.Game.Script.Script_Compiler.OP_THREAD;
-import static neo.Game.Script.Script_Compiler.OP_UADD_F;
-import static neo.Game.Script.Script_Compiler.OP_UADD_V;
-import static neo.Game.Script.Script_Compiler.OP_UAND_F;
-import static neo.Game.Script.Script_Compiler.OP_UDECP_F;
-import static neo.Game.Script.Script_Compiler.OP_UDEC_F;
-import static neo.Game.Script.Script_Compiler.OP_UDIV_F;
-import static neo.Game.Script.Script_Compiler.OP_UDIV_V;
-import static neo.Game.Script.Script_Compiler.OP_UINCP_F;
-import static neo.Game.Script.Script_Compiler.OP_UINC_F;
-import static neo.Game.Script.Script_Compiler.OP_UMOD_F;
-import static neo.Game.Script.Script_Compiler.OP_UMUL_F;
-import static neo.Game.Script.Script_Compiler.OP_UMUL_V;
-import static neo.Game.Script.Script_Compiler.OP_UOR_F;
-import static neo.Game.Script.Script_Compiler.OP_USUB_F;
-import static neo.Game.Script.Script_Compiler.OP_USUB_V;
-import static neo.Game.Script.Script_Program.MAX_STRING_LEN;
-import static neo.Game.Script.Script_Program.def_namespace;
-import static neo.Game.Script.Script_Program.ev_boolean;
-import static neo.Game.Script.Script_Program.ev_field;
-import static neo.Game.Script.Script_Program.ev_float;
-import static neo.Game.Script.Script_Program.ev_string;
-import static neo.Game.Script.Script_Program.ev_vector;
-import neo.Game.Script.Script_Program.function_t;
-import neo.Game.Script.Script_Program.idScriptObject;
-import neo.Game.Script.Script_Program.idTypeDef;
-import neo.Game.Script.Script_Program.idVarDef;
-import static neo.Game.Script.Script_Program.idVarDef.initialized_t.stackVariable;
-import neo.Game.Script.Script_Program.statement_s;
-import static neo.Game.Script.Script_Program.type_object;
-import neo.Game.Script.Script_Program.varEval_s;
+import neo.Game.Script.Script_Program.*;
 import neo.Game.Script.Script_Thread.idThread;
-import static neo.TempDump.NOT;
-import static neo.TempDump.btoi;
-import static neo.TempDump.btos;
-import static neo.TempDump.ctos;
-import static neo.TempDump.isNotNullOrEmpty;
-import static neo.TempDump.itob;
-import static neo.TempDump.sizeof;
 import neo.idlib.Text.Str.idStr;
-
-import static neo.TempDump.strLen;
-import static neo.framework.Common.common;
-import static neo.idlib.Text.Str.va;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static neo.Game.GameSys.Event.*;
+import static neo.Game.GameSys.SysCvar.developer;
+import static neo.Game.Game_local.MAX_GENTITIES;
+import static neo.Game.Game_local.gameLocal;
+import static neo.Game.Script.Script_Compiler.*;
+import static neo.Game.Script.Script_Program.*;
+import static neo.Game.Script.Script_Program.idVarDef.initialized_t.stackVariable;
+import static neo.TempDump.*;
+import static neo.framework.Common.common;
+import static neo.idlib.Text.Str.va;
 import static neo.idlib.math.Vector.getVec3_zero;
 
 /**
@@ -180,43 +31,45 @@ import static neo.idlib.math.Vector.getVec3_zero;
  */
 public class Script_Interpreter {
 
-    static final int MAX_STACK_DEPTH = 64;
     static final int LOCALSTACK_SIZE = 6144;
+    static final int MAX_STACK_DEPTH = 64;
 
     public static class prstack_s {
 
-        int        s;
         function_t f;
-        int        stackbase;
-    };
+        int s;
+        int stackbase;
+    }
 
     public static class idInterpreter {
 
         public static final int NULL_ENTITY = -1;
+        static char[] text = new char[32];
+        private static int DBG_Execute = 0;
         private final prstack_s[] callStack = new prstack_s[MAX_STACK_DEPTH];
-        private int callStackDepth;
-        private int maxStackDepth;
         //
         private final byte[] localstack = new byte[LOCALSTACK_SIZE];
-        private int        localstackUsed;
-        private int        localstackBase;
-        private int        maxLocalstackUsed;
+        public boolean debug;
+        //
+        public boolean doneProcessing;
+        public boolean terminateOnExit;
+        public boolean threadDying;
+        private int callStackDepth;
         //
         private function_t currentFunction;
-        private int        instructionPointer;
-        //
-        private int        popParms;
+        private idEntity eventEntity;
+        private int instructionPointer;
+        private int localstackBase;
+        private int localstackUsed;
+        private int maxLocalstackUsed;
+        private int maxStackDepth;
         private idEventDef multiFrameEvent;
-        private idEntity   eventEntity;
-        //
-        private idThread   thread;
-        //
-        public  boolean    doneProcessing;
-        public  boolean    threadDying;
-        public  boolean    terminateOnExit;
-        public  boolean    debug;
         //
         //
+        //
+        private int popParms;
+        //
+        private idThread thread;
 
         public idInterpreter() {
             localstackUsed = 0;
@@ -261,8 +114,6 @@ public class Script_Interpreter {
             localstack[localstackUsed + 3] = (byte) (value >>> 24);
             localstackUsed += Integer.BYTES;
         }
-
-        static char[] text = new char[32];
 
         private String FloatToString(float value) {
 
@@ -477,21 +328,21 @@ public class Script_Interpreter {
                 switch (format[i]) {
                     case D_EVENT_INTEGER:
                         var.setIntPtr(localstack, (start + pos));
-                        data[i]= idEventArg.toArg((int) var.getFloatPtr());
+                        data[i] = idEventArg.toArg((int) var.getFloatPtr());
                         break;
 
                     case D_EVENT_FLOAT:
                         var.setIntPtr(localstack, (start + pos));
-                        data[i]= idEventArg.toArg(var.getFloatPtr());
+                        data[i] = idEventArg.toArg(var.getFloatPtr());
                         break;
 
                     case D_EVENT_VECTOR:
                         var.setIntPtr(localstack, (start + pos));
-                        data[i]= idEventArg.toArg(var.getVectorPtr());
+                        data[i] = idEventArg.toArg(var.getVectorPtr());
                         break;
 
                     case D_EVENT_STRING:
-                        data[i]= idEventArg.toArg(btos(localstack, start + pos));//( *( const char ** )&data[ i ] ) = ( char * )&localstack[ start + pos ];
+                        data[i] = idEventArg.toArg(btos(localstack, start + pos));//( *( const char ** )&data[ i ] ) = ( char * )&localstack[ start + pos ];
                         break;
 
                     case D_EVENT_ENTITY:
@@ -560,7 +411,7 @@ public class Script_Interpreter {
                 switch (format.charAt(i)) {
                     case D_EVENT_INTEGER:
                         source.setIntPtr(localstack, (start + pos));
-                        data[i] = idEventArg.toArg((int)source.getFloatPtr());
+                        data[i] = idEventArg.toArg((int) source.getFloatPtr());
                         break;
 
                     case D_EVENT_FLOAT:
@@ -616,7 +467,7 @@ public class Script_Interpreter {
         }
 
         // save games
-        public void Save(idSaveGame savefile) {				// archives object for save game file
+        public void Save(idSaveGame savefile) {                // archives object for save game file
             int i;
 
             savefile.WriteInt(callStackDepth);
@@ -661,7 +512,7 @@ public class Script_Interpreter {
             savefile.WriteBool(debug);
         }
 
-        public void Restore(idRestoreGame savefile) {				// unarchives object from save game file
+        public void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             int i;
             idStr funcname = new idStr();
             int[] func_index = {0};
@@ -902,7 +753,7 @@ public class Script_Interpreter {
 
             stack = callStack[callStackDepth] = new prstack_s();
 
-            stack.s = instructionPointer + 1;	// point to the next instruction to execute
+            stack.s = instructionPointer + 1;    // point to the next instruction to execute
             stack.f = currentFunction;
             stack.stackbase = localstackBase;
 
@@ -970,8 +821,8 @@ public class Script_Interpreter {
             EnterFunction(func, false);
         }
 
-        private static int DBG_Execute = 0;
-        public boolean Execute() {DBG_Execute++;
+        public boolean Execute() {
+            DBG_Execute++;
             varEval_s var_a = new varEval_s();
             varEval_s var_b;
             varEval_s var_c;
@@ -1620,7 +1471,7 @@ public class Script_Interpreter {
                             var_b.evalPtr.setIntPtr(var_a.getIntPtr());
                         }
                         break;
-                        
+
                     case OP_STOREP_S:
                         var_b = GetEvalVariable(st.b);
                         if (var_b != null && var_b.evalPtr != null) {
@@ -1700,9 +1551,9 @@ public class Script_Interpreter {
                             if (NOT(obj)) {
                                 var_b.evalPtr.setEntityNumberPtr(0);
 
-                            // st.b points to type_pointer, which is just a temporary that gets its type reassigned, so we store the real type in st.c
-                            // so that we can do a type check during run time since we don't know what type the script object is at compile time because it
-                            // comes from an entity
+                                // st.b points to type_pointer, which is just a temporary that gets its type reassigned, so we store the real type in st.c
+                                // so that we can do a type check during run time since we don't know what type the script object is at compile time because it
+                                // comes from an entity
                             } else if (!obj.GetTypeDef().Inherits(st.c.TypeDef())) {
                                 //Warning( "object '%s' cannot be converted to '%s'", obj.GetTypeName(), st.c.TypeDef().Name() );
                                 var_b.evalPtr.setEntityNumberPtr(0);
@@ -1720,7 +1571,7 @@ public class Script_Interpreter {
                             obj.offset = st.b.value.getPtrOffset();
                             var_c.setEvalPtr(var_a.getEntityNumberPtr());
                         } else {
-                            var_c.setEvalPtr(NULL_ENTITY);;
+                            var_c.setEvalPtr(NULL_ENTITY);
                         }
                         break;
 
@@ -1969,8 +1820,8 @@ public class Script_Interpreter {
 
                 case ev_vector:
 //                    if (reg.vectorPtr != null) {
-                        final idVec3 vectorPtr = reg.getVectorPtr();
-                        out.oSet(va("%g,%g,%g", vectorPtr.x, vectorPtr.y, vectorPtr.z));
+                    final idVec3 vectorPtr = reg.getVectorPtr();
+                    out.oSet(va("%g,%g,%g", vectorPtr.x, vectorPtr.y, vectorPtr.z));
 //                    } else {
 //                        out.oSet("0,0,0");
 //                    }
@@ -2044,5 +1895,6 @@ public class Script_Interpreter {
         public idThread GetThread() {
             return thread;
         }
-    };
+    }
+
 }

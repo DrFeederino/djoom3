@@ -1,39 +1,10 @@
 package neo.idlib.Text;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.util.Arrays;
-import static neo.TempDump.NOT;
-import static neo.TempDump.atocb;
-import static neo.TempDump.bbtocb;
 import neo.framework.File_h.idFile;
-import static neo.idlib.Lib.BIT;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Str.va;
-import static neo.idlib.Text.Token.TT_BINARY;
-import static neo.idlib.Text.Token.TT_DECIMAL;
-import static neo.idlib.Text.Token.TT_DOUBLE_PRECISION;
-import static neo.idlib.Text.Token.TT_EXTENDED_PRECISION;
-import static neo.idlib.Text.Token.TT_FLOAT;
-import static neo.idlib.Text.Token.TT_HEX;
-import static neo.idlib.Text.Token.TT_INDEFINITE;
-import static neo.idlib.Text.Token.TT_INFINITE;
-import static neo.idlib.Text.Token.TT_INTEGER;
-import static neo.idlib.Text.Token.TT_IPADDRESS;
-import static neo.idlib.Text.Token.TT_IPPORT;
-import static neo.idlib.Text.Token.TT_LITERAL;
-import static neo.idlib.Text.Token.TT_LONG;
-import static neo.idlib.Text.Token.TT_NAME;
-import static neo.idlib.Text.Token.TT_NAN;
-import static neo.idlib.Text.Token.TT_NUMBER;
-import static neo.idlib.Text.Token.TT_OCTAL;
-import static neo.idlib.Text.Token.TT_PUNCTUATION;
-import static neo.idlib.Text.Token.TT_SINGLE_PRECISION;
-import static neo.idlib.Text.Token.TT_STRING;
-import static neo.idlib.Text.Token.TT_UNSIGNED;
-import neo.idlib.Text.Token.idToken;
+import neo.idlib.Text.Token.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Quat.idCQuat;
@@ -41,183 +12,191 @@ import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Vector.idVec;
 import neo.idlib.math.Vector.idVec3;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.util.Arrays;
+
+import static neo.TempDump.*;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.Text.Str.va;
+import static neo.idlib.Text.Token.*;
+
 /**
  *
  */
 public class Lexer {
 
-    static final boolean PUNCTABLE = true;
-
+    public static final int LEXFL_ALLOWBACKSLASHSTRINGCONCAT = BIT(12);   // allow multiple strings seperated by '\' to be concatenated
+    public static final int LEXFL_ALLOWFLOATEXCEPTIONS = BIT(10);   // allow float exceptions like 1.#INF or 1.#IND to be parsed
+    public static final int LEXFL_ALLOWIPADDRESSES = BIT(9);    // allow ip addresses to be parsed as numbers
+    public static final int LEXFL_ALLOWMULTICHARLITERALS = BIT(11);   // allow multi character literals
+    public static final int LEXFL_ALLOWNUMBERNAMES = BIT(8);    // allow names to start with a number
+    public static final int LEXFL_ALLOWPATHNAMES = BIT(7);    // allow path seperators in names
+    public static final int LEXFL_NOBASEINCLUDES = BIT(6);    // don't include files embraced with < >
+    public static final int LEXFL_NODOLLARPRECOMPILE = BIT(5);    // don't use the $ sign for precompilation
     /**
      * ===============================================================================
-     *
+     * <p>
      * Lexicographical parser
-     *
+     * <p>
      * Does not use memory allocation during parsing. The lexer uses no memory
      * allocation if a source is loaded with LoadMemory(). However, idToken may
      * still allocate memory for large strings.
-     *
+     * <p>
      * A number directly following the escape character '\' in a string is
      * assumed to be in decimal format instead of octal. Binary numbers of the
      * form 0b.. or 0B.. can also be used.
-     *
+     * <p>
      * ===============================================================================
      */
     // lexer flags
-    public static final int             LEXFL_NOERRORS                   = BIT(0);    // don't print any errors
-    public static final int             LEXFL_NOWARNINGS                 = BIT(1);    // don't print any warnings
-    public static final int             LEXFL_NOFATALERRORS              = BIT(2);    // errors aren't fatal
-    public static final int             LEXFL_NOSTRINGCONCAT             = BIT(3);    // multiple strings seperated by whitespaces are not concatenated
-    public static final int             LEXFL_NOSTRINGESCAPECHARS        = BIT(4);    // no escape characters inside strings
-    public static final int             LEXFL_NODOLLARPRECOMPILE         = BIT(5);    // don't use the $ sign for precompilation
-    public static final int             LEXFL_NOBASEINCLUDES             = BIT(6);    // don't include files embraced with < >
-    public static final int             LEXFL_ALLOWPATHNAMES             = BIT(7);    // allow path seperators in names
-    public static final int             LEXFL_ALLOWNUMBERNAMES           = BIT(8);    // allow names to start with a number
-    public static final int             LEXFL_ALLOWIPADDRESSES           = BIT(9);    // allow ip addresses to be parsed as numbers
-    public static final int             LEXFL_ALLOWFLOATEXCEPTIONS       = BIT(10);   // allow float exceptions like 1.#INF or 1.#IND to be parsed
-    public static final int             LEXFL_ALLOWMULTICHARLITERALS     = BIT(11);   // allow multi character literals
-    public static final int             LEXFL_ALLOWBACKSLASHSTRINGCONCAT = BIT(12);   // allow multiple strings seperated by '\' to be concatenated
-    public static final int             LEXFL_ONLYSTRINGS                = BIT(13);   // parse as whitespace deliminated strings (quoted strings keep quotes)
+    public static final int LEXFL_NOERRORS = BIT(0);    // don't print any errors
+    public static final int LEXFL_NOFATALERRORS = BIT(2);    // errors aren't fatal
+    public static final int LEXFL_NOSTRINGCONCAT = BIT(3);    // multiple strings seperated by whitespaces are not concatenated
+    public static final int LEXFL_NOSTRINGESCAPECHARS = BIT(4);    // no escape characters inside strings
+    public static final int LEXFL_NOWARNINGS = BIT(1);    // don't print any warnings
+    public static final int LEXFL_ONLYSTRINGS = BIT(13);   // parse as whitespace deliminated strings (quoted strings keep quotes)
+    public static final int P_PRECOMP = 51;
+    static final boolean PUNCTABLE = true;
+    static final int P_ADD = 29;
+    static final int P_ADD_ASSIGN = 14;
+    static final int P_ASSIGN = 31;
+    static final int P_BACKSLASH = 50;
+    static final int P_BIN_AND = 32;
+    static final int P_BIN_AND_ASSIGN = 18;
+    static final int P_BIN_NOT = 35;
+    static final int P_BIN_OR = 33;
+    static final int P_BIN_OR_ASSIGN = 19;
+    static final int P_BIN_XOR = 34;
+    static final int P_BIN_XOR_ASSIGN = 20;
+    static final int P_BRACECLOSE = 47;
+    static final int P_BRACEOPEN = 46;
+    static final int P_COLON = 42;
+    static final int P_COMMA = 40;
+    static final int P_CPP1 = 24;
+    static final int P_CPP2 = 25;
+    static final int P_DEC = 17;
+    static final int P_DIV = 27;
+    static final int P_DIV_ASSIGN = 12;
+    static final int P_DOLLAR = 52;
+    static final int P_INC = 16;
+    static final int P_LOGIC_AND = 5;
+    static final int P_LOGIC_EQ = 9;
+    static final int P_LOGIC_GEQ = 7;
+    static final int P_LOGIC_GREATER = 37;
+    static final int P_LOGIC_LEQ = 8;
+    static final int P_LOGIC_LESS = 38;
+    static final int P_LOGIC_NOT = 36;
+    static final int P_LOGIC_OR = 6;
+    static final int P_LOGIC_UNEQ = 10;
+    static final int P_LSHIFT = 22;
+    static final int P_LSHIFT_ASSIGN = 2;
+    static final int P_MOD = 28;
+    static final int P_MOD_ASSIGN = 13;
+    static final int P_MUL = 26;
+    static final int P_MUL_ASSIGN = 11;
+    static final int P_PARENTHESESCLOSE = 45;
+    static final int P_PARENTHESESOPEN = 44;
+    static final int P_PARMS = 3;
+    static final int P_POINTERREF = 23;
+    static final int P_PRECOMPMERGE = 4;
+    static final int P_QUESTIONMARK = 43;
+    static final int P_REF = 39;
+    static final int P_RSHIFT = 21;
     //
-//    
+//
     // punctuation ids
-    static final        int             P_RSHIFT_ASSIGN                  = 1;
-    static final        int             P_LSHIFT_ASSIGN                  = 2;
-    static final        int             P_PARMS                          = 3;
-    static final        int             P_PRECOMPMERGE                   = 4;
-    static final        int             P_LOGIC_AND                      = 5;
-    static final        int             P_LOGIC_OR                       = 6;
-    static final        int             P_LOGIC_GEQ                      = 7;
-    static final        int             P_LOGIC_LEQ                      = 8;
-    static final        int             P_LOGIC_EQ                       = 9;
-    static final        int             P_LOGIC_UNEQ                     = 10;
-    static final        int             P_MUL_ASSIGN                     = 11;
-    static final        int             P_DIV_ASSIGN                     = 12;
-    static final        int             P_MOD_ASSIGN                     = 13;
-    static final        int             P_ADD_ASSIGN                     = 14;
-    static final        int             P_SUB_ASSIGN                     = 15;
-    static final        int             P_INC                            = 16;
-    static final        int             P_DEC                            = 17;
-    static final        int             P_BIN_AND_ASSIGN                 = 18;
-    static final        int             P_BIN_OR_ASSIGN                  = 19;
-    static final        int             P_BIN_XOR_ASSIGN                 = 20;
-    static final        int             P_RSHIFT                         = 21;
-    static final        int             P_LSHIFT                         = 22;
-    static final        int             P_POINTERREF                     = 23;
-    static final        int             P_CPP1                           = 24;
-    static final        int             P_CPP2                           = 25;
-    static final        int             P_MUL                            = 26;
-    static final        int             P_DIV                            = 27;
-    static final        int             P_MOD                            = 28;
-    static final        int             P_ADD                            = 29;
-    static final        int             P_SUB                            = 30;
-    static final        int             P_ASSIGN                         = 31;
-    static final        int             P_BIN_AND                        = 32;
-    static final        int             P_BIN_OR                         = 33;
-    static final        int             P_BIN_XOR                        = 34;
-    static final        int             P_BIN_NOT                        = 35;
-    static final        int             P_LOGIC_NOT                      = 36;
-    static final        int             P_LOGIC_GREATER                  = 37;
-    static final        int             P_LOGIC_LESS                     = 38;
-    static final        int             P_REF                            = 39;
-    static final        int             P_COMMA                          = 40;
-    static final        int             P_SEMICOLON                      = 41;
-    static final        int             P_COLON                          = 42;
-    static final        int             P_QUESTIONMARK                   = 43;
-    static final        int             P_PARENTHESESOPEN                = 44;
-    static final        int             P_PARENTHESESCLOSE               = 45;
-    static final        int             P_BRACEOPEN                      = 46;
-    static final        int             P_BRACECLOSE                     = 47;
-    static final        int             P_SQBRACKETOPEN                  = 48;
-    static final        int             P_SQBRACKETCLOSE                 = 49;
-    static final        int             P_BACKSLASH                      = 50;
-    public static final int             P_PRECOMP                        = 51;
-    static final        int             P_DOLLAR                         = 52;
+    static final int P_RSHIFT_ASSIGN = 1;
+    static final int P_SEMICOLON = 41;
+    static final int P_SQBRACKETCLOSE = 49;
+    static final int P_SQBRACKETOPEN = 48;
+    static final int P_SUB = 30;
+    static final int P_SUB_ASSIGN = 15;
     //
 //  
     //longer punctuations first
     static final punctuation_t[] default_punctuations = {
-        //binary operators
-        new punctuation_t(">>=", P_RSHIFT_ASSIGN),
-        new punctuation_t("<<=", P_LSHIFT_ASSIGN),
-        //
-        new punctuation_t("...", P_PARMS),
-        //define merge operator
-        new punctuation_t("##", P_PRECOMPMERGE), // pre-compiler
-        //logic operators
-        new punctuation_t("&&", P_LOGIC_AND), // pre-compiler
-        new punctuation_t("||", P_LOGIC_OR), // pre-compiler
-        new punctuation_t(">=", P_LOGIC_GEQ), // pre-compiler
-        new punctuation_t("<=", P_LOGIC_LEQ), // pre-compiler
-        new punctuation_t("==", P_LOGIC_EQ), // pre-compiler
-        new punctuation_t("!=", P_LOGIC_UNEQ), // pre-compiler
-        //arithmatic operators
-        new punctuation_t("*=", P_MUL_ASSIGN),
-        new punctuation_t("/=", P_DIV_ASSIGN),
-        new punctuation_t("%=", P_MOD_ASSIGN),
-        new punctuation_t("+=", P_ADD_ASSIGN),
-        new punctuation_t("-=", P_SUB_ASSIGN),
-        new punctuation_t("++", P_INC),
-        new punctuation_t("--", P_DEC),
-        //binary operators
-        new punctuation_t("&=", P_BIN_AND_ASSIGN),
-        new punctuation_t("|=", P_BIN_OR_ASSIGN),
-        new punctuation_t("^=", P_BIN_XOR_ASSIGN),
-        new punctuation_t(">>", P_RSHIFT), // pre-compiler
-        new punctuation_t("<<", P_LSHIFT), // pre-compiler
-        //reference operators
-        new punctuation_t("->", P_POINTERREF),
-        //C++
-        new punctuation_t("::", P_CPP1),
-        new punctuation_t(".*", P_CPP2),
-        //arithmatic operators
-        new punctuation_t("*", P_MUL), // pre-compiler
-        new punctuation_t("/", P_DIV), // pre-compiler
-        new punctuation_t("%", P_MOD), // pre-compiler
-        new punctuation_t("+", P_ADD), // pre-compiler
-        new punctuation_t("-", P_SUB), // pre-compiler
-        new punctuation_t("=", P_ASSIGN),
-        //binary operators
-        new punctuation_t("&", P_BIN_AND), // pre-compiler
-        new punctuation_t("|", P_BIN_OR), // pre-compiler
-        new punctuation_t("^", P_BIN_XOR), // pre-compiler
-        new punctuation_t("~", P_BIN_NOT), // pre-compiler
-        //logic operators
-        new punctuation_t("!", P_LOGIC_NOT), // pre-compiler
-        new punctuation_t(">", P_LOGIC_GREATER), // pre-compiler
-        new punctuation_t("<", P_LOGIC_LESS), // pre-compiler
-        //reference operator
-        new punctuation_t(".", P_REF),
-        //seperators
-        new punctuation_t(",", P_COMMA), // pre-compiler
-        new punctuation_t(";", P_SEMICOLON),
-        //label indication
-        new punctuation_t(":", P_COLON), // pre-compiler
-        //if statement
-        new punctuation_t("?", P_QUESTIONMARK), // pre-compiler
-        //embracements
-        new punctuation_t("(", P_PARENTHESESOPEN), // pre-compiler
-        new punctuation_t(")", P_PARENTHESESCLOSE), // pre-compiler
-        new punctuation_t("{", P_BRACEOPEN), // pre-compiler
-        new punctuation_t("}", P_BRACECLOSE), // pre-compiler
-        new punctuation_t("[", P_SQBRACKETOPEN),
-        new punctuation_t("]", P_SQBRACKETCLOSE),
-        //
-        new punctuation_t("\\", P_BACKSLASH),
-        //precompiler operator
-        new punctuation_t("#", P_PRECOMP), // pre-compiler
-        new punctuation_t("$", P_DOLLAR),
-        new punctuation_t(null, 0)
+            //binary operators
+            new punctuation_t(">>=", P_RSHIFT_ASSIGN),
+            new punctuation_t("<<=", P_LSHIFT_ASSIGN),
+            //
+            new punctuation_t("...", P_PARMS),
+            //define merge operator
+            new punctuation_t("##", P_PRECOMPMERGE), // pre-compiler
+            //logic operators
+            new punctuation_t("&&", P_LOGIC_AND), // pre-compiler
+            new punctuation_t("||", P_LOGIC_OR), // pre-compiler
+            new punctuation_t(">=", P_LOGIC_GEQ), // pre-compiler
+            new punctuation_t("<=", P_LOGIC_LEQ), // pre-compiler
+            new punctuation_t("==", P_LOGIC_EQ), // pre-compiler
+            new punctuation_t("!=", P_LOGIC_UNEQ), // pre-compiler
+            //arithmatic operators
+            new punctuation_t("*=", P_MUL_ASSIGN),
+            new punctuation_t("/=", P_DIV_ASSIGN),
+            new punctuation_t("%=", P_MOD_ASSIGN),
+            new punctuation_t("+=", P_ADD_ASSIGN),
+            new punctuation_t("-=", P_SUB_ASSIGN),
+            new punctuation_t("++", P_INC),
+            new punctuation_t("--", P_DEC),
+            //binary operators
+            new punctuation_t("&=", P_BIN_AND_ASSIGN),
+            new punctuation_t("|=", P_BIN_OR_ASSIGN),
+            new punctuation_t("^=", P_BIN_XOR_ASSIGN),
+            new punctuation_t(">>", P_RSHIFT), // pre-compiler
+            new punctuation_t("<<", P_LSHIFT), // pre-compiler
+            //reference operators
+            new punctuation_t("->", P_POINTERREF),
+            //C++
+            new punctuation_t("::", P_CPP1),
+            new punctuation_t(".*", P_CPP2),
+            //arithmatic operators
+            new punctuation_t("*", P_MUL), // pre-compiler
+            new punctuation_t("/", P_DIV), // pre-compiler
+            new punctuation_t("%", P_MOD), // pre-compiler
+            new punctuation_t("+", P_ADD), // pre-compiler
+            new punctuation_t("-", P_SUB), // pre-compiler
+            new punctuation_t("=", P_ASSIGN),
+            //binary operators
+            new punctuation_t("&", P_BIN_AND), // pre-compiler
+            new punctuation_t("|", P_BIN_OR), // pre-compiler
+            new punctuation_t("^", P_BIN_XOR), // pre-compiler
+            new punctuation_t("~", P_BIN_NOT), // pre-compiler
+            //logic operators
+            new punctuation_t("!", P_LOGIC_NOT), // pre-compiler
+            new punctuation_t(">", P_LOGIC_GREATER), // pre-compiler
+            new punctuation_t("<", P_LOGIC_LESS), // pre-compiler
+            //reference operator
+            new punctuation_t(".", P_REF),
+            //seperators
+            new punctuation_t(",", P_COMMA), // pre-compiler
+            new punctuation_t(";", P_SEMICOLON),
+            //label indication
+            new punctuation_t(":", P_COLON), // pre-compiler
+            //if statement
+            new punctuation_t("?", P_QUESTIONMARK), // pre-compiler
+            //embracements
+            new punctuation_t("(", P_PARENTHESESOPEN), // pre-compiler
+            new punctuation_t(")", P_PARENTHESESCLOSE), // pre-compiler
+            new punctuation_t("{", P_BRACEOPEN), // pre-compiler
+            new punctuation_t("}", P_BRACECLOSE), // pre-compiler
+            new punctuation_t("[", P_SQBRACKETOPEN),
+            new punctuation_t("]", P_SQBRACKETCLOSE),
+            //
+            new punctuation_t("\\", P_BACKSLASH),
+            //precompiler operator
+            new punctuation_t("#", P_PRECOMP), // pre-compiler
+            new punctuation_t("$", P_DOLLAR),
+            new punctuation_t(null, 0)
     };
-    static final        int[]           default_punctuationtable         = new int[256];
-    static final        int[]           default_nextpunctuation          = new int[default_punctuations.length];
+    static final int[] default_nextpunctuation = new int[default_punctuations.length];
+    static final int[] default_punctuationtable = new int[256];
     static boolean default_setup;
 
     // punctuation
     static class punctuation_t {
 
+        int n;                 // punctuation id
         String p;                 // punctuation character(s)
-        int    n;                 // punctuation id
 
         public punctuation_t(String p, int n) {
             this.p = p;
@@ -227,30 +206,30 @@ public class Lexer {
 
     public static class idLexer {
 
-        private boolean loaded;                                 // set when a script file is loaded from file or memory
-        private idStr   filename;                               // file name of the script
-        private boolean allocated;                              // true if buffer memory was allocated
-        CharBuffer buffer;                                      // buffer containing the script
-        int        script_p;                                    // current pointer in the script
-        private               int             end_p;            // pointer to the end of the script
-        private               int             lastScript_p;     // script pointer before reading token
-        private               int             whiteSpaceStart_p;// start of last white space
-        private               int             whiteSpaceEnd_p;  // end of last white space
-        private /*ID_TIME_T*/ long            fileTime;         // file time
-        private               int             length;           // length of the script in bytes
-        private               int             line;             // current line in script
-        private               int             lastline;         // line before reading token
-        private               boolean         tokenAvailable;   // set by unreadToken
-        private               long            flags;            // several script flags
-        private               punctuation_t[] punctuations;     // the punctuations used in the script
-        private               int[]           punctuationTable; // ASCII table with punctuations
-        private               int[]           nextPunctuation;  // next punctuation in chain
-        private idToken token;			                        // available token
-        protected idLexer next;			                        // next script in a chain
-        private boolean hadError;		                        // set by idLexer::Error, even if the error is suppressed
         //
         // base folder to load files from
         private static final StringBuilder baseFolder = new StringBuilder(256);
+        protected idLexer next;                                    // next script in a chain
+        CharBuffer buffer;                                      // buffer containing the script
+        int script_p;                                    // current pointer in the script
+        private boolean allocated;                              // true if buffer memory was allocated
+        private int end_p;            // pointer to the end of the script
+        private /*ID_TIME_T*/ long fileTime;         // file time
+        private idStr filename;                               // file name of the script
+        private long flags;            // several script flags
+        private boolean hadError;                                // set by idLexer::Error, even if the error is suppressed
+        private int lastScript_p;     // script pointer before reading token
+        private int lastline;         // line before reading token
+        private int length;           // length of the script in bytes
+        private int line;             // current line in script
+        private boolean loaded;                                 // set when a script file is loaded from file or memory
+        private int[] nextPunctuation;  // next punctuation in chain
+        private int[] punctuationTable; // ASCII table with punctuations
+        private punctuation_t[] punctuations;     // the punctuations used in the script
+        private idToken token;                                    // available token
+        private boolean tokenAvailable;   // set by unreadToken
+        private int whiteSpaceEnd_p;  // end of last white space
+        private int whiteSpaceStart_p;// start of last white space
         //
         //
 
@@ -347,6 +326,11 @@ public class Lexer {
         }
 //					// destructor
 //public					~idLexer();
+
+        // set the base folder to load files from
+        public static void SetBaseFolder(final String path) {
+            idStr.Copynz(baseFolder, path);//TODO:length?
+        }
 
         public boolean LoadFile(final String filename) throws idException {
             return this.LoadFile(filename, false);
@@ -528,12 +512,8 @@ public class Lexer {
             if ((this.flags & LEXFL_ONLYSTRINGS) != 0) {
                 // if there is a leading quote
                 if (c == '\"' || c == '\'') {
-                    if (!this.ReadString(token, c)) {
-                        return false;
-                    }
-                } else if (!this.ReadName(token)) {
-                    return false;
-                }
+                    return this.ReadString(token, c);
+                } else return this.ReadName(token);
             } // if there is a number
             else if ((Character.isDigit(c))
                     || (c == '.' && Character.isDigit(c2))) {
@@ -544,26 +524,18 @@ public class Lexer {
                 if ((this.flags & LEXFL_ALLOWNUMBERNAMES) != 0) {
                     c = this.buffer.get(this.script_p);
                     if (Character.isLetter(c) || c == '_') {
-                        if (!this.ReadName(token)) {
-                            return false;
-                        }
+                        return this.ReadName(token);
                     }
                 }
             } // if there is a leading quote
             else if (c == '\"' || c == '\'') {
-                if (!this.ReadString(token, c)) {
-                    return false;
-                }
+                return this.ReadString(token, c);
             } // if there is a name
             else if (Character.isLetter(c) || c == '_') {
-                if (!this.ReadName(token)) {
-                    return false;
-                }
+                return this.ReadName(token);
             } // names may also start with a slash when pathnames are allowed
             else if ((this.flags & LEXFL_ALLOWPATHNAMES) != 0 && ((c == '/' || c == '\\') || c == '.')) {
-                if (!this.ReadName(token)) {
-                    return false;
-                }
+                return this.ReadName(token);
             } // check for punctuations
             else if (!this.ReadPunctuation(token)) {
                 this.Error("unknown punctuation %c", c);
@@ -812,6 +784,7 @@ public class Lexer {
             this.token = token;
             this.tokenAvailable = true;
         }
+//		
 
         // read a token only if on the same line
         public boolean ReadTokenOnLine(idToken token) throws idException {
@@ -833,7 +806,7 @@ public class Lexer {
             token.Clear();
             return false;
         }
-//		
+//
 
         //Returns the rest of the current line
         public String ReadRestOfLine(idStr out) {
@@ -860,7 +833,6 @@ public class Lexer {
             out.Strip(' ');
             return out.toString();
         }
-//
 
         // read a signed integer
         public int ParseInt() throws idException {
@@ -935,7 +907,7 @@ public class Lexer {
 
             return result;
         }
-        
+
         public boolean Parse1DMatrix(int x, idPlane p) throws idException {
             float[] m = new float[x];
             boolean result = Parse1DMatrix(x, m);
@@ -945,7 +917,7 @@ public class Lexer {
 
             return result;
         }
-        
+
         public boolean Parse1DMatrix(int x, idMat3 m) throws idException {
             float[] n = new float[x];
             boolean result = Parse1DMatrix(x, n);
@@ -957,7 +929,7 @@ public class Lexer {
 
             return result;
         }
-        
+
         public boolean Parse1DMatrix(int x, idQuat q) throws idException {
             float[] m = new float[x];
             boolean result = Parse1DMatrix(x, m);
@@ -967,7 +939,7 @@ public class Lexer {
 
             return result;
         }
-        
+
         public boolean Parse1DMatrix(int x, idCQuat q) throws idException {
             float[] m = new float[x];
             boolean result = Parse1DMatrix(x, m);
@@ -999,7 +971,7 @@ public class Lexer {
             if (!this.ExpectTokenString("(")) {
                 return false;
             }
-            
+
             for (int i = 0; i < y; i++) {
                 if (!Parse1DMatrix(x, m[i])) {
                     return false;
@@ -1304,6 +1276,7 @@ public class Lexer {
             }
             return "unkown punctuation";
         }
+        // set lexer flags
 
         // get the id for the given punctuation
         public int GetPunctuationId(final String p) {
@@ -1316,7 +1289,6 @@ public class Lexer {
             }
             return 0;
         }
-        // set lexer flags
 
         public void SetFlags(int flags) {
             this.flags = flags;
@@ -1415,11 +1387,6 @@ public class Lexer {
         // returns true if Error() was called with LEXFL_NOFATALERRORS or LEXFL_NOERRORS set
         public boolean HadError() {
             return hadError;
-        }
-
-        // set the base folder to load files from
-        public static void SetBaseFolder(final String path) {
-            idStr.Copynz(baseFolder, path);//TODO:length?
         }
 
         private void CreatePunctuationTable(final punctuation_t[] punctuations) {
@@ -1597,7 +1564,7 @@ public class Lexer {
                     break;
                 case 'x': {
                     this.script_p++;
-                    for (i = 0, val = 0;; i++, this.script_p++) {
+                    for (i = 0, val = 0; ; i++, this.script_p++) {
                         c = this.buffer.get(this.script_p);
                         if (Character.isDigit(c)) {
                             c = c - '0';
@@ -1623,7 +1590,7 @@ public class Lexer {
                     if (this.buffer.get(this.script_p) < '0' || this.buffer.get(this.script_p) > '9') {
                         this.Error("unknown escape char");
                     }
-                    for (i = 0, val = 0;; i++, this.script_p++) {
+                    for (i = 0, val = 0; ; i++, this.script_p++) {
                         c = this.buffer.get(this.script_p);
                         if (Character.isDigit(c)) {
                             c = c - '0';
@@ -1706,7 +1673,7 @@ public class Lexer {
                         // step over the '\\'
                         this.script_p++;
                         if (!this.ReadWhiteSpace() || (this.buffer.get(this.script_p) != quote)) {
-                            this.Error("expecting string after '\' terminated line");
+                            this.Error("expecting string after '' terminated line");
                             return false;
                         }
                     }
@@ -1949,7 +1916,7 @@ public class Lexer {
             punctuation_t punc;
 
 // #ifdef PUNCTABLE
-            for (n = this.punctuationTable[(int) this.buffer.get(this.script_p)]; n >= 0; n = this.nextPunctuation[n]) {
+            for (n = this.punctuationTable[this.buffer.get(this.script_p)]; n >= 0; n = this.nextPunctuation[n]) {
                 punc = (this.punctuations[n]);
 // #else
 //	int i;
@@ -1983,7 +1950,7 @@ public class Lexer {
             return false;
         }
 
-//        private boolean ReadPrimitive(idToken token);
+        //        private boolean ReadPrimitive(idToken token);
         private boolean CheckString(final String str) {
             int i;
 
@@ -1998,5 +1965,6 @@ public class Lexer {
         private int NumLinesCrossed() {
             return this.line - this.lastline;
         }
-    };
+    }
+
 }

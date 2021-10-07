@@ -1,22 +1,17 @@
 package neo.framework;
 
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_AUDIO;
-import static neo.framework.DeclManager.declType_t.DECL_EMAIL;
-import static neo.framework.DeclManager.declType_t.DECL_VIDEO;
 import neo.framework.DeclManager.idDecl;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.StrList.idStrList;
+
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.*;
+import static neo.idlib.Text.Lexer.*;
 
 /**
  *
@@ -32,12 +27,12 @@ public class DeclPDA {
      */
     public static class idDeclEmail extends idDecl {
 
-        private idStr text;
-        private idStr subject;
         private idStr date;
-        private idStr to;
         private idStr from;
         private idStr image;
+        private idStr subject;
+        private idStr text;
+        private idStr to;
         //
         //
 
@@ -172,15 +167,15 @@ public class DeclPDA {
         public String GetImage() {
             return image.toString();
         }
-    };
+    }
 
     public static class idDeclVideo extends idDecl {
 
+        private idStr audio;//TODO:construction!?
+        private idStr info;
         private idStr preview;
         private idStr video;
         private idStr videoName;
-        private idStr info;
-        private idStr audio;//TODO:construction!?
         //
         //
 
@@ -296,7 +291,7 @@ public class DeclPDA {
         public String GetPreview() {
             return preview.toString();
         }
-    };
+    }
 
     public static class idDeclAudio extends idDecl {
 
@@ -408,22 +403,22 @@ public class DeclPDA {
         public String GetPreview() {
             return preview.toString();
         }
-    };
+    }
 
     public static class idDeclPDA extends idDecl {
 
-        private idStrList videos;
-        private idStrList audios;
-        private idStrList emails;
-        private idStr     pdaName;
-        private idStr     fullName;
-        private idStr     icon;
-        private idStr     id;
-        private idStr     post;
-        private idStr     title;
-        private idStr     security;
-        private int       originalEmails;
-        private int       originalVideos;
+        private final idStrList audios;
+        private final idStrList emails;
+        private final idStr fullName;
+        private final idStr icon;
+        private final idStr id;
+        private int originalEmails;
+        private int originalVideos;
+        private final idStr pdaName;
+        private final idStr post;
+        private final idStr security;
+        private final idStr title;
+        private final idStrList videos;
         //
         //
 
@@ -690,5 +685,6 @@ public class DeclPDA {
         public String GetTitle() {
             return title.toString();
         }
-    };
+    }
+
 }

@@ -1,70 +1,18 @@
 package neo.Renderer;
 
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
-
-import static neo.Renderer.Image_files.R_WriteTGA;
-import static neo.Renderer.Material.deform_t.DFRM_NONE;
 import neo.Renderer.Material.idMaterial;
-import static neo.Renderer.Model.INVALID_JOINT;
-import neo.Renderer.Model.dynamicModel_t;
-import static neo.Renderer.Model.dynamicModel_t.DM_CACHED;
-import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
-import static neo.Renderer.Model.dynamicModel_t.DM_STATIC;
-import neo.Renderer.Model.idMD5Joint;
-import neo.Renderer.Model.idRenderModel;
-import neo.Renderer.Model.modelSurface_s;
-import neo.Renderer.Model.srfTriangles_s;
-import static neo.Renderer.Model_ase.ASE_Free;
-import static neo.Renderer.Model_ase.ASE_Load;
-import neo.Renderer.Model_ase.aseFace_t;
-import neo.Renderer.Model_ase.aseMaterial_t;
-import neo.Renderer.Model_ase.aseMesh_t;
-import neo.Renderer.Model_ase.aseModel_s;
-import neo.Renderer.Model_ase.aseObject_t;
-import static neo.Renderer.Model_lwo.LWID_;
-import static neo.Renderer.Model_lwo.lwGetObject;
-import neo.Renderer.Model_lwo.lwLayer;
-import neo.Renderer.Model_lwo.lwObject;
-import neo.Renderer.Model_lwo.lwPoint;
-import neo.Renderer.Model_lwo.lwPolygon;
-import neo.Renderer.Model_lwo.lwSurface;
-import neo.Renderer.Model_lwo.lwVMap;
-import neo.Renderer.Model_lwo.lwVMapPt;
-import static neo.Renderer.Model_ma.MA_Free;
-import static neo.Renderer.Model_ma.MA_Load;
+import neo.Renderer.Model.*;
+import neo.Renderer.Model_ase.*;
+import neo.Renderer.Model_lwo.*;
 import neo.Renderer.Model_ma.maMaterial_t;
 import neo.Renderer.Model_ma.maMesh_t;
 import neo.Renderer.Model_ma.maModel_s;
 import neo.Renderer.Model_ma.maObject_t;
 import neo.Renderer.RenderWorld.renderEntity_s;
-import static neo.Renderer.VertexCache.vertexCache;
-import static neo.Renderer.tr_local.demoCommand_t.DC_DEFINE_MODEL;
-import static neo.Renderer.tr_local.tr;
 import neo.Renderer.tr_local.viewDef_s;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfIndexes;
-import static neo.Renderer.tr_trisurf.R_AllocStaticTriSurfVerts;
-import static neo.Renderer.tr_trisurf.R_BoundTriSurf;
-import static neo.Renderer.tr_trisurf.R_CleanupTriangles;
-import static neo.Renderer.tr_trisurf.R_CopyStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_FreeStaticTriSurf;
-import static neo.Renderer.tr_trisurf.R_MergeTriangles;
-import static neo.Renderer.tr_trisurf.R_ReverseTriangles;
-import static neo.Renderer.tr_trisurf.R_TriSurfMemory;
-import static neo.TempDump.NOT;
-import static neo.TempDump.ctos;
-import static neo.TempDump.sizeof;
-import static neo.framework.CVarSystem.CVAR_BOOL;
-import static neo.framework.CVarSystem.CVAR_RENDERER;
 import neo.framework.CVarSystem.idCVar;
-import static neo.framework.Common.common;
-import static neo.framework.DeclManager.declManager;
 import neo.framework.DemoFile.idDemoFile;
-import static neo.framework.FileSystem_h.fileSystem;
 import neo.idlib.BV.Bounds.idBounds;
-import static neo.idlib.Lib.BigFloat;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
@@ -72,14 +20,75 @@ import neo.idlib.containers.VectorSet.idVectorSubset;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
-import static neo.idlib.math.Simd.SIMDProcessor;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
+
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.util.Arrays;
+
+import static neo.Renderer.Image_files.R_WriteTGA;
+import static neo.Renderer.Material.deform_t.DFRM_NONE;
+import static neo.Renderer.Model.*;
+import static neo.Renderer.Model.dynamicModel_t.*;
+import static neo.Renderer.Model_ase.*;
+import static neo.Renderer.Model_lwo.*;
+import static neo.Renderer.Model_ma.MA_Free;
+import static neo.Renderer.Model_ma.MA_Load;
+import static neo.Renderer.VertexCache.vertexCache;
+import static neo.Renderer.tr_local.demoCommand_t.DC_DEFINE_MODEL;
+import static neo.Renderer.tr_local.tr;
+import static neo.Renderer.tr_trisurf.*;
+import static neo.TempDump.*;
+import static neo.framework.CVarSystem.CVAR_BOOL;
+import static neo.framework.CVarSystem.CVAR_RENDERER;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.FileSystem_h.fileSystem;
+import static neo.idlib.Lib.BigFloat;
+import static neo.idlib.math.Simd.SIMDProcessor;
 
 /**
  *
  */
 public class Model_local {
+
+    /*
+     ================
+     AddCubeFace
+     ================
+     */
+    static void AddCubeFace(srfTriangles_s tri, final idVec3 v1, final idVec3 v2, final idVec3 v3, final idVec3 v4) {
+        tri.verts[tri.numVerts + 0].Clear();
+        tri.verts[tri.numVerts + 0].xyz = v1.oMultiply(8);
+        tri.verts[tri.numVerts + 0].st.oSet(0, 0);
+        tri.verts[tri.numVerts + 0].st.oSet(1, 0);
+
+        tri.verts[tri.numVerts + 1].Clear();
+        tri.verts[tri.numVerts + 1].xyz = v2.oMultiply(8);
+        tri.verts[tri.numVerts + 1].st.oSet(0, 1);
+        tri.verts[tri.numVerts + 1].st.oSet(1, 0);
+
+        tri.verts[tri.numVerts + 2].Clear();
+        tri.verts[tri.numVerts + 2].xyz = v3.oMultiply(8);
+        tri.verts[tri.numVerts + 2].st.oSet(0, 1);
+        tri.verts[tri.numVerts + 2].st.oSet(1, 1);
+
+        tri.verts[tri.numVerts + 3].Clear();
+        tri.verts[tri.numVerts + 3].xyz = v4.oMultiply(8);
+        tri.verts[tri.numVerts + 3].st.oSet(0, 0);
+        tri.verts[tri.numVerts + 3].st.oSet(1, 1);
+
+        tri.indexes[tri.numIndexes + 0] = tri.numVerts + 0;
+        tri.indexes[tri.numIndexes + 1] = tri.numVerts + 1;
+        tri.indexes[tri.numIndexes + 2] = tri.numVerts + 2;
+        tri.indexes[tri.numIndexes + 3] = tri.numVerts + 0;
+        tri.indexes[tri.numIndexes + 4] = tri.numVerts + 2;
+        tri.indexes[tri.numIndexes + 5] = tri.numVerts + 3;
+
+        tri.numVerts += 4;
+        tri.numIndexes += 6;
+    }
 
     /*
      ===============================================================================
@@ -90,30 +99,59 @@ public class Model_local {
      */
     public static class idRenderModelStatic extends idRenderModel {
 
+        //
+        protected static final idCVar r_mergeModelSurfaces = new idCVar("r_mergeModelSurfaces", "1", CVAR_BOOL | CVAR_RENDERER, "combine model surfaces with the same material");
+        protected static final idCVar r_slopNormal = new idCVar("r_slopNormal", "0.02", CVAR_RENDERER, "merge normals that dot less than this");
+        protected static final idCVar r_slopTexCoord = new idCVar("r_slopTexCoord", "0.001", CVAR_RENDERER, "merge texture coordinates this far apart");
+        protected static final idCVar r_slopVertex = new idCVar("r_slopVertex", "0.01", CVAR_RENDERER, "merge xyz coordinates this far apart");
+        static final byte[] identityColor/*[4]*/ = {(byte) 255, (byte) 255, (byte) 255, (byte) 255};
+        private static final int DBG_ConvertASEToModelSurfaces = 0;
+        private static int DBG_ConvertLWOToModelSurfaces = 0;
+        /*
+         ================
+         idRenderModelStatic::FinishSurfaces
+
+         The mergeShadows option allows surfaces with different textures to share
+         silhouette edges for shadow calculation, instead of leaving shared edges
+         hanging.
+
+         If any of the original shaders have the noSelfShadow flag set, the surfaces
+         can't be merged, because they will need to be drawn in different order.
+
+         If there is only one surface, a separate merged surface won't be generated.
+
+         A model with multiple surfaces can't later have a skinned shader change the
+         state of the noSelfShadow flag.
+
+         -----------------
+
+         Creates mirrored copies of two sided surfaces with normal maps, which would
+         otherwise light funny.
+
+         Extends the bounds of deformed surfaces so they don't cull incorrectly at screen edges.
+
+         ================
+         */
+        private static int DBG_FinishSurfaces = 0;
         public final idList<modelSurface_s> surfaces;
-        public       idBounds               bounds;
-        public       int                    overlaysAdded;
+        protected final long[]/*ID_TIME_T*/ timeStamp = new long[1];
+        public idBounds bounds;
+        public int overlaysAdded;
+        protected boolean defaulted;
+        protected boolean fastLoad;              // don't generate tangents and shadow data
+        protected boolean isStaticWorldModel;
+        protected int lastArchivedFrame;
         //
         //
-        protected    int                    lastModifiedFrame;
-        protected    int                    lastArchivedFrame;
-        //
-        protected    idStr                  name;
-        protected    srfTriangles_s         shadowHull;
-        protected    boolean                isStaticWorldModel;
-        protected    boolean                defaulted;
-        protected    boolean                purged;                // eventually we will have dynamic reloading
-        protected    boolean                fastLoad;              // don't generate tangents and shadow data
-        protected    boolean                reloadable;            // if not, reloadModels won't check timestamp
-        protected    boolean                levelLoadReferenced;   // for determining if it needs to be freed
-        protected final        long[]/*ID_TIME_T*/ timeStamp            = new long[1];
-        //
-        protected static final idCVar              r_mergeModelSurfaces = new idCVar("r_mergeModelSurfaces", "1", CVAR_BOOL | CVAR_RENDERER, "combine model surfaces with the same material");
-        protected static final idCVar              r_slopVertex         = new idCVar("r_slopVertex", "0.01", CVAR_RENDERER, "merge xyz coordinates this far apart");
-        protected static final idCVar              r_slopTexCoord       = new idCVar("r_slopTexCoord", "0.001", CVAR_RENDERER, "merge texture coordinates this far apart");
-        protected static final idCVar              r_slopNormal         = new idCVar("r_slopNormal", "0.02", CVAR_RENDERER, "merge normals that dot less than this");
+        protected int lastModifiedFrame;
+        protected boolean levelLoadReferenced;   // for determining if it needs to be freed
         //
         //
+        //
+        protected idStr name;
+        protected boolean purged;                // eventually we will have dynamic reloading
+        protected boolean reloadable;            // if not, reloadModels won't check timestamp
+        protected srfTriangles_s shadowHull;
 
         // the inherited public interface
         public idRenderModelStatic() {
@@ -156,7 +194,7 @@ public class Model_local {
                 loaded = LoadMA(name.toString());
                 reloadable = true;
             } else {
-                common.Warning("idRenderModelStatic::InitFromFile: unknown type for model: \'%s\'", name);
+                common.Warning("idRenderModelStatic::InitFromFile: unknown type for model: '%s'", name);
                 loaded = false;
             }
 
@@ -238,14 +276,10 @@ public class Model_local {
             // world, and have already been considered for optimized shadows
             // other model names are inline entity models, and need to be
             // shadowed normally
-            if (0 == idStr.Cmpn(fileName, "_area", 5)) {
-                isStaticWorldModel = true;
-            } else {
-                isStaticWorldModel = false;
-            }
+            isStaticWorldModel = 0 == idStr.Cmpn(fileName, "_area", 5);
 
             name = new idStr(fileName);
-            reloadable = false;	// if it didn't come from a file, we can't reload it
+            reloadable = false;    // if it didn't come from a file, we can't reload it
             PurgeModel();
             purged = false;
             bounds.Zero();
@@ -259,34 +293,9 @@ public class Model_local {
             }
         }
 
-        /*
-         ================
-         idRenderModelStatic::FinishSurfaces
-
-         The mergeShadows option allows surfaces with different textures to share
-         silhouette edges for shadow calculation, instead of leaving shared edges
-         hanging.
-
-         If any of the original shaders have the noSelfShadow flag set, the surfaces
-         can't be merged, because they will need to be drawn in different order.
-
-         If there is only one surface, a separate merged surface won't be generated.
-
-         A model with multiple surfaces can't later have a skinned shader change the
-         state of the noSelfShadow flag.
-
-         -----------------
-
-         Creates mirrored copies of two sided surfaces with normal maps, which would
-         otherwise light funny.
-
-         Extends the bounds of deformed surfaces so they don't cull incorrectly at screen edges.
-
-         ================
-         */
-        private static int DBG_FinishSurfaces = 0;
         @Override
-        public void FinishSurfaces() {DBG_FinishSurfaces++;
+        public void FinishSurfaces() {
+            DBG_FinishSurfaces++;
             int i;
             int totalVerts, totalIndexes;
 
@@ -850,7 +859,7 @@ public class Model_local {
             for (int i = 0; i < len / 4; i++) {
                 data.put(i, BigFloat(data.get(i)));
                 if (data.get(i) == -9999) {
-                    data.put(i, 0);		// unscanned areas
+                    data.put(i, 0);        // unscanned areas
                 }
 
                 if (data.get(i) < min) {
@@ -936,7 +945,7 @@ public class Model_local {
             tri.numVerts = width * height;
             tri.numIndexes = (width - 1) * (height - 1) * 6;
 
-            fastLoad = true;		// don't do all the sil processing
+            fastLoad = true;        // don't do all the sil processing
 
             R_AllocStaticTriSurfIndexes(tri, tri.numIndexes);
             R_AllocStaticTriSurfVerts(tri, tri.numVerts);
@@ -944,12 +953,12 @@ public class Model_local {
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
                     int v = i * width + j;
-                    tri.verts[ v].Clear();
-                    tri.verts[ v].xyz.oSet(0, j * 10);	// each sample is 10 meters
-                    tri.verts[ v].xyz.oSet(1, -i * 10);
-                    tri.verts[ v].xyz.oSet(2, data.get((minY + i) * size + minX + j));	// height is in meters
-                    tri.verts[ v].st.oSet(0, (float) j / (width - 1));
-                    tri.verts[ v].st.oSet(1, 1.0f - ((float) i / (height - 1)));
+                    tri.verts[v].Clear();
+                    tri.verts[v].xyz.oSet(0, j * 10);    // each sample is 10 meters
+                    tri.verts[v].xyz.oSet(1, -i * 10);
+                    tri.verts[v].xyz.oSet(2, data.get((minY + i) * size + minX + j));    // height is in meters
+                    tri.verts[v].st.oSet(0, (float) j / (width - 1));
+                    tri.verts[v].st.oSet(1, 1.0f - ((float) i / (height - 1)));
                 }
             }
 
@@ -965,12 +974,12 @@ public class Model_local {
 //			tri.indexes[ v + 5 ] = i * width + j + 1;
 //}else
                     {
-                        tri.indexes[ v + 0] = i * width + j;
-                        tri.indexes[ v + 1] = i * width + j + 1;
-                        tri.indexes[ v + 2] = (i + 1) * width + j + 1;
-                        tri.indexes[ v + 3] = i * width + j;
-                        tri.indexes[ v + 4] = (i + 1) * width + j + 1;
-                        tri.indexes[ v + 5] = (i + 1) * width + j;
+                        tri.indexes[v + 0] = i * width + j;
+                        tri.indexes[v + 1] = i * width + j + 1;
+                        tri.indexes[v + 2] = (i + 1) * width + j + 1;
+                        tri.indexes[v + 3] = i * width + j;
+                        tri.indexes[v + 4] = (i + 1) * width + j + 1;
+                        tri.indexes[v + 5] = (i + 1) * width + j;
                     }
                 }
             }
@@ -1009,60 +1018,6 @@ public class Model_local {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        static class matchVert_s {
-
-            matchVert_s next;
-            int v, tv;
-            byte[] color = new byte[4];
-            idVec3 normal = new idVec3();
-
-            final int index;
-
-            public matchVert_s(int numVerts) {
-                this.index = numVerts;
-            }
-
-//            static int getPosition(matchVert_s v1, matchVert_s[] vList) {
-//                int i;
-//
-//                for (i = 0; i < vList.length; i++) {
-//                    if (vList[i].equals(v1)) {
-//                        break;
-//                    }
-//                }
-//
-//                return i;
-//            }
-
-
-            @Override
-            public int hashCode() {
-                int result = v;
-                result = 31 * result + tv;
-                return result;
-            }
-
-            @Override
-            public boolean equals(final Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-
-                final matchVert_s that = (matchVert_s) o;
-
-                if (v != that.v) return false;
-                return tv == that.tv;
-
-            }
-
-//            static matchVert_s[] generateArray(final int length) {
-//                return Stream.
-//                        generate(matchVert_s::new).
-//                        limit(length).
-//                        toArray(matchVert_s[]::new);
-//            }
-        };
-        static final byte[] identityColor/*[4]*/ = {(byte) 255, (byte) 255, (byte) 255, (byte) 255};
-                              private static int DBG_ConvertASEToModelSurfaces = 0;
         public boolean ConvertASEToModelSurfaces(final aseModel_s ase) {
             aseObject_t object;
             aseMesh_t mesh;
@@ -1074,8 +1029,8 @@ public class Model_local {
             int v, tv;
             int[] vRemap;
             int[] tvRemap;
-            matchVert_s[] mvTable;	// all of the match verts
-            matchVert_s[] mvHash;	// points inside mvTable for each xyz index
+            matchVert_s[] mvTable;    // all of the match verts
+            matchVert_s[] mvHash;    // points inside mvTable for each xyz index
             matchVert_s lastmv;
             matchVert_s mv;
             idVec3 normal = new idVec3();
@@ -1243,7 +1198,7 @@ public class Model_local {
                             common.Error("ConvertASEToModelSurfaces: bad vertex index in ASE file %s", name);
                         }
 
-                        // collapse the position if it was slightly offset 
+                        // collapse the position if it was slightly offset
                         v = vRemap[v];
 
                         // we may or may not have texcoords to compare
@@ -1283,7 +1238,7 @@ public class Model_local {
                                 break;
                             }
                             if (mv.normal.oMultiply(normal) > normalEpsilon) {
-                                break;		// we already have this one
+                                break;        // we already have this one
                             }
                         }
                         if (null == mv) {
@@ -1335,16 +1290,16 @@ public class Model_local {
                 R_AllocStaticTriSurfVerts(tri, tri.numVerts);
                 for (j = 0; j < tri.numVerts; j++) {
                     mv = mvTable[j];
-                    tri.verts[ j].Clear();
-                    tri.verts[ j].xyz.oSet(mesh.vertexes[ mv.v]);
-                    tri.verts[ j].normal.oSet(mv.normal);
+                    tri.verts[j].Clear();
+                    tri.verts[j].xyz.oSet(mesh.vertexes[mv.v]);
+                    tri.verts[j].normal.oSet(mv.normal);
                     System.arraycopy(mv.color, 0, tri.verts[j].color = mv.color, 0, mv.color.length);
                     if (mesh.numTVFaces == mesh.numFaces && mesh.numTVertexes != 0) {
-                        final idVec2 tv2 = mesh.tvertexes[ mv.tv];
+                        final idVec2 tv2 = mesh.tvertexes[mv.tv];
                         float u = tv2.x * uTiling + uOffset;
                         float V = tv2.y * vTiling + vOffset;
-                        tri.verts[ j].st.oSet(0, u * textureCos + V * textureSin);
-                        tri.verts[ j].st.oSet(1, u * -textureSin + V * textureCos);
+                        tri.verts[j].st.oSet(0, u * textureCos + V * textureSin);
+                        tri.verts[j].st.oSet(1, u * -textureSin + V * textureCos);
                     }
                 }
 //
@@ -1354,7 +1309,7 @@ public class Model_local {
 //                R_StaticFree(vRemap);
 
                 // see if we need to merge with a previous surface of the same material
-                modelSurf = this.surfaces.oGet(mergeTo[ objectNum]);
+                modelSurf = this.surfaces.oGet(mergeTo[objectNum]);
                 srfTriangles_s mergeTri = modelSurf.geometry;
                 if (null == mergeTri) {
                     modelSurf.geometry = tri;
@@ -1368,8 +1323,8 @@ public class Model_local {
             return true;
         }
 
-        private static int DBG_ConvertLWOToModelSurfaces = 0;
-        public boolean ConvertLWOToModelSurfaces(final lwObject lwo) {DBG_ConvertLWOToModelSurfaces++;
+        public boolean ConvertLWOToModelSurfaces(final lwObject lwo) {
+            DBG_ConvertLWOToModelSurfaces++;
             idMaterial im1, im2;
             srfTriangles_s tri;
             lwSurface lwoSurf;
@@ -1380,8 +1335,8 @@ public class Model_local {
             int[] vRemap;
             idVec2[] tvList;
             int[] tvRemap;
-            matchVert_s[] mvTable;	// all of the match verts
-            matchVert_s[] mvHash;		// points inside mvTable for each xyz index
+            matchVert_s[] mvTable;    // all of the match verts
+            matchVert_s[] mvHash;        // points inside mvTable for each xyz index
             matchVert_s lastmv;
             matchVert_s mv;
             idVec3 normal = new idVec3();
@@ -1455,7 +1410,7 @@ public class Model_local {
 
             // vertex positions
             if (layer.point.count <= 0) {
-                common.Warning("ConvertLWOToModelSurfaces: model \'%s\' has bad or missing vertex data", name);
+                common.Warning("ConvertLWOToModelSurfaces: model '%s' has bad or missing vertex data", name);
                 return false;
             }
 
@@ -1486,13 +1441,13 @@ public class Model_local {
                         vm.offset = offset;
                         for (k = 0; k < vm.nverts; k++) {
                             tvList[k + offset].x = vm.val[k][0];
-                            tvList[k + offset].y = 1.0f - vm.val[k][1];	// invert the t
+                            tvList[k + offset].y = 1.0f - vm.val[k][1];    // invert the t
                         }
                         offset += vm.nverts;
                     }
                 }
             } else {
-                common.Warning("ConvertLWOToModelSurfaces: model \'%s\' has bad or missing uv data", name);
+                common.Warning("ConvertLWOToModelSurfaces: model '%s' has bad or missing uv data", name);
                 numTVertexes = 1;
                 tvList = new idVec2[numTVertexes];// Mem_ClearedAlloc(numTVertexes /* sizeof( tvList[0] )*/);
                 tvList[0] = new idVec2();
@@ -1575,7 +1530,7 @@ public class Model_local {
                 // find all the unique combinations
                 float normalEpsilon;
                 if (fastLoad) {
-                    normalEpsilon = 1.0f;	// don't merge unless completely exact
+                    normalEpsilon = 1.0f;    // don't merge unless completely exact
                 } else {
                     normalEpsilon = 1.0f - r_slopNormal.GetFloat();
                 }
@@ -1653,7 +1608,7 @@ public class Model_local {
                                 break;
                             }
                             if (mv.normal.oMultiply(normal) > normalEpsilon) {
-                                break;		// we already have this one
+                                break;        // we already have this one
                             }
                         }
                         if (null == mv) {
@@ -1700,7 +1655,7 @@ public class Model_local {
 //                R_StaticFree(mvHash);
 
                 // see if we need to merge with a previous surface of the same material
-                modelSurf = this.surfaces.oGet(mergeTo[ i]);
+                modelSurf = this.surfaces.oGet(mergeTo[i]);
                 srfTriangles_s mergeTri = modelSurf.geometry;
                 if (null == mergeTri) {
                     modelSurf.geometry = tri;
@@ -1718,7 +1673,6 @@ public class Model_local {
 
             return true;
         }
-//	static short []identityColor/*[4]*/ = { 255, 255, 255, 255 };
 
         public boolean ConvertMAToModelSurfaces(final maModel_s ma) {
 
@@ -1733,8 +1687,8 @@ public class Model_local {
             int v, tv;
             int[] vRemap;
             int[] tvRemap;
-            matchVert_s[] mvTable;	// all of the match verts
-            matchVert_s[] mvHash;		// points inside mvTable for each xyz index
+            matchVert_s[] mvTable;    // all of the match verts
+            matchVert_s[] mvHash;        // points inside mvTable for each xyz index
             matchVert_s lastmv;
             matchVert_s mv;
             idVec3 normal = new idVec3();
@@ -1915,7 +1869,7 @@ public class Model_local {
                             common.Error("ConvertMAToModelSurfaces: bad vertex index in MA file %s", name);
                         }
 
-                        // collapse the position if it was slightly offset 
+                        // collapse the position if it was slightly offset
                         v = vRemap[v];
 
                         // we may or may not have texcoords to compare
@@ -1954,7 +1908,7 @@ public class Model_local {
                                 break;
                             }
                             if (mv.normal.oMultiply(normal) > normalEpsilon) {
-                                break;		// we already have this one
+                                break;        // we already have this one
                             }
                         }
                         if (null == mv) {
@@ -2007,16 +1961,16 @@ public class Model_local {
                 R_AllocStaticTriSurfVerts(tri, tri.numVerts);
                 for (j = 0; j < tri.numVerts; j++) {
                     mv = mvTable[j];
-                    tri.verts[ j].Clear();
-                    tri.verts[ j].xyz = mesh.vertexes[ mv.v];
-                    tri.verts[ j].normal = mv.normal;
+                    tri.verts[j].Clear();
+                    tri.verts[j].xyz = mesh.vertexes[mv.v];
+                    tri.verts[j].normal = mv.normal;
                     tri.verts[j].color = mv.color;
                     if (mesh.numTVertexes != 0) {
-                        final idVec2 tv2 = mesh.tvertexes[ mv.tv];
+                        final idVec2 tv2 = mesh.tvertexes[mv.tv];
                         float U = tv2.x * uTiling + uOffset;
                         float V = tv2.y * vTiling + vOffset;
-                        tri.verts[ j].st.oSet(0, U * textureCos + V * textureSin);
-                        tri.verts[ j].st.oSet(1, U * -textureSin + V * textureCos);
+                        tri.verts[j].st.oSet(0, U * textureCos + V * textureSin);
+                        tri.verts[j].st.oSet(1, U * -textureSin + V * textureCos);
                     }
                 }
 //
@@ -2026,7 +1980,7 @@ public class Model_local {
 //                R_StaticFree(vRemap);
 
                 // see if we need to merge with a previous surface of the same material
-                modelSurf = this.surfaces.oGet(mergeTo[ objectNum]);
+                modelSurf = this.surfaces.oGet(mergeTo[objectNum]);
                 srfTriangles_s mergeTri = modelSurf.geometry;
                 if (null == mergeTri) {
                     modelSurf.geometry = tri;
@@ -2039,6 +1993,7 @@ public class Model_local {
 
             return true;
         }
+//	static short []identityColor/*[4]*/ = { 255, 255, 255, 255 };
 
         public aseModel_s ConvertLWOToASE(final lwObject obj, final String fileName) {
             int j, k;
@@ -2080,7 +2035,7 @@ public class Model_local {
 
                 // vertex positions
                 if (layer.point.count <= 0) {
-                    common.Warning("ConvertLWOToASE: model \'%s\' has bad or missing vertex data", name);
+                    common.Warning("ConvertLWOToASE: model '%s' has bad or missing vertex data", name);
                 }
 
                 for (j = 0; j < layer.point.count; j++) {
@@ -2108,19 +2063,19 @@ public class Model_local {
                             vm.offset = offset;
                             for (k = 0; k < vm.nverts; k++) {
                                 mesh.tvertexes[k + offset].x = vm.val[k][0];
-                                mesh.tvertexes[k + offset].y = 1.0f - vm.val[k][1];	// invert the t
+                                mesh.tvertexes[k + offset].y = 1.0f - vm.val[k][1];    // invert the t
                             }
                             offset += vm.nverts;
                         }
                     }
                 } else {
-                    common.Warning("ConvertLWOToASE: model \'%s\' has bad or missing uv data", fileName);
+                    common.Warning("ConvertLWOToASE: model '%s' has bad or missing uv data", fileName);
                     mesh.numTVertexes = 1;
                     mesh.tvertexes = new idVec2[mesh.numTVertexes];// Mem_ClearedAlloc(mesh.numTVertexes /* sizeof( mesh.tvertexes[0] )*/);
                 }
 
                 mesh.normalsParsed = true;
-                mesh.colorsParsed = true;	// because we are falling back to the surface color
+                mesh.colorsParsed = true;    // because we are falling back to the surface color
 
                 // triangles
                 int faceIndex = 0;
@@ -2254,42 +2209,57 @@ public class Model_local {
         public ByteBuffer Write() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-    };
 
-    /*
-     ================
-     AddCubeFace
-     ================
-     */
-    static void AddCubeFace(srfTriangles_s tri, final idVec3 v1, final idVec3 v2, final idVec3 v3, final idVec3 v4) {
-        tri.verts[tri.numVerts + 0].Clear();
-        tri.verts[tri.numVerts + 0].xyz = v1.oMultiply(8);
-        tri.verts[tri.numVerts + 0].st.oSet(0, 0);
-        tri.verts[tri.numVerts + 0].st.oSet(1, 0);
+        static class matchVert_s {
 
-        tri.verts[tri.numVerts + 1].Clear();
-        tri.verts[tri.numVerts + 1].xyz = v2.oMultiply(8);
-        tri.verts[tri.numVerts + 1].st.oSet(0, 1);
-        tri.verts[tri.numVerts + 1].st.oSet(1, 0);
+            final int index;
+            byte[] color = new byte[4];
+            matchVert_s next;
+            idVec3 normal = new idVec3();
+            int v, tv;
 
-        tri.verts[tri.numVerts + 2].Clear();
-        tri.verts[tri.numVerts + 2].xyz = v3.oMultiply(8);
-        tri.verts[tri.numVerts + 2].st.oSet(0, 1);
-        tri.verts[tri.numVerts + 2].st.oSet(1, 1);
+            public matchVert_s(int numVerts) {
+                this.index = numVerts;
+            }
 
-        tri.verts[tri.numVerts + 3].Clear();
-        tri.verts[tri.numVerts + 3].xyz = v4.oMultiply(8);
-        tri.verts[tri.numVerts + 3].st.oSet(0, 0);
-        tri.verts[tri.numVerts + 3].st.oSet(1, 1);
+//            static int getPosition(matchVert_s v1, matchVert_s[] vList) {
+//                int i;
+//
+//                for (i = 0; i < vList.length; i++) {
+//                    if (vList[i].equals(v1)) {
+//                        break;
+//                    }
+//                }
+//
+//                return i;
+//            }
 
-        tri.indexes[tri.numIndexes + 0] = tri.numVerts + 0;
-        tri.indexes[tri.numIndexes + 1] = tri.numVerts + 1;
-        tri.indexes[tri.numIndexes + 2] = tri.numVerts + 2;
-        tri.indexes[tri.numIndexes + 3] = tri.numVerts + 0;
-        tri.indexes[tri.numIndexes + 4] = tri.numVerts + 2;
-        tri.indexes[tri.numIndexes + 5] = tri.numVerts + 3;
 
-        tri.numVerts += 4;
-        tri.numIndexes += 6;
+            @Override
+            public int hashCode() {
+                int result = v;
+                result = 31 * result + tv;
+                return result;
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+
+                final matchVert_s that = (matchVert_s) o;
+
+                if (v != that.v) return false;
+                return tv == that.tv;
+
+            }
+
+//            static matchVert_s[] generateArray(final int length) {
+//                return Stream.
+//                        generate(matchVert_s::new).
+//                        limit(length).
+//                        toArray(matchVert_s[]::new);
+//            }
+        }
     }
 }

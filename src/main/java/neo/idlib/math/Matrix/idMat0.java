@@ -9,8 +9,8 @@ import java.util.stream.Stream;
  */
 public class idMat0 {
 
+    static final double MATRIX_EPSILON = 1.0E-6;//TODO: re-type to float.
     static final double MATRIX_INVERSE_EPSILON = 1.0E-14;
-    static final double MATRIX_EPSILON         = 1.0E-6;//TODO: re-type to float.
 
     static void matrixPrint(idMatX x, String label) {
         int rows = x.GetNumRows();

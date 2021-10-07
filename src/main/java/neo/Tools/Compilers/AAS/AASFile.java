@@ -1,29 +1,28 @@
 package neo.Tools.Compilers.AAS;
 
-import java.nio.IntBuffer;
-
-import static neo.TempDump.NOT;
-import static neo.framework.Common.common;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
-import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import static neo.idlib.Lib.BIT;
 import neo.idlib.Lib.idException;
-import static neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT;
-import static neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS;
-import neo.idlib.Text.Lexer.idLexer;
+import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import static neo.idlib.Text.Token.TT_STRING;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
+
+import java.nio.IntBuffer;
+
+import static neo.TempDump.NOT;
+import static neo.framework.Common.common;
+import static neo.framework.DeclManager.declManager;
+import static neo.framework.DeclManager.declType_t.DECL_ENTITYDEF;
+import static neo.idlib.Lib.BIT;
+import static neo.idlib.Text.Lexer.*;
+import static neo.idlib.Text.Token.TT_STRING;
 
 /**
  *
@@ -40,71 +39,137 @@ public class AASFile {
     public static final String AAS_FILEID = "DewmAAS";
     public static final String AAS_FILEVERSION = "1.07";
     //
-    // travel flags
-    public static final int TFL_INVALID = BIT(0);              // not valid
-    public static final int TFL_WALK = BIT(1);                 // walking
-    public static final int TFL_CROUCH = BIT(2);               // crouching
-    public static final int TFL_WALKOFFLEDGE = 1 << 3;//BIT(3);// walking of a ledge
-    public static final int TFL_BARRIERJUMP = 1 << 4;//BIT(4); // jumping onto a barrier
-    public static final int TFL_JUMP = 1 << 5;//BIT(5);        // jumping
-    public static final int TFL_LADDER = BIT(6);               // climbing a ladder
-    public static final int TFL_SWIM = BIT(7);                 // swimming
-    public static final int TFL_WATERJUMP = BIT(8);            // jump out of the water
-    public static final int TFL_TELEPORT = BIT(9);             // teleportation
-    public static final int TFL_ELEVATOR = BIT(10);            // travel by elevator
-    public static final int TFL_FLY = BIT(11);                 // fly
-    public static final int TFL_SPECIAL = BIT(12);             // special
-    public static final int TFL_WATER = BIT(21);               // travel through water
-    public static final int TFL_AIR = BIT(22);                 // travel through air
+    // bits for different bboxes
+    public static final int AREACONTENTS_BBOX_BIT = 24;
+    public static final int AREACONTENTS_CLUSTERPORTAL = BIT(2);// area is a cluster portal
+    public static final int AREACONTENTS_OBSTACLE = BIT(3);    // area contains (part of) a dynamic obstacle
     //
-    // face flags
-    public static final int FACE_SOLID = BIT(0);               // solid at the other side
-    public static final int FACE_LADDER = BIT(1);              // ladder surface
-    public static final int FACE_FLOOR = BIT(2);               // standing on floor when on this face
-    public static final int FACE_LIQUID = BIT(3);              // face seperating two areas with liquid
-    public static final int FACE_LIQUIDSURFACE = BIT(4);       // face seperating liquid and air
+    // area contents flags
+    public static final int AREACONTENTS_SOLID = BIT(0);    // solid, not a valid area
+    public static final int AREACONTENTS_TELEPORTER = BIT(4);    // area contains (part of) a teleporter trigger
+    public static final int AREACONTENTS_WATER = BIT(1);    // area contains water
+    public static final int AREA_CROUCH = BIT(5);              // AI cannot walk but can only crouch in this area
     //
     // area flags
     public static final int AREA_FLOOR = BIT(0);               // AI can stand on the floor in this area
     public static final int AREA_GAP = BIT(1);                 // area has a gap
-    public static final int AREA_LEDGE = BIT(2);               // if entered the AI bbox partly floats above a ledge
     public static final int AREA_LADDER = BIT(3);              // area contains one or more ladder faces
+    public static final int AREA_LEDGE = BIT(2);               // if entered the AI bbox partly floats above a ledge
     public static final int AREA_LIQUID = BIT(4);              // area contains a liquid
-    public static final int AREA_CROUCH = BIT(5);              // AI cannot walk but can only crouch in this area
-    public static final int AREA_REACHABLE_WALK = BIT(6);	// area is reachable by walking or swimming
-    public static final int AREA_REACHABLE_FLY = BIT(7);	// area is reachable by flying
+    public static final int AREA_REACHABLE_FLY = BIT(7);    // area is reachable by flying
+    public static final int AREA_REACHABLE_WALK = BIT(6);    // area is reachable by walking or swimming
+    public static final int FACE_FLOOR = BIT(2);               // standing on floor when on this face
+    public static final int FACE_LADDER = BIT(1);              // ladder surface
+    public static final int FACE_LIQUID = BIT(3);              // face seperating two areas with liquid
+    public static final int FACE_LIQUIDSURFACE = BIT(4);       // face seperating liquid and air
     //
-    // area contents flags
-    public static final int AREACONTENTS_SOLID = BIT(0);	// solid, not a valid area
-    public static final int AREACONTENTS_WATER = BIT(1);	// area contains water
-    public static final int AREACONTENTS_CLUSTERPORTAL = BIT(2);// area is a cluster portal
-    public static final int AREACONTENTS_OBSTACLE = BIT(3);	// area contains (part of) a dynamic obstacle
-    public static final int AREACONTENTS_TELEPORTER = BIT(4);	// area contains (part of) a teleporter trigger
-    //
-    // bits for different bboxes
-    public static final int AREACONTENTS_BBOX_BIT = 24;
-    //
-    public static final int MAX_REACH_PER_AREA = 256;
-    public static final int MAX_AAS_TREE_DEPTH = 128;
+    // face flags
+    public static final int FACE_SOLID = BIT(0);               // solid at the other side
     //
     public static final int MAX_AAS_BOUNDING_BOXES = 4;
+    public static final int MAX_AAS_TREE_DEPTH = 128;
     //
+    public static final int MAX_REACH_PER_AREA = 256;
+    public static final int TFL_AIR = BIT(22);                 // travel through air
+    public static final int TFL_BARRIERJUMP = 1 << 4;//BIT(4); // jumping onto a barrier
+    public static final int TFL_CROUCH = BIT(2);               // crouching
+    public static final int TFL_ELEVATOR = BIT(10);            // travel by elevator
+    public static final int TFL_FLY = BIT(11);                 // fly
+    //
+    // travel flags
+    public static final int TFL_INVALID = BIT(0);              // not valid
+    public static final int TFL_JUMP = 1 << 5;//BIT(5);        // jumping
+    public static final int TFL_LADDER = BIT(6);               // climbing a ladder
+    public static final int TFL_SPECIAL = BIT(12);             // special
+    public static final int TFL_SWIM = BIT(7);                 // swimming
+    public static final int TFL_TELEPORT = BIT(9);             // teleportation
+    public static final int TFL_WALK = BIT(1);                 // walking
+    public static final int TFL_WALKOFFLEDGE = 1 << 3;//BIT(3);// walking of a ledge
+    public static final int TFL_WATER = BIT(21);               // travel through water
+    public static final int TFL_WATERJUMP = BIT(8);            // jump out of the water
+    //
+
+    /*
+     ================
+     Reachability_Write
+     ================
+     */
+    static boolean Reachability_Write(idFile fp, idReachability reach) {
+        fp.WriteFloatString("\t\t%d %d (%f %f %f) (%f %f %f) %d %d",
+                reach.travelType, (int) reach.toAreaNum, reach.start.x, reach.start.y, reach.start.z,
+                reach.end.x, reach.end.y, reach.end.z, reach.edgeNum, reach.travelTime);
+        return true;
+    }
+
+    /*
+     ================
+     Reachability_Read
+     ================
+     */
+    static boolean Reachability_Read(idLexer src, idReachability reach) {
+        reach.travelType = src.ParseInt();
+        reach.toAreaNum = (short) src.ParseInt();
+        src.Parse1DMatrix(3, reach.start);
+        src.Parse1DMatrix(3, reach.end);
+        reach.edgeNum = src.ParseInt();
+        reach.travelTime = src.ParseInt();
+        return true;
+    }
+
+    /*
+     ================
+     Reachability_Special_Write
+     ================
+     */
+    static boolean Reachability_Special_Write(idFile fp, idReachability_Special reach) {
+        int i;
+        idKeyValue keyValue;
+
+        fp.WriteFloatString("\n\t\t{\n");
+        for (i = 0; i < reach.dict.GetNumKeyVals(); i++) {
+            keyValue = reach.dict.GetKeyVal(i);
+            fp.WriteFloatString("\t\t\t\"%s\" \"%s\"\n", keyValue.GetKey().toString(), keyValue.GetValue().toString());
+        }
+        fp.WriteFloatString("\t\t}\n");
+
+        return true;
+    }
+
+    /*
+     ================
+     Reachability_Special_Read
+     ================
+     */
+    static boolean Reachability_Special_Read(idLexer src, idReachability_Special reach) {
+        idToken key = new idToken();
+        idToken value = new idToken();
+
+        src.ExpectTokenString("{");
+        while (src.ReadToken(key)) {
+            if (key.equals("}")) {
+                return true;
+            }
+            src.ExpectTokenType(TT_STRING, 0, value);
+            reach.dict.Set(key, value);
+        }
+        return false;
+    }
 
     // reachability to another area
     public static class idReachability {
 
-        public int travelType;                              // type of travel required to get to the area
-        public short toAreaNum;                             // number of the reachable area
-        public short fromAreaNum;                           // number of area the reachability starts
-        public idVec3 start;                                // start point of inter area movement
-        public idVec3 end;                                  // end point of inter area movement
-        public int edgeNum;                                 // edge crossed by this reachability
-        public /*unsigned short*/ int travelTime;           // travel time of the inter area movement
-        public byte number;                                 // reachability number within the fromAreaNum (must be < 256)
-        public byte disableCount;                           // number of times this reachability has been disabled
-        public idReachability next;                         // next reachability in list
-        public idReachability rev_next;                     // next reachability in reversed list
         public IntBuffer areaTravelTimes;                 // travel times within the fromAreaNum from reachabilities that lead towards this area
+        public byte disableCount;                           // number of times this reachability has been disabled
+        public int edgeNum;                                 // edge crossed by this reachability
+        public idVec3 end;                                  // end point of inter area movement
+        public short fromAreaNum;                           // number of area the reachability starts
+        public idReachability next;                         // next reachability in list
+        public byte number;                                 // reachability number within the fromAreaNum (must be < 256)
+        public idReachability rev_next;                     // next reachability in reversed list
+        public idVec3 start;                                // start point of inter area movement
+        public short toAreaNum;                             // number of the reachable area
+        public /*unsigned short*/ int travelTime;           // travel time of the inter area movement
+        public int travelType;                              // type of travel required to get to the area
         //
         //
 
@@ -112,7 +177,7 @@ public class AASFile {
             start = new idVec3();
             end = new idVec3();
         }
-        
+
         public void CopyBase(idReachability reach) {
             travelType = reach.travelType;
             toAreaNum = reach.toAreaNum;
@@ -121,105 +186,105 @@ public class AASFile {
             edgeNum = reach.edgeNum;
             travelTime = reach.travelTime;
         }
-    };
+    }
 
     public static class idReachability_Walk extends idReachability {
-    };
+    }
 
     public static class idReachability_BarrierJump extends idReachability {
-    };
+    }
 
     public static class idReachability_WaterJump extends idReachability {
-    };
+    }
 
     public static class idReachability_WalkOffLedge extends idReachability {
-    };
+    }
 
     public static class idReachability_Swim extends idReachability {
-    };
+    }
 
     public static class idReachability_Fly extends idReachability {
-    };
+    }
 
     public static class idReachability_Special extends idReachability {
 
         public idDict dict;
-    };
+    }
 
     // edge
     public static class aasEdge_s {
 
-        public int[] vertexNum = new int[2];	// numbers of the vertexes of this edge
-    };
+        public int[] vertexNum = new int[2];    // numbers of the vertexes of this edge
+    }
 
     // area boundary face
     public static class aasFace_s {
-        public int planeNum;            // number of the plane this face is on
+        public short[] areas = new short[2];    // area at the front and back of this face
+        public int firstEdge;           // first edge in the edge index
         public int flags;               // face flags
         public int numEdges;            // number of edges in the boundary of the face
-        public int firstEdge;           // first edge in the edge index
-        public short[] areas = new short[2];    // area at the front and back of this face
-    };
+        public int planeNum;            // number of the plane this face is on
+    }
 
     // area with a boundary of faces
     public static class aasArea_s {
 
-        public int            numFaces;      // number of faces used for the boundary of the area
-        public int            firstFace;     // first face in the face index used for the boundary of the area
-        public idBounds       bounds;        // bounds of the area
-        public idVec3         center;        // center of the area an AI can move towards
-        public int            flags;         // several area flags
-        public int            contents;      // contents of the area
-        public short          cluster;       // cluster the area belongs to, if negative it's a portal
-        public short          clusterAreaNum;// number of the area in the cluster
-        public int            travelFlags;   // travel flags for traveling through this area
+        public idBounds bounds;        // bounds of the area
+        public idVec3 center;        // center of the area an AI can move towards
+        public short cluster;       // cluster the area belongs to, if negative it's a portal
+        public short clusterAreaNum;// number of the area in the cluster
+        public int contents;      // contents of the area
+        public int firstFace;     // first face in the face index used for the boundary of the area
+        public int flags;         // several area flags
+        public int numFaces;      // number of faces used for the boundary of the area
         public idReachability reach;         // reachabilities that start from this area
         public idReachability rev_reach;     // reachabilities that lead to this area
-    };
+        public int travelFlags;   // travel flags for traveling through this area
+    }
 
     // nodes of the bsp tree
     public static class aasNode_s {
         /*unsigned short*/
 
-        public int planeNum;                // number of the plane that splits the subspace at this node
         public int[] children = new int[2]; // child nodes, zero is solid, negative is -(area number)
-    };
+        public int planeNum;                // number of the plane that splits the subspace at this node
+    }
 
     // cluster portal
     public static class aasPortal_s {
 
         public short areaNum;                   // number of the area that is the actual portal
-        public short[] clusters       = new short[2];    // number of cluster at the front and back of the portal
         public short[] clusterAreaNum = new short[2];    // number of this portal area in the front and back cluster
+        public short[] clusters = new short[2];    // number of cluster at the front and back of the portal
         public int maxAreaTravelTime;           // maximum travel time through the portal area
-    };
+    }
 
     // cluster
     public static class aasCluster_s {
 
-        public int numAreas;             // number of areas in the cluster
-        public int numReachableAreas;    // number of areas with reachabilities
-        public int numPortals;             // number of cluster portals
         public int firstPortal;          // first cluster portal in the index
-    };
+        public int numAreas;             // number of areas in the cluster
+        public int numPortals;             // number of cluster portals
+        public int numReachableAreas;    // number of areas with reachabilities
+    }
 
     // trace through the world
     public static class aasTrace_s {
         // parameters
 
-        public int      flags;           // areas with these flags block the trace
-        public int      travelFlags;     // areas with these travel flags block the trace
-        public int      maxAreas;        // size of the 'areas' array
-        public int      getOutOfSolid;   // trace out of solid if the trace starts in solid
+        public int[] areas;           // array to store areas the trace went through
+        public int blockingAreaNum; // area that could not be entered
+        public idVec3 endpos;          // end position of trace
+        public int flags;           // areas with these flags block the trace
         // output
-        public float    fraction;        // fraction of trace completed
-        public idVec3   endpos;          // end position of trace
-        public int      planeNum;        // plane hit
-        public int      lastAreaNum;     // number of last area the trace went through
-        public int      blockingAreaNum; // area that could not be entered
-        public int      numAreas;        // number of areas the trace went through
-        public int[]    areas;           // array to store areas the trace went through
+        public float fraction;        // fraction of trace completed
+        public int getOutOfSolid;   // trace out of solid if the trace starts in solid
+        public int lastAreaNum;     // number of last area the trace went through
+        public int maxAreas;        // size of the 'areas' array
+        public int numAreas;        // number of areas the trace went through
+        public int planeNum;        // plane hit
         public idVec3[] points;          // points where the trace entered each new area
+        public int travelFlags;     // areas with these travel flags block the trace
 
         public aasTrace_s() {
             areas = null;
@@ -228,8 +293,6 @@ public class AASFile {
                     flags = travelFlags = maxAreas = 0;
         }
     }
-
-    ;
 
     /*
      ===============================================================================
@@ -240,31 +303,31 @@ public class AASFile {
      */
     public static class idAASSettings {
 
-        // collision settings
-        public int numBoundingBoxes;
-        public idBounds[] boundingBoxes = new idBounds[MAX_AAS_BOUNDING_BOXES];
-        public boolean[]  usePatches    = {false};
-        public boolean[]  writeBrushMap = {false};
-        public boolean[]  playerFlood   = {false};
-        public boolean noOptimize;
+        public boolean[] allowFlyReachabilities = {false};
         public boolean[] allowSwimReachabilities = {false};
-        public boolean[] allowFlyReachabilities  = {false};
-        public idStr  fileExtension;
+        public idBounds[] boundingBoxes = new idBounds[MAX_AAS_BOUNDING_BOXES];
+        public idStr fileExtension;
         // physics settings
         public idVec3 gravity;
         public idVec3 gravityDir;
+        public float gravityValue;
         public idVec3 invGravityDir;
-        public float  gravityValue;
-        public float[] maxStepHeight        = {0};
-        public float[] maxBarrierHeight     = {0};
-        public float[] maxWaterJumpHeight   = {0};
-        public float[] maxFallHeight        = {0};
-        public float[] minFloorCos          = {0};
+        public float[] maxBarrierHeight = {0};
+        public float[] maxFallHeight = {0};
+        public float[] maxStepHeight = {0};
+        public float[] maxWaterJumpHeight = {0};
+        public float[] minFloorCos = {0};
+        public boolean noOptimize;
+        // collision settings
+        public int numBoundingBoxes;
+        public boolean[] playerFlood = {false};
         // fixed travel times
-        public int[]   tt_barrierJump       = {0};
-        public int[]   tt_startCrouching    = {0};
-        public int[]   tt_waterJump         = {0};
-        public int[]   tt_startWalkOffLedge = {0};
+        public int[] tt_barrierJump = {0};
+        public int[] tt_startCrouching = {0};
+        public int[] tt_startWalkOffLedge = {0};
+        public int[] tt_waterJump = {0};
+        public boolean[] usePatches = {false};
+        public boolean[] writeBrushMap = {false};
         //
         //
 
@@ -632,7 +695,7 @@ public class AASFile {
             }
             return false;
         }
-    };
+    }
 
     /*
 
@@ -658,21 +721,21 @@ public class AASFile {
      */
     public static abstract class idAASFile {
 
-        protected idStr                         name;
+        protected idList<aasArea_s> areas;
+        protected idList<aasCluster_s> clusters;
         protected long/*unsigned int*/          crc;
-        //
-        protected idPlaneSet                    planeList;
-        protected idList<idVec3/*aasVertex_t*/> vertices;
-        protected idList<aasEdge_s>             edges;
         protected idList<Integer/*aasIndex_t*/> edgeIndex;
-        protected idList<aasFace_s>             faces;
+        protected idList<aasEdge_s> edges;
         protected idList<Integer/*aasIndex_t*/> faceIndex;
-        protected idList<aasArea_s>             areas;
-        protected idList<aasNode_s>             nodes;
-        protected idList<aasPortal_s>           portals;
+        protected idList<aasFace_s> faces;
+        protected idStr name;
+        protected idList<aasNode_s> nodes;
+        //
+        protected idPlaneSet planeList;
         protected idList<Integer/*aasIndex_t*/> portalIndex;
-        protected idList<aasCluster_s>          clusters;
-        protected idAASSettings                 settings;
+        protected idList<aasPortal_s> portals;
+        protected idAASSettings settings;
+        protected idList<idVec3/*aasVertex_t*/> vertices;
         //
         //
 
@@ -831,72 +894,6 @@ public class AASFile {
         public abstract boolean Trace(aasTrace_s trace, final idVec3 start, final idVec3 end);
 
         public abstract void PrintInfo();
-    };
-
-    /*
-     ================
-     Reachability_Write
-     ================
-     */
-    static boolean Reachability_Write(idFile fp, idReachability reach) {
-        fp.WriteFloatString("\t\t%d %d (%f %f %f) (%f %f %f) %d %d",
-                (int) reach.travelType, (int) reach.toAreaNum, reach.start.x, reach.start.y, reach.start.z,
-                reach.end.x, reach.end.y, reach.end.z, reach.edgeNum, (int) reach.travelTime);
-        return true;
-    }
-
-    /*
-     ================
-     Reachability_Read
-     ================
-     */
-    static boolean Reachability_Read(idLexer src, idReachability reach) {
-        reach.travelType = src.ParseInt();
-        reach.toAreaNum = (short) src.ParseInt();
-        src.Parse1DMatrix(3, reach.start);
-        src.Parse1DMatrix(3, reach.end);
-        reach.edgeNum = src.ParseInt();
-        reach.travelTime = src.ParseInt();
-        return true;
-    }
-
-    /*
-     ================
-     Reachability_Special_Write
-     ================
-     */
-    static boolean Reachability_Special_Write(idFile fp, idReachability_Special reach) {
-        int i;
-        idKeyValue keyValue;
-
-        fp.WriteFloatString("\n\t\t{\n");
-        for (i = 0; i < reach.dict.GetNumKeyVals(); i++) {
-            keyValue = reach.dict.GetKeyVal(i);
-            fp.WriteFloatString("\t\t\t\"%s\" \"%s\"\n", keyValue.GetKey().toString(), keyValue.GetValue().toString());
-        }
-        fp.WriteFloatString("\t\t}\n");
-
-        return true;
-    }
-
-    /*
-     ================
-     Reachability_Special_Read
-     ================
-     */
-    static boolean Reachability_Special_Read(idLexer src, idReachability_Special reach) {
-        idToken key = new idToken();
-        idToken value = new idToken();
-
-        src.ExpectTokenString("{");
-        while (src.ReadToken(key)) {
-            if (key.equals("}")) {
-                return true;
-            }
-            src.ExpectTokenType(TT_STRING, 0, value);
-            reach.dict.Set(key, value);
-        }
-        return false;
     }
 
 }

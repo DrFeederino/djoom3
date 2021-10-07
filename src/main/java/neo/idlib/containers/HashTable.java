@@ -20,11 +20,11 @@ public class HashTable {
 
     public static class idHashTable<Type> {
 
-        private hashnode_s[] heads;
+        private final hashnode_s[] heads;
+        private int numentries;
         //
-        private int          tablesize;
-        private int          numentries;
-        private int          tablesizemask;
+        private final int tablesize;
+        private final int tablesizemask;
         //
         //
 
@@ -267,11 +267,15 @@ public class HashTable {
             return 100 - (error * 100 / numentries);
         }
 
+        int GetHash(final String key) {
+            return (idStr.Hash(key) & tablesizemask);
+        }
+
         private class hashnode_s<Type> {
 
-            idStr      key;
-            Type       value;
+            idStr key;
             hashnode_s next;
+            Type value;
             //
             //
 
@@ -288,10 +292,7 @@ public class HashTable {
             hashnode_s(final String k, Type v, hashnode_s n) {
                 this(new idStr(k), v, n);
             }
-        };
-
-        int GetHash(final String key) {
-            return (idStr.Hash(key) & tablesizemask);
         }
-    };
+    }
+
 }
