@@ -1,11 +1,10 @@
 package neo.ui;
 
 import neo.framework.CVarSystem.idCVar;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec4;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.DeviceContext.idDeviceContext;
@@ -90,7 +89,7 @@ public class ChoiceWindow {
                         return cmd.toString();
                     }
                     currentChoice++;
-                    if (currentChoice >= choices.Num()) {
+                    if (currentChoice >= choices.size()) {
                         currentChoice = 0;
                     }
                     runAction = true;
@@ -104,7 +103,7 @@ public class ChoiceWindow {
                     }
                     currentChoice--;
                     if (currentChoice < 0) {
-                        currentChoice = choices.Num() - 1;
+                        currentChoice = choices.size() - 1;
                     }
                     runAction = true;
                 }
@@ -119,8 +118,8 @@ public class ChoiceWindow {
                 key = event.evValue;
 
                 int potentialChoice = -1;
-                for (int i = 0; i < choices.Num(); i++) {
-                    if (Character.toUpperCase(key) == Character.toUpperCase(choices.oGet(i).oGet(0))) {
+                for (int i = 0; i < choices.size(); i++) {
+                    if (Character.toUpperCase(key) == Character.toUpperCase(choices.get(i).oGet(0))) {
                         if (i < currentChoice && potentialChoice < 0) {
                             potentialChoice = i;
                         } else if (i > currentChoice) {
@@ -147,10 +146,10 @@ public class ChoiceWindow {
 
             if (choiceType == 0) {
                 cvarStr.Set(va("%d", currentChoice));
-            } else if (values.Num() != 0) {
-                cvarStr.Set(values.oGet(currentChoice));
+            } else if (values.size() != 0) {
+                cvarStr.Set(values.get(currentChoice));
             } else {
-                cvarStr.Set(choices.oGet(currentChoice));
+                cvarStr.Set(choices.get(currentChoice));
             }
 
             UpdateVars(false);
@@ -185,7 +184,7 @@ public class ChoiceWindow {
             textAlign = 0;
 
             if (textShadow != 0) {
-                idStr shadowText = choices.oGet(currentChoice);
+                idStr shadowText = choices.get(currentChoice);
                 idRectangle shadowRect = textRect;
 
                 shadowText.RemoveColors();
@@ -204,7 +203,7 @@ public class ChoiceWindow {
                 color = hoverColor.oCastIdVec4();
             }
 
-            dc.DrawText(choices.oGet(currentChoice), textScale.data, textAlign, color, textRect, false, -1);
+            dc.DrawText(choices.get(currentChoice), textScale.data, textAlign, color, textRect, false, -1);
         }
 
         @Override
@@ -282,7 +281,7 @@ public class ChoiceWindow {
             choiceType = 0;
             cvar = null;
             liveUpdate.data = true;
-            choices.Clear();
+            choices.clear();
         }
 
         private void UpdateChoice() {
@@ -304,10 +303,10 @@ public class ChoiceWindow {
                 ValidateChoice();
             } else {
                 // ChoiceType 1 stores current as a cvar string
-                int c = (values.Num() != 0) ? values.Num() : choices.Num();
+                int c = (values.size() != 0) ? values.size() : choices.size();
                 int i;
                 for (i = 0; i < c; i++) {
-                    if (idStr.Icmp(cvarStr.c_str(), ((values.Num() != 0) ? values.oGet(i) : choices.oGet(i)).toString()) == 0) {
+                    if (idStr.Icmp(cvarStr.c_str(), ((values.size() != 0) ? values.get(i) : choices.get(i)).toString()) == 0) {
                         break;
                     }
                 }
@@ -320,11 +319,11 @@ public class ChoiceWindow {
         }
 
         private void ValidateChoice() {
-            if (currentChoice < 0 || currentChoice >= choices.Num()) {
+            if (currentChoice < 0 || currentChoice >= choices.size()) {
                 currentChoice = 0;
             }
-            if (choices.Num() == 0) {
-                choices.Append("No Choices Defined");
+            if (choices.size() == 0) {
+                choices.add("No Choices Defined");
             }
         }
 
@@ -372,7 +371,7 @@ public class ChoiceWindow {
             idLexer src = new idLexer();
 
             if (latchedChoices.Icmp(choicesStr.data) != 0) {
-                choices.Clear();
+                choices.clear();
                 src.FreeSource();
                 src.SetFlags(LEXFL_NOFATALERRORS | LEXFL_ALLOWPATHNAMES | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
                 src.LoadMemory(choicesStr.data, choicesStr.Length(), "<ChoiceList>");
@@ -382,7 +381,7 @@ public class ChoiceWindow {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace();
                                 str2.oSet(common.GetLanguageDict().GetString(str2));
-                                choices.Append(str2);
+                                choices.add(str2);
                                 str2.oSet("");
                             }
                             continue;
@@ -392,13 +391,13 @@ public class ChoiceWindow {
                     }
                     if (str2.Length() != 0) {
                         str2.StripTrailingWhitespace();
-                        choices.Append(str2);
+                        choices.add(str2);
                     }
                 }
                 latchedChoices.oSet(choicesStr.c_str());
             }
             if (choiceVals.Length() != 0 && latchedVals.Icmp(choiceVals.data) != 0) {
-                values.Clear();
+                values.clear();
                 src.FreeSource();
                 src.SetFlags(LEXFL_ALLOWPATHNAMES | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
                 src.LoadMemory(choiceVals.data, choiceVals.Length(), "<ChoiceVals>");
@@ -413,7 +412,7 @@ public class ChoiceWindow {
                         if (token.equals(";")) {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace();
-                                values.Append(str2);
+                                values.add(str2);
                                 str2.oSet("");//TODO:what Da fuk? EDIT:yes yes, vision gets blury at 4 in teh morning!
                             }
                             continue;
@@ -427,10 +426,10 @@ public class ChoiceWindow {
                     }
                     if (str2.Length() != 0) {
                         str2.StripTrailingWhitespace();
-                        values.Append(str2);
+                        values.add(str2);
                     }
                 }
-                if (choices.Num() != values.Num()) {
+                if (choices.size() != values.size()) {
                     common.Warning("idChoiceWindow:: gui '%s' window '%s' has value count unequal to choices count", gui.GetSourceFile(), name);
                 }
                 latchedVals.oSet(choiceVals.c_str());

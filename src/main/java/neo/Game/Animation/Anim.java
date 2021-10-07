@@ -2,18 +2,16 @@ package neo.Game.Animation;
 
 import neo.Game.Game_local;
 import neo.Game.Script.Script_Program.function_t;
-import neo.Renderer.Model.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib.idException;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idCQuat;
@@ -1058,7 +1056,7 @@ public class Anim {
 
         public void Shutdown() {
             animations.DeleteContents();
-            jointnames.Clear();
+            jointnames.clear();
             jointnamesHash.Free();
         }
 
@@ -1124,13 +1122,13 @@ public class Anim {
                 }
             }
 
-            namesize = jointnames.Size() + jointnamesHash.Size();
-            for (i = 0; i < jointnames.Num(); i++) {
-                namesize += jointnames.oGet(i).Size();
+            namesize = jointnames.sizeStrings() + jointnamesHash.Size();
+            for (i = 0; i < jointnames.size(); i++) {
+                namesize += jointnames.get(i).Size();
             }
 
             gameLocal.Printf("\n%d memory used in %d anims\n", size, num);
-            gameLocal.Printf("%d memory used in %d joint names\n", namesize, jointnames.Num());
+            gameLocal.Printf("%d memory used in %d joint names\n", namesize, jointnames.size());
         }
 
         public int JointIndex(final String name) {
@@ -1138,18 +1136,18 @@ public class Anim {
 
             hash = jointnamesHash.GenerateKey(name);
             for (i = jointnamesHash.First(hash); i != -1; i = jointnamesHash.Next(i)) {
-                if (jointnames.oGet(i).Cmp(name) == 0) {
+                if (jointnames.get(i).Cmp(name) == 0) {
                     return i;
                 }
             }
 
-            i = jointnames.Append(name);
+            i = jointnames.add(name);
             jointnamesHash.Add(hash, i);
             return i;
         }
 
         public String JointName(int index) {
-            return jointnames.oGet(index).toString();
+            return jointnames.get(index).toString();
         }
 //
 //        public void ClearAnimsInUse();

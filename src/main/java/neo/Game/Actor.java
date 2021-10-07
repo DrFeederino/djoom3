@@ -5,11 +5,9 @@ import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.AFEntity.idAFEntity_Gibbable;
 import neo.Game.AI.AAS.idAAS;
-import neo.Game.Animation.Anim.*;
 import neo.Game.Animation.Anim_Blend.idAnimBlend;
 import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.Entity.idEntity;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
@@ -31,9 +29,8 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 
@@ -690,9 +687,9 @@ public class Actor {
             savefile.WriteInt(pain_delay);
             savefile.WriteInt(pain_threshold);
 
-            savefile.WriteInt(damageGroups.Num());
-            for (i = 0; i < damageGroups.Num(); i++) {
-                savefile.WriteString(damageGroups.oGet(i));
+            savefile.WriteInt(damageGroups.size());
+            for (i = 0; i < damageGroups.size(); i++) {
+                savefile.WriteString(damageGroups.get(i));
             }
 
             savefile.WriteInt(damageScale.Num());
@@ -812,9 +809,9 @@ public class Actor {
 
             savefile.ReadInt(num);
             damageGroups.SetGranularity(1);
-            damageGroups.SetNum(num[0]);
+            damageGroups.setSize(num[0]);
             for (i = 0; i < num[0]; i++) {
-                savefile.ReadString(damageGroups.oGet(i));
+                savefile.ReadString(damageGroups.get(i));
             }
 
             savefile.ReadInt(num);
@@ -1331,7 +1328,7 @@ public class Actor {
             float scale;
 
             // create damage zones
-            damageGroups.SetNum(animator.NumJoints());
+            damageGroups.setSize(animator.NumJoints());
             arg = spawnArgs.MatchPrefix("damage_zone ", null);
             while (arg != null) {
                 groupname.oSet(arg.GetKey());
@@ -1339,7 +1336,7 @@ public class Actor {
                 animator.GetJointList(arg.GetValue(), jointList);
                 for (i = 0; i < jointList.Num(); i++) {
                     jointnum = jointList.oGet(i);
-                    damageGroups.oSet(jointnum, groupname);
+                    damageGroups.set(jointnum, groupname);
                 }
                 jointList.Clear();
                 arg = spawnArgs.MatchPrefix("damage_zone ", arg);
@@ -1358,7 +1355,7 @@ public class Actor {
                 groupname.oSet(arg.GetKey());
                 groupname.Strip("damage_scale ");
                 for (i = 0; i < damageScale.Num(); i++) {
-                    if (groupname.equals(damageGroups.oGet(i))) {
+                    if (groupname.equals(damageGroups.get(i))) {
                         damageScale.oSet(i, scale);
                     }
                 }
@@ -1446,11 +1443,11 @@ public class Actor {
         }
 
         public String GetDamageGroup(int location) {
-            if ((location < 0) || (location >= damageGroups.Num())) {
+            if ((location < 0) || (location >= damageGroups.size())) {
                 return "";
             }
 
-            return damageGroups.oGet(location).toString();
+            return damageGroups.get(location).toString();
         }
 
         public void ClearPain() {
@@ -2109,8 +2106,8 @@ public class Actor {
 
                 // set the damage joint to be part of the head damage group
                 damageJoint = joint;
-                for (i = 0; i < damageGroups.Num(); i++) {
-                    final idStr d = damageGroups.oGet(i);
+                for (i = 0; i < damageGroups.size(); i++) {
+                    final idStr d = damageGroups.get(i);
                     if (d != null && d.equals("head")) {
                         damageJoint = /*(jointHandle_t)*/ i;
                         break;

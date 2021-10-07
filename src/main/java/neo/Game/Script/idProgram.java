@@ -11,14 +11,13 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Game_local;
 import neo.Game.Script.Script_Compiler.idCompiler;
 import neo.Game.Script.Script_Compiler.opcode_s;
-import neo.Game.Script.Script_Program.*;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.framework.File_h.idFile;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StaticList.idStaticList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec3;
 
 import java.math.BigInteger;
@@ -100,11 +99,11 @@ public final class idProgram {
         gameLocal.DPrintf("Files loaded:\n");
 
         stringspace = 0;
-        for (i = 0; i < fileList.Num(); i++) {
-            gameLocal.DPrintf("   %s\n", fileList.oGet(i));
-            stringspace += fileList.oGet(i).Allocated();
+        for (i = 0; i < fileList.size(); i++) {
+            gameLocal.DPrintf("   %s\n", fileList.get(i));
+            stringspace += fileList.get(i).Allocated();
         }
-        stringspace += fileList.Size();
+        stringspace += fileList.sizeStrings();
 
         numdefs = varDefs.Num();
         memused = varDefs.Num() * idVarDef.BYTES;
@@ -127,7 +126,7 @@ public final class idProgram {
         memused += variables.length;
 
         gameLocal.Printf("\nMemory usage:\n");
-        gameLocal.Printf("     Strings: %d, %d bytes\n", fileList.Num(), stringspace);
+        gameLocal.Printf("     Strings: %d, %d bytes\n", fileList.size(), stringspace);
         gameLocal.Printf("  Statements: %d, %d bytes\n", statements.Num(), statements.MemoryUsed());
         gameLocal.Printf("   Functions: %d, %d bytes\n", functions.Num(), funcMem);
         gameLocal.Printf("   Variables: %d bytes\n", numVariables);
@@ -143,9 +142,9 @@ public final class idProgram {
         int i;
         int currentFileNum = top_files;
 
-        savefile.WriteInt((fileList.Num() - currentFileNum));
-        while (currentFileNum < fileList.Num()) {
-            savefile.WriteString(fileList.oGet(currentFileNum));
+        savefile.WriteInt((fileList.size() - currentFileNum));
+        while (currentFileNum < fileList.size()) {
+            savefile.WriteString(fileList.get(currentFileNum));
             currentFileNum++;
         }
 
@@ -309,7 +308,7 @@ public final class idProgram {
         functions.SetNum(top_functions);
 
         statements.SetNum(top_statements);
-        fileList.SetNum(top_files, false);
+        fileList.setSize(top_files, false);
         filename.Clear();
 
         // reset the variables to their default values
@@ -445,7 +444,7 @@ public final class idProgram {
         top_statements = statements.Num();
         top_types = types.Num();
         top_defs = varDefs.Num();
-        top_files = fileList.Num();
+        top_files = fileList.size();
 
         variableDefaults.Clear();
         variableDefaults.SetNum(numVariables);
@@ -461,7 +460,7 @@ public final class idProgram {
 
         statement = statements.oGet(instructionPointer);
         op = idCompiler.opcodes[statement.op];
-        file.Printf("%20s(%d):\t%6d: %15s\t", fileList.oGet(statement.file), statement.linenumber, instructionPointer, op.opname);
+        file.Printf("%20s(%d):\t%6d: %15s\t", fileList.get(statement.file), statement.linenumber, instructionPointer, op.opname);
 
         if (statement.a != null) {
             file.Printf("\ta: ");
@@ -535,7 +534,7 @@ public final class idProgram {
         }
 
         filename.Clear();
-        fileList.Clear();
+        fileList.clear();
         statements.Clear();
         functions.Clear();
 
@@ -549,7 +548,7 @@ public final class idProgram {
     }
 
     public String GetFilename(int num) {
-        return fileList.oGet(num).toString();
+        return fileList.get(num).toString();
     }
 
     public int GetFilenum(final String name) {
@@ -561,9 +560,9 @@ public final class idProgram {
         strippedName = fileSystem.OSPathToRelativePath(name);
         if (isNotNullOrEmpty(strippedName)) {
             // not off the base path so just use the full path
-            filenum = fileList.AddUnique(name);
+            filenum = fileList.addUnique(name);
         } else {
-            filenum = fileList.AddUnique(strippedName);
+            filenum = fileList.addUnique(strippedName);
         }
 
         // save the unstripped name so that we don't have to strip the incoming name every time we call GetFilenum
@@ -1056,6 +1055,6 @@ public final class idProgram {
     }
 
     public int NumFilenames() {
-        return fileList.Num();
+        return fileList.size();
     }
 }

@@ -3,11 +3,8 @@ package neo.sys;
 import neo.TempDump.CPP_class;
 import neo.TempDump.SERiAL;
 import neo.TempDump.TODO_Exception;
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.sys.sys_local.idSysLocal;
-import neo.sys.win_net.*;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -110,8 +107,8 @@ public class sys_public {
 
     // use fs_debug to verbose Sys_ListFiles
     // returns -1 if directory was not found (the list is cleared)
-    public static int Sys_ListFiles(final String directory, final String extension, idList<idStr> list) {
-        return win_main.Sys_ListFiles(directory, extension, (idStrList) list);
+    public static int Sys_ListFiles(final String directory, final String extension, idStrList list) {
+        return win_main.Sys_ListFiles(directory, extension, list);
     }
 
     public static void setSys(idSys sys) {

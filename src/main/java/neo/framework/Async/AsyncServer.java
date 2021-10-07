@@ -2,16 +2,12 @@ package neo.framework.Async;
 
 import neo.Game.Game.allowReply_t;
 import neo.Game.Game.gameReturn_t;
-import neo.TempDump.*;
-import neo.framework.Async.AsyncNetwork.*;
-import neo.framework.Async.MsgChannel.*;
 import neo.framework.FileSystem_h.findFile_t;
 import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Dict_h.idDict;
-import neo.idlib.Lib.*;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Math_h.idMath;
 import neo.sys.sys_public.idPort;
 import neo.sys.sys_public.netadr_t;
@@ -2589,7 +2585,7 @@ public class AsyncServer {
                 pakbuf[0] = '\0';
                 voidSlots++;
             }
-            pakNames.Append(new idStr(pakbuf));
+            pakNames.add(new idStr(pakbuf));
             numPaks = 1;
 
             // read the checksums, build path names and pass that to the game code
@@ -2601,16 +2597,16 @@ public class AsyncServer {
                     pakbuf[0] = '\0';
                     voidSlots++;
                 }
-                pakNames.Append(new idStr(pakbuf));
+                pakNames.add(new idStr(pakbuf));
                 numPaks++;
                 dlPakChecksum = msg.ReadLong();
             }
 
-            for (i = 0; i < pakNames.Num(); i++) {
+            for (i = 0; i < pakNames.size(); i++) {
                 if (i > 0) {
                     paklist.oPluSet(";");
                 }
-                paklist.oPluSet(pakNames.oGet(i).toString());
+                paklist.oPluSet(pakNames.get(i).toString());
             }
 
             // read the message and pass it to the game code
@@ -2646,7 +2642,7 @@ public class AsyncServer {
                     serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize());
                     return;
                 } else if (type == SERVER_DL_LIST.ordinal()) {
-                    pakURLs.Append(new idStr(token));
+                    pakURLs.add(new idStr(token));
                 } else {
                     common.DPrintf("wrong op type %d\n", type);
                     next = -1;
@@ -2670,18 +2666,18 @@ public class AsyncServer {
 
                 tmpMsg.Init(tmpBuf, MAX_MESSAGE_SIZE);
 
-                for (i = 0; i < pakURLs.Num(); i++) {
+                for (i = 0; i < pakURLs.size(); i++) {
                     tmpMsg.BeginWriting();
-                    if (0 == dlSize[i] || 0 == pakURLs.oGet(i).Length()) {
+                    if (0 == dlSize[i] || 0 == pakURLs.get(i).Length()) {
                         // still send the relative path so the client knows what it missed
                         tmpMsg.WriteByte(SERVER_PAK_NO.ordinal());
-                        tmpMsg.WriteString(pakNames.oGet(i).toString());
+                        tmpMsg.WriteString(pakNames.get(i).toString());
                     } else {
                         totalDlSize += dlSize[i];
                         numActualPaks++;
                         tmpMsg.WriteByte(SERVER_PAK_YES.ordinal());
-                        tmpMsg.WriteString(pakNames.oGet(i).toString());
-                        tmpMsg.WriteString(pakURLs.oGet(i).toString());
+                        tmpMsg.WriteString(pakNames.get(i).toString());
+                        tmpMsg.WriteString(pakURLs.get(i).toString());
                         tmpMsg.WriteLong(dlSize[i]);
                     }
 
@@ -2693,7 +2689,7 @@ public class AsyncServer {
                         break;
                     }
                 }
-                if (i == pakURLs.Num()) {
+                if (i == pakURLs.size()) {
                     // put a closure even if size not exceeded
                     outMsg.WriteByte(SERVER_PAK_END.ordinal());
                 }

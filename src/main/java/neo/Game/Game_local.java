@@ -6,7 +6,6 @@ import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Generic;
 import neo.Game.AFEntity.idAFEntity_WithAttachedHead;
 import neo.Game.AI.AAS.idAAS;
-import neo.Game.AI.AI.*;
 import neo.Game.Actor.idActor;
 import neo.Game.Animation.Anim.idAnimManager;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
@@ -18,7 +17,6 @@ import neo.Game.Camera.idCameraAnim;
 import neo.Game.Camera.idCameraView;
 import neo.Game.Entity.idEntity;
 import neo.Game.FX.idEntityFx;
-import neo.Game.Game.*;
 import neo.Game.GameEdit.idEditEntities;
 import neo.Game.GameSys.Class.idAllocError;
 import neo.Game.GameSys.Class.idClass;
@@ -26,11 +24,9 @@ import neo.Game.GameSys.Class.idTypeInfo;
 import neo.Game.GameSys.Event.idEvent;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.GameSys.SysCmds.*;
 import neo.Game.GameSys.TypeInfo.ListTypeInfo_f;
 import neo.Game.GameSys.TypeInfo.TestSaveGame_f;
 import neo.Game.GameSys.TypeInfo.WriteGameState_f;
-import neo.Game.Game_network.*;
 import neo.Game.Item.*;
 import neo.Game.Light.idLight;
 import neo.Game.Misc.*;
@@ -63,7 +59,6 @@ import neo.Game.Sound.idSound;
 import neo.Game.Target.*;
 import neo.Game.Trigger.*;
 import neo.Game.WorldSpawn.idWorldspawn;
-import neo.Renderer.Material.*;
 import neo.Renderer.ModelManager;
 import neo.Renderer.RenderSystem;
 import neo.Renderer.RenderWorld.idRenderWorld;
@@ -73,12 +68,9 @@ import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.snd_shader.soundShaderParms_t;
 import neo.Sound.snd_system;
 import neo.Sound.sound.idSoundWorld;
-import neo.TempDump.*;
 import neo.framework.Async.NetworkSystem;
 import neo.framework.*;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.argCompletion_t;
-import neo.framework.CmdSystem.*;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
 import neo.framework.DeclManager.declType_t;
 import neo.framework.DeclManager.idDecl;
@@ -92,7 +84,6 @@ import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import neo.idlib.Lib.*;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
@@ -102,11 +93,10 @@ import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StaticList.idStaticList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.geometry.TraceModel.traceModelPoly_t;
 import neo.idlib.geometry.Winding.idFixedWinding;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Random.idRandom;
 import neo.idlib.math.Simd.idSIMD;
@@ -784,7 +774,7 @@ public class Game_local {
             while (kv != null) {
                 aas = idAAS.Alloc();
                 aasList.Append(aas);
-                aasNames.Append(kv.GetValue());
+                aasNames.add(kv.GetValue());
                 kv = dict.MatchPrefix("type", kv);
             }
 
@@ -816,7 +806,7 @@ public class Game_local {
             MapShutdown();
 
             aasList.DeleteContents(true);
-            aasNames.Clear();
+            aasNames.clear();
 
             idAI.FreeObstacleAvoidanceNodes();
 
@@ -2651,11 +2641,11 @@ public class Game_local {
                 Tokenize(dlTable, cvarSystem.GetCVarString("net_serverDlTable"));
                 Tokenize(pakList, paks);
 
-                for (i = 0; i < pakList.Num(); i++) {
+                for (i = 0; i < pakList.size(); i++) {
                     if (i > 0) {
                         reply += ";";
                     }
-                    if (pakList.oGet(i).IsEmpty()) {//[ i ][ 0 ] == '\0' ) {
+                    if (pakList.get(i).IsEmpty()) {//[ i ][ 0 ] == '\0' ) {
                         if (i == 0) {
                             // pak 0 will always miss when client doesn't ask for game bin
                             common.DPrintf("no game pak request\n");
@@ -2664,16 +2654,16 @@ public class Game_local {
                         }
                         continue;
                     }
-                    for (j = 0; j < dlTable.Num(); j++) {
-                        if (!fileSystem.FilenameCompare(pakList.oGet(i), dlTable.oGet(j))) {
+                    for (j = 0; j < dlTable.size(); j++) {
+                        if (!fileSystem.FilenameCompare(pakList.get(i), dlTable.get(j))) {
                             break;
                         }
                     }
-                    if (j == dlTable.Num()) {
-                        common.Printf("download for %s: pak not matched: %s\n", IP, pakList.oGet(i));
+                    if (j == dlTable.size()) {
+                        common.Printf("download for %s: pak not matched: %s\n", IP, pakList.get(i));
                     } else {
                         idStr url = new idStr(cvarSystem.GetCVarString("net_serverDlBaseURL"));
-                        url.AppendPath(dlTable.oGet(j));
+                        url.AppendPath(dlTable.get(j));
                         reply += url;
                         common.DPrintf("download for %s: %s\n", IP, url);
                     }
@@ -2784,8 +2774,8 @@ public class Game_local {
             playerConnectedAreas.i = -1;
 
             // load navigation system for all the different monster sizes
-            for (i = 0; i < aasNames.Num(); i++) {
-                aasList.oGet(i).Init(new idStr(mapFileName).SetFileExtension(aasNames.oGet(i)), mapFile.GetGeometryCRC());
+            for (i = 0; i < aasNames.size(); i++) {
+                aasList.oGet(i).Init(new idStr(mapFileName).SetFileExtension(aasNames.get(i)), mapFile.GetGeometryCRC());
             }
 
             // clear the smoke particle free list
@@ -3051,8 +3041,8 @@ public class Game_local {
         public idAAS GetAAS(final String name) {
             int i;
 
-            for (i = 0; i < aasNames.Num(); i++) {
-                if (aasNames.oGet(i).equals(name)) {
+            for (i = 0; i < aasNames.size(); i++) {
+                if (aasNames.get(i).equals(name)) {
                     if (NOT(aasList.oGet(i).GetSettings())) {
                         return null;
                     } else {
@@ -3469,6 +3459,11 @@ public class Game_local {
                         break;
                     default:
                         obj = null;
+                }
+
+                // missing idItemRemover, possibly more?
+                if (obj == null) {
+                    return false;
                 }
 
                 obj.Spawn();
@@ -4791,7 +4786,7 @@ public class Game_local {
             mapSpawnCount = 0;
             camera = null;
             aasList.Clear();
-            aasNames.Clear();
+            aasNames.clear();
             lastAIAlertEntity = new idEntityPtr<>(null);
             lastAIAlertTime = 0;
             spawnArgs.Clear();
@@ -5878,7 +5873,7 @@ public class Game_local {
                         // don't OGG sounds that cause a shake because that would
                         // cause continuous seeking on the OGG file which is expensive
                         if (parms.shakes != 0.0f) {
-                            shakeSounds.AddUnique(soundName);
+                            shakeSounds.addUnique(soundName);
                             continue;
                         }
 
@@ -5894,21 +5889,21 @@ public class Game_local {
                                     || soundName.Find("bullet", false) != -1
                                     || soundName.Find("bfg", false) != -1
                                     || soundName.Find("plasma", false) != -1) {
-                                weaponSounds.AddUnique(soundName);
+                                weaponSounds.addUnique(soundName);
                                 continue;
                             }
                         }
 
-                        for (k = 0; k < shakeSounds.Num(); k++) {
-                            if (shakeSounds.oGet(k).IcmpPath(soundName.toString()) == 0) {
+                        for (k = 0; k < shakeSounds.size(); k++) {
+                            if (shakeSounds.get(k).IcmpPath(soundName.toString()) == 0) {
                                 break;
                             }
                         }
-                        if (k < shakeSounds.Num()) {
+                        if (k < shakeSounds.size()) {
                             continue;
                         }
 
-                        oggSounds.AddUnique(soundName);
+                        oggSounds.addUnique(soundName);
                     }
                 }
             }
@@ -5921,38 +5916,38 @@ public class Game_local {
 
             // list all the shake sounds
             totalSize = 0;
-            for (i = 0; i < shakeSounds.Num(); i++) {
-                size = fileSystem.ReadFile(shakeSounds.oGet(i), null, null);
+            for (i = 0; i < shakeSounds.size(); i++) {
+                size = fileSystem.ReadFile(shakeSounds.get(i), null, null);
                 totalSize += size;
-                shakeSounds.oGet(i).Replace("/", "\\");
-                file.Printf("echo \"%s\" (%d kB)\n", shakeSounds.oGet(i), size >> 10);
+                shakeSounds.get(i).Replace("/", "\\");
+                file.Printf("echo \"%s\" (%d kB)\n", shakeSounds.get(i), size >> 10);
             }
             file.Printf("echo %d kB in shake sounds\n\n\n", totalSize >> 10);
 
             // list all the weapon sounds
             totalSize = 0;
-            for (i = 0; i < weaponSounds.Num(); i++) {
-                size = fileSystem.ReadFile(weaponSounds.oGet(i), null, null);
+            for (i = 0; i < weaponSounds.size(); i++) {
+                size = fileSystem.ReadFile(weaponSounds.get(i), null, null);
                 totalSize += size;
-                weaponSounds.oGet(i).Replace("/", "\\");
-                file.Printf("echo \"%s\" (%d kB)\n", weaponSounds.oGet(i), size >> 10);
+                weaponSounds.get(i).Replace("/", "\\");
+                file.Printf("echo \"%s\" (%d kB)\n", weaponSounds.get(i), size >> 10);
             }
             file.Printf("echo %d kB in weapon sounds\n\n\n", totalSize >> 10);
 
             // list commands to convert all other sounds to ogg
             totalSize = 0;
-            for (i = 0; i < oggSounds.Num(); i++) {
-                size = fileSystem.ReadFile(oggSounds.oGet(i), null, null);
+            for (i = 0; i < oggSounds.size(); i++) {
+                size = fileSystem.ReadFile(oggSounds.get(i), null, null);
                 totalSize += size;
-                oggSounds.oGet(i).Replace("/", "\\");
-                file.Printf("w:\\doom\\ogg\\oggenc -q 0 \"c:\\doom\\base\\%s\"\n", oggSounds.oGet(i));
-                file.Printf("del \"c:\\doom\\base\\%s\"\n", oggSounds.oGet(i));
+                oggSounds.get(i).Replace("/", "\\");
+                file.Printf("w:\\doom\\ogg\\oggenc -q 0 \"c:\\doom\\base\\%s\"\n", oggSounds.get(i));
+                file.Printf("del \"c:\\doom\\base\\%s\"\n", oggSounds.get(i));
             }
             file.Printf("\n\necho %d kB in OGG sounds\n\n\n", totalSize >> 10);
 
             fileSystem.CloseFile(file);
 
-            shakeSounds.Clear();
+            shakeSounds.clear();
         }
 
         private void GetShakeSounds(final idDict dict) {
@@ -5968,7 +5963,7 @@ public class Game_local {
                     soundName.oSet(soundShader.GetSound(i));
                     soundName.BackSlashesToSlashes();
 
-                    shakeSounds.AddUnique(soundName);
+                    shakeSounds.addUnique(soundName);
                 }
             }
         }
@@ -6011,7 +6006,7 @@ public class Game_local {
 //	}
             String[] tokens = in.split(";");
             for (String token : tokens) {
-                out.Append(token);
+                out.add(token);
             }
         }
 

@@ -1,16 +1,11 @@
 package neo.Renderer;
 
-import neo.Renderer.Image_init.*;
 import neo.Renderer.Material.textureFilter_t;
 import neo.Renderer.Material.textureRepeat_t;
-import neo.Renderer.tr_local.*;
-import neo.TempDump.*;
 import neo.TempDump.CPP_class.Bool;
 import neo.TempDump.CPP_class.Pointer;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.idCmdSystem;
-import neo.framework.Common.*;
 import neo.framework.FileSystem_h.backgroundDownload_s;
 import neo.framework.File_h.idFile;
 import neo.idlib.CmdArgs.idCmdArgs;
@@ -18,7 +13,7 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 import org.lwjgl.BufferUtils;
@@ -3417,14 +3412,14 @@ public class Image {
 
         // used to clear and then write the dds conversion batch file
         public void StartBuild() {
-            ddsList.Clear();
+            ddsList.clear();
             ddsHash.Free();
         }
 
         public void FinishBuild(boolean removeDups /*= false */) {
             idFile batchFile;
             if (removeDups) {
-                ddsList.Clear();
+                ddsList.clear();
                 ByteBuffer[] buffer = {null};
                 fileSystem.ReadFile("makedds.bat", buffer);
                 if (buffer[0] != null) {
@@ -3436,7 +3431,7 @@ public class Image {
                             idStr right = new idStr();
                             str.Right(str.Length() - n - 1, right);
                             str = right;
-                            ddsList.AddUnique(line);
+                            ddsList.addUnique(line);
                         } else {
                             break;
                         }
@@ -3446,15 +3441,15 @@ public class Image {
             batchFile = fileSystem.OpenFileWrite((removeDups) ? "makedds2.bat" : "makedds.bat");
             if (batchFile != null) {
                 int i;
-                int ddsNum = ddsList.Num();
+                int ddsNum = ddsList.size();
 
                 for (i = 0; i < ddsNum; i++) {
-                    batchFile.WriteFloatString("%s", ddsList.oGet(i).toString());
+                    batchFile.WriteFloatString("%s", ddsList.get(i).toString());
                     batchFile.Printf("@echo Finished compressing %d of %d.  %.1f percent done.\n", i + 1, ddsNum, ((float) (i + 1) / (float) ddsNum) * 100.f);
                 }
                 fileSystem.CloseFile(batchFile);
             }
-            ddsList.Clear();
+            ddsList.clear();
             ddsHash.Free();
         }
 
@@ -3471,13 +3466,13 @@ public class Image {
 
             key = ddsHash.GenerateKey(cmd, false);
             for (i = ddsHash.First(key); i != -1; i = ddsHash.Next(i)) {
-                if (ddsList.oGet(i).Icmp(cmd) == 0) {
+                if (ddsList.get(i).Icmp(cmd) == 0) {
                     break;
                 }
             }
 
             if (i == -1) {
-                ddsList.Append(new idStr(cmd));
+                ddsList.add(new idStr(cmd));
             }
         }
 //

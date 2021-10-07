@@ -4,7 +4,7 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 
 import static neo.idlib.Timer.State.TS_STARTED;
 import static neo.idlib.Timer.State.TS_STOPPED;
@@ -148,7 +148,7 @@ public class Timer {
 
         public int AddReport(final String name) {
             if (name != null) {
-                names.Append(new idStr(name));
+                names.add(new idStr(name));
                 return timers.Append(new idTimer());
             }
             return -1;
@@ -156,39 +156,39 @@ public class Timer {
 
         public void Clear() {
             timers.DeleteContents(true);
-            names.Clear();
+            names.clear();
             reportName.Clear();
         }
 
         public void Reset() {
-            assert (timers.Num() == names.Num());
+            assert (timers.Num() == names.size());
             for (int i = 0; i < timers.Num(); i++) {
                 timers.oGet(i).Clear();
             }
         }
 
         public void PrintReport() throws idException {
-            assert (timers.Num() == names.Num());
+            assert (timers.Num() == names.size());
             idLib.common.Printf("Timing Report for %s\n", reportName);
             idLib.common.Printf("-------------------------------\n");
             float total = 0.0f;
-            for (int i = 0; i < names.Num(); i++) {
-                idLib.common.Printf("%s consumed %5.2f seconds\n", names.oGet(i), timers.oGet(i).Milliseconds() * 0.001f);
+            for (int i = 0; i < names.size(); i++) {
+                idLib.common.Printf("%s consumed %5.2f seconds\n", names.get(i), timers.oGet(i).Milliseconds() * 0.001f);
                 total += timers.oGet(i).Milliseconds();
             }
             idLib.common.Printf("Total time for report %s was %5.2f\n\n", reportName, total * 0.001f);//TODO:char[] OR string
         }
 
         public void AddTime(final String name, idTimer time) {
-            assert (timers.Num() == names.Num());
+            assert (timers.Num() == names.size());
             int i;
-            for (i = 0; i < names.Num(); i++) {
-                if (names.oGet(i).Icmp(name) == 0) {
+            for (i = 0; i < names.size(); i++) {
+                if (names.get(i).Icmp(name) == 0) {
                     timers.oPluSet(i, time);
                     break;
                 }
             }
-            if (i == names.Num()) {
+            if (i == names.size()) {
                 int index = AddReport(name);
                 if (index >= 0) {
                     timers.oGet(index).Clear();

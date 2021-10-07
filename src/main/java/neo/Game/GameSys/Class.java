@@ -3,7 +3,6 @@ package neo.Game.GameSys;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AI.AI.idAI;
 import neo.Game.Entity.idEntity;
-import neo.Game.GameSys.Event.*;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Projectile.idBFGProjectile;
@@ -160,7 +159,7 @@ public class Class {
             else if (data instanceof idEntity) type = D_EVENT_ENTITY;
             else if (data instanceof trace_s) type = D_EVENT_TRACE;
             else {
-//                type = D_EVENT_VOID;
+                //type = D_EVENT_VOID;
                 throw new TempDump.TypeErasure_Expection();
             }
             value = data;

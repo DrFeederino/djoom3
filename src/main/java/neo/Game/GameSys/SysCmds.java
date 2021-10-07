@@ -12,9 +12,7 @@ import neo.Game.Animation.Anim_Import.idModelExport;
 import neo.Game.Entity.idEntity;
 import neo.Game.FX.idEntityFx;
 import neo.Game.Light.idLight;
-import neo.Game.Misc.idStaticEntity;
 import neo.Game.Moveable.idMoveable;
-import neo.Game.Player.*;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
@@ -35,10 +33,9 @@ import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
@@ -115,18 +112,18 @@ public class SysCmds {
 
         for (i = 1; i < args.Argc(); i++) {
             name = args.Argv(i);
-            ignore.Append(parseStr(name));
+            ignore.add(parseStr(name));
         }
 
         for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
             if (ent.IsType(superClass)) {
-                for (i = 0; i < ignore.Num(); i++) {
-                    if (ignore.oGet(i).equals(ent.name)) {
+                for (i = 0; i < ignore.size(); i++) {
+                    if (ignore.get(i).equals(ent.name)) {
                         break;
                     }
                 }
 
-                if (i >= ignore.Num()) {
+                if (i >= ignore.size()) {
                     ent.PostEventMS(EV_Remove, 0);
                 }
             }

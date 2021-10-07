@@ -6,7 +6,7 @@ import neo.framework.DeclManager.idDecl;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Math_h.idMath;
 
 import static neo.Sound.snd_local.WAVE_FORMAT_TAG_OGG;

@@ -1,6 +1,5 @@
 package neo.sys;
 
-import neo.TempDump.*;
 import neo.idlib.Text.Str.idStr;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -34,12 +33,11 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public class win_glimp {
 
+    private static final StringBuilder ospath = new StringBuilder(MAX_OSPATH);
     static GLFWErrorCallback errorCallback;
     static long window;
     private static int initialFrames;
-
     private static boolean isEnabled;
-    private static final StringBuilder ospath = new StringBuilder(MAX_OSPATH);
 
     /*
      ===================
@@ -118,21 +116,18 @@ public class win_glimp {
         glfwInit();
         glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
 
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-//        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-//        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//        window = GLFW.glfwCreateWindow(parms.width, parms.height, "BLAAAAAAAAAAAAAAAAAArrrGGGGHH!!", glfwGetPrimaryMonitor(), 0);//HACKME::0 change this back to setDisplayModeAndFullscreen.
-        window = GLFW.glfwCreateWindow(parms.width, parms.height, "BLAAAAAAAAAAAAAAAAAArrrGGGGHH!!", 0, 0);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        window = GLFW.glfwCreateWindow(parms.width, parms.height, "Doom 3", 0, 0);
         GLFWVidMode currentMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         glfwSetWindowPos(window, currentMode.width() / 2 - parms.width / 2, currentMode.height() / 2 - parms.height / 2);
         if (window != 0) {
             glfwMakeContextCurrent(window);
             GL.createCapabilities();
-//                win32.cdsFullscreen = true;
             glfwShowWindow(window);
-            glfwSetInputMode(window, GLFW.GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+            glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             glfwSetKeyCallback(window, usercmdGen.keyboardCallback);
             glfwSetCursorPosCallback(window, usercmdGen.mouseCursorCallback);
             glfwSetScrollCallback(window, usercmdGen.mouseScrollCallback);

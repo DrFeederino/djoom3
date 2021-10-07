@@ -1,12 +1,9 @@
 package neo.Tools.Compilers.AAS;
 
 import neo.Game.GameEdit;
-import neo.Renderer.Material.*;
-import neo.Tools.Compilers.AAS.AASBuild_File.*;
 import neo.Tools.Compilers.AAS.AASBuild_ledge.idLedge;
 import neo.Tools.Compilers.AAS.AASBuild_local.aasProcNode_s;
 import neo.Tools.Compilers.AAS.AASCluster.idAASCluster;
-import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.Tools.Compilers.AAS.AASFile_local.idAASFileLocal;
 import neo.Tools.Compilers.AAS.AASReach.idAASReach;
 import neo.Tools.Compilers.AAS.Brush.idBrush;
@@ -23,21 +20,19 @@ import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
-import neo.idlib.MapFile.*;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.Surface_Patch.idSurface_Patch;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 
 import static java.lang.Math.abs;
@@ -785,13 +780,13 @@ public class AASBuild {
                 }
 
                 if (aasSettings.ValidEntity(classname.toString())) {
-                    entityClassNames.AddUnique(classname);
+                    entityClassNames.addUnique(classname);
                 }
             }
 
             com_editors &= ~EDITOR_AAS;
 
-            return (entityClassNames.Num() != 0);
+            return (entityClassNames.size() != 0);
         }
 
         private void ChangeMultipleBoundingBoxContents_r(idBrushBSPNode node, int mask) {

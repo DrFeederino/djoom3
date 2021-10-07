@@ -2,10 +2,9 @@ package neo.framework;
 
 import neo.framework.DeclManager.idDecl;
 import neo.idlib.Lib.idException;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.DECL_LEXER_FLAGS;
@@ -513,21 +512,21 @@ public class DeclPDA {
 
                 if (0 == token.Icmp("pda_email")) {
                     src.ReadToken(token);
-                    emails.Append(token.toString());
+                    emails.add(token.toString());
                     declManager.FindType(DECL_EMAIL, token);
                     continue;
                 }
 
                 if (0 == token.Icmp("pda_audio")) {
                     src.ReadToken(token);
-                    audios.Append(token.toString());
+                    audios.add(token.toString());
                     declManager.FindType(DECL_AUDIO, token);
                     continue;
                 }
 
                 if (0 == token.Icmp("pda_video")) {
                     src.ReadToken(token);
-                    videos.Append(token.toString());
+                    videos.add(token.toString());
                     declManager.FindType(DECL_VIDEO, token);
                     continue;
                 }
@@ -539,16 +538,16 @@ public class DeclPDA {
                 return false;
             }
 
-            originalVideos = videos.Num();
-            originalEmails = emails.Num();
+            originalVideos = videos.size();
+            originalEmails = emails.size();
             return true;
         }
 
         @Override
         public void FreeData() {
-            videos.Clear();
-            audios.Clear();
-            emails.Clear();
+            videos.clear();
+            audios.clear();
+            emails.clear();
             originalEmails = 0;
             originalVideos = 0;
         }
@@ -566,40 +565,40 @@ public class DeclPDA {
         public void AddVideo(final String _name, boolean unique /*= true*/) throws idException {
             final idStr name = new idStr(_name);
 
-            if (unique && (videos.Find(name) != null)) {
+            if (unique && (videos.findIndex(name) != null)) {
                 return;
             }
             if (declManager.FindType(DECL_VIDEO, _name, false) == null) {
                 common.Printf("Video %s not found\n", name);
                 return;
             }
-            videos.Append(name);
+            videos.add(name);
         }
 
         public void AddAudio(final String _name, boolean unique /*= true*/) throws idException {
             final idStr name = new idStr(_name);
 
-            if (unique && (audios.Find(name) != null)) {
+            if (unique && (audios.findIndex(name) != null)) {
                 return;
             }
             if (declManager.FindType(DECL_AUDIO, _name, false) == null) {
                 common.Printf("Audio log %s not found\n", name);
                 return;
             }
-            audios.Append(name);
+            audios.add(name);
         }
 
         public void AddEmail(final String _name, boolean unique /*= true*/) throws idException {
             final idStr name = new idStr(_name);
 
-            if (unique && (emails.Find(name) != null)) {
+            if (unique && (emails.findIndex(name) != null)) {
                 return;
             }
             if (declManager.FindType(DECL_EMAIL, _name, false) == null) {
                 common.Printf("Email %s not found\n", name);
                 return;
             }
-            emails.Append(name);
+            emails.add(name);
         }
 
         public void AddEmail(final String _name) throws idException {
@@ -607,49 +606,49 @@ public class DeclPDA {
         }
 
         public void RemoveAddedEmailsAndVideos() {
-            int num = emails.Num();
+            int num = emails.size();
             if (originalEmails < num) {
                 while (num != 0 && num > originalEmails) {
-                    emails.RemoveIndex(--num);
+                    emails.removeAtIndex(--num);
                 }
             }
-            num = videos.Num();
+            num = videos.size();
             if (originalVideos < num) {
                 while (num != 0 && num > originalVideos) {
-                    videos.RemoveIndex(--num);
+                    videos.removeAtIndex(--num);
                 }
             }
         }
 
         public int GetNumVideos() {
-            return videos.Num();
+            return videos.size();
         }
 
         public int GetNumAudios() {
-            return audios.Num();
+            return audios.size();
         }
 
         public int GetNumEmails() {
-            return emails.Num();
+            return emails.size();
         }
 
         public idDeclVideo GetVideoByIndex(int index) throws idException {
-            if (index >= 0 && index < videos.Num()) {
-                return (idDeclVideo) (declManager.FindType(DECL_VIDEO, videos.oGet(index), false));
+            if (index >= 0 && index < videos.size()) {
+                return (idDeclVideo) (declManager.FindType(DECL_VIDEO, videos.get(index), false));
             }
             return null;
         }
 
         public idDeclAudio GetAudioByIndex(int index) throws idException {
-            if (index >= 0 && index < audios.Num()) {
-                return (idDeclAudio) declManager.FindType(DECL_AUDIO, audios.oGet(index), false);
+            if (index >= 0 && index < audios.size()) {
+                return (idDeclAudio) declManager.FindType(DECL_AUDIO, audios.get(index), false);
             }
             return null;
         }
 
         public idDeclEmail GetEmailByIndex(int index) throws idException {
-            if (index >= 0 && index < emails.Num()) {
-                return (idDeclEmail) declManager.FindType(DECL_EMAIL, emails.oGet(index), false);
+            if (index >= 0 && index < emails.size()) {
+                return (idDeclEmail) declManager.FindType(DECL_EMAIL, emails.get(index), false);
             }
             return null;
         }

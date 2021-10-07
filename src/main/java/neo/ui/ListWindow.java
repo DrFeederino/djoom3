@@ -1,13 +1,12 @@
 package neo.ui;
 
 import neo.Renderer.Material.idMaterial;
-import neo.framework.KeyInput.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec4;
 import neo.sys.sys_public.sysEvent_s;
@@ -16,7 +15,6 @@ import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.SliderWindow.idSliderWindow;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import neo.ui.Window.*;
 import neo.ui.Winvar.idWinVar;
 
 import static neo.Renderer.Material.MF_DEFAULTED;
@@ -142,7 +140,7 @@ public class ListWindow {
                 if (key == K_MOUSE1) {
                     if (Contains(gui.CursorX(), gui.CursorY())) {
                         int cur = (int) ((gui.CursorY() - actualY - pixelOffset) / vert) + top;
-                        if (cur >= 0 && cur < listItems.Num()) {
+                        if (cur >= 0 && cur < listItems.size()) {
                             if (multipleSel && idKeyInput.IsDown(K_CTRL)) {
                                 if (IsSelected(cur)) {
                                     ClearSelection(cur);
@@ -160,7 +158,7 @@ public class ListWindow {
                                 clickTime = gui.GetTime();
                             }
                         } else {
-                            SetCurrentSel(listItems.Num() - 1);
+                            SetCurrentSel(listItems.size() - 1);
                         }
                     }
                 } else if (key == K_UPARROW || key == K_PGUP || key == K_DOWNARROW || key == K_PGDN) {
@@ -193,8 +191,8 @@ public class ListWindow {
                 typedTime = gui.GetTime();
                 typed.Append((char) key);
 
-                for (int i = 0; i < listItems.Num(); i++) {
-                    if (idStr.Icmpn(typed, listItems.oGet(i), typed.Length()) == 0) {
+                for (int i = 0; i < listItems.size(); i++) {
+                    if (idStr.Icmpn(typed, listItems.get(i), typed.Length()) == 0) {
                         SetCurrentSel(i);
                         break;
                     }
@@ -208,8 +206,8 @@ public class ListWindow {
                 SetCurrentSel(0);
             }
 
-            if (GetCurrentSel() >= listItems.Num()) {
-                SetCurrentSel(listItems.Num() - 1);
+            if (GetCurrentSel() >= listItems.size()) {
+                SetCurrentSel(listItems.size() - 1);
             }
 
             if (scroller.GetHigh() > 0.0f) {
@@ -222,8 +220,8 @@ public class ListWindow {
                     }
                 }
 
-                if (top > listItems.Num() - 2) {
-                    top = listItems.Num() - 2;
+                if (top > listItems.size() - 2) {
+                    top = listItems.size() - 2;
                 }
                 if (top < 0) {
                     top = 0;
@@ -370,7 +368,7 @@ public class ListWindow {
         public void Draw(int time, float x, float y) {
             idVec4 color;
             idStr work = new idStr();
-            int count = listItems.Num();
+            int count = listItems.size();
             idRectangle rect = textRect;
             float scale = textScale.data;
             float lineHeight = GetMaxCharHeight();
@@ -414,13 +412,13 @@ public class ListWindow {
                 if (tabInfo.Num() > 0) {
                     int start = 0;
                     int tab = 0;
-                    int stop = listItems.oGet(i).Find('\t', 0);
-                    while (start < listItems.oGet(i).Length()) {
+                    int stop = listItems.get(i).Find('\t', 0);
+                    while (start < listItems.get(i).Length()) {
                         if (tab >= tabInfo.Num()) {
                             common.Warning("idListWindow::Draw: gui '%s' window '%s' tabInfo.Num() exceeded", gui.GetSourceFile(), name);
                             break;
                         }
-                        listItems.oGet(i).Mid(start, stop - start, work);
+                        listItems.get(i).Mid(start, stop - start, work);
 
                         rect.x = textRect.x + tabInfo.oGet(tab).x;
                         rect.w = (tabInfo.oGet(tab).w == -1) ? width - tabInfo.oGet(tab).x : tabInfo.oGet(tab).w;
@@ -469,16 +467,16 @@ public class ListWindow {
                         dc.PopClipRect();
 
                         start = stop + 1;
-                        stop = listItems.oGet(i).Find('\t', start);
+                        stop = listItems.get(i).Find('\t', start);
                         if (stop < 0) {
-                            stop = listItems.oGet(i).Length();
+                            stop = listItems.get(i).Length();
                         }
                         tab++;
                     }
                     rect.x = textRect.x;
                     rect.w = width;
                 } else {
-                    dc.DrawText(listItems.oGet(i), scale, 0, color, rect, false, -1);
+                    dc.DrawText(listItems.get(i), scale, 0, color, rect, false, -1);
                 }
                 rect.y += lineHeight;
                 if (rect.y > bottom) {
@@ -518,11 +516,11 @@ public class ListWindow {
 
         public void UpdateList() {
             idStr str = new idStr(), strName;
-            listItems.Clear();
+            listItems.clear();
             for (int i = 0; i < MAX_LIST_ITEMS; i++) {
                 if (gui.State().GetString(va("%s_item_%d", listName, i), "", str)) {
                     if (str.Length() != 0) {
-                        listItems.Append(str);
+                        listItems.add(str);
                     }
                 } else {
                     break;
@@ -530,17 +528,17 @@ public class ListWindow {
             }
             float vert = GetMaxCharHeight();
             int fit = (int) (textRect.h / vert);
-            if (listItems.Num() < fit) {
+            if (listItems.size() < fit) {
                 scroller.SetRange(0.0f, 0.0f, 1.0f);
             } else {
-                scroller.SetRange(0.0f, (listItems.Num() - fit) + 1.0f, 1.0f);
+                scroller.SetRange(0.0f, (listItems.size() - fit) + 1.0f, 1.0f);
             }
 
             SetCurrentSel(gui.State().GetInt(va("%s_sel_0", listName)));
 
             float value = scroller.GetValue();
-            if (value > listItems.Num() - 1) {
-                value = listItems.Num() - 1;
+            if (value > listItems.size() - 1) {
+                value = listItems.size() - 1;
             }
             if (value < 0.0f) {
                 value = 0.0f;

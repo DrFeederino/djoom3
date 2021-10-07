@@ -8,7 +8,7 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 
 import java.nio.ByteBuffer;
 
@@ -440,7 +440,7 @@ public class CmdSystem {
             commands = null;
 
             completionString.Clear();
-            completionParms.Clear();
+            completionParms.clear();
             tokenizedCmds.Clear();
             postReload.Clear();
         }
@@ -634,7 +634,7 @@ public class CmdSystem {
                 idFileList names;
 
                 completionString = new idStr(string);
-                completionParms.Clear();
+                completionParms.clear();
 
                 parm = new idStr(args.Argv(1));
                 parm.ExtractFilePath(path);
@@ -653,7 +653,7 @@ public class CmdSystem {
                         name.Strip("/");
                     }
                     name = new idStr(args.Argv(0) + (" " + name) + "/");
-                    completionParms.Append(name);
+                    completionParms.add(name);
                 }
                 fileSystem.FreeFileList(names);
 
@@ -670,14 +670,14 @@ public class CmdSystem {
                             name.Strip("/");
                         }
                         name.oSet(args.Argv(0) + (" " + name));
-                        completionParms.Append(name);
+                        completionParms.add(name);
                     }
                     fileSystem.FreeFileList(names);
                 }
 //                va_end(argPtr);
             }
-            for (i = 0; i < completionParms.Num(); i++) {
-                callback.run(completionParms.oGet(i).toString());
+            for (i = 0; i < completionParms.size(); i++) {
+                callback.run(completionParms.get(i).toString());
             }
         }
 

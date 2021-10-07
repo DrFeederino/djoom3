@@ -15,18 +15,14 @@ import neo.Renderer.tr_guisurf.R_ListGuis_f;
 import neo.Renderer.tr_guisurf.R_ReloadGuis_f;
 import neo.Renderer.tr_lightrun.R_ModulateLights_f;
 import neo.Renderer.tr_lightrun.R_RegenerateWorld_f;
-import neo.Renderer.tr_local.*;
 import neo.Renderer.tr_trisurf.R_ShowTriSurfMemory_f;
 import neo.Sound.snd_system;
-import neo.framework.CVarSystem.*;
-import neo.framework.CmdSystem.*;
 import neo.framework.Common;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
-import neo.sys.win_glimp.*;
 import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
@@ -1002,7 +998,7 @@ public class RenderSystem_init {
                 if (0 == idStr.Icmp(glConfig.vendor_string, "Microsoft") && idStr.FindText(glConfig.renderer_string, "OpenGL-D3D") != -1) {
                     if (cvarSystem.GetCVarBool("r_fullscreen")) {
                         cmdSystem.BufferCommandText(CMD_EXEC_NOW, "vid_restart partial windowed\n");
-                        Sys_GrabMouseCursor(false);
+                        Sys_GrabMouseCursor(true);
                     }
                     //TODO: messageBox below.
 //                    int ret = MessageBox(null, "Please install OpenGL drivers from your graphics hardware vendor to run " + GAME_NAME + ".\nYour OpenGL functionality is limited.",

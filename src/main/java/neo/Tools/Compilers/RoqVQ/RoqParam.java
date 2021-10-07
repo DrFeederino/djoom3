@@ -3,7 +3,7 @@ package neo.Tools.Compilers.RoqVQ;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 
 import java.util.Scanner;
 
@@ -446,7 +446,7 @@ public class RoqParam {
                     numpadding2 = new int[num_files];// Mem_ClearedAlloc(num_files);
                     numfiles = new int[num_files];// Mem_ClearedAlloc(num_files);
                     idStr empty = new idStr();
-                    file.AssureSize(num_files, empty);
+                    file.ensureSize(num_files, empty);
 //                    file.AssureSize(num_files, empty);//TODO:should this really be called twice?
 
                     field = 0;
@@ -456,9 +456,9 @@ public class RoqParam {
                         if (token.Icmp("end_input") != 0) {
                             idStr arg1, arg2, arg3;
 
-                            file.oSet(field, token);
+                            file.set(field, token);
                             while (src.ReadTokenOnLine(token) && token.Icmp("[") != 0) {
-                                file.oGet(field).Append(token);
+                                file.get(field).Append(token);
                             }
 
                             arg1 = token;
@@ -496,7 +496,7 @@ public class RoqParam {
                                 } else if ((arg1.oGet(0) != '[') && (arg2.oGet(0) == '[') && (arg3.oGet(0) == '[')) {  //a double ranger...
                                     int files1, files2;
 
-                                    file2.oSet(field, arg1);
+                                    file2.set(field, arg1);
                                     range[field] = 2;
                                     files1 = parseRange(arg2.toString(), field, skipnum, startnum, endnum, numfiles, padding, numpadding);
 //							common.Printf("  + reading %s from %d to %d\n", file[field], startnum[field], endnum[field]);
@@ -551,7 +551,7 @@ public class RoqParam {
 
             if (range[myfield] == 1) {
 
-                left = file.oGet(myfield).toString();
+                left = file.get(myfield).toString();
                 strp = left.indexOf("*");
                 strp++;
                 right = String.format("%s", left.substring(strp));
@@ -586,7 +586,7 @@ public class RoqParam {
                 }
             } else if (range[myfield] == 2) {
 
-                left = file.oGet(myfield).toString();
+                left = file.get(myfield).toString();
                 strp = left.indexOf("*");
                 strp++;
                 right = String.format("%s", left.substring(strp));
@@ -604,7 +604,7 @@ public class RoqParam {
                     fileName.oSet(String.format("%s%d%s", left, index, right));
                 }
 
-                left = file2.oGet(myfield).toString();
+                left = file2.get(myfield).toString();
                 strp = left.indexOf("*");
                 strp++;
                 right = String.format("%s", left.substring(strp));
@@ -622,7 +622,7 @@ public class RoqParam {
                     fileName.oPluSet(va("\n%s%d%s", left, index, right));
                 }
             } else {
-                fileName.oSet(file.oGet(myfield).toString());
+                fileName.oSet(file.get(myfield).toString());
             }
         }
 

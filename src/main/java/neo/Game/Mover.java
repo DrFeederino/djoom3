@@ -1,12 +1,10 @@
 package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
-import neo.Game.Entity.*;
 import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
@@ -19,7 +17,7 @@ import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Curve.idCurve_Spline;
@@ -2043,7 +2041,7 @@ public class Mover {
 
             idKeyValue kv = spawnArgs.MatchPrefix("buddy", null);
             while (kv != null) {
-                buddies.Append(kv.GetValue());
+                buddies.add(kv.GetValue());
                 kv = spawnArgs.MatchPrefix("buddy", kv);
             }
 
@@ -2141,9 +2139,9 @@ public class Mover {
             savefile.WriteInt(move_thread);
             savefile.WriteInt(updateStatus);
 
-            savefile.WriteInt(buddies.Num());
-            for (i = 0; i < buddies.Num(); i++) {
-                savefile.WriteString(buddies.oGet(i));
+            savefile.WriteInt(buddies.size());
+            for (i = 0; i < buddies.size(); i++) {
+                savefile.WriteString(buddies.get(i));
             }
 
             savefile.WriteStaticObject(physicsObj);
@@ -2199,7 +2197,7 @@ public class Mover {
             num = savefile.ReadInt();
             for (i = 0; i < num; i++) {
                 savefile.ReadString(temp);
-                buddies.Append(temp);
+                buddies.add(temp);
             }
 
             savefile.ReadStaticObject(physicsObj);
@@ -2457,9 +2455,9 @@ public class Mover {
             int i, c;
 
             if (updateStatus == 2) {
-                c = buddies.Num();
+                c = buddies.size();
                 for (i = 0; i < c; i++) {
-                    idEntity buddy = gameLocal.FindEntity(buddies.oGet(i));
+                    idEntity buddy = gameLocal.FindEntity(buddies.get(i));
                     if (buddy != null) {
                         buddy.SetShaderParm(SHADERPARM_MODE, val);
                         buddy.UpdateVisuals();

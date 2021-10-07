@@ -2,7 +2,6 @@ package neo.framework;
 
 import neo.Renderer.GuiModel;
 import neo.Sound.sound.idSoundWorld;
-import neo.TempDump.*;
 import neo.Tools.Compilers.AAS.AASBuild.RunAASDir_f;
 import neo.Tools.Compilers.AAS.AASBuild.RunAAS_f;
 import neo.Tools.Compilers.AAS.AASBuild.RunReach_f;
@@ -11,8 +10,6 @@ import neo.Tools.Compilers.RenderBump.renderbump.RenderBumpFlat_f;
 import neo.Tools.Compilers.RenderBump.renderbump.RenderBump_f;
 import neo.Tools.Compilers.RoqVQ.Roq.RoQFileEncode_f;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import neo.framework.CVarSystem.*;
-import neo.framework.CmdSystem.*;
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Integer;
 import neo.framework.Compressor.idCompressor;
 import neo.framework.FileSystem_h.idFileList;
@@ -29,11 +26,9 @@ import neo.idlib.Lib.idLib;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Base64.idBase64;
-import neo.idlib.Text.Lexer.*;
-import neo.idlib.Text.Str.*;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashTable.idHashTable;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Simd.idSIMD;
 import neo.idlib.math.Vector.idVec4;
 import neo.sys.sys_public;
@@ -253,7 +248,7 @@ public class Common {
             return false;
         }
 
-        return excludeList.Find(testVal) == 0;
+        return excludeList.findIndex(testVal) == 0;
     }
 
     //
@@ -276,19 +271,19 @@ public class Common {
         //Recurse Subdirectories
         idStrList dirList = new idStrList();
         Sys_ListFiles(dir, "/", dirList);
-        for (int i = 0; i < dirList.Num(); i++) {
-            if (dirList.oGet(i).equals(".") || dirList.oGet(i).equals("..")) {
+        for (int i = 0; i < dirList.size(); i++) {
+            if (dirList.get(i).equals(".") || dirList.get(i).equals("..")) {
                 continue;
             }
-            String fullName = va("%s/%s", dir, dirList.oGet(i));
+            String fullName = va("%s/%s", dir, dirList.get(i));
             GetFileList(fullName, ext, list);
         }
 
         idStrList fileList = new idStrList();
         Sys_ListFiles(dir, ext, fileList);
-        for (int i = 0; i < fileList.Num(); i++) {
-            idStr fullName = new idStr(va("%s/%s", dir, fileList.oGet(i)));
-            list.Append(fullName);
+        for (int i = 0; i < fileList.size(); i++) {
+            idStr fullName = new idStr(va("%s/%s", dir, fileList.get(i)));
+            list.add(fullName);
         }
     }
 
@@ -727,7 +722,7 @@ public class Common {
             // free any buffered warning messages
             ClearWarnings(GAME_NAME + " shutdown");
             warningCaption.Clear();
-            errorList.Clear();
+            errorList.clear();
 
             // free language dictionary
             languageDict.Clear();
@@ -1255,8 +1250,8 @@ public class Common {
 
             Printf(S_COLOR_YELLOW + "WARNING: " + S_COLOR_RED + "%s\n", msg[0]);
 
-            if (warningList.Num() < MAX_WARNING_LIST) {
-                warningList.AddUnique(msg[0]);
+            if (warningList.size() < MAX_WARNING_LIST) {
+                warningList.addUnique(msg[0]);
             }
         }
 
@@ -1288,23 +1283,23 @@ public class Common {
         public void PrintWarnings() throws idException {
             int i;
 
-            if (0 == warningList.Num()) {
+            if (0 == warningList.size()) {
                 return;
             }
 
-            warningList.Sort();
+            warningList.sort();
 
             Printf("------------- Warnings ---------------\n");
             Printf("during %s...\n", warningCaption);
 
-            for (i = 0; i < warningList.Num(); i++) {
-                Printf(S_COLOR_YELLOW + "WARNING: " + S_COLOR_RED + "%s\n", warningList.oGet(i));
+            for (i = 0; i < warningList.size(); i++) {
+                Printf(S_COLOR_YELLOW + "WARNING: " + S_COLOR_RED + "%s\n", warningList.get(i));
             }
-            if (warningList.Num() != 0) {
-                if (warningList.Num() >= MAX_WARNING_LIST) {
+            if (warningList.size() != 0) {
+                if (warningList.size() >= MAX_WARNING_LIST) {
                     Printf("more than %d warnings\n", MAX_WARNING_LIST);
                 } else {
-                    Printf("%d warnings\n", warningList.Num());
+                    Printf("%d warnings\n", warningList.size());
                 }
             }
         }
@@ -1312,7 +1307,7 @@ public class Common {
         @Override
         public void ClearWarnings(String reason) {
             warningCaption = new idStr(reason);
-            warningList.Clear();
+            warningList.clear();
         }
 
         @Override
@@ -1371,7 +1366,7 @@ public class Common {
             Sys_SetClipboardData(errorMessage[0]);
 
             // add the message to the error list
-            errorList.AddUnique(new idStr(errorMessage[0]));
+            errorList.addUnique(new idStr(errorMessage[0]));
 
             // Dont shut down the session for gui editor or debugger
             if (0 == (com_editors & (EDITOR_GUI | EDITOR_DEBUGGER))) {
@@ -1700,7 +1695,7 @@ public class Common {
             idStrList currentLangList = langList;
             FilterLangList(currentLangList, langName);
 
-            if (currentLangList.Num() == 0) {
+            if (currentLangList.size() == 0) {
                 // reset cvar to default and try to load again
                 cmdSystem.BufferCommandText(CMD_EXEC_NOW, "reset sys_lang");
                 langName = new idStr(cvarSystem.GetCVarString("sys_lang"));
@@ -1708,9 +1703,9 @@ public class Common {
                 FilterLangList(currentLangList, langName);
             }
 
-            for (int i = 0; i < currentLangList.Num(); i++) {
+            for (int i = 0; i < currentLangList.size(); i++) {
                 //common.Printf("%s\n", currentLangList[i].c_str());
-                languageDict.Load(currentLangList.oGet(i).toString(), false);
+                languageDict.Load(currentLangList.get(i).toString(), false);
             }
 
             fileSystem.FreeFileList(langFiles);
@@ -2132,7 +2127,7 @@ public class Common {
             int i;
             idFile warningFile;
 
-            if (0 == warningList.Num()) {
+            if (0 == warningList.size()) {
                 return;
             }
 
@@ -2141,22 +2136,22 @@ public class Common {
 
                 warningFile.Printf("------------- Warnings ---------------\n\n");
                 warningFile.Printf("during %s...\n", warningCaption);
-                warningList.Sort();
-                for (i = 0; i < warningList.Num(); i++) {
-                    warningList.oGet(i).RemoveColors();
-                    warningFile.Printf("WARNING: %s\n", warningList.oGet(i));
+                warningList.sort();
+                for (i = 0; i < warningList.size(); i++) {
+                    warningList.get(i).RemoveColors();
+                    warningFile.Printf("WARNING: %s\n", warningList.get(i));
                 }
-                if (warningList.Num() >= MAX_WARNING_LIST) {
+                if (warningList.size() >= MAX_WARNING_LIST) {
                     warningFile.Printf("\nmore than %d warnings!\n", MAX_WARNING_LIST);
                 } else {
-                    warningFile.Printf("\n%d warnings.\n", warningList.Num());
+                    warningFile.Printf("\n%d warnings.\n", warningList.size());
                 }
 
                 warningFile.Printf("\n\n-------------- Errors ---------------\n\n");
-                errorList.Sort();
-                for (i = 0; i < errorList.Num(); i++) {
-                    errorList.oGet(i).RemoveColors();
-                    warningFile.Printf("ERROR: %s", errorList.oGet(i));
+                errorList.sort();
+                for (i = 0; i < errorList.size(); i++) {
+                    errorList.get(i).RemoveColors();
+                    warningFile.Printf("ERROR: %s", errorList.get(i));
                 }
 
                 warningFile.ForceFlush();
@@ -2306,12 +2301,12 @@ public class Common {
         private void FilterLangList(idStrList list, idStr lang) {
 
             idStr temp;
-            for (int i = 0; i < list.Num(); i++) {
-                temp = list.oGet(i);
+            for (int i = 0; i < list.size(); i++) {
+                temp = list.get(i);
                 temp = temp.Right(temp.Length() - ("strings/").length());
                 temp = temp.Left(lang.Length());
                 if (idStr.Icmp(temp, lang) != 0) {
-                    list.RemoveIndex(i);
+                    list.removeAtIndex(i);
                     i--;
                 }
             }
@@ -3034,8 +3029,8 @@ public class Common {
             } else {
                 idStrList files = new idStrList();
                 GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files);
-                for (int i = 0; i < files.Num(); i++) {
-                    String file = fileSystem.OSPathToRelativePath(files.oGet(i).toString());
+                for (int i = 0; i < files.size(); i++) {
+                    String file = fileSystem.OSPathToRelativePath(files.get(i).toString());
                     strCount += LocalizeMap(file, strTable, listHash, excludeList, write);
                 }
             }
@@ -3134,12 +3129,12 @@ public class Common {
             idStrList files = new idStrList();
             GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files);
 
-            for (int i = 0; i < files.Num(); i++) {
+            for (int i = 0; i < files.size(); i++) {
 
-                common.Printf("Testing Map '%s'\n", files.oGet(i));
+                common.Printf("Testing Map '%s'\n", files.get(i));
                 idMapFile map = new idMapFile();
 
-                String file = fileSystem.OSPathToRelativePath(files.oGet(i).toString());
+                String file = fileSystem.OSPathToRelativePath(files.get(i).toString());
                 if (map.Parse(file, false, false)) {
                     int count = map.GetNumEntities();
                     for (int j = 0; j < count; j++) {
@@ -3189,12 +3184,12 @@ public class Common {
             idStrList files = new idStrList();
             GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files);
 
-            for (int i = 0; i < files.Num(); i++) {
+            for (int i = 0; i < files.size(); i++) {
 
-                common.Printf("Testing Map '%s'\n", files.oGet(i));
+                common.Printf("Testing Map '%s'\n", files.get(i));
                 idMapFile map = new idMapFile();
 
-                String file = fileSystem.OSPathToRelativePath(files.oGet(i).toString());
+                String file = fileSystem.OSPathToRelativePath(files.get(i).toString());
                 if (map.Parse(file, false, false)) {
                     int count = map.GetNumEntities();
                     for (int j = 0; j < count; j++) {
@@ -3220,18 +3215,18 @@ public class Common {
                             listHash.Get(/*static*/className, list);
                             if (list[0] != null) {
 
-                                for (int k = 0; k < list[0].Num(); k++) {
+                                for (int k = 0; k < list[0].size(); k++) {
 
-                                    String val = ent.epairs.GetString(list[0].oGet(k).toString(), "");
+                                    String val = ent.epairs.GetString(list[0].get(k).toString(), "");
 
-                                    if (/*static*/className.equals("info_location") && list[0].oGet(k).equals("location")) {
+                                    if (/*static*/className.equals("info_location") && list[0].get(k).equals("location")) {
                                         hasLocation = true;
                                     }
 
                                     if (isNotNullOrEmpty(val) && TestMapVal(val)) {
 
-                                        if (!hasLocation || list[0].oGet(k).equals("location")) {
-                                            String out = va("%s,%s,%s\r\n", val, list[0].oGet(k), file);
+                                        if (!hasLocation || list[0].get(k).equals("location")) {
+                                            String out = va("%s,%s,%s\r\n", val, list[0].get(k), file);
                                             localizeFile.WriteString(out);
                                         }
                                     }
@@ -3240,10 +3235,10 @@ public class Common {
 
                             listHash.Get("all", list);
                             if (list[0] != null) {
-                                for (int k = 0; k < list[0].Num(); k++) {
-                                    String val = ent.epairs.GetString(list[0].oGet(k).toString(), "");
+                                for (int k = 0; k < list[0].size(); k++) {
+                                    String val = ent.epairs.GetString(list[0].get(k).toString(), "");
                                     if (isNotNullOrEmpty(val) && TestMapVal(val)) {
-                                        String out = va("%s,%s,%s\r\n", val, list[0].oGet(k), file);
+                                        String out = va("%s,%s,%s\r\n", val, list[0].get(k), file);
                                         localizeFile.WriteString(out);
                                     }
                                 }

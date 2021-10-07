@@ -1,7 +1,6 @@
 package neo.Tools.Compilers.AAS;
 
 import neo.Tools.Compilers.AAS.AASBuild.Allowance;
-import neo.Tools.Compilers.AAS.Brush.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.MapFile.idMapEntity;
@@ -9,10 +8,9 @@ import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
-import neo.idlib.containers.StrList.idStrList;
 import neo.idlib.containers.VectorSet.idVectorSet;
+import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.Arrays;
@@ -1583,13 +1581,13 @@ public class BrushBSP {
                     continue;
                 }
 
-                for (j = 0; j < classNames.Num(); j++) {
-                    if (classname.Icmp(classNames.oGet(j)) == 0) {
+                for (j = 0; j < classNames.size(); j++) {
+                    if (classname.Icmp(classNames.get(j)) == 0) {
                         break;
                     }
                 }
 
-                if (j >= classNames.Num()) {
+                if (j >= classNames.size()) {
                     continue;
                 }
 

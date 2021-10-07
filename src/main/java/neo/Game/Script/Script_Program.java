@@ -3,12 +3,11 @@ package neo.Game.Script;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.TempDump.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec3;
 
 import java.nio.BufferUnderflowException;
@@ -310,9 +309,9 @@ public class Script_Program {
             int/*size_t*/ memsize;
             int i;
 
-            memsize = name.Allocated() + parmTypes.Allocated() + parmNames.Allocated() + functions.Allocated();
+            memsize = name.Allocated() + parmTypes.Allocated() + parmNames.size() + functions.Allocated();
             for (i = 0; i < parmTypes.Num(); i++) {
-                memsize += parmNames.oGet(i).Allocated();
+                memsize += parmNames.get(i).Allocated();
             }
 
             return memsize;
@@ -425,7 +424,7 @@ public class Script_Program {
             }
 
             parmTypes.Append(parmtype);
-            idStr parmName = parmNames.Alloc();
+            idStr parmName = parmNames.addEmptyStr();
             parmName.oSet(name);
         }
 
@@ -442,7 +441,7 @@ public class Script_Program {
             }
 
             parmTypes.Append(fieldtype);
-            idStr parmName = parmNames.Alloc();
+            idStr parmName = parmNames.addEmptyStr();
             parmName.oSet(name);
 
             if (fieldtype.FieldType().Inherits(type_object)) {
@@ -586,7 +585,7 @@ public class Script_Program {
         public String GetParmName(int parmNumber) {
             assert (parmNumber >= 0);
             assert (parmNumber < parmTypes.Num());
-            return parmNames.oGet(parmNumber).toString();
+            return parmNames.get(parmNumber).toString();
         }
 
         public int NumFunctions() {

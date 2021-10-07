@@ -8,7 +8,6 @@ import neo.Game.AI.AAS.idAAS;
 import neo.Game.AI.AI.idAI;
 import neo.Game.Actor.idActor;
 import neo.Game.Camera.idCamera;
-import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameEdit.idDragEntity;
 import neo.Game.GameSys.Class.eventCallback_t;
@@ -18,7 +17,6 @@ import neo.Game.GameSys.Class.idEventArg;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Item.idItem;
 import neo.Game.Misc.idLocationEntity;
 import neo.Game.Physics.Clip.idClipModel;
@@ -32,8 +30,6 @@ import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Program.idScriptBool;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Weapon.idWeapon;
-import neo.Renderer.Material.*;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.snd_shader.soundShaderParms_t;
 import neo.framework.BuildDefines;
@@ -44,7 +40,6 @@ import neo.framework.DeclPDA.idDeclEmail;
 import neo.framework.DeclPDA.idDeclPDA;
 import neo.framework.DeclPDA.idDeclVideo;
 import neo.framework.DeclSkin.idDeclSkin;
-import neo.framework.UsercmdGen.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
@@ -54,13 +49,11 @@ import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Interpolate.idInterpolate;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Vector.*;
 import neo.sys.sys_public.sysEvent_s;
 import neo.ui.UserInterface.idUserInterface;
 
@@ -351,24 +344,24 @@ public class Player {
             savefile.WriteBool(pdaOpened);
             savefile.WriteBool(turkeyScore);
 
-            savefile.WriteInt(pdas.Num());
-            for (i = 0; i < pdas.Num(); i++) {
-                savefile.WriteString(pdas.oGet(i));
+            savefile.WriteInt(pdas.size());
+            for (i = 0; i < pdas.size(); i++) {
+                savefile.WriteString(pdas.get(i));
             }
 
-            savefile.WriteInt(pdaSecurity.Num());
-            for (i = 0; i < pdaSecurity.Num(); i++) {
-                savefile.WriteString(pdaSecurity.oGet(i));
+            savefile.WriteInt(pdaSecurity.size());
+            for (i = 0; i < pdaSecurity.size(); i++) {
+                savefile.WriteString(pdaSecurity.get(i));
             }
 
-            savefile.WriteInt(videos.Num());
-            for (i = 0; i < videos.Num(); i++) {
-                savefile.WriteString(videos.oGet(i));
+            savefile.WriteInt(videos.size());
+            for (i = 0; i < videos.size(); i++) {
+                savefile.WriteString(videos.get(i));
             }
 
-            savefile.WriteInt(emails.Num());
-            for (i = 0; i < emails.Num(); i++) {
-                savefile.WriteString(emails.oGet(i));
+            savefile.WriteInt(emails.size());
+            for (i = 0; i < emails.size(); i++) {
+                savefile.WriteString(emails.get(i));
             }
 
             savefile.WriteInt(nextItemPickup);
@@ -452,7 +445,7 @@ public class Player {
             for (i = 0; i < num; i++) {
                 idStr strPda = new idStr();
                 savefile.ReadString(strPda);
-                pdas.Append(strPda);
+                pdas.add(strPda);
             }
 
             // pda security clearances
@@ -460,7 +453,7 @@ public class Player {
             for (i = 0; i < num; i++) {
                 idStr invName = new idStr();
                 savefile.ReadString(invName);
-                pdaSecurity.Append(invName);
+                pdaSecurity.add(invName);
             }
 
             // videos
@@ -468,7 +461,7 @@ public class Player {
             for (i = 0; i < num; i++) {
                 idStr strVideo = new idStr();
                 savefile.ReadString(strVideo);
-                videos.Append(strVideo);
+                videos.add(strVideo);
             }
 
             // email
@@ -476,7 +469,7 @@ public class Player {
             for (i = 0; i < num; i++) {
                 idStr strEmail = new idStr();
                 savefile.ReadString(strEmail);
-                emails.Append(strEmail);
+                emails.add(strEmail);
             }
 
             nextItemPickup = savefile.ReadInt();
@@ -538,9 +531,9 @@ public class Player {
 
             items.DeleteContents(true);
 //	memset(pdasViewed, 0, 4 * sizeof( pdasViewed[0] ) );
-            pdas.Clear();
-            videos.Clear();
-            emails.Clear();
+            pdas.clear();
+            videos.clear();
+            emails.clear();
             selVideo = 0;
             selEMail = 0;
             selPDA = 0;
@@ -649,25 +642,25 @@ public class Player {
             dict.SetInt("turkeyScore", btoi(turkeyScore));
 
             // pdas
-            for (i = 0; i < pdas.Num(); i++) {
+            for (i = 0; i < pdas.size(); i++) {
                 key = String.format("pda_%d", i);
-                dict.Set(key, pdas.oGet(i));
+                dict.Set(key, pdas.get(i));
             }
-            dict.SetInt("pdas", pdas.Num());
+            dict.SetInt("pdas", pdas.size());
 
             // video cds
-            for (i = 0; i < videos.Num(); i++) {
+            for (i = 0; i < videos.size(); i++) {
                 key = String.format("video_%d", i);
-                dict.Set(key, videos.oGet(i));
+                dict.Set(key, videos.get(i));
             }
-            dict.SetInt("videos", videos.Num());
+            dict.SetInt("videos", videos.size());
 
             // emails
-            for (i = 0; i < emails.Num(); i++) {
+            for (i = 0; i < emails.size(); i++) {
                 key = String.format("email_%d", i);
-                dict.Set(key, emails.oGet(i));
+                dict.Set(key, emails.get(i));
             }
-            dict.SetInt("emails", emails.Num());
+            dict.SetInt("emails", emails.size());
 
             // weapons
             dict.SetInt("weapon_bits", weapons);
@@ -739,26 +732,26 @@ public class Player {
 
             // pdas
             num = dict.GetInt("pdas");
-            pdas.SetNum(num);
+            pdas.setSize(num);
             for (i = 0; i < num; i++) {
                 itemname = String.format("pda_%d", i);
-                pdas.oSet(i, dict.GetString(itemname, "default"));
+                pdas.set(i, dict.GetString(itemname, "default"));
             }
 
             // videos
             num = dict.GetInt("videos");
-            videos.SetNum(num);
+            videos.setSize(num);
             for (i = 0; i < num; i++) {
                 itemname = String.format("video_%d", i);
-                videos.oSet(i, dict.GetString(itemname, "default"));
+                videos.set(i, dict.GetString(itemname, "default"));
             }
 
             // emails
             num = dict.GetInt("emails");
-            emails.SetNum(num);
+            emails.setSize(num);
             for (i = 0; i < num; i++) {
                 itemname = String.format("email_%d", i);
-                emails.oSet(i, dict.GetString(itemname, "default"));
+                emails.set(i, dict.GetString(itemname, "default"));
             }
 
             // weapons are stored as a number for persistant data, but as strings in the entityDef
@@ -1665,8 +1658,8 @@ public class Player {
 
             if (GetPDA() != null) {
                 // Add any emails from the inventory
-                for (int i = 0; i < inventory.emails.Num(); i++) {
-                    GetPDA().AddEmail(inventory.emails.oGet(i).toString());
+                for (int i = 0; i < inventory.emails.size(); i++) {
+                    GetPDA().AddEmail(inventory.emails.get(i).toString());
                 }
                 GetPDA().SetSecurity(common.GetLanguageDict().GetString("#str_00066"));
             }
@@ -2185,8 +2178,8 @@ public class Player {
             inventory.Restore(savefile);
             weapon.Restore(savefile);
 
-            for (i = 0; i < inventory.emails.Num(); i++) {
-                GetPDA().AddEmail(inventory.emails.oGet(i).toString());
+            for (i = 0; i < inventory.emails.size(); i++) {
+                GetPDA().AddEmail(inventory.emails.get(i).toString());
             }
 
             savefile.ReadUserInterface(hud);
@@ -4279,7 +4272,7 @@ public class Player {
             }
 
             if (item != null) {
-                inventory.pdaSecurity.AddUnique(item.GetString("inv_name"));
+                inventory.pdaSecurity.addUnique(item.GetString("inv_name"));
             }
 
             if (isNotNullOrEmpty(pdaName)) {
@@ -4288,13 +4281,13 @@ public class Player {
 
             idDeclPDA pda = (idDeclPDA) declManager.FindType(DECL_PDA, pdaName);
 
-            inventory.pdas.AddUnique(pdaName);
+            inventory.pdas.addUnique(pdaName);
 
             // Copy any videos over
             for (int i = 0; i < pda.GetNumVideos(); i++) {
                 final idDeclVideo video = pda.GetVideoByIndex(i);
                 if (video != null) {
-                    inventory.videos.AddUnique(video.GetName());
+                    inventory.videos.addUnique(video.GetName());
                 }
             }
 
@@ -4311,7 +4304,7 @@ public class Player {
                     hud.HandleNamedEvent("pdaPickup");
                 }
 
-                if (inventory.pdas.Num() == 1) {
+                if (inventory.pdas.size() == 1) {
                     GetPDA().RemoveAddedEmailsAndVideos();
                     if (!objectiveSystemOpen) {
                         TogglePDA();
@@ -4320,7 +4313,7 @@ public class Player {
                     //ShowTip( spawnArgs.GetString( "text_infoTitle" ), spawnArgs.GetString( "text_firstPDA" ), true );
                 }
 
-                if (inventory.pdas.Num() > 1 && pda.GetNumVideos() > 0 && hud != null) {
+                if (inventory.pdas.size() > 1 && pda.GetNumVideos() > 0 && hud != null) {
                     hud.HandleNamedEvent("videoPickup");
                 }
             }
@@ -4332,7 +4325,7 @@ public class Player {
                 return;
             }
 
-            inventory.videos.AddUnique(videoName);
+            inventory.videos.addUnique(videoName);
 
             if (item != null) {
                 idItemInfo info = new idItemInfo();
@@ -4351,7 +4344,7 @@ public class Player {
                 return;
             }
 
-            inventory.emails.AddUnique(emailName);
+            inventory.emails.addUnique(emailName);
             GetPDA().AddEmail(emailName);
 
             if (hud != null) {
@@ -4705,7 +4698,7 @@ public class Player {
                         return;
                     }
                     idealWeapon = previousWeapon;
-                } else if ((weapon_pda >= 0) && (num == weapon_pda) && (inventory.pdas.Num() == 0)) {
+                } else if ((weapon_pda >= 0) && (num == weapon_pda) && (inventory.pdas.size() == 0)) {
                     ShowTip(spawnArgs.GetString("text_infoTitle"), spawnArgs.GetString("text_noPDA"), true);
                     return;
                 } else {
@@ -5353,7 +5346,7 @@ public class Player {
                 return;
             }
 
-            if (inventory.pdas.Num() == 0) {
+            if (inventory.pdas.size() == 0) {
                 ShowTip(spawnArgs.GetString("text_infoTitle"), spawnArgs.GetString("text_noPDA"), true);
                 return;
             }
@@ -5505,16 +5498,16 @@ public class Player {
         }
 
         public idDeclPDA GetPDA() {
-            if (inventory.pdas.Num() != 0) {
-                return (idDeclPDA) declManager.FindType(DECL_PDA, inventory.pdas.oGet(0));
+            if (inventory.pdas.size() != 0) {
+                return (idDeclPDA) declManager.FindType(DECL_PDA, inventory.pdas.get(0));
             } else {
                 return null;
             }
         }
 
         public idDeclVideo GetVideo(int index) {
-            if (index >= 0 && index < inventory.videos.Num()) {
-                return (idDeclVideo) declManager.FindType(DECL_VIDEO, inventory.videos.oGet(index), false);
+            if (index >= 0 && index < inventory.videos.size()) {
+                return (idDeclVideo) declManager.FindType(DECL_VIDEO, inventory.videos.get(index), false);
             }
             return null;
         }
@@ -7753,8 +7746,8 @@ public class Player {
                             focusUI.SetStateInt(iname, 1);
                         }
 
-                        for (j = 0; j < inventory.pdaSecurity.Num(); j++) {
-                            final String p = inventory.pdaSecurity.oGet(j).toString();
+                        for (j = 0; j < inventory.pdaSecurity.size(); j++) {
+                            final String p = inventory.pdaSecurity.get(j).toString();
                             if (isNotNullOrEmpty(p)) {
                                 focusUI.SetStateInt(p, 1);
                             }
@@ -7864,7 +7857,7 @@ public class Player {
             }
 
             if (currentPDA > 0) {
-                currentPDA = inventory.pdas.Num() - currentPDA;
+                currentPDA = inventory.pdas.size() - currentPDA;
             }
 
             // Mark in the bit array that this pda has been read
@@ -7885,15 +7878,15 @@ public class Player {
                 objectiveSystem.SetStateString(va("listPDAEmail_item_%d", j), "");
                 objectiveSystem.SetStateString(va("listPDASecurity_item_%d", j), "");
             }
-            for (j = 0; j < inventory.pdas.Num(); j++) {
+            for (j = 0; j < inventory.pdas.size(); j++) {
 
-                final idDeclPDA pda = (idDeclPDA) declManager.FindType(DECL_PDA, inventory.pdas.oGet(j), false);
+                final idDeclPDA pda = (idDeclPDA) declManager.FindType(DECL_PDA, inventory.pdas.get(j), false);
 
                 if (pda == null) {
                     continue;
                 }
 
-                int index = inventory.pdas.Num() - j;
+                int index = inventory.pdas.size() - j;
                 if (j == 0) {
                     // Special case for the first PDA
                     index = 0;
@@ -7934,8 +7927,8 @@ public class Player {
                         AddGuiPDAData(DECL_VIDEO, "listPDAVideo", pda, objectiveSystem);
                         sel = objectiveSystem.State().GetInt("listPDAVideo_sel_0", "0");
                         idDeclVideo vid = null;
-                        if (sel >= 0 && sel < inventory.videos.Num()) {
-                            vid = (idDeclVideo) declManager.FindType(DECL_VIDEO, inventory.videos.oGet(sel), false);
+                        if (sel >= 0 && sel < inventory.videos.size()) {
+                            vid = (idDeclVideo) declManager.FindType(DECL_VIDEO, inventory.videos.get(sel), false);
                         }
                         if (vid != null) {
                             pdaVideo.oSet(vid.GetRoq());
@@ -8037,11 +8030,11 @@ public class Player {
                 }
                 return c;
             } else if (dataType == DECL_VIDEO) {
-                c = inventory.videos.Num();
+                c = inventory.videos.size();
                 for (i = 0; i < c; i++) {
                     final idDeclVideo video = GetVideo(i);
                     if (video == null) {
-                        work = va("Video CD %s not found", inventory.videos.oGet(i).toString());
+                        work = va("Video CD %s not found", inventory.videos.get(i).toString());
                     } else {
                         work = video.GetVideoName();
                     }

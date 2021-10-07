@@ -7,7 +7,6 @@ import neo.framework.CVarSystem.idInternalCVar;
 import neo.framework.CmdSystem;
 import neo.framework.CmdSystem.commandDef_s;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.containers.StrList.idStrPtr;
 import neo.idlib.containers.StrPool.idPoolStr;
 
 import java.util.Arrays;
@@ -341,7 +340,6 @@ public class List {
                 Clear();
                 return;
             }
-
             if (newsize == size) {
                 // not changing the size, so just exit
                 return;
@@ -835,10 +833,13 @@ public class List {
                 return;
             }
 
-            if (list[0] instanceof idStr
-                    || list[0] instanceof idPoolStr
-                    || list[0] instanceof idStrPtr) {
-                this.Sort(new StrList.idListSortCompare());
+            if (list[0] instanceof idPoolStr) {
+                this.Sort(new cmp_t<idStr>() {
+                    @Override
+                    public int compare(idStr a, idStr b) {
+                        return a.Icmp(b);
+                    }
+                });
 
             } else if (list[0] instanceof idInternalCVar) {
                 this.Sort(new CVarSystem.idListSortCompare());

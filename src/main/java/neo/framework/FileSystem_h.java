@@ -1,10 +1,8 @@
 package neo.framework;
 
-import neo.TempDump.*;
 import neo.TempDump.CPP_class.Bool;
 import neo.TempDump.CPP_class.Char;
 import neo.TempDump.CPP_class.Pointer;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.framework.CmdSystem.idCmdSystem;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
@@ -14,15 +12,13 @@ import neo.framework.File_h.idFile_InZip;
 import neo.framework.File_h.idFile_Permanent;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
-import neo.sys.sys_public.*;
+import neo.idlib.containers.idStrList;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,7 +63,7 @@ import static neo.idlib.Lib.idLib.sys;
 import static neo.idlib.Text.Lexer.*;
 import static neo.idlib.Text.Str.va;
 import static neo.idlib.Text.Token.TT_STRING;
-import static neo.idlib.containers.StrList.idStrList.idStrListSortPaths;
+import static neo.idlib.containers.idStrList.idStrListSortPaths;
 import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 import static neo.sys.sys_public.Sys_ListFiles;
 import static neo.sys.sys_public.*;
@@ -470,11 +466,11 @@ public class FileSystem_h {
         }
 
         public int GetNumFiles() {
-            return list.Num();
+            return list.size();
         }
 
         public String GetFile(int index) {
-            return list.oGet(index).toString();
+            return list.get(index).toString();
         }
 
         public idStrList GetList() {
@@ -496,15 +492,15 @@ public class FileSystem_h {
         }
 
         public int GetNumMods() {
-            return mods.Num();
+            return mods.size();
         }
 
         public String GetMod(int index) {
-            return mods.oGet(index).toString();
+            return mods.get(index).toString();
         }
 
         public String GetDescription(int index) {
-            return descriptions.oGet(index).toString();
+            return descriptions.get(index).toString();
         }
     }
 
@@ -871,14 +867,14 @@ public class FileSystem_h {
         public void Init(final String directory, final String extension, final idStrList list) {
             this.directory = new idStr(directory);
             this.extension = new idStr(extension);
-            super.oSet(list);
+            super.set(list);
         }
 
         @Override
-        public void Clear() {
+        public void clear() {
             directory.Clear();
             extension.Clear();
-            super.Clear();
+            super.clear();
         }
     }
 
@@ -1172,45 +1168,45 @@ public class FileSystem_h {
 
             for (isearch = 0; isearch < 4; isearch++) {
 
-                dirs.Clear();
-                pk4s.Clear();
+                dirs.clear();
+                pk4s.clear();
 
                 // scan for directories
                 ListOSFiles(search[isearch], "/", dirs);
 
-                dirs.Remove(new idStr("."));
-                dirs.Remove(new idStr(".."));
-                dirs.Remove(new idStr("base"));
-                dirs.Remove(new idStr("pb"));
+                dirs.remove(new idStr("."));
+                dirs.remove(new idStr(".."));
+                dirs.remove(new idStr("base"));
+                dirs.remove(new idStr("pb"));
 
                 // see if there are any pk4 files in each directory
-                for (i = 0; i < dirs.Num(); i++) {
-                    idStr gamepath = new idStr(BuildOSPath(search[isearch], dirs.oGet(i).toString(), ""));
+                for (i = 0; i < dirs.size(); i++) {
+                    idStr gamepath = new idStr(BuildOSPath(search[isearch], dirs.get(i).toString(), ""));
                     ListOSFiles(gamepath.toString(), ".pk4", pk4s);
-                    if (pk4s.Num() != 0) {
-                        if (0 == list.mods.Find(dirs.oGet(i))) {
+                    if (pk4s.size() != 0) {
+                        if (0 == list.mods.findIndex(dirs.get(i))) {
                             // D3 1.3 #31, only list d3xp if the pak is present
-                            if (dirs.oGet(i).Icmp("d3xp") != 0 || HasD3XP()) {
-                                list.mods.Append(dirs.oGet(i));
+                            if (dirs.get(i).Icmp("d3xp") != 0 || HasD3XP()) {
+                                list.mods.add(dirs.get(i));
                             }
                         }
                     }
                 }
             }
 
-            list.mods.Sort();
+            list.mods.sort();
 
             // read the descriptions for each mod - search all paths
-            for (i = 0; i < list.mods.Num(); i++) {
+            for (i = 0; i < list.mods.size(); i++) {
 
                 for (isearch = 0; isearch < 4; isearch++) {
 
-                    idStr descfile = new idStr(BuildOSPath(search[isearch], list.mods.oGet(i).toString(), "description.txt"));
+                    idStr descfile = new idStr(BuildOSPath(search[isearch], list.mods.get(i).toString(), "description.txt"));
                     FileChannel f = OpenOSFile(descfile.toString(), "r");
                     if (f != null) {
                         try {
                             if (f.read(desc) > 0) {
-                                list.descriptions.Append(new idStr(new String(desc.array())));
+                                list.descriptions.add(new idStr(new String(desc.array())));
                                 f.close();
                                 break;
                             } else {
@@ -1225,14 +1221,14 @@ public class FileSystem_h {
                 }
 
                 if (isearch == 4) {
-                    list.descriptions.Append(list.mods.oGet(i));
+                    list.descriptions.add(list.mods.get(i));
                 }
             }
 
-            list.mods.Insert(new idStr(""));
-            list.descriptions.Insert(new idStr("Doom 3"));
+            list.mods.insert(new idStr(""));
+            list.descriptions.insert(new idStr("Doom 3"));
 
-            assert (list.mods.Num() == list.descriptions.Num());
+            assert (list.mods.size() == list.descriptions.size());
 
             return list;
         }
@@ -2654,7 +2650,7 @@ public class FileSystem_h {
             dir_cache_index = 0;
             dir_cache_count = 0;
             for (i = 0; i < MAX_CACHED_DIRS; i++) {
-                dir_cache[i].Clear();
+                dir_cache[i].clear();
             }
         }
 
@@ -2708,10 +2704,10 @@ public class FileSystem_h {
             // if we didn't find a pk4 file then the user might have unpacked so look for default.cfg file
             // that's the old way mostly used during developement. don't think it hurts to leave it there
             ListOSFiles(fs_basepath.GetString(), "/", dirs);
-            for (i = 0; i < dirs.Num(); i++) {
-                if (dirs.oGet(i).Icmp("d3xp") == 0) {
+            for (i = 0; i < dirs.size(); i++) {
+                if (dirs.get(i).Icmp("d3xp") == 0) {
 
-                    gamepath = BuildOSPath(fs_savepath.GetString(), dirs.oGet(i).toString(), "default.cfg");
+                    gamepath = BuildOSPath(fs_savepath.GetString(), dirs.get(i).toString(), "default.cfg");
                     idFile cfg = OpenExplicitFileRead(gamepath);
                     if (cfg != null) {
                         CloseFile(cfg);
@@ -2813,18 +2809,18 @@ public class FileSystem_h {
             }
 
             // extract a path that includes the fs_game: != OSPathToRelativePath
-            testList.Append(fs_savepath.GetString());
-            testList.Append(fs_devpath.GetString());
-            testList.Append(fs_basepath.GetString());
-            testList.Append(fs_cdpath.GetString());
-            for (i = 0; i < testList.Num(); i++) {
-                if (testList.oGet(i).Length() != 0
-                        && NOT(testList.oGet(i).Icmpn(pak.pakFilename.toString(), testList.oGet(i).Length()))) {
-                    relativePath.oSet(pak.pakFilename.toString().substring(testList.oGet(i).Length() + 1));
+            testList.add(fs_savepath.GetString());
+            testList.add(fs_devpath.GetString());
+            testList.add(fs_basepath.GetString());
+            testList.add(fs_cdpath.GetString());
+            for (i = 0; i < testList.size(); i++) {
+                if (testList.get(i).Length() != 0
+                        && NOT(testList.get(i).Icmpn(pak.pakFilename.toString(), testList.get(i).Length()))) {
+                    relativePath.oSet(pak.pakFilename.toString().substring(testList.get(i).Length() + 1));
                     break;
                 }
             }
-            if (i == testList.Num()) {
+            if (i == testList.size()) {
                 common.Warning("idFileSystem::ValidateDownloadPak: failed to extract relative path for %s", pak.pakFilename.toString());
                 return 0;
             }
@@ -3108,7 +3104,7 @@ public class FileSystem_h {
                         //common.Printf( "idFileSystemLocal::ListOSFiles: cache hit: %s\n", directory );
                     }
                     list = dir_cache[j];
-                    return list.Num();
+                    return list.size();
                 }
                 i--;
             }
@@ -3174,8 +3170,8 @@ public class FileSystem_h {
                     return null;
                 }
 
-                for (i = 0; i < list.Num(); i++) {
-                    entry = new idStr(fpath.toString() + PATHSEPERATOR_CHAR + list.oGet(i).toString());
+                for (i = 0; i < list.size(); i++) {
+                    entry = new idStr(fpath.toString() + PATHSEPERATOR_CHAR + list.get(i).toString());
                     if (0 == entry.Icmp(fileName)) {
                         fp = Paths.get(entry.toString());//fp = fopen(entry, mode);
                         if (Files.exists(fp, NOFOLLOW_LINKS)) {
@@ -3277,11 +3273,11 @@ public class FileSystem_h {
 
             hashKey = hashIndex.GenerateKey(name.toCharArray());
             for (i = hashIndex.First(hashKey); i >= 0; i = hashIndex.Next(i)) {
-                if (list.oGet(i).Icmp(name) == 0) {
+                if (list.get(i).Icmp(name) == 0) {
                     return i;
                 }
             }
-            i = list.Append(new idStr(name));
+            i = list.add(new idStr(name));
             hashIndex.Add(hashKey, i);
             return i;
         }
@@ -3294,10 +3290,10 @@ public class FileSystem_h {
             while (true) {
                 e = idStr.FindChar(extension, '|', s, l);
                 if (e != -1) {
-                    extensionList.Append(new idStr(extension, s, e));
+                    extensionList.add(new idStr(extension, s, e));
                     s = e + 1;
                 } else {
-                    extensionList.Append(new idStr(extension, s, l));
+                    extensionList.add(new idStr(extension, s, l));
                     break;
                 }
             }
@@ -3325,7 +3321,7 @@ public class FileSystem_h {
                 common.FatalError("Filesystem call made without initialization\n");
             }
 
-            if (0 == extensions.Num()) {
+            if (0 == extensions.size()) {
                 return 0;
             }
 
@@ -3351,26 +3347,26 @@ public class FileSystem_h {
 
                     netpath = new idStr(BuildOSPath(search.dir.path.toString(), search.dir.gamedir.toString(), relativePath));
 
-                    for (i = 0; i < extensions.Num(); i++) {
+                    for (i = 0; i < extensions.size(); i++) {
 
                         // scan for files in the filesystem
-                        ListOSFiles(netpath.toString(), extensions.oGet(i).toString(), sysFiles);
+                        ListOSFiles(netpath.toString(), extensions.get(i).toString(), sysFiles);
 
                         // if we are searching for directories, remove . and ..
-                        if (extensions.oGet(i).equals("/")) {// && extensions.oGet(i).oGet(1) == 0) {//TODO:==0?????
-                            sysFiles.Remove(new idStr("."));
-                            sysFiles.Remove(new idStr(".."));
+                        if (extensions.get(i).equals("/")) {// && extensions.oGet(i).oGet(1) == 0) {//TODO:==0?????
+                            sysFiles.remove(new idStr("."));
+                            sysFiles.remove(new idStr(".."));
                         }
 
-                        for (j = 0; j < sysFiles.Num(); j++) {
+                        for (j = 0; j < sysFiles.size(); j++) {
                             // unique the match
                             if (fullRelativePath) {
                                 work = new idStr(relativePath);
                                 work.Append("/");
-                                work.Append(sysFiles.oGet(j));
+                                work.Append(sysFiles.get(j));
                                 AddUnique(work.toString(), list, hashIndex);
                             } else {
-                                AddUnique(sysFiles.oGet(j).toString(), list, hashIndex);
+                                AddUnique(sysFiles.get(j).toString(), list, hashIndex);
                             }
                         }
                     }
@@ -3419,12 +3415,12 @@ public class FileSystem_h {
                         }
 
                         // check for extension match
-                        for (j = 0; j < extensions.Num(); j++) {
-                            if (length >= extensions.oGet(j).Length() && extensions.oGet(j).Icmp(name.substring(length - extensions.oGet(j).Length())) == 0) {
+                        for (j = 0; j < extensions.size(); j++) {
+                            if (length >= extensions.get(j).Length() && extensions.get(j).Icmp(name.substring(length - extensions.get(j).Length())) == 0) {
                                 break;
                             }
                         }
-                        if (j >= extensions.Num()) {
+                        if (j >= extensions.size()) {
                             continue;
                         }
 
@@ -3444,7 +3440,7 @@ public class FileSystem_h {
                 }
             }
 
-            return list.Num();
+            return list.size();
         }
 
         private int GetFileListTree(final String relativePath, final idStrList extensions, idStrList list, idHashIndex hashIndex, final String gamedir /*= NULL*/) {
@@ -3453,22 +3449,22 @@ public class FileSystem_h {
             idHashIndex folderHashIndex = new idHashIndex(1024, 128);
 
             // recurse through the subdirectories
-            slash.Append(new idStr("/"));
+            slash.add(new idStr("/"));
             GetFileList(relativePath, slash, folders, folderHashIndex, true, gamedir);
-            for (i = 0; i < folders.Num(); i++) {
-                if (folders.oGet(i).oGet(0) == '.') {
+            for (i = 0; i < folders.size(); i++) {
+                if (folders.get(i).oGet(0) == '.') {
                     continue;
                 }
-                if (folders.oGet(i).Icmp(relativePath) == 0) {
+                if (folders.get(i).Icmp(relativePath) == 0) {
                     continue;
                 }
-                GetFileListTree(folders.oGet(i).toString(), extensions, list, hashIndex, gamedir);
+                GetFileListTree(folders.get(i).toString(), extensions, list, hashIndex, gamedir);
             }
 
             // list files in the current directory
             GetFileList(relativePath, extensions, list, hashIndex, true, gamedir);
 
-            return list.Num();
+            return list.size();
         }
 
         /*
@@ -3518,10 +3514,10 @@ public class FileSystem_h {
 
             // sort them so that later alphabetic matches override
             // earlier ones. This makes pak1.pk4 override pak0.pk4
-            pakfiles.Sort();
+            pakfiles.sort();
 
-            for (i = 0; i < pakfiles.Num(); i++) {
-                pakfile = new idStr(BuildOSPath(path, dir, pakfiles.oGet(i).toString()));
+            for (i = 0; i < pakfiles.size(); i++) {
+                pakfile = new idStr(BuildOSPath(path, dir, pakfiles.get(i).toString()));
                 pak = LoadZipFile(pakfile.toString());
                 if (null == pak) {
                     continue;
@@ -3760,37 +3756,41 @@ public class FileSystem_h {
         }
 
         private boolean FileAllowedFromDir(final String path) {
-            int l;
+            if (path == null || path.isEmpty()) {
+                return false;
+            }
 
-            l = path.length();
-
-            if ((".cfg".equals(path.substring(l - 4)) // for config files
-                    || ".dat".equals(path.substring(l - 4)) // for journal files
-                    || "dll".equals(path.substring(l - 4)) // dynamic modules are handled a different way for pure
-                    || ".so".equals(path.substring(l - 3))
-                    || (l > 6 && ".dylib".equals(path.substring(l - 6)))
-                    || (l > 10 && ".scriptcfg".equals(path.substring(l - 10))))// configuration script, such as map cycle
-                    || (ID_PURE_ALLOWDDS && "dds".equals(path.substring(l - 4)))) {
+            if (
+                // for config files
+                    path.endsWith(".cfg") ||
+                            // for journal files
+                            path.endsWith(".dat") ||
+                            // dynamic modules are handled a different way for pure
+                            path.endsWith("dll") ||
+                            path.endsWith(".so") ||
+                            path.endsWith(".dylib") ||
+                            path.endsWith(".scriptcfg") || // configuration script, such as map cycle
+                            (ID_PURE_ALLOWDDS && path.endsWith("dds"))) {
                 // note: cd and xp keys, as well as config.spec are opened through an explicit OS path and don't hit this
                 return true;
             }
             // savegames
             if (path.startsWith("savegames")
-                    && (".tga".equals(path.substring(l - 4)) || ".txt".equals(path.substring(l - 4)) || ".save".equals(path.substring(l - 5)))) {
+                    && (path.endsWith(".tga") || path.endsWith(".txt") || path.endsWith(".save"))) {
                 return true;
             }
             // screen shots
-            if (path.startsWith("screenshots") && ".tga".equals(path.substring(l - 4))) {
+            if (path.startsWith("screenshots") && path.endsWith(".tga")) {
                 return true;
             }
             // objective tgas
             if (path.startsWith("maps/game")
-                    && ".tga".equals(path.substring(l - 4))) {
+                    && path.endsWith(".tga")) {
                 return true;
             }
             // splash screens extracted from addons
             return path.startsWith("guis/assets/splash/addon")
-                    && ".tga".equals(path.substring(l - 4));
+                    && path.endsWith(".tga");
         }
 
         private pack_t GetPackForChecksum(int checksum) {
@@ -4233,7 +4233,7 @@ public class FileSystem_h {
                 for (i = 0; i < fileList.GetNumFiles(); i++) {
                     common.Printf("%s\n", fileList.GetFile(i));
                 }
-                common.Printf("%d files\n", fileList.list.Num());
+                common.Printf("%d files\n", fileList.list.size());
 
                 fileSystemLocal.FreeFileList(fileList);
             }
@@ -4283,7 +4283,7 @@ public class FileSystem_h {
                 for (i = 0; i < fileList.GetNumFiles(); i++) {
                     common.Printf("%s\n", fileList.GetFile(i));
                 }
-                common.Printf("%d files\n" + fileList.list.Num());
+                common.Printf("%d files\n" + fileList.list.size());
 
                 fileSystemLocal.FreeFileList(fileList);
             }

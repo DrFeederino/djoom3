@@ -1,17 +1,14 @@
 package neo.sys;
 
-import neo.TempDump.*;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
 import neo.framework.CVarSystem.idCVar;
-import neo.framework.CmdSystem.*;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.sys.RC.CreateResourceIDs_f;
-import neo.sys.sys_public.*;
 import neo.sys.win_local.Win32Vars_t;
 
 import java.awt.*;
@@ -547,7 +544,7 @@ public class win_main {//TODO: rename to plain "main" or something.
         findinfo = new File(directory);
 
         // search
-        list.Clear();
+        list.clear();
 
         if (!findinfo.exists()) {
             return -1;
@@ -555,11 +552,11 @@ public class win_main {//TODO: rename to plain "main" or something.
 
         for (File findhandle : findinfo.listFiles(search)) {
 //            if (_A_SUBDIR ^ (findinfo.isDirectory())) {
-            list.Append(findhandle.getName());
+            list.add(findhandle.getName());
 //            }
         }
 
-        return list.Num();
+        return list.size();
     }
 
     /*

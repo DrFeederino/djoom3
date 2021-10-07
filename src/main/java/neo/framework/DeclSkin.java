@@ -8,7 +8,7 @@ import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 
 import java.nio.ByteBuffer;
 
@@ -82,7 +82,7 @@ public class DeclSkin {
             src.SetFlags(DECL_LEXER_FLAGS);
             src.SkipUntilString("{");
 
-            associatedModels.Clear();
+            associatedModels.clear();
 
             while (true) {
                 if (!src.ReadToken(token)) {
@@ -99,7 +99,7 @@ public class DeclSkin {
                 }
 
                 if (0 == token.Icmp("model")) {
-                    associatedModels.Append(token2.toString());
+                    associatedModels.add(token2.toString());
                     continue;
                 }
 
@@ -152,19 +152,19 @@ public class DeclSkin {
 
         // model associations are just for the preview dialog in the editor
         public int GetNumModelAssociations() {
-            return associatedModels.Num();
+            return associatedModels.size();
         }
 
         public String GetAssociatedModel(int index) {
-            if (index >= 0 && index < associatedModels.Num()) {
-                return associatedModels.oGet(index).toString();
+            if (index >= 0 && index < associatedModels.size()) {
+                return associatedModels.get(index).toString();
             }
             return "";
         }
 
         public void oSet(idDeclSkin skin) {
             this.mappings.oSet(skin.mappings);
-            this.associatedModels.oSet(skin.associatedModels);
+            this.associatedModels.set(skin.associatedModels);
         }
 
         @Override

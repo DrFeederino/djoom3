@@ -6,8 +6,6 @@ import neo.Renderer.Material.idMaterial;
 import neo.Renderer.RenderWorld.renderView_s;
 import neo.Sound.sound.idSoundWorld;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import neo.framework.CVarSystem.*;
-import neo.framework.CmdSystem.*;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
 import neo.framework.DeclManager.idDecl;
 import neo.framework.DemoFile.idDemoFile;
@@ -15,19 +13,15 @@ import neo.framework.FileSystem_h.backgroundDownload_s;
 import neo.framework.FileSystem_h.idFileList;
 import neo.framework.FileSystem_h.idModList;
 import neo.framework.File_h.idFile;
-import neo.framework.KeyInput.*;
-import neo.framework.Session.*;
 import neo.framework.Session_menu.idListSaveGameCompare;
-import neo.framework.UsercmdGen.*;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
-import neo.idlib.Lib.*;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
-import neo.idlib.containers.StrList.idStrList;
+import neo.idlib.containers.idStrList;
 import neo.sys.sys_public.sysEvent_s;
 import neo.sys.win_main;
 import neo.ui.ListGUI.idListGUI;
@@ -2091,8 +2085,8 @@ public class Session_local {
             }
             ClearWipe();
 
-            loadGameList.Clear();
-            modsList.Clear();
+            loadGameList.clear();
+            modsList.clear();
 
             authEmitTimeout = 0;
             authWaitBox = false;
@@ -3250,8 +3244,8 @@ public class Session_local {
 
             if (0 == idStr.Icmp(cmd, "loadGame")) {
                 int choice = guiActive.State().GetInt("loadgame_sel_0");
-                if (choice >= 0 && choice < loadGameList.Num()) {
-                    sessLocal.LoadGame(loadGameList.oGet(choice).toString());
+                if (choice >= 0 && choice < loadGameList.size()) {
+                    sessLocal.LoadGame(loadGameList.get(choice).toString());
                 }
                 return true;
             }
@@ -3306,10 +3300,10 @@ public class Session_local {
 
             if (0 == idStr.Icmp(cmd, "deleteGame")) {
                 int choice = guiActive.State().GetInt("loadgame_sel_0");
-                if (choice >= 0 && choice < loadGameList.Num()) {
-                    fileSystem.RemoveFile(va("savegames/%s.save", loadGameList.oGet(choice).toString()));
-                    fileSystem.RemoveFile(va("savegames/%s.tga", loadGameList.oGet(choice).toString()));
-                    fileSystem.RemoveFile(va("savegames/%s.txt", loadGameList.oGet(choice).toString()));
+                if (choice >= 0 && choice < loadGameList.size()) {
+                    fileSystem.RemoveFile(va("savegames/%s.save", loadGameList.get(choice).toString()));
+                    fileSystem.RemoveFile(va("savegames/%s.tga", loadGameList.get(choice).toString()));
+                    fileSystem.RemoveFile(va("savegames/%s.txt", loadGameList.get(choice).toString()));
                     SetSaveGameGuiVars();
                     guiActive.StateChanged(com_frameTime);
                 }
@@ -3318,13 +3312,13 @@ public class Session_local {
 
             if (0 == idStr.Icmp(cmd, "updateSaveGameInfo")) {
                 int choice = guiActive.State().GetInt("loadgame_sel_0");
-                if (choice >= 0 && choice < loadGameList.Num()) {
+                if (choice >= 0 && choice < loadGameList.size()) {
                     final idMaterial material;
 
                     idStr saveName, description;
                     String screenshot;
                     idLexer src = new idLexer(LEXFL_NOERRORS | LEXFL_NOSTRINGCONCAT);
-                    if (src.LoadFile(va("savegames/%s.txt", loadGameList.oGet(choice).toString()))) {
+                    if (src.LoadFile(va("savegames/%s.txt", loadGameList.get(choice).toString()))) {
                         idToken tok = new idToken();
 
                         src.ReadToken(tok);
@@ -3337,12 +3331,12 @@ public class Session_local {
                         screenshot = tok.toString();
 
                     } else {
-                        saveName = loadGameList.oGet(choice);
-                        description = loadGameList.oGet(choice);
+                        saveName = loadGameList.get(choice);
+                        description = loadGameList.get(choice);
                         screenshot = "";
                     }
                     if (screenshot.length() == 0) {
-                        screenshot = va("savegames/%s.tga", loadGameList.oGet(choice).toString());
+                        screenshot = va("savegames/%s.tga", loadGameList.get(choice).toString());
                     }
                     material = declManager.FindMaterial(screenshot);
                     if (material != null) {
@@ -3355,7 +3349,7 @@ public class Session_local {
                     guiActive.SetStateString("saveGameDescription", description.toString());
 
                     long[] timeStamp = {0};
-                    fileSystem.ReadFile(va("savegames/%s.save", loadGameList.oGet(choice).toString()), null, timeStamp);
+                    fileSystem.ReadFile(va("savegames/%s.save", loadGameList.get(choice).toString()), null, timeStamp);
                     idStr date = new idStr(Sys_TimeStampToStr(timeStamp[0]));
                     int tab = date.Find('\t');
                     idStr time = date.Right(date.Length() - tab - 1);
@@ -3451,8 +3445,8 @@ public class Session_local {
 
                 if (0 == idStr.Icmp(cmd, "loadMod")) {
                     int choice = guiActive.State().GetInt("modsList_sel_0");
-                    if (choice >= 0 && choice < modsList.Num()) {
-                        cvarSystem.SetCVarString("fs_game", modsList.oGet(choice).toString());
+                    if (choice >= 0 && choice < modsList.size()) {
+                        cvarSystem.SetCVarString("fs_game", modsList.get(choice).toString());
                         cmdSystem.BufferCommandText(CMD_EXEC_APPEND, "reloadEngine menu\n");
                     }
                 }
@@ -4091,26 +4085,26 @@ public class Session_local {
 
                     int count = guiTakeNotes.State().GetInt("person_numsel");
                     if (count == 0) {
-                        fileList.Append(new idStr(fileName + "/Nobody"));
+                        fileList.add(new idStr(fileName + "/Nobody"));
                     } else {
                         for (i = 0; i < count; i++) {
                             int person = guiTakeNotes.State().GetInt(va("person_sel_%d", i));
                             workName = new idStr(fileName + "/");
                             workName.oPluSet(guiTakeNotes.State().GetString(va("person_item_%d", person), "Nobody"));
-                            fileList.Append(workName);
+                            fileList.add(workName);
                         }
                     }
                 } else {
                     fileName.Append("maps/");
                     fileName.Append(mapSpawnData.serverInfo.GetString("si_map"));
                     fileName.StripFileExtension();
-                    fileList.Append(fileName);
+                    fileList.add(fileName);
                 }
 
                 boolean bCon = cvarSystem.GetCVarBool("con_noPrint");
                 cvarSystem.SetCVarBool("con_noPrint", true);
-                for (i = 0; i < fileList.Num(); i++) {
-                    workName = fileList.oGet(i);
+                for (i = 0; i < fileList.size(); i++) {
+                    workName = fileList.get(i);
                     workName.Append("/");
                     workName.Append(p);
                     int[] workNote = {noteNumber[0]};
@@ -4164,15 +4158,15 @@ public class Session_local {
                 files = fileSystem.ListFiles("savegames", ".save");
             }
 
-            fileList.oSet(files.GetList());
+            fileList.set(files.GetList());
             fileSystem.FreeFileList(files);
 
-            for (i = 0; i < fileList.Num(); i++) {
+            for (i = 0; i < fileList.size(); i++) {
                 long[] timeStamp = {0};
 
-                fileSystem.ReadFile("savegames/" + fileList.oGet(i), null, timeStamp);
-                fileList.oGet(i).StripLeading('/');
-                fileList.oGet(i).StripFileExtension();
+                fileSystem.ReadFile("savegames/" + fileList.get(i), null, timeStamp);
+                fileList.get(i).StripLeading('/');
+                fileList.get(i).StripFileExtension();
 
                 fileTIME_T ft = new fileTIME_T();
                 ft.index = i;
@@ -4244,23 +4238,23 @@ public class Session_local {
             idStrList fileList = new idStrList();
             idList<fileTIME_T> fileTimes = new idList<>();
 
-            loadGameList.Clear();
-            fileList.Clear();
+            loadGameList.clear();
+            fileList.clear();
             fileTimes.Clear();
 
             GetSaveGameList(fileList, fileTimes);
 
-            loadGameList.SetNum(fileList.Num());
-            for (i = 0; i < fileList.Num(); i++) {
-                loadGameList.oSet(i, fileList.oGet(fileTimes.oGet(i).index));
+            loadGameList.setSize(fileList.size());
+            for (i = 0; i < fileList.size(); i++) {
+                loadGameList.set(i, fileList.get(fileTimes.oGet(i).index));
 
                 idLexer src = new idLexer(LEXFL_NOERRORS | LEXFL_NOSTRINGCONCAT);
-                if (src.LoadFile(va("savegames/%s.txt", loadGameList.oGet(i)))) {
+                if (src.LoadFile(va("savegames/%s.txt", loadGameList.get(i)))) {
                     idToken tok = new idToken();
                     src.ReadToken(tok);
                     name = tok;
                 } else {
-                    name = loadGameList.oGet(i);
+                    name = loadGameList.get(i);
                 }
 
                 name.Append("\t");
@@ -4270,7 +4264,7 @@ public class Session_local {
 
                 guiActive.SetStateString(va("loadgame_item_%d", i), name.toString());
             }
-            guiActive.DeleteStateVar(va("loadgame_item_%d", fileList.Num()));
+            guiActive.DeleteStateVar(va("loadgame_item_%d", fileList.size()));
 
             guiActive.SetStateString("loadgame_sel_0", "-1");
             guiActive.SetStateString("loadgame_shot", "guis/assets/blankLevelShot");
@@ -4324,12 +4318,12 @@ public class Session_local {
             int i;
             idModList list = fileSystem.ListMods();
 
-            modsList.SetNum(list.GetNumMods());
+            modsList.setSize(list.GetNumMods());
 
             // Build the gui list
             for (i = 0; i < list.GetNumMods(); i++) {
                 guiActive.SetStateString(va("modsList_item_%d", i), list.GetDescription(i));
-                modsList.oSet(i, list.GetMod(i));
+                modsList.set(i, list.GetMod(i));
             }
             guiActive.DeleteStateVar(va("modsList_item_%d", list.GetNumMods()));
             guiActive.SetStateString("modsList_sel_0", "-1");
