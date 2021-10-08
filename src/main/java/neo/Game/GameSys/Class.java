@@ -10,7 +10,6 @@ import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Target.idTarget_Remove;
 import neo.Game.Trigger.idTrigger_Multi;
-import neo.TempDump;
 import neo.TempDump.Deprecation_Exception;
 import neo.TempDump.TODO_Exception;
 import neo.framework.CmdSystem.cmdFunction_t;
@@ -159,8 +158,8 @@ public class Class {
             else if (data instanceof idEntity) type = D_EVENT_ENTITY;
             else if (data instanceof trace_s) type = D_EVENT_TRACE;
             else {
-                //type = D_EVENT_VOID;
-                throw new TempDump.TypeErasure_Expection();
+                type = D_EVENT_VOID;
+                //throw new TempDump.TypeErasure_Expection();
             }
             value = data;
         }

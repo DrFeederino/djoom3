@@ -93,14 +93,17 @@ public class SecurityCamera {
         private idTraceModel trm;
         //
         private idVec3 viewOffset;
-        //
-        //
+
+        public idSecurityCamera() {
+            viewOffset = new idVec3();
+            trm = new idTraceModel();
+            physicsObj = new idPhysics_RigidBody();
+        }
 
         public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
             return eventCallbacks;
         }
 
-        // CLASS_PROTOTYPE( idSecurityCamera );
         @Override
         public void Spawn() {
             idStr str;

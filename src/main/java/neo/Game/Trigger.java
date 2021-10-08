@@ -1,8 +1,6 @@
 package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
-import neo.Game.Entity.*;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
@@ -60,7 +58,6 @@ public class Trigger {
             eventCallbacks.putAll(idEntity.getEventCallBacks());
             eventCallbacks.put(EV_Enable, (eventCallback_t0<idTrigger>) idTrigger::Event_Enable);
             eventCallbacks.put(EV_Disable, (eventCallback_t0<idTrigger>) idTrigger::Event_Disable);
-
         }
 
 
@@ -523,7 +520,7 @@ public class Trigger {
         }
 
         private float delay;
-        private final idStr entityName = new idStr();
+        private idStr entityName = new idStr();
         private int nextTriggerTime;
         private float random;
         private float random_delay;

@@ -6,6 +6,7 @@ import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Generic;
 import neo.Game.AFEntity.idAFEntity_WithAttachedHead;
 import neo.Game.AI.AAS.idAAS;
+import neo.Game.AI.AI_Vagary;
 import neo.Game.Actor.idActor;
 import neo.Game.Animation.Anim.idAnimManager;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
@@ -3457,30 +3458,77 @@ public class Game_local {
                     case "idPendulum":
                         obj = new idPendulum();
                         break;
+                    case "idItemRemover":
+                        obj = new idItemRemover();
+                        break;
+                    case "idTarget_GiveSecurity":
+                        obj = new idTarget_GiveSecurity();
+                        break;
+                    case "idTrigger_EntityName":
+                        obj = new idTrigger_EntityName(); //requires entity_name.
+                        break;
+                    case "idBarrel":
+                        obj = new Moveable.idBarrel();
+                        break;
+                    case "idActivator":
+                        obj = new idActivator();
+                        break;
+                    case "idFuncSplat":
+                        obj = new idFuncSplat();
+                        break;
+                    case "idTarget_Damage":
+                        obj = new idTarget_Damage();
+                        break;
+                    case "idTarget_SetKeyVal":
+                        obj = new idTarget_SetKeyVal();
+                        break;
+                    case "idTarget_EnableStamina":
+                        obj = new idTarget_EnableStamina();
+                        break;
+                    case "idVacuumSeparatorEntity":
+                        obj = new idVacuumSeparatorEntity();
+                        break;
+                    case "idDamagable":
+                        obj = new idDamagable();
+                        break;
+                    case "idSecurityCamera":
+                        obj = new SecurityCamera.idSecurityCamera();
+                        break;
+                    case "idTrigger_Touch":
+                        obj = new idTrigger_Touch();
+                        break;
+                    case "idAFEntity_ClawFourFingers":
+                        obj = new AFEntity.idAFEntity_ClawFourFingers();
+                        break;
+                    case "idAI_Vagary":
+                        obj = new AI_Vagary.idAI_Vagary();
+                        break;
+                    case "idBobber":
+                        obj = new idBobber();
+                        break;
+                    case "idTarget_LevelTrigger":
+                        obj = new idTarget_LevelTrigger();
+                        break;
+                    case "idTarget_RemoveWeapons":
+                        obj = new idTarget_RemoveWeapons();
+                        break;
+                    case "idTeleporter":
+                        obj = new FX.idTeleporter();
+                        break;
+                    case "idPlat":
+                        obj = new idPlat();
+                        break;
                     default:
                         obj = null;
                 }
 
-                // missing idItemRemover, possibly more?
                 if (obj == null) {
-                    return false;
+                    idGameLocal.Error("Could not spawn '%s'. Class '%s' not found.", spawn[0], classname[0]);
                 }
 
+                // many objects rely on spawn args and default state may break spawns for many classes.
+                obj.spawnArgs.oSet(args);
                 obj.Spawn();
-
-//                obj = idClass.GetClass(spawn[0]);
-//                if (NOT(cls)) {
-//                    Warning("Could not spawn '%s'.  Class '%s' not found%s.", classname[0], spawn[0], error);
-//                    return false;
-//                }
-//
-//                obj = (idClass) cls.CreateInstance.run();
-//                if (NOT(obj)) {
-//                    Warning("Could not spawn '%s'. Instance could not be created%s.", classname[0], error);
-//                    return false;
-//                }
-//
-//                obj.CallSpawn();
 
                 if (ent != null) {// && obj.IsType(idEntity.class)) {
                     ent[0] = obj;

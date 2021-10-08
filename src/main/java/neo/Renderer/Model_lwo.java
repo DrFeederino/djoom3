@@ -1,6 +1,5 @@
 package neo.Renderer;
 
-import neo.TempDump.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.math.Math_h.idMath;
@@ -1120,7 +1119,9 @@ public class Model_lwo {
     public static void lwListInsert(lwNode vList, lwNode vItem, cmp_t compare) {
         lwNode list;
         lwNode item, node, prev;
-
+        if (vList == null) {
+            return; // maybe re-init?
+        }
         if (vList.isNULL()) {
             vList.oSet(vItem);
             return;

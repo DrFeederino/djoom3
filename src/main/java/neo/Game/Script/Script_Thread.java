@@ -3,9 +3,7 @@ package neo.Game.Script;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.Camera.idCamera;
-import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
@@ -20,7 +18,6 @@ import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
@@ -976,6 +973,7 @@ public class Script_Thread {
             ClearWaitFor();
 
             interpreter.SetThread(this);
+            spawnArgs = new idDict();
         }
 
         private void Pause() {

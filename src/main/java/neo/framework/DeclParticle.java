@@ -401,10 +401,14 @@ public class DeclParticle {
         public int CreateParticle(particleGen_t g, idDrawVert[] verts) throws idException {
             idVec3 origin = new idVec3();
 
-            verts[0].Clear();
-            verts[1].Clear();
-            verts[2].Clear();
-            verts[3].Clear();
+            for (int i = 0; i < verts.length; i++) {
+                verts[i] = new idDrawVert();
+                verts[i].Clear();
+            }
+//            verts[0].Clear();
+//            verts[1].Clear();
+//            verts[2].Clear();
+//            verts[3].Clear();
 
             ParticleColors(g, verts);
 

@@ -6416,7 +6416,7 @@ public class Player {
                 AI_RELOAD.underscore(false);
             }
 
-            if (idealWeapon == weapon_soulcube && soulCubeProjectile.GetEntity() != null) {
+            if (idealWeapon == weapon_soulcube && soulCubeProjectile != null && soulCubeProjectile.GetEntity() != null) {
                 idealWeapon = currentWeapon;
             }
 

@@ -3645,6 +3645,8 @@ public class Mover {
 
         public idPlat() {
             trigger = null;
+            localTriggerAxis = new idMat3();
+            localTriggerOrigin = new idVec3();
             localTriggerOrigin.Zero();
             localTriggerAxis.Identity();
         }

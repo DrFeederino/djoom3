@@ -3,12 +3,9 @@ package neo.Game;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AF.idAF;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import neo.Game.Entity.*;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Item.idMoveableItem;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force_Constant.idForce_Constant;
@@ -17,7 +14,6 @@ import neo.Game.Physics.Physics_AF.*;
 import neo.Game.Player.idPlayer;
 import neo.Renderer.Model.idMD5Joint;
 import neo.Renderer.Model.idRenderModel;
-import neo.Renderer.RenderWorld.*;
 import neo.framework.DeclAF.getJointTransform_t;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclSkin.idDeclSkin;
@@ -2168,6 +2164,7 @@ public class AFEntity {
         private final idAFConstraint_Hinge[] fingers = new idAFConstraint_Hinge[4];
 
         public idAFEntity_ClawFourFingers() {
+            super();
             fingers[0] = null;
             fingers[1] = null;
             fingers[2] = null;

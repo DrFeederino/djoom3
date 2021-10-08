@@ -9,11 +9,9 @@ import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.FX.idEntityFx;
 import neo.Game.Game.refSound_t;
 import neo.Game.GameSys.Class;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics.impactInfo_s;
@@ -27,7 +25,6 @@ import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Program.idScriptObject;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Renderer.Material.idMaterial;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.sound.idSoundEmitter;
 import neo.TempDump;
@@ -435,7 +432,6 @@ public class Entity {
             cameraTarget = null;
             health = 0;
 
-            physics = null;
             bindMaster = null;
             bindJoint = INVALID_JOINT;
             bindBody = -1;
@@ -453,6 +449,8 @@ public class Entity {
             modelDefHandle = -1;
             refSound = new refSound_t();//memset( &refSound, 0, sizeof( refSound ) );
             defaultPhysicsObj = new idPhysics_Static();
+            physics = defaultPhysicsObj;
+
 
             mpGUIState = -1;
 
@@ -618,8 +616,8 @@ public class Entity {
             e.SetOrigin(org.value);
         }
 
-        private static void Event_SetAngles(idEntity e, final idEventArg<idAngles> ang) {
-            e.SetAngles(ang.value);
+        private static void Event_SetAngles(idEntity e, final idEventArg<idVec3> eventArg) {
+            e.SetAngles(eventArg.value);
         }
 
         private static void Event_SetLinearVelocity(idEntity e, final idEventArg<idVec3> velocity) {
@@ -2497,6 +2495,10 @@ public class Entity {
         // use angles to set the axis of the physics object (relative to bindMaster if not NULL)
         public void SetAngles(final idAngles ang) {
             SetAxis(ang.ToMat3());
+        }
+
+        public void SetAngles(final idVec3 ang) {
+            SetAxis(ang.ToAngles().ToMat3());
         }
 
         // get the floor position underneath the physics object

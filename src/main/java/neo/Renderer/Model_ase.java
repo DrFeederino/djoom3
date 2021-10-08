@@ -772,6 +772,14 @@ public class Model_ase {
         }
     }
 
+    public static float atof(String str) {
+        try {
+            return Float.parseFloat(str);
+        } catch (NumberFormatException exc) {
+            return 0.0f;
+        }
+    }
+
     public static class ASE_KeyMESH_CVERTLIST extends ASE {
 
         private static final ASE instance = new ASE_KeyMESH_CVERTLIST();
@@ -793,13 +801,17 @@ public class Model_ase {
                 ASE_GetToken(false);
 
                 ASE_GetToken(false);
-                pMesh.cvertexes[ase.currentVertex].oSet(0, Float.parseFloat(token));
+                // atof can return 0.0 if it can't convert. Not really the case if java land
+                if (pMesh.cvertexes == null) {
+                    pMesh.cvertexes = new idVec3[pMesh.numCVertexes];
+                }
+                pMesh.cvertexes[ase.currentVertex] = new idVec3();
 
+                pMesh.cvertexes[ase.currentVertex].oSet(0, atof(token));
                 ASE_GetToken(false);
-                pMesh.cvertexes[ase.currentVertex].oSet(1, Float.parseFloat(token));
-
+                pMesh.cvertexes[ase.currentVertex].oSet(1, atof(token));
                 ASE_GetToken(false);
-                pMesh.cvertexes[ase.currentVertex].oSet(2, Float.parseFloat(token));
+                pMesh.cvertexes[ase.currentVertex].oSet(2, atof(token));
 
                 ase.currentVertex++;
 
