@@ -7,7 +7,6 @@ import neo.Renderer.tr_local.idRenderEntityLocal;
 import neo.Renderer.tr_local.idRenderLightLocal;
 import neo.Renderer.tr_local.optimizedShadow_t;
 import neo.Renderer.tr_local.shadowFrustum_t;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
@@ -589,7 +588,7 @@ public class tr_stencilshadow {
             }
 
 //if (false){
-//		if ( idMath.Fabs(d1 - d2) < 0.001 ) {
+//		if ( Math.abs(d1 - d2) < 0.001 ) {
 //			d2 = d1 - 0.1;
 //		}
 //}
@@ -1042,9 +1041,9 @@ public class tr_stencilshadow {
 //		// increase the light radius to cover any origin offsets.
 //		// this will cause some shadows to extend out of the exact light
 //		// volume, but is simpler than adjusting all the frustums
-//		adjustedRadius[0] = light.parms.lightRadius[0] + idMath.Fabs( light.parms.lightCenter[0] );
-//		adjustedRadius[1] = light.parms.lightRadius[1] + idMath.Fabs( light.parms.lightCenter[1] );
-//		adjustedRadius[2] = light.parms.lightRadius[2] + idMath.Fabs( light.parms.lightCenter[2] );
+//		adjustedRadius[0] = light.parms.lightRadius[0] + Math.abs( light.parms.lightCenter[0] );
+//		adjustedRadius[1] = light.parms.lightRadius[1] + Math.abs( light.parms.lightCenter[1] );
+//		adjustedRadius[2] = light.parms.lightRadius[2] + Math.abs( light.parms.lightCenter[2] );
 //
 //		light.numShadowFrustums = 0;
 //		// a point light has to project against six planes

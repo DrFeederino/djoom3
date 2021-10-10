@@ -6,14 +6,11 @@ import neo.Sound.snd_cache.idSoundCache;
 import neo.Sound.snd_cache.idSoundSample;
 import neo.Sound.snd_efxfile.idEFXFile;
 import neo.Sound.snd_emitter.*;
-import neo.Sound.snd_local.*;
 import neo.Sound.snd_world.idSoundWorldLocal;
 import neo.Sound.snd_world.s_stats;
 import neo.Sound.sound.idSoundSystem;
 import neo.Sound.sound.idSoundWorld;
 import neo.Sound.sound.soundDecoderInfo_t;
-import neo.framework.CVarSystem.*;
-import neo.framework.CmdSystem.*;
 import neo.framework.Common.MemInfo_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Text.Str.idStr;
@@ -733,7 +730,7 @@ public class snd_system {
                 for (j = 0; j < numSpeakers; j++) {
                     int meter = 0;
                     for (i = 0; i < MIXBUFFER_SAMPLES; i++) {
-                        float result = idMath.Fabs(accum[i * numSpeakers + j]);
+                        float result = Math.abs(accum[i * numSpeakers + j]);
                         if (result > meter) {
                             meter = (int) result;
                         }

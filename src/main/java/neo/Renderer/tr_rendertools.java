@@ -9,14 +9,11 @@ import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.RenderWorld.modelTrace_s;
 import neo.Renderer.VertexCache.vertCache_s;
-import neo.Renderer.tr_local.*;
-import neo.Renderer.tr_render.*;
 import neo.TempDump;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
@@ -961,7 +958,7 @@ public class tr_rendertools {
 
                 area = d0[3] * d1[4] - d0[4] * d1[3];
 
-                if (idMath.Fabs(area) < 0.0001) {
+                if (Math.abs(area) < 0.0001) {
                     qglColor4f(0, 0, 1, 0.5f);
                 } else if (area < 0) {
                     qglColor4f(1, 0, 0, 0.5f);

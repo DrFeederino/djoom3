@@ -213,26 +213,26 @@ public class Plane {
 
         // compare with epsilon
         public boolean Compare(final idPlane p, final float epsilon) {
-            if (idMath.Fabs(abc.x - p.abc.x) > epsilon) {
+            if (Math.abs(abc.x - p.abc.x) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(abc.y - p.abc.y) > epsilon) {
+            if (Math.abs(abc.y - p.abc.y) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(abc.z - p.abc.z) > epsilon) {
+            if (Math.abs(abc.z - p.abc.z) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(d - p.d) > epsilon);
+            return !(Math.abs(d - p.d) > epsilon);
         }
 //public	boolean			operator==(	const idPlane &p ) const;					// exact compare, no epsilon
 //public	boolean			operator!=(	const idPlane &p ) const;					// exact compare, no epsilon
 
         // compare with epsilon
         public boolean Compare(final idPlane p, final float normalEps, final float distEps) {
-            if (idMath.Fabs(d - p.d) > distEps) {
+            if (Math.abs(d - p.d) > distEps) {
                 return false;
             }
             return Normal().Compare(p.Normal(), normalEps);
@@ -344,7 +344,7 @@ public class Plane {
             boolean fixedNormal = FixDegenerateNormal();
             // only fix dist if the normal was degenerate
             if (fixedNormal) {
-                if (idMath.Fabs(d - idMath.Rint(d)) < distEpsilon) {
+                if (Math.abs(d - idMath.Rint(d)) < distEpsilon) {
                     d = idMath.Rint(d);
                 }
             }
@@ -564,7 +564,7 @@ public class Plane {
             n11 = plane.Normal().LengthSqr();
             det = n00 * n11 - n01 * n01;
 
-            if (idMath.Fabs(det) < 1e-6f) {
+            if (Math.abs(det) < 1e-6f) {
                 return false;
             }
 

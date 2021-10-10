@@ -2,7 +2,6 @@ package neo.idlib.containers;
 
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
-import neo.idlib.math.Math_h.idMath;
 
 import static neo.idlib.math.Plane.*;
 
@@ -40,7 +39,7 @@ public class PlaneSet {
 
             assert (distEps <= 0.125f);
 
-            hashKey = (int) (idMath.Fabs(plane.Dist()) * 0.125f);
+            hashKey = (int) (Math.abs(plane.Dist()) * 0.125f);
             for (border = -1; border <= 1; border++) {
                 for (i = hash.First(hashKey + border); i >= 0; i = hash.Next(i)) {
                     if (this.oGet(i).Compare(plane, normalEps, distEps)) {

@@ -729,15 +729,6 @@ public class Math_h {
             return ((x ^ y) - y);
         }
 
-        // returns the absolute value of the floating point value
-        public static float Fabs(float f) {
-//	int tmp = *reinterpret_cast<int *>( &f );
-            int tmp = Float.floatToIntBits(f);
-            tmp &= 0x7FFFFFFF;
-//	return *reinterpret_cast<float *>( &tmp );
-            return Float.intBitsToFloat(tmp);
-        }
-
         public static float Floor(float f) {// returns the largest integer that is less than or equal to the given value
             return (float) Math.floor(f);
         }

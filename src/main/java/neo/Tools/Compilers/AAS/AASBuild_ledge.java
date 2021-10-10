@@ -3,7 +3,6 @@ package neo.Tools.Compilers.AAS;
 import neo.Tools.Compilers.AAS.BrushBSP.idBrushBSPNode;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 
@@ -99,7 +98,7 @@ public class AASBuild_ledge {
             planes[2].FitThroughPoint(end);
             numExpandedPlanes = 3;
             // if additional bevels are required
-            if (idMath.Fabs(size.oGet(/*!i*/1 ^ i)) > 0.01f) {
+            if (Math.abs(size.oGet(/*!i*/1 ^ i)) > 0.01f) {
                 normal = getVec3_origin();
                 normal.oSet(/*!i]*/1 ^ i, 1.0f);
                 j = end.oGet(/*!i]*/1 ^ i) > start.oGet(/*!i]*/1 ^ i) ? 1 : 0;

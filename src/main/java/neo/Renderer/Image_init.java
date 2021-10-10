@@ -159,7 +159,7 @@ public class Image_init {
     }
 
     static float FogFraction(float viewHeight, float targetHeight) {
-        float total = idMath.Fabs(targetHeight - viewHeight);
+        float total = Math.abs(targetHeight - viewHeight);
 
 //	return targetHeight >= 0 ? 0 : 1.0;
         // only ranges that cross the ramp range are special
@@ -1230,7 +1230,7 @@ public class Image_init {
                     float d;
 
                     d = x - (QUADRATIC_WIDTH / 2 - 0.5f);
-                    d = idMath.Fabs(d);
+                    d = Math.abs(d);
                     d -= 0.5f;
                     d /= QUADRATIC_WIDTH / 2;
 

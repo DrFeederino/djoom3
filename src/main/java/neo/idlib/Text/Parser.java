@@ -3,10 +3,7 @@ package neo.idlib.Text;
 import neo.idlib.Lib;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.Text.Token.*;
-import neo.idlib.math.Math_h.idMath;
 import neo.sys.sys_public;
 
 import java.nio.CharBuffer;
@@ -2941,7 +2938,7 @@ public class Parser {
             token.whiteSpaceEnd_p = 0;
             token.linesCrossed = 0;
             token.flags = 0;
-            buf = String.format("%1.2f", idMath.Fabs((float) value[0]));
+            buf = String.format("%1.2f", Math.abs((float) value[0]));
             token.oSet(buf);
             token.type = TT_NUMBER;
             token.subtype = TT_FLOAT | TT_LONG | TT_DECIMAL;
@@ -3053,12 +3050,12 @@ public class Parser {
             token.whiteSpaceEnd_p = 0;
             token.linesCrossed = 0;
             token.flags = 0;
-            buf = String.format("%1.2f", idMath.Fabs((float) value[0]));
+            buf = String.format("%1.2f", Math.abs((float) value[0]));
             token.oSet(buf);
             token.type = TT_NUMBER;
             token.subtype = TT_FLOAT | TT_LONG | TT_DECIMAL | TT_VALUESVALID;
-            token.intValue = (long) idMath.Fabs((float) value[0]);
-            token.floatValue = idMath.Fabs((float) value[0]);
+            token.intValue = (long) Math.abs((float) value[0]);
+            token.floatValue = Math.abs((float) value[0]);
             this.UnreadSourceToken(token);
             if (value[0] < 0) {
                 this.UnreadSignToken();

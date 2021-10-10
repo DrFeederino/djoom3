@@ -5,7 +5,6 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.sys.sys_public;
 import neo.sys.sys_public.netadr_t;
@@ -81,11 +80,11 @@ public class BitMsg {
             bias = 0.5f / max;
 
             bits = FLOATSIGNBITSET(dir.x) << (numBits * 3 - 1);
-            bits |= (idMath.Ftoi((idMath.Fabs(dir.x) + bias) * max)) << (numBits * 2);
+            bits |= (idMath.Ftoi((Math.abs(dir.x) + bias) * max)) << (numBits * 2);
             bits |= FLOATSIGNBITSET(dir.y) << (numBits * 2 - 1);
-            bits |= (idMath.Ftoi((idMath.Fabs(dir.y) + bias) * max)) << (numBits * 1);
+            bits |= (idMath.Ftoi((Math.abs(dir.y) + bias) * max)) << (numBits * 1);
             bits |= FLOATSIGNBITSET(dir.z) << (numBits * 1 - 1);
-            bits |= (idMath.Ftoi((idMath.Fabs(dir.z) + bias) * max)) << (numBits * 0);
+            bits |= (idMath.Ftoi((Math.abs(dir.z) + bias) * max)) << (numBits * 0);
             return bits;
         }
 

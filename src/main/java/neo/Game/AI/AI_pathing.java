@@ -9,12 +9,10 @@ import neo.Game.Entity.idEntity;
 import neo.Game.Moveable.idMoveable;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics.idPhysics;
-import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.containers.Queue.idQueueTemplate;
 import neo.idlib.geometry.Winding2D.idWinding2D;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
 
@@ -848,7 +846,7 @@ public class AI_pathing {
 
             if (node.dist <= bestNode.dist) {
 
-                if (idMath.Fabs(node.dist - bestNode.dist) < 0.1f) {
+                if (Math.abs(node.dist - bestNode.dist) < 0.1f) {
 
                     if (!optimizedPathCalculated) {
                         bestNumPathPoints = OptimizePath(root, bestNode, obstacles, numObstacles, optimizedPath);

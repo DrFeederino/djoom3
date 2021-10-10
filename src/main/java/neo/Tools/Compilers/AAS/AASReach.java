@@ -1,9 +1,7 @@
 package neo.Tools.Compilers.AAS;
 
-import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.Tools.Compilers.AAS.AASFile_local.idAASFileLocal;
 import neo.idlib.MapFile.idMapFile;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 
@@ -763,7 +761,7 @@ public class AASReach {
                         return true;
                     }
                     // if no maximum fall height set or less than the max
-                    if (0 == file.settings.maxFallHeight[0] || idMath.Fabs(floor_bestDist) < file.settings.maxFallHeight[0]) {
+                    if (0 == file.settings.maxFallHeight[0] || Math.abs(floor_bestDist) < file.settings.maxFallHeight[0]) {
                         // trace a bounding box vertically to check for solids
                         floor_bestEnd.oPluSet(floor_bestNormal.oMultiply(INSIDEUNITS));
                         start = floor_bestEnd;
@@ -792,7 +790,7 @@ public class AASReach {
                                     walkOffLedgeReach.start = floor_bestStart;
                                     walkOffLedgeReach.end = floor_bestEnd;
                                     walkOffLedgeReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
-                                    walkOffLedgeReach.travelTime = (int) (file.settings.tt_startWalkOffLedge[0] + idMath.Fabs(floor_bestDist) * 50 / file.settings.gravityValue);
+                                    walkOffLedgeReach.travelTime = (int) (file.settings.tt_startWalkOffLedge[0] + Math.abs(floor_bestDist) * 50 / file.settings.gravityValue);
                                     AddReachabilityToArea(walkOffLedgeReach, fromAreaNum);
                                     return true;
                                 }
@@ -860,7 +858,7 @@ public class AASReach {
                     if (0 == reachAreaNum || reachAreaNum == areaNum) {
                         continue;
                     }
-                    if (idMath.Fabs(mid.oGet(2) - trace.endpos.oGet(2)) > file.settings.maxFallHeight[0]) {
+                    if (Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) > file.settings.maxFallHeight[0]) {
                         continue;
                     }
                     if (!AreaHasFloor(reachAreaNum) && !CanSwimInArea(reachAreaNum)) {
@@ -886,7 +884,7 @@ public class AASReach {
                     reach.start = mid;
                     reach.end = trace.endpos;
                     reach.edgeNum = abs(edgeNum);
-                    reach.travelTime = (int) (file.settings.tt_startWalkOffLedge[0] + idMath.Fabs(mid.oGet(2) - trace.endpos.oGet(2)) * 50 / file.settings.gravityValue);
+                    reach.travelTime = (int) (file.settings.tt_startWalkOffLedge[0] + Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) * 50 / file.settings.gravityValue);
                     AddReachabilityToArea(reach, areaNum);
                 }
             }

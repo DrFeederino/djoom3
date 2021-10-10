@@ -206,15 +206,15 @@ public class Angles {
         }
 
         public boolean Compare(final idAngles a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(pitch - a.pitch) > epsilon) {
+            if (Math.abs(pitch - a.pitch) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(yaw - a.yaw) > epsilon) {
+            if (Math.abs(yaw - a.yaw) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(roll - a.roll) > epsilon);
+            return !(Math.abs(roll - a.roll) > epsilon);
         }
 
         //public	boolean 			operator==(	final  idAngles &a ) final ;						// exact compare, no epsilon

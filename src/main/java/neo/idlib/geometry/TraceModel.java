@@ -3,7 +3,6 @@ package neo.idlib.geometry;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib.idLib;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 
@@ -1493,9 +1492,9 @@ public class TraceModel {
             for (i = 0; i < numPolys; i++) {
                 poly = polys[i];
 
-                nx = idMath.Fabs(poly.normal.oGet(0));
-                ny = idMath.Fabs(poly.normal.oGet(1));
-                nz = idMath.Fabs(poly.normal.oGet(2));
+                nx = Math.abs(poly.normal.oGet(0));
+                ny = Math.abs(poly.normal.oGet(1));
+                nz = Math.abs(poly.normal.oGet(2));
                 if (nx > ny && nx > nz) {
                     c = 0;
                 } else {

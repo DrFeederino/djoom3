@@ -7,9 +7,7 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.Arrays;
@@ -318,7 +316,7 @@ public class Brush {
 
             bestAxis = 0;
             for (i = 1; i < 3; i++) {
-                if (idMath.Fabs(windingPlane.Normal().oGet(i)) > idMath.Fabs(windingPlane.Normal().oGet(bestAxis))) {
+                if (Math.abs(windingPlane.Normal().oGet(i)) > Math.abs(windingPlane.Normal().oGet(bestAxis))) {
                     bestAxis = i;
                 }
             }
@@ -1432,7 +1430,7 @@ public class Brush {
             idWinding w;
 
             for (b = head; b != null; b = b.next) {
-                if (idMath.Fabs(b.GetBounds().PlaneDistance(plane)) > 0.1f) {
+                if (Math.abs(b.GetBounds().PlaneDistance(plane)) > 0.1f) {
                     continue;
                 }
                 for (i = 0; i < b.GetNumSides(); i++) {

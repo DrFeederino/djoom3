@@ -5,7 +5,6 @@ import neo.Game.Animation.Anim.AFJointModType_t;
 import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
 import neo.Game.Entity.idEntity;
-import neo.Game.GameSys.Class.idClass;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Physics.Clip.idClipModel;
@@ -27,7 +26,6 @@ import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
@@ -1217,7 +1215,7 @@ public class AF {
             for (i = 0; i < physicsObj.GetNumBodies(); i++) {
                 body = physicsObj.GetBody(i);
                 if (gameLocal.clip.Translation(trace, body.GetWorldOrigin(), body.GetWorldOrigin(), body.GetClipModel(), body.GetWorldAxis(), body.GetClipMask(), self)) {
-                    float depth = idMath.Fabs(trace[0].c.point.oMultiply(trace[0].c.normal) - trace[0].c.dist);
+                    float depth = Math.abs(trace[0].c.point.oMultiply(trace[0].c.normal) - trace[0].c.dist);
 
                     body.SetWorldOrigin(body.GetWorldOrigin().oPlus(trace[0].c.normal.oMultiply(depth + 8.0f)));
 

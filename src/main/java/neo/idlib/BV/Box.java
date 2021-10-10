@@ -2,10 +2,8 @@ package neo.idlib.BV;
 
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Sphere.idSphere;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMatX;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVecX;
@@ -530,9 +528,9 @@ public class Box {
             float d1, d2;
 
             d1 = plane.Distance(center);
-            d2 = idMath.Fabs(extents.oGet(0) * plane.Normal().oGet(0))
-                    + idMath.Fabs(extents.oGet(1) * plane.Normal().oGet(1))
-                    + idMath.Fabs(extents.oGet(2) * plane.Normal().oGet(2));
+            d2 = Math.abs(extents.oGet(0) * plane.Normal().oGet(0))
+                    + Math.abs(extents.oGet(1) * plane.Normal().oGet(1))
+                    + Math.abs(extents.oGet(2) * plane.Normal().oGet(2));
 
             if (d1 - d2 > 0.0f) {
                 return d1 - d2;
@@ -551,9 +549,9 @@ public class Box {
             float d1, d2;
 
             d1 = plane.Distance(center);
-            d2 = idMath.Fabs(extents.oGet(0) * plane.Normal().oGet(0))
-                    + idMath.Fabs(extents.oGet(1) * plane.Normal().oGet(1))
-                    + idMath.Fabs(extents.oGet(2) * plane.Normal().oGet(2));
+            d2 = Math.abs(extents.oGet(0) * plane.Normal().oGet(0))
+                    + Math.abs(extents.oGet(1) * plane.Normal().oGet(1))
+                    + Math.abs(extents.oGet(2) * plane.Normal().oGet(2));
 
             if (d1 - d2 > epsilon) {
                 return PLANESIDE_FRONT;
@@ -567,9 +565,9 @@ public class Box {
 
         public boolean ContainsPoint(final idVec3 p) {            // includes touching
             idVec3 lp = p.oMinus(center);
-            return !(idMath.Fabs(lp.oMultiply(axis.oGet(0))) > extents.oGet(0))
-                    && !(idMath.Fabs(lp.oMultiply(axis.oGet(1))) > extents.oGet(1))
-                    && !(idMath.Fabs(lp.oMultiply(axis.oGet(2))) > extents.oGet(2));
+            return !(Math.abs(lp.oMultiply(axis.oGet(0))) > extents.oGet(0))
+                    && !(Math.abs(lp.oMultiply(axis.oGet(1))) > extents.oGet(1))
+                    && !(Math.abs(lp.oMultiply(axis.oGet(2))) > extents.oGet(2));
         }
 
         public boolean IntersectsBox(final idBox a) {            // includes touching
@@ -586,11 +584,11 @@ public class Box {
             c[0][1] = axis.oGet(0).oMultiply(a.axis.oGet(1));
             c[0][2] = axis.oGet(0).oMultiply(a.axis.oGet(2));
             axisdir[0] = axis.oGet(0).oMultiply(dir);
-            ac[0][0] = idMath.Fabs(c[0][0]);
-            ac[0][1] = idMath.Fabs(c[0][1]);
-            ac[0][2] = idMath.Fabs(c[0][2]);
+            ac[0][0] = Math.abs(c[0][0]);
+            ac[0][1] = Math.abs(c[0][1]);
+            ac[0][2] = Math.abs(c[0][2]);
 
-            d = idMath.Fabs(axisdir[0]);
+            d = Math.abs(axisdir[0]);
             e0 = extents.oGet(0);
             e1 = a.extents.oGet(0) * ac[0][0] + a.extents.oGet(1) * ac[0][1] + a.extents.oGet(2) * ac[0][2];
             if (d > e0 + e1) {
@@ -602,11 +600,11 @@ public class Box {
             c[1][1] = axis.oGet(1).oMultiply(a.axis.oGet(1));
             c[1][2] = axis.oGet(1).oMultiply(a.axis.oGet(2));
             axisdir[1] = axis.oGet(1).oMultiply(dir);
-            ac[1][0] = idMath.Fabs(c[1][0]);
-            ac[1][1] = idMath.Fabs(c[1][1]);
-            ac[1][2] = idMath.Fabs(c[1][2]);
+            ac[1][0] = Math.abs(c[1][0]);
+            ac[1][1] = Math.abs(c[1][1]);
+            ac[1][2] = Math.abs(c[1][2]);
 
-            d = idMath.Fabs(axisdir[1]);
+            d = Math.abs(axisdir[1]);
             e0 = extents.oGet(1);
             e1 = a.extents.oGet(0) * ac[1][0] + a.extents.oGet(1) * ac[1][1] + a.extents.oGet(2) * ac[1][2];
             if (d > e0 + e1) {
@@ -618,11 +616,11 @@ public class Box {
             c[2][1] = axis.oGet(2).oMultiply(a.axis.oGet(1));
             c[2][2] = axis.oGet(2).oMultiply(a.axis.oGet(2));
             axisdir[2] = axis.oGet(2).oMultiply(dir);
-            ac[2][0] = idMath.Fabs(c[2][0]);
-            ac[2][1] = idMath.Fabs(c[2][1]);
-            ac[2][2] = idMath.Fabs(c[2][2]);
+            ac[2][0] = Math.abs(c[2][0]);
+            ac[2][1] = Math.abs(c[2][1]);
+            ac[2][2] = Math.abs(c[2][2]);
 
-            d = idMath.Fabs(axisdir[2]);
+            d = Math.abs(axisdir[2]);
             e0 = extents.oGet(2);
             e1 = a.extents.oGet(0) * ac[2][0] + a.extents.oGet(1) * ac[2][1] + a.extents.oGet(2) * ac[2][2];
             if (d > e0 + e1) {
@@ -630,7 +628,7 @@ public class Box {
             }
 
             // axis C0 + t * B0
-            d = idMath.Fabs(a.axis.oGet(0).oMultiply(dir));
+            d = Math.abs(a.axis.oGet(0).oMultiply(dir));
             e0 = extents.oGet(0) * ac[0][0] + extents.oGet(1) * ac[1][0] + extents.oGet(2) * ac[2][0];
             e1 = a.extents.oGet(0);
             if (d > e0 + e1) {
@@ -638,7 +636,7 @@ public class Box {
             }
 
             // axis C0 + t * B1
-            d = idMath.Fabs(a.axis.oGet(1).oMultiply(dir));
+            d = Math.abs(a.axis.oGet(1).oMultiply(dir));
             e0 = extents.oGet(0) * ac[0][1] + extents.oGet(1) * ac[1][1] + extents.oGet(2) * ac[2][1];
             e1 = a.extents.oGet(1);
             if (d > e0 + e1) {
@@ -646,7 +644,7 @@ public class Box {
             }
 
             // axis C0 + t * B2
-            d = idMath.Fabs(a.axis.oGet(2).oMultiply(dir));
+            d = Math.abs(a.axis.oGet(2).oMultiply(dir));
             e0 = extents.oGet(0) * ac[0][2] + extents.oGet(1) * ac[1][2] + extents.oGet(2) * ac[2][2];
             e1 = a.extents.oGet(2);
             if (d > e0 + e1) {
@@ -654,7 +652,7 @@ public class Box {
             }
 
             // axis C0 + t * A0xB0
-            d = idMath.Fabs(axisdir[2] * c[1][0] - axisdir[1] * c[2][0]);
+            d = Math.abs(axisdir[2] * c[1][0] - axisdir[1] * c[2][0]);
             e0 = extents.oGet(1) * ac[2][0] + extents.oGet(2) * ac[1][0];
             e1 = a.extents.oGet(1) * ac[0][2] + a.extents.oGet(2) * ac[0][1];
             if (d > e0 + e1) {
@@ -662,7 +660,7 @@ public class Box {
             }
 
             // axis C0 + t * A0xB1
-            d = idMath.Fabs(axisdir[2] * c[1][1] - axisdir[1] * c[2][1]);
+            d = Math.abs(axisdir[2] * c[1][1] - axisdir[1] * c[2][1]);
             e0 = extents.oGet(1) * ac[2][1] + extents.oGet(2) * ac[1][1];
             e1 = a.extents.oGet(0) * ac[0][2] + a.extents.oGet(2) * ac[0][0];
             if (d > e0 + e1) {
@@ -670,7 +668,7 @@ public class Box {
             }
 
             // axis C0 + t * A0xB2
-            d = idMath.Fabs(axisdir[2] * c[1][2] - axisdir[1] * c[2][2]);
+            d = Math.abs(axisdir[2] * c[1][2] - axisdir[1] * c[2][2]);
             e0 = extents.oGet(1) * ac[2][2] + extents.oGet(2) * ac[1][2];
             e1 = a.extents.oGet(0) * ac[0][1] + a.extents.oGet(1) * ac[0][0];
             if (d > e0 + e1) {
@@ -678,7 +676,7 @@ public class Box {
             }
 
             // axis C0 + t * A1xB0
-            d = idMath.Fabs(axisdir[0] * c[2][0] - axisdir[2] * c[0][0]);
+            d = Math.abs(axisdir[0] * c[2][0] - axisdir[2] * c[0][0]);
             e0 = extents.oGet(0) * ac[2][0] + extents.oGet(2) * ac[0][0];
             e1 = a.extents.oGet(1) * ac[1][2] + a.extents.oGet(2) * ac[1][1];
             if (d > e0 + e1) {
@@ -686,7 +684,7 @@ public class Box {
             }
 
             // axis C0 + t * A1xB1
-            d = idMath.Fabs(axisdir[0] * c[2][1] - axisdir[2] * c[0][1]);
+            d = Math.abs(axisdir[0] * c[2][1] - axisdir[2] * c[0][1]);
             e0 = extents.oGet(0) * ac[2][1] + extents.oGet(2) * ac[0][1];
             e1 = a.extents.oGet(0) * ac[1][2] + a.extents.oGet(2) * ac[1][0];
             if (d > e0 + e1) {
@@ -694,7 +692,7 @@ public class Box {
             }
 
             // axis C0 + t * A1xB2
-            d = idMath.Fabs(axisdir[0] * c[2][2] - axisdir[2] * c[0][2]);
+            d = Math.abs(axisdir[0] * c[2][2] - axisdir[2] * c[0][2]);
             e0 = extents.oGet(0) * ac[2][2] + extents.oGet(2) * ac[0][2];
             e1 = a.extents.oGet(0) * ac[1][1] + a.extents.oGet(1) * ac[1][0];
             if (d > e0 + e1) {
@@ -702,7 +700,7 @@ public class Box {
             }
 
             // axis C0 + t * A2xB0
-            d = idMath.Fabs(axisdir[1] * c[0][0] - axisdir[0] * c[1][0]);
+            d = Math.abs(axisdir[1] * c[0][0] - axisdir[0] * c[1][0]);
             e0 = extents.oGet(0) * ac[1][0] + extents.oGet(1) * ac[0][0];
             e1 = a.extents.oGet(1) * ac[2][2] + a.extents.oGet(2) * ac[2][1];
             if (d > e0 + e1) {
@@ -710,7 +708,7 @@ public class Box {
             }
 
             // axis C0 + t * A2xB1
-            d = idMath.Fabs(axisdir[1] * c[0][1] - axisdir[0] * c[1][1]);
+            d = Math.abs(axisdir[1] * c[0][1] - axisdir[0] * c[1][1]);
             e0 = extents.oGet(0) * ac[1][1] + extents.oGet(1) * ac[0][1];
             e1 = a.extents.oGet(0) * ac[2][2] + a.extents.oGet(2) * ac[2][0];
             if (d > e0 + e1) {
@@ -718,7 +716,7 @@ public class Box {
             }
 
             // axis C0 + t * A2xB2
-            d = idMath.Fabs(axisdir[1] * c[0][2] - axisdir[0] * c[1][2]);
+            d = Math.abs(axisdir[1] * c[0][2] - axisdir[0] * c[1][2]);
             e0 = extents.oGet(0) * ac[1][2] + extents.oGet(1) * ac[0][2];
             e1 = a.extents.oGet(0) * ac[2][1] + a.extents.oGet(1) * ac[2][0];
             return !(d > e0 + e1);
@@ -737,32 +735,32 @@ public class Box {
             idVec3 lineCenter = start.oPlus(lineDir);
             idVec3 dir = lineCenter.oMinus(center);
 
-            ld[0] = idMath.Fabs(lineDir.oMultiply(axis.oGet(0)));
-            if (idMath.Fabs(dir.oMultiply(axis.oGet(0))) > extents.oGet(0) + ld[0]) {
+            ld[0] = Math.abs(lineDir.oMultiply(axis.oGet(0)));
+            if (Math.abs(dir.oMultiply(axis.oGet(0))) > extents.oGet(0) + ld[0]) {
                 return false;
             }
 
-            ld[1] = idMath.Fabs(lineDir.oMultiply(axis.oGet(1)));
-            if (idMath.Fabs(dir.oMultiply(axis.oGet(1))) > extents.oGet(1) + ld[1]) {
+            ld[1] = Math.abs(lineDir.oMultiply(axis.oGet(1)));
+            if (Math.abs(dir.oMultiply(axis.oGet(1))) > extents.oGet(1) + ld[1]) {
                 return false;
             }
 
-            ld[2] = idMath.Fabs(lineDir.oMultiply(axis.oGet(2)));
-            if (idMath.Fabs(dir.oMultiply(axis.oGet(2))) > extents.oGet(2) + ld[2]) {
+            ld[2] = Math.abs(lineDir.oMultiply(axis.oGet(2)));
+            if (Math.abs(dir.oMultiply(axis.oGet(2))) > extents.oGet(2) + ld[2]) {
                 return false;
             }
 
             idVec3 cross = lineDir.Cross(dir);
 
-            if (idMath.Fabs(cross.oMultiply(axis.oGet(0))) > extents.oGet(1) * ld[2] + extents.oGet(2) * ld[1]) {
+            if (Math.abs(cross.oMultiply(axis.oGet(0))) > extents.oGet(1) * ld[2] + extents.oGet(2) * ld[1]) {
                 return false;
             }
 
-            if (idMath.Fabs(cross.oMultiply(axis.oGet(1))) > extents.oGet(0) * ld[2] + extents.oGet(2) * ld[0]) {
+            if (Math.abs(cross.oMultiply(axis.oGet(1))) > extents.oGet(0) * ld[2] + extents.oGet(2) * ld[0]) {
                 return false;
             }
 
-            return !(idMath.Fabs(cross.oMultiply(axis.oGet(2))) > extents.oGet(0) * ld[1] + extents.oGet(1) * ld[0]);
+            return !(Math.abs(cross.oMultiply(axis.oGet(2))) > extents.oGet(0) * ld[1] + extents.oGet(1) * ld[0]);
         }
 
         /*
@@ -919,9 +917,9 @@ public class Box {
 
         public void AxisProjection(final idVec3 dir, float[] min, float[] max) {
             float d1 = dir.oMultiply(center);
-            float d2 = idMath.Fabs(extents.oGet(0) * (dir.oMultiply(axis.oGet(0))))
-                    + idMath.Fabs(extents.oGet(1) * (dir.oMultiply(axis.oGet(1))))
-                    + idMath.Fabs(extents.oGet(2) * (dir.oMultiply(axis.oGet(2))));
+            float d2 = Math.abs(extents.oGet(0) * (dir.oMultiply(axis.oGet(0))))
+                    + Math.abs(extents.oGet(1) * (dir.oMultiply(axis.oGet(1))))
+                    + Math.abs(extents.oGet(2) * (dir.oMultiply(axis.oGet(2))));
             min[0] = d1 - d2;
             max[0] = d1 + d2;
         }
@@ -930,9 +928,9 @@ public class Box {
             for (int i = 0; i < 3; i++) {
 
                 float d1 = ax.oGet(i).oMultiply(center);
-                float d2 = idMath.Fabs(extents.oGet(0) * (ax.oGet(i).oMultiply(axis.oGet(0))))
-                        + idMath.Fabs(extents.oGet(1) * (ax.oGet(i).oMultiply(axis.oGet(1))))
-                        + idMath.Fabs(extents.oGet(2) * (ax.oGet(i).oMultiply(axis.oGet(2))));
+                float d2 = Math.abs(extents.oGet(0) * (ax.oGet(i).oMultiply(axis.oGet(0))))
+                        + Math.abs(extents.oGet(1) * (ax.oGet(i).oMultiply(axis.oGet(1))))
+                        + Math.abs(extents.oGet(2) * (ax.oGet(i).oMultiply(axis.oGet(2))));
 
                 bounds.oSet(0, i, d1 - d2);
                 bounds.oSet(1, i, d1 + d2);

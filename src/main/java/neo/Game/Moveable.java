@@ -3,7 +3,6 @@ package neo.Game;
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Class;
 import neo.Game.GameSys.Class.eventCallback_t;
@@ -18,8 +17,6 @@ import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
 import neo.Game.Projectile.idDebris;
 import neo.Game.Script.Script_Thread.idThread;
-import neo.Renderer.Material.*;
-import neo.Renderer.RenderWorld.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
@@ -629,12 +626,12 @@ public class Moveable {
                     movedDistance = dir.LengthSqr();
 
                     // if the barrel moved and the barrel is not aligned with the gravity direction
-                    if (movedDistance > 0.0f && idMath.Fabs(gravityNormal.oMultiply(curAxis.oGet(barrelAxis))) < 0.7f) {
+                    if (movedDistance > 0.0f && Math.abs(gravityNormal.oMultiply(curAxis.oGet(barrelAxis))) < 0.7f) {
 
                         // barrel movement since last think frame orthogonal to the barrel axis
                         movedDistance = idMath.Sqrt(movedDistance);
                         dir.oMulSet(1.0f / movedDistance);
-                        movedDistance = (1.0f - idMath.Fabs(dir.oMultiply(curAxis.oGet(barrelAxis)))) * movedDistance;
+                        movedDistance = (1.0f - Math.abs(dir.oMultiply(curAxis.oGet(barrelAxis)))) * movedDistance;
 
                         // get rotation about barrel axis since last think frame
                         angle = lastAxis.oGet((barrelAxis + 1) % 3).oMultiply(curAxis.oGet((barrelAxis + 1) % 3));

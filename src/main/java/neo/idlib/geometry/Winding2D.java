@@ -29,7 +29,7 @@ public class Winding2D {
 
     static boolean GetAxialBevel(final idVec3 plane1, final idVec3 plane2, final idVec2 point, idVec3 bevel) {
         if ((FLOATSIGNBITSET(plane1.x) ^ FLOATSIGNBITSET(plane2.x)) != 0) {
-            if (idMath.Fabs(plane1.x) > 0.1f && idMath.Fabs(plane2.x) > 0.1f) {
+            if (Math.abs(plane1.x) > 0.1f && Math.abs(plane2.x) > 0.1f) {
                 bevel.x = 0.0f;
                 if (FLOATSIGNBITSET(plane1.y) != 0) {
                     bevel.y = -1.0f;
@@ -41,7 +41,7 @@ public class Winding2D {
             }
         }
         if ((FLOATSIGNBITSET(plane1.y) ^ FLOATSIGNBITSET(plane2.y)) != 0) {
-            if (idMath.Fabs(plane1.y) > 0.1f && idMath.Fabs(plane2.y) > 0.1f) {
+            if (Math.abs(plane1.y) > 0.1f && Math.abs(plane2.y) > 0.1f) {
                 bevel.y = 0.0f;
                 if (FLOATSIGNBITSET(plane1.x) != 0) {
                     bevel.x = -1.0f;
@@ -709,7 +709,7 @@ public class Winding2D {
             }
             scale2[0] = d1 / d2;
 
-            if (idMath.Fabs(scale1[0]) > idMath.Fabs(scale2[0])) {
+            if (Math.abs(scale1[0]) > Math.abs(scale2[0])) {
                 float scale3 = scale1[0];
                 scale1[0] = scale2[0];
                 scale2[0] = scale3;
@@ -746,7 +746,7 @@ public class Winding2D {
             n11 = plane2.x * plane2.x + plane2.y * plane2.y;
             det = n00 * n11 - n01 * n01;
 
-            if (idMath.Fabs(det) < 1e-6f) {
+            if (Math.abs(det) < 1e-6f) {
                 return false;
             }
 

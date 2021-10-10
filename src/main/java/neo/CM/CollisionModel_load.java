@@ -1,13 +1,15 @@
 package neo.CM;
 
-import neo.CM.CollisionModel_local.cm_brushRef_s;
-import neo.CM.CollisionModel_local.cm_node_s;
-import neo.CM.CollisionModel_local.cm_polygonRef_s;
+import neo.CM.AbstractCollisionModel_local.cm_brushRef_s;
+import neo.CM.AbstractCollisionModel_local.cm_node_s;
+import neo.CM.AbstractCollisionModel_local.cm_polygonRef_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.MapFile.idMapBrush;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapPatch;
 import neo.idlib.MapFile.idMapPrimitive;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 
 import static neo.CM.CollisionModel_local.MAX_NODE_POLYGONS;
 import static neo.CM.CollisionModel_local.MIN_NODE_SIZE;
@@ -30,7 +32,7 @@ public class CollisionModel_load {
      CM_FindSplitter
      ================
      */
-    static boolean CM_FindSplitter(final cm_node_s node, final idBounds bounds, int[] planeType, float[] planeDist) {
+    static boolean CM_FindSplitter(final cm_node_s node, final idBounds bounds, CInt planeType, CFloat planeDist) {
         int i, j, type, polyCount;
         int[] axis = new int[3];
         float dist, t, bestt;
@@ -89,8 +91,8 @@ public class CollisionModel_load {
                         t = Math.abs((bounds.oGet(1, type) - dist) - (dist - bounds.oGet(0, type)));
                         if (t < bestt) {
                             bestt = t;
-                            planeType[0] = type;
-                            planeDist[0] = dist;
+                            planeType.setVal(type);
+                            planeDist.setVal(dist);
                         }
                     }
                 }
@@ -109,8 +111,8 @@ public class CollisionModel_load {
                         t = Math.abs((bounds.oGet(1, type) - dist) - (dist - bounds.oGet(0, type)));
                         if (t < bestt) {
                             bestt = t;
-                            planeType[0] = type;
-                            planeDist[0] = dist;
+                            planeType.setVal(type);
+                            planeDist.setVal(dist);
                         }
                     }
                 }
@@ -122,8 +124,8 @@ public class CollisionModel_load {
                     return true;
                 }
                 // don't create splitters real close to the bounds
-                if (bounds.oGet(1, type) - planeDist[0] > (MIN_NODE_SIZE * 0.5f)
-                        && planeDist[0] - bounds.oGet(0, type) > (MIN_NODE_SIZE * 0.5f)) {
+                if (bounds.oGet(1, type) - planeDist.getVal() > (MIN_NODE_SIZE * 0.5f)
+                        && planeDist.getVal() - bounds.oGet(0, type) > (MIN_NODE_SIZE * 0.5f)) {
                     return true;
                 }
             }
@@ -165,10 +167,11 @@ public class CollisionModel_load {
      CM_EstimateVertsAndEdges
      =================
      */
-    static void CM_EstimateVertsAndEdges(final idMapEntity mapEnt, int[] numVerts, int[] numEdges) {
+    static void CM_EstimateVertsAndEdges(final idMapEntity mapEnt, CInt numVerts, CInt numEdges) {
         int j, width, height;
 
-        numVerts[0] = numEdges[0] = 0;
+        numVerts.setVal(0);
+        numEdges.setVal(0);
         for (j = 0; j < mapEnt.GetNumPrimitives(); j++) {
             final idMapPrimitive mapPrim;
             mapPrim = mapEnt.GetPrimitive(j);
@@ -176,14 +179,14 @@ public class CollisionModel_load {
                 // assume maximum tesselation without adding verts
                 width = ((idMapPatch) mapPrim).GetWidth();
                 height = ((idMapPatch) mapPrim).GetHeight();
-                numVerts[0] += width * height;
-                numEdges[0] += (width - 1) * height + width * (height - 1) + (width - 1) * (height - 1);
+                numVerts.setVal(width * height + numVerts.getVal());
+                numEdges.setVal((width - 1) * height + width * (height - 1) + (width - 1) * (height - 1) + numEdges.getVal());
                 continue;
             }
             if (mapPrim.GetType() == idMapPrimitive.TYPE_BRUSH) {
                 // assume cylinder with a polygon with (numSides - 2) edges ontop and on the bottom
-                numVerts[0] += (((idMapBrush) mapPrim).GetNumSides() - 2) * 2;
-                numEdges[0] += (((idMapBrush) mapPrim).GetNumSides() - 2) * 3;
+                numVerts.setVal((((idMapBrush) mapPrim).GetNumSides() - 2) * 2 + numVerts.getVal());
+                numEdges.setVal((((idMapBrush) mapPrim).GetNumSides() - 2) * 3 + numEdges.getVal());
 //                continue;
             }
         }
@@ -270,4 +273,5 @@ public class CollisionModel_load {
         }
         return contents;
     }
+
 }

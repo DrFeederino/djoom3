@@ -1,12 +1,8 @@
 package neo.Renderer;
 
-import neo.Renderer.Material.*;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.tr_local.*;
-import neo.Renderer.tr_render.*;
 import neo.idlib.geometry.DrawVert.idDrawVert;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
@@ -1274,7 +1270,7 @@ public class draw_common {
         qglDisable(GL_STENCIL_TEST);
 
         v = 1;
-        while (idMath.Fabs(v - backEnd.overBright) > 0.01) {    // a little extra slop
+        while (Math.abs(v - backEnd.overBright) > 0.01) {    // a little extra slop
             f = backEnd.overBright / v;
             f /= 2;
             if (f > 1) {

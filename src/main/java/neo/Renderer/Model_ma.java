@@ -510,7 +510,7 @@ public class Model_ma {
         for (int i = 0; i < 3; i++) {
             int edge = pMesh.faces[faceIndex].edge[i];
             if (edge < 0) {
-                edge = (int) (idMath.Fabs(edge) - 1);
+                edge = (int) (Math.abs(edge) - 1);
             }
             if (pMesh.edges[edge].z == 1 && (pMesh.edges[edge].x == vertNum || pMesh.edges[edge].y == vertNum)) {
                 return true;
@@ -532,7 +532,7 @@ public class Model_ma {
 
             int edge = pMesh.faces[faceIndex].edge[edgeIndex];
             if (edge < 0) {
-                edge = (int) (idMath.Fabs(edge) - 1);
+                edge = (int) (Math.abs(edge) - 1);
             }
 
             if (pMesh.edges[edge].z == 1 && (pMesh.edges[edge].x == vertNum || pMesh.edges[edge].y == vertNum)) {
@@ -618,7 +618,7 @@ public class Model_ma {
             for (int j = 0; j < 3; j++) {
                 int edge = pMesh.faces[i].edge[j];
                 if (edge < 0) {
-                    edge = (int) (idMath.Fabs(edge) - 1);
+                    edge = (int) (Math.abs(edge) - 1);
                     pMesh.faces[i].vertexNum[j] = (int) pMesh.edges[edge].y;
                 } else {
                     pMesh.faces[i].vertexNum[j] = (int) pMesh.edges[edge].x;

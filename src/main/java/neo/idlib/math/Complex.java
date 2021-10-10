@@ -33,7 +33,7 @@ public class Complex {
 
         public static idComplex oDivide(final float a, final idComplex b) {
             float s, t;
-            if (idMath.Fabs(b.r) >= idMath.Fabs(b.i)) {
+            if (Math.abs(b.r) >= Math.abs(b.i)) {
                 s = b.i / b.r;
                 t = a / (b.r + s * b.i);
                 return new idComplex(t, -s * t);
@@ -108,7 +108,7 @@ public class Complex {
 
         public idComplex oDivide(final idComplex a) {
             float s, t;
-            if (idMath.Fabs(a.r) >= idMath.Fabs(a.i)) {
+            if (Math.abs(a.r) >= Math.abs(a.i)) {
                 s = a.i / a.r;
                 t = 1.0f / (a.r + s * a.i);
                 return new idComplex((r + s * i) * t, (i - s * r) * t);
@@ -139,7 +139,7 @@ public class Complex {
 
         public idComplex oDivSet(final idComplex a) {
             float s, t;
-            if (idMath.Fabs(a.r) >= idMath.Fabs(a.i)) {
+            if (Math.abs(a.r) >= Math.abs(a.i)) {
                 s = a.i / a.r;
                 t = 1.0f / (a.r + s * a.i);
                 this.Set((r + s * i) * t, (i - s * r) * t);
@@ -221,10 +221,10 @@ public class Complex {
         }
 
         public boolean Compare(final idComplex a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(r - a.r) > epsilon) {
+            if (Math.abs(r - a.r) > epsilon) {
                 return false;
             }
-            return !(idMath.Fabs(i - a.i) > epsilon);
+            return !(Math.abs(i - a.i) > epsilon);
         }
 //public		boolean				operator==(	final idComplex &a ) final;						// exact compare, no epsilon
 //public		boolean				operator!=(	final idComplex &a ) final;						// exact compare, no epsilon
@@ -254,7 +254,7 @@ public class Complex {
 
         public idComplex Reciprocal() {
             float s, t;
-            if (idMath.Fabs(r) >= idMath.Fabs(i)) {
+            if (Math.abs(r) >= Math.abs(i)) {
                 s = i / r;
                 t = 1.0f / (r + s * i);
                 return new idComplex(t, -s * t);
@@ -271,8 +271,8 @@ public class Complex {
             if (r == 0.0f && i == 0.0f) {
                 return new idComplex(0.0f, 0.0f);
             }
-            x = idMath.Fabs(r);
-            y = idMath.Fabs(i);
+            x = Math.abs(r);
+            y = Math.abs(i);
             if (x >= y) {
                 w = y / x;
                 w = idMath.Sqrt(x) * idMath.Sqrt(0.5f * (1.0f + idMath.Sqrt(1.0f + w * w)));
@@ -292,8 +292,8 @@ public class Complex {
 
         public float Abs() {
             float x, y, t;
-            x = idMath.Fabs(r);
-            y = idMath.Fabs(i);
+            x = Math.abs(r);
+            y = Math.abs(i);
             if (x == 0.0f) {
                 return y;
             } else if (y == 0.0f) {

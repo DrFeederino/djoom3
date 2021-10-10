@@ -201,7 +201,7 @@ public class JointTransform {
             int i;
 
             for (i = 0; i < 12; i++) {
-                if (idMath.Fabs(mat[i] - a.mat[i]) > epsilon) {
+                if (Math.abs(mat[i] - a.mat[i]) > epsilon) {
                     return false;
                 }
             }

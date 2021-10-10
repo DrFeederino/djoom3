@@ -48,7 +48,7 @@ public class Vector {
     }
 
     public static idVec3 getVec3_origin() {
-        return new idVec3(vec3_origin);
+        return new idVec3(0.0f, 0.0f, 0.0f);
     }
 
     public static idVec3 getVec3_zero() {
@@ -375,11 +375,11 @@ public class Vector {
 //public	bool			operator!=(	const idVec2 &a ) const;						// exact compare, no epsilon
 
         public boolean Compare(final idVec2 a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(x - a.x) > epsilon) {
+            if (Math.abs(x - a.x) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(y - a.y) > epsilon);
+            return !(Math.abs(y - a.y) > epsilon);
         }
 
         public float Length() {
@@ -713,15 +713,15 @@ public class Vector {
         }
 
         public boolean Compare(final idVec3 a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(x - a.x) > epsilon) {
+            if (Math.abs(x - a.x) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(y - a.y) > epsilon) {
+            if (Math.abs(y - a.y) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(z - a.z) > epsilon);
+            return !(Math.abs(z - a.z) > epsilon);
         }
 
         //private idVec3  multiply(float a){
@@ -784,19 +784,19 @@ public class Vector {
                     return false;
                 }
             }
-            if (idMath.Fabs(x) == 1.0f) {
+            if (Math.abs(x) == 1.0f) {
                 if (y != 0.0f || z != 0.0f) {
                     y = z = 0.0f;
                     return true;
                 }
                 return false;
-            } else if (idMath.Fabs(y) == 1.0f) {
+            } else if (Math.abs(y) == 1.0f) {
                 if (x != 0.0f || z != 0.0f) {
                     x = z = 0.0f;
                     return true;
                 }
                 return false;
-            } else if (idMath.Fabs(z) == 1.0f) {
+            } else if (Math.abs(z) == 1.0f) {
                 if (x != 0.0f || y != 0.0f) {
                     x = y = 0.0f;
                     return true;
@@ -1087,7 +1087,7 @@ public class Vector {
         public void OrthogonalBasis(idVec3 left, idVec3 up) {
             float l, s;
 
-            if (idMath.Fabs(z) > 0.7f) {
+            if (Math.abs(z) > 0.7f) {
                 l = y * y + z * z;
                 s = idMath.InvSqrt(l);
                 up.x = 0;
@@ -1147,7 +1147,7 @@ public class Vector {
             // normalize so a fixed epsilon can be used
             cross.Normalize();
             len = normal.oMultiply(cross);
-            if (idMath.Fabs(len) < epsilon) {
+            if (Math.abs(len) < epsilon) {
                 return false;
             }
             cross.oMulSet(overBounce * normal.oMultiply(this) / len);//	cross *= overBounce * ( normal * (*this) ) / len;
@@ -1484,19 +1484,19 @@ public class Vector {
         }
 
         public boolean Compare(final idVec4 a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(x - a.x) > epsilon) {
+            if (Math.abs(x - a.x) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(y - a.y) > epsilon) {
+            if (Math.abs(y - a.y) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(z - a.z) > epsilon) {
+            if (Math.abs(z - a.z) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(w - a.w) > epsilon);
+            return !(Math.abs(w - a.w) > epsilon);
         }
 
         public float Length() {
@@ -1972,27 +1972,27 @@ public class Vector {
         }
 
         public boolean Compare(final idVec6 a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(p[0] - a.p[0]) > epsilon) {
+            if (Math.abs(p[0] - a.p[0]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[1] - a.p[1]) > epsilon) {
+            if (Math.abs(p[1] - a.p[1]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[2] - a.p[2]) > epsilon) {
+            if (Math.abs(p[2] - a.p[2]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[3] - a.p[3]) > epsilon) {
+            if (Math.abs(p[3] - a.p[3]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[4] - a.p[4]) > epsilon) {
+            if (Math.abs(p[4] - a.p[4]) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(p[5] - a.p[5]) > epsilon);
+            return !(Math.abs(p[5] - a.p[5]) > epsilon);
         }
 //public 	bool			operator==(	final  idVec6 &a ) final ;						// exact compare, no epsilon
 //public 	bool			operator!=(	final  idVec6 &a ) final ;						// exact compare, no epsilon
@@ -2347,7 +2347,7 @@ public class Vector {
 
             assert (size == a.size);
             for (i = 0; i < size; i++) {
-                if (idMath.Fabs(p[i] - a.p[i]) > epsilon) {
+                if (Math.abs(p[i] - a.p[i]) > epsilon) {
                     return false;
                 }
             }

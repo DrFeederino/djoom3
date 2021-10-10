@@ -335,13 +335,13 @@ public class idMat3 {
     }
 
     public boolean IsSymmetric(final float epsilon) {
-        if (idMath.Fabs(mat[0].y - mat[1].x) > epsilon) {
+        if (Math.abs(mat[0].y - mat[1].x) > epsilon) {
             return false;
         }
-        if (idMath.Fabs(mat[0].z - mat[2].x) > epsilon) {
+        if (Math.abs(mat[0].z - mat[2].x) > epsilon) {
             return false;
         }
-        return !(idMath.Fabs(mat[1].z - mat[2].y) > epsilon);
+        return !(Math.abs(mat[1].z - mat[2].y) > epsilon);
     }
 
     public boolean IsDiagonal() {
@@ -349,12 +349,12 @@ public class idMat3 {
     }
 
     public boolean IsDiagonal(final float epsilon) {
-        return !(idMath.Fabs(mat[0].y) > epsilon)
-                && !(idMath.Fabs(mat[0].z) > epsilon)
-                && !(idMath.Fabs(mat[1].x) > epsilon)
-                && !(idMath.Fabs(mat[1].z) > epsilon)
-                && !(idMath.Fabs(mat[2].x) > epsilon)
-                && !(idMath.Fabs(mat[2].y) > epsilon);
+        return !(Math.abs(mat[0].y) > epsilon)
+                && !(Math.abs(mat[0].z) > epsilon)
+                && !(Math.abs(mat[1].x) > epsilon)
+                && !(Math.abs(mat[1].z) > epsilon)
+                && !(Math.abs(mat[2].x) > epsilon)
+                && !(Math.abs(mat[2].y) > epsilon);
     }
 
     public boolean IsRotated() {
@@ -465,7 +465,7 @@ public class idMat3 {
 
         det = mat[0].x * inverse.mat[0].x + mat[0].y * inverse.mat[1].x + mat[0].z * inverse.mat[2].x;
 
-        if (idMath.Fabs((float) det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs((float) det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 
@@ -705,7 +705,7 @@ public class idMat3 {
             r.vec.oSet(k, (mat[k].oGet(i) + mat[i].oGet(k)) * s);
         }
         r.angle = idMath.ACos(r.angle);
-        if (idMath.Fabs(r.angle) < 1e-10f) {
+        if (Math.abs(r.angle) < 1e-10f) {
             r.vec.Set(0.0f, 0.0f, 1.0f);
             r.angle = 0.0f;
         } else {

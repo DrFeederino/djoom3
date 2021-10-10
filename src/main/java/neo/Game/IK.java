@@ -168,7 +168,7 @@ public class IK /*ea*/ {
             length = lengthInv * lengthSqr;
 
             // if the start and end position are too far out or too close to each other
-            if (length > len0 + len1 || length < idMath.Fabs(len0 - len1)) {
+            if (length > len0 + len1 || length < Math.abs(len0 - len1)) {
                 jointPos.oSet(startPos.oPlus(vec0.oMultiply(0.5f)));
                 return false;
             }
@@ -627,7 +627,7 @@ public class IK /*ea*/ {
                 newPivotYaw = modelAxis.oGet(0).ToYaw();
 
                 // change pivot foot
-                if (newPivotFoot != pivotFoot || idMath.Fabs(idMath.AngleNormalize180(newPivotYaw - pivotYaw)) > 30.0f) {
+                if (newPivotFoot != pivotFoot || Math.abs(idMath.AngleNormalize180(newPivotYaw - pivotYaw)) > 30.0f) {
                     pivotFoot = newPivotFoot;
                     pivotYaw = newPivotYaw;
                     animator.GetJointTransform(footJoints[pivotFoot], gameLocal.time, footOrigin, axis);

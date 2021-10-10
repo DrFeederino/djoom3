@@ -2,10 +2,8 @@ package neo.idlib.geometry;
 
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Pluecker.idPluecker;
 import neo.idlib.math.Vector.idVec3;
 
@@ -935,7 +933,7 @@ public class Surface {
                             verts.oGet(indexes.oGet(i + 1)).xyz,
                             verts.oGet(indexes.oGet(i + 2)).xyz);
                     plane.RayIntersection(start, dir, s);
-                    if (idMath.Fabs(s[0]) < idMath.Fabs(scale[0])) {
+                    if (Math.abs(s[0]) < Math.abs(scale[0])) {
                         scale[0] = s[0];
                     }
                 } else if (!backFaceCull && ((s0 | s1 | s2)) == 0) {
@@ -944,13 +942,13 @@ public class Surface {
                             verts.oGet(indexes.oGet(i + 1)).xyz,
                             verts.oGet(indexes.oGet(i + 2)).xyz);
                     plane.RayIntersection(start, dir, s);
-                    if (idMath.Fabs(s[0]) < idMath.Fabs(scale[0])) {
+                    if (Math.abs(s[0]) < Math.abs(scale[0])) {
                         scale[0] = s[0];
                     }
                 }
             }
 
-            return idMath.Fabs(scale[0]) < idMath.INFINITY;
+            return Math.abs(scale[0]) < idMath.INFINITY;
         }
 
         /*

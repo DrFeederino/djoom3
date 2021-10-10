@@ -371,7 +371,7 @@ public class GameSSDWindow {
             float scaleRadSqr = scaledRad * scaledRad;
 
             idVec2 diff = screenPos.ToVec2().oMinus(pt);
-            float dist = idMath.Fabs(diff.LengthSqr());
+            float dist = Math.abs(diff.LengthSqr());
 
             return dist < scaleRadSqr;
         }
@@ -389,8 +389,8 @@ public class GameSSDWindow {
             bounds.oSet(1, new idVec3(position.x + (size.x / 2.0f), position.y + (size.y / 2.0f), position.z));
 
             idBounds screenBounds = WorldToScreen(bounds);
-            persize.x = idMath.Fabs(screenBounds.oGet(1).x - screenBounds.oGet(0).x);
-            persize.y = idMath.Fabs(screenBounds.oGet(1).y - screenBounds.oGet(0).y);
+            persize.x = Math.abs(screenBounds.oGet(1).x - screenBounds.oGet(0).x);
+            persize.y = Math.abs(screenBounds.oGet(1).y - screenBounds.oGet(0).y);
 
 //	idVec3 center = screenBounds.GetCenter();
             x = screenBounds.oGet(0).x;

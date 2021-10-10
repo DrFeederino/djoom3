@@ -756,7 +756,7 @@ public class GameBearShootWindow {
                         wind.rotation = 180;
                     }
 
-                    scale = 1f - ((MAX_WINDFORCE - idMath.Fabs(windForce)) / MAX_WINDFORCE);
+                    scale = 1f - ((MAX_WINDFORCE - Math.abs(windForce)) / MAX_WINDFORCE);
                     width = (int) (100 * scale);
 
                     if (windForce < 0) {

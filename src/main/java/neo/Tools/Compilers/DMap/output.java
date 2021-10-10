@@ -1,7 +1,6 @@
 package neo.Tools.Compilers.DMap;
 
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Tools.Compilers.DMap.dmap.*;
 import neo.Tools.Compilers.DMap.portals.interAreaPortal_t;
 import neo.framework.File_h.idFile;
 import neo.idlib.MapFile.idMapEntity;
@@ -90,7 +89,7 @@ public class output {
     }
 
     static void WriteFloat(idFile f, float v) {
-        if (idMath.Fabs(v - idMath.Rint(v)) < 0.001) {
+        if (Math.abs(v - idMath.Rint(v)) < 0.001) {
             f.WriteFloatString("%d ", (int) idMath.Rint(v));
         } else {
             f.WriteFloatString("%f ", v);
@@ -146,19 +145,19 @@ public class output {
      ==============
      */
     static boolean MatchVert(final idDrawVert a, final idDrawVert b) {
-        if (idMath.Fabs(a.xyz.oGet(0) - b.xyz.oGet(0)) > XYZ_EPSILON) {
+        if (Math.abs(a.xyz.oGet(0) - b.xyz.oGet(0)) > XYZ_EPSILON) {
             return false;
         }
-        if (idMath.Fabs(a.xyz.oGet(1) - b.xyz.oGet(1)) > XYZ_EPSILON) {
+        if (Math.abs(a.xyz.oGet(1) - b.xyz.oGet(1)) > XYZ_EPSILON) {
             return false;
         }
-        if (idMath.Fabs(a.xyz.oGet(2) - b.xyz.oGet(2)) > XYZ_EPSILON) {
+        if (Math.abs(a.xyz.oGet(2) - b.xyz.oGet(2)) > XYZ_EPSILON) {
             return false;
         }
-        if (idMath.Fabs(a.st.oGet(0) - b.st.oGet(0)) > ST_EPSILON) {
+        if (Math.abs(a.st.oGet(0) - b.st.oGet(0)) > ST_EPSILON) {
             return false;
         }
-        if (idMath.Fabs(a.st.oGet(1) - b.st.oGet(1)) > ST_EPSILON) {
+        if (Math.abs(a.st.oGet(1) - b.st.oGet(1)) > ST_EPSILON) {
             return false;
         }
 

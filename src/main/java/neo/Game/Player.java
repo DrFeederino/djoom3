@@ -5795,7 +5795,7 @@ public class Player {
             if (gameLocal.framenum >= smoothedFrame && entityNumber != gameLocal.localClientNum) {
                 idAngles anglesDiff = viewAngles.oMinus(smoothedAngles);
                 anglesDiff.Normalize180();
-                if (idMath.Fabs(anglesDiff.yaw) < 90 && idMath.Fabs(anglesDiff.pitch) < 90) {
+                if (Math.abs(anglesDiff.yaw) < 90 && Math.abs(anglesDiff.pitch) < 90) {
                     // smoothen by pushing back to the previous angles
                     viewAngles.oMinSet(anglesDiff.oMultiply(gameLocal.clientSmoothing));
                     viewAngles.Normalize180();
@@ -6813,7 +6813,7 @@ public class Player {
             noDamage = false;
             for (int i = 0; i < physicsObj.GetNumContacts(); i++) {
                 final contactInfo_t contact = physicsObj.GetContact(i);
-                if ((contact.material.GetSurfaceFlags() & SURF_NODAMAGE) != 0) {
+                if (contact.material != null && (contact.material.GetSurfaceFlags() & SURF_NODAMAGE) != 0) {
                     noDamage = true;
                     StartSound("snd_land_hard", SND_CHANNEL_ANY, 0, false, null);
                     break;
@@ -6946,7 +6946,7 @@ public class Player {
                 old = bobCycle;
                 bobCycle = (int) (old + bobmove * idGameLocal.msec) & 255;
                 bobFoot = (bobCycle & 128) >> 7;
-                bobfracsin = idMath.Fabs((float) Math.sin((bobCycle & 127) / 127.0 * idMath.PI));
+                bobfracsin = Math.abs((float) Math.sin((bobCycle & 127) / 127.0 * idMath.PI));
             }
 
             // calculate angles for view bobbing
@@ -7204,7 +7204,7 @@ public class Player {
                 legsForward = true;
             } else {
                 legsForward = true;
-                diff = idMath.Fabs(idealLegsYaw - legsYaw);
+                diff = Math.abs(idealLegsYaw - legsYaw);
                 idealLegsYaw = idealLegsYaw - idMath.AngleNormalize180(viewAngles.yaw - oldViewYaw);
                 if (diff < 0.1f) {
                     legsYaw = idealLegsYaw;

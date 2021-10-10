@@ -1,6 +1,5 @@
 package neo.CM;
 
-import neo.CM.CollisionModel_local.cm_polygon_s;
 import neo.Renderer.Material.idMaterial;
 import neo.TempDump.SERiAL;
 import neo.idlib.BV.Bounds.idBounds;
@@ -24,11 +23,7 @@ import static neo.idlib.Text.Str.idStr.parseStr;
 public class CollisionModel {
 
     public static final float CM_BOX_EPSILON = 1.0f;         // should always be larger than clip epsilon
-
-    //
-//typedef int cmHandle_t;
     public static final float CM_CLIP_EPSILON = 0.25f;        // always stay this distance away from any model
-
     public static final float CM_MAX_TRACE_DIST = 4096.0f;      // maximum distance a trace model may be traced, point traces are unlimited
 
     /*
@@ -49,20 +44,14 @@ public class CollisionModel {
 
      ===============================================================================
      */
-    // contact type
     public enum contactType_t {
-
         CONTACT_NONE, // no contact
         CONTACT_EDGE, // trace model edge hits model edge
         CONTACT_MODELVERTEX, // model vertex hits trace model polygon
         CONTACT_TRMVERTEX    // trace model vertex hits model polygon
     }
 
-    // contact info
     public static class contactInfo_t {
-
-        private static int DBG_counter = 0;
-        private final int DBG_count = DBG_counter++;
         public int contents;    // contents at other side of surface
         public float dist;        // contact plane distance
         public int entityNum;   // entity the contact surface is a part of
@@ -77,7 +66,6 @@ public class CollisionModel {
         public contactInfo_t() {
             point = new idVec3();
             normal = new idVec3();
-//            TempDump.printCallStack("contactInfo_t:" + DBG_count);
         }
 
         public contactInfo_t(contactInfo_t c) {
@@ -140,8 +128,6 @@ public class CollisionModel {
 
     public static abstract class idCollisionModelManager {
 
-        // virtual 					~idCollisionModelManager( void ) {}
-        // Loads collision models from a map file.
         public abstract void LoadMap(final idMapFile mapFile);
 
         // Frees all the collision models.
@@ -176,7 +162,7 @@ public class CollisionModel {
         public abstract boolean GetModelEdge(int model, int edgeNum, idVec3 start, idVec3 end);
 
         // Gets a polygon of a model.
-        public abstract boolean GetModelPolygon(int model, /*int*/ cm_polygon_s polygonNum, idFixedWinding winding);
+        public abstract boolean GetModelPolygon(int model, /*int*/ AbstractCollisionModel_local.cm_polygon_s polygonNum, idFixedWinding winding);
 
         // Translates a trace model and reports the first collision if any.
         public abstract void Translation(trace_s[] results, final idVec3 start, final idVec3 end,
@@ -212,8 +198,6 @@ public class CollisionModel {
 
         // Writes a collision model file for the given map entity.
         public abstract boolean WriteCollisionModelForMapEntity(final idMapEntity mapEnt, final String filename, final boolean testTraceModel/* = true*/);
-
-        public abstract boolean WriteCollisionModelForMapEntity(final idMapEntity mapEnt, final String filename);
     }
 
 }

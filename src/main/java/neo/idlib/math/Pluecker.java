@@ -125,27 +125,27 @@ public class Pluecker {
         }
 
         public boolean Compare(final idPluecker a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(p[0] - a.p[0]) > epsilon) {
+            if (Math.abs(p[0] - a.p[0]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[1] - a.p[1]) > epsilon) {
+            if (Math.abs(p[1] - a.p[1]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[2] - a.p[2]) > epsilon) {
+            if (Math.abs(p[2] - a.p[2]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[3] - a.p[3]) > epsilon) {
+            if (Math.abs(p[3] - a.p[3]) > epsilon) {
                 return false;
             }
 
-            if (idMath.Fabs(p[4] - a.p[4]) > epsilon) {
+            if (Math.abs(p[4] - a.p[4]) > epsilon) {
                 return false;
             }
 
-            return !(idMath.Fabs(p[5] - a.p[5]) > epsilon);
+            return !(Math.abs(p[5] - a.p[5]) > epsilon);
         }
 //public	boolean			operator==(	final idPluecker &a ) final;					// exact compare, no epsilon
 //public	boolean			operator!=(	final idPluecker &a ) final;					// exact compare, no epsilon

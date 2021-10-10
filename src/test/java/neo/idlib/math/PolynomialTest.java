@@ -34,7 +34,7 @@ public class PolynomialTest {
         num = p.GetRoots(roots);
         for (i = 0; i < num; i++) {
             value = p.GetValue(roots[i]);
-            Assert.assertTrue(idMath.Fabs(value) < 1e-4f);
+            Assert.assertTrue(Math.abs(value) < 1e-4f);
         }
     }
 
@@ -44,7 +44,7 @@ public class PolynomialTest {
         num = p.GetRoots(roots);
         for (i = 0; i < num; i++) {
             value = p.GetValue(roots[i]);
-            Assert.assertTrue(idMath.Fabs(value) < 1e-4f);
+            Assert.assertTrue(Math.abs(value) < 1e-4f);
         }
     }
 
@@ -54,7 +54,7 @@ public class PolynomialTest {
         num = p.GetRoots(roots);
         for (i = 0; i < num; i++) {
             value = p.GetValue(roots[i]);
-            Assert.assertTrue(idMath.Fabs(value) < 1e-4f);
+            Assert.assertTrue(Math.abs(value) < 1e-4f);
         }
     }
 
@@ -64,7 +64,7 @@ public class PolynomialTest {
         num = p.GetRoots(roots);
         for (i = 0; i < num; i++) {
             value = p.GetValue(roots[i]);
-            Assert.assertTrue(idMath.Fabs(value) < 1e-4f);
+            Assert.assertTrue(Math.abs(value) < 1e-4f);
         }
     }
 
@@ -74,7 +74,7 @@ public class PolynomialTest {
         num = p.GetRoots(roots);
         for (i = 0; i < num; i++) {
             value = p.GetValue(roots[i]);
-            Assert.assertTrue(idMath.Fabs(value) < 1e-4f);
+            Assert.assertTrue(Math.abs(value) < 1e-4f);
         }
     }
 
@@ -84,7 +84,7 @@ public class PolynomialTest {
         num = p.GetRoots(complexRoots);
         for (i = 0; i < num; i++) {
             complexValue = p.GetValue(complexRoots[i]);
-            Assert.assertTrue(idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
+            Assert.assertTrue(Math.abs(complexValue.r) < 1e-4f && Math.abs(complexValue.i) < 1e-4f);
         }
     }
 
@@ -94,7 +94,7 @@ public class PolynomialTest {
         num = p.GetRoots(complexRoots);
         for (i = 0; i < num; i++) {
             complexValue = p.GetValue(complexRoots[i]);
-            Assert.assertTrue(idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
+            Assert.assertTrue(Math.abs(complexValue.r) < 1e-4f && Math.abs(complexValue.i) < 1e-4f);
         }
     }
 }

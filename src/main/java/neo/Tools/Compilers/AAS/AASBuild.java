@@ -631,7 +631,7 @@ public class AASBuild {
                         plane.FitThroughPoint(mesh.oGet(v1).xyz);
                         dot = plane.Distance(mesh.oGet(v4).xyz);
                         // if we can turn it into a quad
-                        if (idMath.Fabs(dot) < 0.1f) {
+                        if (Math.abs(dot) < 0.1f) {
                             w.Clear();
                             w.oPluSet(mesh.oGet(v1).xyz);
                             w.oPluSet(mesh.oGet(v2).xyz);
@@ -942,7 +942,7 @@ public class AASBuild {
                                 if (d >= GRAVSUBDIV_EPSILON) {
                                     break;    // point at the same side of the plane as the gap
                                 }
-                                d = idMath.Fabs(d);
+                                d = Math.abs(d);
                                 if (d < min) {
                                     min = d;
                                 }
@@ -956,7 +956,7 @@ public class AASBuild {
                                 if (d <= -GRAVSUBDIV_EPSILON) {
                                     break;    // point at the same side of the plane as the gap
                                 }
-                                d = idMath.Fabs(d);
+                                d = Math.abs(d);
                                 if (d < min) {
                                     min = d;
                                 }
@@ -1279,10 +1279,10 @@ public class AASBuild {
             for (i = 0; i < ledgeList.Num(); i++) {
 
                 for (j = 0; j < 2; j++) {
-                    if (idMath.Fabs(ledgeList.oGet(i).planes[j].Distance(v1)) > LEDGE_EPSILON) {
+                    if (Math.abs(ledgeList.oGet(i).planes[j].Distance(v1)) > LEDGE_EPSILON) {
                         break;
                     }
-                    if (idMath.Fabs(ledgeList.oGet(i).planes[j].Distance(v2)) > LEDGE_EPSILON) {
+                    if (Math.abs(ledgeList.oGet(i).planes[j].Distance(v2)) > LEDGE_EPSILON) {
                         break;
                     }
                 }
@@ -1583,7 +1583,7 @@ public class AASBuild {
             idVec3 /*aasVertex_t*/ vert = new idVec3(), p;
 
             for (i = 0; i < 3; i++) {
-                if (idMath.Fabs(v.oGet(i) - idMath.Rint(v.oGet(i))) < INTEGRAL_EPSILON) {
+                if (Math.abs(v.oGet(i) - idMath.Rint(v.oGet(i))) < INTEGRAL_EPSILON) {
                     vert.oSet(i, idMath.Rint(v.oGet(i)));
                 } else {
                     vert.oSet(i, v.oGet(i));
@@ -1595,9 +1595,9 @@ public class AASBuild {
             for (vn = aas_vertexHash.First(hashKey); vn >= 0; vn = aas_vertexHash.Next(vn)) {
                 p = file.vertices.oGet(vn);
                 // first compare z-axis because hash is based on x-y plane
-                if (idMath.Fabs(vert.z - p.z) < VERTEX_EPSILON
-                        && idMath.Fabs(vert.x - p.x) < VERTEX_EPSILON
-                        && idMath.Fabs(vert.y - p.y) < VERTEX_EPSILON) {
+                if (Math.abs(vert.z - p.z) < VERTEX_EPSILON
+                        && Math.abs(vert.x - p.x) < VERTEX_EPSILON
+                        && Math.abs(vert.y - p.y) < VERTEX_EPSILON) {
                     vertexNum[0] = vn;
                     return true;
                 }

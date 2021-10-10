@@ -5,18 +5,13 @@ import neo.Game.AF.afTouch_s;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Base;
 import neo.Game.AI.AAS.*;
-import neo.Game.AI.AI_pathing.*;
 import neo.Game.Actor.idActor;
-import neo.Game.Animation.Anim.*;
 import neo.Game.Animation.Anim_Blend.idAnim;
 import neo.Game.Animation.Anim_Blend.idAnimator;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import neo.Game.Entity.*;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Misc.idPathCorner;
 import neo.Game.Moveable.idMoveable;
 import neo.Game.Physics.Clip.idClipModel;
@@ -30,9 +25,7 @@ import neo.Game.Pvs.pvsHandle_t;
 import neo.Game.Script.Script_Program.idScriptBool;
 import neo.Game.Script.Script_Program.idScriptFloat;
 import neo.Game.Script.Script_Thread.idThread;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.idlib.BV.Bounds.idBounds;
@@ -43,7 +36,6 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Vector.idVec2;
@@ -4236,7 +4228,7 @@ public class AI {
             }
 
             diff = idMath.AngleNormalize180(current_yaw - ideal_yaw);
-            if (idMath.Fabs(diff) < 0.01f) {
+            if (Math.abs(diff) < 0.01f) {
                 // force it to be exact
                 current_yaw = ideal_yaw;
                 return true;
@@ -4297,7 +4289,7 @@ public class AI {
                 current_yaw += turnAmount;
                 current_yaw = idMath.AngleNormalize180(current_yaw);
                 diff2 = idMath.AngleNormalize180(ideal_yaw - current_yaw);
-                if (idMath.Fabs(diff2) < 0.1f) {
+                if (Math.abs(diff2) < 0.1f) {
                     current_yaw = ideal_yaw;
                 }
             }
@@ -5156,7 +5148,7 @@ public class AI {
                     alignHeadTime = (int) (gameLocal.time + (0.5f + 0.5f * gameLocal.random.RandomFloat()) * focusAlignTime);
                 }
             }
-            if (idMath.Fabs(newLookAng.yaw) < 0.1f) {
+            if (Math.abs(newLookAng.yaw) < 0.1f) {
                 alignHeadTime = gameLocal.time;
             }
             if ((gameLocal.time >= alignHeadTime) || (gameLocal.time < forceAlignHeadTime)) {
@@ -6021,7 +6013,7 @@ public class AI {
 
             attack_cone = spawnArgs.GetFloat("attack_cone", "70");
             relYaw = idMath.AngleNormalize180(ideal_yaw - yaw);
-            idThread.ReturnInt(idMath.Fabs(relYaw) < (attack_cone * 0.5f));
+            idThread.ReturnInt(Math.abs(relYaw) < (attack_cone * 0.5f));
         }
 
         protected void Event_CanSeeEntity(idEventArg<idEntity> ent) {
@@ -6925,7 +6917,7 @@ public class AI {
             anim_turn_angles = angles.value;
             if (angles.value != 0) {
                 anim_turn_yaw = current_yaw;
-                anim_turn_amount = idMath.Fabs(idMath.AngleNormalize180(current_yaw - ideal_yaw));
+                anim_turn_amount = Math.abs(idMath.AngleNormalize180(current_yaw - ideal_yaw));
                 if (anim_turn_amount > anim_turn_angles) {
                     anim_turn_amount = anim_turn_angles;
                 }
@@ -7207,7 +7199,7 @@ public class AI {
 
                 final idMat3 axis = node.GetPhysics().GetAxis();
                 float cone_dot = node.cone_right.oMultiply(axis.oGet(1));
-                if (idMath.Fabs(cone_dot) > 0.1) {
+                if (Math.abs(cone_dot) > 0.1) {
                     float cone_dist = node.max_dist / cone_dot;
                     idVec3 pos1 = org.oPlus(leftDir.oMultiply(node.min_dist));
                     idVec3 pos2 = org.oPlus(leftDir.oMultiply(cone_dist));

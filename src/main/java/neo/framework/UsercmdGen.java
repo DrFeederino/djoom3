@@ -1,11 +1,7 @@
 package neo.framework;
 
-import neo.TempDump.*;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.idCmdSystem;
-import neo.framework.KeyInput.*;
-import neo.idlib.Lib.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
@@ -981,7 +977,7 @@ public class UsercmdGen {
 
             historyCounter++;
 
-            if (idMath.Fabs(mx) > 1000 || idMath.Fabs(my) > 1000) {
+            if (Math.abs(mx) > 1000 || Math.abs(my) > 1000) {
                 Sys_DebugPrintf("idUsercmdGenLocal.MouseMove: Ignoring ridiculous mouse delta.\n");
                 mx = my = 0;
             }

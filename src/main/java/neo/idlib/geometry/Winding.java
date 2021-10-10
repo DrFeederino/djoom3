@@ -5,7 +5,6 @@ import neo.TempDump.NiLLABLE;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.math.Math_h;
 import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Pluecker.idPluecker;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
@@ -678,7 +677,7 @@ public class Winding {
                 edgeNormal.Normalize();
                 dist = edgeNormal.oMultiply(p[i].ToVec3());
 
-                if (idMath.Fabs(edgeNormal.oMultiply(p[(i + 1) % numPoints].ToVec3()) - dist) > epsilon) {
+                if (Math.abs(edgeNormal.oMultiply(p[(i + 1) % numPoints].ToVec3()) - dist) > epsilon) {
                     continue;
                 }
 
@@ -730,7 +729,7 @@ public class Winding {
             idVec3 normal;
 
             // point may not be too far from the winding plane
-            if (idMath.Fabs(plane.Distance(point)) > epsilon) {
+            if (Math.abs(plane.Distance(point)) > epsilon) {
                 return false;
             }
 
@@ -741,7 +740,7 @@ public class Winding {
                 normal.Normalize();
                 dist = normal.oMultiply(p[i].ToVec3());
 
-                if (idMath.Fabs(normal.oMultiply(point) - dist) > epsilon) {
+                if (Math.abs(normal.oMultiply(point) - dist) > epsilon) {
                     continue;
                 }
 
@@ -1016,10 +1015,10 @@ public class Winding {
                     p3 = f2.p[j].ToVec3();
                     p4 = f2.p[(j + 1) % f2.numPoints].ToVec3();
                     for (k = 0; k < 3; k++) {
-                        if (idMath.Fabs(p1.oGet(k) - p4.oGet(k)) > 0.1f) {
+                        if (Math.abs(p1.oGet(k) - p4.oGet(k)) > 0.1f) {
                             break;
                         }
-                        if (idMath.Fabs(p2.oGet(k) - p3.oGet(k)) > 0.1f) {
+                        if (Math.abs(p2.oGet(k) - p3.oGet(k)) > 0.1f) {
                             break;
                         }
                     }
@@ -1457,7 +1456,7 @@ public class Winding {
             }
 
             // get point of intersection with winding plane
-            if (idMath.Fabs(front - back) < 0.0001f) {
+            if (Math.abs(front - back) < 0.0001f) {
                 mid = end;
             } else {
                 frac = front / (front - back);

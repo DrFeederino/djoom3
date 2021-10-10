@@ -248,49 +248,49 @@ public class Polynomial {
             num = p.GetRoots(roots);
             for (i = 0; i < num; i++) {
                 value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
+                assert (Math.abs(value) < 1e-4f);
             }
 
             p = new idPolynomial(-5.0f, 4.0f, 3.0f);
             num = p.GetRoots(roots);
             for (i = 0; i < num; i++) {
                 value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
+                assert (Math.abs(value) < 1e-4f);
             }
 
             p = new idPolynomial(1.0f, 4.0f, 3.0f, -2.0f);
             num = p.GetRoots(roots);
             for (i = 0; i < num; i++) {
                 value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
+                assert (Math.abs(value) < 1e-4f);
             }
 
             p = new idPolynomial(5.0f, 4.0f, 3.0f, -2.0f);
             num = p.GetRoots(roots);
             for (i = 0; i < num; i++) {
                 value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
+                assert (Math.abs(value) < 1e-4f);
             }
 
             p = new idPolynomial(-5.0f, 4.0f, 3.0f, 2.0f, 1.0f);
             num = p.GetRoots(roots);
             for (i = 0; i < num; i++) {
                 value = p.GetValue(roots[i]);
-                assert (idMath.Fabs(value) < 1e-4f);
+                assert (Math.abs(value) < 1e-4f);
             }
 
             p = new idPolynomial(1.0f, 4.0f, 3.0f, -2.0f);
             num = p.GetRoots(complexRoots);
             for (i = 0; i < num; i++) {
                 complexValue = p.GetValue(complexRoots[i]);
-                assert (idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
+                assert (Math.abs(complexValue.r) < 1e-4f && Math.abs(complexValue.i) < 1e-4f);
             }
 
             p = new idPolynomial(5.0f, 4.0f, 3.0f, -2.0f);
             num = p.GetRoots(complexRoots);
             for (i = 0; i < num; i++) {
                 complexValue = p.GetValue(complexRoots[i]);
-                assert (idMath.Fabs(complexValue.r) < 1e-4f && idMath.Fabs(complexValue.i) < 1e-4f);
+                assert (Math.abs(complexValue.r) < 1e-4f && Math.abs(complexValue.i) < 1e-4f);
             }
         }
 
@@ -507,7 +507,7 @@ public class Polynomial {
                 return false;
             }
             for (int i = 0; i <= degree; i++) {
-                if (idMath.Fabs(coefficient[i] - p.coefficient[i]) > epsilon) {
+                if (Math.abs(coefficient[i] - p.coefficient[i]) > epsilon) {
                     return false;
                 }
             }
@@ -618,7 +618,7 @@ public class Polynomial {
             for (i = degree - 1; i >= 0; i--) {
                 x.Zero();
                 Laguer(coef, i + 1, x);
-                if (idMath.Fabs(x.i) < 2.0f * EPSILON * idMath.Fabs(x.r)) {
+                if (Math.abs(x.i) < 2.0f * EPSILON * Math.abs(x.r)) {
                     x.i = 0.0f;
                 }
                 roots[i].oSet(x);

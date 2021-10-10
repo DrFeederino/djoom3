@@ -14,7 +14,6 @@ import neo.Game.Physics.Physics.impactInfo_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.containers.List.idList;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
@@ -574,7 +573,7 @@ public class Physics_Base {
                 }
                 axis = GetAxis(id);
                 vec = axis.oGet(2);
-                if (idMath.Fabs(dir.oMultiply(vec)) > 0.99f) {
+                if (Math.abs(dir.oMultiply(vec)) > 0.99f) {
                     vec = axis.oGet(0);
                 }
                 vec.oMinSet(vec.oMultiply(dir.oMultiply(vec)));

@@ -2960,9 +2960,9 @@ public class Mover {
             pos1 = GetPhysics().GetOrigin();
 
             // calculate second position
-            abs_movedir.oSet(0, idMath.Fabs(moveDir.oGet(0)));
-            abs_movedir.oSet(1, idMath.Fabs(moveDir.oGet(1)));
-            abs_movedir.oSet(2, idMath.Fabs(moveDir.oGet(2)));
+            abs_movedir.oSet(0, Math.abs(moveDir.oGet(0)));
+            abs_movedir.oSet(1, Math.abs(moveDir.oGet(1)));
+            abs_movedir.oSet(2, Math.abs(moveDir.oGet(2)));
             size = GetPhysics().GetAbsBounds().oGet(1).oMinus(GetPhysics().GetAbsBounds().oGet(0));
             distance = (abs_movedir.oMultiply(size)) - lip[0];
             pos2 = pos1.oPlus(moveDir.oMultiply(distance));
@@ -4109,7 +4109,7 @@ public class Mover {
                 }
             } else {
                 // find pendulum length
-                length[0] = idMath.Fabs(GetPhysics().GetBounds().oGet(0, 2));
+                length[0] = Math.abs(GetPhysics().GetBounds().oGet(0, 2));
                 if (length[0] < 8) {
                     length[0] = 8;
                 }

@@ -288,10 +288,10 @@ public class Lcp {
                     for (j = boxStartIndex; j < m.GetNumRows(); j++) {
                         s = o_x.p[boxIndex[j]];
                         if (lo.p[j] != -idMath.INFINITY) {
-                            lo.p[j] = -idMath.Fabs(lo.p[j] * s);
+                            lo.p[j] = -Math.abs(lo.p[j] * s);
                         }
                         if (hi.p[j] != idMath.INFINITY) {
-                            hi.p[j] = idMath.Fabs(hi.p[j] * s);
+                            hi.p[j] = Math.abs(hi.p[j] * s);
                         }
                     }
                 }
@@ -313,7 +313,7 @@ public class Lcp {
                 }
 
                 // if inside the clamped region
-                if (idMath.Fabs(a.p[i]) <= LCP_ACCEL_EPSILON) {
+                if (Math.abs(a.p[i]) <= LCP_ACCEL_EPSILON) {
                     side[i] = 0;
                     AddClamped(i);
                     continue;
@@ -432,7 +432,7 @@ public class Lcp {
 //				if ( lo[i] != hi[i] && a[i] > LCP_ACCEL_EPSILON ) {
 //					int bah2 = 1;
 //				}
-//			} else if ( f[i] < lo[i] || f[i] > hi[i] || idMath.Fabs( a[i] ) > 1.0f ) {
+//			} else if ( f[i] < lo[i] || f[i] > hi[i] || Math.abs( a[i] ) > 1.0f ) {
 //				int bah3 = 1;
 //			}
 //		}
@@ -470,7 +470,7 @@ public class Lcp {
 
             for (i = 0; i < numClamped; i++) {
 
-                s = idMath.Fabs(clamped.oGet(i)[i]);
+                s = Math.abs(clamped.oGet(i)[i]);
 
                 if (s == 0.0f) {
                     return false;
@@ -785,7 +785,7 @@ public class Lcp {
             float s;
 
             // default to a full step for the current variable
-            if (idMath.Fabs(delta_a.p[d]) > LCP_DELTA_ACCEL_EPSILON) {
+            if (Math.abs(delta_a.p[d]) > LCP_DELTA_ACCEL_EPSILON) {
                 maxStep[0] = -a.p[d] / delta_a.p[d];
             } else {
                 maxStep[0] = 0.0f;
@@ -1039,10 +1039,10 @@ public class Lcp {
                     for (j = boxStartIndex; j < m.GetNumRows(); j++) {
                         s = o_x.p[boxIndex[j]];
                         if (lo.p[j] != -idMath.INFINITY) {
-                            lo.p[j] = -idMath.Fabs(lo.p[j] * s);
+                            lo.p[j] = -Math.abs(lo.p[j] * s);
                         }
                         if (hi.p[j] != idMath.INFINITY) {
-                            hi.p[j] = idMath.Fabs(hi.p[j] * s);
+                            hi.p[j] = Math.abs(hi.p[j] * s);
                         }
                     }
                 }
@@ -1064,7 +1064,7 @@ public class Lcp {
                 }
 
                 // if inside the clamped region
-                if (idMath.Fabs(a.p[i]) <= LCP_ACCEL_EPSILON) {
+                if (Math.abs(a.p[i]) <= LCP_ACCEL_EPSILON) {
                     side[i] = 0;
                     AddClamped(i, false);
                     continue;
@@ -1579,7 +1579,7 @@ public class Lcp {
             float s;
 
             // default to a full step for the current variable
-            if (idMath.Fabs(delta_a.p[d]) > LCP_DELTA_ACCEL_EPSILON) {
+            if (Math.abs(delta_a.p[d]) > LCP_DELTA_ACCEL_EPSILON) {
                 maxStep[0] = -a.p[d] / delta_a.p[d];
             } else {
                 maxStep[0] = 0.0f;

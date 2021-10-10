@@ -189,16 +189,16 @@ public class Quat {
         }
 
         public boolean Compare(final idQuat a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(x - a.x) > epsilon) {
+            if (Math.abs(x - a.x) > epsilon) {
                 return false;
             }
-            if (idMath.Fabs(y - a.y) > epsilon) {
+            if (Math.abs(y - a.y) > epsilon) {
                 return false;
             }
-            if (idMath.Fabs(z - a.z) > epsilon) {
+            if (Math.abs(z - a.z) > epsilon) {
                 return false;
             }
-            return !(idMath.Fabs(w - a.w) > epsilon);
+            return !(Math.abs(w - a.w) > epsilon);
         }
 
         //public 	bool			operator==(	const idQuat &a ) const;					// exact compare, no epsilon
@@ -487,13 +487,13 @@ public class Quat {
         }
 
         public boolean Compare(final idCQuat a, final float epsilon) {// compare with epsilon
-            if (idMath.Fabs(x - a.x) > epsilon) {
+            if (Math.abs(x - a.x) > epsilon) {
                 return false;
             }
-            if (idMath.Fabs(y - a.y) > epsilon) {
+            if (Math.abs(y - a.y) > epsilon) {
                 return false;
             }
-            return !(idMath.Fabs(z - a.z) > epsilon);
+            return !(Math.abs(z - a.z) > epsilon);
         }
 
         //	bool			operator==(	const idCQuat &a ) const;					// exact compare, no epsilon

@@ -6,7 +6,6 @@ import neo.idlib.Lib.idLib;
 import neo.idlib.MapFile.idMapPrimitive;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Surface.idSurface;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 
 import static neo.idlib.math.Math_h.Square;
@@ -495,7 +494,7 @@ public class Surface_Patch {
                 offset = verts.oGet(0).xyz.oMultiply(norm);
                 for (i = 1; i < width * height; i++) {
                     float d = verts.oGet(i).xyz.oMultiply(norm);
-                    if (idMath.Fabs(d - offset) > COPLANAR_EPSILON) {
+                    if (Math.abs(d - offset) > COPLANAR_EPSILON) {
                         break;
                     }
                 }

@@ -1,9 +1,6 @@
 package neo.Tools.Compilers.DMap;
 
-import neo.Tools.Compilers.DMap.dmap.*;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 
 import static java.lang.Math.floor;
@@ -334,7 +331,7 @@ public class facebsp {
 
         // split the bounds if we have a nice axial plane
         for (i = 0; i < 3; i++) {
-            if (idMath.Fabs(plane.oGet(i) - 1.0f) < 0.001) {
+            if (Math.abs(plane.oGet(i) - 1.0f) < 0.001) {
                 node.children[0].bounds.oSet(0, i, plane.Dist());
                 node.children[1].bounds.oSet(1, i, plane.Dist());
                 break;

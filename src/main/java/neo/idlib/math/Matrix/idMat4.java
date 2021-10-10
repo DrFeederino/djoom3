@@ -1,6 +1,5 @@
 package neo.idlib.math.Matrix;
 
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
@@ -334,7 +333,7 @@ public class idMat4 {
 
         for (i = 0; i < 4; i++) {
             for (j = 0; j < 4; j++) {
-                if (idMath.Fabs(ptr1[i].oGet(j) - ptr2[i].oGet(j)) > epsilon) {
+                if (Math.abs(ptr1[i].oGet(j) - ptr2[i].oGet(j)) > epsilon) {
                     return false;
                 }
             }
@@ -386,7 +385,7 @@ public class idMat4 {
     public boolean IsSymmetric(final float epsilon) {
         for (int i = 1; i < 4; i++) {
             for (int j = 0; j < i; j++) {
-                if (idMath.Fabs(mat[i].oGet(j) - mat[j].oGet(i)) > epsilon) {
+                if (Math.abs(mat[i].oGet(j) - mat[j].oGet(i)) > epsilon) {
                     return false;
                 }
             }
@@ -401,7 +400,7 @@ public class idMat4 {
     public boolean IsDiagonal(final float epsilon) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                if (i != j && idMath.Fabs(mat[i].oGet(j)) > epsilon) {
+                if (i != j && Math.abs(mat[i].oGet(j)) > epsilon) {
                     return false;
                 }
             }
@@ -510,7 +509,7 @@ public class idMat4 {
 
         det = (-det3_201_123 * mat[3].x + det3_201_023 * mat[3].y - det3_201_013 * mat[3].z + det3_201_012 * mat[3].w);
 
-        if (idMath.Fabs(det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs(det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 
@@ -590,7 +589,7 @@ public class idMat4 {
         // r0 = m0.Inverse();
         det = mat[0].x * mat[1].y - mat[0].y * mat[1].x;
 
-        if (idMath.Fabs(det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs(det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 
@@ -622,7 +621,7 @@ public class idMat4 {
         // r3.InverseSelf();
         det = r3[0][0] * r3[1][1] - r3[0][1] * r3[1][0];
 
-        if (idMath.Fabs(det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs(det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 

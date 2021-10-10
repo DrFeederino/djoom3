@@ -5,7 +5,6 @@ import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
@@ -60,9 +59,9 @@ public class MapFile {
         idVec3 n = new idVec3();
 
         // do some cleaning
-        n.oSet(0, (idMath.Fabs(normal.oGet(0)) < 1e-6f) ? 0.0f : normal.oGet(0));
-        n.oSet(1, (idMath.Fabs(normal.oGet(1)) < 1e-6f) ? 0.0f : normal.oGet(1));
-        n.oSet(2, (idMath.Fabs(normal.oGet(2)) < 1e-6f) ? 0.0f : normal.oGet(2));
+        n.oSet(0, (Math.abs(normal.oGet(0)) < 1e-6f) ? 0.0f : normal.oGet(0));
+        n.oSet(1, (Math.abs(normal.oGet(1)) < 1e-6f) ? 0.0f : normal.oGet(1));
+        n.oSet(2, (Math.abs(normal.oGet(2)) < 1e-6f) ? 0.0f : normal.oGet(2));
 
         RotY = -Math.atan2(n.oGet(2), idMath.Sqrt(n.oGet(1) * n.oGet(1) + n.oGet(0) * n.oGet(0)));
         RotZ = Math.atan2(n.oGet(1), n.oGet(0));

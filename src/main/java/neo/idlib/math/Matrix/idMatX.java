@@ -1156,7 +1156,7 @@ public class idMatX {
 
         s = numRows * numColumns;
         for (i = 0; i < s; i++) {
-            if (idMath.Fabs(mat[i] - a.mat[i]) > epsilon) {
+            if (Math.abs(mat[i] - a.mat[i]) > epsilon) {
                 return false;
             }
         }
@@ -1520,7 +1520,7 @@ public class idMatX {
         maxDiff = -1.0f;
         for (i = 0; i < numRows; i++) {
             for (j = 0; j < numColumns; j++) {
-                diff = idMath.Fabs(mat[i * numColumns + j] - m.mat[i + j * m.numRows]);
+                diff = Math.abs(mat[i * numColumns + j] - m.mat[i + j * m.numRows]);
                 if (maxDiff < 0.0f || diff > maxDiff) {
                     maxDiff = diff;
                 }
@@ -1541,7 +1541,7 @@ public class idMatX {
         // returns true if (*this) == Zero
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numColumns; j++) {
-                if (idMath.Fabs(mat[i * numColumns + j]) > epsilon) {
+                if (Math.abs(mat[i * numColumns + j]) > epsilon) {
                     return false;
                 }
             }
@@ -1558,7 +1558,7 @@ public class idMatX {
         assert (numRows == numColumns);
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numColumns; j++) {
-                if (idMath.Fabs(mat[i * numColumns + j]
+                if (Math.abs(mat[i * numColumns + j]
                         - (i == j ? 1.0f : 0.0f)) > epsilon) {//TODO:i==j??
                     return false;
                 }
@@ -1576,7 +1576,7 @@ public class idMatX {
         assert (numRows == numColumns);
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numColumns; j++) {
-                if (i != j && idMath.Fabs(oGet(i, j)) > epsilon) {
+                if (i != j && Math.abs(oGet(i, j)) > epsilon) {
                     return false;
                 }
             }
@@ -1596,10 +1596,10 @@ public class idMatX {
         }
         for (int i = 0; i < numRows - 2; i++) {
             for (int j = i + 2; j < numColumns; j++) {
-                if (idMath.Fabs(oGet(i, j)) > epsilon) {
+                if (Math.abs(oGet(i, j)) > epsilon) {
                     return false;
                 }
-                if (idMath.Fabs(oGet(j, i)) > epsilon) {
+                if (Math.abs(oGet(j, i)) > epsilon) {
                     return false;
                 }
             }
@@ -1618,7 +1618,7 @@ public class idMatX {
         }
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numColumns; j++) {
-                if (idMath.Fabs(mat[i * numColumns + j] - mat[j * numColumns + i]) > epsilon) {
+                if (Math.abs(mat[i * numColumns + j] - mat[j * numColumns + i]) > epsilon) {
                     return false;
                 }
             }
@@ -1659,7 +1659,7 @@ public class idMatX {
                     ptr2 += numColumns;
                     sum += mat[ptr1 + n] * mat[ptr2];
                 }
-                if (idMath.Fabs(sum) > epsilon) {
+                if (Math.abs(sum) > epsilon) {
                     return false;
                 }
             }
@@ -1689,7 +1689,7 @@ public class idMatX {
                     ptr2 += numColumns;
                     sum += mat[ptr1 + n] * mat[ptr2];
                 }
-                if (idMath.Fabs(sum) > epsilon) {
+                if (Math.abs(sum) > epsilon) {
                     return false;
                 }
             }
@@ -1701,7 +1701,7 @@ public class idMatX {
                 ptr2 += numColumns;
                 sum += mat[ptr2 + i] * mat[ptr2 + i];
             }
-            if (idMath.Fabs(sum) > epsilon) {
+            if (Math.abs(sum) > epsilon) {
                 return false;
             }
         }
@@ -1916,10 +1916,10 @@ public class idMatX {
                     continue;
                 }
                 for (k = 0; k < numRows; k++) {
-                    if (idMath.Fabs(m.oGet(k, j)) > epsilon) {
+                    if (Math.abs(m.oGet(k, j)) > epsilon) {
                         return false;
                     }
-                    if (idMath.Fabs(m.oGet(j, k)) > epsilon) {
+                    if (Math.abs(m.oGet(j, k)) > epsilon) {
                         return false;
                     }
                 }
@@ -2032,7 +2032,7 @@ public class idMatX {
         boolean result;
         switch (numRows) {
             case 1:
-                if (idMath.Fabs(mat[0]) < MATRIX_INVERSE_EPSILON) {
+                if (Math.abs(mat[0]) < MATRIX_INVERSE_EPSILON) {
                     return false;
                 }
                 mat[0] = 1.0f / mat[0];
@@ -2103,7 +2103,7 @@ public class idMatX {
         boolean result;
         switch (numRows) {
             case 1:
-                if (idMath.Fabs(mat[0]) < MATRIX_INVERSE_EPSILON) {
+                if (Math.abs(mat[0]) < MATRIX_INVERSE_EPSILON) {
                     return false;
                 }
                 mat[0] = 1.0f / mat[0];
@@ -2718,7 +2718,7 @@ public class idMatX {
                 if (!pivot[j]) {
                     for (k = 0; k < numRows; k++) {
                         if (!pivot[k]) {
-                            d = idMath.Fabs(this.oGet(j, k));
+                            d = Math.abs(this.oGet(j, k));
                             if (d > max) {
                                 max = d;
                                 r = j;
@@ -2944,12 +2944,12 @@ public class idMatX {
         for (i = 0; i < min; i++) {
 
             newi = i;
-            s = idMath.Fabs(this.oGet(i, i));
+            s = Math.abs(this.oGet(i, i));
 
             if (index != null) {
                 // find the largest absolute pivot
                 for (j = i + 1; j < numRows; j++) {
-                    t = idMath.Fabs(this.oGet(j, i));
+                    t = Math.abs(this.oGet(j, i));
 //                    System.out.println(t);
                     if (t > s) {
                         newi = j;
@@ -3306,7 +3306,7 @@ public class idMatX {
 
             if (p != r) {
 
-                if (idMath.Fabs(u.p[p]) < 1e-4f) {
+                if (Math.abs(u.p[p]) < 1e-4f) {
                     // NOTE: an additional row interchange is required for numerical stability
                 }
 
@@ -3489,7 +3489,7 @@ public class idMatX {
 
             scale = 0.0f;
             for (i = k; i < numRows; i++) {
-                s = idMath.Fabs(this.oGet(i, k));
+                s = Math.abs(this.oGet(i, k));
                 if (s > scale) {
                     scale = s;
                 }
@@ -3565,13 +3565,13 @@ public class idMatX {
         for (i = k - 1; i >= 0; i--) {
             QR_Rotate(R, i, u.p[i], -u.p[i + 1]);
             if (u.p[i] == 0.0f) {
-                u.p[i] = idMath.Fabs(u.p[i + 1]);
-            } else if (idMath.Fabs(u.p[i]) > idMath.Fabs(u.p[i + 1])) {
+                u.p[i] = Math.abs(u.p[i + 1]);
+            } else if (Math.abs(u.p[i]) > Math.abs(u.p[i + 1])) {
                 f = u.p[i + 1] / u.p[i];
-                u.p[i] = idMath.Fabs(u.p[i]) * idMath.Sqrt(1.0f + f * f);
+                u.p[i] = Math.abs(u.p[i]) * idMath.Sqrt(1.0f + f * f);
             } else {
                 f = u.p[i] / u.p[i + 1];
-                u.p[i] = idMath.Fabs(u.p[i + 1]) * idMath.Sqrt(1.0f + f * f);
+                u.p[i] = Math.abs(u.p[i + 1]) * idMath.Sqrt(1.0f + f * f);
             }
         }
         for (i = 0; i < v.GetSize(); i++) {
@@ -3877,11 +3877,11 @@ public class idMatX {
                 nm = 0;
                 for (l = k; l >= 0; l--) {
                     nm = l - 1;
-                    if ((idMath.Fabs(rv1.p[l]) + anorm[0]) == anorm[0] /* idMath::Fabs( rv1.p[l] ) < idMath::FLT_EPSILON */) {
+                    if ((Math.abs(rv1.p[l]) + anorm[0]) == anorm[0] /* idMath::Fabs( rv1.p[l] ) < idMath::FLT_EPSILON */) {
                         flag = 0;
                         break;
                     }
-                    if ((idMath.Fabs(w.p[nm]) + anorm[0]) == anorm[0] /* idMath::Fabs( w[nm] ) < idMath::FLT_EPSILON */) {
+                    if ((Math.abs(w.p[nm]) + anorm[0]) == anorm[0] /* idMath::Fabs( w[nm] ) < idMath::FLT_EPSILON */) {
                         break;
                     }
                 }
@@ -3891,7 +3891,7 @@ public class idMatX {
                     for (i = l; i <= k; i++) {
                         f = s * rv1.p[i];
 
-                        if ((idMath.Fabs((float) f) + anorm[0]) != anorm[0] /* idMath::Fabs( f ) > idMath::FLT_EPSILON */) {
+                        if ((Math.abs((float) f) + anorm[0]) != anorm[0] /* idMath::Fabs( f ) > idMath::FLT_EPSILON */) {
                             g = w.p[i];
                             h = Pythag((float) f, (float) g);
                             w.p[i] = (float) h;
@@ -5246,16 +5246,16 @@ public class idMatX {
         if (a == 0.0f) {
             c = 0.0f;
             s = (b >= 0.0f) ? 1.0f : -1.0f;
-        } else if (idMath.Fabs(a) > idMath.Fabs(b)) {
+        } else if (Math.abs(a) > Math.abs(b)) {
             f = b / a;
-            c = idMath.Fabs(1.0f / idMath.Sqrt(1.0f + f * f));
+            c = Math.abs(1.0f / idMath.Sqrt(1.0f + f * f));
             if (a < 0.0f) {
                 c = -c;
             }
             s = f * c;
         } else {
             f = a / b;
-            s = idMath.Fabs(1.0f / idMath.Sqrt(1.0f + f * f));
+            s = Math.abs(1.0f / idMath.Sqrt(1.0f + f * f));
             if (b < 0.0f) {
                 s = -s;
             }
@@ -5283,8 +5283,8 @@ public class idMatX {
     private float Pythag(float a, float b) {
         double at, bt, ct;
 
-        at = idMath.Fabs(a);
-        bt = idMath.Fabs(b);
+        at = Math.abs(a);
+        bt = Math.abs(b);
         if (at > bt) {
             ct = bt / at;
             return (float) (at * idMath.Sqrt((float) (1.0f + ct * ct)));
@@ -5310,7 +5310,7 @@ public class idMatX {
             g = s = scale = 0.0f;
             if (i < numRows) {
                 for (k = i; k < numRows; k++) {
-                    scale += idMath.Fabs(this.oGet(k, i));
+                    scale += Math.abs(this.oGet(k, i));
                 }
                 if (scale != 0.0f) {
                     for (k = i; k < numRows; k++) {
@@ -5344,7 +5344,7 @@ public class idMatX {
             g = s = scale = 0.0f;
             if (i < numRows && i != (numColumns - 1)) {
                 for (k = l; k < numColumns; k++) {
-                    scale += idMath.Fabs(this.oGet(i, k));
+                    scale += Math.abs(this.oGet(i, k));
                 }
                 if (scale != 0.0f) {
                     for (k = l; k < numColumns; k++) {
@@ -5376,7 +5376,7 @@ public class idMatX {
                     }
                 }
             }
-            r = idMath.Fabs(w.p[i]) + idMath.Fabs(rv1.p[i]);
+            r = Math.abs(w.p[i]) + Math.abs(rv1.p[i]);
             if (r > anorm[0]) {
                 anorm[0] = (float) r;
             }
@@ -5469,7 +5469,7 @@ public class idMatX {
 
             if (i3 > 0) {
                 for (i2 = 0; i2 <= i3; i2++) {
-                    scale += idMath.Fabs(this.oGet(i0, i2));
+                    scale += Math.abs(this.oGet(i0, i2));
                 }
                 if (scale == 0) {
                     subd.p[i0] = this.oGet(i0, i3);
@@ -5570,8 +5570,8 @@ public class idMatX {
         for (i0 = 0; i0 < numRows; i0++) {
             for (i1 = 0; i1 < maxIter; i1++) {
                 for (i2 = i0; i2 <= numRows - 2; i2++) {
-                    a = idMath.Fabs(diag.p[i2]) + idMath.Fabs(diag.p[i2 + 1]);
-                    if (idMath.Fabs(subd.p[i2]) + a == a) {
+                    a = Math.abs(diag.p[i2]) + Math.abs(diag.p[i2 + 1]);
+                    if (Math.abs(subd.p[i2]) + a == a) {
                         break;
                     }
                 }
@@ -5592,7 +5592,7 @@ public class idMatX {
                 for (i3 = i2 - 1; i3 >= i0; i3--) {
                     f = s * subd.p[i3];
                     b = c * subd.p[i3];
-                    if (idMath.Fabs(f) >= idMath.Fabs(g)) {
+                    if (Math.abs(f) >= Math.abs(g)) {
                         c = g / f;
                         r = idMath.Sqrt(c * c + 1.0f);
                         subd.p[i3 + 1] = f * r;
@@ -5648,7 +5648,7 @@ public class idMatX {
 
             scale = 0.0f;
             for (i = m; i <= high; i++) {
-                scale = scale + idMath.Fabs(H.oGet(i, m - 1));
+                scale = scale + Math.abs(H.oGet(i, m - 1));
             }
             if (scale != 0.0f) {
 
@@ -5722,7 +5722,7 @@ public class idMatX {
      */
     private void ComplexDivision(float xr, float xi, float yr, float yi, float[] cdivr, float[] cdivi) {
         float r, d;
-        if (idMath.Fabs(yr) > idMath.Fabs(yi)) {
+        if (Math.abs(yr) > Math.abs(yi)) {
             r = yi / yr;
             d = yr + r * yi;
             cdivr[0] = (xr + r * xi) / d;
@@ -5756,7 +5756,7 @@ public class idMatX {
                 imaginaryEigenValues.p[i] = 0.0f;
             }
             for (j = Lib.Max(i - 1, 0); j < numRows; j++) {
-                norm = norm + idMath.Fabs(H.oGet(i, j));
+                norm = norm + Math.abs(H.oGet(i, j));
             }
         }
 
@@ -5766,11 +5766,11 @@ public class idMatX {
             // look for single small sub-diagonal element
             int l = n;
             while (l > low) {
-                s = idMath.Fabs(H.oGet(l - 1, l - 1)) + idMath.Fabs(H.oGet(l, l));
+                s = Math.abs(H.oGet(l - 1, l - 1)) + Math.abs(H.oGet(l, l));
                 if (s == 0.0f) {
                     s = norm;
                 }
-                if (idMath.Fabs(H.oGet(l, l - 1)) < eps * s) {
+                if (Math.abs(H.oGet(l, l - 1)) < eps * s) {
                     break;
                 }
                 l--;
@@ -5787,7 +5787,7 @@ public class idMatX {
                 w = H.oGet(n, n - 1) * H.oGet(n - 1, n);
                 p = (H.oGet(n - 1, n - 1) - H.oGet(n, n)) / 2.0f;
                 q = p * p + w;
-                z = idMath.Sqrt(idMath.Fabs(q));
+                z = idMath.Sqrt(Math.abs(q));
                 H.oPluSet(n, n, exshift);
                 H.oPluSet(n - 1, n - 1, exshift);
                 x = H.oGet(n, n);
@@ -5806,7 +5806,7 @@ public class idMatX {
                     imaginaryEigenValues.p[n - 1] = 0.0f;
                     imaginaryEigenValues.p[n] = 0.0f;
                     x = H.oGet(n, n - 1);
-                    s = idMath.Fabs(x) + idMath.Fabs(z);
+                    s = Math.abs(x) + Math.abs(z);
                     p = x / s;
                     q = z / s;
                     r = idMath.Sqrt(p * p + q * q);
@@ -5859,7 +5859,7 @@ public class idMatX {
                     for (i = low; i <= n; i++) {
                         H.oMinSet(i, i, x);
                     }
-                    s = idMath.Fabs(H.oGet(n, n - 1)) + idMath.Fabs(H.oGet(n - 1, n - 2));
+                    s = Math.abs(H.oGet(n, n - 1)) + Math.abs(H.oGet(n - 1, n - 2));
                     x = y = 0.75f * s;
                     w = -0.4375f * s * s;
                 }
@@ -5893,15 +5893,15 @@ public class idMatX {
                     p = (r * s - w) / H.oGet(m + 1, m) + H.oGet(m, m + 1);
                     q = H.oGet(m + 1, m + 1) - z - r - s;
                     r = H.oGet(m + 2, m + 1);
-                    s = idMath.Fabs(p) + idMath.Fabs(q) + idMath.Fabs(r);
+                    s = Math.abs(p) + Math.abs(q) + Math.abs(r);
                     p = p / s;
                     q = q / s;
                     r = r / s;
                     if (m == l) {
                         break;
                     }
-                    if (idMath.Fabs(H.oGet(m, m - 1)) * (idMath.Fabs(q) + idMath.Fabs(r))
-                            < eps * (idMath.Fabs(p) * (idMath.Fabs(H.oGet(m - 1, m - 1)) + idMath.Fabs(z) + idMath.Fabs(H.oGet(m + 1, m + 1))))) {
+                    if (Math.abs(H.oGet(m, m - 1)) * (Math.abs(q) + Math.abs(r))
+                            < eps * (Math.abs(p) * (Math.abs(H.oGet(m - 1, m - 1)) + Math.abs(z) + Math.abs(H.oGet(m + 1, m + 1))))) {
                         break;
                     }
                 }
@@ -5920,7 +5920,7 @@ public class idMatX {
                         p = H.oGet(k, k - 1);
                         q = H.oGet(k + 1, k - 1);
                         r = (notlast ? H.oGet(k + 2, k - 1) : 0.0f);
-                        x = idMath.Fabs(p) + idMath.Fabs(q) + idMath.Fabs(r);
+                        x = Math.abs(p) + Math.abs(q) + Math.abs(r);
                         if (x != 0.0f) {
                             p = p / x;
                             q = q / x;
@@ -6019,7 +6019,7 @@ public class idMatX {
                             q = (realEigenValues.p[i] - p) * (realEigenValues.p[i] - p) + imaginaryEigenValues.p[i] * imaginaryEigenValues.p[i];
                             t = (x * s - z * r) / q;
                             H.oSet(i, n, t);
-                            if (idMath.Fabs(x) > idMath.Fabs(z)) {
+                            if (Math.abs(x) > Math.abs(z)) {
                                 H.oSet(i + 1, n, (-r - w * t) / x);
                             } else {
                                 H.oSet(i + 1, n, (-s - y * t) / z);
@@ -6027,7 +6027,7 @@ public class idMatX {
                         }
 
                         // overflow control
-                        t = idMath.Fabs(H.oGet(i, n));
+                        t = Math.abs(H.oGet(i, n));
                         if ((eps * t) * t > 1) {
                             for (j = i; j <= n; j++) {
                                 H.oSet(j, n, H.oGet(j, n) / t);
@@ -6040,7 +6040,7 @@ public class idMatX {
                 float[] cr = {0}, ci = {0};
 
                 // last vector component imaginary so matrix is triangular
-                if (idMath.Fabs(H.oGet(n, n - 1)) > idMath.Fabs(H.oGet(n - 1, n))) {
+                if (Math.abs(H.oGet(n, n - 1)) > Math.abs(H.oGet(n - 1, n))) {
                     H.oSet(n - 1, n - 1, q / H.oGet(n, n - 1));
                     H.oSet(n - 1, n, -(H.oGet(n, n) - p) / H.oGet(n, n - 1));
                 } else {
@@ -6077,12 +6077,12 @@ public class idMatX {
                             vr = (realEigenValues.p[i] - p) * (realEigenValues.p[i] - p) + imaginaryEigenValues.p[i] * imaginaryEigenValues.p[i] - q * q;
                             vi = (realEigenValues.p[i] - p) * 2.0f * q;
                             if (vr == 0.0f && vi == 0.0f) {
-                                vr = eps * norm * (idMath.Fabs(w) + idMath.Fabs(q) + idMath.Fabs(x) + idMath.Fabs(y) + idMath.Fabs(z));
+                                vr = eps * norm * (Math.abs(w) + Math.abs(q) + Math.abs(x) + Math.abs(y) + Math.abs(z));
                             }
                             ComplexDivision(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi, cr, ci);
                             H.oSet(i, n - 1, cr[0]);
                             H.oSet(i, n, ci[0]);
-                            if (idMath.Fabs(x) > (idMath.Fabs(z) + idMath.Fabs(q))) {
+                            if (Math.abs(x) > (Math.abs(z) + Math.abs(q))) {
                                 H.oSet(i + 1, n - 1, (-ra - w * H.oGet(i, n - 1) + q * H.oGet(i, n)) / x);
                                 H.oSet(i + 1, n, (-sa - w * H.oGet(i, n) - q * H.oGet(i, n - 1)) / x);
                             } else {
@@ -6093,7 +6093,7 @@ public class idMatX {
                         }
 
                         // overflow control
-                        t = Lib.Max(idMath.Fabs(H.oGet(i, n - 1)), idMath.Fabs(H.oGet(i, n)));
+                        t = Lib.Max(Math.abs(H.oGet(i, n - 1)), Math.abs(H.oGet(i, n)));
                         if ((eps * t) * t > 1) {
                             for (j = i; j <= n; j++) {
                                 H.oSet(j, n - 1, H.oGet(j, n - 1) / t);

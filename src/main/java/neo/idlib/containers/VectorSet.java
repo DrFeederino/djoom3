@@ -106,7 +106,7 @@ public class VectorSet {
                 for (j = hash.First(hashKey); j >= 0; j = hash.Next(j)) {
                     final idVec lv = (idVec) this.oGet(j);
                     for (k = 0; k < dimension; k++) {
-                        if (idMath.Fabs(lv.oGet(k) - v.oGet(k)) > epsilon) {
+                        if (Math.abs(lv.oGet(k) - v.oGet(k)) > epsilon) {
                             break;
                         }
                     }
@@ -220,7 +220,7 @@ public class VectorSet {
                 for (j = hash.First(hashKey); j >= 0; j = hash.Next(j)) {
                     final idVec lv = vectorList[j];
                     for (k = 0; k < dimension; k++) {
-                        if (idMath.Fabs(lv.oGet(k) - v.oGet(k)) > epsilon) {
+                        if (Math.abs(lv.oGet(k) - v.oGet(k)) > epsilon) {
                             break;
                         }
                     }

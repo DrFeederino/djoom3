@@ -16,14 +16,12 @@ import neo.idlib.Text.Str.idStr;
 import neo.idlib.Timer.idTimer;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Lcp.idLCP;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMatX;
 import neo.idlib.math.Quat.idCQuat;
 import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector;
-import neo.idlib.math.Vector.*;
 
 import java.util.Arrays;
 
@@ -2455,7 +2453,7 @@ public class Physics_AF {
             force = a2.oMinus(a1);
             d = force.oMultiply(force);
             if (d != 0.0f) {
-                dampingForce = damping * idMath.Fabs((velocity2.oMinus(velocity1)).oMultiply(force)) / d;
+                dampingForce = damping * Math.abs((velocity2.oMinus(velocity1)).oMultiply(force)) / d;
             } else {
                 dampingForce = 0.0f;
             }
@@ -3498,7 +3496,7 @@ public class Physics_AF {
             suspensionLength = suspensionUp + suspensionDown;
             springDir = trace.endpos.oMinus(start);
             springLength = trace.fraction * suspensionLength;
-            dampingForce = suspensionDamping * idMath.Fabs((vel2.oMinus(vel1)).oMultiply(springDir)) / (1.0f + springLength * springLength);
+            dampingForce = suspensionDamping * Math.abs((vel2.oMinus(vel1)).oMultiply(springDir)) / (1.0f + springLength * springLength);
             compression = suspensionLength - springLength;
             springForce = compression * compression * suspensionKCompress - dampingForce;
 
@@ -5939,7 +5937,7 @@ public class Physics_AF {
                                     if ((contacts.oGet(k).point.oMinus(contactInfo[j].point)).LengthSqr() < Square(2.0f)) {
                                         break;
                                     }
-                                    if (idMath.Fabs(contacts.oGet(k).normal.oMultiply(contactInfo[j].normal)) > 0.9f) {
+                                    if (Math.abs(contacts.oGet(k).normal.oMultiply(contactInfo[j].normal)) > 0.9f) {
                                         numBodyContacts++;
                                     }
                                 }

@@ -1583,7 +1583,7 @@ public class AFEntity {
                     if (player.usercmd.forwardmove < 0) {
                         velocity = -velocity;
                     }
-                    force = idMath.Fabs(player.usercmd.forwardmove * g_vehicleForce.GetFloat()) * (1.0f / 128.0f);
+                    force = Math.abs(player.usercmd.forwardmove * g_vehicleForce.GetFloat()) * (1.0f / 128.0f);
                     steerAngle = GetSteerAngle();
                 }
 
@@ -1772,7 +1772,7 @@ public class AFEntity {
                     if (player.usercmd.forwardmove < 0) {
                         velocity = -velocity;
                     }
-                    force = idMath.Fabs(player.usercmd.forwardmove * g_vehicleForce.GetFloat()) * (1.0f / 128.0f);
+                    force = Math.abs(player.usercmd.forwardmove * g_vehicleForce.GetFloat()) * (1.0f / 128.0f);
                     steerAngle = GetSteerAngle();
                 }
 
@@ -1950,7 +1950,7 @@ public class AFEntity {
                     if (player.usercmd.forwardmove < 0) {
                         velocity = -velocity;
                     }
-                    force = idMath.Fabs(player.usercmd.forwardmove * g_vehicleForce.GetFloat()) * (1.0f / 128.0f);
+                    force = Math.abs(player.usercmd.forwardmove * g_vehicleForce.GetFloat()) * (1.0f / 128.0f);
                     steerAngle = GetSteerAngle();
                 }
 

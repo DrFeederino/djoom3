@@ -4,12 +4,10 @@ import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Tools.Compilers.DMap.dmap.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
@@ -66,14 +64,14 @@ public class usurface {
                 // check the texture vectors
                 for (i = 0; i < 2; i++) {
                     for (j = 0; j < 3; j++) {
-                        if (idMath.Fabs(texVec.v[i].oGet(j) - group.texVec.v[i].oGet(j)) > TEXTURE_VECTOR_EQUAL_EPSILON) {
+                        if (Math.abs(texVec.v[i].oGet(j) - group.texVec.v[i].oGet(j)) > TEXTURE_VECTOR_EQUAL_EPSILON) {
                             break;
                         }
                     }
                     if (j != 3) {
                         break;
                     }
-                    if (idMath.Fabs(texVec.v[i].oGet(3) - group.texVec.v[i].oGet(3)) > TEXTURE_OFFSET_EQUAL_EPSILON) {
+                    if (Math.abs(texVec.v[i].oGet(3) - group.texVec.v[i].oGet(3)) > TEXTURE_OFFSET_EQUAL_EPSILON) {
                         break;
                     }
                 }

@@ -1,6 +1,5 @@
 package neo.idlib.math.Matrix;
 
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
 
@@ -257,7 +256,7 @@ public class idMat5 {
         ptr1 = this.reinterpret_cast();
         ptr2 = a.reinterpret_cast();
         for (i = 0; i < 5 * 5; i++) {
-            if (idMath.Fabs(ptr1[i] - ptr2[i]) > epsilon) {
+            if (Math.abs(ptr1[i] - ptr2[i]) > epsilon) {
                 return false;
             }
         }
@@ -308,7 +307,7 @@ public class idMat5 {
     public boolean IsSymmetric(final float epsilon) {
         for (int i = 1; i < 5; i++) {
             for (int j = 0; j < i; j++) {
-                if (idMath.Fabs(mat[i].oGet(j) - mat[j].oGet(i)) > epsilon) {
+                if (Math.abs(mat[i].oGet(j) - mat[j].oGet(i)) > epsilon) {
                     return false;
                 }
             }
@@ -323,7 +322,7 @@ public class idMat5 {
     public boolean IsDiagonal(final float epsilon) {
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
-                if (i != j && idMath.Fabs(mat[i].oGet(j)) > epsilon) {
+                if (i != j && Math.abs(mat[i].oGet(j)) > epsilon) {
                     return false;
                 }
             }
@@ -446,7 +445,7 @@ public class idMat5 {
         // determinant of 5x5 matrix
         det = mat[0].x * det4_1234_1234 - mat[0].y * det4_1234_0234 + mat[0].z * det4_1234_0134 - mat[0].s * det4_1234_0124 + mat[0].t * det4_1234_0123;
 
-        if (idMath.Fabs((float) det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs((float) det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 
@@ -585,7 +584,7 @@ public class idMat5 {
 
         det = matt[0 * 5 + 0] * c0 + matt[0 * 5 + 1] * c1 + matt[0 * 5 + 2] * c2;
 
-        if (idMath.Fabs(det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs(det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 
@@ -624,7 +623,7 @@ public class idMat5 {
         // r3.InverseSelf();	// 2x2
         det = r3[0].x * r3[1].y - r3[0].y * r3[1].x;
 
-        if (idMath.Fabs(det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs(det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 

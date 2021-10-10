@@ -1,5 +1,6 @@
 package neo.CM;
 
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Vector.idVec3;
 
 import static neo.CM.CollisionModel.CM_CLIP_EPSILON;
@@ -45,9 +46,6 @@ public class CollisionModel_rotate {
         v1 = point.oMinus(proj);
         v2 = axis.Cross(v1);
 
-        // r = tan( a / 2 );
-        // sin(a) = 2*r/(1+r*r);
-        // cos(a) = (1-r*r)/(1+r*r);
         t = tanHalfAngle * tanHalfAngle;
         d = 1.0f / (1.0f + t);
         s = 2.0f * tanHalfAngle * d;
@@ -63,16 +61,13 @@ public class CollisionModel_rotate {
      rotates an edge about an arbitrary axis using the tangent of half the rotation angle
      ================
      */
-    static void CM_RotateEdge(idVec3 start, idVec3 end, final idVec3 origin, final idVec3 axis, final float tanHalfAngle) {
+    static void CM_RotateEdge(idVec3 start, idVec3 end, final idVec3 origin, final idVec3 axis, CFloat tanHalfAngle) {
         double d, t, s, c;
         idVec3 proj, v1, v2;
 
-        // r = tan( a / 2 );
-        // sin(a) = 2*r/(1+r*r);
-        // cos(a) = (1-r*r)/(1+r*r);
-        t = tanHalfAngle * tanHalfAngle;
+        t = tanHalfAngle.getVal() * tanHalfAngle.getVal();
         d = 1.0f / (1.0f + t);
-        s = 2.0f * tanHalfAngle * d;
+        s = 2.0f * tanHalfAngle.getVal() * d;
         c = (1.0f - t) * d;
 
         start.oMinSet(origin);
@@ -87,4 +82,5 @@ public class CollisionModel_rotate {
         v2 = axis.Cross(v1);
         end.oSet(v1.oMultiply((float) c).oMinus(v2.oMultiply((float) s)).oPlus(proj.oPlus(origin)));
     }
+
 }

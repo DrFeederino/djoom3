@@ -5,7 +5,6 @@ import neo.framework.File_h.idFile;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec4;
 import neo.sys.sys_public.sysEvent_s;
@@ -294,7 +293,7 @@ public class GameBustOutWindow {
                         vec = pos.oMinus(ptB);
                     }
 
-                    if ((idMath.Fabs(vec.y) > idMath.Fabs(vec.x)) && (vec.LengthFast() < BALL_RADIUS)) {
+                    if ((Math.abs(vec.y) > Math.abs(vec.x)) && (vec.LengthFast() < BALL_RADIUS)) {
                         result = COLLIDE_DOWN;
                     }
                 }
@@ -319,7 +318,7 @@ public class GameBustOutWindow {
                             vec = pos.oMinus(ptB);
                         }
 
-                        if ((idMath.Fabs(vec.y) > idMath.Fabs(vec.x)) && (vec.LengthFast() < BALL_RADIUS)) {
+                        if ((Math.abs(vec.y) > Math.abs(vec.x)) && (vec.LengthFast() < BALL_RADIUS)) {
                             result = COLLIDE_UP;
                         }
                     }
@@ -347,7 +346,7 @@ public class GameBustOutWindow {
                                 vec = pos.oMinus(ptB);
                             }
 
-                            if ((idMath.Fabs(vec.x) >= idMath.Fabs(vec.y)) && (vec.LengthFast() < BALL_RADIUS)) {
+                            if ((Math.abs(vec.x) >= Math.abs(vec.y)) && (vec.LengthFast() < BALL_RADIUS)) {
                                 result = COLLIDE_LEFT;
                             }
                         }
@@ -372,7 +371,7 @@ public class GameBustOutWindow {
                                     vec = pos.oMinus(ptB);
                                 }
 
-                                if ((idMath.Fabs(vec.x) >= idMath.Fabs(vec.y)) && (vec.LengthFast() < BALL_RADIUS)) {
+                                if ((Math.abs(vec.x) >= Math.abs(vec.y)) && (vec.LengthFast() < BALL_RADIUS)) {
                                     result = COLLIDE_LEFT;
                                 }
                             }

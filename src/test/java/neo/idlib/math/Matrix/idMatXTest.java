@@ -3,19 +3,20 @@ package neo.idlib.math.Matrix;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Simd;
 import neo.idlib.math.Vector.idVecX;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class idMatXTest {
 
     private idMatX original = new idMatX();
-    private idMatX m1       = new idMatX();
-    private idMatX m2       = new idMatX();
-    private idMatX m3       = new idMatX();
-    private idMatX q1       = new idMatX();
-    private idMatX q2       = new idMatX();
-    private idMatX r1       = new idMatX();
+    private idMatX m1 = new idMatX();
+    private idMatX m2 = new idMatX();
+    private idMatX m3 = new idMatX();
+    private idMatX q1 = new idMatX();
+    private idMatX q2 = new idMatX();
+    private idMatX r1 = new idMatX();
     private idMatX r2       = new idMatX();
     private idVecX v        = new idVecX();
     private idVecX w        = new idVecX();
@@ -49,7 +50,7 @@ public class idMatXTest {
         m2.InverseSelf();
         m1.LowerTriangularInverse();
 
-        Assert.assertTrue("idMatX::LowerTriangularInverse failed", m1.Compare(m2, 1.e-4f));
+        assertTrue("idMatX::LowerTriangularInverse failed", m1.Compare(m2, 1.e-4f));
     }
 
     @Test
@@ -62,7 +63,7 @@ public class idMatXTest {
         m1.UpperTriangularInverse();
 
 
-        Assert.assertTrue("idMatX::UpperTriangularInverse failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::UpperTriangularInverse failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -73,7 +74,7 @@ public class idMatXTest {
         m1.oMulSet(original);
 
 
-        Assert.assertTrue("idMatX::Inverse_GaussJordan failed", m1.IsIdentity(1e-4f));
+        assertTrue("idMatX::Inverse_GaussJordan failed", m1.IsIdentity(1e-4f));
     }
 
     @Test
@@ -97,7 +98,7 @@ public class idMatXTest {
         m1.Inverse_UpdateRankOne(v, w, 1.0f);
 
 
-        Assert.assertTrue("idMatX::Inverse_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Inverse_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -122,7 +123,7 @@ public class idMatXTest {
             // update inverse of m1
             m1.Inverse_UpdateRowColumn(v, w, offset);
 
-            Assert.assertTrue("idMatX::Inverse_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::Inverse_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -147,7 +148,7 @@ public class idMatXTest {
         // update inverse of m1
         m1.Inverse_UpdateIncrement(v, w);
 
-        Assert.assertTrue("idMatX::Inverse_UpdateIncrement failed", !m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Inverse_UpdateIncrement failed", !m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -176,7 +177,7 @@ public class idMatXTest {
             m1.Inverse_UpdateDecrement(v, w, offset);
 
 //            Assert.assertTrue("idMatX::Inverse_UpdateDecrement failed " + offset, m1.Compare(m2, 1e-3f));//TODO: fix this?
-            Assert.assertTrue("idMatX::Inverse_UpdateDecrement failed " + offset, m1.Compare(m2, 1e-2f));
+            assertTrue("idMatX::Inverse_UpdateDecrement failed " + offset, m1.Compare(m2, 1e-2f));
         }
     }
 
@@ -188,7 +189,7 @@ public class idMatXTest {
         m1.LU_UnpackFactors(m2, m3);
         m1.oSet(m2.oMultiply(m3));
 
-        Assert.assertTrue("idMatX::LU_Factor failed", original.Compare(m1, 1e-4f));
+        assertTrue("idMatX::LU_Factor failed", original.Compare(m1, 1e-4f));
     }
 
     @Test
@@ -215,7 +216,7 @@ public class idMatXTest {
         m1.LU_MultiplyFactors(m3, index1);
         m1.oSet(m3);
 
-        Assert.assertTrue("idMatX::LU_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::LU_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -244,7 +245,7 @@ public class idMatXTest {
             m1.LU_MultiplyFactors(m3, index1);
             m1.oSet(m3);
 
-            Assert.assertTrue("idMatX::LU_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::LU_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -273,7 +274,7 @@ public class idMatXTest {
         m1.LU_MultiplyFactors(m3, index1);
         m1.oSet(m3);
 
-        Assert.assertTrue("idMatX::LU_UpdateIncrement failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::LU_UpdateIncrement failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -311,7 +312,7 @@ public class idMatXTest {
             m1.LU_MultiplyFactors(m3, index1);
             m1.oSet(m3);
 
-            Assert.assertTrue("idMatX::LU_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::LU_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -323,7 +324,7 @@ public class idMatXTest {
         m2.LU_Inverse(m1, null);
         m1.oMulSet(original);
 
-        Assert.assertTrue("idMatX::LU_Inverse failed", m1.IsIdentity(1e-4f));
+        assertTrue("idMatX::LU_Inverse failed", m1.IsIdentity(1e-4f));
     }
 
     @Test
@@ -337,7 +338,7 @@ public class idMatXTest {
         m1.QR_UnpackFactors(q1, r1, c, d);
         m1.oSet(q1.oMultiply(r1));
 
-        Assert.assertTrue("idMatX::QR_Factor failed", original.Compare(m1, 1e-4f));
+        assertTrue("idMatX::QR_Factor failed", original.Compare(m1, 1e-4f));
     }
 
     @Test
@@ -367,7 +368,7 @@ public class idMatXTest {
         q1.QR_UpdateRankOne(r1, v, w, 1.0f);
         m1 = q1.oMultiply(r1);
 
-        Assert.assertTrue("idMatX::QR_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::QR_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -399,7 +400,7 @@ public class idMatXTest {
             q1.QR_UpdateRowColumn(r1, v, w, offset);
             m1 = q1.oMultiply(r1);
 
-            Assert.assertTrue("idMatX::QR_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::QR_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -431,7 +432,7 @@ public class idMatXTest {
         q1.QR_UpdateIncrement(r1, v, w);
         m1 = q1.oMultiply(r1);
 
-        Assert.assertTrue("idMatX::QR_UpdateIncrement failed", !m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::QR_UpdateIncrement failed", !m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -470,7 +471,7 @@ public class idMatXTest {
             q1.QR_UpdateDecrement(r1, v, w, offset);
             m1.oSet(q1.oMultiply(r1));
 
-            Assert.assertTrue("idMatX::QR_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::QR_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -483,14 +484,14 @@ public class idMatXTest {
         m2.QR_Inverse(m1, c, d);
         m1.oMulSet(original);
 
-        Assert.assertTrue("idMatX::QR_Inverse failed", m1.IsIdentity(1e-4f));
+        assertTrue("idMatX::QR_Inverse failed", m1.IsIdentity(1e-4f));
     }
 
     @Test
     public void SVD_FactorTest() {
         SVD_FactorSetUp();
 
-        Assert.assertTrue("idMatX::SVD_Factor failed", original.Compare(m1, 1e-4f));
+        assertTrue("idMatX::SVD_Factor failed", original.Compare(m1, 1e-4f));
     }
 
     private void SVD_FactorSetUp() {
@@ -513,7 +514,7 @@ public class idMatXTest {
         m2.SVD_Inverse(m1, w, m3);
         m1.oMulSet(original);
 
-        Assert.assertTrue("idMatX::SVD_Inverse failed", m1.IsIdentity(1e-4f));
+        assertTrue("idMatX::SVD_Inverse failed", m1.IsIdentity(1e-4f));
     }
 
     @Test
@@ -523,7 +524,7 @@ public class idMatXTest {
         m1.Cholesky_Factor();
         m1.Cholesky_MultiplyFactors(m2);
 
-        Assert.assertTrue("idMatX::Cholesky_Factor failed", original.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Cholesky_Factor failed", original.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -547,7 +548,7 @@ public class idMatXTest {
         // update factored m1
         m1.Cholesky_UpdateRankOne(w, 1.0f, 0);
 
-        Assert.assertTrue("idMatX::Cholesky_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Cholesky_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -574,7 +575,7 @@ public class idMatXTest {
             // update m1
             m1.Cholesky_UpdateRowColumn(w, offset);
 
-            Assert.assertTrue("idMatX::Cholesky_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::Cholesky_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -606,7 +607,7 @@ public class idMatXTest {
         m1.ClearUpperTriangle();
         m2.ClearUpperTriangle();
 
-        Assert.assertTrue("idMatX::Cholesky_UpdateIncrement failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Cholesky_UpdateIncrement failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -632,7 +633,7 @@ public class idMatXTest {
             // update factors of m1
             m1.Cholesky_UpdateDecrement(v, offset);
 
-            Assert.assertTrue("idMatX::Cholesky_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::Cholesky_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -644,7 +645,7 @@ public class idMatXTest {
         m2.Cholesky_Inverse(m1);
         m1.oMulSet(original);
 
-        Assert.assertTrue("idMatX::Cholesky_Inverse failed", m1.IsIdentity(1e-4f));
+        assertTrue("idMatX::Cholesky_Inverse failed", m1.IsIdentity(1e-4f));
     }
 
     @Test
@@ -654,12 +655,12 @@ public class idMatXTest {
         m1.LDLT_Factor();
         m1.LDLT_MultiplyFactors(m2);
 
-        Assert.assertTrue("idMatX::LDLT_Factor failed", original.Compare(m2, 1e-4f));
+        assertTrue("idMatX::LDLT_Factor failed", original.Compare(m2, 1e-4f));
 
         m1.LDLT_UnpackFactors(m2, m3);
         m2 = m2.oMultiply(m3).oMultiply(m2.Transpose());
 
-        Assert.assertTrue("idMatX::LDLT_Factor failed", original.Compare(m2, 1e-4f));
+        assertTrue("idMatX::LDLT_Factor failed", original.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -683,7 +684,7 @@ public class idMatXTest {
         // update factored m1
         m1.LDLT_UpdateRankOne(w, 1.0f, 0);
 
-        Assert.assertTrue("idMatX::LDLT_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::LDLT_UpdateRankOne failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -708,7 +709,7 @@ public class idMatXTest {
             // update m1
             m1.LDLT_UpdateRowColumn(w, offset);
 
-            Assert.assertTrue("idMatX::LDLT_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::LDLT_UpdateRowColumn failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -740,7 +741,7 @@ public class idMatXTest {
         m1.ClearUpperTriangle();
         m2.ClearUpperTriangle();
 
-        Assert.assertTrue("idMatX::LDLT_UpdateIncrement failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::LDLT_UpdateIncrement failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -766,7 +767,7 @@ public class idMatXTest {
             // update factors of m1
             m1.LDLT_UpdateDecrement(v, offset);
 
-            Assert.assertTrue("idMatX::LDLT_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
+            assertTrue("idMatX::LDLT_UpdateDecrement failed", m1.Compare(m2, 1e-3f));
         }
     }
 
@@ -774,7 +775,7 @@ public class idMatXTest {
     public void LDLT_InverseTest() {
         LDLT_InverseSetUp();
 
-        Assert.assertTrue("idMatX::LDLT_Inverse failed", m1.IsIdentity(1e-4f));
+        assertTrue("idMatX::LDLT_Inverse failed", m1.IsIdentity(1e-4f));
     }
 
     private void LDLT_InverseSetUp() {
@@ -804,7 +805,7 @@ public class idMatXTest {
             }
         }
 
-        Assert.assertTrue("idMatX::Eigen_SolveSymmetricTriDiagonal failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Eigen_SolveSymmetricTriDiagonal failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -825,7 +826,7 @@ public class idMatXTest {
             }
         }
 
-        Assert.assertTrue("idMatX::Eigen_SolveSymmetric failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Eigen_SolveSymmetric failed", m1.Compare(m2, 1e-4f));
     }
 
     @Test
@@ -847,7 +848,12 @@ public class idMatXTest {
             }
         }
 
-        Assert.assertTrue("idMatX::Eigen_Solve failed", m1.Compare(m2, 1e-4f));
+        assertTrue("idMatX::Eigen_Solve failed", m1.Compare(m2, 1e-4f));
+    }
+
+    @Test
+    public void checkEqualityAbsAndIdFabs() {
+        assertTrue(Math.abs(-1.0f) == Math.abs(-1.0f));
     }
 
 }

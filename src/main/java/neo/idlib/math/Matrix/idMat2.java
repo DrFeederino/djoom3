@@ -1,7 +1,6 @@
 package neo.idlib.math.Matrix;
 
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec2;
 
 import java.util.Arrays;
@@ -210,7 +209,7 @@ public class idMat2 {
     }
 
     public boolean IsSymmetric(final float epsilon) {
-        return (idMath.Fabs(mat[0].y - mat[1].x) < epsilon);
+        return (Math.abs(mat[0].y - mat[1].x) < epsilon);
     }
 
     public boolean IsDiagonal() {
@@ -218,8 +217,8 @@ public class idMat2 {
     }
 
     public boolean IsDiagonal(final float epsilon) {
-        return !(idMath.Fabs(mat[0].y) > epsilon)
-                && !(idMath.Fabs(mat[1].x) > epsilon);
+        return !(Math.abs(mat[0].y) > epsilon)
+                && !(Math.abs(mat[1].x) > epsilon);
     }
 
     public float Trace() {
@@ -262,7 +261,7 @@ public class idMat2 {
 
         det = this.Determinant();//	det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
 
-        if (idMath.Fabs((float) det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs((float) det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 
@@ -294,7 +293,7 @@ public class idMat2 {
 
         det = this.Determinant();//	det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
 
-        if (idMath.Fabs((float) det) < MATRIX_INVERSE_EPSILON) {
+        if (Math.abs((float) det) < MATRIX_INVERSE_EPSILON) {
             return false;
         }
 

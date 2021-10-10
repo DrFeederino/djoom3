@@ -6,14 +6,11 @@ import neo.Renderer.Image.cubeFiles_t;
 import neo.Renderer.Image.idImage;
 import neo.Renderer.Image.textureDepth_t;
 import neo.Renderer.MegaTexture.idMegaTexture;
-import neo.Renderer.tr_local.*;
 import neo.Sound.sound.idSoundEmitter;
-import neo.TempDump.*;
 import neo.TempDump.CPP_class.Bool;
 import neo.TempDump.CPP_class.Pointer;
 import neo.framework.DeclManager.idDecl;
 import neo.framework.DeclTable.idDeclTable;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.List.idList;
@@ -70,7 +67,6 @@ public class Material {
     public static final int CONTENTS_AAS_OBSTACLE = BIT(14);  // used to compile an obstacle into AAS that can be enabled/disabled
 
     public static final int CONTENTS_AAS_SOLID = BIT(13);  // solid for AAS
-
     //
     // contents used by utils
     public static final int CONTENTS_AREAPORTAL = BIT(20);  // portal separating renderer areas

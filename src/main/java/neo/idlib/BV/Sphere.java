@@ -1,7 +1,6 @@
 package neo.idlib.BV;
 
 import neo.idlib.math.Math_h.idMath;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
 
@@ -68,7 +67,7 @@ public class Sphere {
         }
 
         public boolean Compare(final idSphere a, final float epsilon) {    // compare with epsilon
-            return (origin.Compare(a.origin, epsilon) && idMath.Fabs(radius - a.radius) <= epsilon);
+            return (origin.Compare(a.origin, epsilon) && Math.abs(radius - a.radius) <= epsilon);
         }
 //public	boolean			operator==(	final idSphere &a );						// exact compare, no epsilon
 //public	boolean			operator!=(	final idSphere &a );						// exact compare, no epsilon

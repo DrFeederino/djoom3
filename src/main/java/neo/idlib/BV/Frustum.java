@@ -5,9 +5,7 @@ import neo.idlib.BV.Box.idBox;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.Lib;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 
 import static neo.idlib.Lib.Max;
@@ -276,10 +274,10 @@ public class Frustum {
                 return true;
             }
             scale = p.x * invFar;
-            if (idMath.Fabs(p.y) > dLeft * scale) {
+            if (Math.abs(p.y) > dLeft * scale) {
                 return true;
             }
-            return idMath.Fabs(p.z) > dUp * scale;
+            return Math.abs(p.z) > dUp * scale;
         }
 
         /*
@@ -358,13 +356,13 @@ public class Frustum {
             sFar = dFar * dFar;
 
             // test left/right planes
-            d = dFar * idMath.Fabs(center.y) - dLeft * center.x;
+            d = dFar * Math.abs(center.y) - dLeft * center.x;
             if ((d * d) > rs * (sFar + dLeft * dLeft)) {
                 return true;
             }
 
             // test up/down planes
-            d = dFar * idMath.Fabs(center.z) - dUp * center.x;
+            d = dFar * Math.abs(center.z) - dUp * center.x;
             return (d * d) > rs * (sFar + dUp * dUp);
         }
 //
@@ -506,15 +504,15 @@ public class Frustum {
 
             if (p.x <= dNear) {
                 scale = dNear * invFar;
-                dir.y = idMath.Fabs(p.y) - dLeft * scale;
-                dir.z = idMath.Fabs(p.z) - dUp * scale;
+                dir.y = Math.abs(p.y) - dLeft * scale;
+                dir.z = Math.abs(p.z) - dUp * scale;
             } else if (p.x >= dFar) {
-                dir.y = idMath.Fabs(p.y) - dLeft;
-                dir.z = idMath.Fabs(p.z) - dUp;
+                dir.y = Math.abs(p.y) - dLeft;
+                dir.z = Math.abs(p.z) - dUp;
             } else {
                 scale = p.x * invFar;
-                dir.y = idMath.Fabs(p.y) - dLeft * scale;
-                dir.z = idMath.Fabs(p.z) - dUp * scale;
+                dir.y = Math.abs(p.y) - dLeft * scale;
+                dir.z = Math.abs(p.z) - dUp * scale;
             }
             if (dir.y > 0.0f) {
                 y = (1 + FLOATSIGNBITNOTSET(p.y));
@@ -776,9 +774,9 @@ public class Frustum {
             }
 
             bestAxis = 0;
-            bestValue = idMath.Fabs(box.GetAxis().oGet(0).oMultiply(dir));
+            bestValue = Math.abs(box.GetAxis().oGet(0).oMultiply(dir));
             for (i = 1; i < 3; i++) {
-                value = idMath.Fabs(box.GetAxis().oGet(i).oMultiply(dir));
+                value = Math.abs(box.GetAxis().oGet(i).oMultiply(dir));
                 if (value * box.GetExtents().oGet(bestAxis) * box.GetExtents().oGet(bestAxis) < bestValue * box.GetExtents().oGet(i) * box.GetExtents().oGet(i)) {
                     bestValue = value;
                     bestAxis = i;
@@ -838,8 +836,8 @@ public class Frustum {
             this.origin = new idVec3(projectionOrigin);
             this.dNear = points[minX].x;
             this.dFar = dFar;
-            this.dLeft = Lib.Max(idMath.Fabs(points[minY].y / points[minY].x), idMath.Fabs(points[maxY].y / points[maxY].x)) * dFar;
-            this.dUp = Lib.Max(idMath.Fabs(points[minZ].z / points[minZ].x), idMath.Fabs(points[maxZ].z / points[maxZ].x)) * dFar;
+            this.dLeft = Lib.Max(Math.abs(points[minY].y / points[minY].x), Math.abs(points[maxY].y / points[maxY].x)) * dFar;
+            this.dUp = Lib.Max(Math.abs(points[minZ].z / points[minZ].x), Math.abs(points[maxZ].z / points[maxZ].x)) * dFar;
             this.invFar = 1.0f / dFar;
 
 //#elif 1
@@ -1272,13 +1270,13 @@ public class Frustum {
             sFar = dFar * dFar;
 
             // test left/right planes
-            d = dFar * idMath.Fabs(center.y) - dLeft * center.x;
+            d = dFar * Math.abs(center.y) - dLeft * center.x;
             if ((d * d) > rs * (sFar + dLeft * dLeft)) {
                 return false;
             }
 
             // test up/down planes
-            d = dFar * idMath.Fabs(center.z) - dUp * center.x;
+            d = dFar * Math.abs(center.z) - dUp * center.x;
             if ((d * d) > rs * (sFar + dUp * dUp)) {
                 return false;
             }
@@ -1585,10 +1583,10 @@ public class Frustum {
                         boxPointCull[i] = 1 | 2 | 4 | 8;
                     } else {
                         boxPointCull[i] = 0;
-                        if (idMath.Fabs(p.y) > p.x * leftScale) {
+                        if (Math.abs(p.y) > p.x * leftScale) {
                             boxPointCull[i] |= 1 << FLOATSIGNBITSET(p.y);
                         }
-                        if (idMath.Fabs(p.z) > p.x * upScale) {
+                        if (Math.abs(p.z) > p.x * upScale) {
                             boxPointCull[i] |= 4 << FLOATSIGNBITSET(p.z);
                         }
                     }
@@ -1729,9 +1727,9 @@ public class Frustum {
 
             // near plane
             d1 = dNear - localOrigin.x;
-            d2 = idMath.Fabs(extents.oGet(0) * localAxis.oGet(0).oGet(0))
-                    + idMath.Fabs(extents.oGet(1) * localAxis.oGet(1).oGet(0))
-                    + idMath.Fabs(extents.oGet(2) * localAxis.oGet(2).oGet(0));
+            d2 = Math.abs(extents.oGet(0) * localAxis.oGet(0).oGet(0))
+                    + Math.abs(extents.oGet(1) * localAxis.oGet(1).oGet(0))
+                    + Math.abs(extents.oGet(2) * localAxis.oGet(2).oGet(0));
             if (d1 - d2 > 0.0f) {
                 return true;
             }
@@ -1754,9 +1752,9 @@ public class Frustum {
 
             // test left/right planes
             d1 = dFar * testOrigin.y - dLeft * testOrigin.x;
-            d2 = idMath.Fabs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(1) - dLeft * testAxis.oGet(0).oGet(0)))
-                    + idMath.Fabs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(1) - dLeft * testAxis.oGet(1).oGet(0)))
-                    + idMath.Fabs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(1) - dLeft * testAxis.oGet(2).oGet(0)));
+            d2 = Math.abs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(1) - dLeft * testAxis.oGet(0).oGet(0)))
+                    + Math.abs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(1) - dLeft * testAxis.oGet(1).oGet(0)))
+                    + Math.abs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(1) - dLeft * testAxis.oGet(2).oGet(0)));
             if (d1 - d2 > 0.0f) {
                 return true;
             }
@@ -1770,9 +1768,9 @@ public class Frustum {
 
             // test up/down planes
             d1 = dFar * testOrigin.z - dUp * testOrigin.x;
-            d2 = idMath.Fabs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(2) - dUp * testAxis.oGet(0).oGet(0)))
-                    + idMath.Fabs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(2) - dUp * testAxis.oGet(1).oGet(0)))
-                    + idMath.Fabs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(2) - dUp * testAxis.oGet(2).oGet(0)));
+            d2 = Math.abs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(2) - dUp * testAxis.oGet(0).oGet(0)))
+                    + Math.abs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(2) - dUp * testAxis.oGet(1).oGet(0)))
+                    + Math.abs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(2) - dUp * testAxis.oGet(2).oGet(0)));
             return d1 - d2 > 0.0f;
         }
 
@@ -1875,10 +1873,10 @@ public class Frustum {
                 } else if (p.x > dFar) {
                     pCull = 2;
                 }
-                if (idMath.Fabs(p.y) > p.x * leftScale) {
+                if (Math.abs(p.y) > p.x * leftScale) {
                     pCull |= 4 << FLOATSIGNBITSET(p.y);
                 }
-                if (idMath.Fabs(p.z) > p.x * upScale) {
+                if (Math.abs(p.z) > p.x * upScale) {
                     pCull |= 16 << FLOATSIGNBITSET(p.z);
                 }
                 culled &= pCull;
@@ -1984,8 +1982,8 @@ public class Frustum {
                     d2 = dNear - end.x;
                     if ((FLOATSIGNBITSET(d1) ^ FLOATSIGNBITSET(d2)) != 0) {
                         f = d1 / (d1 - d2);
-                        if (idMath.Fabs(start.y + f * dir.y) <= dNear * leftScale) {
-                            if (idMath.Fabs(start.z + f * dir.z) <= dNear * upScale) {
+                        if (Math.abs(start.y + f * dir.y) <= dNear * leftScale) {
+                            if (Math.abs(start.z + f * dir.z) <= dNear * upScale) {
                                 return true;
                             }
                         }
@@ -2000,8 +1998,8 @@ public class Frustum {
                 d2 = end.x - dFar;
                 if ((FLOATSIGNBITSET(d1) ^ FLOATSIGNBITSET(d2)) != 0) {
                     f = d1 / (d1 - d2);
-                    if (idMath.Fabs(start.y + f * dir.y) <= dFar * leftScale) {
-                        if (idMath.Fabs(start.z + f * dir.z) <= dFar * upScale) {
+                    if (Math.abs(start.y + f * dir.y) <= dFar * leftScale) {
+                        if (Math.abs(start.z + f * dir.z) <= dFar * upScale) {
                             return true;
                         }
                     }
@@ -2022,7 +2020,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = start.x + f * dir.x;
                     if (x >= dNear && x <= dFar) {
-                        if (idMath.Fabs(start.z + f * dir.z) <= x * upScale) {
+                        if (Math.abs(start.z + f * dir.z) <= x * upScale) {
                             return true;
                         }
                     }
@@ -2038,7 +2036,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = start.x + f * dir.x;
                     if (x >= dNear && x <= dFar) {
-                        if (idMath.Fabs(start.z + f * dir.z) <= x * upScale) {
+                        if (Math.abs(start.z + f * dir.z) <= x * upScale) {
                             return true;
                         }
                     }
@@ -2059,7 +2057,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = start.x + f * dir.x;
                     if (x >= dNear && x <= dFar) {
-                        if (idMath.Fabs(start.y + f * dir.y) <= x * leftScale) {
+                        if (Math.abs(start.y + f * dir.y) <= x * leftScale) {
                             return true;
                         }
                     }
@@ -2075,7 +2073,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = start.x + f * dir.x;
                     if (x >= dNear && x <= dFar) {
-                        if (idMath.Fabs(start.y + f * dir.y) <= x * leftScale) {
+                        if (Math.abs(start.y + f * dir.y) <= x * leftScale) {
                             return true;
                         }
                     }
@@ -2113,8 +2111,8 @@ public class Frustum {
                 d2 = dNear - end.x;
                 if (d1 != d2) {
                     f = d1 / (d1 - d2);
-                    if (idMath.Fabs(start.y + f * dir.y) <= dNear * leftScale) {
-                        if (idMath.Fabs(start.z + f * dir.z) <= dNear * upScale) {
+                    if (Math.abs(start.y + f * dir.y) <= dNear * leftScale) {
+                        if (Math.abs(start.z + f * dir.z) <= dNear * upScale) {
                             if (f < scale1[0]) {
                                 scale1[0] = f;
                             }
@@ -2132,8 +2130,8 @@ public class Frustum {
             d2 = end.x - dFar;
             if (d1 != d2) {
                 f = d1 / (d1 - d2);
-                if (idMath.Fabs(start.y + f * dir.y) <= dFar * leftScale) {
-                    if (idMath.Fabs(start.z + f * dir.z) <= dFar * upScale) {
+                if (Math.abs(start.y + f * dir.y) <= dFar * leftScale) {
+                    if (Math.abs(start.z + f * dir.z) <= dFar * upScale) {
                         if (f < scale1[0]) {
                             scale1[0] = f;
                         }
@@ -2157,7 +2155,7 @@ public class Frustum {
                 f = d1 / (d1 - d2);
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
-                    if (idMath.Fabs(start.z + f * dir.z) <= x * upScale) {
+                    if (Math.abs(start.z + f * dir.z) <= x * upScale) {
                         if (f < scale1[0]) {
                             scale1[0] = f;
                         }
@@ -2176,7 +2174,7 @@ public class Frustum {
                 f = d1 / (d1 - d2);
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
-                    if (idMath.Fabs(start.z + f * dir.z) <= x * upScale) {
+                    if (Math.abs(start.z + f * dir.z) <= x * upScale) {
                         if (f < scale1[0]) {
                             scale1[0] = f;
                         }
@@ -2200,7 +2198,7 @@ public class Frustum {
                 f = d1 / (d1 - d2);
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
-                    if (idMath.Fabs(start.y + f * dir.y) <= x * leftScale) {
+                    if (Math.abs(start.y + f * dir.y) <= x * leftScale) {
                         if (f < scale1[0]) {
                             scale1[0] = f;
                         }
@@ -2219,7 +2217,7 @@ public class Frustum {
                 f = d1 / (d1 - d2);
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
-                    if (idMath.Fabs(start.y + f * dir.y) <= x * leftScale) {
+                    if (Math.abs(start.y + f * dir.y) <= x * leftScale) {
                         if (f < scale1[0]) {
                             scale1[0] = f;
                         }
@@ -2439,7 +2437,7 @@ public class Frustum {
                     p.x = start.x + f * dir.x;
                     if (p.x > 0.0f) {
                         p.z = start.z + f * dir.z;
-                        if (idMath.Fabs(p.z) <= p.x * upScale) {
+                        if (Math.abs(p.z) <= p.x * upScale) {
                             p.y = 1.0f;
                             p.z = p.z * dFar / (p.x * dUp);
                             bounds.AddPoint(p);
@@ -2459,7 +2457,7 @@ public class Frustum {
                     p.x = start.x + f * dir.x;
                     if (p.x > 0.0f) {
                         p.z = start.z + f * dir.z;
-                        if (idMath.Fabs(p.z) <= p.x * upScale) {
+                        if (Math.abs(p.z) <= p.x * upScale) {
                             p.y = -1.0f;
                             p.z = p.z * dFar / (p.x * dUp);
                             bounds.AddPoint(p);
@@ -2484,7 +2482,7 @@ public class Frustum {
                     p.x = start.x + f * dir.x;
                     if (p.x > 0.0f) {
                         p.y = start.y + f * dir.y;
-                        if (idMath.Fabs(p.y) <= p.x * leftScale) {
+                        if (Math.abs(p.y) <= p.x * leftScale) {
                             p.y = p.y * dFar / (p.x * dLeft);
                             p.z = 1.0f;
                             bounds.AddPoint(p);
@@ -2504,7 +2502,7 @@ public class Frustum {
                     p.x = start.x + f * dir.x;
                     if (p.x > 0.0f) {
                         p.y = start.y + f * dir.y;
-                        if (idMath.Fabs(p.y) <= p.x * leftScale) {
+                        if (Math.abs(p.y) <= p.x * leftScale) {
                             p.y = p.y * dFar / (p.x * dLeft);
                             p.z = -1.0f;
                             bounds.AddPoint(p);
@@ -2578,7 +2576,7 @@ public class Frustum {
                             p.x = start.x + f * dir.x;
                             if (p.x > 0.0f) {
                                 p.z = start.z + f * dir.z;
-                                if (idMath.Fabs(p.z) <= p.x * upScale) {
+                                if (Math.abs(p.z) <= p.x * upScale) {
                                     p.y = 1.0f;
                                     p.z = p.z * dFar / (p.x * dUp);
                                     bounds.AddPoint(p);
@@ -2598,7 +2596,7 @@ public class Frustum {
                             p.x = start.x + f * dir.x;
                             if (p.x > 0.0f) {
                                 p.z = start.z + f * dir.z;
-                                if (idMath.Fabs(p.z) <= p.x * upScale) {
+                                if (Math.abs(p.z) <= p.x * upScale) {
                                     p.y = -1.0f;
                                     p.z = p.z * dFar / (p.x * dUp);
                                     bounds.AddPoint(p);
@@ -2626,7 +2624,7 @@ public class Frustum {
                             p.x = start.x + f * dir.x;
                             if (p.x > 0.0f) {
                                 p.y = start.y + f * dir.y;
-                                if (idMath.Fabs(p.y) <= p.x * leftScale) {
+                                if (Math.abs(p.y) <= p.x * leftScale) {
                                     p.y = p.y * dFar / (p.x * dLeft);
                                     p.z = 1.0f;
                                     bounds.AddPoint(p);
@@ -2646,7 +2644,7 @@ public class Frustum {
                             p.x = start.x + f * dir.x;
                             if (p.x > 0.0f) {
                                 p.y = start.y + f * dir.y;
-                                if (idMath.Fabs(p.y) <= p.x * leftScale) {
+                                if (Math.abs(p.y) <= p.x * leftScale) {
                                     p.y = p.y * dFar / (p.x * dLeft);
                                     p.z = -1.0f;
                                     bounds.AddPoint(p);
@@ -2858,7 +2856,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = localStart.x + f * localDir.x;
                     if (x >= 0.0f) {
-                        if (idMath.Fabs(localStart.z + f * localDir.z) <= x * upScale) {
+                        if (Math.abs(localStart.z + f * localDir.z) <= x * upScale) {
                             if (f < scale1) {
                                 scale1 = f;
                                 startClip[0] = 0;
@@ -2882,7 +2880,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = localStart.x + f * localDir.x;
                     if (x >= 0.0f) {
-                        if (idMath.Fabs(localStart.z + f * localDir.z) <= x * upScale) {
+                        if (Math.abs(localStart.z + f * localDir.z) <= x * upScale) {
                             if (f < scale1) {
                                 scale1 = f;
                                 startClip[0] = 1;
@@ -2911,7 +2909,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = localStart.x + f * localDir.x;
                     if (x >= 0.0f) {
-                        if (idMath.Fabs(localStart.y + f * localDir.y) <= x * leftScale) {
+                        if (Math.abs(localStart.y + f * localDir.y) <= x * leftScale) {
                             if (f < scale1) {
                                 scale1 = f;
                                 startClip[0] = 2;
@@ -2935,7 +2933,7 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     x = localStart.x + f * localDir.x;
                     if (x >= 0.0f) {
-                        if (idMath.Fabs(localStart.y + f * localDir.y) <= x * leftScale) {
+                        if (Math.abs(localStart.y + f * localDir.y) <= x * leftScale) {
                             if (f < scale1) {
                                 scale1 = f;
                                 startClip[0] = 3;

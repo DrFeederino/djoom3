@@ -182,7 +182,7 @@ public class Curve {
             t = (times.oGet(index + 1) - times.oGet(index)) * len0 / len1;
             for (i = 0; i < 32; i++) {
                 diff = RombergIntegral(times.oGet(index), times.oGet(index) + t, 5) - len0;
-                if (idMath.Fabs(diff) <= epsilon) {
+                if (Math.abs(diff) <= epsilon) {
                     return times.oGet(index) + t;
                 }
                 t -= diff / GetSpeed(times.oGet(index) + t);

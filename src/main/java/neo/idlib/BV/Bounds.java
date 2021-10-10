@@ -5,7 +5,6 @@ import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.Lib;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Simd;
 import neo.idlib.math.Vector.idVec3;
@@ -16,9 +15,7 @@ import java.util.Arrays;
 import static neo.idlib.math.Plane.*;
 import static neo.idlib.math.Vector.getVec3_origin;
 
-/**
- *
- */
+
 public class Bounds {
 
     public static idBounds bounds_zero;
@@ -253,8 +250,8 @@ public class Bounds {
 
             total = 0.0f;
             for (i = 0; i < 3; i++) {
-                b0 = idMath.Fabs(b[0].oGet(i));
-                b1 = idMath.Fabs(b[1].oGet(i));
+                b0 = Math.abs(b[0].oGet(i));
+                b1 = Math.abs(b[1].oGet(i));
                 if (b0 > b1) {
                     total += b0 * b0;
                 } else {
@@ -271,8 +268,8 @@ public class Bounds {
 
             total = 0.0f;
             for (i = 0; i < 3; i++) {
-                b0 = idMath.Fabs(center.oGet(i) - b[0].oGet(i));
-                b1 = idMath.Fabs(b[1].oGet(i) - center.oGet(i));
+                b0 = Math.abs(center.oGet(i) - b[0].oGet(i));
+                b1 = Math.abs(b[1].oGet(i) - center.oGet(i));
                 if (b0 > b1) {
                     total += b0 * b0;
                 } else {
@@ -441,9 +438,9 @@ public class Bounds {
             center = (b[0].oPlus(b[1])).oMultiply(0.5f);
 
             d1 = plane.Distance(center);
-            d2 = idMath.Fabs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
-                    + idMath.Fabs((b[1].oGet(1) - center.oGet(1)) * plane.Normal().oGet(1))
-                    + idMath.Fabs((b[1].oGet(2) - center.oGet(2)) * plane.Normal().oGet(2));
+            d2 = Math.abs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
+                    + Math.abs((b[1].oGet(1) - center.oGet(1)) * plane.Normal().oGet(1))
+                    + Math.abs((b[1].oGet(2) - center.oGet(2)) * plane.Normal().oGet(2));
 
             if (d1 - d2 > 0.0f) {
                 return d1 - d2;
@@ -465,9 +462,9 @@ public class Bounds {
             center = (b[0].oPlus(b[1])).oMultiply(0.5f);
 
             d1 = plane.Distance(center);
-            d2 = idMath.Fabs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
-                    + idMath.Fabs((b[1].oGet(1) - center.oGet(1)) * plane.Normal().oGet(1))
-                    + idMath.Fabs((b[1].oGet(2) - center.oGet(2)) * plane.Normal().oGet(2));
+            d2 = Math.abs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
+                    + Math.abs((b[1].oGet(1) - center.oGet(1)) * plane.Normal().oGet(1))
+                    + Math.abs((b[1].oGet(2) - center.oGet(2)) * plane.Normal().oGet(2));
 
             if (d1 - d2 > epsilon) {
                 return PLANESIDE_FRONT;
@@ -505,32 +502,32 @@ public class Bounds {
             idVec3 lineCenter = start.oPlus(lineDir);
             idVec3 dir = lineCenter.oMinus(center);
 
-            ld[0] = idMath.Fabs(lineDir.oGet(0));
-            if (idMath.Fabs(dir.oGet(0)) > extents.oGet(0) + ld[0]) {
+            ld[0] = Math.abs(lineDir.oGet(0));
+            if (Math.abs(dir.oGet(0)) > extents.oGet(0) + ld[0]) {
                 return false;
             }
 
-            ld[1] = idMath.Fabs(lineDir.oGet(1));
-            if (idMath.Fabs(dir.oGet(1)) > extents.oGet(1) + ld[1]) {
+            ld[1] = Math.abs(lineDir.oGet(1));
+            if (Math.abs(dir.oGet(1)) > extents.oGet(1) + ld[1]) {
                 return false;
             }
 
-            ld[2] = idMath.Fabs(lineDir.oGet(2));
-            if (idMath.Fabs(dir.oGet(2)) > extents.oGet(2) + ld[2]) {
+            ld[2] = Math.abs(lineDir.oGet(2));
+            if (Math.abs(dir.oGet(2)) > extents.oGet(2) + ld[2]) {
                 return false;
             }
 
             idVec3 cross = lineDir.Cross(dir);
 
-            if (idMath.Fabs(cross.oGet(0)) > extents.oGet(1) * ld[2] + extents.oGet(2) * ld[1]) {
+            if (Math.abs(cross.oGet(0)) > extents.oGet(1) * ld[2] + extents.oGet(2) * ld[1]) {
                 return false;
             }
 
-            if (idMath.Fabs(cross.oGet(1)) > extents.oGet(0) * ld[2] + extents.oGet(2) * ld[0]) {
+            if (Math.abs(cross.oGet(1)) > extents.oGet(0) * ld[2] + extents.oGet(2) * ld[0]) {
                 return false;
             }
 
-            return !(idMath.Fabs(cross.oGet(2)) > extents.oGet(0) * ld[1] + extents.oGet(1) * ld[0]);
+            return !(Math.abs(cross.oGet(2)) > extents.oGet(0) * ld[1] + extents.oGet(1) * ld[0]);
         }
 
         /*
@@ -562,7 +559,7 @@ public class Bounds {
                     continue;
                 }
                 f = (start.oGet(i) - b[side].oGet(i));
-                if (ax0 < 0 || idMath.Fabs(f) > idMath.Fabs(scale[0] * dir.oGet(i))) {
+                if (ax0 < 0 || Math.abs(f) > Math.abs(scale[0] * dir.oGet(i))) {
                     scale[0] = -(f / dir.oGet(i));
                     ax0 = i;
                 }
@@ -592,9 +589,9 @@ public class Bounds {
             extents = bounds.oGet(1).oMinus(center);
 
             for (i = 0; i < 3; i++) {
-                rotatedExtents.oSet(i, idMath.Fabs(extents.oGet(0) * axis.oGet(0).oGet(i))
-                        + idMath.Fabs(extents.oGet(1) * axis.oGet(1).oGet(i))
-                        + idMath.Fabs(extents.oGet(2) * axis.oGet(2).oGet(i)));
+                rotatedExtents.oSet(i, Math.abs(extents.oGet(0) * axis.oGet(0).oGet(i))
+                        + Math.abs(extents.oGet(1) * axis.oGet(1).oGet(i))
+                        + Math.abs(extents.oGet(2) * axis.oGet(2).oGet(i)));
             }
 
             center = origin.oPlus(axis.oMultiply(center));
@@ -669,7 +666,7 @@ public class Bounds {
         public void FromPointRotation(final idVec3 point, final idRotation rotation) {// most tight bounds for a rotation
             float radius;
 
-            if (idMath.Fabs(rotation.GetAngle()) < 180.0f) {
+            if (Math.abs(rotation.GetAngle()) < 180.0f) {
                 BoundsForPointRotation(point, rotation);
             } else {
 
@@ -694,7 +691,7 @@ public class Bounds {
             idVec3 point = new idVec3();
             idBounds rBounds;
 
-            if (idMath.Fabs(rotation.GetAngle()) < 180.0f) {
+            if (Math.abs(rotation.GetAngle()) < 180.0f) {
 
                 this.b = BoundsForPointRotation(axis.oMultiply(bounds.oGet(0)).oPlus(origin), rotation).b;//TODO:check if function output is gargbage collected
                 for (i = 1; i < 8; i++) {
@@ -737,9 +734,9 @@ public class Bounds {
             extents = b[1].oMinus(center);
 
             d1 = dir.oMultiply(center);
-            d2 = idMath.Fabs(extents.oGet(0) * dir.oGet(0))
-                    + idMath.Fabs(extents.oGet(1) * dir.oGet(1))
-                    + idMath.Fabs(extents.oGet(2) * dir.oGet(2));
+            d2 = Math.abs(extents.oGet(0) * dir.oGet(0))
+                    + Math.abs(extents.oGet(1) * dir.oGet(1))
+                    + Math.abs(extents.oGet(2) * dir.oGet(2));
 
             min[0] = d1 - d2;
             max[0] = d1 + d2;
@@ -754,9 +751,9 @@ public class Bounds {
             center = origin.oPlus(axis.oMultiply(center));
 
             d1 = dir.oMultiply(center);
-            d2 = idMath.Fabs(extents.oGet(0) * (dir.oMultiply(axis.oGet(0))))
-                    + idMath.Fabs(extents.oGet(1) * (dir.oMultiply(axis.oGet(1))))
-                    + idMath.Fabs(extents.oGet(2) * (dir.oMultiply(axis.oGet(2))));
+            d2 = Math.abs(extents.oGet(0) * (dir.oMultiply(axis.oGet(0))))
+                    + Math.abs(extents.oGet(1) * (dir.oMultiply(axis.oGet(1))))
+                    + Math.abs(extents.oGet(2) * (dir.oMultiply(axis.oGet(2))));
 
             min[0] = d1 - d2;
             max[0] = d1 + d2;

@@ -1,7 +1,5 @@
 package neo.idlib.math;
 
-import neo.idlib.math.Math_h.idMath;
-
 /*
  ===============================================================================
 
@@ -282,7 +280,7 @@ public class Ode {
                 // get max estimated error
                 max = 0.0f;
                 for (i = 0; i < dimension; i++) {
-                    error = idMath.Fabs((newState[i] - tmpState[i]) / (delta * d1[i] + 1e-10f));
+                    error = Math.abs((newState[i] - tmpState[i]) / (delta * d1[i] + 1e-10f));
                     if (error > max) {
                         max = error;
                     }
