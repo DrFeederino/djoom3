@@ -14,6 +14,9 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Timer.idTimer;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Lcp.idLCP;
 import neo.idlib.math.Matrix.idMat3;
@@ -24,6 +27,7 @@ import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -101,10 +105,10 @@ public class Physics_AF {
      ================
      */
     static void idPhysics_AF_RestorePState(idRestoreGame saveFile, AFPState_s state) {
-        int[] atRest = {0};
-        float[] noMoveTime = {0};
-        float[] activateTime = {0};
-        float[] lastTimeStep = {0};
+        CInt atRest = new CInt();
+        CFloat noMoveTime = new CFloat();
+        CFloat activateTime = new CFloat();
+        CFloat lastTimeStep = new CFloat();
 
         saveFile.ReadInt(atRest);
         saveFile.ReadFloat(noMoveTime);
@@ -112,10 +116,10 @@ public class Physics_AF {
         saveFile.ReadFloat(lastTimeStep);
         saveFile.ReadVec6(state.pushVelocity);
 
-        state.atRest = atRest[0];
-        state.noMoveTime = noMoveTime[0];
-        state.activateTime = activateTime[0];
-        state.lastTimeStep = lastTimeStep[0];
+        state.atRest = atRest.getVal();
+        state.noMoveTime = noMoveTime.getVal();
+        state.activateTime = activateTime.getVal();
+        state.lastTimeStep = lastTimeStep.getVal();
     }
 
     /*
@@ -296,9 +300,9 @@ public class Physics_AF {
         }
 
         public void Restore(idRestoreGame saveFile) {
-            int[] t = {0};
-            saveFile.ReadInt(t);//TODO:int to booleans
-            assert (t[0] == type.ordinal());
+            CInt t = new CInt();
+            saveFile.ReadInt(t);
+            assert (t.getVal() == type.ordinal());
         }
 
         protected void Evaluate(float invTimeStep) {
@@ -675,14 +679,14 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            float[] friction = {this.friction};
+            CFloat friction = new CFloat(this.friction);
 
             super.Restore(saveFile);
             saveFile.ReadVec3(anchor1);
             saveFile.ReadVec3(anchor2);
             saveFile.ReadFloat(friction);
 
-            this.friction = friction[0];
+            this.friction = friction.getVal();
 
             if (coneLimit != null) {
                 coneLimit.Restore(saveFile);
@@ -1113,7 +1117,7 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            float[] friction = {this.friction};
+            CFloat friction = new CFloat(this.friction);
 
             super.Restore(saveFile);
             saveFile.ReadVec3(anchor1);
@@ -1124,7 +1128,7 @@ public class Physics_AF {
             saveFile.ReadVec3(axis2);
             saveFile.ReadFloat(friction);
 
-            this.friction = friction[0];
+            this.friction = friction.getVal();
 
             if (coneLimit != null) {
                 coneLimit.Restore(saveFile);
@@ -1603,8 +1607,8 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            boolean[] b = {false};
-            float[] friction = {this.friction};
+            CBool b = new CBool(false);
+            CFloat friction = new CFloat(this.friction);
 
             super.Restore(saveFile);
             saveFile.ReadVec3(anchor1);
@@ -1616,9 +1620,9 @@ public class Physics_AF {
 
             saveFile.ReadBool(b);
 
-            this.friction = friction[0];
+            this.friction = friction.getVal();
 
-            if (b[0]) {
+            if (b.isVal()) {
                 if (null == coneLimit) {
                     coneLimit = new idAFConstraint_ConeLimit();
                 }
@@ -1626,7 +1630,7 @@ public class Physics_AF {
                 coneLimit.Restore(saveFile);
             }
             saveFile.ReadBool(b);
-            if (b[0]) {
+            if (b.isVal()) {
                 if (null == steering) {
                     steering = new idAFConstraint_HingeSteering();
                 }
@@ -1634,7 +1638,7 @@ public class Physics_AF {
                 steering.Restore(saveFile);
             }
             saveFile.ReadBool(b);
-            if (b[0]) {
+            if (b.isVal()) {
                 if (null == fc) {
                     fc = new idAFConstraint_HingeFriction();
                 }
@@ -1915,17 +1919,17 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            float[] steerAngle = {0};//TODO:check if these read pointers need to have the original values set instead of zero;
-            float[] steerSpeed = {0};
-            float[] epsilon = {0};
+            CFloat steerAngle = new CFloat();//TODO:check if these read pointers need to have the original values set instead of zero;
+            CFloat steerSpeed = new CFloat();//TODO:check if these read pointers need to have the original values set instead of zero;
+            CFloat epsilon = new CFloat();//TODO:check if these read pointers need to have the original values set instead of zero;
 
             saveFile.ReadFloat(steerAngle);
             saveFile.ReadFloat(steerSpeed);
             saveFile.ReadFloat(epsilon);
 
-            this.steerAngle = steerAngle[0];
-            this.steerSpeed = steerSpeed[0];
-            this.epsilon = epsilon[0];
+            this.steerAngle = steerAngle.getVal();
+            this.steerSpeed = steerSpeed.getVal();
+            this.epsilon = epsilon.getVal();
         }
 
         @Override
@@ -2404,12 +2408,12 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            float[] kstretch = {0};
-            float[] kcompress = {0};
-            float[] damping = {0};
-            float[] restLength = {0};
-            float[] minLength = {0};
-            float[] maxLength = {0};
+            CFloat kstretch = new CFloat();
+            CFloat kcompress = new CFloat();
+            CFloat damping = new CFloat();
+            CFloat restLength = new CFloat();
+            CFloat minLength = new CFloat();
+            CFloat maxLength = new CFloat();
 
             super.Restore(saveFile);
             saveFile.ReadVec3(anchor1);
@@ -2421,12 +2425,12 @@ public class Physics_AF {
             saveFile.ReadFloat(minLength);
             saveFile.ReadFloat(maxLength);
 
-            this.kstretch = kstretch[0];
-            this.kcompress = kcompress[0];
-            this.damping = damping[0];
-            this.restLength = restLength[0];
-            this.minLength = minLength[0];
-            this.maxLength = maxLength[0];
+            this.kstretch = kstretch.getVal();
+            this.kcompress = kcompress.getVal();
+            this.damping = damping.getVal();
+            this.restLength = restLength.getVal();
+            this.minLength = minLength.getVal();
+            this.maxLength = maxLength.getVal();
         }
 
         @Override
@@ -3032,10 +3036,10 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            float[] cosAngle = {0};
-            float[] sinHalfAngle = {0};
-            float[] cosHalfAngle = {0};
-            float[] epsilon = {0};
+            CFloat cosAngle = new CFloat();
+            CFloat sinHalfAngle = new CFloat();
+            CFloat cosHalfAngle = new CFloat();
+            CFloat epsilon = new CFloat();
 
             super.Restore(saveFile);
             saveFile.ReadVec3(coneAnchor);
@@ -3046,10 +3050,10 @@ public class Physics_AF {
             saveFile.ReadFloat(cosHalfAngle);
             saveFile.ReadFloat(epsilon);
 
-            this.cosAngle = cosAngle[0];
-            this.sinHalfAngle = sinHalfAngle[0];
-            this.cosHalfAngle = cosHalfAngle[0];
-            this.epsilon = epsilon[0];
+            this.cosAngle = cosAngle.getVal();
+            this.sinHalfAngle = sinHalfAngle.getVal();
+            this.cosHalfAngle = cosHalfAngle.getVal();
+            this.epsilon = epsilon.getVal();
         }
 
         @Override
@@ -3296,10 +3300,10 @@ public class Physics_AF {
 
         @Override
         public void Restore(idRestoreGame saveFile) {
-            float[][] cosAngle = {{0}, {0}};
-            float[][] sinHalfAngle = {{0}, {0}};
-            float[][] cosHalfAngle = {{0}, {0}};
-            float[] epsilon = {0};
+            CFloat[] cosAngle = List.of(new CFloat(), new CFloat()).toArray(CFloat[]::new);
+            CFloat[] sinHalfAngle = List.of(new CFloat(), new CFloat()).toArray(CFloat[]::new);
+            CFloat[] cosHalfAngle = List.of(new CFloat(), new CFloat()).toArray(CFloat[]::new);
+            CFloat epsilon = new CFloat();
 
             super.Restore(saveFile);
             saveFile.ReadVec3(pyramidAnchor);
@@ -3313,13 +3317,13 @@ public class Physics_AF {
             saveFile.ReadFloat(cosHalfAngle[1]);
             saveFile.ReadFloat(epsilon);
 
-            this.cosAngle[0] = cosAngle[0][0];
-            this.cosAngle[1] = cosAngle[1][0];
-            this.sinHalfAngle[0] = sinHalfAngle[0][0];
-            this.sinHalfAngle[1] = sinHalfAngle[1][0];
-            this.cosHalfAngle[0] = cosHalfAngle[0][0];
-            this.cosHalfAngle[1] = cosHalfAngle[1][0];
-            this.epsilon = epsilon[0];
+            this.cosAngle[0] = cosAngle[0].getVal();
+            this.cosAngle[1] = cosAngle[1].getVal();
+            this.sinHalfAngle[0] = sinHalfAngle[0].getVal();
+            this.sinHalfAngle[1] = sinHalfAngle[1].getVal();
+            this.cosHalfAngle[0] = cosHalfAngle[0].getVal();
+            this.cosHalfAngle[1] = cosHalfAngle[1].getVal();
+            this.epsilon = epsilon.getVal();
         }
 
         @Override
@@ -3470,9 +3474,9 @@ public class Physics_AF {
             axis.oMulSet(rotation.ToMat3());
 
             {
-                trace_s[] tracy = {trace};
+                trace_s tracy = trace;
                 gameLocal.clip.Translation(tracy, start, end, wheelModel, axis, MASK_SOLID, null);
-                this.trace = tracy[0];
+                this.trace = tracy;
             }
 
             wheelOffset = (trace.endpos.oMinus(body1.GetWorldOrigin())).oMultiply(body1.GetWorldAxis().Transpose());
@@ -3868,12 +3872,12 @@ public class Physics_AF {
         public void SetDensity(float density, final idMat3 inertiaScale /*= mat3_identity*/) {
             DBG_SetDensity++;
 
-            float[] massTemp = {mass};
+            CFloat massTemp = new CFloat(mass);
 
             // get the body mass properties
             clipModel.GetMassProperties(density, massTemp, centerOfMass, inertiaTensor);
 
-            mass = massTemp[0];
+            mass = massTemp.getVal();
 
             // make sure we have a valid mass
             if (mass <= 0.0f || FLOAT_IS_NAN(mass)) {
@@ -4709,26 +4713,26 @@ public class Physics_AF {
         @Override
         public void Restore(idRestoreGame saveFile) {
             int i;
-            int[] num = {0};
-            boolean[] hasMaster = {false};
+            CInt num = new CInt();
+            CBool hasMaster = new CBool(false);
 
             // the articulated figure structure should have already been restored
             idPhysics_AF_RestorePState(saveFile, current);
             idPhysics_AF_RestorePState(saveFile, saved);
 
             saveFile.ReadInt(num);
-            assert (num[0] == bodies.Num());
+            assert (num.getVal() == bodies.Num());
             for (i = 0; i < bodies.Num(); i++) {
                 bodies.oGet(i).Restore(saveFile);
             }
             saveFile.ReadBool(hasMaster);
-            if (hasMaster[0]) {
+            if (hasMaster.isVal()) {
                 masterBody = new idAFBody();
                 masterBody.Restore(saveFile);
             }
 
             saveFile.ReadInt(num);
-            assert (num[0] == constraints.Num());
+            assert (num.getVal() == constraints.Num());
             for (i = 0; i < constraints.Num(); i++) {
                 constraints.oGet(i).Restore(saveFile);
             }
@@ -5768,12 +5772,12 @@ public class Physics_AF {
         }
 
         @Override
-        public void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model) {
+        public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
             int i;
             idAFBody body;
-            trace_s[] bodyResults = {new trace_s()};
+            trace_s bodyResults = new trace_s();
 
-            results[0].fraction = 1.0f;
+            results.fraction = 1.0f;
 
             for (i = 0; i < bodies.Num(); i++) {
                 body = bodies.oGet(i);
@@ -5787,24 +5791,24 @@ public class Physics_AF {
                         gameLocal.clip.Translation(bodyResults, body.current.worldOrigin, body.current.worldOrigin.oPlus(translation),
                                 body.clipModel, body.current.worldAxis, body.clipMask, self);
                     }
-                    if (bodyResults[0].fraction < results[0].fraction) {
-                        results[0].oSet(bodyResults[0]);
+                    if (bodyResults.fraction < results.fraction) {
+                        results.oSet(bodyResults);
                     }
                 }
             }
 
-            results[0].endpos.oSet(bodies.oGet(0).current.worldOrigin.oPlus(translation.oMultiply(results[0].fraction)));
-            results[0].endAxis.oSet(bodies.oGet(0).current.worldAxis);
+            results.endpos.oSet(bodies.oGet(0).current.worldOrigin.oPlus(translation.oMultiply(results.fraction)));
+            results.endAxis.oSet(bodies.oGet(0).current.worldAxis);
         }
 
         @Override
-        public void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model) {
+        public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
             int i;
             idAFBody body;
-            trace_s[] bodyResults = {null};
+            trace_s bodyResults = new trace_s();
             idRotation partialRotation;
 
-            results[0].fraction = 1.0f;
+            results.fraction = 1.0f;
 
             for (i = 0; i < bodies.Num(); i++) {
                 body = bodies.oGet(i);
@@ -5818,15 +5822,15 @@ public class Physics_AF {
                         gameLocal.clip.Rotation(bodyResults, body.current.worldOrigin, rotation,
                                 body.clipModel, body.current.worldAxis, body.clipMask, self);
                     }
-                    if (bodyResults[0].fraction < results[0].fraction) {
-                        results[0] = bodyResults[0];
+                    if (bodyResults.fraction < results.fraction) {
+                        results = bodyResults;
                     }
                 }
             }
 
-            partialRotation = rotation.oMultiply(results[0].fraction);
-            results[0].endpos.oSet(bodies.oGet(0).current.worldOrigin.oMultiply(partialRotation));
-            results[0].endAxis.oSet(bodies.oGet(0).current.worldAxis.oMultiply(partialRotation.ToMat3()));
+            partialRotation = rotation.oMultiply(results.fraction);
+            results.endpos.oSet(bodies.oGet(0).current.worldOrigin.oMultiply(partialRotation));
+            results.endAxis.oSet(bodies.oGet(0).current.worldAxis.oMultiply(partialRotation.ToMat3()));
         }
 
         @Override
@@ -6878,7 +6882,7 @@ public class Physics_AF {
             idEntity ent;
 
             ent = gameLocal.entities[collision.c.entityNum];
-            if (ent == self) {
+            if (ent == self || ent == null) {
                 return false;
             }
 
@@ -6927,7 +6931,7 @@ public class Physics_AF {
             idAFBody body;
             idMat3 axis = new idMat3();
             idRotation rotation;
-            trace_s[] collision = {new trace_s()};
+            trace_s collision = new trace_s();
             idEntity passEntity;
             boolean startSolid = false;
 
@@ -6961,14 +6965,14 @@ public class Physics_AF {
                             body.clipModel, body.current.worldAxis, body.clipMask, passEntity)) {
 
                         // set the next state to the state at the moment of impact
-                        body.next.worldOrigin.oSet(collision[0].endpos);
-                        body.next.worldAxis.oSet(collision[0].endAxis);
+                        body.next.worldOrigin.oSet(collision.endpos);
+                        body.next.worldAxis.oSet(collision.endAxis);
 
                         // add collision to the list
                         index = collisions.Num();
                         collisions.SetNum(index + 1, false);
                         collisions.oSet(index, new AFCollision_s());
-                        collisions.oGet(index).trace = new trace_s(collision[0]);
+                        collisions.oGet(index).trace = new trace_s(collision);
                         collisions.oGet(index).body = body;
                     }
 

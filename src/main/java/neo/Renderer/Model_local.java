@@ -1,9 +1,6 @@
 package neo.Renderer;
 
 import neo.Renderer.Material.idMaterial;
-import neo.Renderer.Model.*;
-import neo.Renderer.Model_ase.*;
-import neo.Renderer.Model_lwo.*;
 import neo.Renderer.Model_ma.maMaterial_t;
 import neo.Renderer.Model_ma.maMesh_t;
 import neo.Renderer.Model_ma.maModel_s;
@@ -15,6 +12,7 @@ import neo.framework.DemoFile.idDemoFile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.VectorSet.idVectorSubset;
 import neo.idlib.geometry.JointTransform.idJointQuat;
@@ -316,7 +314,6 @@ public class Model_local {
 
                     R_BoundTriSurf(surf.geometry);
                     bounds.AddBounds(surf.geometry.bounds);
-                    int a = 0;
                 }
 
                 return;
@@ -421,7 +418,6 @@ public class Model_local {
 
                     // add to the model bounds
                     bounds.AddBounds(surf.geometry.bounds);
-                    int a = 0;
                 }
             }
         }
@@ -678,12 +674,12 @@ public class Model_local {
             InitEmpty(f.ReadHashString());
 
             int i, j;
-            int[] numSurfaces = new int[1];
-            int[] index = new int[1];
-            int[] vert = new int[1];
+            CInt numSurfaces = new CInt();
+            CInt index = new CInt();
+            CInt vert = new CInt();
             f.ReadInt(numSurfaces);
 
-            for (i = 0; i < numSurfaces[0]; i++) {
+            for (i = 0; i < numSurfaces.getVal(); i++) {
                 modelSurface_s surf = new modelSurface_s();
 
                 surf.shader = declManager.FindMaterial(f.ReadHashString());
@@ -691,15 +687,15 @@ public class Model_local {
                 srfTriangles_s tri = R_AllocStaticTriSurf();
 
                 f.ReadInt(index);
-                tri.numIndexes = index[0];
+                tri.numIndexes = index.getVal();
                 R_AllocStaticTriSurfIndexes(tri, tri.numIndexes);
                 for (j = 0; j < tri.numIndexes; ++j) {
                     f.ReadInt(index);
-                    tri.indexes[j] = index[0];
+                    tri.indexes[j] = index.getVal();
                 }
 
                 f.ReadInt(vert);
-                tri.numVerts = vert[0];
+                tri.numVerts = vert.getVal();
                 R_AllocStaticTriSurfVerts(tri, tri.numVerts);
                 for (j = 0; j < tri.numVerts; ++j) {
                     char[][] color = new char[4][1];
@@ -779,7 +775,7 @@ public class Model_local {
             // create one new surface
             modelSurface_s surf = new modelSurface_s();
 
-            srfTriangles_s tri = R_AllocStaticTriSurf();
+            srfTriangles_s tri = new srfTriangles_s();
 
             surf.shader = tr.defaultMaterial;
             surf.geometry = tri;
@@ -2150,7 +2146,9 @@ public class Model_local {
 
                 aseFace_t[] newFaces = new aseFace_t[mesh.numFaces];// Mem_Alloc(mesh.numFaces /* sizeof ( mesh.faces[0] ) */);
 //		memcpy( newFaces, mesh.faces, sizeof( mesh.faces[0] ) * mesh.numFaces );
-                System.arraycopy(mesh.faces, 0, newFaces, 0, mesh.numFaces);
+                for (int i = 0; i < mesh.numFaces; i++) {
+                    newFaces[i] = mesh.faces[i];
+                }
 //                Mem_Free(mesh.faces);
                 mesh.faces = newFaces;
             }
@@ -2183,12 +2181,12 @@ public class Model_local {
             }
         }
 
-        public boolean FindSurfaceWithId(int id, int[] surfaceNum) {
+        public boolean FindSurfaceWithId(int id, CInt surfaceNum) {
             int i;
 
             for (i = 0; i < surfaces.Num(); i++) {
                 if (surfaces.oGet(i).id == id) {
-                    surfaceNum[0] = i;
+                    surfaceNum.setVal(i);
                     return true;
                 }
             }

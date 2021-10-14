@@ -208,10 +208,6 @@ public class Trigger {
             super.Think();
         }
 
-        @Override
-        public java.lang.Class/*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public idClass CreateInstance() {
@@ -933,7 +929,7 @@ public class Trigger {
 
      ===============================================================================
      */
-    static class idTrigger_Hurt extends idTrigger {
+    public static class idTrigger_Hurt extends idTrigger {
         //	CLASS_PROTOTYPE(idTrigger_Hurt );
         private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 

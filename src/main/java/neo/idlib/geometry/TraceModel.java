@@ -2,6 +2,7 @@ package neo.idlib.geometry;
 
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Lib.idLib;
+import neo.idlib.containers.CFloat;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
@@ -794,7 +795,7 @@ public class TraceModel {
                 case TRM_POLYGONVOLUME:
                 case TRM_CUSTOM:
                     for (i = 0; i < trm.numVerts; i++) {
-                        if (verts[i] != trm.verts[i]) {
+                        if (verts[i].equals(trm.verts[i])) {
                             return false;
                         }
                     }
@@ -916,7 +917,7 @@ public class TraceModel {
         }
 
         // calculate mass properties assuming an uniform density
-        public void GetMassProperties(final float density, float[] mass, idVec3 centerOfMass, idMat3 inertiaTensor) {
+        public void GetMassProperties(final float density, CFloat mass, idVec3 centerOfMass, idMat3 inertiaTensor) {
             volumeIntegrals_t integrals = new volumeIntegrals_t();
             DBG_GetMassProperties++;
 
@@ -933,14 +934,14 @@ public class TraceModel {
 
             // if no volume
             if (integrals.T0 == 0.0f) {
-                mass[0] = 1.0f;
+                mass.setVal(1.0f);
                 centerOfMass.Zero();
                 inertiaTensor.Identity();
                 return;
             }
 
             // mass of model
-            mass[0] = density * integrals.T0;
+            mass.setVal(density * integrals.T0);
             // center of mass
             centerOfMass.oSet(integrals.T1.oDivide(integrals.T0));
             // compute inertia tensor
@@ -954,15 +955,15 @@ public class TraceModel {
             inertiaTensor.oSet(2, 0, -density * integrals.TP.oGet(2));
             inertiaTensor.oSet(0, 2, -density * integrals.TP.oGet(2));
             // translate inertia tensor to center of mass
-            inertiaTensor.oMinSet(0, 0, mass[0] * (centerOfMass.oGet(1) * centerOfMass.oGet(1) + centerOfMass.oGet(2) * centerOfMass.oGet(2)));
-            inertiaTensor.oMinSet(1, 1, mass[0] * (centerOfMass.oGet(2) * centerOfMass.oGet(2) + centerOfMass.oGet(0) * centerOfMass.oGet(0)));
-            inertiaTensor.oMinSet(2, 2, mass[0] * (centerOfMass.oGet(0) * centerOfMass.oGet(0) + centerOfMass.oGet(1) * centerOfMass.oGet(1)));
-            inertiaTensor.oPluSet(0, 1, mass[0] * centerOfMass.oGet(0) * centerOfMass.oGet(1));
-            inertiaTensor.oPluSet(1, 0, mass[0] * centerOfMass.oGet(0) * centerOfMass.oGet(1));
-            inertiaTensor.oPluSet(1, 2, mass[0] * centerOfMass.oGet(1) * centerOfMass.oGet(2));
-            inertiaTensor.oPluSet(2, 1, mass[0] * centerOfMass.oGet(1) * centerOfMass.oGet(2));
-            inertiaTensor.oPluSet(2, 0, mass[0] * centerOfMass.oGet(2) * centerOfMass.oGet(0));
-            inertiaTensor.oPluSet(0, 2, mass[0] * centerOfMass.oGet(2) * centerOfMass.oGet(0));
+            inertiaTensor.oMinSet(0, 0, mass.getVal() * (centerOfMass.oGet(1) * centerOfMass.oGet(1) + centerOfMass.oGet(2) * centerOfMass.oGet(2)));
+            inertiaTensor.oMinSet(1, 1, mass.getVal() * (centerOfMass.oGet(2) * centerOfMass.oGet(2) + centerOfMass.oGet(0) * centerOfMass.oGet(0)));
+            inertiaTensor.oMinSet(2, 2, mass.getVal() * (centerOfMass.oGet(0) * centerOfMass.oGet(0) + centerOfMass.oGet(1) * centerOfMass.oGet(1)));
+            inertiaTensor.oPluSet(0, 1, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1));
+            inertiaTensor.oPluSet(1, 0, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1));
+            inertiaTensor.oPluSet(1, 2, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2));
+            inertiaTensor.oPluSet(2, 1, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2));
+            inertiaTensor.oPluSet(2, 0, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0));
+            inertiaTensor.oPluSet(0, 2, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0));
         }
 
         //

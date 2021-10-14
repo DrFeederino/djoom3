@@ -1,9 +1,8 @@
 package neo.Renderer;
 
-import neo.Renderer.RenderWorld_local.idRenderWorldLocal;
-import neo.Renderer.tr_local.*;
 import neo.TempDump.TODO_Exception;
 import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
@@ -103,11 +102,11 @@ public class tr_main {
         screenRect.y2 = idMath.FtoiFast(0.5f * (1.0f + bounds.oGet(1).z) * (tr.viewDef.viewport.y2 - tr.viewDef.viewport.y1));
 
         if (r_useDepthBoundsTest.GetInteger() != 0) {
-            float[] zmin = {screenRect.zmin}, zmax = {screenRect.zmax};
+            CFloat zmin = new CFloat(screenRect.zmin), zmax = new CFloat(screenRect.zmax);
             R_TransformEyeZToWin(-bounds.oGet(0).x, tr.viewDef.projectionMatrix, zmin);
             R_TransformEyeZToWin(-bounds.oGet(1).x, tr.viewDef.projectionMatrix, zmax);
-            screenRect.zmin = zmin[0];
-            screenRect.zmax = zmax[0];
+            screenRect.zmin = zmin.getVal();
+            screenRect.zmax = zmax.getVal();
         }
 
         return screenRect;
@@ -521,7 +520,7 @@ public class tr_main {
     }
 
     // transform Z in eye coordinates to window coordinates
-    public static void R_TransformEyeZToWin(float src_z, final float[] projectionMatrix, float[] dst_z) {
+    public static void R_TransformEyeZToWin(float src_z, final float[] projectionMatrix, CFloat dst_z) {
         final float clip_z, clip_w;
 
         // projection
@@ -529,10 +528,10 @@ public class tr_main {
         clip_w = src_z * projectionMatrix[3 + 2 * 4] + projectionMatrix[3 + 3 * 4];
 
         if (clip_w <= 0.0f) {
-            dst_z[0] = 0.0f;                    // clamp to near plane
+            dst_z.setVal(0.0f);                    // clamp to near plane
         } else {
-            dst_z[0] = clip_z / clip_w;
-            dst_z[0] = dst_z[0] * 0.5f + 0.5f;    // convert to window coords
+            dst_z.setVal(clip_z / clip_w);
+            dst_z.setVal(dst_z.getVal() * 0.5f + 0.5f);    // convert to window coords
         }
     }
 
@@ -901,20 +900,20 @@ public class tr_main {
      */
     public static void R_SetupViewFrustum() {
         int i;
-        float[] xs = {0.0f}, xc = {0.00f};
+        CFloat xs = new CFloat(0.0f), xc = new CFloat(0.0f);
         float ang;
 
         ang = DEG2RAD(tr.viewDef.renderView.fov_x) * 0.5f;
         idMath.SinCos(ang, xs, xc);
 
-        tr.viewDef.frustum[0].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oPlus(tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc[0])));
-        tr.viewDef.frustum[1].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oMinus(tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc[0])));
+        tr.viewDef.frustum[0].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal()).oPlus(tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc.getVal())));
+        tr.viewDef.frustum[1].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal()).oMinus(tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc.getVal())));
 
         ang = DEG2RAD(tr.viewDef.renderView.fov_y) * 0.5f;
         idMath.SinCos(ang, xs, xc);
 
-        tr.viewDef.frustum[2].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oPlus(tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc[0])));
-        tr.viewDef.frustum[3].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs[0]).oMinus(tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc[0])));
+        tr.viewDef.frustum[2].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal()).oPlus(tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc.getVal())));
+        tr.viewDef.frustum[3].oSet(tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal()).oMinus(tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc.getVal())));
 
         // plane four is the front clipping plane
         tr.viewDef.frustum[4].oSet( /* vec3_origin - */tr.viewDef.renderView.viewaxis.oGet(0));

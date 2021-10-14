@@ -5,6 +5,7 @@ import neo.framework.File_h.idFile;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Vector.idVec2;
@@ -344,11 +345,11 @@ public class RegExp {
         }
 
         public void ReadFromDemoFile(idDemoFile f) {
-            int[] c = new int[1];
+            CInt c = new CInt();
 
             f.ReadInt(c);
             regs.DeleteContents(true);
-            for (int i = 0; i < c[0]; i++) {
+            for (int i = 0; i < c.getVal(); i++) {
                 idRegister reg = new idRegister();
                 reg.ReadFromDemoFile(f);
                 regs.Append(reg);

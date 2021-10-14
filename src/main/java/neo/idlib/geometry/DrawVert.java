@@ -18,7 +18,9 @@ public class DrawVert {
         ByteBuffer data = BufferUtils.createByteBuffer(idDrawVert.BYTES * verts.length);
 
         for (idDrawVert vert : verts) {
-            data.put(vert.Write().rewind());
+            if (vert != null) {
+                data.put(vert.Write().rewind());
+            }
         }
 //        System.out.printf("%d %d %d %d\n", data.get(0) & 0xff, data.get(1) & 0xff, data.get(2) & 0xff, data.get(3) & 0xff);
 //        System.out.printf("%d %d %d %d\n", data.get(4) & 0xff, data.get(5) & 0xff, data.get(6) & 0xff, data.get(7) & 0xff);

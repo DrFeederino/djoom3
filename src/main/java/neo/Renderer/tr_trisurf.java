@@ -4,7 +4,6 @@ import neo.Renderer.Model.dominantTri_s;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.tr_local.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.containers.HashIndex.idHashIndex;
@@ -173,7 +172,7 @@ public class tr_trisurf {
 
 //
 //    static final idBlockAlloc<srfTriangles_s> srfTrianglesAllocator = new idBlockAlloc<>(1 << 8);
-//    
+//
 //    static final idDynamicBlockAlloc<idDrawVert> triVertexAllocator;
 //    static final idDynamicBlockAlloc</*glIndex_t*/Integer> triIndexAllocator;
 //    static final idDynamicBlockAlloc<shadowCache_s> triShadowVertexAllocator;
@@ -567,7 +566,9 @@ public class tr_trisurf {
         newTri.numVerts = tri.numVerts;
         newTri.numIndexes = tri.numIndexes;
 //	memcpy( newTri.verts, tri.verts, tri.numVerts * sizeof( newTri.verts[0] ) );
-        System.arraycopy(tri.verts, 0, newTri.verts, 0, tri.numVerts);
+        for (int i = 0; i < tri.numVerts; i++) {
+            newTri.verts[i] = new idDrawVert(tri.verts[i]);
+        }
 //	memcpy( newTri.indexes, tri.indexes, tri.numIndexes * sizeof( newTri.indexes[0] ) );
         System.arraycopy(tri.indexes, 0, newTri.indexes, 0, tri.numIndexes);
 
@@ -1027,7 +1028,7 @@ public class tr_trisurf {
         }
 
         if (c_duplicatedEdges != 0 || c_tripledEdges != 0) {
-            common.DWarning("%d duplicated edge directions, %d tripled edges", c_duplicatedEdges, c_tripledEdges);
+            common.DWarning("%s tri has %d duplicated edge directions, %d tripled edges", tri.silEdges, c_duplicatedEdges, c_tripledEdges);
         }
 
         // if we know that the vertexes aren't going
@@ -1072,7 +1073,9 @@ public class tr_trisurf {
                 if (j == 3) {
                     // we can cull this sil edge
 //				memmove( &silEdges[i], &silEdges[i+1], (numSilEdges-i-1) * sizeof( silEdges[i] ) );
-                    System.arraycopy(silEdges, i + 1, silEdges, i, numSilEdges - i - 1);
+                    for (int k = i; k < numSilEdges - i - 1; k++) {
+                        silEdges[i] = new silEdge_t(silEdges[i + 1]);
+                    }
                     c_coplanarCulled++;
                     numSilEdges--;
                     i--;
@@ -1104,13 +1107,17 @@ public class tr_trisurf {
             }
         }
 
-        tri.perfectHull = 0 == single;
+        if (single != 0) {
+            tri.perfectHull = true;
+        } else {
+            tri.perfectHull = false;
+        }
 
         tri.numSilEdges = numSilEdges;
-        tri.silEdges = new silEdge_t[numSilEdges];//triSilEdgeAllocator.Alloc(numSilEdges);
-//	memcpy( tri.silEdges, silEdges, numSilEdges * sizeof( tri.silEdges[0] ) );
-        System.arraycopy(silEdges, 0, tri.silEdges, 0, numSilEdges);
-        silEdges = silEdge_t.generateArray(silEdges.length);
+        tri.silEdges = new silEdge_t[numSilEdges];
+        for(i = 0; i < tri.numSilEdges; i++) {
+            tri.silEdges[i] = new silEdge_t(silEdges[i]);
+        }
     }
 
     /*
@@ -1277,7 +1284,9 @@ public class tr_trisurf {
             idDrawVert[] oldVerts = tri.verts;
             R_AllocStaticTriSurfVerts(tri, totalVerts);
 //	memcpy( tri.verts, oldVerts, tri.numVerts * sizeof( tri.verts[0] ) );
-            System.arraycopy(oldVerts, 0, tri.verts, 0, tri.numVerts);
+            for (i = 0; i < tri.numVerts; i++) {
+                tri.verts[i] = new idDrawVert(oldVerts[i]);
+            }
 //            triVertexAllocator.Free(oldVerts);
         }
 
@@ -1938,7 +1947,10 @@ public class tr_trisurf {
         for (i = 0; i < numSurfaces; i++) {
             tri = surfaces[i];
 //		memcpy( newTri.verts + totalVerts, tri.verts, tri.numVerts * sizeof( *tri.verts ) );
-            System.arraycopy(tri.verts, 0, newTri.verts, totalVerts, tri.numVerts);
+           
+            for (int k = 0, tv = totalVerts; k < tri.numVerts; k++, tv++) {
+                newTri.verts[tv] = new idDrawVert(tri.verts[k]);
+            }
             for (j = 0; j < tri.numIndexes; j++) {
                 newTri.indexes[totalIndexes + j] = totalVerts + tri.indexes[j];
             }
@@ -2251,14 +2263,20 @@ public class tr_trisurf {
     private static idDrawVert[] Resize(idDrawVert[] verts, int totalVerts) {
         idDrawVert[] newVerts = new idDrawVert[totalVerts];
 
-        System.arraycopy(verts, 0, newVerts, 0, verts.length);
+
+        for (int i = 0; i < verts.length; i++) {
+            newVerts[i] = new idDrawVert(verts[i]);
+        }
 
         return newVerts;
     }
 
     private static shadowCache_s[] Resize(shadowCache_s[] shadowVertexes, int numVerts) {
         shadowCache_s[] newArray = new shadowCache_s[numVerts];
-        System.arraycopy(shadowVertexes, 0, newArray, 0, Math.min(shadowVertexes.length, numVerts));
+        int length = Math.min(shadowVertexes.length, numVerts);
+        for (int i = 0; i < length; i++) {
+            newArray[i] = new shadowCache_s(shadowVertexes[i]);
+        }
         return newArray;
     }
 

@@ -23,6 +23,8 @@ import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Curve.idCurve_Spline;
 import neo.idlib.math.Math_h.idMath;
@@ -151,7 +153,7 @@ public class Moveable {
             super.Spawn();
 
             idTraceModel trm = new idTraceModel();
-            float[] density = {0}, friction = {0}, bouncyness = {0}, mass = {0};
+            CFloat density = new CFloat(), friction = new CFloat(), bouncyness = new CFloat(), mass = new CFloat();
             int clipShrink;
             idStr clipModelName = new idStr();
 
@@ -174,11 +176,11 @@ public class Moveable {
 
             // get rigid body properties
             spawnArgs.GetFloat("density", "0.5", density);
-            density[0] = idMath.ClampFloat(0.001f, 1000.0f, density[0]);
+            density.setVal( idMath.ClampFloat(0.001f, 1000.0f, density.getVal()));
             spawnArgs.GetFloat("friction", "0.05", friction);
-            friction[0] = idMath.ClampFloat(0.0f, 1.0f, friction[0]);
+            friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction.getVal()));
             spawnArgs.GetFloat("bouncyness", "0.6", bouncyness);
-            bouncyness[0] = idMath.ClampFloat(0.0f, 1.0f, bouncyness[0]);
+            bouncyness.setVal(idMath.ClampFloat(0.0f, 1.0f, bouncyness.getVal()));
             explode = spawnArgs.GetBool("explode");
             unbindOnDeath = spawnArgs.GetBool("unbindondeath");
 
@@ -204,19 +206,19 @@ public class Moveable {
 
             // setup the physics
             physicsObj.SetSelf(this);
-            physicsObj.SetClipModel(new idClipModel(trm), density[0]);
+            physicsObj.SetClipModel(new idClipModel(trm), density.getVal());
             physicsObj.GetClipModel().SetMaterial(GetRenderModelMaterial());
             physicsObj.SetOrigin(GetPhysics().GetOrigin());
             physicsObj.SetAxis(GetPhysics().GetAxis());
-            physicsObj.SetBouncyness(bouncyness[0]);
-            physicsObj.SetFriction(0.6f, 0.6f, friction[0]);
+            physicsObj.SetBouncyness(bouncyness.getVal());
+            physicsObj.SetFriction(0.6f, 0.6f, friction.getVal());
             physicsObj.SetGravity(gameLocal.GetGravity());
             physicsObj.SetContents(CONTENTS_SOLID);
             physicsObj.SetClipMask(MASK_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_MOVEABLECLIP);
             SetPhysics(physicsObj);
 
             if (spawnArgs.GetFloat("mass", "10", mass)) {
-                physicsObj.SetMass(mass[0]);
+                physicsObj.SetMass(mass.getVal());
             }
 
             if (spawnArgs.GetBool("nodrop")) {
@@ -261,7 +263,7 @@ public class Moveable {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] initialSplineTime = {0};
+            CInt initialSplineTime = new CInt();
 
             savefile.ReadString(brokenModel);
             savefile.ReadString(damage);
@@ -278,8 +280,8 @@ public class Moveable {
             savefile.ReadInt(initialSplineTime);
             savefile.ReadVec3(initialSplineDir);
 
-            if (initialSplineTime[0] != -1) {
-                InitInitialSpline(initialSplineTime[0]);
+            if (initialSplineTime.getVal() != -1) {
+                InitInitialSpline(initialSplineTime.getVal());
             } else {
                 initialSpline = null;
             }

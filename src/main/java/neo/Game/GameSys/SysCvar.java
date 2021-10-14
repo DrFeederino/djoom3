@@ -1,6 +1,5 @@
 package neo.Game.GameSys;
 
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.idCmdSystem;
 
 import java.util.Date;
@@ -74,7 +73,6 @@ public class SysCvar {
     public static final idCVar ai_testPredictPath = new idCVar("ai_testPredictPath", "0", CVAR_GAME | CVAR_BOOL, "");
     //
     // change anytime vars
-    public static final idCVar developer = new idCVar("developer", "0", CVAR_GAME | CVAR_BOOL, "");
     public static final idCVar g_TDMArrows = new idCVar("g_TDMArrows", "1", CVAR_GAME | CVAR_NETWORKSYNC | CVAR_BOOL, "draw arrows over teammates in team deathmatch");
     public static final idCVar g_armorProtection = new idCVar("g_armorProtection", "0.3", CVAR_GAME | CVAR_FLOAT | CVAR_ARCHIVE, "armor takes this percentage of damage");
     public static final idCVar g_armorProtectionMP = new idCVar("g_armorProtectionMP", "0.6", CVAR_GAME | CVAR_FLOAT | CVAR_ARCHIVE, "armor takes this percentage of damage in mp");

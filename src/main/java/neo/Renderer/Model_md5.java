@@ -1,7 +1,6 @@
 package neo.Renderer;
 
 import neo.Renderer.Material.idMaterial;
-import neo.Renderer.Model.*;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
 import neo.Renderer.Model_local.idRenderModelStatic;
 import neo.Renderer.RenderWorld.renderEntity_s;
@@ -12,6 +11,7 @@ import neo.idlib.Lib;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
@@ -254,6 +254,7 @@ public class Model_md5 {
             idDrawVert[] verts = new idDrawVert[texCoords.Num()];
             for (i = 0; i < texCoords.Num(); i++) {
                 verts[i] = new idDrawVert();
+                verts[i].Clear();
                 verts[i].st = texCoords.oGet(i);
             }
             TransformVerts(verts, joints);
@@ -656,7 +657,7 @@ public class Model_md5 {
 
         @Override
         public idRenderModel InstantiateDynamicModel(final renderEntity_s ent, final viewDef_s view, idRenderModel cachedModel) {
-            int[] surfaceNum = {0};
+            CInt surfaceNum = new CInt();
             idRenderModelStatic staticModel;
 
             if (cachedModel != null && !r_useCachedDynamicModels.GetBool()) {
@@ -721,8 +722,8 @@ public class Model_md5 {
                 modelSurface_s surf;
 
                 if (staticModel.FindSurfaceWithId(i, surfaceNum)) {
-                    mesh.surfaceNum = surfaceNum[0];
-                    surf = staticModel.surfaces.oGet(surfaceNum[0]);
+                    mesh.surfaceNum = surfaceNum.getVal();
+                    surf = staticModel.surfaces.oGet(surfaceNum.getVal());
                 } else {
 
                     // Remove Overlays before adding new surfaces

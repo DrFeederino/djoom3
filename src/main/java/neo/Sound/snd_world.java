@@ -10,16 +10,14 @@ import neo.Sound.snd_emitter.idSlowChannel;
 import neo.Sound.snd_emitter.idSoundChannel;
 import neo.Sound.snd_emitter.idSoundEmitterLocal;
 import neo.Sound.snd_emitter.idSoundFade;
-import neo.Sound.snd_local.*;
-import neo.Sound.snd_shader.*;
 import neo.Sound.snd_system.idSoundSystemLocal;
 import neo.Sound.sound.idSoundEmitter;
 import neo.Sound.sound.idSoundWorld;
-import neo.TempDump.*;
 import neo.framework.DemoFile.idDemoFile;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
@@ -1952,12 +1950,12 @@ public class snd_world {
                 idPlane pl = new idPlane();
                 re.w.GetPlane(pl);
 
-                float[] scale = {0};
+                CFloat scale = new CFloat();
                 idVec3 dir = listenerQU.oMinus(soundOrigin);
                 if (!pl.RayIntersection(soundOrigin, dir, scale)) {
                     source = re.w.GetCenter();
                 } else {
-                    source = soundOrigin.oPlus(dir.oMultiply(scale[0]));
+                    source = soundOrigin.oPlus(dir.oMultiply(scale.getVal()));
 
                     // if this point isn't inside the portal edges, slide it in
                     for (int i = 0; i < re.w.GetNumPoints(); i++) {

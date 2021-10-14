@@ -2,7 +2,6 @@ package neo.framework.Async;
 
 import neo.framework.Async.AsyncClient.idAsyncClient;
 import neo.framework.Async.AsyncServer.idAsyncServer;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.framework.CmdSystem.idCmdSystem;
 import neo.framework.UsercmdGen.usercmd_t;
@@ -11,6 +10,8 @@ import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.sys.sys_public.netadr_t;
+
+import java.util.stream.Stream;
 
 import static neo.Game.Game_local.game;
 import static neo.Renderer.RenderSystem.renderSystem;
@@ -35,17 +36,14 @@ import static neo.sys.win_input.Sys_GrabMouseCursor;
 import static neo.sys.win_net.Sys_StringToNetAdr;
 import static neo.sys.win_syscon.Sys_ShowConsole;
 
-/**
- *
- */
 public class AsyncNetwork {
     /*
-     DOOM III gold:	33
+     DOOM III gold:	    33
      1.1 beta patch:	34
-     1.1 patch:		35
+     1.1 patch:		    35
      1.2 XP:			36-39
-     1.3 patch:		40
-     1.3.1:			41
+     1.3 patch:		    40
+     1.3.1:			    41
      */
 
     public static final int ASYNC_PROTOCOL_MINOR = 41;
@@ -77,7 +75,6 @@ public class AsyncNetwork {
 
     // reliable client -> server messages
     public enum CLIENT_RELIABLE {
-
         CLIENT_RELIABLE_MESSAGE_PURE,
         CLIENT_RELIABLE_MESSAGE_CLIENTINFO,
         CLIENT_RELIABLE_MESSAGE_PRINT,
@@ -87,14 +84,12 @@ public class AsyncNetwork {
 
     // unreliable client -> server messages
     public enum CLIENT_UNRELIABLE {
-
         CLIENT_UNRELIABLE_MESSAGE_EMPTY,
         CLIENT_UNRELIABLE_MESSAGE_PINGRESPONSE,
         CLIENT_UNRELIABLE_MESSAGE_USERCMD
     }
 
     public enum SERVER_DL {
-
         _0_,
         SERVER_DL_REDIRECT,
         SERVER_DL_LIST,
@@ -102,7 +97,6 @@ public class AsyncNetwork {
     }
 
     public enum SERVER_PAK {
-
         SERVER_PAK_NO,
         SERVER_PAK_YES,
         SERVER_PAK_END
@@ -110,7 +104,6 @@ public class AsyncNetwork {
 
     // server print messages
     public enum SERVER_PRINT {
-
         SERVER_PRINT_MISC,
         SERVER_PRINT_BADPROTOCOL,
         SERVER_PRINT_RCON,
@@ -120,7 +113,6 @@ public class AsyncNetwork {
 
     // reliable server -> client messages
     public enum SERVER_RELIABLE {
-
         SERVER_RELIABLE_MESSAGE_PURE,
         SERVER_RELIABLE_MESSAGE_RELOAD,
         SERVER_RELIABLE_MESSAGE_CLIENTINFO,
@@ -139,24 +131,22 @@ public class AsyncNetwork {
 
      ===============================================================================
      */
-// unreliable server -> client messages
+    // unreliable server -> client messages
     public enum SERVER_UNRELIABLE {
-
         SERVER_UNRELIABLE_MESSAGE_EMPTY,
         SERVER_UNRELIABLE_MESSAGE_PING,
         SERVER_UNRELIABLE_MESSAGE_GAMEINIT,
         SERVER_UNRELIABLE_MESSAGE_SNAPSHOT
     }
 
+    /*master_t*/
     static class master_s {
-
-        netadr_t address;
-        boolean resolved;
-        idCVar var;
-    }/*master_t*/
+        netadr_t address = new netadr_t();
+        idCVar cVar;
+        boolean resolved = false;
+    }
 
     public static class idAsyncNetwork {
-
         public static final idCVar LANServer = new idCVar("net_LANServer", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NOCHEAT, "config LAN games only - affects clients and servers");
         public static final idCVar allowCheats = new idCVar("net_allowCheats", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NETWORKSYNC, "Allow cheats in network game");
         public static final idAsyncClient client = new idAsyncClient();
@@ -185,11 +175,14 @@ public class AsyncNetwork {
         public static final idCVar serverRemoteConsolePassword = new idCVar("net_serverRemoteConsolePassword", "", CVAR_SYSTEM | CVAR_NOCHEAT, "remote console password");
         public static final idCVar serverSnapshotDelay = new idCVar("net_serverSnapshotDelay", "50", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "delay between snapshots in milliseconds");
         public static final idCVar serverZombieTimeout = new idCVar("net_serverZombieTimeout", "5", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "disconnected client timeout in seconds");
+
         //
         public static final idCVar verbose = new idCVar("net_verbose", "0", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "1 = verbose output, 2 = even more verbose output", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
-        private static final master_s[] masters = new master_s[MAX_MASTER_SERVERS];    // master1 etc.
+        private static final master_s[] masters = Stream.generate(master_s::new)
+                .limit(MAX_MASTER_SERVERS)
+                .toArray(master_s[]::new);
         //
-        private static int realTime;
+        private static int realTime = 0;
         //    
         //
 
@@ -209,15 +202,12 @@ public class AsyncNetwork {
         }
 
         public static void Init() throws idException {
-
             realTime = 0;
-
-//	memset( masters, 0, sizeof( masters ) );
-            masters[0].var = master0;
-            masters[1].var = master1;
-            masters[2].var = master2;
-            masters[3].var = master3;
-            masters[4].var = master4;
+            masters[0].cVar = master0;
+            masters[1].cVar = master1;
+            masters[2].cVar = master2;
+            masters[3].cVar = master3;
+            masters[4].cVar = master4;
 
             if (!ID_DEMO_BUILD) {//#ifndef
                 cmdSystem.AddCommand("spawnServer", SpawnServer_f.getInstance(), CMD_FL_SYSTEM, "spawns a server", idCmdSystem.ArgCompletion_MapName.getInstance());
@@ -259,7 +249,6 @@ public class AsyncNetwork {
             client.RunFrame();
             server.RunFrame();
         }
-//
 
         public static void WriteUserCmdDelta(idBitMsg msg, final usercmd_t cmd, final usercmd_t base) {
             if (base != null) {
@@ -289,8 +278,6 @@ public class AsyncNetwork {
         }
 
         public static void ReadUserCmdDelta(final idBitMsg msg, usercmd_t cmd, final usercmd_t base) throws idException {
-//	memset( &cmd, 0, sizeof( cmd ) );
-
             if (base != null) {
                 cmd.gameTime = msg.ReadDeltaLongCounter(base.gameTime);
                 cmd.buttons = (byte) msg.ReadDeltaByte(base.buttons);
@@ -316,17 +303,13 @@ public class AsyncNetwork {
             cmd.angles[1] = (short) msg.ReadShort();
             cmd.angles[2] = (short) msg.ReadShort();
         }
-//
 
         public static boolean DuplicateUsercmd(final usercmd_t previousUserCmd, usercmd_t currentUserCmd, int frame, int time) {
-
             if (currentUserCmd.gameTime <= previousUserCmd.gameTime) {
-
                 currentUserCmd = previousUserCmd;
                 currentUserCmd.gameFrame = frame;
                 currentUserCmd.gameTime = time;
                 currentUserCmd.duplicateCount++;
-
                 if (currentUserCmd.duplicateCount > MAX_USERCMD_DUPLICATION) {
                     currentUserCmd.buttons &= ~BUTTON_ATTACK;
                     if (Math.abs(currentUserCmd.forwardmove) > 2) {
@@ -339,35 +322,34 @@ public class AsyncNetwork {
                         currentUserCmd.upmove >>= 1;
                     }
                 }
-
                 return true;
             }
             return false;
         }
 
         public static boolean UsercmdInputChanged(final usercmd_t previousUserCmd, final usercmd_t currentUserCmd) {
-            return previousUserCmd.buttons != currentUserCmd.buttons
-                    || previousUserCmd.forwardmove != currentUserCmd.forwardmove
-                    || previousUserCmd.rightmove != currentUserCmd.rightmove
-                    || previousUserCmd.upmove != currentUserCmd.upmove
-                    || previousUserCmd.angles[0] != currentUserCmd.angles[0]
-                    || previousUserCmd.angles[1] != currentUserCmd.angles[1]
-                    || previousUserCmd.angles[2] != currentUserCmd.angles[2];
+            return  previousUserCmd.buttons != currentUserCmd.buttons ||
+                    previousUserCmd.forwardmove != currentUserCmd.forwardmove ||
+                    previousUserCmd.rightmove != currentUserCmd.rightmove ||
+                    previousUserCmd.upmove != currentUserCmd.upmove ||
+                    previousUserCmd.angles[0] != currentUserCmd.angles[0] ||
+                    previousUserCmd.angles[1] != currentUserCmd.angles[1] ||
+                    previousUserCmd.angles[2] != currentUserCmd.angles[2];
         }
 
         //
         // returns true if the corresponding master is set to something (and could be resolved)
         public static boolean GetMasterAddress(int index, netadr_t adr) {
-            if (null == masters[index].var) {
+            if (null == masters[index].cVar) {
                 return false;
             }
-            if (masters[index].var.GetString().isEmpty()) {
+            if (masters[index].cVar.GetString().isEmpty()) {
                 return false;
             }
-            if (!masters[index].resolved || masters[index].var.IsModified()) {
-                masters[index].var.ClearModified();
-                if (!Sys_StringToNetAdr(masters[index].var.GetString(), masters[index].address, true)) {
-                    common.Printf("Failed to resolve master%d: %s\n", index, masters[index].var.GetString());
+            if (!masters[index].resolved || masters[index].cVar.IsModified()) {
+                masters[index].cVar.ClearModified();
+                if (!Sys_StringToNetAdr(masters[index].cVar.GetString(), masters[index].address, true)) {
+                    common.Printf("Failed to resolve master%d: %s\n", index, masters[index].cVar.GetString());
                     masters[index].address = new netadr_t();//memset( &masters[ index ].address, 0, sizeof( netadr_t ) );
                     masters[index].resolved = true;
                     return false;
@@ -437,11 +419,9 @@ public class AsyncNetwork {
 
             @Override
             public void run(idCmdArgs args) throws idException {
-
                 if (args.Argc() > 1) {
                     cvarSystem.SetCVarString("si_map", args.Argv(1));
                 }
-
                 // don't let a server spawn with singleplayer game type - it will crash
                 if (idStr.Icmp(cvarSystem.GetCVarString("si_gameType"), "singleplayer") == 0) {
                     cvarSystem.SetCVarString("si_gameType", "deathmatch");
@@ -501,12 +481,9 @@ public class AsyncNetwork {
          ==================
          */
         private static class Connect_f extends cmdFunction_t {
-
             private static final cmdFunction_t instance = new Connect_f();
-
             private Connect_f() {
             }
-
             public static cmdFunction_t getInstance() {
                 return instance;
             }

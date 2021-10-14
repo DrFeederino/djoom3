@@ -16,7 +16,6 @@ import neo.Game.Game_local.idEntityPtr;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
 import neo.Game.Player.idPlayer;
-import neo.TempDump.*;
 import neo.framework.CmdSystem.argCompletion_t;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.BV.Bounds.idBounds;
@@ -220,14 +219,14 @@ public class Anim_Testmodel {
                             copyJoint.mod = JOINTMOD_LOCAL_OVERRIDE;
                         }
 
-                        copyJoint.from[0] = animator.GetJointHandle(jointName.toString());
-                        if (copyJoint.from[0] == INVALID_JOINT) {
+                        copyJoint.from.setVal(animator.GetJointHandle(jointName.toString()));
+                        if (copyJoint.from.getVal() == INVALID_JOINT) {
                             gameLocal.Warning("Unknown copy_joint '%s'", jointName);
                             continue;
                         }
 
-                        copyJoint.to[0] = headAnimator.GetJointHandle(jointName.toString());
-                        if (copyJoint.to[0] == INVALID_JOINT) {
+                        copyJoint.to.setVal(headAnimator.GetJointHandle(jointName.toString()));
+                        if (copyJoint.to.getVal() == INVALID_JOINT) {
                             gameLocal.Warning("Unknown copy_joint '%s' on head", jointName);
                             continue;
                         }
@@ -564,14 +563,14 @@ public class Anim_Testmodel {
                     for (i = 0; i < copyJoints.Num(); i++) {
                         if (copyJoints.oGet(i).mod == JOINTMOD_WORLD_OVERRIDE) {
                             idMat3 mat = head.GetEntity().GetPhysics().GetAxis().Transpose();
-                            GetJointWorldTransform(copyJoints.oGet(i).from[0], gameLocal.time, pos, axis);
+                            GetJointWorldTransform(copyJoints.oGet(i).from.getVal(), gameLocal.time, pos, axis);
                             pos.oMinSet(head.GetEntity().GetPhysics().GetOrigin());
-                            headAnimator.SetJointPos(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, pos.oMultiply(mat));
-                            headAnimator.SetJointAxis(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, axis.oMultiply(mat));
+                            headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos.oMultiply(mat));
+                            headAnimator.SetJointAxis(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, axis.oMultiply(mat));
                         } else {
-                            animator.GetJointLocalTransform(copyJoints.oGet(i).from[0], gameLocal.time, pos, axis);
-                            headAnimator.SetJointPos(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, pos);
-                            headAnimator.SetJointAxis(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, axis);
+                            animator.GetJointLocalTransform(copyJoints.oGet(i).from.getVal(), gameLocal.time, pos, axis);
+                            headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos);
+                            headAnimator.SetJointAxis(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, axis);
                         }
                     }
                 }

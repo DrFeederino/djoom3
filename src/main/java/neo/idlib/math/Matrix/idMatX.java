@@ -4,6 +4,7 @@ import neo.TempDump;
 import neo.idlib.Lib;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Random;
@@ -33,10 +34,10 @@ public class idMatX {
 //===============================================================
 
     static final int MATX_MAX_TEMP = 1024;
+    private static final float[] temp = new float[MATX_MAX_TEMP + 4];    // used to store intermediate results
     //
     public static boolean DISABLE_RANDOM_TEST = false;
     public static boolean MATX_SIMD = true;
-    private static final float[] temp = new float[MATX_MAX_TEMP + 4];    // used to store intermediate results
     private static int tempIndex;           // index into memory pool, wraps around
     private static int tempPtr;             // pointer to 16 byte aligned temporary memory
     private int alloced;                // floats allocated, if -1 then mat points to data set with SetData
@@ -97,7 +98,7 @@ public class idMatX {
 
         size = 6;
         original.Random(size, size, 0);
-        original = original.oMultiply(original.Transpose());
+        original = new idMatX(original.oMultiply(original.Transpose()));
 
         index1 = new int[size + 1];
         index2 = new int[size + 1];
@@ -105,9 +106,9 @@ public class idMatX {
         /*
          idMatX::LowerTriangularInverse
          */
-        m1.oSet(original);
+        m1 = new idMatX(original);
         m1.ClearUpperTriangle();
-        m2.oSet(m1);
+        m2 = new idMatX(m1);
 
         m2.InverseSelf();
         m1.LowerTriangularInverse();
@@ -119,9 +120,9 @@ public class idMatX {
         /*
          idMatX::UpperTriangularInverse
          */
-        m1.oSet(original);
+        m1 = new idMatX(original);
         m1.ClearLowerTriangle();
-        m2.oSet(m1);
+        m2 = new idMatX(m1);
 
         m2.InverseSelf();
         m1.UpperTriangularInverse();
@@ -133,10 +134,10 @@ public class idMatX {
         /*
          idMatX::Inverse_GaussJordan
          */
-        m1.oSet(original);
+        m1 = new idMatX(original);
 
         m1.Inverse_GaussJordan();
-        m1.oMulSet(original);
+        m1 = new idMatX(m1.oMulSet(original));
 
         if (!m1.IsIdentity(1e-4f)) {
             idLib.common.Warning("idMatX::Inverse_GaussJordan failed");
@@ -145,8 +146,8 @@ public class idMatX {
         /*
          idMatX::Inverse_UpdateRankOne
          */
-        m1.oSet(original);
-        m2.oSet(original);
+        m1 = new idMatX(original);
+        m2 = new idMatX(original);
 
         w.Random(size, 1);
         v.Random(size, 2);
@@ -156,7 +157,9 @@ public class idMatX {
 
         // modify and invert m2
         m2.Update_RankOne(v, w, 1.0f);
-        assert m2.Inverse_GaussJordan();
+        if (!m2.Inverse_GaussJordan()) {
+            assert (false);
+        }
 
         // update inverse of m1
         m1.Inverse_UpdateRankOne(v, w, 1.0f);
@@ -169,8 +172,8 @@ public class idMatX {
          idMatX::Inverse_UpdateRowColumn
          */
         for (offset = 0; offset < size; offset++) {
-            m1.oSet(original);
-            m2.oSet(original);
+            m1 = new idMatX(original);
+            m2 = new idMatX(original);
 
             v.Random(size, 1);
             w.Random(size, 2);
@@ -181,7 +184,9 @@ public class idMatX {
 
             // modify and invert m2
             m2.Update_RowColumn(v, w, offset);
-            assert m2.Inverse_GaussJordan();
+            if (!m2.Inverse_GaussJordan()) {
+                assert (false);
+            }
 
             // update inverse of m1
             m1.Inverse_UpdateRowColumn(v, w, offset);
@@ -194,8 +199,8 @@ public class idMatX {
         /*
          idMatX::Inverse_UpdateIncrement
          */
-        m1.oSet(original);
-        m2.oSet(original);
+        m1 = new idMatX(original);
+        m2 = new idMatX(original);
 
         v.Random(size + 1, 1);
         w.Random(size + 1, 2);
@@ -206,7 +211,9 @@ public class idMatX {
 
         // modify and invert m2
         m2.Update_Increment(v, w);
-        assert m2.Inverse_GaussJordan();
+        if (!m2.Inverse_GaussJordan()) {
+            assert false;
+        }
 
         // update inverse of m1
         m1.Inverse_UpdateIncrement(v, w);
@@ -219,8 +226,8 @@ public class idMatX {
          idMatX::Inverse_UpdateDecrement
          */
         for (offset = 0; offset < size; offset++) {
-            m1.oSet(original);
-            m2.oSet(original);
+            m1 = new idMatX(original);
+            m2 = new idMatX(original);
 
             v.SetSize(6);
             w.SetSize(6);
@@ -234,7 +241,9 @@ public class idMatX {
 
             // modify and invert m2
             m2.Update_Decrement(offset);
-            assert m2.Inverse_GaussJordan();
+            if (!m2.Inverse_GaussJordan()) {
+                assert false;
+            }
 
             // update inverse of m1
             m1.Inverse_UpdateDecrement(v, w, offset);
@@ -272,7 +281,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_RankOne(v, w, 1.0f);
-        assert m2.LU_Factor(index2);
+        if (!m2.LU_Factor(index2)) {
+            assert false;
+        }
         m2.LU_MultiplyFactors(m3, index2);
         m2.oSet(m3);
 
@@ -302,7 +313,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_RowColumn(v, w, offset);
-            assert m2.LU_Factor(index2);
+            if (!m2.LU_Factor(index2)) {
+                assert false;
+            }
             m2.LU_MultiplyFactors(m3, index2);
             m2.oSet(m3);
 
@@ -331,7 +344,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_Increment(v, w);
-        assert m2.LU_Factor(index2);
+        if (!m2.LU_Factor(index2)) {
+            assert false;
+        }
         m2.LU_MultiplyFactors(m3, index2);
         m2.oSet(m3);
 
@@ -348,9 +363,8 @@ public class idMatX {
          idMatX::LU_UpdateDecrement
          */
         for (offset = 0; offset < size; offset++) {
-            m1 = new idMatX();//TODO:check m1=m3, m2=m2 refs!!!
-            m1.oSet(original);
-            m2.oSet(original);
+            m1 = new idMatX(original);
+            m2 = new idMatX(original);
 
             v.SetSize(6);
             w.SetSize(6);
@@ -364,7 +378,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_Decrement(offset);
-            assert m2.LU_Factor(index2);
+            if (!m2.LU_Factor(index2)) {
+                assert false;
+            }
             m2.LU_MultiplyFactors(m3, index2);
             m2.oSet(m3);
 
@@ -431,7 +447,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_RankOne(v, w, 1.0f);
-        assert m2.QR_Factor(c, d);
+        if (!m2.QR_Factor(c, d)) {
+            assert false;
+        }
         m2.QR_UnpackFactors(q2, r2, c, d);
         m2 = q2.oMultiply(r2);
 
@@ -463,7 +481,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_RowColumn(v, w, offset);
-            assert m2.QR_Factor(c, d);
+            if (!m2.QR_Factor(c, d)) {
+                assert false;
+            }
             m2.QR_UnpackFactors(q2, r2, c, d);
             m2 = q2.oMultiply(r2);
 
@@ -496,7 +516,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_Increment(v, w);
-        assert m2.QR_Factor(c, d);
+        if (!m2.QR_Factor(c, d)) {
+            assert false;
+        }
         m2.QR_UnpackFactors(q2, r2, c, d);
         m2 = q2.oMultiply(r2);
 
@@ -531,7 +553,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_Decrement(offset);
-            assert m2.QR_Factor(c, d);
+            if (!m2.QR_Factor(c, d)) {
+                assert false;
+            }
             m2.QR_UnpackFactors(q2, r2, c, d);
             m2 = q2.oMultiply(r2);
 
@@ -612,7 +636,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_RankOneSymmetric(w, 1.0f);
-        assert m2.Cholesky_Factor();
+        if (!m2.Cholesky_Factor()) {
+            assert false;
+        }
         m2.ClearUpperTriangle();
 
         // update factored m1
@@ -639,7 +665,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_RowColumnSymmetric(w, offset);
-            assert m2.Cholesky_Factor();
+            if (!m2.Cholesky_Factor()) {
+                assert false;
+            }
             m2.ClearUpperTriangle();
 
             // update m1
@@ -669,7 +697,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_IncrementSymmetric(w);
-        assert m2.Cholesky_Factor();
+        if (!m2.Cholesky_Factor()) {
+            assert false;
+        }
 
         // update factored m1
         m1.Cholesky_UpdateIncrement(w);
@@ -698,7 +728,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_Decrement(offset);
-            assert m2.Cholesky_Factor();
+            if (!m2.Cholesky_Factor()) {
+                assert false;
+            }
 
             // update factors of m1
             m1.Cholesky_UpdateDecrement(v, offset);
@@ -754,7 +786,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_RankOneSymmetric(w, 1.0f);
-        assert m2.LDLT_Factor();
+        if (!m2.LDLT_Factor()) {
+            assert false;
+        }
         m2.ClearUpperTriangle();
 
         // update factored m1
@@ -779,7 +813,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_RowColumnSymmetric(w, offset);
-            assert m2.LDLT_Factor();
+            if (!m2.LDLT_Factor()) {
+                assert false;
+            }
             m2.ClearUpperTriangle();
 
             // update m1
@@ -809,7 +845,9 @@ public class idMatX {
 
         // modify and factor m2
         m2.Update_IncrementSymmetric(w);
-        assert m2.LDLT_Factor();
+        if (!m2.LDLT_Factor()) {
+            assert false;
+        }
 
         // update factored m1
         m1.LDLT_UpdateIncrement(w);
@@ -838,7 +876,9 @@ public class idMatX {
 
             // modify and factor m2
             m2.Update_Decrement(offset);
-            assert m2.LDLT_Factor();
+            if (!m2.LDLT_Factor()) {
+                assert false;
+            }
 
             // update factors of m1
             m1.LDLT_UpdateDecrement(v, offset);
@@ -1156,7 +1196,8 @@ public class idMatX {
 
         s = numRows * numColumns;
         for (i = 0; i < s; i++) {
-            if (Math.abs(mat[i] - a.mat[i]) > epsilon) {
+            float res = Math.abs(mat[i] - a.mat[i]);
+            if (res > epsilon) {
                 return false;
             }
         }
@@ -1265,7 +1306,7 @@ public class idMatX {
         if (mat != null && alloced != -1) {
 //		Mem_Free16( mat );
         }
-        assert ((data.length & 15) == 0); // data must be 16 byte aligned
+        //assert ((data.length & 15) == 0); // data must be 16 byte aligned
         mat = data;
         alloced = -1;
         numRows = rows;
@@ -2336,23 +2377,39 @@ public class idMatX {
     }
 
     public void TransposeMultiply(idVecX dst, final idVecX vec) {// dst = this->Transpose() * vec
-        if (MATX_SIMD) {
-            SIMDProcessor.MatX_TransposeMultiplyVecX(dst, this, vec);
-        } else {
-            int i, j, mPtr;
-            final float[] vPtr, dstPtr;
+//        assert (numRows == a.numRows);
+//        assert ( dst != vec && dst != this );
+//
+//        dst.SetSize(numColumns, vec.GetSize());
+//        float*dstPtr = dst.ToFloatPtr();
+//        int k = numColumns;
+//        int l = a.numColumns;
+//        for (int i = 0; i < k; i++) {
+//            for (int j = 0; j < l; j++) {
+//			const float*m1Ptr = ToFloatPtr() + i;
+//			const float*m2Ptr = a.ToFloatPtr() + j;
+//                float sum = m1Ptr[0] * m2Ptr[0];
+//                for (int n = 1; n < numRows; n++) {
+//                    m1Ptr += numColumns;
+//                    m2Ptr += a.numColumns;
+//                    sum += m1Ptr[0] * m2Ptr[0];
+//                }
+//			*dstPtr++ = sum;
+//            }
+//        }
+        int i, j, mPtr;
+        final float[] vPtr, dstPtr;
 
-            vPtr = vec.ToFloatPtr();
-            dstPtr = dst.ToFloatPtr();
-            for (i = 0; i < numColumns; i++) {
-                mPtr = i;
-                float sum = mat[mPtr] * vPtr[0];
-                for (j = 1; j < numRows; j++) {
-                    mPtr += numColumns;
-                    sum += mat[mPtr] * vPtr[j];
-                }
-                dstPtr[i] = sum;
+        vPtr = vec.ToFloatPtr();
+        dstPtr = dst.ToFloatPtr();
+        for (i = 0; i < numColumns; i++) {
+            mPtr = i;
+            float sum = mat[mPtr] * vPtr[0];
+            for (j = 1; j < numRows; j++) {
+                mPtr += numColumns;
+                sum += mat[mPtr] * vPtr[j];
             }
+            dstPtr[i] = sum;
         }
     }
 
@@ -2537,6 +2594,7 @@ public class idMatX {
         for (i = 0; i < numRows; i++) {
             s = alpha * v.p[i];
             for (j = 0; j < numColumns; j++) {
+                //this.mat[i + j] += s * w.p[j];
                 this.oPluSet(i, j, s * w.p[j]);
             }
         }
@@ -2787,8 +2845,8 @@ public class idMatX {
         assert (v.GetSize() >= numColumns);
         assert (w.GetSize() >= numRows);
 
-        y.SetData(numRows, VECX_ALLOCA(numRows));
-        z.SetData(numRows, VECX_ALLOCA(numRows));
+        y.SetData(numRows, new float[numRows]);
+        z.SetData(numRows, new float[numRows]);
 
         Multiply(y, v);
         TransposeMultiply(z, w);
@@ -2803,7 +2861,9 @@ public class idMatX {
         for (i = 0; i < numRows; i++) {
             s = y.p[i] * alpha;
             for (j = 0; j < numColumns; j++) {
-                this.oMinSet(i, j, s * z.p[j]);
+                // (*this)[i][j]
+                float result = s * z.p[j];
+                this.oMinSet(i, j, result);
             }
         }
         return true;
@@ -2830,14 +2890,17 @@ public class idMatX {
         assert (r >= 0 && r < numRows && r < numColumns);
         assert (w.p[r] == 0.0f);
 
-        s.SetData(Lib.Max(numRows, numColumns), VECX_ALLOCA(Lib.Max(numRows, numColumns)));
+        s.SetData(Lib.Max(numRows, numColumns), new float[(Lib.Max(numRows, numColumns))]);
         s.Zero();
-        s.p[r] = 1.0f;
+        s.oSet(r, 1.0f);
 
         if (!Inverse_UpdateRankOne(v, s, 1.0f)) {
             return false;
         }
-        return Inverse_UpdateRankOne(s, w, 1.0f);
+        if (!Inverse_UpdateRankOne(s, w, 1.0f)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -2861,11 +2924,11 @@ public class idMatX {
         ChangeSize(numRows + 1, numColumns + 1, true);
         this.oSet(numRows - 1, numRows - 1, 1.0f);
 
-        v2.SetData(numRows, VECX_ALLOCA(numRows));
+        v2.SetData(numRows, new float[numRows]);
         v2 = v;
-        v2.p[numRows - 1] -= 1.0f;
-
-        return Inverse_UpdateRowColumn(v2, w, numRows - 1);
+        v2.oSet(numRows - 1, v.oGet(numRows - 1) - 1.0f); //v2.p[numRows - 1] -= 1.0f;
+        boolean isInversed = Inverse_UpdateRowColumn(v2, w, numRows - 1);
+        return isInversed;
     }
 
     /**
@@ -5720,18 +5783,18 @@ public class idMatX {
      * <p>
      * Complex scalar division. ============
      */
-    private void ComplexDivision(float xr, float xi, float yr, float yi, float[] cdivr, float[] cdivi) {
+    private void ComplexDivision(float xr, float xi, float yr, float yi, CFloat cdivr, CFloat cdivi) {
         float r, d;
         if (Math.abs(yr) > Math.abs(yi)) {
             r = yi / yr;
             d = yr + r * yi;
-            cdivr[0] = (xr + r * xi) / d;
-            cdivi[0] = (xi - r * xr) / d;
+            cdivr.setVal((xr + r * xi) / d);
+            cdivi.setVal((xi - r * xr) / d);
         } else {
             r = yr / yi;
             d = yi + r * yr;
-            cdivr[0] = (r * xr + xi) / d;
-            cdivi[0] = (r * xi - xr) / d;
+            cdivr.setVal( (r * xr + xi) / d);
+            cdivi.setVal( (r * xi - xr) / d);
         }
     }
 
@@ -6037,7 +6100,7 @@ public class idMatX {
                 }
             } else if (q < 0.0f) {    // complex vector
                 int l = n - 1;
-                float[] cr = {0}, ci = {0};
+                CFloat cr = new CFloat(), ci = new CFloat();
 
                 // last vector component imaginary so matrix is triangular
                 if (Math.abs(H.oGet(n, n - 1)) > Math.abs(H.oGet(n - 1, n))) {
@@ -6045,8 +6108,8 @@ public class idMatX {
                     H.oSet(n - 1, n, -(H.oGet(n, n) - p) / H.oGet(n, n - 1));
                 } else {
                     ComplexDivision(0.0f, -H.oGet(n - 1, n), H.oGet(n - 1, n - 1) - p, q, cr, ci);
-                    H.oSet(n - 1, n - 1, cr[0]);
-                    H.oSet(n - 1, n, ci[0]);
+                    H.oSet(n - 1, n - 1, cr.getVal());
+                    H.oSet(n - 1, n, ci.getVal());
                 }
                 H.oSet(n, n - 1, 0.0f);
                 H.oSet(n, n, 1.0f);
@@ -6068,8 +6131,8 @@ public class idMatX {
                         l = i;
                         if (imaginaryEigenValues.p[i] == 0.0f) {
                             ComplexDivision(-ra, -sa, w, q, cr, ci);
-                            H.oSet(i, n - 1, cr[0]);
-                            H.oSet(i, n, ci[0]);
+                            H.oSet(i, n - 1, cr.getVal());
+                            H.oSet(i, n, ci.getVal());
                         } else {
                             // solve complex equations
                             x = H.oGet(i, i + 1);
@@ -6080,15 +6143,15 @@ public class idMatX {
                                 vr = eps * norm * (Math.abs(w) + Math.abs(q) + Math.abs(x) + Math.abs(y) + Math.abs(z));
                             }
                             ComplexDivision(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi, cr, ci);
-                            H.oSet(i, n - 1, cr[0]);
-                            H.oSet(i, n, ci[0]);
+                            H.oSet(i, n - 1, cr.getVal());
+                            H.oSet(i, n, ci.getVal());
                             if (Math.abs(x) > (Math.abs(z) + Math.abs(q))) {
                                 H.oSet(i + 1, n - 1, (-ra - w * H.oGet(i, n - 1) + q * H.oGet(i, n)) / x);
                                 H.oSet(i + 1, n, (-sa - w * H.oGet(i, n) - q * H.oGet(i, n - 1)) / x);
                             } else {
                                 ComplexDivision(-r - y * H.oGet(i, n - 1), -s - y * H.oGet(i, n), z, q, cr, ci);
-                                H.oSet(i + 1, n - 1, cr[0]);
-                                H.oSet(i + 1, n, ci[0]);
+                                H.oSet(i + 1, n - 1, cr.getVal());
+                                H.oSet(i + 1, n, ci.getVal());
                             }
                         }
 

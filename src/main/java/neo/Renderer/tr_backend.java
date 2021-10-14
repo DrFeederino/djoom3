@@ -1,7 +1,7 @@
 package neo.Renderer;
 
 import neo.Renderer.Image.idImage;
-import neo.Renderer.tr_local.*;
+import neo.idlib.containers.CInt;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -544,8 +544,8 @@ public class tr_backend {
 
             // show in proportional size in mode 2
             if (r_showImages.GetInteger() == 2) {
-                w *= image.uploadWidth / 512.0f;
-                h *= image.uploadHeight / 512.0f;
+                w *= image.uploadWidth.getVal() / 512.0f;
+                h *= image.uploadHeight.getVal() / 512.0f;
             }
 
             image.Bind();
@@ -611,10 +611,10 @@ public class tr_backend {
         RB_LogComment("***************** RB_CopyRender *****************\n");
 
         if (cmd.image != null) {
-            int[] imageWidth = {cmd.imageWidth}, imageHeight = {cmd.imageHeight};
+            CInt imageWidth = new CInt(cmd.imageWidth), imageHeight = new CInt(cmd.imageHeight);
             cmd.image.CopyFramebuffer(cmd.x, cmd.y, imageWidth, imageHeight, false);
-            cmd.imageWidth = imageWidth[0];
-            cmd.imageHeight = imageHeight[0];
+            cmd.imageWidth = imageWidth.getVal();
+            cmd.imageHeight = imageHeight.getVal();
         }
     }
 

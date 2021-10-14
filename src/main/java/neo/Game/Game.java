@@ -9,13 +9,11 @@ import neo.Game.Animation.Anim.frameBlend_t;
 import neo.Game.Animation.Anim.idMD5Anim;
 import neo.Game.Animation.Anim_Blend.idAnim;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import neo.Game.Entity.*;
 import neo.Game.Player.idPlayer;
 import neo.Renderer.Model.idMD5Joint;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.ModelManager.idRenderModelManager;
 import neo.Renderer.RenderSystem.idRenderSystem;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.snd_shader.soundShaderParms_t;
 import neo.Sound.sound.idSoundEmitter;
@@ -39,6 +37,7 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.math.Angles.idAngles;
@@ -292,7 +291,7 @@ public class Game {
          generates a unique name for a given classname
          =============
          */
-        static StringBuilder name = new StringBuilder(1024);
+        static StringBuffer name = new StringBuffer(1024);
 
         // virtual						~idGameEdit() {}
         // These are the canonical idDict to parameter parsing routines used by both the game and tools.
@@ -339,10 +338,10 @@ public class Game {
 
                 // create a point light
                 if (!args.GetVector("light_radius", "300 300 300", renderLight.lightRadius)) {
-                    float[] radius = {0};
+                    CFloat radius = new CFloat();
 
                     args.GetFloat("light", "300", radius);
-                    renderLight.lightRadius.oSet(0, renderLight.lightRadius.oSet(1, renderLight.lightRadius.oSet(2, radius[0])));
+                    renderLight.lightRadius.oSet(0, renderLight.lightRadius.oSet(1, renderLight.lightRadius.oSet(2, radius.getVal())));
                 }
             }
 
@@ -1043,8 +1042,10 @@ public class Game {
 
             // save the original joints
             originalJoints = new idJointMat[numMD5joints];
-            System.arraycopy(ent.joints, 0, originalJoints, 0, numMD5joints);//memcpy(originalJoints, ent.joints, numMD5joints * sizeof(originalJoints[0]));
 
+            for (i = 0; i < numMD5joints; i++) {
+                originalJoints[i] = new idJointMat(ent.joints[i]);
+            }
             // buffer to store the joint mods
             jointMod = new declAFJointMod_t[numMD5joints];//memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
             modifiedOrigin = new idVec3[numMD5joints];//memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));

@@ -8,6 +8,7 @@ import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.tr_local.viewEntity_s;
 import neo.framework.DemoFile.idDemoFile;
 import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.containers.CFloat;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
@@ -339,12 +340,12 @@ public class ModelDecal {
                     } else {
                         for (int j = 0; j < 3; j++) {
                             idVec3 dir;
-                            float[] scale = new float[1];
+                            CFloat scale = new CFloat();
 
                             fw.oGet(j).oSet(stri.verts[stri.indexes[index + j]].xyz);
                             dir = fw.oGet(j).ToVec3().oMinus(localInfo.projectionOrigin);
                             localInfo.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 1].RayIntersection(fw.oGet(j).ToVec3(), dir, scale);
-                            dir = fw.oGet(j).ToVec3().oPlus(dir.oMultiply(scale[0]));
+                            dir = fw.oGet(j).ToVec3().oPlus(dir.oMultiply(scale.getVal()));
                             fw.oGet(j).s = localInfo.textureAxis[0].Distance(dir);
                             fw.oGet(j).t = localInfo.textureAxis[1].Distance(dir);
                         }

@@ -1,7 +1,7 @@
 package neo.sys;
 
 import neo.TempDump.TODO_Exception;
-import neo.framework.CVarSystem.*;
+import neo.idlib.containers.CInt;
 import neo.sys.sys_public.netadr_t;
 
 import java.net.*;
@@ -506,7 +506,7 @@ public class win_net {
      Net_GetUDPPacket
      ==================
      */
-    static boolean Net_GetUDPPacket(int netSocket, netadr_t net_from, char[] data, int[] size, int maxSize) {
+    static boolean Net_GetUDPPacket(int netSocket, netadr_t net_from, char[] data, CInt size, int maxSize) {
         throw new TODO_Exception();
 //	int 			ret;
 //	struct sockaddr	from;

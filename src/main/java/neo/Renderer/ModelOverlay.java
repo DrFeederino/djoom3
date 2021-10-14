@@ -6,6 +6,7 @@ import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
 import neo.framework.DemoFile.idDemoFile;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec2;
@@ -33,6 +34,14 @@ public class ModelOverlay {
 
         float[] st = new float[2];
         int vertexNum;
+
+        public overlayVertex_s() {
+        }
+
+        public overlayVertex_s(overlayVertex_s val) {
+            this.vertexNum = val.vertexNum;
+            System.arraycopy(val.st, 0, this.st, 0, this.st.length);
+        }
     }
 
     private static class overlaySurface_s {
@@ -41,7 +50,7 @@ public class ModelOverlay {
         int numIndexes;
         int numVerts;
         int surfaceId;
-        int[] surfaceNum = {0};
+        CInt surfaceNum = new CInt();
         overlayVertex_s[] verts;
 
         private void clear() {
@@ -192,11 +201,13 @@ public class ModelOverlay {
                 }
 
                 overlaySurface_s s = new overlaySurface_s();// Mem_Alloc(sizeof(overlaySurface_t));
-                s.surfaceNum[0] = surfNum;
+                s.surfaceNum.setVal(surfNum);
                 s.surfaceId = surf.id;
                 s.verts = new overlayVertex_s[numVerts];// Mem_Alloc(numVerts);
 //                memcpy(s.verts, overlayVerts, numVerts * sizeof(s.verts[0]));
-                System.arraycopy(overlayVerts, 0, s.verts, 0, numVerts);
+                for (i = 0; i < numVerts; i++) {
+                    s.verts[i] = new overlayVertex_s(overlayVerts[i]);
+                }
                 s.numVerts = numVerts;
                 s.indexes = new int[numIndexes];///*(glIndex_t *)*/Mem_Alloc(numIndexes);
 //                memcpy(s.indexes, overlayIndexes, numIndexes * sizeof(s.indexes[0]));
@@ -230,7 +241,7 @@ public class ModelOverlay {
         // Creates new model surfaces for baseModel, which should be a static instantiation of a dynamic model.
         public void AddOverlaySurfacesToModel(idRenderModel baseModel) {
             int i, j, k, numVerts, numIndexes;
-            final int[] surfaceNum = new int[1];
+            final CInt surfaceNum = new CInt();
             modelSurface_s baseSurf;
             idRenderModelStatic staticModel;
             overlaySurface_s surf;
@@ -269,7 +280,7 @@ public class ModelOverlay {
                 }
 
                 if (staticModel.FindSurfaceWithId(-1 - k, surfaceNum)) {
-                    newSurf = staticModel.surfaces.oGet(surfaceNum[0]);
+                    newSurf = staticModel.surfaces.oGet(surfaceNum.getVal());
                 } else {
                     newSurf = staticModel.surfaces.Alloc();
                     newSurf.geometry = null;
@@ -294,8 +305,8 @@ public class ModelOverlay {
                     surf = materials.oGet(k).surfaces.oGet(i);
 
                     // get the model surface for this overlay surface
-                    if (surf.surfaceNum[0] < staticModel.NumSurfaces()) {
-                        baseSurf = staticModel.Surface(surf.surfaceNum[0]);
+                    if (surf.surfaceNum.getVal() < staticModel.NumSurfaces()) {
+                        baseSurf = staticModel.Surface(surf.surfaceNum.getVal());
                     } else {
                         baseSurf = null;
                     }
@@ -304,7 +315,7 @@ public class ModelOverlay {
                     if (null == baseSurf || baseSurf.id != surf.surfaceId) {
                         // find the surface with the correct id
                         if (staticModel.FindSurfaceWithId(surf.surfaceId, surf.surfaceNum)) {
-                            baseSurf = staticModel.Surface(surf.surfaceNum[0]);
+                            baseSurf = staticModel.Surface(surf.surfaceNum.getVal());
                         } else {
                             // the surface with this id no longer exists
                             FreeSurface(surf);

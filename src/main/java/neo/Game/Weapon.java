@@ -4,7 +4,6 @@ import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AI.AI.idAI;
-import neo.Game.Actor.*;
 import neo.Game.Entity.idAnimatedEntity;
 import neo.Game.Entity.idEntity;
 import neo.Game.Game.refSound_t;
@@ -12,17 +11,13 @@ import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Item.idMoveableItem;
-import neo.Game.Player.*;
 import neo.Game.Projectile.idDebris;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Program.idScriptBool;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Trigger.idTrigger;
-import neo.Renderer.Material.*;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
 import neo.framework.DeclParticle.idDeclParticle;
@@ -33,10 +28,11 @@ import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
@@ -117,6 +113,7 @@ public class Weapon {
     public static final int LIGHTID_VIEW_MUZZLE_FLASH = 100;
     //
     public static final int LIGHTID_WORLD_MUZZLE_FLASH = 1;
+
     /*
      ===============================================================================
 
@@ -196,6 +193,36 @@ public class Weapon {
         private final idScriptBool WEAPON_NETRELOAD = new idScriptBool();
         private final idScriptBool WEAPON_RAISEWEAPON = new idScriptBool();
         private final idScriptBool WEAPON_RELOAD = new idScriptBool();
+        private final idDict brassDict;
+        //
+        private final idVec3 flashColor;
+        private final idStr icon;
+        private final idStr idealState;
+        private final idStr meleeDefName;
+        private final idMat3 muzzleAxis;
+        //
+        // the muzzle bone's position, used for launching projectiles and trailing smoke
+        private final idVec3 muzzleOrigin;
+        private final idAngles muzzle_kick_angles;
+        private final idVec3 muzzle_kick_offset;
+        //
+        private final idVec3 nozzleGlowColor;      // color of the nozzle glow
+        private final idMat3 playerViewAxis;
+        //
+        // these are the player render view parms, which include bobbing
+        private final idVec3 playerViewOrigin;
+        private final idDict projectileDict;
+        //
+        private final idVec3 pushVelocity;
+        private final idStr state;
+        private final idVec3 strikePos;            // position of last melee strike
+        private final idMat3 viewWeaponAxis;
+        //
+        // the view weapon render entity parms
+        private final idVec3 viewWeaponOrigin;
+        //
+//
+        private final idEntityPtr<idAnimatedEntity> worldModel;
         private boolean allowDrop;
         private int ammoClip;
         private int ammoRequired;         // amount of ammo to use each shot.  0 means weapon doesn't need ammo.
@@ -212,14 +239,11 @@ public class Weapon {
         // berserk
         private int berserk;
         private int brassDelay;
-        private final idDict brassDict;
         private int clipSize;             // 0 means no reload
         private boolean continuousSmoke;      // if smoke is continuous ( chainsaw )
         private boolean disabled;
         private int /*jointHandle_t*/         ejectJointView;
         private int /*jointHandle_t*/         ejectJointWorld;
-        //
-        private final idVec3 flashColor;
         private int /*jointHandle_t*/         flashJointView;
         //
         private int /*jointHandle_t*/         flashJointWorld;
@@ -241,8 +265,6 @@ public class Weapon {
         //
         // hiding (for GUIs and NPCs)
         private int hideTime;
-        private final idStr icon;
-        private final idStr idealState;
         // a projectile is launched
         // mp client
         private boolean isFiring;
@@ -254,20 +276,13 @@ public class Weapon {
         private boolean lightOn;
         private int lowAmmo;              // if ammo in clip hits this threshold, snd_
         private idDeclEntityDef meleeDef;
-        private final idStr meleeDefName;
         private float meleeDistance;
-        private final idMat3 muzzleAxis;
         //
         // muzzle flash
         private renderLight_s muzzleFlash;          // positioned on view weapon bone
         private int muzzleFlashEnd;
         private int muzzleFlashHandle;
-        //
-        // the muzzle bone's position, used for launching projectiles and trailing smoke
-        private final idVec3 muzzleOrigin;
-        private final idAngles muzzle_kick_angles;
         private int muzzle_kick_maxtime;
-        private final idVec3 muzzle_kick_offset;
         private int muzzle_kick_time;
         private int nextStrikeFx;         // used for sound and decal ( may use for strike smoke too )
         //
@@ -276,40 +291,25 @@ public class Weapon {
         // this also assumes a nozzle light atm
         private int nozzleFxFade;         // time it takes to fade between the effects
         private renderLight_s nozzleGlow;           // nozzle light
-        //
-        private final idVec3 nozzleGlowColor;      // color of the nozzle glow
         private int nozzleGlowHandle;     // handle for nozzle light
         private float nozzleGlowRadius;     // radius of glow light
         private idMaterial nozzleGlowShader;     // shader for glow light
         //
         private idPlayer owner;
-        private final idMat3 playerViewAxis;
-        //
-        // these are the player render view parms, which include bobbing
-        private final idVec3 playerViewOrigin;
         private boolean powerAmmo;            // true if the clip reduction is a factor of the power setting when
-        private final idDict projectileDict;
         //
         // precreated projectile
         private idEntity projectileEnt;
-        //
-        private final idVec3 pushVelocity;
         private boolean silent_fire;
         //
         // sound
         private idSoundShader sndHum;
-        private final idStr state;
         private weaponStatus_t status;
         private idMat3 strikeAxis;           // axis of last melee strike
-        private final idVec3 strikePos;            // position of last melee strike
         private idDeclParticle strikeSmoke;          // striking something in melee
         private int strikeSmokeStartTime; // timing
         private idThread thread;
         private int /*jointHandle_t*/         ventLightJointView;
-        private final idMat3 viewWeaponAxis;
-        //
-        // the view weapon render entity parms
-        private final idVec3 viewWeaponOrigin;
         //
         // weighting for viewmodel angles
         private int weaponAngleOffsetAverages;
@@ -326,9 +326,6 @@ public class Weapon {
         // new style muzzle smokes
         private idDeclParticle weaponSmoke;          // null if it doesn't smoke
         private int weaponSmokeStartTime; // set to gameLocal.time every weapon fire
-//
-//
-        private final idEntityPtr<idAnimatedEntity> worldModel;
         // virtual					~idWeapon();
         //
         private renderLight_s worldMuzzleFlash;     // positioned on world weapon bone
@@ -428,7 +425,7 @@ public class Weapon {
 
          ***********************************************************************/
         public static int /*ammo_t*/ GetAmmoNumForName(final String ammoname) {
-            int[] num = new int[1];
+            CInt num = new CInt();
             idDict ammoDict;
 
             assert (ammoname != null);
@@ -446,11 +443,11 @@ public class Weapon {
                 idGameLocal.Error("Unknown ammo type '%s'", ammoname);
             }
 
-            if ((num[0] < 0) || (num[0] >= AMMO_NUMTYPES)) {
+            if ((num.getVal() < 0) || (num.getVal() >= AMMO_NUMTYPES)) {
                 idGameLocal.Error("Ammo type '%s' value out of range.  Maximum ammo types is %d.\n", ammoname, AMMO_NUMTYPES);
             }
 
-            return num[0];
+            return num.getVal();
         }
 
         public static String GetAmmoNameForNum(int /*ammo_t*/ ammonum) {
@@ -1898,19 +1895,19 @@ public class Weapon {
             return zoomFov;
         }
 
-        public void GetWeaponAngleOffsets(int[] average, float[] scale, float[] max) {
-            average[0] = weaponAngleOffsetAverages;
-            scale[0] = weaponAngleOffsetScale;
-            max[0] = weaponAngleOffsetMax;
+        public void GetWeaponAngleOffsets(CInt average, CFloat scale, CFloat max) {
+            average.setVal(weaponAngleOffsetAverages);
+            scale.setVal(weaponAngleOffsetScale);
+            max.setVal(weaponAngleOffsetMax);
         }
 
-        public void GetWeaponTimeOffsets(float[] time, float[] scale) {
-            time[0] = weaponOffsetTime;
-            scale[0] = weaponOffsetScale;
+        public void GetWeaponTimeOffsets(CFloat time, CFloat scale) {
+            time.setVal(weaponOffsetTime);
+            scale.setVal(weaponOffsetScale);
         }
 
         public boolean BloodSplat(float size) {
-            float[] s = new float[1], c = new float[1];
+            CFloat s = new CFloat(), c = new CFloat();
             idMat3 localAxis = new idMat3(), axistemp = new idMat3();
             idVec3 localOrigin = new idVec3(), normal;
 
@@ -1939,8 +1936,8 @@ public class Weapon {
 
             localAxis.oSet(2, normal.oNegative());
             localAxis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1));
-            localAxis.oSet(0, axistemp.oGet(0).oMultiply(c[0]).oPlus(axistemp.oGet(1).oMultiply(-s[0])));
-            localAxis.oSet(1, axistemp.oGet(0).oMultiply(-s[0]).oPlus(axistemp.oGet(1).oMultiply(-c[0])));
+            localAxis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())));
+            localAxis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())));
 
             localAxis.oGet(0).oMulSet(1.0f / size);
             localAxis.oGet(1).oMulSet(1.0f / size);
@@ -2071,23 +2068,23 @@ public class Weapon {
 
         // flashlight
         private void AlertMonsters() {
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idEntity ent;
             idVec3 end = muzzleFlash.origin.oPlus(muzzleFlash.axis.oMultiply(muzzleFlash.target));
 
             gameLocal.clip.TracePoint(tr, muzzleFlash.origin, end, CONTENTS_OPAQUE | MASK_SHOT_RENDERMODEL | CONTENTS_FLASHLIGHT_TRIGGER, owner);
             if (g_debugWeapon.GetBool()) {
                 gameRenderWorld.DebugLine(colorYellow, muzzleFlash.origin, end, 0);
-                gameRenderWorld.DebugArrow(colorGreen, muzzleFlash.origin, tr[0].endpos, 2, 0);
+                gameRenderWorld.DebugArrow(colorGreen, muzzleFlash.origin, tr.endpos, 2, 0);
             }
 
-            if (tr[0].fraction < 1.0f) {
-                ent = gameLocal.GetTraceEntity(tr[0]);
+            if (tr.fraction < 1.0f) {
+                ent = gameLocal.GetTraceEntity(tr);
                 if (ent.IsType(idAI.class)) {
                     ((idAI) ent).TouchedByFlashlight(owner);
                 } else if (ent.IsType(idTrigger.class)) {
                     ent.Signal(SIG_TOUCH);
-                    ent.ProcessEvent(EV_Touch, owner, tr[0]);
+                    ent.ProcessEvent(EV_Touch, owner, tr);
                 }
             }
 
@@ -2097,16 +2094,16 @@ public class Weapon {
             gameLocal.clip.TracePoint(tr, muzzleFlash.origin, end, CONTENTS_OPAQUE | MASK_SHOT_RENDERMODEL | CONTENTS_FLASHLIGHT_TRIGGER, owner);
             if (g_debugWeapon.GetBool()) {
                 gameRenderWorld.DebugLine(colorYellow, muzzleFlash.origin, end, 0);
-                gameRenderWorld.DebugArrow(colorGreen, muzzleFlash.origin, tr[0].endpos, 2, 0);
+                gameRenderWorld.DebugArrow(colorGreen, muzzleFlash.origin, tr.endpos, 2, 0);
             }
 
-            if (tr[0].fraction < 1.0f) {
-                ent = gameLocal.GetTraceEntity(tr[0]);
+            if (tr.fraction < 1.0f) {
+                ent = gameLocal.GetTraceEntity(tr);
                 if (ent.IsType(idAI.class)) {
                     ((idAI) ent).TouchedByFlashlight(owner);
                 } else if (ent.IsType(idTrigger.class)) {
                     ent.Signal(SIG_TOUCH);
-                    ent.ProcessEvent(EV_Touch, owner, tr[0]);
+                    ent.ProcessEvent(EV_Touch, owner, tr);
                 }
             }
         }
@@ -2276,10 +2273,10 @@ public class Weapon {
             // if the desired point is inside or very close to a wall, back it up until it is clear
             idVec3 start = muzzleFlash.origin.oMinus(playerViewAxis.oGet(0).oMultiply(16));
             idVec3 end = muzzleFlash.origin.oPlus(playerViewAxis.oGet(0).oMultiply(8));
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL, owner);
             // be at least 8 units away from a solid
-            muzzleFlash.origin = tr[0].endpos.oMinus(playerViewAxis.oGet(0).oMultiply(8));
+            muzzleFlash.origin = tr.endpos.oMinus(playerViewAxis.oGet(0).oMultiply(8));
 
             // put the world muzzle flash on the end of the joint, no matter what
             GetGlobalJointTransform(false, flashJointWorld, worldMuzzleFlash.origin, worldMuzzleFlash.axis);
@@ -2567,8 +2564,8 @@ public class Weapon {
             idVec3 dir;
             float ang;
             float spin;
-            float[] distance = {0};
-            trace_s[] tr = {null};
+            CFloat distance = new CFloat();
+            trace_s tr = new trace_s();
             idVec3 start;
             idVec3 muzzle_pos = new idVec3();
             idBounds ownerBounds, projBounds;
@@ -2658,8 +2655,8 @@ public class Weapon {
                         dir = playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin))));
                         dir.Normalize();
                         gameLocal.clip.Translation(tr, muzzle_pos, muzzle_pos.oPlus(dir.oMultiply(4096.0f)), null, getMat3_identity(), MASK_SHOT_RENDERMODEL, owner);
-                        if (tr[0].fraction < 1.0f) {
-                            idProjectile.ClientPredictionCollide(this, projectileDict, tr[0], getVec3_origin(), true);
+                        if (tr.fraction < 1.0f) {
+                            idProjectile.ClientPredictionCollide(this, projectileDict, tr, getVec3_origin(), true);
                         }
                     }
                 }
@@ -2705,13 +2702,13 @@ public class Weapon {
                     if (i == 0) {
                         muzzle_pos = muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f));
                         if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle_pos, playerViewAxis.oGet(0), distance)) {
-                            start = muzzle_pos.oPlus(playerViewAxis.oGet(0).oMultiply(distance[0]));
+                            start = muzzle_pos.oPlus(playerViewAxis.oGet(0).oMultiply(distance.getVal()));
                         } else {
                             start = ownerBounds.GetCenter();
                         }
                         gameLocal.clip.Translation(tr, start, muzzle_pos, proj.GetPhysics().GetClipModel(), proj.GetPhysics().GetClipModel().GetAxis(), MASK_SHOT_RENDERMODEL, owner
                         );
-                        muzzle_pos = tr[0].endpos;
+                        muzzle_pos = tr.endpos;
                     }
 
                     proj.Launch(muzzle_pos, dir, pushVelocity, fuseOffset.value, launchPower.value, dmgPower);
@@ -2793,7 +2790,7 @@ public class Weapon {
 
         private void Event_Melee() {
             idEntity ent;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
 
             if (null == meleeDef) {
                 idGameLocal.Error("No meleeDef on '%s'", weaponDef.dict.GetString("classname"));
@@ -2803,8 +2800,8 @@ public class Weapon {
                 idVec3 start = playerViewOrigin;
                 idVec3 end = start.oPlus(playerViewAxis.oGet(0).oMultiply(meleeDistance * owner.PowerUpModifier(MELEE_DISTANCE)));
                 gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL, owner);
-                if (tr[0].fraction < 1.0f) {
-                    ent = gameLocal.GetTraceEntity(tr[0]);
+                if (tr.fraction < 1.0f) {
+                    ent = gameLocal.GetTraceEntity(tr);
                 } else {
                     ent = null;
                 }
@@ -2822,14 +2819,14 @@ public class Weapon {
                 if (ent != null) {
 
                     float push = meleeDef.dict.GetFloat("push");
-                    idVec3 impulse = tr[0].c.normal.oMultiply(-push * owner.PowerUpModifier(SPEED));
+                    idVec3 impulse = tr.c.normal.oMultiply(-push * owner.PowerUpModifier(SPEED));
 
                     if (gameLocal.world.spawnArgs.GetBool("no_Weapons") && (ent.IsType(idActor.class) || ent.IsType(idAFAttachment.class))) {
                         idThread.ReturnInt(0);
                         return;
                     }
 
-                    ent.ApplyImpulse(this, tr[0].c.id, tr[0].c.point, impulse);
+                    ent.ApplyImpulse(this, tr.c.id, tr.c.point, impulse);
 
                     // weapon stealing - do this before damaging so weapons are not dropped twice
                     if (gameLocal.isMultiplayer
@@ -2844,7 +2841,7 @@ public class Weapon {
                         idVec3 kickDir = new idVec3(), globalKickDir;
                         meleeDef.dict.GetVector("kickDir", "0 0 0", kickDir);
                         globalKickDir = muzzleAxis.oMultiply(kickDir);
-                        ent.Damage(owner, owner, globalKickDir, meleeDefName.toString(), owner.PowerUpModifier(MELEE_DAMAGE), tr[0].c.id);
+                        ent.Damage(owner, owner, globalKickDir, meleeDefName.toString(), owner.PowerUpModifier(MELEE_DAMAGE), tr.c.id);
                         hit = true;
                     }
 
@@ -2854,11 +2851,11 @@ public class Weapon {
 
                             hitSound = meleeDef.dict.GetString(owner.PowerUpActive(BERSERK) ? "snd_hit_berserk" : "snd_hit");
 
-                            ent.AddDamageEffect(tr[0], impulse, meleeDef.dict.GetString("classname"));
+                            ent.AddDamageEffect(tr, impulse, meleeDef.dict.GetString("classname"));
 
                         } else {
 
-                            surfTypes_t type = tr[0].c.material.GetSurfaceType();
+                            surfTypes_t type = tr.c.material.GetSurfaceType();
                             if (type == SURFTYPE_NONE) {
                                 type = surfTypes_t.values()[GetDefaultSurfaceType()];
                             }
@@ -2876,7 +2873,7 @@ public class Weapon {
                                 // project decal
                                 decal = weaponDef.dict.GetString("mtr_strike");
                                 if (isNotNullOrEmpty(decal)) {
-                                    gameLocal.ProjectDecal(tr[0].c.point, tr[0].c.normal.oNegative(), 8.0f, true, 6.0f, decal);
+                                    gameLocal.ProjectDecal(tr.c.point, tr.c.normal.oNegative(), 8.0f, true, 6.0f, decal);
                                 }
                                 nextStrikeFx = gameLocal.time + 200;
                             } else {
@@ -2884,8 +2881,8 @@ public class Weapon {
                             }
 
                             strikeSmokeStartTime = gameLocal.time;
-                            strikePos.oSet(tr[0].c.point);
-                            strikeAxis.oSet(tr[0].endAxis.oNegative());
+                            strikePos.oSet(tr.c.point);
+                            strikeAxis.oSet(tr.endAxis.oNegative());
                         }
                     }
                 }

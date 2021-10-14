@@ -18,6 +18,7 @@ import neo.idlib.BV.Frustum.idFrustum;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
@@ -275,7 +276,9 @@ public class RenderWorld {
             this.customSkin = newEntity.customSkin;
             this.referenceSound = newEntity.referenceSound;
             System.arraycopy(newEntity.shaderParms, 0, this.shaderParms, 0, this.shaderParms.length);
-            System.arraycopy(newEntity.gui, 0, this.gui, 0, this.gui.length);
+            for (int i = 0; i < this.gui.length; i++) {
+                this.gui[i] = newEntity.gui[i];
+            }
             this.remoteRenderView = newEntity.remoteRenderView;
             this.numJoints = newEntity.numJoints;
             this.joints = newEntity.joints;
@@ -291,15 +294,15 @@ public class RenderWorld {
 
         public void atomicSet(Atomics.renderEntityShadow shadow) {
             this.hModel = shadow.hModel;
-            this.entityNum = shadow.entityNum[0];
-            this.bodyId = shadow.bodyId[0];
+            this.entityNum = shadow.entityNum.getVal();
+            this.bodyId = shadow.bodyId.getVal();
             this.bounds = shadow.bounds;
             this.callback = shadow.callback;
             this.callbackData = shadow.callbackData;
-            this.suppressSurfaceInViewID = shadow.suppressSurfaceInViewID[0];
-            this.suppressShadowInViewID = shadow.suppressShadowInViewID[0];
-            this.suppressShadowInLightID = shadow.suppressShadowInLightID[0];
-            this.allowSurfaceInViewID = shadow.allowSurfaceInViewID[0];
+            this.suppressSurfaceInViewID = shadow.suppressSurfaceInViewID.getVal();
+            this.suppressShadowInViewID = shadow.suppressShadowInViewID.getVal();
+            this.suppressShadowInLightID = shadow.suppressShadowInLightID.getVal();
+            this.allowSurfaceInViewID = shadow.allowSurfaceInViewID.getVal();
             this.origin = shadow.origin;
             this.axis = shadow.axis;
             this.customShader = shadow.customShader;
@@ -307,16 +310,16 @@ public class RenderWorld {
             this.customSkin = shadow.customSkin;
             this.referenceSound = shadow.referenceSound;
             this.remoteRenderView = shadow.remoteRenderView;
-            this.numJoints = shadow.numJoints[0];
+            this.numJoints = shadow.numJoints.getVal();
             this.joints = shadow.joints;
-            this.modelDepthHack = shadow.modelDepthHack[0];
-            this.noSelfShadow = shadow.noSelfShadow[0];
-            this.noShadow = shadow.noShadow[0];
-            this.noDynamicInteractions = shadow.noDynamicInteractions[0];
-            this.weaponDepthHack = shadow.weaponDepthHack[0];
-            this.forceUpdate = shadow.forceUpdate[0];
-            this.timeGroup = shadow.timeGroup[0];
-            this.xrayIndex = shadow.xrayIndex[0];
+            this.modelDepthHack = shadow.modelDepthHack.getVal();
+            this.noSelfShadow = shadow.noSelfShadow.isVal();
+            this.noShadow = shadow.noShadow.isVal();
+            this.noDynamicInteractions = shadow.noDynamicInteractions.isVal();
+            this.weaponDepthHack = shadow.weaponDepthHack.isVal();
+            this.forceUpdate = shadow.forceUpdate.getVal();
+            this.timeGroup = shadow.timeGroup.getVal();
+            this.xrayIndex = shadow.xrayIndex.getVal();
         }
 
         public void clear() {
@@ -593,15 +596,15 @@ public class RenderWorld {
             this.axis = shadow.axis;
             this.origin = shadow.origin;
 
-            this.suppressLightInViewID = shadow.suppressLightInViewID[0];
+            this.suppressLightInViewID = shadow.suppressLightInViewID.getVal();
 
-            this.allowLightInViewID = shadow.allowLightInViewID[0];
+            this.allowLightInViewID = shadow.allowLightInViewID.getVal();
 
-            this.noShadows = shadow.noShadows[0];
-            this.noSpecular = shadow.noSpecular[0];
+            this.noShadows = shadow.noShadows.isVal();
+            this.noSpecular = shadow.noSpecular.isVal();
 
-            this.pointLight = shadow.pointLight[0];
-            this.parallel = shadow.parallel[0];
+            this.pointLight = shadow.pointLight.isVal();
+            this.parallel = shadow.parallel.isVal();
             this.lightRadius = shadow.lightRadius;
             this.lightCenter = shadow.lightCenter;
 
@@ -614,7 +617,7 @@ public class RenderWorld {
 
             this.prelightModel = shadow.prelightModel;
 
-            this.lightId = shadow.lightId[0];
+            this.lightId = shadow.lightId.getVal();
             this.shader = shadow.shader;
             this.referenceSound = shadow.referenceSound;
         }
@@ -663,24 +666,24 @@ public class RenderWorld {
         }
 
         public void atomicSet(Atomics.renderViewShadow shadow) {
-            this.viewID = shadow.viewID[0];
+            this.viewID = shadow.viewID.getVal();
 
-            this.x = shadow.x[0];
-            this.y = shadow.y[0];
-            this.width = shadow.width[0];
-            this.height = shadow.height[0];
+            this.x = shadow.x.getVal();
+            this.y = shadow.y.getVal();
+            this.width = shadow.width.getVal();
+            this.height = shadow.height.getVal();
 
-            this.fov_x = shadow.fov_x[0];
-            this.fov_y = shadow.fov_y[0];
+            this.fov_x = shadow.fov_x.getVal();
+            this.fov_y = shadow.fov_y.getVal();
             this.vieworg = new idVec3(shadow.vieworg);
             this.viewaxis = new idMat3(shadow.viewaxis);
 
-            this.cramZNear = shadow.cramZNear[0];
-            this.forceUpdate = shadow.forceUpdate[0];
+            this.cramZNear = shadow.cramZNear.isVal();
+            this.forceUpdate = shadow.forceUpdate.isVal();
 
-            this.time = shadow.time[0];
+            this.time = shadow.time.getVal();
             for (int a = 0; a < MAX_GLOBAL_SHADER_PARMS; a++) {
-                this.shaderParms[a] = shadow.shaderParms[a][0];
+                this.shaderParms[a] = shadow.shaderParms[a].getVal();
             }
             this.globalMaterial = shadow.globalMaterial;
         }
@@ -873,7 +876,7 @@ public class RenderWorld {
         // is less than 30hz
         // demoTimeOffset will be set if a new map load command was processed before
         // the next renderScene
-        public abstract boolean ProcessDemoCommand(idDemoFile readDemo, renderView_s demoRenderView, int[] demoTimeOffset);
+        public abstract boolean ProcessDemoCommand(idDemoFile readDemo, renderView_s demoRenderView, CInt demoTimeOffset);
 
         // this is used to regenerate all interactions ( which is currently only done during influences ), there may be a less
         // expensive way to do it

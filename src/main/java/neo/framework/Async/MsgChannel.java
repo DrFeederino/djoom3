@@ -5,6 +5,7 @@ import neo.framework.Compressor.idCompressor;
 import neo.framework.File_h.idFile_BitMsg;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Lib.idException;
+import neo.idlib.containers.CInt;
 import neo.sys.sys_public.idPort;
 import neo.sys.sys_public.netadr_t;
 
@@ -153,7 +154,6 @@ public class MsgChannel {
         }
 
         public void Shutdown() {
-//	delete compressor;
             compressor = null;
         }
 
@@ -221,7 +221,7 @@ public class MsgChannel {
             if (deltaTime > 1000) {
                 return true;
             }
-            return ((lastDataBytes - (deltaTime * maxRate) / 1000) <= 0);
+            return ( (lastDataBytes - (deltaTime * maxRate) / 1000) <= 0 );
         }
 //
 
@@ -369,7 +369,7 @@ public class MsgChannel {
         // is ready for further processing. In that case the read pointer of msg
         // points to the first byte ready for reading, and sequence is set to
         // the sequence number of the message.
-        public boolean Process(final netadr_t from, int time, idBitMsg msg, int[] sequence) {
+        public boolean Process(final netadr_t from, int time, idBitMsg msg, CInt sequence) {
             int fragStart, fragLength, dropped;
             boolean fragmented;
             idBitMsg fragMsg = new idBitMsg();
@@ -386,11 +386,11 @@ public class MsgChannel {
             UpdateIncomingRate(time, msg.GetSize());
 
             // get sequence numbers
-            sequence[0] = msg.ReadLong();
+            sequence.setVal(msg.ReadLong());
 
             // check for fragment information
-            if ((sequence[0] & FRAGMENT_BIT) != 0) {
-                sequence[0] &= ~FRAGMENT_BIT;
+            if ((sequence.getVal() & FRAGMENT_BIT) != 0) {
+                sequence.setVal(sequence.getVal() & ~FRAGMENT_BIT);
                 fragmented = true;
             } else {
                 fragmented = false;
@@ -407,18 +407,18 @@ public class MsgChannel {
 
             if (net_channelShowPackets.GetBool()) {
                 if (fragmented) {
-                    common.Printf("%d recv %4d : s = %d fragment = %d,%d\n", id, msg.GetSize(), sequence[0], fragStart, fragLength);
+                    common.Printf("%d recv %4d : s = %d fragment = %d,%d\n", id, msg.GetSize(), sequence.getVal(), fragStart, fragLength);
                 } else {
-                    common.Printf("%d recv %4d : s = %d\n", id, msg.GetSize(), sequence[0]);
+                    common.Printf("%d recv %4d : s = %d\n", id, msg.GetSize(), sequence.getVal());
                 }
             }
 
             //
             // discard out of order or duplicated packets
             //
-            if (sequence[0] <= incomingSequence) {
+            if (sequence.getVal() <= incomingSequence) {
                 if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
-                    common.Printf("%s: out of order packet %d at %d\n", Sys_NetAdrToString(remoteAddress), sequence[0], incomingSequence);
+                    common.Printf("%s: out of order packet %d at %d\n", Sys_NetAdrToString(remoteAddress), sequence.getVal(), incomingSequence);
                 }
                 return false;
             }
@@ -426,10 +426,10 @@ public class MsgChannel {
             //
             // dropped packets don't keep this message from being used
             //
-            dropped = sequence[0] - (incomingSequence + 1);
+            dropped = sequence.getVal() - (incomingSequence + 1);
             if (dropped > 0) {
                 if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
-                    common.Printf("%s: dropped %d packets at %d\n", Sys_NetAdrToString(remoteAddress), dropped, sequence[0]);
+                    common.Printf("%s: dropped %d packets at %d\n", Sys_NetAdrToString(remoteAddress), dropped, sequence.getVal());
                 }
                 UpdatePacketLoss(time, 0, dropped);
             }
@@ -439,15 +439,15 @@ public class MsgChannel {
             //
             if (fragmented) {
                 // make sure we have the correct sequence number
-                if (sequence[0] != fragmentSequence) {
-                    fragmentSequence = sequence[0];
+                if (sequence.getVal() != fragmentSequence) {
+                    fragmentSequence = sequence.getVal();
                     fragmentLength = 0;
                 }
 
                 // if we missed a fragment, dump the message
                 if (fragStart != fragmentLength) {
                     if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
-                        common.Printf("%s: dropped a message fragment at seq %d\n", Sys_NetAdrToString(remoteAddress), sequence[0]);
+                        common.Printf("%s: dropped a message fragment at seq %d\n", Sys_NetAdrToString(remoteAddress), sequence.getVal());
                     }
                     // we can still keep the part that we have so far,
                     // so we don't need to clear fragmentLength
@@ -489,7 +489,7 @@ public class MsgChannel {
             fragMsg.SetSize(fragmentLength);
             fragMsg.BeginReading();
 
-            incomingSequence = sequence[0];
+            incomingSequence = sequence.getVal();
 
             // read the message data
             return ReadMessageData(msg, fragMsg);
@@ -515,7 +515,7 @@ public class MsgChannel {
         // Returns true if a new reliable message is available and stores the message.
 
         public boolean GetReliableMessage(idBitMsg msg) {
-            int[] size = new int[1];
+            CInt size = new CInt();
             boolean result;
 
             result = reliableReceive.Get(msg.GetData().array(), size);
@@ -561,7 +561,7 @@ public class MsgChannel {
 
         private boolean ReadMessageData(idBitMsg out, final idBitMsg msg) {
             int reliableAcknowledge, reliableSequence;
-            int[] reliableMessageSize = new int[1];
+            CInt reliableMessageSize = new CInt();
 
             // read message size
             out.SetSize(msg.ReadShort());
@@ -584,18 +584,18 @@ public class MsgChannel {
             }
 
             // read reliable messages
-            reliableMessageSize[0] = out.ReadShort();
-            while (reliableMessageSize[0] != 0) {
-                if (reliableMessageSize[0] <= 0 || reliableMessageSize[0] > out.GetSize() - out.GetReadCount()) {
+            reliableMessageSize.setVal(out.ReadShort());
+            while (reliableMessageSize.getVal() != 0) {
+                if (reliableMessageSize.getVal() <= 0 || reliableMessageSize.getVal() > out.GetSize() - out.GetReadCount()) {
                     common.Printf("%s: bad reliable message\n", Sys_NetAdrToString(remoteAddress));
                     return false;
                 }
                 reliableSequence = out.ReadLong();
                 if (reliableSequence == reliableReceive.GetLast() + 1) {
-                    reliableReceive.Add(Arrays.copyOfRange(out.GetData().array(), out.GetReadCount(), out.GetData().capacity()), reliableMessageSize[0]);
+                    reliableReceive.Add(Arrays.copyOfRange(out.GetData().array(), out.GetReadCount(), out.GetData().capacity()), reliableMessageSize.getVal());
                 }
-                out.ReadData(null, reliableMessageSize[0]);
-                reliableMessageSize[0] = out.ReadShort();
+                out.ReadData(null, reliableMessageSize.getVal());
+                reliableMessageSize.setVal(out.ReadShort());
             }
 
             return true;
@@ -689,15 +689,15 @@ public class MsgChannel {
             return true;
         }
 
-        public boolean Get(byte[] data, int[] size) {
+        public boolean Get(byte[] data, CInt size) {
             if (first == last) {
-                size[0] = 0;
+                size.setVal(0);
                 return false;
             }
             int sequence;
-//	size = ReadShort();
+        	size.setVal(ReadShort());
             sequence = ReadLong();
-            ReadData(data, size[0]);
+            ReadData(data, size.getVal());
             assert (sequence == first);
             first++;
             return true;

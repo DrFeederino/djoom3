@@ -589,7 +589,7 @@ public class IK /*ea*/ {
                     kneeOrigin = new idVec3(), hipOrigin = new idVec3(), waistOrigin = new idVec3();
             idMat3 modelAxis, waistAxis = new idMat3(), axis = new idMat3();
             idMat3[] hipAxis = new idMat3[MAX_LEGS], kneeAxis = new idMat3[MAX_LEGS], ankleAxis = new idMat3[MAX_LEGS];
-            trace_s[] results = {null};
+            trace_s results = new trace_s();
 
             if (null == self || !gameLocal.isNewFrame) {
                 return;
@@ -648,14 +648,14 @@ public class IK /*ea*/ {
                 start = jointOrigins[i].oPlus(normal.oMultiply(footUpTrace));
                 end = jointOrigins[i].oMinus(normal.oMultiply(footDownTrace));
                 gameLocal.clip.Translation(results, start, end, footModel, getMat3_identity(), CONTENTS_SOLID | CONTENTS_IKCLIP, self);
-                floorHeights[i] = results[0].endpos.oMultiply(normal);
+                floorHeights[i] = results.endpos.oMultiply(normal);
 
                 if (ik_debug.GetBool() && footModel != null) {
                     idFixedWinding w = new idFixedWinding();
                     for (int j = 0; j < footModel.GetTraceModel().numVerts; j++) {
                         w.oPluSet(footModel.GetTraceModel().verts[j]);
                     }
-                    gameRenderWorld.DebugWinding(colorRed, w, results[0].endpos, results[0].endAxis);
+                    gameRenderWorld.DebugWinding(colorRed, w, results.endpos, results.endAxis);
                 }
             }
 
@@ -721,7 +721,7 @@ public class IK /*ea*/ {
                 start = waistOrigin;
                 end = waistOrigin.oPlus(waistOffset.oMinus(normal.oMultiply(minWaistFloorDist)));
                 gameLocal.clip.Translation(results, start, end, footModel, modelAxis, CONTENTS_SOLID | CONTENTS_IKCLIP, self);
-                height = (waistOrigin.oPlus(waistOffset.oMinus(results[0].endpos))).oMultiply(normal);
+                height = (waistOrigin.oPlus(waistOffset.oMinus(results.endpos))).oMultiply(normal);
                 if (height < minWaistFloorDist) {
                     waistOffset.oPluSet(normal.oMultiply(minWaistFloorDist - height));
                 }
@@ -1071,7 +1071,7 @@ public class IK /*ea*/ {
             idVec3 modelOrigin, shoulderOrigin = new idVec3(), elbowOrigin = new idVec3(), handOrigin = new idVec3(), shoulderDir, elbowDir;
             idMat3 modelAxis, axis = new idMat3();
             idMat3[] shoulderAxis = new idMat3[MAX_ARMS], elbowAxis = new idMat3[MAX_ARMS];
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
 
             modelOrigin = self.GetRenderEntity().origin;
             modelAxis = self.GetRenderEntity().axis;
@@ -1090,7 +1090,7 @@ public class IK /*ea*/ {
 
                 // get first collision going from shoulder to hand
                 gameLocal.clip.TracePoint(trace, shoulderOrigin, handOrigin, CONTENTS_SOLID, self);
-                handOrigin = trace[0].endpos;
+                handOrigin = trace.endpos;
 
                 // get the IK bend direction
                 animator.GetJointTransform(elbowJoints[i], gameLocal.time, elbowOrigin, axis);

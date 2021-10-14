@@ -237,7 +237,7 @@ public class snd_system {
             common.StartupVariable("s_useOpenAL", true);
             common.StartupVariable("s_useEAXReverb", true);
 
-            if (idSoundSystemLocal.s_useOpenAL.GetBool() || idSoundSystemLocal.s_useEAXReverb.GetBool()) {
+            if (idSoundSystemLocal.s_useOpenAL.GetBool() && idSoundSystemLocal.s_useEAXReverb.GetBool()) {
                 if (!Sys_LoadOpenAL()) {
                     idSoundSystemLocal.s_useOpenAL.SetBool(false);
                 } else {
@@ -352,7 +352,7 @@ public class snd_system {
                 // adjust source count back up to allow for freeing of all resources
                 openalSourceCount += 8;
 
-                for (int/*ALsizei*/ i = 0; i < openalSourceCount; i++) {
+                for (int/*ALsizei*/ i = 0; i < openalSources.length; i++) {
                     // stop source
                     alSourceStop(openalSources[i].handle);
                     alSourcei(openalSources[i].handle, AL_BUFFER, 0);

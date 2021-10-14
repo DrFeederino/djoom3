@@ -2,6 +2,7 @@ package neo.idlib.math;
 
 import neo.Renderer.Model.dominantTri_s;
 import neo.TempDump;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
@@ -461,24 +462,22 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void Dot(float[] dot, float[] src1, float[] src2, int count) {
-//#if 1
-//
+        public void Dot(CFloat dot, float[] src1, float[] src2, int count) {
             switch (count) {
                 case 0: {
-                    dot[0] = 0.0f;
+                    dot.setVal(0.0f);
                     return;
                 }
                 case 1: {
-                    dot[0] = src1[0] * src2[0];
+                    dot.setVal(src1[0] * src2[0]);
                     return;
                 }
                 case 2: {
-                    dot[0] = src1[0] * src2[0] + src1[1] * src2[1];
+                    dot.setVal(src1[0] * src2[0] + src1[1] * src2[1]);
                     return;
                 }
                 case 3: {
-                    dot[0] = src1[0] * src2[0] + src1[1] * src2[1] + src1[2] * src2[2];
+                    dot.setVal(src1[0] * src2[0] + src1[1] * src2[1] + src1[2] * src2[2]);
                     return;
                 }
                 default: {
@@ -522,18 +521,9 @@ public class Simd_Generic {
                     sum += s2;
                     sum += s1;
                     sum += s0;
-                    dot[0] = (float) sum;
+                    dot.setVal((float) sum);
                 }
             }
-//
-//#else
-//
-//            dot = 0.0f;
-//            for ( i = 0; i < count; i++) {
-//                dot += src1[i] * src2[i];
-//            }
-//
-//#endif
         }
 
         /*
@@ -702,13 +692,13 @@ public class Simd_Generic {
         }
 
         @Override
-        public void MinMax(float[] min, float[] max, float[] src, int count) {
-            min[0] = idMath.INFINITY;
-            max[0] = -idMath.INFINITY;
+        public void MinMax(CFloat min, CFloat max, float[] src, int count) {
+            min.setVal(idMath.INFINITY);
+            max.setVal(-idMath.INFINITY);
 
             for (int _IX = 0; _IX < count; _IX++) {
-                if (src[(_IX)] < min[0]) min[0] = src[(_IX)];
-                if (src[(_IX)] > max[0]) max[0] = src[(_IX)];
+                if (src[(_IX)] < min.getVal()) min.setVal(src[(_IX)]);
+                if (src[(_IX)] > max.getVal()) max.setVal(src[(_IX)]);
             }
         }
 

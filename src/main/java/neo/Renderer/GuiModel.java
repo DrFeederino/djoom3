@@ -7,6 +7,7 @@ import neo.Renderer.tr_local.drawSurf_s;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.Renderer.tr_local.viewEntity_s;
 import neo.framework.DemoFile.idDemoFile;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idFixedWinding;
@@ -118,15 +119,15 @@ public class GuiModel {
         }
 
         public void ReadFromDemo(idDemoFile demo) {
-            int[] i = new int[1];
+            CInt i = new CInt();
             int j;
-            int[] k = new int[1];
+            CInt k = new CInt();
             char[] color = {0};
 
-            i[0] = verts.Num();
+            i.setVal( verts.Num());
             demo.ReadInt(i);
-            verts.SetNum(i[0], false);
-            for (j = 0; j < i[0]; j++) {
+            verts.SetNum(i.getVal(), false);
+            for (j = 0; j < i.getVal(); j++) {
                 demo.ReadVec3(verts.oGet(j).xyz);
                 demo.ReadVec2(verts.oGet(j).st);
                 demo.ReadVec3(verts.oGet(j).normal);
@@ -142,18 +143,18 @@ public class GuiModel {
                 verts.oGet(j).color[3] = (byte) color[0];
             }
 
-            i[0] = indexes.Num();
+            i.setVal(indexes.Num());
             demo.ReadInt(i);
-            indexes.SetNum(i[0], false);
-            for (j = 0; j < i[0]; j++) {
+            indexes.SetNum(i.getVal(), false);
+            for (j = 0; j < i.getVal(); j++) {
                 demo.ReadInt(k);
-                indexes.oSet(j, k[0]);
+                indexes.oSet(j, k.getVal());
             }
 
-            i[0] = surfaces.Num();
+            i.setVal(surfaces.Num());
             demo.ReadInt(i);
-            surfaces.SetNum(i[0], false);
-            for (j = 0; j < i[0]; j++) {
+            surfaces.SetNum(i.getVal(), false);
+            for (j = 0; j < i.getVal(); j++) {
                 guiModelSurface_t surf = surfaces.oGet(j);
 
 //                demo.ReadInt((int) surf.material);
@@ -398,7 +399,9 @@ public class GuiModel {
                 }
 
                 //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
-                System.arraycopy(dVerts, 0, verts.getList(), numVerts, vertCount);//no need to memcpy here. dVerts has no back references.
+                for (int i = 0; i < vertCount; i++) {
+                    verts.oSet(i + numVerts, new idDrawVert(dVerts[i]));
+                }
 //                }
             }
         }
@@ -613,7 +616,9 @@ public class GuiModel {
             }
 
 //            memcpy(verts[numVerts], tempVerts, vertCount * sizeof(verts[0]));
-            System.arraycopy(tempVerts, 0, verts.getList(), numVerts, vertCount);
+            for (int i = 0; i < vertCount; i++) {
+                verts.oSet(i, new idDrawVert(tempVerts[i]));
+            }
         }
 
         //---------------------------

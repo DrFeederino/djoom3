@@ -81,13 +81,13 @@ public class AASBuild {
             str.StripLeading('-');
 
             if (str.Icmp("usePatches") == 0) {
-                settings.usePatches[0] = true;
+                settings.usePatches.setVal(true);
                 common.Printf("usePatches = true\n");
             } else if (str.Icmp("writeBrushMap") == 0) {
-                settings.writeBrushMap[0] = true;
+                settings.writeBrushMap.setVal(true);
                 common.Printf("writeBrushMap = true\n");
             } else if (str.Icmp("playerFlood") == 0) {
-                settings.playerFlood[0] = true;
+                settings.playerFlood.setVal(true);
                 common.Printf("playerFlood = true\n");
             } else if (str.Icmp("noOptimize") == 0) {
                 settings.noOptimize = true;
@@ -211,7 +211,7 @@ public class AASBuild {
 //		delete expandedBrushes[i];
             }
 
-            if (aasSettings.writeBrushMap[0]) {
+            if (aasSettings.writeBrushMap.isVal()) {
                 bsp.WriteBrushMap(fileName, new idStr("_" + aasSettings.fileExtension), AREACONTENTS_SOLID);
             }
 
@@ -241,7 +241,7 @@ public class AASBuild {
             // melt portal windings
             bsp.MeltPortals(AREACONTENTS_SOLID);
 
-            if (aasSettings.writeBrushMap[0]) {
+            if (aasSettings.writeBrushMap.isVal()) {
                 WriteLedgeMap(fileName, new idStr("_" + aasSettings.fileExtension + "_ledge"));
             }
 
@@ -738,7 +738,7 @@ public class AASBuild {
                     continue;
                 }
                 if (mapPrim.GetType() == idMapPrimitive.TYPE_PATCH) {
-                    if (aasSettings.usePatches[0]) {
+                    if (aasSettings.usePatches.isVal()) {
                         brushList = AddBrushesForMapPatch((idMapPatch) mapPrim, origin, axis, entityNum, i, brushList);
                     }
 //                    continue;
@@ -824,7 +824,7 @@ public class AASBuild {
                         } else {
                             normal = p.GetPlane().Normal();
                         }
-                        if (normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos[0]) {
+                        if (normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal()) {
                             p.SetFlag(FACE_FLOOR);
                         } else {
                             p.SetFlag(FACE_SOLID);
@@ -851,7 +851,7 @@ public class AASBuild {
             } else {
                 normal = portal.GetPlane().Normal();
             }
-            return normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos[0];
+            return normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal();
         }
 
         private void GravSubdivLeafNode(idBrushBSPNode node) {
@@ -1195,7 +1195,7 @@ public class AASBuild {
             for (i = 0; i < ledgeList.Num(); i++) {
 
                 ledgeList.oGet(i).CreateBevels(aasSettings.gravityDir);
-                ledgeList.oGet(i).Expand(aasSettings.boundingBoxes[0], aasSettings.maxStepHeight[0]);
+                ledgeList.oGet(i).Expand(aasSettings.boundingBoxes[0], aasSettings.maxStepHeight.getVal());
 
                 // if we should write out a ledge map
                 if (ledgeMap != null) {
@@ -1350,15 +1350,15 @@ public class AASBuild {
                     winding.Clear();
                     winding.oPluSet(v1.oPlus(normal.oMultiply(LEDGE_EPSILON * 0.5f)));
                     winding.oPluSet(v2.oPlus(normal.oMultiply(LEDGE_EPSILON * 0.5f)));
-                    winding.oPluSet(winding.oGet(1).ToVec3().oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight[0] + 1.0f)));
-                    winding.oPluSet(winding.oGet(0).ToVec3().oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight[0] + 1.0f)));
+                    winding.oPluSet(winding.oGet(1).ToVec3().oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal() + 1.0f)));
+                    winding.oPluSet(winding.oGet(0).ToVec3().oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal() + 1.0f)));
 
                     winding.GetBounds(bounds);
                     origin = (bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f));
                     radius = origin.Length() + LEDGE_EPSILON;
                     origin = bounds.oGet(0).oPlus(origin);
 
-                    plane.FitThroughPoint(v1.oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight[0])));
+                    plane.FitThroughPoint(v1.oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal())));
 
                     if (!IsLedgeSide_r(root, winding, plane, normal, origin, radius)) {
                         continue;

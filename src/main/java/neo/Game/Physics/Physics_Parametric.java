@@ -8,13 +8,14 @@ import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_Base.idPhysics_Base;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Curve.idCurve_Spline;
-import neo.idlib.math.Extrapolate.*;
 import neo.idlib.math.Interpolate.idInterpolateAccelDecelLinear;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
-import neo.idlib.math.Vector.*;
 
 import static neo.Game.Entity.TH_PHYSICS;
 import static neo.Game.Game_local.gameLocal;
@@ -85,20 +86,19 @@ public class Physics_Parametric {
      ================
      */
     static void idPhysics_Parametric_RestorePState(idRestoreGame savefile, parametricPState_s state) {
-        int[]/*extrapolation_t*/ etype = {0};
-        float[] startTime = {0}, duration = {0}, accelTime = {0}, decelTime = {0}, startValue = {0}, endValue = {0};
+        CFloat startTime = new CFloat(), duration = new CFloat(), accelTime = new CFloat(), decelTime = new CFloat(), startValue = new CFloat(), endValue = new CFloat();
         idVec3 linearStartValue = new idVec3(), linearBaseSpeed = new idVec3(), linearSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
         idAngles angularStartValue = new idAngles(), angularBaseSpeed = new idAngles(), angularSpeed = new idAngles(), startAng = new idAngles(), endAng = new idAngles();
-        int[] time = {0}, atRest = {0};
-        boolean[] useSplineAngles = {false};
+        CInt time = new CInt(), atRest = new CInt(), etype = new CInt();
+        CBool useSplineAngles = new CBool(false);
 
         savefile.ReadInt(time);
         savefile.ReadInt(atRest);
         savefile.ReadBool(useSplineAngles);
 
-        state.time = time[0];
-        state.atRest = atRest[0];
-        state.useSplineAngles = useSplineAngles[0];
+        state.time = time.getVal();
+        state.atRest = atRest.getVal();
+        state.useSplineAngles = useSplineAngles.isVal();
 
         savefile.ReadVec3(state.origin);
         savefile.ReadAngles(state.angles);
@@ -113,7 +113,7 @@ public class Physics_Parametric {
         savefile.ReadVec3(linearBaseSpeed);
         savefile.ReadVec3(linearSpeed);
 
-        state.linearExtrapolation.Init(startTime[0], duration[0], linearStartValue, linearBaseSpeed, linearSpeed, etype[0]);
+        state.linearExtrapolation.Init(startTime.getVal(), duration.getVal(), linearStartValue, linearBaseSpeed, linearSpeed, etype.getVal());
 
         savefile.ReadInt(etype);
         savefile.ReadFloat(startTime);
@@ -122,7 +122,7 @@ public class Physics_Parametric {
         savefile.ReadAngles(angularBaseSpeed);
         savefile.ReadAngles(angularSpeed);
 
-        state.angularExtrapolation.Init(startTime[0], duration[0], angularStartValue, angularBaseSpeed, angularSpeed, etype[0]);
+        state.angularExtrapolation.Init(startTime.getVal(), duration.getVal(), angularStartValue, angularBaseSpeed, angularSpeed, etype.getVal());
 
         savefile.ReadFloat(startTime);
         savefile.ReadFloat(accelTime);
@@ -131,7 +131,7 @@ public class Physics_Parametric {
         savefile.ReadVec3(startPos);
         savefile.ReadVec3(endPos);
 
-        state.linearInterpolation.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startPos, endPos);
+        state.linearInterpolation.Init(startTime.getVal(), accelTime.getVal(), decelTime.getVal(), duration.getVal(), startPos, endPos);
 
         savefile.ReadFloat(startTime);
         savefile.ReadFloat(accelTime);
@@ -140,7 +140,7 @@ public class Physics_Parametric {
         savefile.ReadAngles(startAng);
         savefile.ReadAngles(endAng);
 
-        state.angularInterpolation.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startAng, endAng);
+        state.angularInterpolation.Init(startTime.getVal(), accelTime.getVal(), decelTime.getVal(), duration.getVal(), startAng, endAng);
 
         // spline is handled by owner
         savefile.ReadFloat(startTime);
@@ -150,7 +150,7 @@ public class Physics_Parametric {
         savefile.ReadFloat(startValue);
         savefile.ReadFloat(endValue);
 
-        state.splineInterpolate.Init(startTime[0], accelTime[0], decelTime[0], duration[0], startValue[0], endValue[0]);
+        state.splineInterpolate.Init(startTime.getVal(), accelTime.getVal(), decelTime.getVal(), duration.getVal(), startValue.getVal(), endValue.getVal());
     }
 
     /*
@@ -275,8 +275,8 @@ public class Physics_Parametric {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            boolean[] isPusher = {false}, isBlocked = {false}, hasMaster = {false}, isOrientated = {false};
-            int[] pushFlags = {0};
+            CBool isPusher = new CBool(false), isBlocked = new CBool(false), hasMaster = new CBool(false), isOrientated = new CBool(false);
+            CInt pushFlags = new CInt();
 
             idPhysics_Parametric_RestorePState(savefile, current);
             idPhysics_Parametric_RestorePState(savefile, saved);
@@ -291,11 +291,11 @@ public class Physics_Parametric {
             savefile.ReadBool(hasMaster);
             savefile.ReadBool(isOrientated);
 
-            this.isPusher = isPusher[0];
-            this.isBlocked = isBlocked[0];
-            this.hasMaster = hasMaster[0];
-            this.isOrientated = isOrientated[0];
-            this.pushFlags = pushFlags[0];
+            this.isPusher = isPusher.isVal();
+            this.isBlocked = isBlocked.isVal();
+            this.hasMaster = hasMaster.isVal();
+            this.isOrientated = isOrientated.isVal();
+            this.pushFlags = pushFlags.getVal();
         }
 
         public void SetPusher(int flags) {
@@ -508,9 +508,9 @@ public class Physics_Parametric {
             if (isPusher) {
 
                 {
-                    trace_s[] pushResults = {this.pushResults};
+                    trace_s pushResults = this.pushResults;
                     gameLocal.push.ClipPush(pushResults, self, pushFlags, oldOrigin, oldAxis, current.origin, current.axis);
-                    this.pushResults = pushResults[0];
+                    this.pushResults = pushResults;
                 }
                 if (pushResults.fraction < 1.0f) {
                     clipModel.Link(gameLocal.clip, self, 0, oldOrigin, oldAxis);

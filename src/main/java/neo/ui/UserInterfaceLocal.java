@@ -67,9 +67,9 @@ public class UserInterfaceLocal {
         private int refs;
         private final idStr returnCmd = new idStr();
         //
-        private final idStr source;
+        private idStr source = new idStr();
         //
-        private final idDict state;
+        private idDict state = new idDict();
         //
         private int time;
         private final long[] timeStamp = {0};
@@ -90,6 +90,23 @@ public class UserInterfaceLocal {
             refs = 1;
             this.source = new idStr();
             this.state = new idDict();
+        }
+
+        public idUserInterfaceLocal(idUserInterfaceLocal val) {
+            if (val != null) {
+                this.active = val.active;
+                this.bindHandler = val.bindHandler;
+                this.cursorX = val.cursorX;
+                this.cursorY = val.cursorY;
+                this.desktop = val.desktop;
+                this.interactive = val.interactive;
+                this.loading = val.loading;
+                this.refs = val.refs;
+                this.source = val.source;
+                this.state = val.state;
+                this.time = val.time;
+                this.uniqued = val.uniqued;
+            }
         }
 
         // ~idUserInterfaceLocal();

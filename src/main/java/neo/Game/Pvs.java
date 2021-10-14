@@ -4,9 +4,9 @@ import neo.Renderer.RenderWorld.exitPortal_t;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Timer.idTimer;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
@@ -960,7 +960,7 @@ public class Pvs {
             DestroyPassages();
         }
 
-        private void AddPassageBoundaries(final idWinding source, final idWinding pass, boolean flipClip, idPlane[] bounds, int[] numBounds, int maxBounds) {
+        private void AddPassageBoundaries(final idWinding source, final idWinding pass, boolean flipClip, idPlane[] bounds, CInt numBounds, int maxBounds) {
             int i, j, k, l;
             idVec3 v1, v2, normal;
             float d, dist;
@@ -1049,21 +1049,21 @@ public class Pvs {
                     }
 
                     // check if the plane is already a passage boundary
-                    for (k = 0; k < numBounds[0]; k++) {
+                    for (k = 0; k < numBounds.getVal(); k++) {
                         if (plane.Compare(bounds[k], 0.001f, 0.01f)) {
                             break;
                         }
                     }
-                    if (k < numBounds[0]) {
+                    if (k < numBounds.getVal()) {
                         break;
                     }
 
-                    if (numBounds[0] >= maxBounds) {
+                    if (numBounds.getVal() >= maxBounds) {
                         gameLocal.Warning("max passage boundaries.");
                         break;
                     }
-                    bounds[numBounds[0]] = plane;
-                    numBounds[0]++;
+                    bounds[numBounds.getVal()] = plane;
+                    numBounds.increment();
                     break;
                 }
             }
@@ -1071,7 +1071,7 @@ public class Pvs {
 
         private void CreatePassages() {
             int i, j, l, n, front, passageMemory, byteNum, bitNum;
-            int[] numBounds = new int[1];
+            CInt numBounds = new CInt();
             int[] sides = new int[MAX_PASSAGE_BOUNDS];
             idPlane[] passageBounds = new idPlane[MAX_PASSAGE_BOUNDS];
             pvsPortal_t source, target, p;
@@ -1105,7 +1105,7 @@ public class Pvs {
                     passageMemory += portalVisBytes;
 
                     // boundary plane normals point inwards
-                    numBounds[0] = 0;
+                    numBounds.setVal(0);
                     AddPassageBoundaries(source.w, target.w, false, passageBounds, numBounds, MAX_PASSAGE_BOUNDS);
                     AddPassageBoundaries(target.w, source.w, true, passageBounds, numBounds, MAX_PASSAGE_BOUNDS);
 
@@ -1130,7 +1130,7 @@ public class Pvs {
                                 continue;
                             }
 
-                            for (front = 0, l = 0; l < numBounds[0]; l++) {
+                            for (front = 0, l = 0; l < numBounds.getVal(); l++) {
                                 sides[l] = p.bounds.PlaneSide(passageBounds[l]);
                                 // if completely at the back of the passage bounding plane
                                 if (sides[l] == PLANESIDE_BACK) {
@@ -1142,16 +1142,16 @@ public class Pvs {
                                 }
                             }
                             // if completely outside the passage
-                            if (l < numBounds[0]) {
+                            if (l < numBounds.getVal()) {
                                 continue;
                             }
 
                             // if not at the front of all bounding planes and thus not completely inside the passage
-                            if (front != numBounds[0]) {
+                            if (front != numBounds.getVal()) {
 
                                 winding.oSet(p.w);
 
-                                for (l = 0; l < numBounds[0]; l++) {
+                                for (l = 0; l < numBounds.getVal(); l++) {
                                     // only clip if the winding possibly crosses this plane
                                     if (sides[l] != PLANESIDE_CROSS) {
                                         continue;
@@ -1164,7 +1164,7 @@ public class Pvs {
                                     }
                                 }
                                 // if completely outside the passage
-                                if (l < numBounds[0]) {
+                                if (l < numBounds.getVal()) {
                                     continue;
                                 }
                             }

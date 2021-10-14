@@ -15,6 +15,7 @@ import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.HashIndex;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
@@ -67,6 +68,7 @@ import static neo.idlib.containers.idStrList.idStrListSortPaths;
 import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 import static neo.sys.sys_public.Sys_ListFiles;
 import static neo.sys.sys_public.*;
+import static neo.sys.sys_public.xthreadPriority.THREAD_NORMAL;
 import static neo.sys.win_main.*;
 
 /**
@@ -601,7 +603,7 @@ public class FileSystem_h {
 
         // fills a 0-terminated list of pak checksums for a client
         // if OS is -1, give the current game pak checksum. if >= 0, lookup the game pak table (server only)
-        public abstract void GetPureServerChecksums(int[] checksums, int OS, int[] gamePakChecksum);
+        public abstract void GetPureServerChecksums(int[] checksums, int OS, CInt gamePakChecksum);
 
         // before doing a restart, force the pure list and the search order
         // if the given checksum list can't be completely processed and set, will error out
@@ -725,7 +727,7 @@ public class FileSystem_h {
 
         public abstract idDict GetMapDecl(int i);
 
-        public abstract void FindMapScreenshot(final String path, String[] buf, int len);
+        public abstract void FindMapScreenshot(final String path, StringBuffer buf, int len);
 
         // ignore case and seperator char distinctions
         public abstract boolean FilenameCompare(final String s1, final String s2);
@@ -1045,7 +1047,7 @@ public class FileSystem_h {
 
         public void StartBackgroundDownloadThread() {
             if (NOT(backgroundThread.threadHandle)) {//TODO:enable this.
-//                Sys_CreateThread(BackgroundDownloadThread.INSTANCE, null, THREAD_NORMAL, backgroundThread, "backgroundDownload", g_threads, g_thread_count);
+                Sys_CreateThread(BackgroundDownloadThread.INSTANCE, null, THREAD_NORMAL, backgroundThread, "backgroundDownload", g_threads, g_thread_count);
                 if (NOT(backgroundThread.threadHandle)) {
                     common.Warning("idFileSystemLocal::StartBackgroundDownloadThread: failed");
                 }
@@ -1813,7 +1815,7 @@ public class FileSystem_h {
         }
 
         @Override
-        public void GetPureServerChecksums(int[] checksums, int OS, int[] _gamePakChecksum) {
+        public void GetPureServerChecksums(int[] checksums, int OS, CInt _gamePakChecksum) {
             int i;
 
             for (i = 0; i < serverPaks.Num(); i++) {
@@ -1822,9 +1824,9 @@ public class FileSystem_h {
             checksums[i] = 0;
             if (_gamePakChecksum != null) {
                 if (OS >= 0) {
-                    _gamePakChecksum[0] = gamePakForOS[OS];
+                    _gamePakChecksum.setVal(gamePakForOS[OS]);
                 } else {
-                    _gamePakChecksum[0] = gamePakChecksum;
+                    _gamePakChecksum.setVal(gamePakChecksum);
                 }
             }
         }
@@ -1884,7 +1886,7 @@ public class FileSystem_h {
         public int ReadFile(String relativePath, ByteBuffer[] buffer, long[] timestamp) {
             idFile f;
             ByteBuffer buf;
-            int[] len = {0};
+            CInt len = new CInt();
             boolean isConfig;
 
             if (NOT(searchPaths)) {
@@ -1916,24 +1918,24 @@ public class FileSystem_h {
                     loadStack++;
 
                     common.DPrintf("Loading %s from journal file.\n", relativePath);
-                    len[0] = 0;
+                    len.setVal(0);
                     r = eventLoop.com_journalDataFile.ReadInt(len);
                     final int r_bits = r * 8;
                     if (r_bits != Integer.SIZE) {
                         buffer[0] = null;
                         return -1;
                     }
-                    buf = ByteBuffer.allocate(len[0] + 1);// Heap.Mem_ClearedAlloc(len + 1);
+                    buf = ByteBuffer.allocate(len.getVal() + 1);// Heap.Mem_ClearedAlloc(len + 1);
                     buffer[0] = buf;
-                    r = eventLoop.com_journalDataFile.Read(buf, len[0]);
-                    if (r != len[0]) {
+                    r = eventLoop.com_journalDataFile.Read(buf, len.getVal());
+                    if (r != len.getVal()) {
                         common.FatalError("Read from journalDataFile failed");
                     }
 
                     // guarantee that it will have a trailing 0 for string operations
-                    buf.put(len[0], (byte) 0);
+                    buf.put(len.getVal(), (byte) 0);
 
-                    return len[0];
+                    return len.getVal();
                 }
             } else {
                 isConfig = false;
@@ -1947,7 +1949,7 @@ public class FileSystem_h {
                 }
                 return -1;
             }
-            len[0] = f.Length();
+            len.setVal(f.Length());
 
             if (timestamp != null) {
                 timestamp[0] = f.Timestamp();
@@ -1955,16 +1957,16 @@ public class FileSystem_h {
 
             if (null == buffer) {
                 CloseFile(f);
-                return len[0];
+                return len.getVal();
             }
 
             loadCount++;
             loadStack++;
 
-            buf = ByteBuffer.allocate(len[0] + 1);// Heap.Mem_ClearedAlloc(len + 1);
+            buf = ByteBuffer.allocate(len.getVal() + 1);// Heap.Mem_ClearedAlloc(len + 1);
             buffer[0] = buf;
 
-            f.Read(buf, len[0]);
+            f.Read(buf, len.getVal());
 
             // guarantee that it will have a trailing 0 for string operations
 //            buf.put(len[0], (byte) 0);
@@ -1973,12 +1975,12 @@ public class FileSystem_h {
             // if we are journalling and it is a config file, write it to the journal file
             if (isConfig && eventLoop != null && eventLoop.JournalLevel() == 1) {
                 common.DPrintf("Writing %s to journal file.\n", relativePath);
-                eventLoop.com_journalDataFile.WriteInt(len[0]);
-                eventLoop.com_journalDataFile.Write(buf, len[0]);
+                eventLoop.com_journalDataFile.WriteInt(len.getVal());
+                eventLoop.com_journalDataFile.Write(buf, len.getVal());
                 eventLoop.com_journalDataFile.Flush();
             }
 
-            return len[0];
+            return len.getVal();
         }
 
         @Override
@@ -2983,7 +2985,7 @@ public class FileSystem_h {
         }
 
         @Override
-        public void FindMapScreenshot(String path, String[] buf, int len) {
+        public void FindMapScreenshot(String path, StringBuffer buf, int len) {
             idFile file;
             idStr mapname = new idStr(path);
 
@@ -2991,9 +2993,9 @@ public class FileSystem_h {
             mapname.StripFileExtension();
 
             idStr.snPrintf(buf, len, "guis/assets/splash/%s.tga", mapname.toString());
-            if (ReadFile(buf[0], null, null) == -1) {
+            if (ReadFile(buf.toString(), null, null) == -1) {
                 // try to extract from an addon
-                file = OpenFileReadFlags(buf[0], FSFLAG_SEARCH_ADDONS);
+                file = OpenFileReadFlags(buf.toString(), FSFLAG_SEARCH_ADDONS);
                 if (file != null) {
                     // save it out to an addon splash directory
                     int dlen = file.Length();
@@ -3001,10 +3003,10 @@ public class FileSystem_h {
                     file.Read(data, dlen);
                     CloseFile(file);
                     idStr.snPrintf(buf, len, "guis/assets/splash/addon/%s.tga", mapname.toString());
-                    WriteFile(buf[0], data, dlen);
-//			delete[] data;
+                    WriteFile(buf.toString(), data, dlen);
+                    data = null;
                 } else {
-                    idStr.Copynz(buf, "guis/assets/splash/pdtempa", len);
+                    buf.append("guis/assets/splash/pdtempa".substring(0, len));
                 }
             }
         }
@@ -4451,7 +4453,8 @@ public class FileSystem_h {
 
             @Override
             public void/*int*/ run(/*Object... parms*/) {
-                throw new TODO_Exception();
+                // doo dee doo
+                //throw new TODO_Exception();
 //                while (true) {
 //                    Sys_EnterCriticalSection();
 //                    backgroundDownload_t bgl = fileSystemLocal.backgroundDownloads;

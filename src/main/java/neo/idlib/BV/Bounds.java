@@ -3,6 +3,7 @@ package neo.idlib.BV;
 import neo.TempDump.SERiAL;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.Lib;
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
@@ -539,7 +540,7 @@ public class Bounds {
          If start is inside the bounds it is considered an intersection with scale = 0
          ============
          */
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale) {// intersection point is start + dir * scale
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale) {// intersection point is start + dir * scale
             int i, ax0, ax1, ax2, side, inside;
             float f;
             idVec3 hit = new idVec3();
@@ -559,22 +560,22 @@ public class Bounds {
                     continue;
                 }
                 f = (start.oGet(i) - b[side].oGet(i));
-                if (ax0 < 0 || Math.abs(f) > Math.abs(scale[0] * dir.oGet(i))) {
-                    scale[0] = -(f / dir.oGet(i));
+                if (ax0 < 0 || Math.abs(f) > Math.abs(scale.getVal() * dir.oGet(i))) {
+                    scale.setVal(-(f / dir.oGet(i)));
                     ax0 = i;
                 }
             }
 
             if (ax0 < 0) {
-                scale[0] = 0.0f;//TODO:should scale have a backreference?
+                scale.setVal(0.0f);//TODO:should scale have a backreference?
                 // return true if the start point is inside the bounds
                 return (inside == 3);
             }
 
             ax1 = (ax0 + 1) % 3;
             ax2 = (ax0 + 2) % 3;
-            hit.oSet(ax1, start.oGet(ax1) + scale[0] * dir.oGet(ax1));
-            hit.oSet(ax2, start.oGet(ax2) + scale[0] * dir.oGet(ax2));
+            hit.oSet(ax1, start.oGet(ax1) + scale.getVal() * dir.oGet(ax1));
+            hit.oSet(ax2, start.oGet(ax2) + scale.getVal() * dir.oGet(ax2));
 
             return (hit.oGet(ax1) >= b[0].oGet(ax1) && hit.oGet(ax1) <= b[1].oGet(ax1)
                     && hit.oGet(ax2) >= b[0].oGet(ax2) && hit.oGet(ax2) <= b[1].oGet(ax2));
@@ -726,7 +727,7 @@ public class Bounds {
             return sphere;
         }
 
-        public void AxisProjection(final idVec3 dir, float[] min, float[] max) {
+        public void AxisProjection(final idVec3 dir, CFloat min, CFloat max) {
             float d1, d2;
             idVec3 center, extents;
 
@@ -738,11 +739,11 @@ public class Bounds {
                     + Math.abs(extents.oGet(1) * dir.oGet(1))
                     + Math.abs(extents.oGet(2) * dir.oGet(2));
 
-            min[0] = d1 - d2;
-            max[0] = d1 + d2;
+            min.setVal(d1 - d2);
+            max.setVal(d1 + d2);
         }
 
-        public void AxisProjection(final idVec3 origin, final idMat3 axis, final idVec3 dir, float[] min, float[] max) {
+        public void AxisProjection(final idVec3 origin, final idMat3 axis, final idVec3 dir, CFloat min, CFloat max) {
             float d1, d2;
             idVec3 center, extents;
 
@@ -755,8 +756,8 @@ public class Bounds {
                     + Math.abs(extents.oGet(1) * (dir.oMultiply(axis.oGet(1))))
                     + Math.abs(extents.oGet(2) * (dir.oMultiply(axis.oGet(2))));
 
-            min[0] = d1 - d2;
-            max[0] = d1 + d2;
+            min.setVal(d1 - d2);
+            max.setVal(d1 + d2);
         }
 
         @Override

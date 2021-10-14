@@ -8,6 +8,7 @@ import neo.framework.CmdSystem;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idLib;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
@@ -328,9 +329,9 @@ public class Simd {
 
         public abstract void /*VPCALL*/ Dot(float[] dst, final idVec3[] src0, final idVec3[] src1, final int count);
 
-        public abstract void /*VPCALL*/ Dot(float[] dot, final float[] src1, final float[] src2, final int count);
+        public abstract void /*VPCALL*/ Dot(CFloat dot, final float[] src1, final float[] src2, final int count);
 
-        public void Dot(float[] dot, final FloatBuffer src1, final float[] src2, final int count) {
+        public void Dot(CFloat dot, final FloatBuffer src1, final float[] src2, final int count) {
             Dot(dot, fbtofa(src1), src2, count);
         }
 
@@ -351,7 +352,7 @@ public class Simd {
         public abstract void /*VPCALL*/ CmpLE(byte[] dst, final byte bitNum, final float[] src0, final float constant, final int count);
 //
 
-        public abstract void /*VPCALL*/ MinMax(float[] min, float[] max, final float[] src, final int count);
+        public abstract void /*VPCALL*/ MinMax(CFloat min, CFloat max, final float[] src, final int count);
 
         public abstract void /*VPCALL*/ MinMax(idVec2 min, idVec2 max, final idVec2[] src, final int count);
 

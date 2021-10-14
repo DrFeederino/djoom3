@@ -16,6 +16,9 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
@@ -285,16 +288,12 @@ public class Mover {
         }
         // } moverDir_t;
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public void Spawn() {
             super.Spawn();
 
-            float[] damage = {0};
+            CFloat damage = new CFloat();
 
             move_thread = 0;
             rotate_thread = 0;
@@ -307,7 +306,7 @@ public class Mover {
             move_speed = spawnArgs.GetFloat("move_speed", "0");
 
             spawnArgs.GetFloat("damage", "0", damage);
-            this.damage = damage[0];
+            this.damage = damage.getVal();
 
             dest_position = GetPhysics().GetOrigin();
             dest_angles = GetPhysics().GetAxis().ToAngles();
@@ -414,8 +413,8 @@ public class Mover {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = {0};
-            boolean[] hasSpline = {false};
+            CInt num = new CInt();
+            CBool hasSpline = new CBool(false);
 
             savefile.ReadStaticObject(physicsObj);
             RestorePhysics(physicsObj);
@@ -453,25 +452,25 @@ public class Mover {
 
             areaPortal = savefile.ReadInt();
             if (areaPortal > 0) {
-                int[] portalState = {0};
+                CInt portalState = new CInt();
                 savefile.ReadInt(portalState);
-                gameLocal.SetPortalState(areaPortal, portalState[0]);
+                gameLocal.SetPortalState(areaPortal, portalState.getVal());
             }
 
             guiTargets.Clear();
             savefile.ReadInt(num);
-            guiTargets.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            guiTargets.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 guiTargets.oGet(i).Restore(savefile);
             }
 
             savefile.ReadBool(hasSpline);
-            if (hasSpline[0]) {
-                int[] starttime = {0};
-                int[] totaltime = {0};
-                int[] accel = {0};
-                int[] decel = {0};
-                int[] useAngles = {0};
+            if (hasSpline.isVal()) {
+                CInt starttime = new CInt();
+                CInt totaltime = new CInt();
+                CInt accel = new CInt();
+                CInt decel = new CInt();
+                CInt useAngles = new CInt();
 
                 splineEnt.Restore(savefile);
                 savefile.ReadInt(starttime);
@@ -1443,10 +1442,6 @@ public class Mover {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 
     public static class floorInfo_s {
@@ -2815,10 +2810,6 @@ public class Mover {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2911,11 +2902,11 @@ public class Mover {
             float distance;
             idVec3 size;
             idVec3 moveDir = new idVec3();
-            float[] dir = {0};
-            float[] lip = {0};
-            boolean[] start_open = {false};
-            float[] time = {0};
-            float[] speed = {0};
+            CFloat dir = new CFloat();
+            CFloat lip = new CFloat();
+            CFloat time = new CFloat();
+            CFloat speed = new CFloat();
+            CBool start_open = new CBool();
 
             // get the direction to move
             if (!spawnArgs.GetFloat("movedir", "0", dir)) {
@@ -2924,7 +2915,7 @@ public class Mover {
                 SetAngles(getAng_zero());
                 spawnArgs.GetFloat("angle", "0", dir);
             }
-            GetMovedir(dir[0], moveDir);
+            GetMovedir(dir.getVal(), moveDir);
 
             // default speed of 400
             spawnArgs.GetFloat("speed", "400", speed);
@@ -2964,19 +2955,19 @@ public class Mover {
             abs_movedir.oSet(1, Math.abs(moveDir.oGet(1)));
             abs_movedir.oSet(2, Math.abs(moveDir.oGet(2)));
             size = GetPhysics().GetAbsBounds().oGet(1).oMinus(GetPhysics().GetAbsBounds().oGet(0));
-            distance = (abs_movedir.oMultiply(size)) - lip[0];
+            distance = (abs_movedir.oMultiply(size)) - lip.getVal();
             pos2 = pos1.oPlus(moveDir.oMultiply(distance));
 
             // if "start_open", reverse position 1 and 2
-            if (start_open[0]) {
+            if (start_open.isVal()) {
                 // post it after EV_SpawnBind
                 PostEventMS(EV_Door_StartOpen, 1);
             }
 
             if (spawnArgs.GetFloat("time", "1", time)) {
-                InitTime(pos1, pos2, time[0], 0, 0);
+                InitTime(pos1, pos2, time.getVal(), 0, 0);
             } else {
-                InitSpeed(pos1, pos2, speed[0], 0, 0);
+                InitSpeed(pos1, pos2, speed.getVal(), 0, 0);
             }
 
             if (moveMaster == this) {
@@ -2999,7 +2990,7 @@ public class Mover {
 
             // see if we are on an areaportal
             areaPortal = gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds());
-            if (!start_open[0]) {
+            if (!start_open.isVal()) {
                 // start closed
                 ProcessEvent(EV_Mover_ClosePortal);
             }
@@ -3416,8 +3407,8 @@ public class Mover {
          ======================
          */
         private void Event_StartOpen() {
-            float[] time = {0};
-            float[] speed = {0};
+            CFloat time = new CFloat();
+            CFloat speed = new CFloat();
 
             // if "start_open", reverse position 1 and 2
             pos1 = pos2;
@@ -3426,9 +3417,9 @@ public class Mover {
             spawnArgs.GetFloat("speed", "400", speed);
 
             if (spawnArgs.GetFloat("time", "1", time)) {
-                InitTime(pos1, pos2, time[0], 0, 0);
+                InitTime(pos1, pos2, time.getVal(), 0, 0);
             } else {
-                InitSpeed(pos1, pos2, speed[0], 0, 0);
+                InitSpeed(pos1, pos2, speed.getVal(), 0, 0);
             }
         }
 
@@ -3658,13 +3649,13 @@ public class Mover {
 
         @Override
         public void Spawn() {
-            float[] lip = {0};
-            float[] height = {0};
-            float[] time = {0};
-            float[] speed = {0};
-            float[] accel = {0};
-            float[] decel = {0};
-            boolean[] noTouch = {false};
+            CFloat lip = new CFloat();
+            CFloat height = new CFloat();
+            CFloat time = new CFloat();
+            CFloat speed = new CFloat();
+            CFloat accel = new CFloat();
+            CFloat decel = new CFloat();
+            CBool noTouch = new CBool(false);
 
             spawnArgs.GetFloat("speed", "100", speed);
             damage = spawnArgs.GetFloat("damage", "0");
@@ -3675,7 +3666,7 @@ public class Mover {
 
             // create second position
             if (!spawnArgs.GetFloat("height", "0", height)) {
-                height[0] = (GetPhysics().GetBounds().oGet(1, 2) - GetPhysics().GetBounds().oGet(0, 2)) - lip[0];
+                height.setVal( (GetPhysics().GetBounds().oGet(1, 2) - GetPhysics().GetBounds().oGet(0, 2)) - lip.getVal());
             }
 
             spawnArgs.GetBool("no_touch", "0", noTouch);
@@ -3683,19 +3674,19 @@ public class Mover {
             // pos1 is the rest (bottom) position, pos2 is the top
             pos2 = GetPhysics().GetOrigin();
             pos1 = pos2;
-            pos1.oMinSet(2, height[0]);
+            pos1.oMinSet(2, height.getVal());
 
             if (spawnArgs.GetFloat("time", "1", time)) {
-                InitTime(pos1, pos2, time[0], accel[0], decel[0]);
+                InitTime(pos1, pos2, time.getVal(), accel.getVal(), decel.getVal());
             } else {
-                InitSpeed(pos1, pos2, speed[0], accel[0], decel[0]);
+                InitSpeed(pos1, pos2, speed.getVal(), accel.getVal(), decel.getVal());
             }
 
             SetMoverState(MOVER_POS1, gameLocal.time);
             UpdateVisuals();
 
             // spawn the trigger if one hasn't been custom made
-            if (!noTouch[0]) {
+            if (!noTouch.isVal()) {
                 // spawn trigger
                 SpawnPlatTrigger(pos1);
             }
@@ -3840,13 +3831,13 @@ public class Mover {
             eventCallbacks.put(EV_PartBlocked, (eventCallback_t1<idMover_Periodic>) idMover_Periodic::Event_PartBlocked);
         }
 
-        protected float[] damage = {0};
+        protected CFloat damage = new CFloat();
         protected idPhysics_Parametric physicsObj;
         //
         //
 
         public idMover_Periodic() {
-            damage[0] = 0;
+            damage.setVal(0);
             physicsObj = new idPhysics_Parametric();
             fl.neverDormant = false;
         }
@@ -3867,7 +3858,7 @@ public class Mover {
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteFloat(damage[0]);
+            savefile.WriteFloat(damage.getVal());
             savefile.WriteStaticObject(physicsObj);
         }
 
@@ -3909,8 +3900,8 @@ public class Mover {
         }
 
         protected void Event_PartBlocked(idEventArg<idEntity> blockingEntity) {
-            if (damage[0] > 0) {
-                blockingEntity.value.Damage(this, this, getVec3_origin(), "damage_moverCrush", damage[0], INVALID_JOINT);
+            if (damage.getVal() > 0) {
+                blockingEntity.value.Damage(this, this, getVec3_origin(), "damage_moverCrush", damage.getVal(), INVALID_JOINT);
             }
         }
 
@@ -3919,10 +3910,6 @@ public class Mover {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -3991,9 +3978,9 @@ public class Mover {
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
-            float[] speed = {0};
-            boolean[] x_axis = {false};
-            boolean[] y_axis = {false};
+            CFloat speed = new CFloat();
+            CBool x_axis = new CBool(false);
+            CBool y_axis = new CBool(false);
             idAngles delta = new idAngles();
 
             activatedBy.oSet(activator.value);
@@ -4007,12 +3994,12 @@ public class Mover {
                 spawnArgs.GetBool("y_axis", "0", y_axis);
 
                 // set the axis of rotation
-                if (x_axis[0]) {
-                    delta.oSet(2, speed[0]);
-                } else if (y_axis[0]) {
-                    delta.oSet(0, speed[0]);
+                if (x_axis.isVal()) {
+                    delta.oSet(2, speed.getVal());
+                } else if (y_axis.isVal()) {
+                    delta.oSet(0, speed.getVal());
                 } else {
-                    delta.oSet(1, speed[0]);
+                    delta.oSet(1, speed.getVal());
                 }
             } else {
                 spawnArgs.Set("rotate", "0");
@@ -4043,11 +4030,11 @@ public class Mover {
 
         @Override
         public void Spawn() {
-            float[] speed = {0};
-            float[] height = {0};
-            float[] phase = {0};
-            boolean[] x_axis = {false};
-            boolean[] y_axis = {false};
+            CFloat speed = new CFloat();
+            CFloat height = new CFloat();
+            CFloat phase = new CFloat();
+            CBool x_axis = new CBool(false);
+            CBool y_axis = new CBool(false);
             idVec3 delta;
 
             spawnArgs.GetFloat("speed", "4", speed);
@@ -4058,12 +4045,12 @@ public class Mover {
 
             // set the axis of bobbing
             delta = getVec3_origin();
-            if (x_axis[0]) {
-                delta.oSet(0, height[0]);
-            } else if (y_axis[0]) {
-                delta.oSet(1, height[0]);
+            if (x_axis.isVal()) {
+                delta.oSet(0, height.getVal());
+            } else if (y_axis.isVal()) {
+                delta.oSet(1, height.getVal());
             } else {
-                delta.oSet(2, height[0]);
+                delta.oSet(2, height.getVal());
             }
 
             physicsObj.SetSelf(this);
@@ -4074,7 +4061,7 @@ public class Mover {
             if (!spawnArgs.GetBool("nopush")) {
                 physicsObj.SetPusher(0);
             }
-            physicsObj.SetLinearExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (phase[0] * 1000), (int) (speed[0] * 500), GetPhysics().GetOrigin(), delta.oMultiply(2.0f), getVec3_origin());
+            physicsObj.SetLinearExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (phase.getVal() * 1000), (int) (speed.getVal() * 500), GetPhysics().GetOrigin(), delta.oMultiply(2.0f), getVec3_origin());
             SetPhysics(physicsObj);
         }
     }
@@ -4095,26 +4082,26 @@ public class Mover {
         public void Spawn() {
             super.Spawn();
 
-            float[] speed = {0};
-            float[] freq = {0};
-            float[] length = {0};
-            float[] phase = {0};
+            CFloat speed = new CFloat();
+            CFloat freq = new CFloat();
+            CFloat length = new CFloat();
+            CFloat phase = new CFloat();
 
             spawnArgs.GetFloat("speed", "30", speed);
             spawnArgs.GetFloat("phase", "0", phase);
 
             if (spawnArgs.GetFloat("freq", "", freq)) {
-                if (freq[0] <= 0.0f) {
+                if (freq.getVal() <= 0.0f) {
                     idGameLocal.Error("Invalid frequency on entity '%s'", GetName());
                 }
             } else {
                 // find pendulum length
-                length[0] = Math.abs(GetPhysics().GetBounds().oGet(0, 2));
-                if (length[0] < 8) {
-                    length[0] = 8;
+                length.setVal( Math.abs(GetPhysics().GetBounds().oGet(0, 2)));
+                if (length.getVal() < 8) {
+                    length.setVal(8);
                 }
 
-                freq[0] = 1 / (idMath.TWO_PI) * idMath.Sqrt(g_gravity.GetFloat() / (3 * length[0]));
+                freq.setVal( 1 / (idMath.TWO_PI) * idMath.Sqrt(g_gravity.GetFloat() / (3 * length.getVal())));
             }
 
             physicsObj.SetSelf(this);
@@ -4126,7 +4113,7 @@ public class Mover {
                 physicsObj.SetPusher(0);
             }
             physicsObj.SetLinearExtrapolation(EXTRAPOLATION_NONE, 0, 0, GetPhysics().GetOrigin(), getVec3_origin(), getVec3_origin());
-            physicsObj.SetAngularExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (phase[0] * 1000), (int) (500 / freq[0]), GetPhysics().GetAxis().ToAngles(), new idAngles(0, 0, speed[0] * 2.0f), getAng_zero());
+            physicsObj.SetAngularExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (phase.getVal() * 1000), (int) (500 / freq.getVal()), GetPhysics().GetAxis().ToAngles(), new idAngles(0, 0, speed.getVal() * 2.0f), getAng_zero());
             SetPhysics(physicsObj);
         }
     }
@@ -4177,17 +4164,17 @@ public class Mover {
                 Hide();
             } else {
                 Show();
-                float[] time = {0};
-                float[] height = {0};
+                CFloat time = new CFloat();
+                CFloat height = new CFloat();
                 idVec3 delta;
 
                 spawnArgs.GetFloat("time", "4", time);
                 spawnArgs.GetFloat("height", "32", height);
 
                 delta = getVec3_origin();
-                delta.oSet(2, height[0]);
+                delta.oSet(2, height.getVal());
 
-                physicsObj.SetLinearExtrapolation(EXTRAPOLATION_LINEAR, gameLocal.time, (int) (time[0] * 1000), physicsObj.GetOrigin(), delta, getVec3_origin());
+                physicsObj.SetLinearExtrapolation(EXTRAPOLATION_LINEAR, gameLocal.time, (int) (time.getVal() * 1000), physicsObj.GetOrigin(), delta, getVec3_origin());
             }
         }
 

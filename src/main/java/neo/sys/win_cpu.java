@@ -1,6 +1,7 @@
 package neo.sys;
 
 import neo.TempDump.TODO_Exception;
+import neo.idlib.containers.CInt;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -435,7 +436,7 @@ public class win_cpu {
      returns one of the HT_* flags
      ================
      */
-    public static int CPUCount(int[] logicalNum, int[] physicalNum) {
+    public static int CPUCount(CInt logicalNum, CInt physicalNum) {
         throw new TODO_Exception();
 //	int statusFlag;
 //	SYSTEM_INFO info;

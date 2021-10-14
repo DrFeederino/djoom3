@@ -3,23 +3,18 @@ package neo.Game;
 import neo.CM.CollisionModel.trace_s;
 import neo.Game.AFEntity.idAFEntity_Gibbable;
 import neo.Game.AI.AI.idAI;
-import neo.Game.Actor.*;
 import neo.Game.Animation.Anim_Blend.idAnim;
 import neo.Game.Camera.idCamera;
-import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Moveable.idMoveable;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force_Field.idForce_Field;
 import neo.Game.Physics.Force_Spring.idForce_Spring;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
-import neo.Game.Player.*;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Renderer.Model_liquid.idRenderModelLiquid;
@@ -31,6 +26,9 @@ import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
@@ -48,7 +46,8 @@ import static neo.Game.Animation.Anim.FRAME2MS;
 import static neo.Game.Entity.*;
 import static neo.Game.GameSys.Class.*;
 import static neo.Game.GameSys.SaveGame.INITIAL_RELEASE_BUILD_NUMBER;
-import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.GameSys.SysCvar.ai_debugTrajectory;
+import static neo.Game.GameSys.SysCvar.g_debugCinematic;
 import static neo.Game.Game_local.*;
 import static neo.Game.Game_local.gameSoundChannel_t.*;
 import static neo.Game.Physics.Force_Field.forceFieldApplyType.*;
@@ -63,8 +62,7 @@ import static neo.TempDump.NOT;
 import static neo.TempDump.etoi;
 import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_CLUSTERPORTAL;
 import static neo.Tools.Compilers.AAS.AASFile.AREACONTENTS_OBSTACLE;
-import static neo.framework.Common.EDITOR_PARTICLE;
-import static neo.framework.Common.common;
+import static neo.framework.Common.*;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import static neo.idlib.Lib.*;
@@ -176,10 +174,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 
     /*
@@ -302,11 +296,11 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] teleportStage = {0};
+            CInt teleportStage = new CInt();
 
             savefile.ReadInt(teleportStage);
 
-            this.teleportStage = teleportStage[0];
+            this.teleportStage = teleportStage.getVal();
         }
 
         @Override
@@ -369,10 +363,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -400,7 +391,7 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idActivator>) idActivator::Event_Activate);
         }
 
-        private final boolean[] stay_on = new boolean[1];
+        private final CBool stay_on = new CBool(false);
         //
         //
 
@@ -418,7 +409,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
-            boolean[] start_off = new boolean[1];
+            CBool start_off = new CBool(false);
 
             spawnArgs.GetBool("stay_on", "0", stay_on);
             spawnArgs.GetBool("start_off", "0", start_off);
@@ -426,21 +417,21 @@ public class Misc {
             GetPhysics().SetClipBox(new idBounds(getVec3_origin()).Expand(4), 1.0f);
             GetPhysics().SetContents(0);
 
-            if (!start_off[0]) {
+            if (!start_off.isVal()) {
                 BecomeActive(TH_THINK);
             }
         }
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteBool(stay_on[0]);
+            savefile.WriteBool(stay_on.isVal());
         }
 
         @Override
         public void Restore(idRestoreGame savefile) {
             savefile.ReadBool(stay_on);
 
-            if (stay_on[0]) {
+            if (stay_on.isVal()) {
                 BecomeActive(TH_THINK);
             }
         }
@@ -450,7 +441,7 @@ public class Misc {
             RunPhysics();
             if ((thinkFlags & TH_THINK) != 0) {
                 if (TouchTriggers()) {
-                    if (!stay_on[0]) {
+                    if (!stay_on.isVal()) {
                         BecomeInactive(TH_THINK);
                     }
                 }
@@ -463,10 +454,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -554,10 +541,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -576,14 +560,14 @@ public class Misc {
             eventCallbacks.put(EV_RestoreDamagable, (eventCallback_t0<idDamagable>) idDamagable::Event_RestoreDamagable);
         }
 
-        private final int[] count = {0};
-        private final int[] nextTriggerTime = {0};
+        private final CInt count = new CInt();
+        private final CInt nextTriggerTime = new CInt();
         //
         //
 
         public idDamagable() {
-            count[0] = 0;
-            nextTriggerTime[0] = 0;
+            count.setVal(0);
+            nextTriggerTime.setVal(0);
         }
 
         private static void Event_BecomeBroken(idDamagable d, idEventArg<idEntity> activator) {
@@ -596,8 +580,8 @@ public class Misc {
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteInt(count[0]);
-            savefile.WriteInt(nextTriggerTime[0]);
+            savefile.WriteInt(count.getVal());
+            savefile.WriteInt(nextTriggerTime.getVal());
         }
 
         @Override
@@ -612,7 +596,7 @@ public class Misc {
 
             health = spawnArgs.GetInt("health", "5");
             spawnArgs.GetInt("count", "1", count);
-            nextTriggerTime[0] = 0;
+            nextTriggerTime.setVal(0);
 
             // make sure the model gets cached
             spawnArgs.GetString("broken", "", broken);
@@ -626,7 +610,7 @@ public class Misc {
 
         @Override
         public void Killed(idEntity inflictor, idEntity attacker, int damage, final idVec3 dir, int location) {
-            if (gameLocal.time < nextTriggerTime[0]) {
+            if (gameLocal.time < nextTriggerTime.getVal()) {
                 health += damage;
                 return;
             }
@@ -635,20 +619,20 @@ public class Misc {
         }
 
         private void BecomeBroken(idEntity activator) {
-            float[] forceState = {0};
-            int[] numStates = {0};
-            int[] cycle = {0};
-            float[] wait = {0};
+            CFloat forceState = new CFloat();
+            CInt numStates = new CInt();
+            CInt cycle = new CInt();
+            CFloat wait = new CFloat();
 
-            if (gameLocal.time < nextTriggerTime[0]) {
+            if (gameLocal.time < nextTriggerTime.getVal()) {
                 return;
             }
 
             spawnArgs.GetFloat("wait", "0.1", wait);
-            nextTriggerTime[0] = (int) (gameLocal.time + SEC2MS(wait[0]));
-            if (count[0] > 0) {
-                count[0]--;
-                if (0 == count[0]) {
+            nextTriggerTime.setVal((int) (gameLocal.time + SEC2MS(wait.getVal())));
+            if (count.getVal() > 0) {
+                count.decrement();
+                if (0 == count.getVal()) {
                     fl.takedamage = false;
                 } else {
                     health = spawnArgs.GetInt("health", "5");
@@ -670,15 +654,15 @@ public class Misc {
             spawnArgs.GetFloat("forcestate", "0", forceState);
 
             // set the state parm
-            if (cycle[0] != 0) {
+            if (cycle.getVal() != 0) {
                 renderEntity.shaderParms[SHADERPARM_MODE]++;
-                if (renderEntity.shaderParms[SHADERPARM_MODE] > numStates[0]) {
+                if (renderEntity.shaderParms[SHADERPARM_MODE] > numStates.getVal()) {
                     renderEntity.shaderParms[SHADERPARM_MODE] = 0;
                 }
-            } else if (forceState[0] != 0) {
-                renderEntity.shaderParms[SHADERPARM_MODE] = forceState[0];
+            } else if (forceState.getVal() != 0) {
+                renderEntity.shaderParms[SHADERPARM_MODE] = forceState.getVal();
             } else {
-                renderEntity.shaderParms[SHADERPARM_MODE] = gameLocal.random.RandomInt(numStates[0]) + 1;
+                renderEntity.shaderParms[SHADERPARM_MODE] = gameLocal.random.RandomInt(numStates.getVal()) + 1;
             }
 
             renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
@@ -687,7 +671,7 @@ public class Misc {
 
             if (spawnArgs.GetBool("hideWhenBroken")) {
                 Hide();
-                PostEventMS(EV_RestoreDamagable, nextTriggerTime[0] - gameLocal.time);
+                PostEventMS(EV_RestoreDamagable, nextTriggerTime.getVal() - gameLocal.time);
                 BecomeActive(TH_THINK);
             }
         }
@@ -702,10 +686,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -776,10 +757,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -804,8 +781,8 @@ public class Misc {
             eventCallbacks.put(EV_PostSpawn, (eventCallback_t0<idSpring>) idSpring::Event_LinkSpring);
         }
 
-        private final int[] id1 = {0};
-        private final int[] id2 = {0};
+        private final CInt id1 = new CInt();
+        private final CInt id2 = new CInt();
         private idEntity ent1;
         private idEntity ent2;
         private idVec3 p1;
@@ -820,7 +797,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
-            float[] Kstretch = {0}, damping = {0}, restLength = {0};
+            CFloat Kstretch = new CFloat(), damping = new CFloat(), restLength = new CFloat();
 
             spawnArgs.GetInt("id1", "0", id1);
             spawnArgs.GetInt("id2", "0", id2);
@@ -830,7 +807,7 @@ public class Misc {
             spawnArgs.GetFloat("damping", "10.0f", damping);
             spawnArgs.GetFloat("restlength", "0.0f", restLength);
 
-            spring.InitSpring(Kstretch[0], 0.0f, damping[0], restLength[0]);
+            spring.InitSpring(Kstretch.getVal(), 0.0f, damping.getVal(), restLength.getVal());
 
             ent1 = ent2 = null;
 
@@ -892,7 +869,7 @@ public class Misc {
             } else {
                 ent2 = gameLocal.entities[ENTITYNUM_WORLD];
             }
-            spring.SetPosition(ent1.GetPhysics(), id1[0], p1, ent2.GetPhysics(), id2[0], p2);
+            spring.SetPosition(ent1.GetPhysics(), id1.getVal(), p1, ent2.GetPhysics(), id2.getVal(), p2);
             BecomeActive(TH_THINK);
         }
 
@@ -901,10 +878,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -947,18 +920,18 @@ public class Misc {
             super.Spawn();
 
             idVec3 uniform = new idVec3();
-            float[] explosion = {0}, implosion = {0}, randomTorque = {0};
+            CFloat explosion = new CFloat(), implosion = new CFloat(), randomTorque = new CFloat();
 
             if (spawnArgs.GetVector("uniform", "0 0 0", uniform)) {
                 forceField.Uniform(uniform);
             } else if (spawnArgs.GetFloat("explosion", "0", explosion)) {
-                forceField.Explosion(explosion[0]);
+                forceField.Explosion(explosion.getVal());
             } else if (spawnArgs.GetFloat("implosion", "0", implosion)) {
-                forceField.Implosion(implosion[0]);
+                forceField.Implosion(implosion.getVal());
             }
 
             if (spawnArgs.GetFloat("randomTorque", "0", randomTorque)) {
-                forceField.RandomTorque(randomTorque[0]);
+                forceField.RandomTorque(randomTorque.getVal());
             }
 
             if (spawnArgs.GetBool("applyForce", "0")) {
@@ -1001,11 +974,11 @@ public class Misc {
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
-            float[] wait = new float[1];
+            CFloat wait = new CFloat();
 
             Toggle();
             if (spawnArgs.GetFloat("wait", "0.01", wait)) {
-                PostEventSec(EV_Toggle, wait[0]);
+                PostEventSec(EV_Toggle, wait.getVal());
             }
         }
 
@@ -1026,10 +999,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -1055,8 +1025,8 @@ public class Misc {
             eventCallbacks.put(EV_LaunchMissilesUpdate, (eventCallback_t4<idAnimated>) idAnimated::Event_LaunchMissilesUpdate);
         }
 
-        private boolean activated;
         private final idEntityPtr<idEntity> activator;
+        private boolean activated;
         private int anim;
         private int blendFrames;
         private int current_anim_index;
@@ -1095,8 +1065,8 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] current_anim_index = {0}, num_anims = {0}, anim = {0}, blendFrames = {0}, soundJoint = {0};
-            boolean[] activated = {false};
+            CInt current_anim_index = new CInt(), num_anims = new CInt(), anim = new CInt(), blendFrames = new CInt(), soundJoint = new CInt();
+            CBool activated = new CBool(false);
 
             savefile.ReadInt(current_anim_index);
             savefile.ReadInt(num_anims);
@@ -1106,12 +1076,12 @@ public class Misc {
             activator.Restore(savefile);
             savefile.ReadBool(activated);
 
-            this.current_anim_index = current_anim_index[0];
-            this.num_anims = num_anims[0];
-            this.anim = anim[0];
-            this.blendFrames = blendFrames[0];
-            this.soundJoint = soundJoint[0];
-            this.activated = activated[0];
+            this.current_anim_index = current_anim_index.getVal();
+            this.num_anims = num_anims.getVal();
+            this.anim = anim.getVal();
+            this.blendFrames = blendFrames.getVal();
+            this.soundJoint = soundJoint.getVal();
+            this.activated = activated.isVal();
         }
 
         @Override
@@ -1120,9 +1090,9 @@ public class Misc {
 
             String[] animname = new String[1];
             int anim2;
-            float[] wait = {0};
+            CFloat wait = new CFloat();
             final String joint;
-            int[] num_anims2 = {0};
+            CInt num_anims2 = new CInt();
 
             joint = spawnArgs.GetString("sound_bone", "origin");
             soundJoint = animator.GetJointHandle(joint);
@@ -1146,7 +1116,7 @@ public class Misc {
 
             current_anim_index = 0;
             spawnArgs.GetInt("num_anims", "0", num_anims2);
-            num_anims = num_anims2[0];
+            num_anims = num_anims2.getVal();
 
             blendFrames = spawnArgs.GetInt("blend_in");
 
@@ -1183,8 +1153,8 @@ public class Misc {
 
             spawnArgs.GetFloat("wait", "-1", wait);
 
-            if (wait[0] >= 0) {
-                PostEventSec(EV_Activate, wait[0], this);
+            if (wait.getVal() >= 0) {
+                PostEventSec(EV_Activate, wait.getVal(), this);
             }
         }
 
@@ -1229,7 +1199,7 @@ public class Misc {
         private void PlayNextAnim() {
             String[] animName = new String[1];
             int len;
-            int[] cycle = new int[1];
+            CInt cycle = new CInt();
 
             if (current_anim_index >= num_anims) {
                 Hide();
@@ -1263,11 +1233,11 @@ public class Misc {
 
             spawnArgs.GetInt("cycle", "1", cycle);
             if ((current_anim_index == num_anims) && spawnArgs.GetBool("loop_last_anim")) {
-                cycle[0] = -1;
+                cycle.setVal(-1);
             }
 
             animator.CycleAnim(ANIMCHANNEL_ALL, anim, gameLocal.time, FRAME2MS(blendFrames));
-            animator.CurrentAnim(ANIMCHANNEL_ALL).SetCycleCount(cycle[0]);
+            animator.CurrentAnim(ANIMCHANNEL_ALL).SetCycleCount(cycle.getVal());
 
             len = animator.CurrentAnim(ANIMCHANNEL_ALL).PlayLength();
             if (len >= 0) {
@@ -1301,7 +1271,7 @@ public class Misc {
         }
 
         private void Event_Start() {
-            int[] cycle = new int[1];
+            CInt cycle = new CInt();
             int len;
 
             Show();
@@ -1318,7 +1288,7 @@ public class Misc {
                 }
                 spawnArgs.GetInt("cycle", "1", cycle);
                 animator.CycleAnim(ANIMCHANNEL_ALL, anim, gameLocal.time, FRAME2MS(blendFrames));
-                animator.CurrentAnim(ANIMCHANNEL_ALL).SetCycleCount(cycle[0]);
+                animator.CurrentAnim(ANIMCHANNEL_ALL).SetCycleCount(cycle.getVal());
 
                 len = animator.CurrentAnim(ANIMCHANNEL_ALL).PlayLength();
                 if (len >= 0) {
@@ -1457,11 +1427,11 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idStaticEntity>) idStaticEntity::Event_Activate);
         }
 
+        private final idVec4 fadeFrom;
+        private final idVec4 fadeTo;
         private boolean active;
         private int fadeEnd;
-        private final idVec4 fadeFrom;
         private int fadeStart;
-        private final idVec4 fadeTo;
         private boolean runGui;
         private int spawnTime;
         //
@@ -1494,8 +1464,8 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] spawnTime = {0}, fadeStart = {0}, fadeEnd = {0};//TODO:make sure the dumbass compiler doesn't decide that all {0}'s are the same
-            boolean[] active = {false}, runGui = {false};
+            CInt spawnTime = new CInt(), fadeStart = new CInt(), fadeEnd = new CInt();//TODO:make sure the dumbass compiler doesn't decide that all {0}'s are the same (lol)
+            CBool active = new CBool(), runGui = new CBool();
 
             savefile.ReadInt(spawnTime);
             savefile.ReadBool(active);
@@ -1505,11 +1475,11 @@ public class Misc {
             savefile.ReadInt(fadeEnd);
             savefile.ReadBool(runGui);
 
-            this.spawnTime = spawnTime[0];
-            this.fadeStart = fadeStart[0];
-            this.fadeEnd = fadeEnd[0];
-            this.active = active[0];
-            this.runGui = runGui[0];
+            this.spawnTime = spawnTime.getVal();
+            this.fadeStart = fadeStart.getVal();
+            this.fadeEnd = fadeEnd.getVal();
+            this.active = active.isVal();
+            this.runGui = runGui.isVal();
         }
 
         @Override
@@ -1673,10 +1643,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -1701,12 +1667,12 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idFuncEmitter>) idFuncEmitter::Event_Activate);
         }
 
-        private final boolean[] hidden = {false};
+        private final CBool hidden = new CBool(false);
         //
         //
 
         public idFuncEmitter() {
-            hidden[0] = false;
+            hidden.setVal(false);
         }
 
         public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
@@ -1715,7 +1681,7 @@ public class Misc {
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteBool(hidden[0]);
+            savefile.WriteBool(hidden.isVal());
         }
 
         @Override
@@ -1728,36 +1694,36 @@ public class Misc {
             super.Spawn();
 
             if (spawnArgs.GetBool("start_off")) {
-                hidden[0] = true;
+                hidden.setVal(true);
                 renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME] = MS2SEC(1);
                 UpdateVisuals();
             } else {
-                hidden[0] = false;
+                hidden.setVal(false);
             }
         }
 
         public void Event_Activate(idEventArg<idEntity> activator) {
-            if (hidden[0] || spawnArgs.GetBool("cycleTrigger")) {
+            if (hidden.isVal() || spawnArgs.GetBool("cycleTrigger")) {
                 renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME] = 0;
                 renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
-                hidden[0] = false;
+                hidden.setVal(false);
             } else {
                 renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME] = MS2SEC(gameLocal.time);
-                hidden[0] = true;
+                hidden.setVal(true);
             }
             UpdateVisuals();
         }
 
         @Override
         public void WriteToSnapshot(idBitMsgDelta msg) {
-            msg.WriteBits(hidden[0] ? 1 : 0, 1);
+            msg.WriteBits(hidden.isVal() ? 1 : 0, 1);
             msg.WriteFloat(renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME]);
             msg.WriteFloat(renderEntity.shaderParms[SHADERPARM_TIMEOFFSET]);
         }
 
         @Override
         public void ReadFromSnapshot(final idBitMsgDelta msg) {
-            hidden[0] = msg.ReadBits(1) != 0;
+            hidden.setVal(msg.ReadBits(1) != 0);
             renderEntity.shaderParms[SHADERPARM_PARTICLE_STOPTIME] = msg.ReadFloat();
             renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = msg.ReadFloat();
             if (msg.HasChanged()) {
@@ -1834,15 +1800,15 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] smokeTime = {0};
-            boolean[] restart = {false};
+            CInt smokeTime = new CInt();
+            CBool restart = new CBool();
 
             savefile.ReadInt(smokeTime);
             savefile.ReadParticle(smoke);
             savefile.ReadBool(restart);
 
-            this.smokeTime = smokeTime[0];
-            this.restart = restart[0];
+            this.smokeTime = smokeTime.getVal();
+            this.restart = restart.isVal();
         }
 
         @Override
@@ -1882,10 +1848,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -1965,7 +1927,7 @@ public class Misc {
             text.oSet(spawnArgs.GetString("text"));
             playerOriented = spawnArgs.GetBool("playerOriented");
             boolean force = spawnArgs.GetBool("force");
-            if (developer.GetBool() || force) {
+            if (com_developer.GetBool() || force) {
                 BecomeActive(TH_THINK);
             }
         }
@@ -1978,12 +1940,12 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            boolean[] playerOriented = {false};
+            CBool playerOriented = new CBool(false);
 
             savefile.ReadString(text);
             savefile.ReadBool(playerOriented);
 
-            this.playerOriented = playerOriented[0];
+            this.playerOriented = playerOriented.isVal();
         }
 
         @Override
@@ -2005,10 +1967,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
     }
 
     /*
@@ -2043,10 +2002,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
     }
 
     /*
@@ -2078,10 +2034,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 
     /*
@@ -2135,13 +2087,13 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] state = {0}, portal = {0};
+            CInt state = new CInt(), portal = new CInt();
 
             savefile.ReadInt(portal);
             savefile.ReadInt(state);
 
-            this.portal = portal[0];
-            gameLocal.SetPortalState(portal[0], state[0]);
+            this.portal = portal.getVal();
+            gameLocal.SetPortalState(portal.getVal(), state.getVal());
         }
 
         public void Event_Activate(idEventArg<idEntity> activator) {
@@ -2156,10 +2108,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2200,10 +2149,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 
     /*
@@ -2237,10 +2182,10 @@ public class Misc {
         public void Spawn() {
             super.Spawn();
 
-            float[] width = new float[1];
+            CFloat width = new CFloat();
 
             if (spawnArgs.GetFloat("width", "0", width)) {
-                renderEntity.shaderParms[SHADERPARM_BEAM_WIDTH] = width[0];
+                renderEntity.shaderParms[SHADERPARM_BEAM_WIDTH] = width.getVal();
             }
 
             SetModel("_BEAM");
@@ -2370,10 +2315,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
     }
 
     /*
@@ -2439,10 +2381,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2467,8 +2405,8 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idShaking>) idShaking::Event_Activate);
         }
 
-        private boolean active;
         private final idPhysics_Parametric physicsObj;
+        private boolean active;
         //
         //
 
@@ -2506,13 +2444,13 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            boolean[] active = {false};
+            CBool active = new CBool();
 
             savefile.ReadBool(active);
             savefile.ReadStaticObject(physicsObj);
             RestorePhysics(physicsObj);
 
-            this.active = active[0];
+            this.active = active.isVal();
         }
 
         private void BeginShaking() {
@@ -2541,10 +2479,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2628,9 +2562,9 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            int[] nextTriggerTime = {0}, shakeStopTime = {0};
-            float[] wait = {0}, random = {0}, shakeTime = {0};
-            boolean[] triggered = {false}, playerOriented = {false}, disabled = {false};
+            CInt nextTriggerTime = new CInt(), shakeStopTime = new CInt();
+            CFloat wait = new CFloat(), random = new CFloat(), shakeTime = new CFloat();
+            CBool triggered = new CBool(false), playerOriented = new CBool(false), disabled =new CBool(false);
 
             savefile.ReadInt(nextTriggerTime);
             savefile.ReadInt(shakeStopTime);
@@ -2641,16 +2575,16 @@ public class Misc {
             savefile.ReadBool(disabled);
             savefile.ReadFloat(shakeTime);
 
-            this.nextTriggerTime = nextTriggerTime[0];
-            this.shakeStopTime = shakeStopTime[0];
-            this.wait = wait[0];
-            this.random = random[0];
-            this.triggered = triggered[0];
-            this.playerOriented = playerOriented[0];
-            this.disabled = disabled[0];
-            this.shakeTime = shakeTime[0];
+            this.nextTriggerTime = nextTriggerTime.getVal();
+            this.shakeStopTime = shakeStopTime.getVal();
+            this.wait = wait.getVal();
+            this.random = random.getVal();
+            this.triggered = triggered.isVal();
+            this.playerOriented = playerOriented.isVal();
+            this.disabled = disabled.isVal();
+            this.shakeTime = shakeTime.getVal();
 
-            if (shakeStopTime[0] > gameLocal.time) {
+            if (shakeStopTime.getVal() > gameLocal.time) {
                 BecomeActive(TH_THINK);
             }
         }
@@ -2717,10 +2651,7 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2745,14 +2676,14 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idFuncPortal>) idFuncPortal::Event_Activate);
         }
 
-        private final int[]/*qhandle_t*/ portal = {0};
-        private final boolean[] state = {false};
+        private final CInt/*qhandle_t*/ portal = new CInt();
+        private final CBool state = new CBool();
         //
         //
 
         public idFuncPortal() {
-            portal[0] = 0;
-            state[0] = false;
+            portal.setVal(0);
+            state.setVal(false);
         }
 
         public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
@@ -2763,30 +2694,30 @@ public class Misc {
         public void Spawn() {
             super.Spawn();
 
-            portal[0] = gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds().Expand(32.0f));
-            if (portal[0] > 0) {
-                state[0] = spawnArgs.GetBool("start_on");
-                gameLocal.SetPortalState(portal[0], (state[0] ? PS_BLOCK_ALL : PS_BLOCK_NONE).ordinal());
+            portal.setVal( gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds().Expand(32.0f)));
+            if (portal.getVal() > 0) {
+                state.setVal(spawnArgs.GetBool("start_on"));
+                gameLocal.SetPortalState(portal.getVal(), (state.isVal() ? PS_BLOCK_ALL : PS_BLOCK_NONE).ordinal());
             }
         }
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteInt(portal[0]);
-            savefile.WriteBool(state[0]);
+            savefile.WriteInt(portal.getVal());
+            savefile.WriteBool(state.isVal());
         }
 
         @Override
         public void Restore(idRestoreGame savefile) {
             savefile.ReadInt(portal);
             savefile.ReadBool(state);
-            gameLocal.SetPortalState(portal[0], (state[0] ? PS_BLOCK_ALL : PS_BLOCK_NONE).ordinal());
+            gameLocal.SetPortalState(portal.getVal(), (state.isVal() ? PS_BLOCK_ALL : PS_BLOCK_NONE).ordinal());
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
-            if (portal[0] > 0) {
-                state[0] = !state[0];
-                gameLocal.SetPortalState(portal[0], (state[0] ? PS_BLOCK_ALL : PS_BLOCK_NONE).ordinal());
+            if (portal.getVal() > 0) {
+                state.setVal(!state.isVal());
+                gameLocal.SetPortalState(portal.getVal(), (state.isVal() ? PS_BLOCK_ALL : PS_BLOCK_NONE).ordinal());
             }
         }
 
@@ -2795,10 +2726,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2848,9 +2775,9 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            final boolean[] state = {false};
+            final CBool state = new CBool();
             savefile.ReadBool(state);
-            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_CLUSTERPORTAL, this.state = state[0]);
+            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_CLUSTERPORTAL, this.state = state.isVal());
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
@@ -2863,10 +2790,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2891,12 +2814,12 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idFuncAASObstacle>) idFuncAASObstacle::Event_Activate);
         }
 
-        private final boolean[] state = {false};
+        private final CBool state = new CBool(false);
         //
         //
 
         public idFuncAASObstacle() {
-            state[0] = false;
+            state.setVal(false);
         }
 
         public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
@@ -2907,24 +2830,24 @@ public class Misc {
         public void Spawn() {
             super.Spawn();
 
-            state[0] = spawnArgs.GetBool("start_on");
-            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_OBSTACLE, state[0]);
+            state.setVal(spawnArgs.GetBool("start_on"));
+            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_OBSTACLE, state.isVal());
         }
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteBool(state[0]);
+            savefile.WriteBool(state.isVal());
         }
 
         @Override
         public void Restore(idRestoreGame savefile) {
             savefile.ReadBool(state);
-            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_OBSTACLE, state[0]);
+            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_OBSTACLE, state.isVal());
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
-            state[0] ^= true;//1;
-            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_OBSTACLE, state[0]);
+            state.setVal(state.isVal() ^ true);
+            gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_OBSTACLE, state.isVal());
         }
 
         @Override
@@ -2932,10 +2855,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -2980,18 +2899,18 @@ public class Misc {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            float[] time = {0};
+            CFloat time = new CFloat();
 
             savefile.ReadFloat(time);
 
-            this.time = time[0];
+            this.time = time.getVal();
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
             idPlayer player;
             final String sound;
             idSoundShader shader;
-            int[] length = {0};
+            CInt length = new CInt();
 
             if (activator.value.IsType(idPlayer.class)) {
                 player = (idPlayer) activator.value;
@@ -3005,7 +2924,7 @@ public class Misc {
             if (sound != null && !sound.isEmpty()) {
                 shader = declManager.FindSound(sound);
                 player.StartSoundShader(shader, SND_CHANNEL_RADIO, SSF_GLOBAL, false, length);
-                time = MS2SEC(length[0] + 150);
+                time = MS2SEC(length.getVal() + 150);
             }
             // we still put the hud up because this is used with no sound on
             // certain frame commands when the chatter is triggered
@@ -3025,10 +2944,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -3054,15 +2969,15 @@ public class Misc {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idPhantomObjects>) idPhantomObjects::Event_Activate);
         }
 
-        private int end_time;
         private final idList<idVec3> lastTargetPos;
+        private final idEntityPtr<idActor> target;
+        private final idList<Integer> targetTime;
+        private int end_time;
         private int max_wait;
         private int min_wait;
         private idVec3 shake_ang;
         private float shake_time;
         private float speed;
-        private final idEntityPtr<idActor> target;
-        private final idList<Integer> targetTime;
         private float throw_time;
         //
         //
@@ -3172,7 +3087,7 @@ public class Misc {
             idEntity ent;
             idActor targetEnt;
             idPhysics entPhys;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
 
             // if we are completely closed off from the player, don't do anything at all
             if (CheckDormant()) {
@@ -3219,7 +3134,7 @@ public class Misc {
                 final idVec3 entOrg = entPhys.GetOrigin();
 
                 gameLocal.clip.TracePoint(tr, entOrg, toPos, MASK_OPAQUE, ent);
-                if (tr[0].fraction >= 1.0f || gameLocal.GetTraceEntity(tr[0]).equals(targetEnt)) {
+                if (tr.fraction >= 1.0f || gameLocal.GetTraceEntity(tr).equals(targetEnt)) {
                     lastTargetPos.oSet(i, toPos);
                 }
 
@@ -3308,10 +3223,6 @@ public class Misc {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {

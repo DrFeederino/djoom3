@@ -168,7 +168,7 @@ public class GameEdit {
         public void Update(idPlayer player) {
             idVec3 viewPoint = new idVec3(), origin;
             idMat3 viewAxis = new idMat3(), axis = new idMat3();
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idEntity newEnt;
             idAngles angles;
             int/*jointHandle_t*/ newJoint = 0;
@@ -182,16 +182,16 @@ public class GameEdit {
                 if ((player.usercmd.buttons & BUTTON_ATTACK) != 0) {
 
                     gameLocal.clip.TracePoint(trace, viewPoint, viewPoint.oPlus(viewAxis.oGet(0).oMultiply(MAX_DRAG_TRACE_DISTANCE)), (CONTENTS_SOLID | CONTENTS_RENDERMODEL | CONTENTS_BODY), player);
-                    if (trace[0].fraction < 1.0f) {
+                    if (trace.fraction < 1.0f) {
 
-                        newEnt = gameLocal.entities[trace[0].c.entityNum];
+                        newEnt = gameLocal.entities[trace.c.entityNum];
                         if (newEnt != null) {
 
                             if (newEnt.GetBindMaster() != null) {
                                 if (newEnt.GetBindJoint() != 0) {
-                                    trace[0].c.id = JOINT_HANDLE_TO_CLIPMODEL_ID(newEnt.GetBindJoint());
+                                    trace.c.id = JOINT_HANDLE_TO_CLIPMODEL_ID(newEnt.GetBindJoint());
                                 } else {
-                                    trace[0].c.id = newEnt.GetBindBody();
+                                    trace.c.id = newEnt.GetBindBody();
                                 }
                                 newEnt = newEnt.GetBindMaster();
                             }
@@ -200,16 +200,16 @@ public class GameEdit {
                                 idAFEntity_Base af = (idAFEntity_Base) newEnt;
 
                                 // joint being dragged
-                                newJoint = CLIPMODEL_ID_TO_JOINT_HANDLE(trace[0].c.id);
+                                newJoint = CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id);
                                 // get the body id from the trace model id which might be a joint handle
-                                trace[0].c.id = af.BodyForClipModelId(trace[0].c.id);
+                                trace.c.id = af.BodyForClipModelId(trace.c.id);
                                 // get the name of the body being dragged
-                                newBodyName = af.GetAFPhysics().GetBody(trace[0].c.id).GetName();
+                                newBodyName = af.GetAFPhysics().GetBody(trace.c.id).GetName();
 
                             } else if (!newEnt.IsType(idWorldspawn.class)) {
 
-                                if (trace[0].c.id < 0) {
-                                    newJoint = CLIPMODEL_ID_TO_JOINT_HANDLE(trace[0].c.id);
+                                if (trace.c.id < 0) {
+                                    newJoint = CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id);
                                 } else {
                                     newJoint = INVALID_JOINT;
                                 }
@@ -225,7 +225,7 @@ public class GameEdit {
                             dragEnt.oSet(newEnt);
                             selected.oSet(newEnt);
                             joint = newJoint;
-                            id = trace[0].c.id;
+                            id = trace.c.id;
                             bodyName = newBodyName;
 
                             if (null == cursor) {
@@ -233,10 +233,10 @@ public class GameEdit {
                             }
 
                             idPhysics phys = dragEnt.GetEntity().GetPhysics();
-                            localPlayerPoint.oSet((trace[0].c.point.oMinus(viewPoint)).oMultiply(viewAxis.Transpose()));
+                            localPlayerPoint.oSet((trace.c.point.oMinus(viewPoint)).oMultiply(viewAxis.Transpose()));
                             origin = phys.GetOrigin(id);
                             axis = phys.GetAxis(id);
-                            localEntityPoint.oSet((trace[0].c.point.oMinus(origin)).oMultiply(axis.Transpose()));
+                            localEntityPoint.oSet((trace.c.point.oMinus(origin)).oMultiply(axis.Transpose()));
 
                             cursor.drag.Init(g_dragDamping.GetFloat());
                             cursor.drag.SetPhysics(phys, id, localEntityPoint);

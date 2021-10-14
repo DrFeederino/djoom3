@@ -5,29 +5,25 @@ import neo.CM.CollisionModel_local;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AI.AI.idAI;
 import neo.Game.Actor.idActor;
-import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Mover.idDoor;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force_Constant.idForce_Constant;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
 import neo.Game.Script.Script_Thread.idThread;
-import neo.Renderer.Material.*;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
-import neo.TempDump.*;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
@@ -654,7 +650,7 @@ public class Projectile {
             idEntity ignore;
             String damageDefName;
             idVec3 dir;
-            float[] push = {0};
+            CFloat push = new CFloat();
             float damageScale;
 
             if (state == EXPLODED || state == FIZZLED) {
@@ -695,8 +691,8 @@ public class Projectile {
             dir.Normalize();
 
             // projectiles can apply an additional impulse next to the rigid body physics impulse
-            if (spawnArgs.GetFloat("push", "0", push) && push[0] > 0) {
-                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.oMultiply(push[0]));
+            if (spawnArgs.GetFloat("push", "0", push) && push.getVal() > 0) {
+                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.oMultiply(push.getVal()));
             }
 
             // MP: projectiles open doors
@@ -1408,13 +1404,13 @@ public class Projectile {
                 if (owner.GetEntity().IsType(idAI.class)) {
                     enemy.oSet(((idAI) owner.GetEntity()).GetEnemy());
                 } else if (owner.GetEntity().IsType(idPlayer.class)) {
-                    trace_s[] tr = {null};
+                    trace_s tr = new trace_s();
                     idPlayer player = (idPlayer) owner.GetEntity();
                     idVec3 start2 = player.GetEyePosition();
                     idVec3 end2 = start2.oPlus(player.viewAxis.oGet(0).oMultiply(1000.0f));
                     gameLocal.clip.TracePoint(tr, start2, end2, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, owner.GetEntity());
-                    if (tr[0].fraction < 1.0f) {
-                        enemy.oSet(gameLocal.GetTraceEntity(tr[0]));
+                    if (tr.fraction < 1.0f) {
+                        enemy.oSet(gameLocal.GetTraceEntity(tr));
                     }
                     // ignore actors on the player's team
                     if (enemy.GetEntity() == null || !enemy.GetEntity().IsType(idActor.class) || (((idActor) enemy.GetEntity()).team == player.team)) {
@@ -1715,11 +1711,11 @@ public class Projectile {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = new int[1];
+            CInt num = new CInt();
 
             savefile.ReadInt(num);
-            beamTargets.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            beamTargets.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 beamTargets.oGet(i).target.Restore(savefile);
                 savefile.ReadRenderEntity(beamTargets.oGet(i).renderEntity);
                 beamTargets.oGet(i).modelDefHandle = savefile.ReadInt();
@@ -1839,9 +1835,9 @@ public class Projectile {
             idBounds bounds;
             idVec3 damagePoint = new idVec3();
 
-            float[] radius = {0};
+            CFloat radius = new CFloat();
             spawnArgs.GetFloat("damageRadius", "512", radius);
-            bounds = new idBounds(GetPhysics().GetOrigin()).Expand(radius[0]);
+            bounds = new idBounds(GetPhysics().GetOrigin()).Expand(radius.getVal());
 
             float beamWidth = spawnArgs.GetFloat("beam_WidthFly");
             final String skin = spawnArgs.GetString("skin_beam");
@@ -2041,6 +2037,7 @@ public class Projectile {
         private idDeclParticle smokeFly;
         private int smokeFlyTime;
         private idSoundShader sndBounce;
+        private final idDebris type = new idDebris();
         //
         //
 
@@ -2324,11 +2321,6 @@ public class Projectile {
 
         @Override
         public Class.idClass CreateInstance() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 

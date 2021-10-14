@@ -3,6 +3,7 @@ package neo.idlib.geometry;
 import neo.TempDump;
 import neo.TempDump.NiLLABLE;
 import neo.idlib.BV.Bounds.idBounds;
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Pluecker.idPluecker;
@@ -480,8 +481,9 @@ public class Winding {
             }
 
             numPoints = newNumPoints;
-            System.arraycopy(newPoints, 0, p, 0, newNumPoints);//memcpy( p, newPoints, newNumPoints * sizeof(idVec5) );
-
+            for (i = 0; i < newNumPoints; i++) {
+                p[i] = new idVec5(newPoints[i]);
+            }
             return this;
         }
 
@@ -599,8 +601,9 @@ public class Winding {
             }
 
             numPoints = newNumPoints;
-            System.arraycopy(newPoints, 0, p, 0, newNumPoints);//memcpy( p, newPoints, newNumPoints * sizeof(idVec5) );
-
+            for (i = 0; i < newNumPoints; i++) {
+                p[i] = new idVec5(newPoints[i]);
+            }
             return true;
         }
 
@@ -611,7 +614,9 @@ public class Winding {
 
             w = new idWinding(numPoints);
             w.numPoints = numPoints;
-            System.arraycopy(p, 0, w.p, 0, numPoints);//memcpy( w->p, p, numPoints * sizeof(p[0]) );
+            for (int i = 0; i < numPoints; i++) {
+                w.p[i] = new idVec5(p[i]);
+            }
             return w;
         }
 
@@ -862,7 +867,9 @@ public class Winding {
                 }
 
                 this.numPoints = numNewHullPoints;
-                System.arraycopy(newHullPoints, 0, this.p, 0, numNewHullPoints);//memcpy( this.p, newHullPoints, numNewHullPoints * sizeof(idVec5) );
+                for (i = 0; i < numNewHullPoints; i++) {
+                    this.p[i] = new idVec5(newHullPoints[i]);
+                }
             }
         }
 
@@ -982,7 +989,9 @@ public class Winding {
             }
             numPoints = numHullPoints;
 //	memcpy( p, hullPoints, numHullPoints * sizeof(idVec5) );
-            System.arraycopy(hullPoints, 0, this.p, 0, numHullPoints);
+            for (int i = 0; i < numHullPoints; i++) {
+                this.p[i] = new idVec5(hullPoints[i]);
+            }
         }
 
         public idWinding TryMerge(final idWinding w, final idVec3 planenormal) {
@@ -1224,12 +1233,12 @@ public class Winding {
             return idMath.Sqrt(radius);
         }
 
-        public void GetPlane(idVec3 normal, float[] dist) {
+        public void GetPlane(idVec3 normal, CFloat dist) {
             idVec3 v1, v2, center;
 
             if (numPoints < 3) {
                 normal.Zero();
-                dist[0] = 0.0f;
+                dist.setVal(0.0f);
                 return;
             }
 
@@ -1238,7 +1247,7 @@ public class Winding {
             v2 = p[1].ToVec3().oMinus(center);
             normal = v2.Cross(v1);
             normal.Normalize();
-            dist[0] = p[0].ToVec3().oMultiply(normal);
+            dist.setVal(p[0].ToVec3().oMultiply(normal));
         }
 
         public void GetPlane(idPlane plane) {
@@ -1468,17 +1477,17 @@ public class Winding {
             return PointInside(windingPlane.Normal(), mid, 0.0f);
         }
 
-        public boolean RayIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 dir, float[] scale) {
+        public boolean RayIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 dir, CFloat scale) {
             return RayIntersection(windingPlane, start, dir, scale, false);
         }
 
         // intersection point is start + dir * scale
-        public boolean RayIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 dir, float[] scale, boolean backFaceCull) {
+        public boolean RayIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 dir, CFloat scale, boolean backFaceCull) {
             int i;
             boolean side, lastside = false;
             idPluecker pl1 = new idPluecker(), pl2 = new idPluecker();
 
-            scale[0] = 0.0f;
+            scale.setVal(0.0f);
             pl1.FromRay(start, dir);
             for (i = 0; i < numPoints; i++) {
                 pl2.FromLine(p[i].ToVec3(), p[(i + 1) % numPoints].ToVec3());
@@ -1518,7 +1527,9 @@ public class Winding {
             p = TempDump.allocArray(idVec5.class, n);
             if (oldP != null && keep) {
 //			memcpy( p, oldP, numPoints * sizeof(p[0]) );
-                System.arraycopy(oldP, 0, p, 0, numPoints);
+                for (int i = 0; i < numPoints; i++) {
+                    p[i] = new idVec5(oldP[i]);
+                }
             }
             allocedSize = n;
 

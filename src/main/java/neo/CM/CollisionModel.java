@@ -6,6 +6,7 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.math.Matrix.idMat3;
@@ -153,7 +154,7 @@ public class CollisionModel {
         public abstract boolean GetModelBounds(int model, idBounds bounds);
 
         // Gets all contents flags of brushes and polygons of a model ored together.
-        public abstract boolean GetModelContents(int model, int[] contents);
+        public abstract boolean GetModelContents(int model, CInt contents);
 
         // Gets a vertex of a model.
         public abstract boolean GetModelVertex(int model, int vertexNum, idVec3 vertex);
@@ -165,12 +166,12 @@ public class CollisionModel {
         public abstract boolean GetModelPolygon(int model, /*int*/ AbstractCollisionModel_local.cm_polygon_s polygonNum, idFixedWinding winding);
 
         // Translates a trace model and reports the first collision if any.
-        public abstract void Translation(trace_s[] results, final idVec3 start, final idVec3 end,
+        public abstract void Translation(trace_s results, final idVec3 start, final idVec3 end,
                                          final idTraceModel trm, final idMat3 trmAxis, int contentMask,
                                          int model, final idVec3 modelOrigin, final idMat3 modelAxis);
 
         // Rotates a trace model and reports the first collision if any.
-        public abstract void Rotation(trace_s[] results, final idVec3 start, final idRotation rotation,
+        public abstract void Rotation(trace_s results, final idVec3 start, final idRotation rotation,
                                       final idTraceModel trm, final idMat3 trmAxis, int contentMask,
                                       int model, final idVec3 modelOrigin, final idMat3 modelAxis);
 

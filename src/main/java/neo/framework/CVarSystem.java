@@ -11,7 +11,6 @@ import neo.Renderer.Model_local.idRenderModelStatic;
 import neo.Renderer.RenderSystem_init;
 import neo.Renderer.VertexCache.idVertexCache;
 import neo.Sound.snd_system;
-import neo.TempDump.*;
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
 import neo.framework.Async.ServerScan;
 import neo.framework.CmdSystem.argCompletion_t;
@@ -27,7 +26,6 @@ import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
-import neo.idlib.Text.Str.*;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
@@ -38,6 +36,8 @@ import neo.sys.win_net;
 import neo.ui.DeviceContext;
 import neo.ui.GameBearShootWindow;
 import neo.ui.Window.idWindow;
+
+import java.util.Arrays;
 
 import static neo.TempDump.*;
 import static neo.framework.CVarSystem.idCVarSystemLocal.show.*;
@@ -231,7 +231,7 @@ public class CVarSystem {
 
         // Never use the default constructor.
         private idCVar() {
-            assert (this.getClass() != idCVar.class);
+            //assert (!this.getClass().equals(idCVar.class));
         }
 
         // Always use one of the following constructors.
@@ -281,12 +281,54 @@ public class CVarSystem {
          ===============================================================================
          */
         public static void RegisterStaticVars() {
-            if (staticVars != ID_CVAR_0xFFFFFFFF) {
+            if (!staticVars.equals(ID_CVAR_0xFFFFFFFF)) {
                 for (idCVar cvar = staticVars; cvar != null; cvar = cvar.next) {
                     cvarSystem.Register(cvar);
                 }
                 staticVars = ID_CVAR_0xFFFFFFFF;
             }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof idCVar)) return false;
+
+            idCVar idCVar = (idCVar) o;
+
+            if (flags != idCVar.flags) return false;
+            if (Float.compare(idCVar.floatValue, floatValue) != 0) return false;
+            if (integerValue != idCVar.integerValue) return false;
+            if (Float.compare(idCVar.valueMax, valueMax) != 0) return false;
+            if (Float.compare(idCVar.valueMin, valueMin) != 0) return false;
+            if (description != null ? !description.equals(idCVar.description) : idCVar.description != null)
+                return false;
+            if (internalVar != null ? !internalVar.equals(idCVar.internalVar) : idCVar.internalVar != null)
+                return false;
+            if (name != null ? !name.equals(idCVar.name) : idCVar.name != null) return false;
+            if (next != null ? !next.equals(idCVar.next) : idCVar.next != null) return false;
+            if (value != null ? !value.equals(idCVar.value) : idCVar.value != null) return false;
+            if (valueCompletion != null ? !valueCompletion.equals(idCVar.valueCompletion) : idCVar.valueCompletion != null)
+                return false;
+            // Probably incorrect - comparing Object[] arrays with Arrays.equals
+            return Arrays.equals(valueStrings, idCVar.valueStrings);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = description != null ? description.hashCode() : 0;
+            result = 31 * result + flags;
+            result = 31 * result + (floatValue != +0.0f ? Float.floatToIntBits(floatValue) : 0);
+            result = 31 * result + integerValue;
+            result = 31 * result + (internalVar != null ? internalVar.hashCode() : 0);
+            result = 31 * result + (name != null ? name.hashCode() : 0);
+            result = 31 * result + (next != null ? next.hashCode() : 0);
+            result = 31 * result + (value != null ? value.hashCode() : 0);
+            result = 31 * result + (valueCompletion != null ? valueCompletion.hashCode() : 0);
+            result = 31 * result + (valueMax != +0.0f ? Float.floatToIntBits(valueMax) : 0);
+            result = 31 * result + (valueMin != +0.0f ? Float.floatToIntBits(valueMin) : 0);
+            result = 31 * result + Arrays.hashCode(valueStrings);
+            return result;
         }
 
         public String GetName() {

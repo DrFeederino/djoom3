@@ -3,11 +3,13 @@ package neo.sys;
 import neo.TempDump.CPP_class;
 import neo.TempDump.SERiAL;
 import neo.TempDump.TODO_Exception;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.idStrList;
 import neo.sys.sys_local.idSysLocal;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.TimerTask;
 
 import static neo.sys.win_net.*;
@@ -261,6 +263,26 @@ public class sys_public {
             this.ip[3] = address.ip[3];
             this.port = port;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof netadr_t)) return false;
+
+            netadr_t netadr_t = (netadr_t) o;
+
+            if (port != netadr_t.port) return false;
+            if (!Arrays.equals(ip, netadr_t.ip)) return false;
+            return type == netadr_t.type;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Arrays.hashCode(ip);
+            result = 31 * result + (int) port;
+            result = 31 * result + (type != null ? type.hashCode() : 0);
+            return result;
+        }
     }
 
     public static class idPort {
@@ -325,7 +347,7 @@ public class sys_public {
             }
         }
 
-        public boolean GetPacket(netadr_t[] from, Object data, int[] size, int maxSize) {
+        public boolean GetPacket(netadr_t from, Object data, CInt size, int maxSize) {
             throw new TODO_Exception();
 //            udpMsg_s msg;
 //            boolean ret;
@@ -387,7 +409,7 @@ public class sys_public {
 //            }
         }
 
-        public boolean GetPacketBlocking(netadr_t[] from, Object data, int[] size, int maxSize, int timeout) {
+        public boolean GetPacketBlocking(netadr_t from, Object data, CInt size, int maxSize, int timeout) {
 
             Net_WaitForUDPPacket(netSocket, timeout);
 

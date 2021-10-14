@@ -6,9 +6,11 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.PlaneSet.idPlaneSet;
 import neo.idlib.math.Plane.idPlane;
@@ -303,8 +305,8 @@ public class AASFile {
      */
     public static class idAASSettings {
 
-        public boolean[] allowFlyReachabilities = {false};
-        public boolean[] allowSwimReachabilities = {false};
+        public CBool allowFlyReachabilities = new CBool(false);
+        public CBool allowSwimReachabilities = new CBool(false);
         public idBounds[] boundingBoxes = new idBounds[MAX_AAS_BOUNDING_BOXES];
         public idStr fileExtension;
         // physics settings
@@ -312,50 +314,50 @@ public class AASFile {
         public idVec3 gravityDir;
         public float gravityValue;
         public idVec3 invGravityDir;
-        public float[] maxBarrierHeight = {0};
-        public float[] maxFallHeight = {0};
-        public float[] maxStepHeight = {0};
-        public float[] maxWaterJumpHeight = {0};
-        public float[] minFloorCos = {0};
+        public CFloat maxBarrierHeight = new CFloat();
+        public CFloat maxFallHeight = new CFloat();
+        public CFloat maxStepHeight = new CFloat();
+        public CFloat maxWaterJumpHeight = new CFloat();
+        public CFloat minFloorCos = new CFloat();
         public boolean noOptimize;
         // collision settings
         public int numBoundingBoxes;
-        public boolean[] playerFlood = {false};
+        public CBool playerFlood = new CBool(false);
         // fixed travel times
-        public int[] tt_barrierJump = {0};
-        public int[] tt_startCrouching = {0};
-        public int[] tt_startWalkOffLedge = {0};
-        public int[] tt_waterJump = {0};
-        public boolean[] usePatches = {false};
-        public boolean[] writeBrushMap = {false};
+        public CInt tt_barrierJump = new CInt();
+        public CInt tt_startCrouching = new CInt();
+        public CInt tt_startWalkOffLedge = new CInt();
+        public CInt tt_waterJump = new CInt();
+        public CBool usePatches = new CBool(false);
+        public CBool writeBrushMap = new CBool(false);
         //
         //
 
         public idAASSettings() {
             numBoundingBoxes = 1;
             boundingBoxes[0] = new idBounds(new idVec3(-16, -16, 0), new idVec3(16, 16, 72));
-            usePatches[0] = false;
-            writeBrushMap[0] = false;
-            playerFlood[0] = false;
+            usePatches.setVal(false);
+            writeBrushMap.setVal(false);
+            playerFlood.setVal( false );
             noOptimize = false;
-            allowSwimReachabilities[0] = false;
-            allowFlyReachabilities[0] = false;
+            allowSwimReachabilities.setVal(false);
+            allowFlyReachabilities.setVal(false);
             fileExtension = new idStr("aas48");
             // physics settings
             gravity = new idVec3(0, 0, -1066);
             gravityDir = gravity;
             gravityValue = gravityDir.Normalize();
             invGravityDir = gravityDir.oNegative();
-            maxStepHeight[0] = 14.0f;
-            maxBarrierHeight[0] = 32.0f;
-            maxWaterJumpHeight[0] = 20.0f;
-            maxFallHeight[0] = 64.0f;
-            minFloorCos[0] = 0.7f;
+            maxStepHeight.setVal(14.0f);
+            maxBarrierHeight.setVal(32.0f);
+            maxWaterJumpHeight.setVal(20.0f);
+            maxFallHeight.setVal(64.0f);
+            minFloorCos.setVal(0.7f);
             // fixed travel times
-            tt_barrierJump[0] = 100;
-            tt_startCrouching[0] = 100;
-            tt_waterJump[0] = 100;
-            tt_startWalkOffLedge[0] = 100;
+            tt_barrierJump.setVal(100);
+            tt_startCrouching.setVal(100);
+            tt_waterJump.setVal(100);
+            tt_startWalkOffLedge.setVal(100);
         }
 
         public boolean FromFile(final idStr fileName) throws idException {
@@ -576,22 +578,22 @@ public class AASFile {
                         boundingBoxes[i].oGet(1).x, boundingBoxes[i].oGet(1).y, boundingBoxes[i].oGet(1).z);
             }
             fp.WriteFloatString("\t}\n");
-            fp.WriteFloatString("\tusePatches = %d\n", usePatches[0]);
-            fp.WriteFloatString("\twriteBrushMap = %d\n", writeBrushMap[0]);
-            fp.WriteFloatString("\tplayerFlood = %d\n", playerFlood[0]);
-            fp.WriteFloatString("\tallowSwimReachabilities = %d\n", allowSwimReachabilities[0]);
-            fp.WriteFloatString("\tallowFlyReachabilities = %d\n", allowFlyReachabilities[0]);
+            fp.WriteFloatString("\tusePatches = %d\n", usePatches.isVal());
+            fp.WriteFloatString("\twriteBrushMap = %d\n", writeBrushMap.isVal());
+            fp.WriteFloatString("\tplayerFlood = %d\n", playerFlood.isVal());
+            fp.WriteFloatString("\tallowSwimReachabilities = %d\n", allowSwimReachabilities.isVal());
+            fp.WriteFloatString("\tallowFlyReachabilities = %d\n", allowFlyReachabilities.isVal());
             fp.WriteFloatString("\tfileExtension = \"%s\"\n", fileExtension);
             fp.WriteFloatString("\tgravity = (%f %f %f)\n", gravity.x, gravity.y, gravity.z);
-            fp.WriteFloatString("\tmaxStepHeight = %f\n", maxStepHeight[0]);
-            fp.WriteFloatString("\tmaxBarrierHeight = %f\n", maxBarrierHeight[0]);
-            fp.WriteFloatString("\tmaxWaterJumpHeight = %f\n", maxWaterJumpHeight[0]);
-            fp.WriteFloatString("\tmaxFallHeight = %f\n", maxFallHeight[0]);
-            fp.WriteFloatString("\tminFloorCos = %f\n", minFloorCos[0]);
-            fp.WriteFloatString("\ttt_barrierJump = %d\n", tt_barrierJump[0]);
-            fp.WriteFloatString("\ttt_startCrouching = %d\n", tt_startCrouching[0]);
-            fp.WriteFloatString("\ttt_waterJump = %d\n", tt_waterJump[0]);
-            fp.WriteFloatString("\ttt_startWalkOffLedge = %d\n", tt_startWalkOffLedge[0]);
+            fp.WriteFloatString("\tmaxStepHeight = %f\n", maxStepHeight.getVal());
+            fp.WriteFloatString("\tmaxBarrierHeight = %f\n", maxBarrierHeight.getVal());
+            fp.WriteFloatString("\tmaxWaterJumpHeight = %f\n", maxWaterJumpHeight.getVal());
+            fp.WriteFloatString("\tmaxFallHeight = %f\n", maxFallHeight.getVal());
+            fp.WriteFloatString("\tminFloorCos = %f\n", minFloorCos.getVal());
+            fp.WriteFloatString("\ttt_barrierJump = %d\n", tt_barrierJump.getVal());
+            fp.WriteFloatString("\ttt_startCrouching = %d\n", tt_startCrouching.getVal());
+            fp.WriteFloatString("\ttt_waterJump = %d\n", tt_waterJump.getVal());
+            fp.WriteFloatString("\ttt_startWalkOffLedge = %d\n", tt_startWalkOffLedge.getVal());
             fp.WriteFloatString("}\n");
             return true;
         }
@@ -615,7 +617,7 @@ public class AASFile {
             idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
 
-            if (playerFlood[0]) {
+            if (playerFlood.isVal()) {
                 if (classname.equals("info_player_start") || classname.equals("info_player_deathmatch") || classname.equals("func_teleporter")) {
                     return true;
                 }
@@ -640,27 +642,27 @@ public class AASFile {
             return false;
         }
 
-        private boolean ParseBool(idLexer src, boolean[] b) {
+        private boolean ParseBool(idLexer src, CBool b) {
             if (!src.ExpectTokenString("=")) {
                 return false;
             }
-            b[0] = src.ParseBool();
+            b.setVal(src.ParseBool());
             return true;
         }
 
-        private boolean ParseInt(idLexer src, int[] i) {
+        private boolean ParseInt(idLexer src, CInt i) {
             if (!src.ExpectTokenString("=")) {
                 return false;
             }
-            i[0] = src.ParseInt();
+            i.setVal(src.ParseInt());
             return true;
         }
 
-        private boolean ParseFloat(idLexer src, float[] f) {
+        private boolean ParseFloat(idLexer src, CFloat f) {
             if (!src.ExpectTokenString("=")) {
                 return false;
             }
-            f[0] = src.ParseFloat();
+            f.setVal(src.ParseFloat());
             return true;
         }
 

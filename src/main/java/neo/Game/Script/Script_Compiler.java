@@ -1,11 +1,7 @@
 package neo.Game.Script;
 
-import neo.Game.GameSys.Event.*;
-import neo.Game.Script.Script_Program.*;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.Text.Token.*;
 import neo.idlib.Timer.idTimer;
 import neo.idlib.math.Vector.idVec3;
 
@@ -1987,7 +1983,8 @@ public class Script_Compiler {
             statement_s pos;
 
             pos = gameLocal.program.GetStatement(start);
-            for (i = start; i < gameLocal.program.NumStatements(); pos = gameLocal.program.GetStatement(++i)) {
+            for (i = start; i < gameLocal.program.NumStatements(); i++) {
+                pos = gameLocal.program.GetStatement(i);
                 if (pos.op == OP_BREAK) {
                     pos.op = OP_GOTO;
                     pos.a = JumpFrom(i);
@@ -2517,7 +2514,8 @@ public class Script_Compiler {
                     if (func.firstStatement < gameLocal.program.NumStatements()) {
                         // change all returns to point to the call to the destructor
                         pos = gameLocal.program.GetStatement(func.firstStatement);
-                        for (i = func.firstStatement; i < gameLocal.program.NumStatements(); pos = gameLocal.program.GetStatement(++i)) {
+                        for (i = func.firstStatement; i < gameLocal.program.NumStatements(); i++) {
+                            pos = gameLocal.program.GetStatement(i);
                             if (pos.op == OP_RETURN) {
                                 pos.op = OP_GOTO;
                                 pos.a = JumpDef(i, gameLocal.program.NumStatements());

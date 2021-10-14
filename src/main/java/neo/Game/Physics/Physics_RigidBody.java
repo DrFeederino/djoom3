@@ -12,9 +12,10 @@ import neo.Game.Physics.Physics_Base.idPhysics_Base;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Timer.idTimer;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Ode.deriveFunction_t;
 import neo.idlib.math.Ode.idODE;
@@ -101,8 +102,8 @@ public class Physics_RigidBody {
      ================
      */
     static void idPhysics_RigidBody_RestorePState(idRestoreGame savefile, rigidBodyPState_s state) {
-        int[] atRest = {0};
-        float[] lastTimeStep = {0};
+        CInt atRest = new CInt();
+        CFloat lastTimeStep = new CFloat();
 
         savefile.ReadInt(atRest);
         savefile.ReadFloat(lastTimeStep);
@@ -117,8 +118,8 @@ public class Physics_RigidBody {
         savefile.ReadVec3(state.i.linearMomentum);
         savefile.ReadVec3(state.i.angularMomentum);
 
-        state.atRest = atRest[0];
-        state.lastTimeStep = lastTimeStep[0];
+        state.atRest = atRest.getVal();
+        state.lastTimeStep = lastTimeStep.getVal();
     }
 
     public static class rigidBodyIState_s {
@@ -148,10 +149,10 @@ public class Physics_RigidBody {
         }
 
         private rigidBodyIState_s(rigidBodyIState_s r) {
-            position = new idVec3(r.position);
-            orientation = new idMat3(r.orientation);
-            linearMomentum = new idVec3(r.linearMomentum);
-            angularMomentum = new idVec3(r.angularMomentum);
+            position = r.position;
+            orientation = r.orientation;
+            linearMomentum = r.linearMomentum;
+            angularMomentum = r.angularMomentum;
         }
 
         private float[] toFloats() {
@@ -228,9 +229,12 @@ public class Physics_RigidBody {
          Drops the object straight down to the floor and verifies if the object is at rest on the floor.
          ================
          */                   private static int DBG_DropToFloorAndRest = 0;
+        private final idVec3 centerOfMass;         // center of mass of trace model
+        private final idMat3 inertiaTensor;        // mass distribution
+        //
+        private final idODE integrator;           // integrator
         private float angularFriction;      // rotational friction
         private float bouncyness;           // bouncyness
-        private final idVec3 centerOfMass;         // center of mass of trace model
         private idClipModel clipModel;            // clip model used for collision detection
         private float contactFriction;      // friction with contact surfaces
         // state of the rigid body
@@ -239,9 +243,6 @@ public class Physics_RigidBody {
         //
         // master
         private boolean hasMaster;
-        private final idMat3 inertiaTensor;        // mass distribution
-        //
-        private final idODE integrator;           // integrator
         private idMat3 inverseInertiaTensor; // inverse inertia tensor
         private float inverseMass;          // 1 / mass
         private boolean isOrientated;
@@ -418,17 +419,15 @@ public class Physics_RigidBody {
             clipModel = model;
             clipModel.Link(gameLocal.clip, self, 0, current.i.position, current.i.orientation);
 
-            {// get mass properties from the trace model
-                float[] mass = {0};
-                clipModel.GetMassProperties(density, mass, centerOfMass, inertiaTensor);
-                this.mass = mass[0];
-            }
+            CFloat mass = new CFloat();
+            clipModel.GetMassProperties(density, mass, centerOfMass, inertiaTensor);
+            this.mass = mass.getVal();
 
             // check whether or not the clip model has valid mass properties
-            if (mass <= 0.0f || FLOAT_IS_NAN(mass)) {
+            if (mass.getVal() <= 0.0f || FLOAT_IS_NAN(mass.getVal())) {
                 gameLocal.Warning("idPhysics_RigidBody::SetClipModel: invalid mass for entity '%s' type '%s'",
                         self.name, self.GetType().getName());
-                mass = 1.0f;
+                mass.setVal(1.0f);
                 centerOfMass.Zero();
                 inertiaTensor.Identity();
             }
@@ -449,7 +448,7 @@ public class Physics_RigidBody {
                 inertiaTensor.oMulSet(inertiaScale);
             }
 
-            inverseMass = 1.0f / mass;
+            inverseMass = 1.0f / mass.getVal();
             inverseInertiaTensor = inertiaTensor.Inverse().oMultiply(1.0f / 6.0f);
 
             current.i.linearMomentum.Zero();
@@ -513,7 +512,7 @@ public class Physics_RigidBody {
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
             rigidBodyPState_s next;
             idAngles angles;
-            trace_s[] collision = {new trace_s()};
+            trace_s collision = new trace_s();
             idVec3 impulse = new idVec3();
             idEntity ent;
             idVec3 oldOrigin, masterOrigin = new idVec3();
@@ -587,7 +586,7 @@ public class Physics_RigidBody {
 
             if (collided) {
                 // apply collision impulse
-                if (CollisionImpulse(collision[0], impulse)) {
+                if (CollisionImpulse(collision, impulse)) {
                     current.atRest = gameLocal.time;
                 }
             }
@@ -626,10 +625,10 @@ public class Physics_RigidBody {
 
             if (collided) {
                 // if the rigid body didn't come to rest or the other entity is not at rest
-                ent = gameLocal.entities[collision[0].c.entityNum];
+                ent = gameLocal.entities[collision.c.entityNum];
                 if (ent != null && (!cameToRest || !ent.IsAtRest())) {
                     // apply impact to other entity
-                    ent.ApplyImpulse(self, collision[0].c.id, collision[0].c.point, impulse.oNegative());
+                    ent.ApplyImpulse(self, collision.c.id, collision.c.point, impulse.oNegative());
                 }
             }
 
@@ -875,7 +874,7 @@ public class Physics_RigidBody {
         }
 
         @Override
-        public void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model) {
+        public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
             if (model != null) {
                 gameLocal.clip.TranslationModel(results, clipModel.GetOrigin(), clipModel.GetOrigin().oPlus(translation),
                         clipModel, clipModel.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis());
@@ -886,7 +885,7 @@ public class Physics_RigidBody {
         }
 
         @Override
-        public void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model) {
+        public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
             if (model != null) {
                 gameLocal.clip.RotationModel(results, clipModel.GetOrigin(), rotation,
                         clipModel, clipModel.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis());
@@ -1118,7 +1117,7 @@ public class Physics_RigidBody {
          If there is a collision the next state is set to the state at the moment of impact.
          ================
          */
-        private boolean CheckForCollisions(final float deltaTime, rigidBodyPState_s next, trace_s[] collision) {
+        private boolean CheckForCollisions(final float deltaTime, rigidBodyPState_s next, trace_s collision) {
 //#define TEST_COLLISION_DETECTION
             idMat3 axis = new idMat3();
             idRotation rotation;
@@ -1138,8 +1137,8 @@ public class Physics_RigidBody {
             // if there was a collision
             if (gameLocal.clip.Motion(collision, current.i.position, next.i.position, rotation, clipModel, current.i.orientation, clipMask, self)) {
                 // set the next state to the state at the moment of impact
-                next.i.position.oSet(collision[0].endpos);
-                next.i.orientation.oSet(collision[0].endAxis);
+                next.i.position.oSet(collision.endpos);
+                next.i.orientation.oSet(collision.endAxis);
                 next.i.linearMomentum.oSet(current.i.linearMomentum);
                 next.i.angularMomentum.oSet(current.i.angularMomentum);
                 collided = true;
@@ -1272,7 +1271,7 @@ public class Physics_RigidBody {
         private void DropToFloorAndRest() {
             DBG_DropToFloorAndRest++;
             idVec3 down;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
 
             if (this.DBG_count == 8209) {
                 int bla = 1;
@@ -1295,11 +1294,11 @@ public class Physics_RigidBody {
             // put the body on the floor
             down = current.i.position.oPlus(gravityNormal.oMultiply(128.0f));
             gameLocal.clip.Translation(tr, current.i.position, down, clipModel, current.i.orientation, clipMask, self);
-            current.i.position.oSet(tr[0].endpos);
-            clipModel.Link(gameLocal.clip, self, clipModel.GetId(), tr[0].endpos, current.i.orientation);
+            current.i.position.oSet(tr.endpos);
+            clipModel.Link(gameLocal.clip, self, clipModel.GetId(), tr.endpos, current.i.orientation);
 
             // if on the floor already
-            if (tr[0].fraction == 0.0f) {
+            if (tr.fraction == 0.0f) {
                 // test if we are really at rest
                 EvaluateContacts();
                 if (!TestIfAtRest()) {

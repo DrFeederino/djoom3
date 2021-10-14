@@ -1,8 +1,6 @@
 package neo.Game;
 
 import neo.CM.CollisionModel_local;
-import neo.Game.Entity.*;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
@@ -10,7 +8,6 @@ import neo.Game.Item.idItem;
 import neo.Game.Light.idLight;
 import neo.Game.Misc.idStaticEntity;
 import neo.Game.Mover.idDoor;
-import neo.Game.Player.*;
 import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Sound.idSound;
@@ -19,6 +16,8 @@ import neo.framework.DeclPDA.idDeclPDA;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Interpolate.idInterpolate;
@@ -30,7 +29,8 @@ import java.util.Map;
 
 import static neo.Game.Entity.*;
 import static neo.Game.GameSys.Class.*;
-import static neo.Game.GameSys.SysCvar.*;
+import static neo.Game.GameSys.SysCvar.g_fov;
+import static neo.Game.GameSys.SysCvar.pm_stamina;
 import static neo.Game.Game_local.*;
 import static neo.Game.Game_local.gameSoundChannel_t.*;
 import static neo.Game.Player.*;
@@ -41,6 +41,7 @@ import static neo.Renderer.RenderWorld.*;
 import static neo.TempDump.*;
 import static neo.framework.BuildDefines.ID_DEMO_BUILD;
 import static neo.framework.CVarSystem.cvarSystem;
+import static neo.framework.Common.com_developer;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_MODELDEF;
@@ -82,10 +83,6 @@ public class Target {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 
     /*
@@ -419,7 +416,7 @@ public class Target {
         private void Event_Activate(idEventArg<idEntity> activator) {
             int i;
             idEntity ent;
-            float[] value = {0};
+            CFloat value = new CFloat();
             idVec3 color = new idVec3();
             int parmnum;
 
@@ -439,14 +436,14 @@ public class Target {
                     for (i = 0; i < targets.Num(); i++) {
                         ent = targets.oGet(i).GetEntity();
                         if (ent != null) {
-                            ent.SetShaderParm(parmnum, value[0]);
+                            ent.SetShaderParm(parmnum, value.getVal());
                         }
                     }
-                    if (spawnArgs.GetBool("toggle") && (value[0] == 0 || value[0] == 1)) {
-                        int val = (int) value[0];
+                    if (spawnArgs.GetBool("toggle") && (value.getVal() == 0 || value.getVal() == 1)) {
+                        int val = (int) value.getVal();
                         val ^= 1;
-                        value[0] = val;
-                        spawnArgs.SetFloat(va("shaderParm%d", parmnum), value[0]);
+                        value.setVal(val);
+                        spawnArgs.SetFloat(va("shaderParm%d", parmnum), value.getVal());
                     }
                 }
             }
@@ -748,7 +745,7 @@ public class Target {
 
         private void Event_Activate(idEventArg<idEntity> activator) {
 
-            if (spawnArgs.GetBool("development") && developer.GetInteger() == 0) {
+            if (spawnArgs.GetBool("development") && com_developer.GetInteger() == 0) {
                 return;
             }
 
@@ -966,32 +963,32 @@ public class Target {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = {0};
-            int[] itemNum = new int[1];
-            float[] set = new float[1];
+            CInt num = new CInt();
+            CInt itemNum = new CInt();
+            CFloat set = new CFloat();
 
             savefile.ReadInt(num);
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadInt(itemNum);
-                lightList.Append(itemNum[0]);
+                lightList.Append(itemNum.getVal());
             }
 
             savefile.ReadInt(num);
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadInt(itemNum);
-                guiList.Append(itemNum[0]);
+                guiList.Append(itemNum.getVal());
             }
 
             savefile.ReadInt(num);
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadInt(itemNum);
-                soundList.Append(itemNum[0]);
+                soundList.Append(itemNum.getVal());
             }
 
             savefile.ReadInt(num);
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadInt(itemNum);
-                genericList.Append(itemNum[0]);
+                genericList.Append(itemNum.getVal());
             }
 
             flashIn = savefile.ReadFloat();
@@ -1005,13 +1002,13 @@ public class Target {
             savefile.ReadObject(/*reinterpret_cast<idClass *&>*/switchToCamera);
 
             savefile.ReadFloat(set);
-            fovSetting.SetStartTime(set[0]);
+            fovSetting.SetStartTime(set.getVal());
             savefile.ReadFloat(set);
-            fovSetting.SetDuration(set[0]);
+            fovSetting.SetDuration(set.getVal());
             savefile.ReadFloat(set);
-            fovSetting.SetStartValue(set[0]);
+            fovSetting.SetStartValue(set.getVal());
             savefile.ReadFloat(set);
-            fovSetting.SetEndValue(set[0]);
+            fovSetting.SetEndValue(set.getVal());
 
             soundFaded = savefile.ReadBool();
             restoreOnTrigger = savefile.ReadBool();
@@ -1471,16 +1468,16 @@ public class Target {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            float[] setting = new float[1];
+            CFloat setting = new CFloat();
 
             savefile.ReadFloat(setting);
-            fovSetting.SetStartTime(setting[0]);
+            fovSetting.SetStartTime(setting.getVal());
             savefile.ReadFloat(setting);
-            fovSetting.SetDuration(setting[0]);
+            fovSetting.SetDuration(setting.getVal());
             savefile.ReadFloat(setting);
-            fovSetting.SetStartValue((int) setting[0]);
+            fovSetting.SetStartValue((int) setting.getVal());
             savefile.ReadFloat(setting);
-            fovSetting.SetEndValue((int) setting[0]);
+            fovSetting.SetEndValue((int) setting.getVal());
 
             fovSetting.GetCurrentValue(gameLocal.time);
         }

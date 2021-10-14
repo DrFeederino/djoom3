@@ -18,6 +18,7 @@ import neo.idlib.math.Vector.idVec4;
 import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
@@ -72,6 +73,17 @@ public class Model {
         public silEdge_t() {
         }
 
+        public silEdge_t(silEdge_t val) {
+            if (val == null) {
+                p1 = p2 = v1 = v2 = 0;
+            } else {
+                this.p1 = val.p1;
+                this.p2 = val.p2;
+                this.v1 = val.v1;
+                this.v2 = val.v2;
+            }
+        }
+
         static silEdge_t[] generateArray(final int length) {
             return Stream.
                     generate(silEdge_t::new).
@@ -85,6 +97,17 @@ public class Model {
 
         public final float[] normalizationScale = new float[3];
         public int/*glIndex_t*/ v2, v3;
+
+        public dominantTri_s() {
+        }
+
+        public dominantTri_s(dominantTri_s val) {
+            if (val != null) {
+                System.arraycopy(val.normalizationScale, 0, this.normalizationScale, 0, this.normalizationScale.length);
+                this.v2 = val.v2;
+                this.v3 = val.v3;
+            }
+        }
     }
 
     static class lightingCache_s {
@@ -95,6 +118,12 @@ public class Model {
 
         lightingCache_s(ByteBuffer Position) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        public lightingCache_s(lightingCache_s val) {
+            if (val != null) {
+                this.localLightVector = new idVec3(val.localLightVector);
+            }
         }
 
         public static ByteBuffer toByteBuffer(lightingCache_s[] cache) {
@@ -121,6 +150,15 @@ public class Model {
         shadowCache_s(ByteBuffer Position) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
+
+        shadowCache_s(shadowCache_s val) {
+            if (val != null) {
+                this.xyz = val.xyz;
+            } else {
+                this.xyz = new idVec4();
+            }
+        }
+
 
         public static ByteBuffer toByteBuffer(shadowCache_s[] cache) {
             ByteBuffer data = BufferUtils.createByteBuffer(shadowCache_s.BYTES * cache.length);
@@ -207,6 +245,109 @@ public class Model {
             this.ambientCache = null;
             this.lightingCache = null;
             this.shadowCache = null;
+        }
+
+        public srfTriangles_s(srfTriangles_s val) {
+            if (val != null) {
+                this.bounds = val.bounds;
+                this.ambientViewCount = val.ambientViewCount;
+                this.generateNormals = val.generateNormals;
+                this.tangentsCalculated = val.tangentsCalculated;
+                this.facePlanesCalculated = val.facePlanesCalculated;
+                this.perfectHull = val.perfectHull;
+                this.deformedSurface = val.deformedSurface;
+                this.numVerts = val.numVerts;
+                this.verts = val.verts;
+                this.numIndexes = val.numIndexes;
+                this.indexes = val.indexes;
+                this.silIndexes = val.silIndexes;
+                this.numMirroredVerts = val.numMirroredVerts;
+                this.mirroredVerts = val.mirroredVerts;
+                this.numDupVerts = val.numDupVerts;
+                this.dupVerts = val.dupVerts;
+                this.numSilEdges = val.numSilEdges;
+                this.silEdges = val.silEdges;
+                this.facePlanes = val.facePlanes;
+                this.dominantTris = val.dominantTris;
+                this.numShadowIndexesNoFrontCaps = val.numShadowIndexesNoFrontCaps;
+                this.numShadowIndexesNoCaps = val.numShadowIndexesNoCaps;
+                this.shadowCapPlaneBits = val.shadowCapPlaneBits;
+                this.shadowVertexes = val.shadowVertexes;
+                this.ambientSurface = val.ambientSurface;
+                this.nextDeferredFree = val.nextDeferredFree;
+                this.indexCache = val.indexCache;
+                this.ambientCache = val.ambientCache;
+                this.lightingCache = val.lightingCache;
+                this.shadowCache = val.shadowCache;
+            } else {
+                this.bounds = new idBounds();
+                this.ambientViewCount = 0;
+                this.generateNormals = false;
+                this.tangentsCalculated = false;
+                this.facePlanesCalculated = false;
+                this.perfectHull = false;
+                this.deformedSurface = false;
+                this.numVerts = 0;
+                this.verts = null;
+                this.numIndexes = 0;
+                this.indexes = null;
+                this.silIndexes = null;
+                this.numMirroredVerts = 0;
+                this.mirroredVerts = null;
+                this.numDupVerts = 0;
+                this.dupVerts = null;
+                this.numSilEdges = 0;
+                this.silEdges = null;
+                this.facePlanes = null;
+                this.dominantTris = null;
+                this.numShadowIndexesNoFrontCaps = 0;
+                this.numShadowIndexesNoCaps = 0;
+                this.shadowCapPlaneBits = 0;
+                this.shadowVertexes = null;
+                this.ambientSurface = null;
+                this.nextDeferredFree = null;
+                this.indexCache = null;
+                this.ambientCache = null;
+                this.lightingCache = null;
+                this.shadowCache = null;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "srfTriangles_s{" +
+                    "DBG_count=" + DBG_count +
+                    ", bounds=" + bounds +
+                    ", facePlanes=" + Arrays.toString(facePlanes) +
+                    ", indexes=" + Arrays.toString(indexes) +
+                    ", numIndexes=" + numIndexes +
+                    ", numShadowIndexesNoCaps=" + numShadowIndexesNoCaps +
+                    ", numShadowIndexesNoFrontCaps=" + numShadowIndexesNoFrontCaps +
+                    ", numVerts=" + numVerts +
+                    ", shadowCapPlaneBits=" + shadowCapPlaneBits +
+                    ", shadowVertexes=" + Arrays.toString(shadowVertexes) +
+                    ", silIndexes=" + Arrays.toString(silIndexes) +
+                    ", tangentsCalculated=" + tangentsCalculated +
+                    ", verts=" + Arrays.toString(verts) +
+                    ", ambientCache=" + ambientCache +
+                    ", ambientSurface=" + ambientSurface +
+                    ", ambientViewCount=" + ambientViewCount +
+                    ", deformedSurface=" + deformedSurface +
+                    ", dominantTris=" + Arrays.toString(dominantTris) +
+                    ", dupVerts=" + Arrays.toString(dupVerts) +
+                    ", facePlanesCalculated=" + facePlanesCalculated +
+                    ", generateNormals=" + generateNormals +
+                    ", indexCache=" + indexCache +
+                    ", lightingCache=" + lightingCache +
+                    ", mirroredVerts=" + Arrays.toString(mirroredVerts) +
+                    ", nextDeferredFree=" + nextDeferredFree +
+                    ", numDupVerts=" + numDupVerts +
+                    ", numMirroredVerts=" + numMirroredVerts +
+                    ", numSilEdges=" + numSilEdges +
+                    ", perfectHull=" + perfectHull +
+                    ", shadowCache=" + shadowCache +
+                    ", silEdges=" + Arrays.toString(silEdges) +
+                    '}';
         }
     }
 

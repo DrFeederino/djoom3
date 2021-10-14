@@ -21,7 +21,6 @@ import neo.framework.File_h.idFile;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
@@ -33,6 +32,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static neo.Sound.snd_system.soundSystem;
 import static neo.TempDump.*;
@@ -137,7 +137,7 @@ public class DeclManager {
             0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
             0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001,};
 
-    static huffmanCode_s[] huffmanCodes = new huffmanCode_s[MAX_HUFFMAN_SYMBOLS];
+    static huffmanCode_s[] huffmanCodes = Stream.generate(huffmanCode_s::new).limit(MAX_HUFFMAN_SYMBOLS).toArray(huffmanCode_s[]::new); //new huffmanCode_s[MAX_HUFFMAN_SYMBOLS];
     static huffmanNode_s huffmanTree = null;
     static int maxHuffmanBits = 0;
 
@@ -2500,14 +2500,16 @@ public class DeclManager {
 
         public huffmanCode_s(huffmanCode_s code) {
             this.numBits = code.numBits;
-            this.bits[0] = code.bits[0];
-            this.bits[1] = code.bits[1];
-            this.bits[2] = code.bits[2];
-            this.bits[3] = code.bits[3];
-            this.bits[4] = code.bits[4];
-            this.bits[5] = code.bits[5];
-            this.bits[6] = code.bits[6];
-            this.bits[7] = code.bits[7];
+            System.arraycopy(code.bits, 0, this.bits, 0, this.bits.length);
+//            this.bits = code.bits;
+//            this.bits[0] = code.bits[0];
+//            this.bits[1] = code.bits[1];
+//            this.bits[2] = code.bits[2];
+//            this.bits[3] = code.bits[3];
+//            this.bits[4] = code.bits[4];
+//            this.bits[5] = code.bits[5];
+//            this.bits[6] = code.bits[6];
+//            this.bits[7] = code.bits[7];
         }
 
     }

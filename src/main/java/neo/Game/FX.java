@@ -10,13 +10,14 @@ import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Player.idPlayer;
 import neo.Game.Projectile.idProjectile;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.framework.DeclFX.idDeclFX;
 import neo.framework.DeclFX.idFXSingleAction;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
@@ -205,8 +206,8 @@ public class FX {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = {0};
-            boolean[] hasObject = {false};
+            CInt num = new CInt();
+            CBool hasObject = new CBool(false);
 
             started = savefile.ReadInt();
             nextTriggerTime = savefile.ReadInt();
@@ -215,11 +216,11 @@ public class FX {
 
             savefile.ReadInt(num);
 
-            actions.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            actions.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
 
                 savefile.ReadBool(hasObject);
-                if (hasObject[0]) {
+                if (hasObject.isVal()) {
                     savefile.ReadRenderLight(actions.oGet(i).renderLight);
                     actions.oGet(i).lightDefHandle = gameRenderWorld.AddLightDef(actions.oGet(i).renderLight);
                 } else {
@@ -229,7 +230,7 @@ public class FX {
                 }
 
                 savefile.ReadBool(hasObject);
-                if (hasObject[0]) {
+                if (hasObject.isVal()) {
                     savefile.ReadRenderEntity(actions.oGet(i).renderEntity);
                     actions.oGet(i).modelDefHandle = gameRenderWorld.AddEntityDef(actions.oGet(i).renderEntity);
                 } else {
@@ -582,7 +583,7 @@ public class FX {
         @Override
         public void ReadFromSnapshot(final idBitMsgDelta msg) {
             int fx_index, start_time;
-            int[] max_lapse = new int[1];
+            CInt max_lapse = new CInt();
 
             GetPhysics().ReadFromSnapshot(msg);
             ReadBindFromSnapshot(msg);
@@ -591,7 +592,7 @@ public class FX {
 
             if (fx_index != -1 && start_time > 0 && NOT(fxEffect) && started < 0) {
                 spawnArgs.GetInt("effect_lapse", "1000", max_lapse);
-                if (gameLocal.time - start_time > max_lapse[0]) {
+                if (gameLocal.time - start_time > max_lapse.getVal()) {
                     // too late, skip the effect completely
                     started = 0;
                     return;

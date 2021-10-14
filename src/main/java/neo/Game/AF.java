@@ -22,6 +22,7 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
@@ -241,7 +242,7 @@ public class AF {
 
             // initialize articulated figure physics
             physicsObj.SetGravity(gameLocal.GetGravity());
-            physicsObj.SetClipMask(file.clipMask[0]);
+            physicsObj.SetClipMask(file.clipMask.getVal());
             physicsObj.SetDefaultFriction(file.defaultLinearFriction, file.defaultAngularFriction, file.defaultContactFriction);
             physicsObj.SetSuspendSpeed(file.suspendVelocity, file.suspendAcceleration);
             physicsObj.SetSuspendTolerance(file.noMoveTime, file.noMoveTranslation, file.noMoveRotation);
@@ -924,7 +925,7 @@ public class AF {
             int id, i;
             DBG_LoadBody++;
             float length;
-            float[] candleMass = {0};
+            CFloat candleMass = new CFloat();
             idTraceModel trm = new idTraceModel();
             idClipModel clip;
             idAFBody body;
@@ -986,18 +987,18 @@ public class AF {
                 clip = body.GetClipModel();
                 if (!clip.IsEqual(trm)) {
                     clip = new idClipModel(trm);
-                    clip.SetContents(fb.contents[0]);
+                    clip.SetContents(fb.contents.getVal());
                     clip.Link(gameLocal.clip, self, 0, origin, axis);
                     body.SetClipModel(clip);
                 }
-                clip.SetContents(fb.contents[0]);
+                clip.SetContents(fb.contents.getVal());
                 body.SetDensity(fb.density, fb.inertiaScale);
                 body.SetWorldOrigin(origin);
                 body.SetWorldAxis(axis);
                 id = physicsObj.GetBodyId(body);
             } else {
                 clip = new idClipModel(trm);
-                clip.SetContents(fb.contents[0]);
+                clip.SetContents(fb.contents.getVal());
                 clip.Link(gameLocal.clip, self, 0, origin, axis);
                 body = new idAFBody(fb.name, clip, fb.density);
                 if (!fb.inertiaScale.equals(getMat3_identity())) {
@@ -1008,7 +1009,7 @@ public class AF {
             if (fb.linearFriction != -1.0f) {
                 body.SetFriction(fb.linearFriction, fb.angularFriction, fb.contactFriction);
             }
-            body.SetClipMask(fb.clipMask[0]);
+            body.SetClipMask(fb.clipMask.getVal());
             body.SetSelfCollision(fb.selfCollision);
 
             if (fb.jointName.equals("origin")) {
@@ -1198,7 +1199,7 @@ public class AF {
         protected boolean TestSolid() {
             int i;
             idAFBody body;
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
 //	idStr str;
             boolean solid;
 
@@ -1215,12 +1216,12 @@ public class AF {
             for (i = 0; i < physicsObj.GetNumBodies(); i++) {
                 body = physicsObj.GetBody(i);
                 if (gameLocal.clip.Translation(trace, body.GetWorldOrigin(), body.GetWorldOrigin(), body.GetClipModel(), body.GetWorldAxis(), body.GetClipMask(), self)) {
-                    float depth = Math.abs(trace[0].c.point.oMultiply(trace[0].c.normal) - trace[0].c.dist);
+                    float depth = Math.abs(trace.c.point.oMultiply(trace.c.normal) - trace.c.dist);
 
-                    body.SetWorldOrigin(body.GetWorldOrigin().oPlus(trace[0].c.normal.oMultiply(depth + 8.0f)));
+                    body.SetWorldOrigin(body.GetWorldOrigin().oPlus(trace.c.normal.oMultiply(depth + 8.0f)));
 
                     gameLocal.DWarning("%s: body '%s' stuck in %d (normal = %.2f %.2f %.2f, depth = %.2f)", self.name,
-                            body.GetName(), trace[0].c.contents, trace[0].c.normal.x, trace[0].c.normal.y, trace[0].c.normal.z, depth);
+                            body.GetName(), trace.c.contents, trace.c.normal.x, trace.c.normal.y, trace.c.normal.z, depth);
                     solid = true;
 
                 }

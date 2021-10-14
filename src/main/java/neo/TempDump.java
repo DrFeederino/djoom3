@@ -12,6 +12,9 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.math.Curve;
@@ -32,13 +35,13 @@ import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static neo.Renderer.Material.MAX_ENTITY_SHADER_PARMS;
 import static neo.Renderer.RenderWorld.MAX_GLOBAL_SHADER_PARMS;
@@ -875,27 +878,29 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         public static class renderViewShadow {
 
             //
-            public boolean[] cramZNear = {false};
-            public boolean[] forceUpdate = {false};
+            public CBool cramZNear = new CBool(false);
+            public CBool forceUpdate = new CBool(false);
             //
-            public float[] fov_x = {0}, fov_y = {0};
+            public CFloat fov_x = new CFloat(), fov_y = new CFloat();
             public idMaterial globalMaterial = new idMaterial();
-            public float[][] shaderParms = new float[MAX_GLOBAL_SHADER_PARMS][];
+            public CFloat[] shaderParms = Stream.generate(CFloat::new)
+                    .limit(MAX_GLOBAL_SHADER_PARMS)
+                    .toArray(CFloat[]::new);
             //
-            public int[] time = {0};
-            public int[] viewID = {0};
+            public CInt time = new CInt();
+            public CInt viewID = new CInt();
             public idMat3 viewaxis = new idMat3();
             public idVec3 vieworg = new idVec3();
             //
-            public int[] x = {0}, y = {0}, width = {0}, height = {0};
+            public CInt x = new CInt(), y = new CInt(), width = new CInt(), height = new CInt();
         }
 
         public static class renderEntityShadow {
 
             //
-            public int[] allowSurfaceInViewID = {0};
+            public CInt allowSurfaceInViewID = new CInt();
             public idMat3 axis;
-            public int[] bodyId = {0};
+            public CInt bodyId = new CInt();
             //      
             public idBounds bounds;
             public deferredEntityCallback_t callback;
@@ -905,57 +910,59 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             public idMaterial customShader;
             public idDeclSkin customSkin;
             //
-            public int[] entityNum = {0};
+            public CInt entityNum = new CInt();
             //
-            public int[] forceUpdate = {0};
+            public CInt forceUpdate = new CInt();
             //
             public idUserInterface[] gui = new idUserInterface[MAX_RENDERENTITY_GUI];
             public idRenderModel hModel;
             public idJointMat[] joints;
             //
-            public float[] modelDepthHack = {0};
+            public CFloat modelDepthHack = new CFloat();
             //
-            public boolean[] noDynamicInteractions = {false};
+            public CBool noDynamicInteractions = new CBool();;
             //
-            public boolean[] noSelfShadow = {false};
-            public boolean[] noShadow = {false};
+            public CBool noSelfShadow = new CBool();;
+            public CBool noShadow = new CBool();;
             //
-            public int[] numJoints = {0};
+            public CInt numJoints = new CInt();
             //
             public idVec3 origin;
             public idMaterial referenceShader;
             public idSoundEmitter referenceSound;
             //
             public renderView_s remoteRenderView;
-            public float[][] shaderParms = new float[MAX_ENTITY_SHADER_PARMS][];
+            public CFloat[] shaderParms = Stream.generate(CFloat::new)
+                    .limit(MAX_ENTITY_SHADER_PARMS)
+                    .toArray(CFloat[]::new);
             //
-            public int[] suppressShadowInLightID = {0};
-            public int[] suppressShadowInViewID = {0};
+            public CInt suppressShadowInLightID = new CInt();;
+            public CInt suppressShadowInViewID = new CInt();;
             //
-            public int[] suppressSurfaceInViewID = {0};
-            public int[] timeGroup = {0};
+            public CInt suppressSurfaceInViewID = new CInt();;
+            public CInt timeGroup = new CInt();;
             //
-            public boolean[] weaponDepthHack = {false};
-            public int[] xrayIndex = {0};
+            public CBool weaponDepthHack = new CBool();;
+            public CInt xrayIndex = new CInt();;
         }
 
         public static class renderLightShadow {
 
             //
-            public int[] allowLightInViewID = {0};
+            public CInt allowLightInViewID = new CInt();;
             public idMat3 axis;
             public idVec3 end;
             public idVec3 lightCenter;
             //
-            public int[] lightId = {0};
+            public CInt lightId = new CInt();;
             public idVec3 lightRadius;
             //
-            public boolean[] noShadows = {false};
-            public boolean[] noSpecular = {false};
+            public CBool noShadows = new CBool();;
+            public CBool noSpecular = new CBool();;
             public idVec3 origin;
-            public boolean[] parallel = {false};
+            public CBool parallel = new CBool();;
             //
-            public boolean[] pointLight = {false};
+            public CBool pointLight = new CBool();;
             //
             public idRenderModel prelightModel;
             public idSoundEmitter referenceSound;
@@ -966,7 +973,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             public float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];
             public idVec3 start;
             //
-            public int[] suppressLightInViewID = {0};
+            public CInt suppressLightInViewID = new CInt();;
             //
             public idVec3 target;
             public idVec3 up;

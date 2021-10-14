@@ -1,7 +1,6 @@
 package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
-import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t1;
@@ -13,16 +12,16 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Physics.Physics_StaticMulti.idPhysics_StaticMulti;
-import neo.Renderer.Material.*;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.TraceModel.idTraceModel;
@@ -233,7 +232,7 @@ public class BrittleFracture {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i, j;
-            int[] num = new int[1];
+            CInt num = new CInt();
 
             renderEntity.hModel = renderModelManager.AllocModel();
             renderEntity.hModel.InitEmpty(brittleFracture_SnapshotName);
@@ -272,12 +271,12 @@ public class BrittleFracture {
             RestorePhysics(physicsObj);
 
             savefile.ReadInt(num);
-            shards.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            shards.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 shards.oSet(i, new shard_s());
             }
 
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadWinding(shards.oGet(i).winding);
 
                 j = savefile.ReadInt();
@@ -290,10 +289,10 @@ public class BrittleFracture {
                 j = savefile.ReadInt();
                 shards.oGet(i).neighbours.SetNum(j);
                 for (j = 0; j < shards.oGet(i).neighbours.Num(); j++) {
-                    int[] index = new int[1];
+                    CInt index = new CInt();
                     savefile.ReadInt(index);
-                    assert (index[0] != -1);
-                    shards.oGet(i).neighbours.oSet(j, shards.oGet(index[0]));
+                    assert (index.getVal() != -1);
+                    shards.oGet(i).neighbours.oSet(j, shards.oGet(index.getVal()));
                 }
 
                 j = savefile.ReadInt();
@@ -316,7 +315,7 @@ public class BrittleFracture {
 
         @Override
         public void Spawn() {
-            float[] d = {0}, f = {0}, b = {0};
+            CFloat d = new CFloat(), f = new CFloat(), b = new CFloat();
 
             // get shard properties
             decalMaterial = declManager.FindMaterial(spawnArgs.GetString("mtr_decal"));
@@ -333,11 +332,11 @@ public class BrittleFracture {
             shardMass = spawnArgs.GetFloat("shardMass", "20");
             shardMass = idMath.ClampFloat(0.001f, 1000.0f, shardMass);
             spawnArgs.GetFloat("density", "0.1", d);
-            density = idMath.ClampFloat(0.001f, 1000.0f, d[0]);
+            density = idMath.ClampFloat(0.001f, 1000.0f, d.getVal());
             spawnArgs.GetFloat("friction", "0.4", f);
-            friction = idMath.ClampFloat(0.0f, 1.0f, f[0]);
+            friction = idMath.ClampFloat(0.0f, 1.0f, f.getVal());
             spawnArgs.GetFloat("bouncyness", "0.01", b);
-            bouncyness = idMath.ClampFloat(0.0f, 1.0f, b[0]);
+            bouncyness = idMath.ClampFloat(0.0f, 1.0f, b.getVal());
 
             disableFracture = spawnArgs.GetBool("disableFracture", "0");
             health = spawnArgs.GetInt("health", "40");

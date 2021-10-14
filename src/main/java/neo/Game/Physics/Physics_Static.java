@@ -396,7 +396,7 @@ public class Physics_Static {
         }
 
         @Override
-        public void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model) {
+        public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
             if (model != null) {
                 gameLocal.clip.TranslationModel(results, current.origin, current.origin.oPlus(translation),
                         clipModel, current.axis, MASK_SOLID, model.Handle(), model.GetOrigin(), model.GetAxis());
@@ -407,7 +407,7 @@ public class Physics_Static {
         }
 
         @Override
-        public void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model) {
+        public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
             if (model != null) {
                 gameLocal.clip.RotationModel(results, current.origin, rotation,
                         clipModel, current.axis, MASK_SOLID, model.Handle(), model.GetOrigin(), model.GetAxis());

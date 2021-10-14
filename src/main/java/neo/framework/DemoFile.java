@@ -1,12 +1,12 @@
 package neo.framework;
 
-import neo.framework.CVarSystem.*;
 import neo.framework.Compressor.idCompressor;
 import neo.framework.File_h.idFile;
 import neo.framework.File_h.idFile_Memory;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 
 import java.nio.ByteBuffer;
@@ -110,7 +110,7 @@ public class DemoFile {
 
         public boolean OpenForReading(final String fileName) {
             ByteBuffer magicBuffer = ByteBuffer.allocate(magicLen);
-            int[] compression = new int[1];
+            CInt compression = new CInt();
             int fileLength;
 
             Close();
@@ -142,11 +142,11 @@ public class DemoFile {
             } else {
                 // Ideally we would error out if the magic string isn't there,
                 // but for backwards compatibility we are going to assume it's just an uncompressed demo file
-                compression[0] = 0;
+                compression.setVal(0);
                 f.Rewind();
             }
 
-            compressor = AllocCompressor(compression[0]);
+            compressor = AllocCompressor(compression.getVal());
             compressor.Init(f, false, 8);
 
             return true;
@@ -202,7 +202,7 @@ public class DemoFile {
         }
 
         public String ReadHashString() throws idException {
-            int[] index = new int[1];
+            CInt index = new CInt();
 
             if (log && fLog != null) {
                 final String text = va("%s > Reading hash string\n", logStr.toString());
@@ -211,7 +211,7 @@ public class DemoFile {
 
             ReadInt(index);
 
-            if (index[0] == -1) {
+            if (index.getVal() == -1) {
                 // read a new string for the table
                 idStr str;
 
@@ -224,12 +224,12 @@ public class DemoFile {
                 return str.toString();
             }
 
-            if (index[0] < -1 || index[0] >= demoStrings.Num()) {
+            if (index.getVal() < -1 || index.getVal() >= demoStrings.Num()) {
                 Close();
                 common.Error("demo hash index out of range");
             }
 
-            return demoStrings.oGet(index[0]).toString();//TODO:return c_str?
+            return demoStrings.oGet(index.getVal()).toString();//TODO:return c_str?
         }
 
         public void WriteHashString(final String str) {
@@ -256,12 +256,12 @@ public class DemoFile {
 
         public void ReadDict(idDict dict) throws idException {
             int i;
-            int[] c = new int[1];
+            CInt c = new CInt();
             String key, val;
 
             dict.Clear();
             ReadInt(c);
-            for (i = 0; i < c[0]; i++) {
+            for (i = 0; i < c.getVal(); i++) {
                 key = ReadHashString();
                 val = ReadHashString();
                 dict.Set(key, val);

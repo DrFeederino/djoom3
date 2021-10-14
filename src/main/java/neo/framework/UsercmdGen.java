@@ -335,6 +335,27 @@ public class UsercmdGen {
             sequence = LittleLong(sequence);
         }
 
+        public usercmd_t() {
+        }
+
+        public usercmd_t(usercmd_t val) {
+            if (val != null) {
+                this.angles = val.angles;
+                this.buttons = val.buttons;
+                this.duplicateCount = val.duplicateCount;
+                this.flags = val.flags;
+                this.forwardmove = val.forwardmove;
+                this.gameFrame = val.gameFrame;
+                this.gameTime = val.gameTime;
+                this.impulse = val.impulse;
+                this.mx = val.mx;
+                this.my = val.my;
+                this.rightmove = val.rightmove;
+                this.sequence = val.sequence;
+                this.upmove = val.upmove;
+            }
+        }
+
         @Override
         public int hashCode() {
             int hash = 5;

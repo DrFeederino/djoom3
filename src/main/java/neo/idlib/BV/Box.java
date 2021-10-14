@@ -2,6 +2,7 @@ package neo.idlib.BV;
 
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Sphere.idSphere;
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMatX;
 import neo.idlib.math.Vector;
@@ -174,21 +175,21 @@ public class Box {
      BoxPlaneClip
      ============
      */
-    static boolean BoxPlaneClip(final float denom, final float numer, float[] scale0, float[] scale1) {
+    static boolean BoxPlaneClip(final float denom, final float numer, CFloat scale0, CFloat scale1) {
         if (denom > 0.0f) {
-            if (numer > denom * scale1[0]) {
+            if (numer > denom * scale1.getVal()) {
                 return false;
             }
-            if (numer > denom * scale0[0]) {
-                scale0[0] = numer / denom;
+            if (numer > denom * scale0.getVal()) {
+                scale0.setVal(numer / denom);
             }
             return true;
         } else if (denom < 0.0f) {
-            if (numer > denom * scale0[0]) {
+            if (numer > denom * scale0.getVal()) {
                 return false;
             }
-            if (numer > denom * scale1[0]) {
-                scale1[0] = numer / denom;
+            if (numer > denom * scale1.getVal()) {
+                scale1.setVal(numer / denom);
             }
             return true;
         } else {
@@ -773,14 +774,14 @@ public class Box {
          ============
          */
         // intersection points are (start + dir * scale1) and (start + dir * scale2)
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale1, float[] scale2) {
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
             idVec3 localStart, localDir;
 
             localStart = (start.oMinus(center)).oMultiply(axis.Transpose());
             localDir = dir.oMultiply(axis.Transpose());
 
-            scale1[0] = -idMath.INFINITY;
-            scale2[0] = idMath.INFINITY;
+            scale1.setVal(-idMath.INFINITY);
+            scale2.setVal(idMath.INFINITY);
             return BoxPlaneClip(localDir.x, -localStart.x - extents.oGet(0), scale1, scale2)
                     && BoxPlaneClip(-localDir.x, localStart.x - extents.oGet(0), scale1, scale2)
                     && BoxPlaneClip(localDir.y, -localStart.y - extents.oGet(1), scale1, scale2)
@@ -915,13 +916,13 @@ public class Box {
 //
 //					// calculates the projection of this box onto the given axis
 
-        public void AxisProjection(final idVec3 dir, float[] min, float[] max) {
+        public void AxisProjection(final idVec3 dir, CFloat min, CFloat max) {
             float d1 = dir.oMultiply(center);
             float d2 = Math.abs(extents.oGet(0) * (dir.oMultiply(axis.oGet(0))))
                     + Math.abs(extents.oGet(1) * (dir.oMultiply(axis.oGet(1))))
                     + Math.abs(extents.oGet(2) * (dir.oMultiply(axis.oGet(2))));
-            min[0] = d1 - d2;
-            max[0] = d1 + d2;
+            min.setVal(d1 - d2);
+            max.setVal(d1 + d2);
         }
 
         public void AxisProjection(final idMat3 ax, idBounds bounds) {

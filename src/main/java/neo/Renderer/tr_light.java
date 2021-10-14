@@ -6,8 +6,6 @@ import neo.Renderer.Material.shaderStage_t;
 import neo.Renderer.Model.*;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import neo.Renderer.RenderWorld.*;
-import neo.Renderer.tr_local.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.CmdArgs.idCmdArgs;
@@ -1082,7 +1080,9 @@ public class tr_light {
             tr.viewDef.drawSurfs = new drawSurf_s[tr.viewDef.maxDrawSurfs];// R_FrameAlloc(tr.viewDef.maxDrawSurfs);
 //		memcpy( tr.viewDef.drawSurfs, old, count );
             if (old != null) {
-                System.arraycopy(old, 0, tr.viewDef.drawSurfs, 0, count);
+                for (int i = 0; i < count; i++) {
+                    tr.viewDef.drawSurfs[i] = new drawSurf_s(old[i]);
+                }
             }
         }
         tr.viewDef.drawSurfs[tr.viewDef.numDrawSurfs++] = drawSurf;

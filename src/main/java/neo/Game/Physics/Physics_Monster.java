@@ -5,10 +5,11 @@ import neo.Game.Actor.idActor;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Actor.idPhysics_Actor;
 import neo.idlib.BitMsg.idBitMsgDelta;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
@@ -58,8 +59,8 @@ public class Physics_Monster {
      ================
      */
     static void idPhysics_Monster_RestorePState(idRestoreGame savefile, monsterPState_s state) {
-        boolean[] onGround = {false};
-        int[] atRest = {0};
+        CBool onGround = new CBool(false);
+        CInt atRest = new CInt();
 
         savefile.ReadVec3(state.origin);
         savefile.ReadVec3(state.velocity);
@@ -68,8 +69,8 @@ public class Physics_Monster {
         savefile.ReadBool(onGround);
         savefile.ReadInt(atRest);
 
-        state.onGround = onGround[0];
-        state.atRest = atRest[0];
+        state.onGround = onGround.isVal();
+        state.atRest = atRest.getVal();
     }
 //
 
@@ -135,7 +136,6 @@ public class Physics_Monster {
 
         public idPhysics_Monster() {
 
-//	memset( &current, 0, sizeof( current ) );
             current = new monsterPState_s();
             current.atRest = -1;
             saved = current;
@@ -548,7 +548,7 @@ public class Physics_Monster {
         }
 
         private void CheckGround(monsterPState_s state) {
-            trace_s[] groundTrace = {null};
+            trace_s groundTrace = new trace_s();
             idVec3 down;
 
             if (gravityNormal.equals(getVec3_zero())) {
@@ -560,15 +560,15 @@ public class Physics_Monster {
             down = state.origin.oPlus(gravityNormal.oMultiply(CONTACT_EPSILON));
             gameLocal.clip.Translation(groundTrace, state.origin, down, clipModel, clipModel.GetAxis(), clipMask, self);
 
-            if (groundTrace[0].fraction == 1.0f) {
+            if (groundTrace.fraction == 1.0f) {
                 state.onGround = false;
                 groundEntityPtr = new idEntityPtr<>(null);
                 return;
             }
 
-            groundEntityPtr.oSet(gameLocal.entities[groundTrace[0].c.entityNum]);
+            groundEntityPtr.oSet(gameLocal.entities[groundTrace.c.entityNum]);
 
-            if ((groundTrace[0].c.normal.oMultiply(gravityNormal.oNegative())) < minFloorCosine) {
+            if ((groundTrace.c.normal.oMultiply(gravityNormal.oNegative())) < minFloorCosine) {
                 state.onGround = false;
                 return;
             }
@@ -576,20 +576,20 @@ public class Physics_Monster {
             state.onGround = true;
 
             // let the entity know about the collision
-            self.Collide(groundTrace[0], state.velocity);
+            self.Collide(groundTrace, state.velocity);
 
             // apply impact to a non world floor entity
-            if (groundTrace[0].c.entityNum != ENTITYNUM_WORLD && groundEntityPtr.GetEntity() != null) {
-                impactInfo_s info = groundEntityPtr.GetEntity().GetImpactInfo(self, groundTrace[0].c.id, groundTrace[0].c.point);
+            if (groundTrace.c.entityNum != ENTITYNUM_WORLD && groundEntityPtr.GetEntity() != null) {
+                impactInfo_s info = groundEntityPtr.GetEntity().GetImpactInfo(self, groundTrace.c.id, groundTrace.c.point);
                 if (info.invMass != 0.0f) {
-                    groundEntityPtr.GetEntity().ApplyImpulse(self, 0, groundTrace[0].c.point, state.velocity.oDivide(info.invMass * 10.0f));
+                    groundEntityPtr.GetEntity().ApplyImpulse(self, 0, groundTrace.c.point, state.velocity.oDivide(info.invMass * 10.0f));
                 }
             }
         }
 
         private monsterMoveResult_t SlideMove(idVec3 start, idVec3 velocity, final idVec3 delta) {
             int i;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 move = new idVec3();
 
             blockingEntity = null;
@@ -597,22 +597,22 @@ public class Physics_Monster {
             for (i = 0; i < 3; i++) {
                 gameLocal.clip.Translation(tr, start, start.oPlus(move), clipModel, clipModel.GetAxis(), clipMask, self);
 
-                start.oSet(tr[0].endpos);
+                start.oSet(tr.endpos);
 
-                if (tr[0].fraction == 1.0f) {
+                if (tr.fraction == 1.0f) {
                     if (i > 0) {
                         return MM_SLIDING;
                     }
                     return MM_OK;
                 }
 
-                if (tr[0].c.entityNum != ENTITYNUM_NONE) {
-                    blockingEntity = gameLocal.entities[tr[0].c.entityNum];
+                if (tr.c.entityNum != ENTITYNUM_NONE) {
+                    blockingEntity = gameLocal.entities[tr.c.entityNum];
                 }
 
                 // clip the movement delta and velocity
-                move.ProjectOntoPlane(tr[0].c.normal, OVERCLIP);
-                velocity.ProjectOntoPlane(tr[0].c.normal, OVERCLIP);
+                move.ProjectOntoPlane(tr.c.normal, OVERCLIP);
+                velocity.ProjectOntoPlane(tr.c.normal, OVERCLIP);
             }
 
             return MM_BLOCKED;
@@ -627,7 +627,7 @@ public class Physics_Monster {
          =====================
          */
         private monsterMoveResult_t StepMove(idVec3 start, idVec3 velocity, final idVec3 delta) {
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 up, down, noStepPos, noStepVel, stepPos, stepVel;
             monsterMoveResult_t result1, result2;
             float stepdist;
@@ -651,8 +651,8 @@ public class Physics_Monster {
                 // try to step down so that we walk down slopes and stairs at a normal rate
                 down = noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
                 gameLocal.clip.Translation(tr, noStepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);
-                if (tr[0].fraction < 1.0f) {
-                    start.oSet(tr[0].endpos);
+                if (tr.fraction < 1.0f) {
+                    start.oSet(tr.endpos);
                     return MM_STEPPED;
                 } else {
                     start.oSet(noStepPos);
@@ -664,7 +664,7 @@ public class Physics_Monster {
                 // try to step down in case walking into an actor while going down steps
                 down = noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
                 gameLocal.clip.Translation(tr, noStepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);
-                start.oSet(tr[0].endpos);
+                start.oSet(tr.endpos);
                 velocity.oSet(noStepVel);
                 return MM_BLOCKED;
             }
@@ -676,14 +676,14 @@ public class Physics_Monster {
             // try to step up
             up = start.oMinus(gravityNormal.oMultiply(maxStepHeight));
             gameLocal.clip.Translation(tr, start, up, clipModel, clipModel.GetAxis(), clipMask, self);
-            if (tr[0].fraction == 0.0f) {
+            if (tr.fraction == 0.0f) {
                 start.oSet(noStepPos);
                 velocity.oSet(noStepVel);
                 return result1;
             }
 
             // try to move at the stepped up position
-            stepPos = tr[0].endpos;
+            stepPos = tr.endpos;
             stepVel = velocity;
             result2 = SlideMove(stepPos, stepVel, delta);
             if (result2 == MM_BLOCKED) {
@@ -695,12 +695,12 @@ public class Physics_Monster {
             // step down again
             down = stepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
             gameLocal.clip.Translation(tr, stepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);
-            stepPos = tr[0].endpos;
+            stepPos = tr.endpos;
 
             // if the move is further without stepping up, or the slope is too steap, don't step up
             nostepdist = (noStepPos.oMinus(start)).LengthSqr();
             stepdist = (stepPos.oMinus(start)).LengthSqr();
-            if ((nostepdist >= stepdist) || ((tr[0].c.normal.oMultiply(gravityNormal.oNegative())) < minFloorCosine)) {
+            if ((nostepdist >= stepdist) || ((tr.c.normal.oMultiply(gravityNormal.oNegative())) < minFloorCosine)) {
                 start.oSet(noStepPos);
                 velocity.oSet(noStepVel);
                 return MM_SLIDING;

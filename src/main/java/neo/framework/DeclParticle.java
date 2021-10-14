@@ -12,6 +12,7 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Math_h.idMath;
@@ -468,11 +469,11 @@ public class DeclParticle {
                     case PDIST_CYLINDER: {    // ( sizeX sizeY sizeZ ringFraction )
                         angle1 = ((randomDistribution) ? g.random.CRandomFloat() : 1.0f) * idMath.TWO_PI;
 
-                        float[] origin2 = new float[1];
-                        float[] origin3 = new float[1];
+                        CFloat origin2 = new CFloat();
+                        CFloat origin3 = new CFloat();
                         idMath.SinCos16(angle1, origin2, origin3);
-                        origin.oSet(0, origin2[0]);
-                        origin.oSet(1, origin3[0]);
+                        origin.oSet(0, origin2.getVal());
+                        origin.oSet(1, origin3.getVal());
                         origin.oSet(2, (randomDistribution ? g.random.CRandomFloat() : 1.0f));
 
                         // reproject points that are inside the ringFraction to the outer band
@@ -543,14 +544,14 @@ public class DeclParticle {
                         angle1 = g.random.CRandomFloat() * directionParms[0] * idMath.M_DEG2RAD;
                         angle2 = g.random.CRandomFloat() * idMath.PI;
 
-                        float[] s1 = new float[1], s2 = new float[1];
-                        float[] c1 = new float[1], c2 = new float[1];
+                        CFloat s1 = new CFloat(), s2 = new CFloat();
+                        CFloat c1 = new CFloat(), c2 = new CFloat();
                         idMath.SinCos16(angle1, s1, c1);
                         idMath.SinCos16(angle2, s2, c2);
 
-                        dir.oSet(0, s1[0] * c2[0]);
-                        dir.oSet(1, s1[0] * s2[0]);
-                        dir.oSet(2, c1[0]);
+                        dir.oSet(0, s1.getVal() * c2.getVal());
+                        dir.oSet(1, s1.getVal() * s2.getVal());
+                        dir.oSet(2, c1.getVal());
                         break;
                     }
                     case PDIR_OUTWARD: {
@@ -577,12 +578,12 @@ public class DeclParticle {
                         speed2 = g.random.CRandomFloat();
                         angle1 = g.random.RandomFloat() * idMath.TWO_PI + customPathParms[3] * speed1 * g.age;
 
-                        float[] s1 = new float[1];
-                        float[] c1 = new float[1];
+                        CFloat s1 = new CFloat();
+                        CFloat c1 = new CFloat();
                         idMath.SinCos16(angle1, s1, c1);
 
-                        origin.oSet(0, c1[0] * customPathParms[0]);
-                        origin.oSet(1, s1[0] * customPathParms[1]);
+                        origin.oSet(0, c1.getVal() * customPathParms[0]);
+                        origin.oSet(1, s1.getVal() * customPathParms[1]);
                         origin.oSet(2, g.random.RandomFloat() * customPathParms[2] + customPathParms[4] * speed2 * g.age);
                         break;
                     }
@@ -592,25 +593,25 @@ public class DeclParticle {
                         angle1 = g.random.RandomFloat() * idMath.PI * 2 + customPathParms[0] * speed1 * g.age;
                         angle2 = g.random.RandomFloat() * idMath.PI * 2 + customPathParms[1] * speed1 * g.age;
 
-                        float[] s1 = new float[1], s2 = new float[1];
-                        float[] c1 = new float[1], c2 = new float[1];
+                        CFloat s1 = new CFloat(), s2 = new CFloat();
+                        CFloat c1 = new CFloat(), c2 = new CFloat();
                         idMath.SinCos16(angle1, s1, c1);
                         idMath.SinCos16(angle2, s2, c2);
 
-                        origin.oSet(0, c1[0] * c2[0]);
-                        origin.oSet(1, s1[0] * c2[0]);
-                        origin.oSet(2, -s2[0]);
+                        origin.oSet(0, c1.getVal() * c2.getVal());
+                        origin.oSet(1, s1.getVal() * c2.getVal());
+                        origin.oSet(2, -s2.getVal());
                         origin.oMultiply(customPathParms[2]);
                         break;
                     }
                     case PPATH_ORBIT: {        // ( radius speed axis )
                         angle1 = g.random.RandomFloat() * idMath.TWO_PI + customPathParms[1] * g.age;
 
-                        float[] s1 = new float[1], c1 = new float[1];
+                        CFloat s1 = new CFloat(), c1 = new CFloat();
                         idMath.SinCos16(angle1, s1, c1);
 
-                        origin.oSet(0, c1[0] * customPathParms[0]);
-                        origin.oSet(1, s1[0] * customPathParms[0]);
+                        origin.oSet(0, c1.getVal() * customPathParms[0]);
+                        origin.oSet(1, s1.getVal() * customPathParms[0]);
                         origin.ProjectSelfOntoSphere(customPathParms[0]);
                         break;
                     }

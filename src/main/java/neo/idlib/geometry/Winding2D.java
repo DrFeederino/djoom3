@@ -1,5 +1,6 @@
 package neo.idlib.geometry;
 
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
@@ -385,7 +386,9 @@ public class Winding2D {
 
             numPoints = newNumPoints;
 //	memcpy( p, newPoints, newNumPoints * sizeof(idVec2) );
-            System.arraycopy(newPoints, 0, p, 0, newNumPoints);
+            for (i = 0; i < newNumPoints; i++) {
+                p[i] = new idVec2(newPoints[i]);
+            }
 
             return true;
         }
@@ -396,7 +399,9 @@ public class Winding2D {
             w = new idWinding2D();
             w.numPoints = numPoints;
 //	memcpy( w->p, p, numPoints * sizeof( p[0] ) );
-            System.arraycopy(p, 0, w.p, 0, numPoints);
+            for (int i = 0; i < numPoints; i++) {
+                w.p[i] = new idVec2(p[i]);
+            }
             return w;
         }
 
@@ -650,7 +655,7 @@ public class Winding2D {
         }
 
         //public	boolean			RayIntersection( final idVec2 start, final idVec2 dir, float scale1, float scale2) ;
-        public boolean RayIntersection(final idVec2 start, final idVec2 dir, float[] scale1, float[] scale2, int[] edgeNums) {
+        public boolean RayIntersection(final idVec2 start, final idVec2 dir, CFloat scale1, CFloat scale2, int[] edgeNums) {
             int i, numEdges;
             int[] localEdgeNums = new int[2];
             int[] sides = new int[MAX_POINTS_ON_WINDING_2D + 1], counts = new int[3];
@@ -658,7 +663,8 @@ public class Winding2D {
             idVec3 plane;
             idVec3[] edges = new idVec3[2];
 
-            scale1[0] = scale2[0] = 0.0f;
+            scale1.setVal(0.0f);
+            scale2.setVal(0.0f);
             counts[SIDE_FRONT] = counts[SIDE_BACK] = counts[SIDE_ON] = 0;
 
             plane = Plane2DFromVecs(start, dir);
@@ -701,18 +707,18 @@ public class Winding2D {
             if (d2 == 0.0f) {
                 return false;
             }
-            scale1[0] = d1 / d2;
+            scale1.setVal(d1 / d2);
             d1 = edges[1].x * start.x + edges[1].y * start.y + edges[1].z;
             d2 = -(edges[1].x * dir.x + edges[1].y * dir.y);
             if (d2 == 0.0f) {
                 return false;
             }
-            scale2[0] = d1 / d2;
+            scale2.setVal( d1 / d2);
 
-            if (Math.abs(scale1[0]) > Math.abs(scale2[0])) {
-                float scale3 = scale1[0];
-                scale1[0] = scale2[0];
-                scale2[0] = scale3;
+            if (Math.abs(scale1.getVal()) > Math.abs(scale2.getVal())) {
+                float scale3 = scale1.getVal();
+                scale1.setVal( scale2.getVal());
+                scale2.setVal( scale3);
                 idSwap(localEdgeNums, localEdgeNums, 0, 1);
             }
 

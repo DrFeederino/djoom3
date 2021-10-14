@@ -29,6 +29,10 @@ public class Pluecker {
             System.arraycopy(a, 0, p, 0, 6);//memcpy( p, a, 6 * sizeof( float ) );
         }
 
+        public idPluecker(idPluecker a) {
+            System.arraycopy(a.p, 0, p, 0, 6);//memcpy( p, a, 6 * sizeof( float ) );
+        }
+
         public idPluecker(final idVec3 start, final idVec3 end) {
             this.FromLine(start, end);
         }

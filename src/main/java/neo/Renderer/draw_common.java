@@ -2,6 +2,7 @@ package neo.Renderer;
 
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.srfTriangles_s;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
@@ -466,11 +467,11 @@ public class draw_common {
         // screen power of two correction factor, assuming the copy to _currentRender
         // also copied an extra row and column for the bilerp
         int w = backEnd.viewDef.viewport.x2 - backEnd.viewDef.viewport.x1 + 1;
-        pot = globalImages.currentRenderImage.uploadWidth;
+        pot = globalImages.currentRenderImage.uploadWidth.getVal();
         parm.put(0, (float) w / pot);
 
         int h = backEnd.viewDef.viewport.y2 - backEnd.viewDef.viewport.y1 + 1;
-        pot = globalImages.currentRenderImage.uploadHeight;
+        pot = globalImages.currentRenderImage.uploadHeight.getVal();
         parm.put(1, (float) h / pot);
 
         parm.put(2, 0f);
@@ -843,8 +844,8 @@ public class draw_common {
 
             // only dump if in a 3d view
             if (backEnd.viewDef.viewEntitys != null && tr.backEndRenderer == BE_ARB2) {
-                int[] imageWidth = {backEnd.viewDef.viewport.x2 - backEnd.viewDef.viewport.x1 + 1};
-                int[] imageHeight = {backEnd.viewDef.viewport.y2 - backEnd.viewDef.viewport.y1 + 1};
+                CInt imageWidth = new CInt(backEnd.viewDef.viewport.x2 - backEnd.viewDef.viewport.x1 + 1);
+                CInt imageHeight = new CInt(backEnd.viewDef.viewport.y2 - backEnd.viewDef.viewport.y1 + 1);
                 globalImages.currentRenderImage.CopyFramebuffer(backEnd.viewDef.viewport.x1, backEnd.viewDef.viewport.y1,
                         imageWidth, imageHeight, true);
             }

@@ -69,13 +69,13 @@ public class Push {
          */
         // If results.fraction < 1.0 the move was blocked by results.c.entityNum
         // Returns total mass of all pushed entities.
-        public float ClipTranslationalPush(trace_s[] results, idEntity pusher, final int flags, final idVec3 newOrigin, final idVec3 translation) {
+        public float ClipTranslationalPush(trace_s results, idEntity pusher, final int flags, final idVec3 newOrigin, final idVec3 translation) {
             int i, listedEntities, res;
             idEntity check;
             idEntity[] entityList = new idEntity[MAX_GENTITIES];
             idBounds bounds, pushBounds = new idBounds();
             idVec3 clipMove, clipOrigin, oldOrigin, dir, impulse = new idVec3();
-            trace_s[] pushResults = {new trace_s()};
+            trace_s pushResults = new trace_s();
             boolean wasEnabled;
             float totalMass;
             idClipModel clipModel;
@@ -84,10 +84,10 @@ public class Push {
 
             totalMass = 0.0f;
 
-            results[0].fraction = 1.0f;
-            results[0].endpos.oSet(newOrigin);
-            results[0].endAxis.oSet(clipModel.GetAxis());
-            results[0].c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODO:
+            results.fraction = 1.0f;
+            results.endpos.oSet(newOrigin);
+            results.endAxis.oSet(clipModel.GetAxis());
+            results.c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODO:
 
             if (translation.equals(getVec3_origin())) {
                 return totalMass;
@@ -132,15 +132,15 @@ public class Push {
                     entityList[i].GetPhysics().EnableClip();
                 }
 
-                if (results[0].fraction == 0.0f) {
+                if (results.fraction == 0.0f) {
                     if (wasEnabled) {
                         clipModel.Enable();
                     }
                     return totalMass;
                 }
 
-                clipMove = results[0].endpos.oMinus(clipModel.GetOrigin());
-                clipOrigin = results[0].endpos;
+                clipMove = results.endpos.oMinus(clipModel.GetOrigin());
+                clipOrigin = results.endpos;
 
             } else {
 
@@ -203,7 +203,7 @@ public class Push {
 
                 // if blocking entities should be crushed
                 if ((flags & PUSHFL_CRUSH) != 0) {
-                    check.Damage(clipModel.GetEntity(), clipModel.GetEntity(), getVec3_origin(), "damage_crush", 1.0f, CLIPMODEL_ID_TO_JOINT_HANDLE(pushResults[0].c.id));
+                    check.Damage(clipModel.GetEntity(), clipModel.GetEntity(), getVec3_origin(), "damage_crush", 1.0f, CLIPMODEL_ID_TO_JOINT_HANDLE(pushResults.c.id));
                     continue;
                 }
 
@@ -220,12 +220,12 @@ public class Push {
                 }
 
                 // blocked
-                results[0] = pushResults[0];
-                results[0].fraction = 0.0f;
-                results[0].endAxis.oSet(clipModel.GetAxis());
-                results[0].endpos.oSet(clipModel.GetOrigin());
-                results[0].c.entityNum = check.entityNumber;
-                results[0].c.id = 0;
+                results = pushResults;
+                results.fraction = 0.0f;
+                results.endAxis.oSet(clipModel.GetAxis());
+                results.endpos.oSet(clipModel.GetOrigin());
+                results.c.entityNum = check.entityNumber;
+                results.c.id = 0;
 
                 if (!wasEnabled) {
                     clipModel.Disable();
@@ -248,14 +248,14 @@ public class Push {
          Try to push other entities by moving the given entity.
          ============
          */
-        public float ClipRotationalPush(trace_s[] results, idEntity pusher, final int flags, final idMat3 newAxis, final idRotation rotation) {
+        public float ClipRotationalPush(trace_s results, idEntity pusher, final int flags, final idMat3 newAxis, final idRotation rotation) {
             int i, listedEntities, res;
             idEntity check;
             idEntity[] entityList = new idEntity[MAX_GENTITIES];
             idBounds bounds, pushBounds = new idBounds();
             idRotation clipRotation;
             idMat3 clipAxis, oldAxis;
-            trace_s[] pushResults = {new trace_s()};
+            trace_s pushResults = new trace_s();
             boolean wasEnabled;
             float totalMass;
             idClipModel clipModel;
@@ -264,10 +264,10 @@ public class Push {
 
             totalMass = 0.0f;
 
-            results[0].fraction = 1.0f;
-            results[0].endpos.oSet(clipModel.GetOrigin());
-            results[0].endAxis.oSet(newAxis);
-            results[0].c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
+            results.fraction = 1.0f;
+            results.endpos.oSet(clipModel.GetOrigin());
+            results.endAxis.oSet(newAxis);
+            results.c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             if (0 == rotation.GetAngle()) {
                 return totalMass;
@@ -307,15 +307,15 @@ public class Push {
                     entityList[i].GetPhysics().EnableClip();
                 }
 
-                if (results[0].fraction == 0.0f) {
+                if (results.fraction == 0.0f) {
                     if (wasEnabled) {
                         clipModel.Enable();
                     }
                     return totalMass;
                 }
 
-                clipRotation = rotation.oMultiply(results[0].fraction);
-                clipAxis = results[0].endAxis;
+                clipRotation = rotation.oMultiply(results.fraction);
+                clipAxis = results.endAxis;
             } else {
 
                 clipRotation = rotation;
@@ -372,7 +372,7 @@ public class Push {
 
                 // if blocking entities should be crushed
                 if ((flags & PUSHFL_CRUSH) != 0) {
-                    check.Damage(clipModel.GetEntity(), clipModel.GetEntity(), getVec3_origin(), "damage_crush", 1.0f, CLIPMODEL_ID_TO_JOINT_HANDLE(pushResults[0].c.id));
+                    check.Damage(clipModel.GetEntity(), clipModel.GetEntity(), getVec3_origin(), "damage_crush", 1.0f, CLIPMODEL_ID_TO_JOINT_HANDLE(pushResults.c.id));
                     continue;
                 }
 
@@ -384,12 +384,12 @@ public class Push {
                 }
 
                 // blocked
-                results[0] = pushResults[0];
-                results[0].fraction = 0.0f;
-                results[0].endAxis.oSet(clipModel.GetAxis());
-                results[0].endpos.oSet(clipModel.GetOrigin());
-                results[0].c.entityNum = check.entityNumber;
-                results[0].c.id = 0;
+                results = pushResults;
+                results.fraction = 0.0f;
+                results.endAxis.oSet(clipModel.GetAxis());
+                results.endpos.oSet(clipModel.GetOrigin());
+                results.c.entityNum = check.entityNumber;
+                results.c.id = 0;
 
                 if (!wasEnabled) {
                     clipModel.Disable();
@@ -412,17 +412,17 @@ public class Push {
          Try to push other entities by moving the given entity.
          ============
          */
-        public float ClipPush(trace_s[] results, idEntity pusher, final int flags, final idVec3 oldOrigin, final idMat3 oldAxis, idVec3 newOrigin, idMat3 newAxis) {
+        public float ClipPush(trace_s results, idEntity pusher, final int flags, final idVec3 oldOrigin, final idMat3 oldAxis, idVec3 newOrigin, idMat3 newAxis) {
             idVec3 translation;
             idRotation rotation;
             float mass;
 
             mass = 0.0f;
 
-            results[0].fraction = 1.0f;
-            results[0].endpos.oSet(newOrigin);
-            results[0].endAxis.oSet(newAxis);
-            results[0].c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
+            results.fraction = 1.0f;
+            results.endpos.oSet(newOrigin);
+            results.endAxis.oSet(newAxis);
+            results.c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // translational push
             translation = newOrigin.oMinus(oldOrigin);
@@ -431,7 +431,7 @@ public class Push {
             if (!translation.equals(getVec3_origin())) {
 
                 mass += ClipTranslationalPush(results, pusher, flags, newOrigin, translation);
-                if (results[0].fraction < 1.0f) {
+                if (results.fraction < 1.0f) {
                     newOrigin.oSet(oldOrigin);
                     newAxis.oSet(oldAxis);
                     return mass;
@@ -458,7 +458,7 @@ public class Push {
                 pusher.GetPhysics().GetClipModel().SetPosition(newOrigin, oldAxis);
 
                 mass += ClipRotationalPush(results, pusher, flags, newAxis, rotation);
-                if (results[0].fraction < 1.0f) {
+                if (results.fraction < 1.0f) {
                     newOrigin.oSet(oldOrigin);
                     newAxis.oSet(oldAxis);
                     return mass;
@@ -537,7 +537,7 @@ public class Push {
 
         private boolean RotateEntityToAxial(idEntity ent, idVec3 rotationPoint) {
             int i;
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idRotation rotation;
             idMat3 axis;
             idPhysics physics;
@@ -561,26 +561,26 @@ public class Push {
                 //
                 ent.GetPhysics().ClipRotation(trace, rotation, null);
                 // if the full rotation is possible
-                if (trace[0].fraction >= 1.0f) {
+                if (trace.fraction >= 1.0f) {
                     // set bbox in final axial position
-                    physics.SetOrigin(trace[0].endpos);
+                    physics.SetOrigin(trace.endpos);
                     physics.SetAxis(getMat3_identity());
                     return true;
                 } // if partial rotation was possible
-                else if (trace[0].fraction > 0.0f) {
+                else if (trace.fraction > 0.0f) {
                     // partial rotation
-                    physics.SetOrigin(trace[0].endpos);
-                    physics.SetAxis(trace[0].endAxis);
+                    physics.SetOrigin(trace.endpos);
+                    physics.SetAxis(trace.endAxis);
                 }
                 // next rotate around collision point
-                rotationPoint.oSet(trace[0].c.point);
+                rotationPoint.oSet(trace.c.point);
             }
             return false;
         }
 //
 //
 
-        private void ClipEntityRotation(trace_s[] trace, final idEntity ent, final idClipModel clipModel, idClipModel skip, final idRotation rotation) {
+        private void ClipEntityRotation(trace_s trace, final idEntity ent, final idClipModel clipModel, idClipModel skip, final idRotation rotation) {
 
             if (skip != null) {
                 skip.Disable();
@@ -593,7 +593,7 @@ public class Push {
             }
         }
 
-        private void ClipEntityTranslation(trace_s[] trace, final idEntity ent, final idClipModel clipModel, idClipModel skip, final idVec3 translation) {
+        private void ClipEntityTranslation(trace_s trace, final idEntity ent, final idClipModel clipModel, idClipModel skip, final idVec3 translation) {
 
             if (skip != null) {
                 skip.Disable();
@@ -617,8 +617,8 @@ public class Push {
         // final idRotation &rotation, idEntity *entityList[], int maxEntities );
 // #else
 
-        private int TryTranslatePushEntity(trace_s[] results, idEntity check, idClipModel clipModel, final int flags, final idVec3 newOrigin, final idVec3 move) {
-            trace_s[] trace = {null};
+        private int TryTranslatePushEntity(trace_s results, idEntity check, idClipModel clipModel, final int flags, final idVec3 newOrigin, final idVec3 move) {
+            trace_s trace = new trace_s();
             idVec3 checkMove;
 //            idVec3 oldOrigin;
             idPhysics physics;
@@ -631,27 +631,27 @@ public class Push {
             // startsolid = true;
             // }
 // #endif
-            results[0].fraction = 1.0f;
-            results[0].endpos.oSet(newOrigin);
-            results[0].endAxis.oSet(clipModel.GetAxis());
-            results[0].c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
+            results.fraction = 1.0f;
+            results.endpos.oSet(newOrigin);
+            results.endAxis.oSet(clipModel.GetAxis());
+            results.c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // always pushed when standing on the pusher
             if (physics.IsGroundClipModel(clipModel.GetEntity().entityNumber, clipModel.GetId())) {
                 // move the entity colliding with all other entities except the pusher itself
                 ClipEntityTranslation(trace, check, null, clipModel, move);
                 // if there is a collision
-                if (trace[0].fraction < 1.0f) {
+                if (trace.fraction < 1.0f) {
                     // vector along which the entity is pushed
-                    checkMove = move.oMultiply(trace[0].fraction);
+                    checkMove = move.oMultiply(trace.fraction);
                     // test if the entity can stay at it's partly pushed position by moving the entity in reverse only colliding with pusher
                     ClipEntityTranslation(results, check, clipModel, null, (move.oMinus(checkMove).oNegative()));
                     // if there is a collision
-                    if (results[0].fraction < 1.0f) {
+                    if (results.fraction < 1.0f) {
 
                         // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                        results[0].c.normal.oSet(results[0].c.normal.oNegative());
-                        results[0].c.dist = -results[0].c.dist;
+                        results.c.normal.oSet(results.c.normal.oNegative());
+                        results.c.dist = -results.c.dist;
 
                         // the entity will be crushed between the pusher and some other entity
                         return PUSH_BLOCKED;
@@ -664,18 +664,18 @@ public class Push {
                 // move entity in reverse only colliding with pusher
                 ClipEntityTranslation(results, check, clipModel, null, move.oNegative());
                 // if no collision with the pusher then the entity is not pushed by the pusher
-                if (results[0].fraction >= 1.0f) {
+                if (results.fraction >= 1.0f) {
                     return PUSH_NO;
                 }
                 // vector along which the entity is pushed
-                checkMove = move.oMultiply(1.0f - results[0].fraction);
+                checkMove = move.oMultiply(1.0f - results.fraction);
                 // move the entity colliding with all other entities except the pusher itself
                 ClipEntityTranslation(trace, check, null, clipModel, checkMove);
                 // if there is a collisions
-                if (trace[0].fraction < 1.0f) {
+                if (trace.fraction < 1.0f) {
 
-                    results[0].c.normal.oSet(results[0].c.normal.oNegative());
-                    results[0].c.dist = -results[0].c.dist;
+                    results.c.normal.oSet(results.c.normal.oNegative());
+                    results.c.dist = -results.c.dist;
 
                     // FIXME: try to push the blocking entity as well ?
                     // FIXME: handle sliding along more than one collision plane ?
@@ -710,7 +710,7 @@ public class Push {
 
                      physics.SetOrigin( oldOrigin );
                      */
-                    if (trace[0].fraction < 1.0f) {
+                    if (trace.fraction < 1.0f) {
                         return PUSH_BLOCKED;
                     }
                 }
@@ -733,8 +733,8 @@ public class Push {
             return PUSH_OK;
         }
 
-        private int TryRotatePushEntity(trace_s[] results, idEntity check, idClipModel clipModel, final int flags, final idMat3 newAxis, final idRotation rotation) {
-            trace_s[] trace = {null};
+        private int TryRotatePushEntity(trace_s results, idEntity check, idClipModel clipModel, final int flags, final idMat3 newAxis, final idRotation rotation) {
+            trace_s trace = new trace_s();
             idVec3 rotationPoint;
             idRotation newRotation = new idRotation();
             float checkAngle;
@@ -748,29 +748,29 @@ public class Push {
             // startsolid = true;
             // }
 // #endif
-            results[0].fraction = 1.0f;
-            results[0].endpos.oSet(clipModel.GetOrigin());
-            results[0].endAxis.oSet(newAxis);
-            results[0].c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
+            results.fraction = 1.0f;
+            results.endpos.oSet(clipModel.GetOrigin());
+            results.endAxis.oSet(newAxis);
+            results.c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // always pushed when standing on the pusher
             if (physics.IsGroundClipModel(clipModel.GetEntity().entityNumber, clipModel.GetId())) {
                 // rotate the entity colliding with all other entities except the pusher itself
                 ClipEntityRotation(trace, check, null, clipModel, rotation);
                 // if there is a collision
-                if (trace[0].fraction < 1.0f) {
+                if (trace.fraction < 1.0f) {
                     // angle along which the entity is pushed
-                    checkAngle = rotation.GetAngle() * trace[0].fraction;
+                    checkAngle = rotation.GetAngle() * trace.fraction;
                     // test if the entity can stay at it's partly pushed position by rotating
                     // the entity in reverse only colliding with pusher
                     newRotation.Set(rotation.GetOrigin(), rotation.GetVec(), -(rotation.GetAngle() - checkAngle));
                     ClipEntityRotation(results, check, clipModel, null, newRotation);
                     // if there is a collision
-                    if (results[0].fraction < 1.0f) {
+                    if (results.fraction < 1.0f) {
 
                         // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                        results[0].c.normal.oSet(results[0].c.normal.oNegative());
-                        results[0].c.dist = -results[0].c.dist;
+                        results.c.normal.oSet(results.c.normal.oNegative());
+                        results.c.dist = -results.c.dist;
 
                         // the entity will be crushed between the pusher and some other entity
                         return PUSH_BLOCKED;
@@ -788,7 +788,7 @@ public class Push {
                 //
                 ClipEntityRotation(results, check, clipModel, null, newRotation);
                 // if no collision with the pusher then the entity is not pushed by the pusher
-                if (results[0].fraction >= 1.0f) {
+                if (results.fraction >= 1.0f) {
 // #ifdef ROTATIONAL_PUSH_DEBUG
                     // // set pusher into final position
                     // clipModel.Link( gameLocal.clip, clipModel.GetEntity(), clipModel.GetId(), clipModel.GetOrigin(), newAxis );
@@ -801,18 +801,18 @@ public class Push {
                     return PUSH_NO;
                 }
                 // get point to rotate bbox around back to axial
-                rotationPoint = results[0].c.point;
+                rotationPoint = results.c.point;
                 // angle along which the entity will be pushed
-                checkAngle = rotation.GetAngle() * (1.0f - results[0].fraction);
+                checkAngle = rotation.GetAngle() * (1.0f - results.fraction);
                 // rotate the entity colliding with all other entities except the pusher itself
                 newRotation.Set(rotation.GetOrigin(), rotation.GetVec(), checkAngle);
                 ClipEntityRotation(trace, check, null, clipModel, newRotation);
                 // if there is a collision
-                if (trace[0].fraction < 1.0f) {
+                if (trace.fraction < 1.0f) {
 
                     // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                    results[0].c.normal.oSet(results[0].c.normal.oNegative());
-                    results[0].c.dist = -results[0].c.dist;
+                    results.c.normal.oSet(results.c.normal.oNegative());
+                    results.c.dist = -results.c.dist;
 
                     // the entity will be crushed between the pusher and some other entity
                     return PUSH_BLOCKED;

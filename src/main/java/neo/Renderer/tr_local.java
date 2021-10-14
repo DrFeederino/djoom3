@@ -13,7 +13,6 @@ import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import neo.Renderer.RenderSystem.*;
 import neo.Renderer.RenderWorld.idRenderWorld;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderLight_s;
@@ -493,6 +492,23 @@ public class tr_local {
         // specular directions for non vertex program cards, skybox texcoords, etc
         public float sort;                 // material->sort, modified by gui / entity sort offsets
         public viewEntity_s space;
+
+        public drawSurf_s() {
+        }
+
+        public drawSurf_s(drawSurf_s val) {
+            if (val != null) {
+                this.dsFlags = val.dsFlags;
+                this.dynamicTexCoords = val.dynamicTexCoords;
+                this.geo = val.geo;
+                this.material = val.material;
+                this.nextOnLight = val.nextOnLight;
+                this.scissorRect = val.scissorRect;
+                this.shaderRegisters = val.shaderRegisters;
+                this.sort = val.sort;
+                this.space = val.space;
+            }
+        }
     }
 
     public static class shadowFrustum_t {
@@ -1699,7 +1715,7 @@ public class tr_local {
             long[] fTime = {0};
             int i, len, fontCount;
 //	char name[1024];
-            StringBuilder name = new StringBuilder(1024);
+            StringBuffer name = new StringBuffer(1024);
 
             int pointSize = 12;
             /*

@@ -1,6 +1,5 @@
 package neo.Game;
 
-import neo.Game.Entity.*;
 import neo.Game.GameSys.Class;
 import neo.Game.GameSys.Class.eventCallback_t;
 import neo.Game.GameSys.Class.eventCallback_t0;
@@ -12,6 +11,7 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.Sound.sound.idSoundEmitter;
 import neo.idlib.Dict_h.idDict;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
@@ -301,9 +301,9 @@ public class Sound {
 
         private void DoSound(boolean play) {
             if (play) {
-                int[] playingUntilTime = {0};
+                CInt playingUntilTime = new CInt();
                 StartSoundShader(refSound.shader, etoi(SND_CHANNEL_ANY), refSound.parms.soundShaderFlags, true, playingUntilTime);
-                this.playingUntilTime = playingUntilTime[0] + gameLocal.time;
+                this.playingUntilTime = playingUntilTime.getVal() + gameLocal.time;
             } else {
                 StopSound(etoi(SND_CHANNEL_ANY), true);
                 playingUntilTime = 0;
@@ -315,10 +315,6 @@ public class Sound {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {

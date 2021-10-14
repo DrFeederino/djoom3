@@ -2,10 +2,9 @@ package neo.Tools.Compilers.DMap;
 
 import neo.Game.GameEdit;
 import neo.Renderer.Material.idMaterial;
-import neo.Tools.Compilers.DMap.dmap.*;
 import neo.idlib.BV.Bounds.idBounds;
-import neo.idlib.MapFile.*;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
 import neo.idlib.geometry.Surface.idSurface;
 import neo.idlib.geometry.Surface_Patch.idSurface_Patch;
 import neo.idlib.math.Plane.idPlane;
@@ -437,14 +436,14 @@ public class map {
      */
     static void CreateMapLight(final idMapEntity mapEnt) {
         mapLight_t light;
-        boolean[] dynamic = {false};
+        CBool dynamic = new CBool(false);
 
         // designers can add the "noPrelight" flag to signal that
         // the lights will move around, so we don't want
         // to bother chopping up the surfaces under it or creating
         // shadow volumes
         mapEnt.epairs.GetBool("noPrelight", "0", dynamic);
-        if (dynamic[0]) {
+        if (dynamic.isVal()) {
             return;
         }
 
@@ -469,15 +468,7 @@ public class map {
             common.Error("Light at (%f,%f,%f) didn't have a name",
                     light.def.parms.origin.oGet(0), light.def.parms.origin.oGet(1), light.def.parms.origin.oGet(2));
         }
-//#if 0
-//	// use the renderer code to get the bounding planes for the light
-//	// based on all the parameters
-//	R_RenderLightFrustum( light.parms, light.frustum );
-//	light.lightShader = light.parms.shader;
-//#endif
-
         dmapGlobals.mapLights.Append(light);
-
     }
 
     /*

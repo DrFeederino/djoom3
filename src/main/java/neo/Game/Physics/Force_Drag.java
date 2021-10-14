@@ -3,6 +3,7 @@ package neo.Game.Physics;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Force.idForce;
 import neo.Game.Physics.Physics.idPhysics;
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
@@ -82,7 +83,7 @@ public class Force_Drag {
         @Override
         public void Evaluate(int time) {
             float l1, l2;
-            float[] mass = new float[1];
+            CFloat mass = new CFloat();
             idVec3 dragOrigin, dir1, dir2, velocity, centerOfMass = new idVec3();
             idMat3 inertiaTensor = new idMat3();
             idRotation rotation = new idRotation();

@@ -13,6 +13,7 @@ import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
@@ -53,7 +54,7 @@ public class Physics_Base {
         protected idList<contactEntity_t> contactEntities;  // entities touching this physics object
         protected idList<contactInfo_t> contacts;         // contacts with other physics objects
         protected idVec3 gravityNormal;    // normalized direction of gravity
-        protected idVec3 gravityVector;    // direction and magnitude of gravity
+        protected idVec3 gravityVector = new idVec3();    // direction and magnitude of gravity
         //
         //
         protected idEntity self;             // entity using this physics object
@@ -63,9 +64,9 @@ public class Physics_Base {
             clipMask = 0;
             this.contacts = new idList<>(contactInfo_t.class);
             this.contactEntities = new idList<>(contactEntity_t.class);
-//            SetGravity(gameLocal.GetGravity());
-            gravityVector = new idVec3(gameLocal.GetGravity());
-            gravityNormal = new idVec3(gameLocal.GetGravity());
+            //SetGravity(gameLocal.GetGravity());
+            gravityVector = gameLocal.GetGravity();
+            gravityNormal = gameLocal.GetGravity();
             gravityNormal.Normalize();
             ClearContacts();
         }
@@ -103,9 +104,14 @@ public class Physics_Base {
         }
 
         @Override
+        public Class<? extends idClass> GetType() {
+            return this.getClass();
+        }
+
+        @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = {0};
+            CInt num = new CInt();
 
             savefile.ReadObject(/*reinterpret_cast<idClass *&>*/self);
             clipMask = savefile.ReadInt();
@@ -113,13 +119,13 @@ public class Physics_Base {
             savefile.ReadVec3(gravityNormal);
 
             savefile.ReadInt(num);
-            contacts.SetNum(num[0]);
+            contacts.SetNum(num.getVal());
             for (i = 0; i < contacts.Num(); i++) {
                 savefile.ReadContactInfo(contacts.oGet(i));
             }
 
             savefile.ReadInt(num);
-            contactEntities.SetNum(num[0]);
+            contactEntities.SetNum(num.getVal());
             for (i = 0; i < contactEntities.Num(); i++) {
                 contactEntities.oGet(i).Restore(savefile);
             }
@@ -314,15 +320,15 @@ public class Physics_Base {
         }
 
         @Override
-        public void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model) {
+        public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );
-            results[0] = new trace_s();
+            results = new trace_s();
         }
 
         @Override
-        public void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model) {
+        public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );
-            results[0] = new trace_s();
+            results = new trace_s();
         }
 
         @Override
@@ -595,10 +601,6 @@ public class Physics_Base {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public void oSet(idClass oGet) {

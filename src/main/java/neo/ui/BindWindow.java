@@ -25,7 +25,7 @@ public class BindWindow {
 
     static class idBindWindow extends idWindow {
 
-        private static final StringBuilder ret = new StringBuilder(256);
+        private static final StringBuffer ret = new StringBuffer(256);
         private final idWinStr bindName = new idWinStr();
         //
         //

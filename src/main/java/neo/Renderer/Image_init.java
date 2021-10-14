@@ -426,7 +426,7 @@ public class Image_init {
                     for (j = 0; j < classifications[i].Num(); j++) {
                         partialSize += sortedArray[classifications[i].oGet(j)].image.StorageSize();
                         if (overSized) {
-                            if (sortedArray[classifications[i].oGet(j)].image.uploadWidth > IC_Info[i].maxWidth && sortedArray[classifications[i].oGet(j)].image.uploadHeight > IC_Info[i].maxHeight) {
+                            if (sortedArray[classifications[i].oGet(j)].image.uploadWidth.getVal() > IC_Info[i].maxWidth && sortedArray[classifications[i].oGet(j)].image.uploadHeight.getVal() > IC_Info[i].maxHeight) {
                                 overSizedList.Append(classifications[i].oGet(j));
                             }
                         }

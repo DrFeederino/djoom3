@@ -16,6 +16,7 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Vector.idVec3;
@@ -424,10 +425,10 @@ public class Script_Thread {
         }
 
         private static void Event_SpawnFloat(idThread t, final idEventArg<String> key, idEventArg<Float> defaultvalue) {
-            float[] result = {0};
+            CFloat result = new CFloat();
 
             t.spawnArgs.GetFloat(key.value, va("%f", defaultvalue.value), result);
-            ReturnFloat(result[0]);
+            ReturnFloat(result.getVal());
         }
 
         private static void Event_SpawnVector(idThread t, final idEventArg<String> key, idEventArg<idVec3> d) {
@@ -450,10 +451,10 @@ public class Script_Thread {
         }
 
         private static void Event_GetPersistantFloat(idThread t, final idEventArg<String> key) {
-            float[] result = {0};
+            CFloat result = new CFloat();
 
             gameLocal.persistentLevelInfo.GetFloat(key.value, "0", result);
-            ReturnFloat(result[0]);
+            ReturnFloat(result.getVal());
         }
 
         private static void Event_GetPersistantVector(idThread t, final idEventArg<String> key) {
@@ -587,13 +588,13 @@ public class Script_Thread {
             idEntity passEntity = p.value;
 
             {
-                trace_s[] trace = {idThread.trace};
+                trace_s trace = idThread.trace;
                 if (mins.equals(getVec3_origin()) && maxs.equals(getVec3_origin())) {
                     gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity);
                 } else {
                     gameLocal.clip.TraceBounds(trace, start, end, new idBounds(mins, maxs), contents_mask, passEntity);
                 }
-                idThread.trace = trace[0];
+                idThread.trace = trace;
             }
             ReturnFloat(trace.fraction);
         }
@@ -604,9 +605,9 @@ public class Script_Thread {
             int contents_mask = c.value;
             idEntity passEntity = p.value;
             {
-                trace_s[] trace = {idThread.trace};
+                trace_s trace = idThread.trace;
                 gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity);
-                idThread.trace = trace[0];
+                idThread.trace = trace;
             }
             ReturnFloat(trace.fraction);
         }

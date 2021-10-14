@@ -20,6 +20,9 @@ import neo.framework.DeclSkin.idDeclSkin;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
@@ -174,10 +177,6 @@ public class AFEntity {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 //
 //
@@ -196,18 +195,18 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
-            int[] numLinks = new int[1];
-            float[] length = new float[1], linkWidth = new float[1], density = new float[1];
+            CInt numLinks = new CInt();
+            CFloat length = new CFloat(), linkWidth = new CFloat(), density = new CFloat();
             float linkLength;
-            boolean[] drop = {false};
+            CBool drop = new CBool(false);
             idVec3 origin;
 
             spawnArgs.GetBool("drop", "0", drop);
             spawnArgs.GetInt("links", "3", numLinks);
-            spawnArgs.GetFloat("length", "" + (numLinks[0] * 32.0f), length);
+            spawnArgs.GetFloat("length", "" + (numLinks.getVal() * 32.0f), length);
             spawnArgs.GetFloat("width", "8", linkWidth);
             spawnArgs.GetFloat("density", "0.2", density);
-            linkLength = length[0] / numLinks[0];
+            linkLength = length.getVal() / numLinks.getVal();
             origin = GetPhysics().GetOrigin();
 
             // initialize physics
@@ -216,7 +215,7 @@ public class AFEntity {
             physicsObj.SetClipMask(MASK_SOLID | CONTENTS_BODY);
             SetPhysics(physicsObj);
 
-            BuildChain("link", origin, linkLength, linkWidth[0], density[0], numLinks[0], !drop[0]);
+            BuildChain("link", origin, linkLength, linkWidth.getVal(), density.getVal(), numLinks.getVal(), !drop.isVal());
         }
 
         /*
@@ -853,16 +852,16 @@ public class AFEntity {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            boolean[] hasCombatModel = {false};
-            boolean[] gibbed = {false};
+            CBool hasCombatModel = new CBool(false);
+            CBool gibbed = new CBool(false);
 
             savefile.ReadBool(gibbed);
             savefile.ReadBool(hasCombatModel);
 
-            this.gibbed = gibbed[0];
+            this.gibbed = gibbed.isVal();
             InitSkeletonModel();
 
-            if (hasCombatModel[0]) {
+            if (hasCombatModel.isVal()) {
                 SetCombatModel();
                 LinkCombat();
             }
@@ -1068,12 +1067,12 @@ public class AFEntity {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idAFEntity_Generic>) idAFEntity_Generic::Event_Activate);
         }
 
-        private final boolean[] keepRunningPhysics = {false};
+        private final CBool keepRunningPhysics = new CBool(false);
         //
         //
 
         public idAFEntity_Generic() {
-            keepRunningPhysics[0] = false;
+            keepRunningPhysics.setVal(false);
         }
         // ~idAFEntity_Generic( void );
 
@@ -1103,7 +1102,7 @@ public class AFEntity {
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteBool(keepRunningPhysics[0]);
+            savefile.WriteBool(keepRunningPhysics.isVal());
         }
 
         @Override
@@ -1115,13 +1114,13 @@ public class AFEntity {
         public void Think() {
             idAFEntity_Base_Think();
 
-            if (keepRunningPhysics[0]) {
+            if (keepRunningPhysics.isVal()) {
                 BecomeActive(TH_PHYSICS);
             }
         }
 
         public void KeepRunningPhysics() {
-            keepRunningPhysics[0] = true;
+            keepRunningPhysics.setVal(true);
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
@@ -1413,7 +1412,7 @@ public class AFEntity {
         public void Spawn() {
             final String eyesJointName = spawnArgs.GetString("eyesJoint", "eyes");
             final String steeringWheelJointName = spawnArgs.GetString("steeringWheelJoint", "steeringWheel");
-            float[] wheel = new float[1], steer = new float[1];
+            CFloat wheel = new CFloat(), steer = new CFloat();
 
             LoadAF();
 
@@ -1436,8 +1435,8 @@ public class AFEntity {
 
             spawnArgs.GetFloat("wheelRadius", "20", wheel);
             spawnArgs.GetFloat("steerSpeed", "5", steer);
-            wheelRadius = wheel[0];
-            steerSpeed = steer[0];
+            wheelRadius = wheel.getVal();
+            steerSpeed = steer.getVal();
 
             player = null;
             steerAngle = 0;

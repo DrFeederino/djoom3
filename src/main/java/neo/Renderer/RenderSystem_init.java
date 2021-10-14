@@ -20,6 +20,7 @@ import neo.Sound.snd_system;
 import neo.framework.Common;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
@@ -305,7 +306,7 @@ public class RenderSystem_init {
      screenshot [width] [height] [samples]
      ==================
      */
-    private static final int[] lastNumber = {0};
+    private static final CInt lastNumber = new CInt();
     static int s_numVidModes = r_vidModes.length;
     /*
      ==================
@@ -564,18 +565,18 @@ public class RenderSystem_init {
      thousands of shots
      ==================
      */
-    public static void R_ScreenshotFilename(int[] lastNumber, final String base, idStr fileName) {
+    public static void R_ScreenshotFilename(CInt lastNumber, final String base, idStr fileName) {
         int a, b, c, d, e;
 
         boolean restrict = cvarSystem.GetCVarBool("fs_restrict");
         cvarSystem.SetCVarBool("fs_restrict", false);
 
-        lastNumber[0]++;
-        if (lastNumber[0] > 99999) {
-            lastNumber[0] = 99999;
+        lastNumber.increment();
+        if (lastNumber.getVal() > 99999) {
+            lastNumber.setVal(99999);
         }
-        for (; lastNumber[0] < 99999; lastNumber[0]++) {
-            int frac = lastNumber[0];
+        for (; lastNumber.getVal() < 99999; lastNumber.increment()) {
+            int frac = lastNumber.getVal();
 
             a = frac / 10000;
             frac -= a * 10000;
@@ -588,7 +589,7 @@ public class RenderSystem_init {
             e = frac;
 
             fileName.oSet(String.format("%s%d%d%d%d%d.tga", base, a, b, c, d, e));
-            if (lastNumber[0] == 99999) {
+            if (lastNumber.getVal() == 99999) {
                 break;
             }
             int len = fileSystem.ReadFile(fileName.toString(), null, null);
@@ -1354,7 +1355,7 @@ public class RenderSystem_init {
     static class R_ScreenShot_f extends cmdFunction_t {
 
         private static final cmdFunction_t instance = new R_ScreenShot_f();
-        private static final int[] lastNumber = {0};
+        private static final CInt lastNumber = new CInt();
 
         private R_ScreenShot_f() {
         }

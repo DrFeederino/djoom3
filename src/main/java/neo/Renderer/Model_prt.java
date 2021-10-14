@@ -4,13 +4,13 @@ import neo.Renderer.Model.dynamicModel_t;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclParticle.idParticleStage;
 import neo.framework.DeclParticle.particleGen_t;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Random.idRandom;
 
@@ -136,11 +136,11 @@ public class Model_prt {
 
                 int count = stage.totalParticles * stage.NumQuadsPerParticle();
 
-                int[] surfaceNum = new int[1];
+                CInt surfaceNum = new CInt();
                 modelSurface_s surf;
 
                 if (staticModel.FindSurfaceWithId(stageNum, surfaceNum)) {
-                    surf = staticModel.surfaces.oGet(surfaceNum[0]);
+                    surf = staticModel.surfaces.oGet(surfaceNum.getVal());
                     R_FreeStaticTriSurfVertexCaches(surf.geometry);
                 } else {
                     surf = staticModel.surfaces.Alloc();

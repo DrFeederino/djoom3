@@ -11,13 +11,9 @@ import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.ModelDecal.decalProjectionInfo_s;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
 import neo.Renderer.ModelOverlay.idRenderModelOverlay;
-import neo.Renderer.RenderWorld.*;
 import neo.Renderer.RenderWorld_demo.demoHeader_t;
 import neo.Renderer.RenderWorld_portals.portalStack_s;
-import neo.Renderer.tr_lightrun.*;
-import neo.Renderer.tr_local.*;
 import neo.TempDump;
-import neo.TempDump.*;
 import neo.TempDump.Atomics.renderEntityShadow;
 import neo.TempDump.Atomics.renderLightShadow;
 import neo.TempDump.Atomics.renderViewShadow;
@@ -27,17 +23,17 @@ import neo.idlib.BV.Box.idBox;
 import neo.idlib.BV.Frustum.idFrustum;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.CmdArgs.idCmdArgs;
-import neo.idlib.Lib.*;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.Winding.idFixedWinding;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
@@ -3225,7 +3221,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public boolean ProcessDemoCommand(idDemoFile readDemo, renderView_s renderView, int[] demoTimeOffset) {
+        public boolean ProcessDemoCommand(idDemoFile readDemo, renderView_s renderView, CInt demoTimeOffset) {
             boolean newMap = false;
             renderViewShadow viewShadow = new Atomics.renderViewShadow();
 
@@ -3234,15 +3230,15 @@ public class RenderWorld_local {
             }
 
             demoCommand_t dc;
-            int[] d = {0};
-            int/*qhandle_t*/[] h = {0};
+            CInt d = new CInt();
+            CInt h = new CInt();
 
             if (NOT(readDemo.ReadInt(d))) {
                 // a demoShot may not have an endFrame, but it is still valid
                 return false;
             }
 
-            dc = demoCommand_t.values()[d[0]];
+            dc = demoCommand_t.values()[d.getVal()];
 
             switch (dc) {
                 case DC_LOADMAP:
@@ -3258,7 +3254,7 @@ public class RenderWorld_local {
                         header.mapname[i] = (char) c[0];
                     }
                     // the internal version value got replaced by DS_VERSION at toplevel
-                    if (header.version[0] != 4) {
+                    if (header.version.getVal() != 4) {
                         common.Error("Demo version mismatch.\n");
                     }
 
@@ -3302,8 +3298,8 @@ public class RenderWorld_local {
                     }
 
                     // possibly change the time offset if this is from a new map
-                    if (newMap && demoTimeOffset[0] != 0) {
-                        demoTimeOffset[0] = viewShadow.time[0] - eventLoop.Milliseconds();
+                    if (newMap && demoTimeOffset.getVal() != 0) {
+                        demoTimeOffset.setVal( viewShadow.time.getVal() - eventLoop.Milliseconds());
                     }
 
                     renderView.atomicSet(viewShadow);
@@ -3317,9 +3313,9 @@ public class RenderWorld_local {
                         return false;
                     }
                     if (r_showDemo.GetBool()) {
-                        common.Printf("DC_DELETE_ENTITYDEF: %d\n", h[0]);
+                        common.Printf("DC_DELETE_ENTITYDEF: %d\n", h.getVal());
                     }
-                    FreeEntityDef(h[0]);
+                    FreeEntityDef(h.getVal());
                     break;
                 case DC_UPDATE_LIGHTDEF:
                     ReadRenderLight();
@@ -3329,9 +3325,9 @@ public class RenderWorld_local {
                         return false;
                     }
                     if (r_showDemo.GetBool()) {
-                        common.Printf("DC_DELETE_LIGHTDEF: %d\n", h[0]);
+                        common.Printf("DC_DELETE_LIGHTDEF: %d\n", h.getVal());
                     }
-                    FreeLightDef(h[0]);
+                    FreeLightDef(h.getVal());
                     break;
 
                 case DC_CAPTURE_RENDER:
@@ -3345,11 +3341,11 @@ public class RenderWorld_local {
                     if (r_showDemo.GetBool()) {
                         common.Printf("DC_CROP_RENDER\n");
                     }
-                    int[][] size = new int[3][1];
+                    CInt[] size = Stream.generate(CInt::new).limit(3).toArray(CInt[]::new);
                     readDemo.ReadInt(size[0]);
                     readDemo.ReadInt(size[1]);
                     readDemo.ReadInt(size[2]);
-                    renderSystem.CropRenderSize(size[0][0], size[1][0], size[2][0] != 0);
+                    renderSystem.CropRenderSize(size[0].getVal(), size[1].getVal(), size[2].getVal() != 0);
                     break;
 
                 case DC_UNCROP_RENDER:
@@ -3381,12 +3377,12 @@ public class RenderWorld_local {
                     break;
                 }
                 case DC_SET_PORTAL_STATE: {
-                    int[][] data = new int[2][1];
+                    CInt[] data = Stream.generate(CInt::new).limit(2).toArray(CInt[]::new);
                     readDemo.ReadInt(data[0]);
                     readDemo.ReadInt(data[1]);
-                    SetPortalState(data[0][0], data[1][0]);
+                    SetPortalState(data[0].getVal(), data[1].getVal());
                     if (r_showDemo.GetBool()) {
-                        common.Printf("DC_SET_PORTAL_STATE: %d %d\n", data[0][0], data[1][0]);
+                        common.Printf("DC_SET_PORTAL_STATE: %d %d\n", data[0].getVal(), data[1].getVal());
                     }
                 }
 
@@ -3415,12 +3411,12 @@ public class RenderWorld_local {
             demoHeader_t header = new demoHeader_t();
 //            strncpy(header.mapname, mapName.c_str(), sizeof(header.mapname) - 1);
             header.mapname = mapName.c_str();
-            header.version[0] = 4;
-            header.sizeofRenderEntity[0] = sizeof(renderEntity_s.class);
-            header.sizeofRenderLight[0] = sizeof(renderLight_s.class);
-            session.writeDemo.WriteInt(header.version[0]);
-            session.writeDemo.WriteInt(header.sizeofRenderEntity[0]);
-            session.writeDemo.WriteInt(header.sizeofRenderLight[0]);
+            header.version.setVal(4);
+            header.sizeofRenderEntity.setVal(sizeof(renderEntity_s.class));
+            header.sizeofRenderLight.setVal(sizeof(renderLight_s.class));
+            session.writeDemo.WriteInt(header.version.getVal());
+            session.writeDemo.WriteInt(header.sizeofRenderEntity.getVal());
+            session.writeDemo.WriteInt(header.sizeofRenderLight.getVal());
             for (int i = 0; i < 256; i++) {
                 session.writeDemo.WriteChar((short) header.mapname[i]);
             }
@@ -3710,11 +3706,11 @@ public class RenderWorld_local {
         public void ReadRenderEntity() {
             renderEntity_s ent = new renderEntity_s();
             renderEntityShadow shadow = new Atomics.renderEntityShadow();
-            int[] index = new int[1];
+            CInt index = new CInt();
             int i;
 
             session.readDemo.ReadInt(index);
-            if (index[0] < 0) {
+            if (index.getVal() < 0) {
                 common.Error("ReadRenderEntity: index < 0");
             }
 
@@ -3786,16 +3782,16 @@ public class RenderWorld_local {
             if (shadow.referenceSound != null) {
 //		int	index;
                 session.readDemo.ReadInt(index);
-                shadow.referenceSound = session.sw.EmitterForIndex(index[0]);
+                shadow.referenceSound = session.sw.EmitterForIndex(index.getVal());
             }
-            if (shadow.numJoints[0] != 0) {
-                shadow.joints = new idJointMat[shadow.numJoints[0]];//Mem_Alloc16(ent.numJoints);
-                for (i = 0; i < shadow.numJoints[0]; i++) {
+            if (shadow.numJoints.getVal() != 0) {
+                shadow.joints = new idJointMat[shadow.numJoints.getVal()];//Mem_Alloc16(ent.numJoints);
+                for (i = 0; i < shadow.numJoints.getVal(); i++) {
                     float[] data = shadow.joints[i].ToFloatPtr();
                     for (int j = 0; j < 12; ++j) {
-                        float[] d = {0};
+                        CFloat d = new CFloat();
                         session.readDemo.ReadFloat(d);
-                        data[j] = d[0];
+                        data[j] = d.getVal();
                     }
                 }
             }
@@ -3826,25 +3822,25 @@ public class RenderWorld_local {
                 session.readDemo.ReadInt(shadow.timeGroup);
                 session.readDemo.ReadInt(shadow.xrayIndex);
             } else {
-                shadow.timeGroup[0] = 0;
-                shadow.xrayIndex[0] = 0;
+                shadow.timeGroup.setVal(0);
+                shadow.xrayIndex.setVal(0);
             }
 
             ent.atomicSet(shadow);
-            UpdateEntityDef(index[0], ent);
+            UpdateEntityDef(index.getVal(), ent);
 
             if (RenderSystem_init.r_showDemo.GetBool()) {
-                common.Printf("DC_UPDATE_ENTITYDEF: %d = %s\n", index[0], shadow.hModel != null ? shadow.hModel.Name() : "NULL");
+                common.Printf("DC_UPDATE_ENTITYDEF: %d = %s\n", index.getVal(), shadow.hModel != null ? shadow.hModel.Name() : "NULL");
             }
         }
 
         public void ReadRenderLight() {
             renderLightShadow shadow = new Atomics.renderLightShadow();
             renderLight_s light = new renderLight_s();
-            int[] index = new int[1];
+            CInt index = new CInt();
 
             session.readDemo.ReadInt(index);
-            if (index[0] < 0) {
+            if (index.getVal() < 0) {
                 common.Error("ReadRenderLight: index < 0 ");
             }
 
@@ -3869,9 +3865,9 @@ public class RenderWorld_local {
 //            session.readDemo.ReadInt((int) shadow.shader);
             session.readDemo.Read(shadow.shader);
             for (int i = 0; i < MAX_ENTITY_SHADER_PARMS; i++) {
-                float[] parm = {0};
+                CFloat parm = new CFloat();
                 session.readDemo.ReadFloat(parm);
-                shadow.shaderParms[i] = parm[0];
+                shadow.shaderParms[i] = parm.getVal();
             }
 //            session.readDemo.ReadInt((int) shadow.referenceSound);
             session.readDemo.Read(shadow.referenceSound);
@@ -3884,14 +3880,14 @@ public class RenderWorld_local {
             if (shadow.referenceSound != null) {
 //		int	index;
                 session.readDemo.ReadInt(index);
-                shadow.referenceSound = session.sw.EmitterForIndex(index[0]);
+                shadow.referenceSound = session.sw.EmitterForIndex(index.getVal());
             }
 
             light.atomicSet(shadow);
-            UpdateLightDef(index[0], light);
+            UpdateLightDef(index.getVal(), light);
 
             if (RenderSystem_init.r_showDemo.GetBool()) {
-                common.Printf("DC_UPDATE_LIGHTDEF: %d\n", index[0]);
+                common.Printf("DC_UPDATE_LIGHTDEF: %d\n", index.getVal());
             }
         }
         //--------------------------

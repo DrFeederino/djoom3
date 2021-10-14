@@ -2,7 +2,6 @@ package neo.idlib.Text;
 
 import neo.TempDump.CPP_class.Char;
 import neo.TempDump.CPP_class.Pointer;
-import neo.TempDump.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idLib;
@@ -123,7 +122,7 @@ public class Str {
         static int index = 0;
         //int numFormatList = sizeof(formatList) / sizeof( formatList[0] );
         static int numFormatList = formatList.length;
-        static StringBuilder[] str = new StringBuilder[4];    // in case called by nested functions
+        static StringBuffer[] str = new StringBuffer[4];    // in case called by nested functions
         //
         //
         protected final char[] baseBuffer = new char[STR_ALLOC_BASE];
@@ -723,7 +722,6 @@ public class Str {
                 return null;
             }
 
-//	strncpy( dest, src, destsize-1 );
             final int len = Math.min(destsize - 1, src.length());
             System.arraycopy(src.toCharArray(), 0, dest, offset, len);
             dest[offset + len] = 0;
@@ -776,10 +774,10 @@ public class Str {
             }
         }
 
-        public static int snPrintf(StringBuilder dest, int size, final String fmt, Object... args) {
+        public static int snPrintf(StringBuffer dest, int size, final String fmt, Object... args) {
             int len;
             final int bufferSize = 32000;
-            StringBuilder buffer = new StringBuilder(bufferSize);
+            StringBuffer buffer = new StringBuffer(bufferSize);
 //
 //	va_start( argptr, fmt );
 //	len = vsprintf( buffer, fmt, argptr );
@@ -1000,10 +998,10 @@ public class Str {
 
             int i, n;
             String format;
-            StringBuilder s;
+            StringBuffer s;
 
             // use an array of string so that multiple calls won't collide
-            s = str[index] = new StringBuilder(16384);
+            s = str[index] = new StringBuffer(16384);
             index = (index + 1) & 3;
 
             format = String.format("%%.%df", precision);
@@ -1223,7 +1221,7 @@ public class Str {
         }
 
         public char oSet(int index, final char value) {
-            assert ((index >= 0) && (index <= len));
+            //assert ((index >= 0) && (index <= len));
             if (index == len
                     || 0 == len) {//just append if length == 0;
                 data += value;

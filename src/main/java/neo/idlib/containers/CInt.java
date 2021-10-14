@@ -17,4 +17,20 @@ public class CInt {
     public void setVal(int val) {
         this.val = val;
     }
+
+    public int increment() {
+        return this.val++;
+    }
+
+    public int decrement() {
+        return this.val--;
+    }
+
+    public void rightShift(int power) {
+        this.val >>= power;
+    }
+
+    public void leftShit(int power) {
+        this.val <<= power;
+    }
 }

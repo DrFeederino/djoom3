@@ -12,9 +12,9 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Game_local.idEntityPtr;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Renderer.RenderWorld.renderView_s;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idCQuat;
@@ -111,13 +111,13 @@ public class Camera {
 
         @Override
         public void Restore(idRestoreGame savefile) {                // unarchives object from save game file
-            float[] fov = {this.fov};
+            CFloat fov = new CFloat(this.fov);
 
             savefile.ReadFloat(fov);
             savefile.ReadObject(/*reinterpret_cast<idClass *&>(*/attachedTo);
             savefile.ReadObject( /*reinterpret_cast<idClass *&>(*/attachedView);
 
-            this.fov = fov[0];
+            this.fov = fov.getVal();
         }
 
         @Override
@@ -163,10 +163,10 @@ public class Camera {
             }
 
             {
-                float[] fov_x = {view.fov_x}, fov_y = {view.fov_y};
+                CFloat fov_x = new CFloat(view.fov_x), fov_y = new CFloat(view.fov_y);
                 gameLocal.CalcFov(fov, fov_x, fov_y);
-                view.fov_x = fov_x[0];
-                view.fov_y = fov_y[0];
+                view.fov_x = fov_x.getVal();
+                view.fov_y = fov_y.getVal();
             }
         }
 
@@ -216,10 +216,6 @@ public class Camera {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {
@@ -437,10 +433,10 @@ public class Camera {
             }
 
             {
-                float[] fov_x = {view.fov_x}, fov_y = {view.fov_y};
+                CFloat fov_x = new CFloat(view.fov_x), fov_y = new CFloat(view.fov_y);
                 gameLocal.CalcFov(view.fov_x, fov_x, fov_y);
-                view.fov_x = fov_x[0];
-                view.fov_y = fov_y[0];
+                view.fov_x = fov_x.getVal();
+                view.fov_y = fov_y.getVal();
             }
 
             // setup the pvs for this frame
@@ -702,10 +698,6 @@ public class Camera {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {

@@ -39,6 +39,9 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
@@ -584,10 +587,10 @@ public class Entity {
         }
 
         private static void Event_StartSoundShader(idEntity e, final idEventArg<String> soundName, idEventArg<Integer> channel) {
-            int[] length = new int[1];
+            CInt length = new CInt();
 
             e.StartSoundShader(declManager.FindSound(soundName.value), /*(s_channelType)*/ channel.value, 0, false, length);
-            idThread.ReturnFloat(MS2SEC(length[0]));
+            idThread.ReturnFloat(MS2SEC(length.getVal()));
         }
 
         private static void Event_StopSound(idEntity e, idEventArg<Integer> channel, idEventArg<Integer> netSync) {
@@ -595,10 +598,10 @@ public class Entity {
         }
 
         private static void Event_StartSound(idEntity e, final idEventArg<String> soundName, idEventArg<Integer> channel, idEventArg<Integer> netSync) {
-            int[] time = new int[1];
+            CInt time = new CInt();
 
             e.StartSound(soundName.value, /*(s_channelType)*/ channel.value, 0, (netSync.value != 0), time);
-            idThread.ReturnFloat(MS2SEC(time[0]));
+            idThread.ReturnFloat(MS2SEC(time.getVal()));
         }
 
         private static void Event_FadeSound(idEntity e, idEventArg<Integer> channel, idEventArg<Float> to, idEventArg<Float> over) {
@@ -697,19 +700,19 @@ public class Entity {
         }
 
         private static void Event_GetIntKey(idEntity e, final idEventArg<String> key) {
-            int[] value = new int[1];
+            CInt value = new CInt(0);
 
             e.spawnArgs.GetInt(key.value, "0", value);
 
             // scripts only support floats
-            idThread.ReturnFloat(value[0]);
+            idThread.ReturnFloat(value.getVal());
         }
 
         private static void Event_GetFloatKey(idEntity e, final idEventArg<String> key) {
-            float[] value = new float[1];
+            CFloat value = new CFloat();
 
             e.spawnArgs.GetFloat(key.value, "0", value);
-            idThread.ReturnFloat(value[0]);
+            idThread.ReturnFloat(value.getVal());
         }
 
         private static void Event_GetVectorKey(idEntity e, final idEventArg<String> key) {
@@ -760,9 +763,9 @@ public class Entity {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        @Override//TODO:final this
-        public java.lang.Class/*idTypeInfo*/ GetType() {//TODO: make method final
-            return getClass();
+        @Override
+        public final java.lang.Class<? extends idEntity>/*idTypeInfo*/ GetType() {
+            return this.getClass();
         }
 
         @Override
@@ -922,7 +925,7 @@ public class Entity {
                 if (!gameLocal.isClient) {
                     // common.DPrintf( "NET: DBG %s - %s is synced: %s\n", spawnArgs.GetString( "classname", "" ), GetType().classname, fl.networkSync ? "true" : "false" );
                     if (spawnArgs.GetString("classname", "").charAt(0) == '\0' && !fl.networkSync) {
-                        common.DPrintf("NET: WRN %s entity, no classname, and no networkSync?\n", GetType().getName());
+                        common.DPrintf("NET: WRN %s entity, no classname, and no networkSync?\n", GetType().getClass().getName());
                     }
                 }
             }
@@ -1040,7 +1043,7 @@ public class Entity {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i, j;
-            int[] num = {0};
+            CInt num = new CInt();
             idStr funcname = new idStr();
 
             entityNumber = savefile.ReadInt();
@@ -1066,8 +1069,8 @@ public class Entity {
 
             targets.Clear();
             savefile.ReadInt(num);
-            targets.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            targets.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 targets.oGet(i).Restore(savefile);
             }
 
@@ -1091,15 +1094,14 @@ public class Entity {
             for (i = 0; i < MAX_PVS_AREAS; i++) {
                 PVSAreas[i] = savefile.ReadInt();
             }
-
-            boolean[] readsignals = new boolean[1];
+            CBool readsignals = new CBool(false);
             savefile.ReadBool(readsignals);
-            if (readsignals[0]) {
+            if (readsignals.isVal()) {
                 signals = new signalList_t();
                 for (i = 0; i < NUM_SIGNALS.ordinal(); i++) {
                     savefile.ReadInt(num);
-                    signals.signal[i].SetNum(num[0]);
-                    for (j = 0; j < num[0]; j++) {
+                    signals.signal[i].SetNum(num.getVal());
+                    for (j = 0; j < num.getVal(); j++) {
                         signals.signal[i].oGet(j).threadnum = savefile.ReadInt();
                         savefile.ReadString(funcname);
                         signals.signal[i].oGet(j).function = gameLocal.program.FindFunction(funcname);
@@ -1525,7 +1527,7 @@ public class Entity {
         }
 
         public void ProjectOverlay(final idVec3 origin, final idVec3 dir, float size, final String material) {
-            float[] s = new float[1], c = new float[1];
+            CFloat s = new CFloat(), c = new CFloat();
             idMat3 axis = new idMat3(), axistemp = new idMat3();
             idVec3 localOrigin = new idVec3();
             idVec3[] localAxis = new idVec3[2];
@@ -1545,8 +1547,8 @@ public class Entity {
 
             axis.oSet(2, dir.oNegative());
             axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1));
-            axis.oSet(0, axistemp.oGet(0).oMultiply(c[0]).oPlus(axistemp.oGet(1).oMultiply(-s[0])));
-            axis.oSet(1, axistemp.oGet(0).oMultiply(-s[0]).oPlus(axistemp.oGet(1).oMultiply(-c[0])));
+            axis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())));
+            axis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())));
 
             renderEntity.axis.ProjectVector(origin.oMinus(renderEntity.origin), localOrigin);
             renderEntity.axis.ProjectVector(axis.oGet(0), localAxis[0]);
@@ -1658,12 +1660,12 @@ public class Entity {
             return true;
         }
 
-        public boolean StartSound(final String soundName, final int/*s_channelType*/ channel, int soundShaderFlags, boolean broadcast, int[] length) {
+        public boolean StartSound(final String soundName, final int/*s_channelType*/ channel, int soundShaderFlags, boolean broadcast, CInt length) {
             idSoundShader shader;
             idStr sound = new idStr();
 
             if (length != null) {
-                length[0] = 0;
+                length.setVal(0);
             }
 
             // we should ALWAYS be playing sounds from the def.
@@ -1675,7 +1677,6 @@ public class Entity {
             }
 
             if (sound.IsEmpty()) {
-//            if (sound.oGet(0) == '\0') {
                 return false;
             }
 
@@ -1688,16 +1689,16 @@ public class Entity {
             return StartSoundShader(shader, channel, soundShaderFlags, broadcast, length);
         }
 
-        public boolean StartSound(final String soundName, final Enum channel, int soundShaderFlags, boolean broadcast, int[] length) {
+        public boolean StartSound(final String soundName, final Enum channel, int soundShaderFlags, boolean broadcast, CInt length) {
             return StartSound(soundName, channel.ordinal(), soundShaderFlags, broadcast, length);
         }
 
-        public boolean StartSoundShader(final idSoundShader shader, final int/*s_channelType*/ channel, int soundShaderFlags, boolean broadcast, int[] length) {
+        public boolean StartSoundShader(final idSoundShader shader, final int/*s_channelType*/ channel, int soundShaderFlags, boolean broadcast, CInt length) {
             float diversity;
             int len;
 
             if (length != null) {
-                length[0] = 0;
+                length.setVal(0);
             }
 
             if (NOT(shader)) {
@@ -1735,7 +1736,7 @@ public class Entity {
 
             len = refSound.referenceSound.StartSound(shader, channel, diversity, soundShaderFlags);
             if (length != null) {
-                length[0] = len;
+                length.setVal(len);
             }
 
             // set reference to the sound for shader synced effects
@@ -1744,7 +1745,7 @@ public class Entity {
             return true;
         }
 
-        public boolean StartSoundShader(final idSoundShader shader, final Enum channel, int soundShaderFlags, boolean broadcast, int[] length) {
+        public boolean StartSoundShader(final idSoundShader shader, final Enum channel, int soundShaderFlags, boolean broadcast, CInt length) {
             return StartSoundShader(shader, channel.ordinal(), soundShaderFlags, broadcast, length);
         }
 
@@ -2503,12 +2504,12 @@ public class Entity {
 
         // get the floor position underneath the physics object
         public boolean GetFloorPos(float max_dist, idVec3 floorpos) {
-            trace_s[] result = {new trace_s()};
+            trace_s result = new trace_s();
 
             if (!GetPhysics().HasGroundContacts()) {
                 GetPhysics().ClipTranslation(result, GetPhysics().GetGravityNormal().oMultiply(max_dist), null);
-                if (result[0].fraction < 1.0f) {
-                    floorpos.oSet(result[0].endpos);
+                if (result.fraction < 1.0f) {
+                    floorpos.oSet(result.endpos);
                     return true;
                 } else {
                     floorpos.oSet(GetPhysics().GetOrigin());
@@ -2601,7 +2602,7 @@ public class Entity {
         // returns true if this entity can be damaged from the given origin
         public boolean CanDamage(final idVec3 origin, idVec3 damagePoint) {
             idVec3 dest;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 midpoint;
 
             // use the midpoint of the bounds instead of the origin, because
@@ -2610,8 +2611,8 @@ public class Entity {
 
             dest = midpoint;
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
@@ -2620,8 +2621,8 @@ public class Entity {
             dest.oPluSet(0, 15.0f);
             dest.oPluSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
@@ -2629,8 +2630,8 @@ public class Entity {
             dest.oPluSet(0, 15.0f);
             dest.oMinSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
@@ -2638,8 +2639,8 @@ public class Entity {
             dest.oMinSet(0, 15.0f);
             dest.oPluSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
@@ -2647,24 +2648,24 @@ public class Entity {
             dest.oMinSet(0, 15.0f);
             dest.oMinSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
             dest = midpoint;
             dest.oPluSet(2, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
             dest = midpoint;
             dest.oMinSet(2, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
-            if (tr[0].fraction == 1.0 || (gameLocal.GetTraceEntity(tr[0]) == this)) {
-                damagePoint.oSet(tr[0].endpos);
+            if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
+                damagePoint.oSet(tr.endpos);
                 return true;
             }
 
@@ -2707,21 +2708,21 @@ public class Entity {
                 idGameLocal.Error("Unknown damageDef '%s'\n", damageDefName);
             }
 
-            int[] damage = {damageDef.GetInt("damage")};
+            CInt damage = new CInt(damageDef.GetInt("damage"));
 
             // inform the attacker that they hit someone
             attacker.DamageFeedback(this, inflictor, damage);
-            if (0 == damage[0]) {
+            if (0 == damage.getVal()) {
                 // do the damage
-                health -= damage[0];
+                health -= damage.getVal();
                 if (health <= 0) {
                     if (health < -999) {
                         health = -999;
                     }
 
-                    Killed(inflictor, attacker, damage[0], dir, location);
+                    Killed(inflictor, attacker, damage.getVal(), dir, location);
                 } else {
-                    Pain(inflictor, attacker, damage[0], dir, location);
+                    Pain(inflictor, attacker, damage.getVal(), dir, location);
                 }
             }
         }
@@ -2770,7 +2771,7 @@ public class Entity {
          ================
          */
         // callback function for when another entity received damage from this entity.  damage can be adjusted and returned to the caller.
-        public void DamageFeedback(idEntity victim, idEntity inflictor, int[] damage) {
+        public void DamageFeedback(idEntity victim, idEntity inflictor, CInt damage) {
             // implemented in subclasses
         }
 
@@ -3677,13 +3678,13 @@ public class Entity {
                     }
 
                     if (setClipModel) {
-                        int[] numSides = {0};
+                        CInt numSides = new CInt();
                         idTraceModel trm = new idTraceModel();
 
-                        if (spawnArgs.GetInt("cylinder", "0", numSides) && numSides[0] > 0) {
-                            trm.SetupCylinder(bounds, Math.max(numSides[0], 3));
-                        } else if (spawnArgs.GetInt("cone", "0", numSides) && numSides[0] > 0) {
-                            trm.SetupCone(bounds, Math.max(numSides[0], 3));
+                        if (spawnArgs.GetInt("cylinder", "0", numSides) && numSides.getVal() > 0) {
+                            trm.SetupCylinder(bounds, Math.max(numSides.getVal(), 3));
+                        } else if (spawnArgs.GetInt("cone", "0", numSides) && numSides.getVal() > 0) {
+                            trm.SetupCone(bounds, Math.max(numSides.getVal(), 3));
                         } else {
                             trm.SetupBox(bounds);
                         }
@@ -3891,7 +3892,7 @@ public class Entity {
             String[] bind = new String[1], joint = new String[1], bindanim = new String[1];
             int/*jointHandle_t*/ bindJoint;
             boolean bindOrientated;
-            int[] id = new int[1];
+            CInt id = new CInt(0);
             idAnim anim;
             int animNum;
             idAnimator parentAnimator;
@@ -3941,7 +3942,7 @@ public class Entity {
                         }
                     } // bind to a body of the physics object of the parent
                     else if (spawnArgs.GetInt("bindToBody", "0", id)) {
-                        BindToBody(parent, id[0], bindOrientated);
+                        BindToBody(parent, id.getVal(), bindOrientated);
                     } // bind to the parent
                     else {
                         Bind(parent, bindOrientated);

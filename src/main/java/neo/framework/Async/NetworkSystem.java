@@ -11,7 +11,6 @@ public class NetworkSystem {
     /**
      * Disclaimer: Use at own risk! @see https://www.ietf.org/rfc/rfc3514.txt
      */
-    private static final long EVIL_BIT = 0L;
     private static idNetworkSystem networkSystemLocal = new idNetworkSystem();
     public static idNetworkSystem networkSystem = networkSystemLocal;
 

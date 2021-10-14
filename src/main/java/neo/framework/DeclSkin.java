@@ -52,7 +52,7 @@ public class DeclSkin {
         public boolean SetDefaultText() throws idException {
             // if there exists a material with the same name
             if (declManager.FindType(DECL_MATERIAL, GetName(), false) != null) {
-                StringBuilder generated = new StringBuilder(2048);
+                StringBuffer generated = new StringBuffer(2048);
 
                 idStr.snPrintf(generated, generated.capacity(),
                         "skin %s // IMPLICITLY GENERATED\n"

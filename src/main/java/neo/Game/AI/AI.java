@@ -33,6 +33,9 @@ import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
@@ -410,7 +413,7 @@ public class AI {
         @Override
         public boolean TestArea(final idAAS aas, int areaNum) {
             final idVec3 areaCenter = aas.AreaCenter(areaNum);
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             float dist;
 
             dist = (targetPos.ToVec2().oMinus(areaCenter.ToVec2())).LengthSqr();
@@ -420,7 +423,7 @@ public class AI {
             }
 
             gameLocal.clip.TracePoint(trace, targetPos, areaCenter.oPlus(new idVec3(0.0f, 0.0f, 1.0f)), MASK_OPAQUE, null);
-            return !(trace[0].fraction < 1.0f);
+            return !(trace.fraction < 1.0f);
         }
     }
 
@@ -1000,8 +1003,8 @@ public class AI {
                 gravity = aas.GetSettings().gravity;
                 gravityDir = aas.GetSettings().gravityDir;
                 invGravityDir = aas.GetSettings().invGravityDir;
-                maxStepHeight = aas.GetSettings().maxStepHeight[0];
-                minFloorCos = aas.GetSettings().minFloorCos[0];
+                maxStepHeight = aas.GetSettings().maxStepHeight.getVal();
+                minFloorCos = aas.GetSettings().minFloorCos.getVal();
             } else {
                 gravity = DEFAULT_GRAVITY_VEC3;
                 gravityDir = new idVec3(0, 0, -1);
@@ -1156,7 +1159,7 @@ public class AI {
             int i, numSegments;
             float maxHeight, t, t2;
             idVec3[] points = new idVec3[5];
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             boolean result;
 
             t = zVel / gravity;
@@ -1210,17 +1213,17 @@ public class AI {
             result = true;
             for (i = 0; i < numSegments; i++) {
                 gameLocal.clip.Translation(trace, points[i], points[i + 1], clip, getMat3_identity(), clipmask, ignore);
-                if (trace[0].fraction < 1.0f) {
-                    result = gameLocal.GetTraceEntity(trace[0]).equals(targetEntity);
+                if (trace.fraction < 1.0f) {
+                    result = gameLocal.GetTraceEntity(trace).equals(targetEntity);
                     break;
                 }
             }
 
             if (drawtime != 0) {
                 if (clip != null) {
-                    gameRenderWorld.DebugBounds(result ? colorGreen : colorYellow, clip.GetBounds().Expand(1.0f), trace[0].endpos, drawtime);
+                    gameRenderWorld.DebugBounds(result ? colorGreen : colorYellow, clip.GetBounds().Expand(1.0f), trace.endpos, drawtime);
                 } else {
-                    idBounds bnds = new idBounds(trace[0].endpos);
+                    idBounds bnds = new idBounds(trace.endpos);
                     bnds.ExpandSelf(1.0f);
                     gameRenderWorld.DebugBounds(result ? colorGreen : colorYellow, bnds, getVec3_zero(), drawtime);
                 }
@@ -1241,8 +1244,8 @@ public class AI {
         public static boolean PredictTrajectory(final idVec3 firePos, final idVec3 target, float projectileSpeed, final idVec3 projGravity, final idClipModel clip, int clipmask, float max_height, final idEntity ignore, final idEntity targetEntity, int drawtime, idVec3 aimDir) {
             int n, i, j;
             float zVel, a, t, pitch;
-            float[] s = {0}, c = {0};
-            trace_s[] trace = {null};
+            CFloat s = new CFloat(), c = new CFloat();
+            trace_s trace = new trace_s();
             ballistics_s[] ballistics = new ballistics_s[2];
             idVec3[] dir = new idVec3[2];
             idVec3 velocity;
@@ -1267,12 +1270,12 @@ public class AI {
 
                 if (drawtime != 0) {
                     gameRenderWorld.DebugLine(colorRed, firePos, target, drawtime);
-                    idBounds bnds = new idBounds(trace[0].endpos);
+                    idBounds bnds = new idBounds(trace.endpos);
                     bnds.ExpandSelf(1.0f);
-                    gameRenderWorld.DebugBounds((trace[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(trace[0]) == targetEntity)) ? colorGreen : colorYellow, bnds, getVec3_zero(), drawtime);
+                    gameRenderWorld.DebugBounds((trace.fraction >= 1.0f || (gameLocal.GetTraceEntity(trace) == targetEntity)) ? colorGreen : colorYellow, bnds, getVec3_zero(), drawtime);
                 }
 
-                return (trace[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(trace[0]) == targetEntity));
+                return (trace.fraction >= 1.0f || (gameLocal.GetTraceEntity(trace) == targetEntity));
             }
 
             n = Ballistics(firePos, target, projectileSpeed, projGravity.oGet(2), ballistics);
@@ -1301,8 +1304,8 @@ public class AI {
                 idMath.SinCos(pitch, s, c);
                 dir[i] = target.oMinus(firePos);
                 dir[i].z = 0.0f;
-                dir[i].oMulSet(c[0] * idMath.InvSqrt(dir[i].LengthSqr()));
-                dir[i].z = s[0];
+                dir[i].oMulSet(c.getVal() * idMath.InvSqrt(dir[i].LengthSqr()));
+                dir[i].z = s.getVal();
 
                 zVel = projectileSpeed * dir[i].z;
 
@@ -1465,7 +1468,7 @@ public class AI {
 
         @Override
         public void Restore(idRestoreGame savefile) {
-            boolean[] restorePhysics = {false};
+            CBool restorePhysics = new CBool(false);
             int i;
             int num;
             idBounds bounds;
@@ -1621,7 +1624,7 @@ public class AI {
             // Link the script variables back to the scriptobject
             LinkScriptVariables();
 
-            if (restorePhysics[0]) {
+            if (restorePhysics.isVal()) {
                 RestorePhysics(physicsObj);
             }
         }
@@ -1635,7 +1638,7 @@ public class AI {
             idAngles jointScale;
             int/*jointHandle_t*/ joint;
             idVec3 local_dir = new idVec3();
-            boolean[] talks = {false};
+            CBool talks = new CBool(false);
 
             if (!g_monsters.GetBool()) {
                 PostEventMS(EV_Remove, 0);
@@ -1662,7 +1665,7 @@ public class AI {
 
             spawnArgs.GetBool("talks", "0", talks);
             if (spawnArgs.GetString("npc_name", null) != null) {
-                if (talks[0]) {
+                if (talks.isVal()) {
                     talk_state = TALK_OK;
                 } else {
                     talk_state = TALK_BUSY;
@@ -1942,7 +1945,7 @@ public class AI {
                     if (!ValidForBounds(settings, physicsObj.GetBounds())) {
                         idGameLocal.Error("%s cannot use use_aas %s\n", name, use_aas);
                     }
-                    float height = settings.maxStepHeight[0];
+                    float height = settings.maxStepHeight.getVal();
                     physicsObj.SetMaxStepHeight(height);
                     return;
                 } else {
@@ -2305,7 +2308,7 @@ public class AI {
 
         protected idVec3 FirstVisiblePointOnPath(final idVec3 origin, final idVec3 target, int travelFlags) {
             int i, areaNum, targetAreaNum, curAreaNum;
-            int[] travelTime = {0};
+            CInt travelTime = new CInt();
             idVec3 curOrigin;
             idReachability[] reach = {null};
 
@@ -2857,7 +2860,7 @@ public class AI {
             predictedPath_s path = new predictedPath_s();
             idVec3 end;
             idVec3 dest;
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idActor enemyEnt;
             boolean goLower;
 
@@ -2891,7 +2894,7 @@ public class AI {
                 }
 
                 gameLocal.clip.Translation(trace, origin, end, physicsObj.GetClipModel(), getMat3_identity(), MASK_MONSTERSOLID, this);
-                vel.oPluSet(Seek(vel, origin, trace[0].endpos, AI_SEEK_PREDICTION));
+                vel.oPluSet(Seek(vel, origin, trace.endpos, AI_SEEK_PREDICTION));
             }
         }
 
@@ -3301,7 +3304,7 @@ public class AI {
             }
 
             idReachability[] reach = {null};
-            int[] travelTime = {0};
+            CInt travelTime = new CInt();
             if (!aas.RouteToGoalArea(fromArea, start, toArea, travelFlags, travelTime, reach)) {
                 return -1;
             }
@@ -3314,7 +3317,7 @@ public class AI {
                 }
             }
 
-            return travelTime[0];
+            return travelTime.getVal();
         }
 
         protected int PointReachableAreaNum(final idVec3 pos, final float boundsScale /*= 2.0f*/) {
@@ -3477,7 +3480,7 @@ public class AI {
 
         protected boolean EntityCanSeePos(idActor actor, final idVec3 actorOrigin, final idVec3 pos) {
             idVec3 eye, point;
-            trace_s[] results = {null};
+            trace_s results = new trace_s();
             pvsHandle_t handle;
 
             handle = gameLocal.pvs.SetupCurrentPVS(actor.GetPVSAreas(), actor.GetNumPVSAreas());
@@ -3497,7 +3500,7 @@ public class AI {
             physicsObj.DisableClip();
 
             gameLocal.clip.TracePoint(results, eye, point, MASK_SOLID, actor);
-            if (results[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(results[0]) == this)) {
+            if (results.fraction >= 1.0f || (gameLocal.GetTraceEntity(results) == this)) {
                 physicsObj.EnableClip();
                 return true;
             }
@@ -3508,7 +3511,7 @@ public class AI {
             gameLocal.clip.TracePoint(results, eye, point, MASK_SOLID, actor);
             physicsObj.EnableClip();
 
-            return results[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(results[0]) == this);
+            return results.fraction >= 1.0f || (gameLocal.GetTraceEntity(results) == this);
         }
 
         protected void BlockedFailSafe() {
@@ -4343,7 +4346,7 @@ public class AI {
         }
 
         protected boolean EnemyPositionValid() {
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 muzzle;
             idMat3 axis;
 
@@ -4357,7 +4360,7 @@ public class AI {
 
             gameLocal.clip.TracePoint(tr, GetEyePosition(), lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset), MASK_OPAQUE, this);
             // can't see the area yet, so don't know if he's there or not
-            return tr[0].fraction < 1.0f;
+            return tr.fraction < 1.0f;
         }
 
         protected void SetEnemyPosition() {
@@ -4518,7 +4521,7 @@ public class AI {
         }
 
         protected void SetEnemy(idActor newEnemy) {
-            int[] enemyAreaNum = {0};
+            CInt enemyAreaNum = new CInt();
 
             if (AI_DEAD.underscore()) {
                 ClearEnemy();
@@ -4542,9 +4545,9 @@ public class AI {
 
                 lastReachableEnemyPos = lastVisibleEnemyPos;
                 lastVisibleReachableEnemyPos = lastReachableEnemyPos;
-                enemyAreaNum[0] = PointReachableAreaNum(lastReachableEnemyPos, 1.0f);
-                if (aas != null && enemyAreaNum[0] != 0) {
-                    aas.PushPointIntoAreaNum(enemyAreaNum[0], lastReachableEnemyPos);
+                enemyAreaNum.setVal(PointReachableAreaNum(lastReachableEnemyPos, 1.0f));
+                if (aas != null && enemyAreaNum.getVal() != 0) {
+                    aas.PushPointIntoAreaNum(enemyAreaNum.getVal(), lastReachableEnemyPos);
                     lastVisibleReachableEnemyPos = lastReachableEnemyPos;
                 }
             }
@@ -4593,9 +4596,9 @@ public class AI {
             idVec3 muzzle = new idVec3();
             idVec3 dir = new idVec3();
             idVec3 start;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idBounds projBounds;
-            float[] distance = {0};
+            CFloat distance = new CFloat();
             idClipModel projClip;
             float attack_accuracy;
             float attack_cone;
@@ -4651,7 +4654,7 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle, viewAxis.oGet(0), distance)) {
-                    start = muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance[0]));
+                    start = muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
                 } else {
                     start = ownerBounds.GetCenter();
                 }
@@ -4661,7 +4664,7 @@ public class AI {
             }
 
             gameLocal.clip.Translation(tr, start, muzzle, projClip, axis, MASK_SHOT_RENDERMODEL, this);
-            muzzle = tr[0].endpos;
+            muzzle = tr.endpos;
 
             // set aiming direction
             GetAimDir(muzzle, target, this, dir);
@@ -4720,10 +4723,10 @@ public class AI {
          ================
          */
         @Override
-        public void DamageFeedback(idEntity victim, idEntity inflictor, int[] damage) {
+        public void DamageFeedback(idEntity victim, idEntity inflictor, CInt damage) {
             if ((victim.equals(this)) && inflictor.IsType(idProjectile.class)) {
                 // monsters only get half damage from their own projectiles
-                damage[0] = (damage[0] + 1) / 2;  // round up so we don't do 0 damage
+                damage.setVal((damage.getVal() + 1) / 2);  // round up so we don't do 0 damage
 
             } else if (victim.equals(enemy.GetEntity())) {
                 AI_HIT_ENEMY.underscore(true);
@@ -4782,7 +4785,7 @@ public class AI {
         }
 
         protected boolean TestMelee() {
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idActor enemyEnt = enemy.GetEntity();
 
             if (null == enemyEnt || 0 == melee_range) {
@@ -4820,7 +4823,7 @@ public class AI {
 
             gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_BOUNDINGBOX, this);
 
-            return (trace[0].fraction == 1.0f) || (gameLocal.GetTraceEntity(trace[0]).equals(enemyEnt));
+            return (trace.fraction == 1.0f) || (gameLocal.GetTraceEntity(trace).equals(enemyEnt));
         }
 
         /*
@@ -4859,11 +4862,11 @@ public class AI {
             // stupid place for this.
             boolean forceMiss = false;
             if (enemyEnt.IsType(idPlayer.class) && g_skill.GetInteger() < 2) {
-                int[] damage = {0}, armor = {0};
+                CInt damage = new CInt(), armor = new CInt();
                 idPlayer player = (idPlayer) enemyEnt;
                 player.CalcDamagePoints(this, this, meleeDef, 1.0f, INVALID_JOINT, damage, armor);
 
-                if (enemyEnt.health <= damage[0]) {
+                if (enemyEnt.health <= damage.getVal()) {
                     int t = gameLocal.time - player.lastSavingThrowTime;
                     if (t > SAVING_THROW_TIME) {
                         player.lastSavingThrowTime = gameLocal.time;
@@ -5545,11 +5548,11 @@ public class AI {
             final idVec3 muzzle = _muzzle.value;
             final idAngles ang = _ang.value;
             idVec3 start;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idBounds projBounds;
             idClipModel projClip;
             idMat3 axis;
-            float[] distance = {0};
+            CFloat distance = new CFloat();
 
             if (null == projectileDef) {
                 gameLocal.Warning("%s (%s) doesn't have a projectile specified", name, GetEntityDefName());
@@ -5572,7 +5575,7 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle, viewAxis.oGet(0), distance)) {
-                    start = muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance[0]));
+                    start = muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
                 } else {
                     start = ownerBounds.GetCenter();
                 }
@@ -5585,10 +5588,10 @@ public class AI {
 
             // launch the projectile
             idThread.ReturnEntity(projectile.GetEntity());
-            projectile.GetEntity().Launch(tr[0].endpos, axis.oGet(0), getVec3_origin());
+            projectile.GetEntity().Launch(tr.endpos, axis.oGet(0), getVec3_origin());
             projectile.oSet(null);
 
-            TriggerWeaponEffects(tr[0].endpos);
+            TriggerWeaponEffects(tr.endpos);
 
             lastAttackTime = gameLocal.time;
         }
@@ -6111,7 +6114,7 @@ public class AI {
         }
 
         protected void Event_CanHitEnemy() {
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idEntity hit;
 
             idActor enemyEnt = enemy.GetEntity();
@@ -6137,10 +6140,10 @@ public class AI {
             dir.Normalize();
             toPos = eye.oPlus(dir.oMultiply(MAX_WORLD_SIZE));
             gameLocal.clip.TracePoint(tr, eye, toPos, MASK_SHOT_BOUNDINGBOX, this);
-            hit = gameLocal.GetTraceEntity(tr[0]);
-            if (tr[0].fraction >= 1.0f || (hit.equals(enemyEnt))) {
+            hit = gameLocal.GetTraceEntity(tr);
+            if (tr.fraction >= 1.0f || (hit.equals(enemyEnt))) {
                 lastHitCheckResult = true;
-            } else lastHitCheckResult = (tr[0].fraction < 1.0f) && (hit.IsType(idAI.class))
+            } else lastHitCheckResult = (tr.fraction < 1.0f) && (hit.IsType(idAI.class))
                     && (((idAI) hit).team != team);
 
             idThread.ReturnInt(lastHitCheckResult);
@@ -6153,8 +6156,8 @@ public class AI {
             idVec3 fromPos;
             idMat3 axis;
             idVec3 start;
-            trace_s[] tr = {null};
-            float[] distance = {0};
+            trace_s tr = new trace_s();
+            CFloat distance = new CFloat();
 
             idActor enemyEnt = enemy.GetEntity();
             if (!AI_ENEMY_VISIBLE.underscore() || NOT(enemyEnt)) {
@@ -6194,7 +6197,7 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(org, viewAxis.oGet(0), distance)) {
-                    start = org.oPlus(viewAxis.oGet(0).oMultiply(distance[0]));
+                    start = org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
                 } else {
                     start = ownerBounds.GetCenter();
                 }
@@ -6204,17 +6207,17 @@ public class AI {
             }
 
             gameLocal.clip.Translation(tr, start, fromPos, projectileClipModel, getMat3_identity(), MASK_SHOT_RENDERMODEL, this);
-            fromPos = tr[0].endpos;
+            fromPos = tr.endpos;
 
             idThread.ReturnInt(GetAimDir(fromPos, enemy.GetEntity(), this, dir));
         }
 
         protected void Event_CanHitEnemyFromJoint(final idEventArg<String> jointname) {
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 muzzle = new idVec3();
             idMat3 axis = new idMat3();
             idVec3 start;
-            float[] distance = {0};
+            CFloat distance = new CFloat();
 
             idActor enemyEnt = enemy.GetEntity();
             if (!AI_ENEMY_VISIBLE.underscore() || null == enemyEnt) {
@@ -6250,7 +6253,7 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(org, viewAxis.oGet(0), distance)) {
-                    start = org.oPlus(viewAxis.oGet(0).oMultiply(distance[0]));
+                    start = org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
                 } else {
                     start = ownerBounds.GetCenter();
                 }
@@ -6260,10 +6263,10 @@ public class AI {
             }
 
             gameLocal.clip.Translation(tr, start, muzzle, projectileClipModel, getMat3_identity(), MASK_SHOT_BOUNDINGBOX, this);
-            muzzle = tr[0].endpos;
+            muzzle = tr.endpos;
 
             gameLocal.clip.Translation(tr, muzzle, toPos, projectileClipModel, getMat3_identity(), MASK_SHOT_BOUNDINGBOX, this);
-            lastHitCheckResult = tr[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(tr[0]).equals(enemyEnt));
+            lastHitCheckResult = tr.fraction >= 1.0f || (gameLocal.GetTraceEntity(tr).equals(enemyEnt));
 
             idThread.ReturnInt(lastHitCheckResult);
         }
@@ -6854,7 +6857,7 @@ public class AI {
 
         protected void Event_LocateEnemy() {
             idActor enemyEnt;
-            int[] areaNum = {0};
+            CInt areaNum = new CInt();
 
             enemyEnt = enemy.GetEntity();
             if (null == enemyEnt) {
@@ -7004,7 +7007,7 @@ public class AI {
 
         protected void Event_CanReachEnemy() {
             aasPath_s path = new aasPath_s();
-            int[] toAreaNum = {0};
+            CInt toAreaNum = new CInt();
             int areaNum;
             idVec3 pos = new idVec3();
             idActor enemyEnt;
@@ -7023,17 +7026,17 @@ public class AI {
                 enemyEnt.GetAASLocation(aas, pos, toAreaNum);
             } else {
                 pos = enemyEnt.GetPhysics().GetOrigin();
-                toAreaNum[0] = PointReachableAreaNum(pos);
+                toAreaNum.setVal(PointReachableAreaNum(pos));
             }
 
-            if (0 == toAreaNum[0]) {
+            if (0 == toAreaNum.getVal()) {
                 idThread.ReturnInt(false);
                 return;
             }
 
             final idVec3 org = physicsObj.GetOrigin();
             areaNum = PointReachableAreaNum(org);
-            idThread.ReturnInt(PathToGoal(path, areaNum, org, toAreaNum[0], pos));
+            idThread.ReturnInt(PathToGoal(path, areaNum, org, toAreaNum.getVal(), pos));
         }
 
         protected void Event_GetReachableEntityPosition(idEventArg<idEntity> _ent) {

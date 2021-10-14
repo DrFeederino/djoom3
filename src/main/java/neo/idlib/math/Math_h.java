@@ -1,5 +1,7 @@
 package neo.idlib.math;
 
+import neo.idlib.containers.CFloat;
+
 /**
  * ===============================================================================
  * <p>
@@ -328,7 +330,7 @@ public class Math_h {
             return Math.cos(a);
         }        // cosine with 64 bits precision
 
-        public static void SinCos(float a, float[] s, float[] c) {// sine and cosine with 32 bits precision
+        public static void SinCos(float a, CFloat s, CFloat c) {// sine and cosine with 32 bits precision
 //#ifdef _WIN32//i wish.
 //	_asm {
 //		fld		a
@@ -339,12 +341,12 @@ public class Math_h {
 //		fstp	dword ptr [edx]
 //	}
 //#else
-            s[0] = (float) Math.sin(a);
-            c[0] = (float) Math.cos(a);
+            s.setVal((float) Math.sin(a));
+            c.setVal( (float) Math.cos(a));
 //#endif
         }
 
-        public static void SinCos16(float a, float[] s, float[] c) {// sine and cosine with 16 bits precision
+        public static void SinCos16(float a, CFloat s, CFloat c) {// sine and cosine with 16 bits precision
             float t, d;
 
             if ((a < 0.0f) || (a >= idMath.TWO_PI)) {
@@ -378,11 +380,11 @@ public class Math_h {
 //	}
 //#endif
             t = a * a;
-            s[0] = a * (((((-2.39e-08f * t + 2.7526e-06f) * t - 1.98409e-04f) * t + 8.3333315e-03f) * t - 1.666666664e-01f) * t + 1.0f);
-            c[0] = d * (((((-2.605e-07f * t + 2.47609e-05f) * t - 1.3888397e-03f) * t + 4.16666418e-02f) * t - 4.999999963e-01f) * t + 1.0f);
+            s.setVal(a * (((((-2.39e-08f * t + 2.7526e-06f) * t - 1.98409e-04f) * t + 8.3333315e-03f) * t - 1.666666664e-01f) * t + 1.0f));
+            c.setVal( d * (((((-2.605e-07f * t + 2.47609e-05f) * t - 1.3888397e-03f) * t + 4.16666418e-02f) * t - 4.999999963e-01f) * t + 1.0f));
         }
 
-        static void SinCos64(float a, float[] s, float[] c) {// sine and cosine with 64 bits precision
+        static void SinCos64(float a, CFloat s, CFloat c) {// sine and cosine with 64 bits precision
 //#ifdef _WIN32
 //	_asm {
 //		fld		a
@@ -393,8 +395,8 @@ public class Math_h {
 //		fstp	qword ptr [edx]
 //	}
 //#else
-            s[0] = (float) Math.sin(a);
-            c[0] = (float) Math.cos(a);
+            s.setVal( (float) Math.sin(a));
+            c.setVal( (float) Math.cos(a));
 //#endif
         }
 

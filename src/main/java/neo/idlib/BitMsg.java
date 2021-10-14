@@ -5,6 +5,7 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Vector.idVec3;
 import neo.sys.sys_public;
 import neo.sys.sys_public.netadr_t;
@@ -196,9 +197,9 @@ public class BitMsg {
         }
 
         // save the write state
-        public void SaveWriteState(int[] s, int[] b) {
-            s[0] = curSize;
-            b[0] = writeBit;
+        public void SaveWriteState(CInt s, CInt b) {
+            s.setVal(curSize);
+            b.setVal(writeBit);
         }
 
         // restore the write state
@@ -243,9 +244,9 @@ public class BitMsg {
         }
 
         // save the read state
-        public void SaveReadState(int[] c, int[] b) {
-            c[0] = readCount;
-            b[0] = readBit;
+        public void SaveReadState(CInt c, CInt b) {
+            c.setVal(readCount);
+            b.setVal(readBit);
         }
 
         // restore the read state

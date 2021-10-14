@@ -13,6 +13,7 @@ import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Static.staticPState_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idCQuat;
@@ -113,13 +114,13 @@ public class Physics_StaticMulti {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = {0};
+            CInt num = new CInt();
 
             savefile.ReadObject(/*reinterpret_cast<idClass *&>*/self);
 
             savefile.ReadInt(num);
-            current.AssureSize(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            current.AssureSize(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadVec3(current.oGet(i).origin);
                 savefile.ReadMat3(current.oGet(i).axis);
                 savefile.ReadVec3(current.oGet(i).localOrigin);
@@ -127,8 +128,8 @@ public class Physics_StaticMulti {
             }
 
             savefile.ReadInt(num);
-            clipModels.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            clipModels.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadClipModel(clipModels.oGet(i));
             }
 
@@ -563,13 +564,13 @@ public class Physics_StaticMulti {
         }
 
         @Override
-        public void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model) {
+        public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );//TODO:
             gameLocal.Warning("idPhysics_StaticMulti::ClipTranslation called");
         }
 
         @Override
-        public void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model) {
+        public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );//TODO:
             gameLocal.Warning("idPhysics_StaticMulti::ClipRotation called");
         }

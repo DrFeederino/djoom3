@@ -6,6 +6,7 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.framework.File_h.idFile;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec3;
@@ -663,7 +664,7 @@ public class Script_Program {
 
         public void Restore(idRestoreGame savefile) {            // unarchives object from save game file
             idStr typeName = new idStr();
-            int/*size_t*/[] size = {0};
+            CInt size = new CInt();
 
             savefile.ReadString(typeName);
 
@@ -677,11 +678,11 @@ public class Script_Program {
             }
 
             savefile.ReadInt(size);
-            if (size[0] != type.Size()) {
+            if (size.getVal() != type.Size()) {
                 savefile.Error("idScriptObject::Restore: size of object '%s' doesn't match size in save game.", typeName);
             }
 
-            savefile.Read(data, size[0]);
+            savefile.Read(data, size.getVal());
         }
 
         public void Free() {

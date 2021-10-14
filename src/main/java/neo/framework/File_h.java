@@ -1,9 +1,11 @@
 package neo.framework;
 
-import neo.TempDump.*;
 import neo.idlib.BitMsg.idBitMsg;
-import neo.idlib.Lib.*;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
+import neo.idlib.containers.CLong;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
@@ -343,18 +345,18 @@ public class File_h {
         }
 
         // Endian portable alternatives to Read(...)
-        public int ReadInt(int[] value) {
+        public int ReadInt(CInt value) {
             ByteBuffer intBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
             int result = Read(intBytes);
-            value[0] = LittleLong(intBytes.getInt(0));
+            value.setVal(LittleLong(intBytes.getInt(0)));
             return result;
         }
 
         public int ReadInt() {
-            int[] value = {0};
+            CInt value = new CInt();
             this.ReadInt(value);
 
-            return value[0];
+            return value.getVal();
         }
 
         // Endian portable alternatives to Write(...)
@@ -369,10 +371,10 @@ public class File_h {
             return WriteInt(value.ordinal());
         }
 
-        public int ReadUnsignedInt(long[] value) {
+        public int ReadUnsignedInt(CLong value) {
             ByteBuffer uintBytes = ByteBuffer.allocate(4);
             int result = Read(uintBytes);
-            value[0] = LittleLong(uintBytes.getInt()) & 0xFFFF_FFFFL;
+            value.setVal(LittleLong(uintBytes.getInt()) & 0xFFFF_FFFFL);
             return result;
         }
 
@@ -462,18 +464,18 @@ public class File_h {
             return Write(ucharBytes);
         }
 
-        public int ReadFloat(float[] value) {
+        public int ReadFloat(CFloat value) {
             ByteBuffer floatBytes = ByteBuffer.allocate(4);
             int result = Read(floatBytes);
-            value[0] = LittleFloat(floatBytes.getFloat());
+            value.setVal(LittleFloat(floatBytes.getFloat()));
             return result;
         }
 
         public float ReadFloat() {
-            float[] value = {0};
+            CFloat value = new CFloat();
             ReadFloat(value);
 
-            return value[0];
+            return value.getVal();
         }
 
         public int WriteFloat(final float value) {
@@ -483,18 +485,18 @@ public class File_h {
             return Write(floatBytes);
         }
 
-        public int ReadBool(boolean[] value) {
+        public int ReadBool(CBool value) {
             char[] c = new char[1];
             int result = ReadUnsignedChar(c);
-            value[0] = (c[0] != '\0');
+            value.setVal((c[0] != '\0'));
             return result;
         }
 
         public boolean ReadBool() {
-            boolean[] value = {false};
+            CBool value = new CBool(false);
             ReadBool(value);
 
-            return value[0];
+            return value.isVal();
         }
 
         public int WriteBool(final boolean value) {
@@ -503,13 +505,13 @@ public class File_h {
         }
 
         public int ReadString(idStr string) {
-            int[] len = new int[1];
+            CInt len = new CInt(0);
             int result = 0;
             ByteBuffer stringBytes;
 
             ReadInt(len);
-            if (len[0] >= 0) {
-                stringBytes = ByteBuffer.allocate(len[0] * 2);//2 bytes per char
+            if (len.getVal() >= 0) {
+                stringBytes = ByteBuffer.allocate(len.getVal() * 2);//2 bytes per char
 //                string.Fill(' ', len[0]);
                 result = Read(stringBytes);
                 string.oSet(new String(stringBytes.array()));

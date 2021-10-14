@@ -4,7 +4,6 @@ import neo.CM.CollisionModel_local;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.tr_local.idRenderLightLocal;
-import neo.TempDump.*;
 import neo.Tools.Compilers.AAS.AASBuild.RunAAS_f;
 import neo.Tools.Compilers.DMap.optimize.optVertex_s;
 import neo.Tools.Compilers.DMap.tritjunction.hashVert_s;
@@ -508,6 +507,16 @@ public class dmap {
     static class textureVectors_t {
 
         idVec4[] v = new idVec4[2];    // the offset value will always be in the 0.0 to 1.0 range
+
+        public textureVectors_t(textureVectors_t val) {
+            if (val != null) {
+                v[0] = new idVec4(val.v[0]);
+                v[1] = new idVec4(val.v[1]);
+            }
+        }
+
+        public textureVectors_t() {
+        }
     }
 
     static class side_s {
@@ -519,6 +528,17 @@ public class dmap {
         idWinding visibleHull;          // also clipped to the solid parts of the world
         //
         idWinding winding;        // only clipped to the other sides of the brush
+
+        public side_s(side_s val) {
+            this.material = val.material;
+            this.planenum = val.planenum;
+            this.texVec = val.texVec;
+            this.visibleHull = val.visibleHull;
+            this.winding = val.winding;
+        }
+
+        public side_s() {
+        }
     }
 
     static class bspbrush_s {
@@ -561,7 +581,10 @@ public class dmap {
 
             this.bounds = brush.bounds;
             this.numsides = brush.numsides;
-            System.arraycopy(brush.sides, 0, this.sides, 0, 6);
+            //System.arraycopy(brush.sides, 0, this.sides, 0, 6);
+            for (int i = 0; i < 6; i++) {
+                this.sides[i] = new side_s(brush.sides[i]);
+            }
         }
 
         void clear() {

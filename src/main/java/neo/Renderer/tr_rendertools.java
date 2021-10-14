@@ -2283,10 +2283,10 @@ public class tr_rendertools {
             w = 0.25f;
             h = 0.25f;
         } else {
-            max = image.uploadWidth > image.uploadHeight ? image.uploadWidth : image.uploadHeight;
+            max = Math.max(image.uploadWidth.getVal(), image.uploadHeight.getVal());
 
-            w = 0.25f * image.uploadWidth / max;
-            h = 0.25f * image.uploadHeight / max;
+            w = 0.25f * image.uploadWidth.getVal() / max;
+            h = 0.25f * image.uploadHeight.getVal() / max;
 
             w *= (float) glConfig.vidHeight / glConfig.vidWidth;
         }

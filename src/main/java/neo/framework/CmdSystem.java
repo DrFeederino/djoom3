@@ -68,7 +68,6 @@ public class CmdSystem {
 
     // command function
     public static abstract class cmdFunction_t {
-
         public abstract void run(final idCmdArgs args) throws idException;
     }
 

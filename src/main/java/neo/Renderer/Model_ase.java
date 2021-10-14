@@ -301,11 +301,24 @@ public class Model_ase {
      */
     public static class aseFace_t {
 
-        public final int[] tVertexNum = new int[3];
-        public final byte[][] vertexColors = new byte[3][4];
-        public final idVec3[] vertexNormals = new idVec3[3];
-        public final int[] vertexNum = new int[3];
+        public int[] tVertexNum = new int[3];
+        public byte[][] vertexColors = new byte[3][4];
+        public idVec3[] vertexNormals = new idVec3[3];
+        public int[] vertexNum = new int[3];
         public idVec3 faceNormal;
+
+        public aseFace_t() {
+        }
+
+        public aseFace_t(aseFace_t val) {
+            if (val != null) {
+                this.tVertexNum = val.tVertexNum;
+                this.vertexColors = val.vertexColors;
+                this.vertexNormals = val.vertexNormals;
+                this.vertexNum = val.vertexNum;
+                this.faceNormal = val.faceNormal;
+            }
+        }
     }
 
     public static class aseMesh_t {
@@ -1095,7 +1108,9 @@ public class Model_ase {
                 case "*MESH":
                     idVec3[] transform = ase.currentObject.mesh.transform;//copied from the bfg sources
                     ase.currentMesh = ase.currentObject.mesh = new aseMesh_t();
-                    System.arraycopy(transform, 0, ase.currentMesh.transform, 0, transform.length);
+                    for (int i = 0; i < transform.length; i++) {
+                        ase.currentMesh.transform[i] = transform[i];
+                    }
                     ASE_ParseBracedBlock(ASE_KeyMESH.getInstance());
                     break;
 

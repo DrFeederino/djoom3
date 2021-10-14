@@ -215,7 +215,7 @@ public class Physics_Actor {
         }
 
         @Override
-        public void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model) {
+        public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
             if (model != null) {
                 gameLocal.clip.TranslationModel(results, clipModel.GetOrigin(), clipModel.GetOrigin().oPlus(translation),
                         clipModel, clipModel.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis());
@@ -226,7 +226,7 @@ public class Physics_Actor {
         }
 
         @Override
-        public void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model) {
+        public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
             if (model != null) {
                 gameLocal.clip.RotationModel(results, clipModel.GetOrigin(), rotation,
                         clipModel, clipModel.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis());

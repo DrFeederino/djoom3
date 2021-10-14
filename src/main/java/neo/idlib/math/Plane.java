@@ -1,5 +1,6 @@
 package neo.idlib.math;
 
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat2;
 import neo.idlib.math.Matrix.idMat3;
@@ -544,7 +545,7 @@ public class Plane {
         }
 
         // intersection point is start + dir * scale
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale) {
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale) {
             float d1, d2;
 
             d1 = Normal().oMultiply(start.oPlus(d));
@@ -552,7 +553,7 @@ public class Plane {
             if (d2 == 0.0f) {
                 return false;
             }
-            scale[0] = -(d1 / d2);
+            scale.setVal(-(d1 / d2));
             return true;
         }
 

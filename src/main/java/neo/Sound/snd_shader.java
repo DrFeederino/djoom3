@@ -120,7 +120,7 @@ public class snd_shader {
 
             // if there exists a wav file with the same name
             if (true) { //fileSystem->ReadFile( wavname, NULL ) != -1 ) {
-                StringBuilder generated = new StringBuilder(2048);
+                StringBuffer generated = new StringBuffer(2048);
                 idStr.snPrintf(generated, generated.capacity(),
                         "sound %s // IMPLICITLY GENERATED\n"
                                 + "{\n"

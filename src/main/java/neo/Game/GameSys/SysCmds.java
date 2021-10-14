@@ -35,6 +35,8 @@ import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.idStrList;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
@@ -2083,9 +2085,9 @@ public class SysCmds {
             if (args.Argc() == 3) {
                 float angle = Float.parseFloat(args.Argv(2));
 
-                float[] d1 = {0}, d0 = {0};
+                CFloat d1 = new CFloat(), d0 = new CFloat();
                 idMath.SinCos(DEG2RAD(angle), d1, d0);
-                dir = new idVec3(d0[0], d1[0], 0);
+                dir = new idVec3(d0.getVal(), d1.getVal(), 0);
             } else {
                 dir = new idVec3();
 //            dir.Zero();
@@ -2163,9 +2165,9 @@ public class SysCmds {
             }
 
             idVec3 dir;
-            float[] d1 = {0}, d0 = {0};
+            CFloat d1 = new CFloat(), d0 = new CFloat();
             idMath.SinCos(DEG2RAD(45.0f), d1, d0);
-            dir = new idVec3(d0[0], d1[0], 0);
+            dir = new idVec3(d0.getVal(), d1.getVal(), 0);
 
             g_testDeath.SetBool(true);
             player.Damage(null, null, dir, "damage_triggerhurt_1000", 1.0f, INVALID_JOINT);
@@ -2931,7 +2933,7 @@ public class SysCmds {
             idAngles angles;
             idPlayer player;
             idEntity ent;
-            int[] guiSurfaces = {0};
+            CInt guiSurfaces = new CInt();
             boolean newEnt;
             renderEntity_s renderEnt;
             int surfIndex;
@@ -2939,7 +2941,9 @@ public class SysCmds {
             idMat4 modelMatrix;
             idVec3 normal;
             idVec3 center;
-            modelSurface_s[] surfaces = new modelSurface_s[MAX_RENDERENTITY_GUI];
+            modelSurface_s[] surfaces = Stream.generate(modelSurface_s::new)
+                    .limit(MAX_RENDERENTITY_GUI)
+                    .toArray(modelSurface_s[]::new);
 
             player = gameLocal.GetLocalPlayer();
             if (player == null || !gameLocal.CheatsOk()) {
@@ -2960,7 +2964,7 @@ public class SysCmds {
             if (ent == null) {
                 newEnt = true;
             } else if (FindEntityGUIs(ent, surfaces, MAX_RENDERENTITY_GUI, guiSurfaces) == true) {
-                if (gameLocal.lastGUI >= guiSurfaces[0]) {
+                if (gameLocal.lastGUI >= guiSurfaces.getVal()) {
                     newEnt = true;
                 }
             } else {
@@ -3006,7 +3010,7 @@ public class SysCmds {
                 gameLocal.Printf("Entity \"%s\" has gui properties but no gui surfaces.\n", ent.name);
             }
 
-            if (guiSurfaces[0] == 0) {
+            if (guiSurfaces.getVal() == 0) {
                 gameLocal.Printf("Entity \"%s\" has gui properties but no gui surfaces!\n", ent.name);
                 return;
             }
@@ -3045,7 +3049,7 @@ public class SysCmds {
          has any valid gui surfaces.
          =================
          */
-        boolean FindEntityGUIs(idEntity ent, final modelSurface_s[] surfaces, int maxSurfs, int[] guiSurfaces) {
+        boolean FindEntityGUIs(idEntity ent, final modelSurface_s[] surfaces, int maxSurfs, CInt guiSurfaces) {
             renderEntity_s renderEnt;
             idRenderModel renderModel;
             modelSurface_s surf;
@@ -3055,8 +3059,8 @@ public class SysCmds {
             assert (surfaces != null);
             assert (ent != null);
 
-//	memset( surfaces, 0x00, sizeof( modelSurface_t *) * maxSurfs );//TODO: make sure the loop below loops over the entire array
-            guiSurfaces[0] = 0;
+
+            guiSurfaces.setVal(0);
 
             renderEnt = ent.GetRenderEntity();
             renderModel = renderEnt.hModel;
@@ -3074,11 +3078,11 @@ public class SysCmds {
                     continue;
                 }
                 if (shader.GetEntityGui() > 0) {
-                    surfaces[guiSurfaces[0]++] = surf;
+                    surfaces[guiSurfaces.increment()] = surf;
                 }
             }
 
-            return (guiSurfaces[0] != 0);
+            return (guiSurfaces.getVal() != 0);
         }
     }
 

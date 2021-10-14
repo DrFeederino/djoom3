@@ -27,6 +27,9 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
@@ -318,9 +321,9 @@ public class Actor {
 
     public static class copyJoints_t {
 
-        public int[]/*jointHandle_t*/ from = {0};
+        public CInt/*jointHandle_t*/ from = new CInt();
         public jointModTransform_t mod;
-        public int[]/*jointHandle_t*/ to = {0};
+        public CInt/*jointHandle_t*/ to = new CInt();
     }
 
     /* **********************************************************************
@@ -516,9 +519,9 @@ public class Actor {
 
             idEntity[] ent = {null};
             idStr jointName = new idStr();
-            float[] fovDegrees = {0};
-            int[] rank = {0}, team = {0};
-            boolean[] use_combat_bbox = {false};
+            CFloat fovDegrees = new CFloat();
+            CInt rank = new CInt(), team = new CInt();
+            CBool use_combat_bbox = new CBool(false);
 
             animPrefix.oSet("");
             state = null;
@@ -526,18 +529,18 @@ public class Actor {
 
             spawnArgs.GetInt("rank", "0", rank);
             spawnArgs.GetInt("team", "0", team);
-            this.rank = rank[0];
-            this.team = team[0];
+            this.rank = rank.getVal();
+            this.team = team.getVal();
 
             spawnArgs.GetVector("offsetModel", "0 0 0", modelOffset);
 
             spawnArgs.GetBool("use_combat_bbox", "0", use_combat_bbox);
-            this.use_combat_bbox = use_combat_bbox[0];
+            this.use_combat_bbox = use_combat_bbox.isVal();
 
             viewAxis.oSet(GetPhysics().GetAxis());
 
             spawnArgs.GetFloat("fov", "90", fovDegrees);
-            SetFOV(fovDegrees[0]);
+            SetFOV(fovDegrees.getVal());
 
             pain_debounce_time = 0;
 
@@ -606,15 +609,15 @@ public class Actor {
                         copyJoint.mod = JOINTMOD_LOCAL_OVERRIDE;
                     }
 
-                    copyJoint.from[0] = animator.GetJointHandle(jointName);
-                    if (copyJoint.from[0] == INVALID_JOINT) {
+                    copyJoint.from.setVal(animator.GetJointHandle(jointName));
+                    if (copyJoint.from.getVal() == INVALID_JOINT) {
                         gameLocal.Warning("Unknown copy_joint '%s' on entity %s", jointName, name);
                         continue;
                     }
 
                     jointName.oSet(kv.GetValue());
-                    copyJoint.to[0] = headAnimator.GetJointHandle(jointName);
-                    if (copyJoint.to[0] == INVALID_JOINT) {
+                    copyJoint.to.setVal(headAnimator.GetJointHandle(jointName));
+                    if (copyJoint.to.getVal() == INVALID_JOINT) {
                         gameLocal.Warning("Unknown copy_joint '%s' on head of entity %s", jointName, name);
                         continue;
                     }
@@ -703,8 +706,8 @@ public class Actor {
             savefile.WriteInt(copyJoints.Num());
             for (i = 0; i < copyJoints.Num(); i++) {
                 savefile.WriteInt(etoi(copyJoints.oGet(i).mod));
-                savefile.WriteJoint(copyJoints.oGet(i).from[0]);
-                savefile.WriteJoint(copyJoints.oGet(i).to[0]);
+                savefile.WriteJoint(copyJoints.oGet(i).from.getVal());
+                savefile.WriteJoint(copyJoints.oGet(i).to.getVal());
             }
 
             savefile.WriteJoint(leftEyeJoint);
@@ -782,7 +785,7 @@ public class Actor {
         @Override
         public void Restore(idRestoreGame savefile) {
             int i;
-            int[] num = {0};
+            CInt num = new CInt();
             idActor ent = new idActor();
 
             team = savefile.ReadInt();
@@ -790,7 +793,7 @@ public class Actor {
             savefile.ReadMat3(viewAxis);
 
             savefile.ReadInt(num);
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadObject(/*reinterpret_cast<idClass *&>*/ent);
                 assert (ent != null);
                 if (ent != null) {
@@ -809,14 +812,14 @@ public class Actor {
 
             savefile.ReadInt(num);
             damageGroups.SetGranularity(1);
-            damageGroups.setSize(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            damageGroups.setSize(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 savefile.ReadString(damageGroups.get(i));
             }
 
             savefile.ReadInt(num);
-            damageScale.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            damageScale.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 damageScale.oSet(i, savefile.ReadFloat());
             }
 
@@ -824,11 +827,11 @@ public class Actor {
             head.Restore(savefile);
 
             savefile.ReadInt(num);
-            copyJoints.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
-                int[] val = {0};
+            copyJoints.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
+                CInt val = new CInt();
                 savefile.ReadInt(val);
-                copyJoints.oGet(i).mod = jointModTransform_t.values()[val[0]];
+                copyJoints.oGet(i).mod = jointModTransform_t.values()[val.getVal()];
                 savefile.ReadJoint(copyJoints.oGet(i).from);
                 savefile.ReadJoint(copyJoints.oGet(i).to);
             }
@@ -861,7 +864,7 @@ public class Actor {
             painTime = savefile.ReadInt();
 
             savefile.ReadInt(num);
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 idAttachInfo attach = attachments.Alloc();
                 attach.ent.Restore(savefile);
                 attach.channel = savefile.ReadInt();
@@ -974,7 +977,7 @@ public class Actor {
                 rightEyeJoint = headEnt.GetAnimator().GetJointHandle(jointname);
 
                 // set up the eye height.  check if it's specified in the def.
-                if (!spawnArgs.GetFloat("eye_height", "0", new float[]{eyeOffset.z})) {
+                if (!spawnArgs.GetFloat("eye_height", "0", new CFloat(eyeOffset.z))) {
                     // if not in the def, then try to base it off the idle animation
                     int anim = headEnt.GetAnimator().GetAnim("idle");
                     if (anim != 0 && (leftEyeJoint != INVALID_JOINT)) {
@@ -1000,7 +1003,7 @@ public class Actor {
                 rightEyeJoint = animator.GetJointHandle(jointname);
 
                 // set up the eye height.  check if it's specified in the def.
-                if (!spawnArgs.GetFloat("eye_height", "0", new float[]{eyeOffset.z})) {
+                if (!spawnArgs.GetFloat("eye_height", "0", new CFloat(eyeOffset.z))) {
                     // if not in the def, then try to base it off the idle animation
                     int anim = animator.GetAnim("idle");
                     if (anim != 0 && (leftEyeJoint != INVALID_JOINT)) {
@@ -1258,7 +1261,7 @@ public class Actor {
         }
 
         public boolean CanSee(idEntity ent, boolean useFOV) {
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 eye;
             idVec3 toPos;
 
@@ -1279,11 +1282,11 @@ public class Actor {
             eye = GetEyePosition();
 
             gameLocal.clip.TracePoint(tr, eye, toPos, MASK_OPAQUE, this);
-            return tr[0].fraction >= 1.0f || (gameLocal.GetTraceEntity(tr[0]) == ent);
+            return tr.fraction >= 1.0f || (gameLocal.GetTraceEntity(tr) == ent);
         }
 
         public boolean PointVisible(final idVec3 point) {
-            trace_s[] results = {null};
+            trace_s results = new trace_s();
             idVec3 start, end;
 
             start = GetEyePosition();
@@ -1291,7 +1294,7 @@ public class Actor {
             end.oPluSet(2, 1.0f);
 
             gameLocal.clip.TracePoint(results, start, end, MASK_OPAQUE, this);
-            return (results[0].fraction >= 1.0f);
+            return (results.fraction >= 1.0f);
         }
 
         /*
@@ -1404,23 +1407,23 @@ public class Actor {
                 Game_local.idGameLocal.Error("Unknown damageDef '%s'", damageDefName);
             }
 
-            int[] damage = {(int) (damageDef.GetInt("damage") * damageScale)};
-            damage[0] = GetDamageForLocation(damage[0], location);
+            CInt damage = new CInt((int) (damageDef.GetInt("damage") * damageScale));
+            damage.setVal(GetDamageForLocation(damage.getVal(), location));
 
             // inform the attacker that they hit someone
             attacker.DamageFeedback(this, inflictor, damage);
-            if (damage[0] > 0) {
-                health -= damage[0];
+            if (damage.getVal() > 0) {
+                health -= damage.getVal();
                 if (health <= 0) {
                     if (health < -999) {
                         health = -999;
                     }
-                    Killed(inflictor, attacker, damage[0], dir, location);
+                    Killed(inflictor, attacker, damage.getVal(), dir, location);
                     if ((health < -20) && spawnArgs.GetBool("gib") && damageDef.GetBool("gib")) {
                         Gib(dir, damageDefName);
                     }
                 } else {
-                    Pain(inflictor, attacker, damage[0], dir, location);
+                    Pain(inflictor, attacker, damage.getVal(), dir, location);
                 }
             } else {
                 // don't accumulate knockback
@@ -1733,13 +1736,13 @@ public class Actor {
             return false;
         }
 
-        public void GetAASLocation(idAAS aas, idVec3 pos, int[] areaNum) {
+        public void GetAASLocation(idAAS aas, idVec3 pos, CInt areaNum) {
             idVec3 size;
             idBounds bounds = new idBounds();
 
             GetFloorPos(64.0f, pos);
             if (NOT(aas)) {
-                areaNum[0] = 0;
+                areaNum.setVal(0);
                 return;
             }
 
@@ -1748,9 +1751,9 @@ public class Actor {
             size.z = 32.0f;
             bounds.oSet(1, size);
 
-            areaNum[0] = aas.PointReachableAreaNum(pos, bounds, AREA_REACHABLE_WALK);
-            if (areaNum[0] != 0) {
-                aas.PushPointIntoAreaNum(areaNum[0], pos);
+            areaNum.setVal(aas.PointReachableAreaNum(pos, bounds, AREA_REACHABLE_WALK));
+            if (areaNum.getVal() != 0) {
+                aas.PushPointIntoAreaNum(areaNum.getVal(), pos);
             }
         }
 
@@ -2001,14 +2004,14 @@ public class Actor {
             for (i = 0; i < copyJoints.Num(); i++) {
                 if (copyJoints.oGet(i).mod == JOINTMOD_WORLD_OVERRIDE) {
                     mat = headEnt.GetPhysics().GetAxis().Transpose();
-                    GetJointWorldTransform(copyJoints.oGet(i).from[0], gameLocal.time, pos, axis);
+                    GetJointWorldTransform(copyJoints.oGet(i).from.getVal(), gameLocal.time, pos, axis);
                     pos.oMinSet(headEnt.GetPhysics().GetOrigin());
-                    headAnimator.SetJointPos(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, pos.oMultiply(mat));
-                    headAnimator.SetJointAxis(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, axis.oMultiply(mat));
+                    headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos.oMultiply(mat));
+                    headAnimator.SetJointAxis(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, axis.oMultiply(mat));
                 } else {
-                    animator.GetJointLocalTransform(copyJoints.oGet(i).from[0], gameLocal.time, pos, axis);
-                    headAnimator.SetJointPos(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, pos);
-                    headAnimator.SetJointAxis(copyJoints.oGet(i).to[0], copyJoints.oGet(i).mod, axis);
+                    animator.GetJointLocalTransform(copyJoints.oGet(i).from.getVal(), gameLocal.time, pos, axis);
+                    headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos);
+                    headAnimator.SetJointAxis(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, axis);
                 }
             }
         }

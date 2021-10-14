@@ -14,6 +14,7 @@ import neo.Game.Script.Script_Thread;
 import neo.TempDump.CPP_class;
 import neo.TempDump.TODO_Exception;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.math.Vector.idVec3;
 
@@ -641,7 +642,7 @@ public class Event {
 
         public static void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             ByteBuffer str = ByteBuffer.allocate(MAX_STRING_LEN);
-            int[] num = {0}, argsize = {0};
+            CInt num = new CInt(), argsize = new CInt();
             int i, j, size;
             idStr name = new idStr();
             idEvent event;
@@ -649,7 +650,7 @@ public class Event {
 
             savefile.ReadInt(num);
 
-            for (i = 0; i < num[0]; i++) {
+            for (i = 0; i < num.getVal(); i++) {
                 if (FreeEvents.IsListEmpty()) {
                     Game_local.idGameLocal.Error("idEvent::Restore : No more free events");
                 }
@@ -679,8 +680,8 @@ public class Event {
 
                 // read the args
                 savefile.ReadInt(argsize);
-                if (argsize[0] != event.eventdef.GetArgSize()) {
-                    savefile.Error("idEvent::Restore: arg size (%d) doesn't match saved arg size(%d) on event '%s'", event.eventdef.GetArgSize(), argsize[0], event.eventdef.GetName());
+                if (argsize.getVal() != event.eventdef.GetArgSize()) {
+                    savefile.Error("idEvent::Restore: arg size (%d) doesn't match saved arg size(%d) on event '%s'", event.eventdef.GetArgSize(), argsize.getVal(), event.eventdef.GetName());
                 }
 
                 throw new TODO_Exception();

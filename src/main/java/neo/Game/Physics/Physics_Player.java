@@ -4,10 +4,8 @@ import neo.CM.CollisionModel.trace_s;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Game_local.*;
 import neo.Game.Physics.Physics.impactInfo_s;
 import neo.Game.Physics.Physics_Actor.idPhysics_Actor;
-import neo.Renderer.Material.*;
 import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BitMsg.idBitMsgDelta;
@@ -717,7 +715,7 @@ public class Physics_Player {
             idVec3 dir;
             idVec3[] planes = new idVec3[MAX_CLIP_PLANES];
             idVec3 end, stepEnd, primal_velocity = new idVec3(), endVelocity = new idVec3(), endClipVelocity = new idVec3(), clipVelocity = new idVec3();
-            trace_s[] trace = {null}, stepTrace = {null}, downTrace = {null};
+            trace_s trace = new trace_s(), stepTrace = new trace_s(), downTrace = new trace_s();
             boolean nearGround, stepped, pushed;
 
             numbumps = 4;
@@ -759,11 +757,11 @@ public class Physics_Player {
                 // see if we can make it there
                 gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
 
-                time_left -= time_left * trace[0].fraction;
-                current.origin.oSet(trace[0].endpos);
+                time_left -= time_left * trace.fraction;
+                current.origin.oSet(trace.endpos);
 
                 // if moved the entire distance
-                if (trace[0].fraction >= 1.0f) {
+                if (trace.fraction >= 1.0f) {
                     break;
                 }
 
@@ -779,7 +777,7 @@ public class Physics_Player {
                         // step checking when near the ground allows the player to move up stairs smoothly while jumping
                         stepEnd = current.origin.oPlus(gravityNormal.oMultiply(maxStepHeight));
                         gameLocal.clip.Translation(downTrace, current.origin, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
-                        nearGround = (downTrace[0].fraction < 1.0f && (downTrace[0].c.normal.oMultiply(gravityNormal.oNegative())) > MIN_WALK_NORMAL);
+                        nearGround = (downTrace.fraction < 1.0f && (downTrace.c.normal.oMultiply(gravityNormal.oNegative())) > MIN_WALK_NORMAL);
                     }
 
                     // may only step up if near the ground or on a ladder
@@ -790,33 +788,33 @@ public class Physics_Player {
                         gameLocal.clip.Translation(downTrace, current.origin, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
 
                         // trace along velocity
-                        stepEnd = downTrace[0].endpos.oPlus(current.velocity.oMultiply(time_left));
-                        gameLocal.clip.Translation(stepTrace, downTrace[0].endpos, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
+                        stepEnd = downTrace.endpos.oPlus(current.velocity.oMultiply(time_left));
+                        gameLocal.clip.Translation(stepTrace, downTrace.endpos, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
 
                         // step down
-                        stepEnd = stepTrace[0].endpos.oPlus(gravityNormal.oMultiply(maxStepHeight));
-                        gameLocal.clip.Translation(downTrace, stepTrace[0].endpos, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
+                        stepEnd = stepTrace.endpos.oPlus(gravityNormal.oMultiply(maxStepHeight));
+                        gameLocal.clip.Translation(downTrace, stepTrace.endpos, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
 
-                        if (downTrace[0].fraction >= 1.0f || (downTrace[0].c.normal.oMultiply(gravityNormal.oNegative())) > MIN_WALK_NORMAL) {
+                        if (downTrace.fraction >= 1.0f || (downTrace.c.normal.oMultiply(gravityNormal.oNegative())) > MIN_WALK_NORMAL) {
 
                             // if moved the entire distance
-                            if (stepTrace[0].fraction >= 1.0f) {
+                            if (stepTrace.fraction >= 1.0f) {
 //                                time_left = 0;
-                                current.stepUp -= (downTrace[0].endpos.oMinus(current.origin)).oMultiply(gravityNormal);
-                                current.origin.oSet(downTrace[0].endpos);
+                                current.stepUp -= (downTrace.endpos.oMinus(current.origin)).oMultiply(gravityNormal);
+                                current.origin.oSet(downTrace.endpos);
                                 current.movementFlags |= PMF_STEPPED_UP;
                                 current.velocity.oMulSet(PM_STEPSCALE);
                                 break;
                             }
 
                             // if the move is further when stepping up
-                            if (stepTrace[0].fraction > trace[0].fraction) {
-                                time_left -= time_left * stepTrace[0].fraction;
-                                current.stepUp -= (downTrace[0].endpos.oMinus(current.origin)).oMultiply(gravityNormal);
-                                current.origin.oSet(downTrace[0].endpos);
+                            if (stepTrace.fraction > trace.fraction) {
+                                time_left -= time_left * stepTrace.fraction;
+                                current.stepUp -= (downTrace.endpos.oMinus(current.origin)).oMultiply(gravityNormal);
+                                current.origin.oSet(downTrace.endpos);
                                 current.movementFlags |= PMF_STEPPED_UP;
                                 current.velocity.oMulSet(PM_STEPSCALE);
-                                trace[0] = stepTrace[0];
+                                trace = stepTrace;
                                 stepped = true;
                             }
                         }
@@ -824,7 +822,7 @@ public class Physics_Player {
                 }
 
                 // if we can push other entities and not blocked by the world
-                if (push && trace[0].c.entityNum != ENTITYNUM_WORLD) {
+                if (push && trace.c.entityNum != ENTITYNUM_WORLD) {
 
                     clipModel.SetPosition(current.origin, clipModel.GetAxis());
 
@@ -842,18 +840,18 @@ public class Physics_Player {
                         pushed = true;
                     }
 
-                    current.origin.oSet(trace[0].endpos);
-                    time_left -= time_left * trace[0].fraction;
+                    current.origin.oSet(trace.endpos);
+                    time_left -= time_left * trace.fraction;
 
                     // if moved the entire distance
-                    if (trace[0].fraction >= 1.0f) {
+                    if (trace.fraction >= 1.0f) {
                         break;
                     }
                 }
 
                 if (!stepped) {
                     // let the entity know about the collision
-                    self.Collide(trace[0], current.velocity);
+                    self.Collide(trace, current.velocity);
                 }
 
                 if (numplanes >= MAX_CLIP_PLANES) {
@@ -869,15 +867,15 @@ public class Physics_Player {
                 // non-axial planes
                 //
                 for (i = 0; i < numplanes; i++) {
-                    if ((trace[0].c.normal.oMultiply(planes[i])) > 0.999f) {
-                        current.velocity.oPluSet(trace[0].c.normal);
+                    if ((trace.c.normal.oMultiply(planes[i])) > 0.999f) {
+                        current.velocity.oPluSet(trace.c.normal);
                         break;
                     }
                 }
                 if (i < numplanes) {
                     continue;
                 }
-                planes[numplanes] = trace[0].c.normal;
+                planes[numplanes] = trace.c.normal;
                 numplanes++;
 
                 //
@@ -953,9 +951,9 @@ public class Physics_Player {
             if (stepDown && groundPlane) {
                 stepEnd = current.origin.oPlus(gravityNormal.oMultiply(maxStepHeight));
                 gameLocal.clip.Translation(downTrace, current.origin, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
-                if (downTrace[0].fraction > 1e-4f && downTrace[0].fraction < 1.0f) {
-                    current.stepUp -= (downTrace[0].endpos.oMinus(current.origin)).oMultiply(gravityNormal);
-                    current.origin.oSet(downTrace[0].endpos);
+                if (downTrace.fraction > 1e-4f && downTrace.fraction < 1.0f) {
+                    current.stepUp -= (downTrace.endpos.oMinus(current.origin)).oMultiply(gravityNormal);
+                    current.origin.oSet(downTrace.endpos);
                     current.movementFlags |= PMF_STEPPED_DOWN;
                     current.velocity.oMulSet(PM_STEPSCALE);
                 }
@@ -1551,7 +1549,7 @@ public class Physics_Player {
          ==============
          */
         private void CheckDuck() {
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idVec3 end;
             idBounds bounds;
             float maxZ;
@@ -1569,7 +1567,7 @@ public class Physics_Player {
                         // try to stand up
                         end = current.origin.oMinus(gravityNormal.oMultiply(pm_normalheight.GetFloat() - pm_crouchheight.GetFloat()));
                         gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
-                        if (trace[0].fraction >= 1.0f) {
+                        if (trace.fraction >= 1.0f) {
                             current.movementFlags &= ~PMF_DUCKED;
                         }
                     }
@@ -1597,7 +1595,7 @@ public class Physics_Player {
 
         private void CheckLadder() {
             idVec3 forward, start, end;
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             float tracedist;
 
             if (current.movementTime != 0) {
@@ -1624,27 +1622,27 @@ public class Physics_Player {
             gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
 
             // if near a surface
-            if (trace[0].fraction < 1.0f) {
+            if (trace.fraction < 1.0f) {
 
                 // if a ladder surface
-                if (trace[0].c.material != null
-                        && ((trace[0].c.material.GetSurfaceFlags() & SURF_LADDER) != 0)) {
+                if (trace.c.material != null
+                        && ((trace.c.material.GetSurfaceFlags() & SURF_LADDER) != 0)) {
 
                     // check a step height higher
                     end = current.origin.oMinus(gravityNormal.oMultiply(maxStepHeight * 0.75f));
                     gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
-                    start = trace[0].endpos;
+                    start = trace.endpos;
                     end = start.oPlus(forward.oMultiply(tracedist));
                     gameLocal.clip.Translation(trace, start, end, clipModel, clipModel.GetAxis(), clipMask, self);
 
                     // if also near a surface a step height higher
-                    if (trace[0].fraction < 1.0f) {
+                    if (trace.fraction < 1.0f) {
 
                         // if it also is a ladder surface
-                        if (trace[0].c.material != null
-                                && ((trace[0].c.material.GetSurfaceFlags() & SURF_LADDER) != 0)) {
+                        if (trace.c.material != null
+                                && ((trace.c.material.GetSurfaceFlags() & SURF_LADDER) != 0)) {
                             ladder = true;
-                            ladderNormal.oSet(trace[0].c.normal);
+                            ladderNormal.oSet(trace.c.normal);
                         }
                     }
                 }

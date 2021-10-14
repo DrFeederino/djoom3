@@ -48,6 +48,8 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
@@ -779,7 +781,7 @@ public class Player {
 
         }
 
-        public boolean Give(idPlayer owner, final idDict spawnArgs, final String statname, final String value, int[] idealWeapon, boolean updateHud) {
+        public boolean Give(idPlayer owner, final idDict spawnArgs, final String statname, final String value, CInt idealWeapon, boolean updateHud) {
             int i;
             int pos;
             int end;
@@ -873,7 +875,7 @@ public class Player {
                         if ((weapons & (1 << i)) == 0 || gameLocal.isMultiplayer) {
                             if (owner.GetUserInfo().GetBool("ui_autoSwitch") && idealWeapon != null) {
                                 assert (!gameLocal.isClient);
-                                idealWeapon[0] = i;
+                                idealWeapon.setVal(i);
                             }
                             if (owner.hud != null && updateHud && lastGiveTime + 1000 < gameLocal.time) {
                                 owner.hud.SetStateInt("newWeapon", i);
@@ -2143,8 +2145,8 @@ public class Player {
         @Override
         public void Restore(idRestoreGame savefile) {                    // unarchives object from save game file
             int i;
-            int[] num = {0};
-            float[] set = {0};
+            CInt num = new CInt();
+            CFloat set = new CFloat();
 
             savefile.ReadUsercmd(usercmd);
             playerView.Restore(savefile);
@@ -2156,7 +2158,6 @@ public class Player {
             savefile.ReadAngles(viewAngles);
             savefile.ReadAngles(cmdAngles);
 
-//	memset( usercmd.angles, 0, sizeof( usercmd.angles ) );
             Arrays.fill(usercmd.angles, (short) 0);//damn you type safety!!
             SetViewAngles(viewAngles);
             spawnAnglesSet = true;
@@ -2193,13 +2194,13 @@ public class Player {
             heartRate = savefile.ReadInt();
 
             savefile.ReadFloat(set);
-            heartInfo.SetStartTime(set[0]);
+            heartInfo.SetStartTime(set.getVal());
             savefile.ReadFloat(set);
-            heartInfo.SetDuration(set[0]);
+            heartInfo.SetDuration(set.getVal());
             savefile.ReadFloat(set);
-            heartInfo.SetStartValue(set[0]);
+            heartInfo.SetStartValue(set.getVal());
             savefile.ReadFloat(set);
-            heartInfo.SetEndValue(set[0]);
+            heartInfo.SetEndValue(set.getVal());
 
             lastHeartAdjust = savefile.ReadInt();
             lastHeartBeat = savefile.ReadInt();
@@ -2255,8 +2256,8 @@ public class Player {
 
             savefile.ReadInt(num);
             aasLocation.SetGranularity(1);
-            aasLocation.SetNum(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            aasLocation.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 aasLocation.oGet(i).areaNum = savefile.ReadInt();
                 savefile.ReadVec3(aasLocation.oGet(i).pos);
             }
@@ -2300,22 +2301,22 @@ public class Player {
             savefile.ReadVec3(gibsDir);
 
             savefile.ReadFloat(set);
-            zoomFov.SetStartTime(set[0]);
+            zoomFov.SetStartTime(set.getVal());
             savefile.ReadFloat(set);
-            zoomFov.SetDuration(set[0]);
+            zoomFov.SetDuration(set.getVal());
             savefile.ReadFloat(set);
-            zoomFov.SetStartValue(set[0]);
+            zoomFov.SetStartValue(set.getVal());
             savefile.ReadFloat(set);
-            zoomFov.SetEndValue(set[0]);
+            zoomFov.SetEndValue(set.getVal());
 
             savefile.ReadFloat(set);
-            centerView.SetStartTime(set[0]);
+            centerView.SetStartTime(set.getVal());
             savefile.ReadFloat(set);
-            centerView.SetDuration(set[0]);
+            centerView.SetDuration(set.getVal());
             savefile.ReadFloat(set);
-            centerView.SetStartValue(set[0]);
+            centerView.SetStartValue(set.getVal());
             savefile.ReadFloat(set);
-            centerView.SetEndValue(set[0]);
+            centerView.SetEndValue(set.getVal());
 
             fxFov = savefile.ReadBool();
 
@@ -2379,7 +2380,7 @@ public class Player {
             }
 
             savefile.ReadFloat(set);
-            pm_stamina.SetFloat(set[0]);
+            pm_stamina.SetFloat(set.getVal());
 
             // create combat collision hull for exact collision detection
             SetCombatModel();
@@ -3182,20 +3183,20 @@ public class Player {
         }
 
         @Override
-        public void GetAASLocation(idAAS aas, idVec3 pos, int[] areaNum) {
+        public void GetAASLocation(idAAS aas, idVec3 pos, CInt areaNum) {
             int i;
 
             if (aas != null) {
                 for (i = 0; i < aasLocation.Num(); i++) {
                     if (aas == gameLocal.GetAAS(i)) {
-                        areaNum[0] = aasLocation.oGet(i).areaNum;
+                        areaNum.setVal(aasLocation.oGet(i).areaNum);
                         pos = aasLocation.oGet(i).pos;
                         return;
                     }
                 }
             }
 
-            areaNum[0] = 0;
+            areaNum.setVal(0);
             pos = physicsObj.GetOrigin();
         }
 
@@ -3229,10 +3230,10 @@ public class Player {
          ================
          */
         @Override
-        public void DamageFeedback(idEntity victim, idEntity inflictor, int[] damage) {
+        public void DamageFeedback(idEntity victim, idEntity inflictor, CInt damage) {
             assert (!gameLocal.isClient);
-            damage[0] *= PowerUpModifier(BERSERK);
-            if (damage[0] != 0 && (victim != this) && victim.IsType(idActor.class)) {
+            damage.setVal((int) (PowerUpModifier(BERSERK) * damage.getVal()));
+            if (damage.getVal() != 0 && (victim != this) && victim.IsType(idActor.class)) {
                 SetLastHitTime(gameLocal.time);
             }
         }
@@ -3247,28 +3248,28 @@ public class Player {
          =================
          */
         public void CalcDamagePoints(idEntity inflictor, idEntity attacker, final idDict damageDef,
-                                     final float damageScale, final int location, int[] health, int[] armor) {
-            int[] damage = {0};
+                                     final float damageScale, final int location, CInt health, CInt armor) {
+            CInt damage = new CInt();
             int armorSave;
 
             damageDef.GetInt("damage", "20", damage);
-            damage[0] = GetDamageForLocation(damage[0], location);
+            damage.setVal(GetDamageForLocation(damage.getVal(), location));
 
             idPlayer player = attacker.IsType(idPlayer.class) ? (idPlayer) attacker : null;
             if (!gameLocal.isMultiplayer) {
                 if (inflictor != gameLocal.world) {
                     switch (g_skill.GetInteger()) {
                         case 0:
-                            damage[0] *= 0.80f;
-                            if (damage[0] < 1) {
-                                damage[0] = 1;
+                            damage.setVal((int) (damage.getVal() * 0.80f));
+                            if (damage.getVal() < 1) {
+                                damage.setVal(1);
                             }
                             break;
                         case 2:
-                            damage[0] *= 1.70f;
+                            damage.setVal((int) (damage.getVal() * 1.70f));
                             break;
                         case 3:
-                            damage[0] *= 3.5f;
+                            damage.setVal((int) (damage.getVal() * 3.5f));
                             break;
                         default:
                             break;
@@ -3276,15 +3277,15 @@ public class Player {
                 }
             }
 
-            damage[0] *= damageScale;
+            damage.setVal((int) (damage.getVal()* damageScale));
 
             // always give half damage if hurting self
             if (attacker.equals(this)) {
                 if (gameLocal.isMultiplayer) {
                     // only do this in mp so single player plasma and rocket splash is very dangerous in close quarters
-                    damage[0] *= damageDef.GetFloat("selfDamageScale", "0.5");
+                    damage.setVal((int) (damage.getVal() * damageDef.GetFloat("selfDamageScale", "0.5")));
                 } else {
-                    damage[0] *= damageDef.GetFloat("selfDamageScale", "1");
+                    damage.setVal((int) (damage.getVal() * damageDef.GetFloat("selfDamageScale", "1")));
                 }
             }
 
@@ -3292,7 +3293,7 @@ public class Player {
             if (!damageDef.GetBool("noGod")) {
                 // check for godmode
                 if (godmode) {
-                    damage[0] = 0;
+                    damage.setVal(0);
                 }
             }
 
@@ -3305,18 +3306,18 @@ public class Player {
 
                 armor_protection = gameLocal.isMultiplayer ? g_armorProtectionMP.GetFloat() : g_armorProtection.GetFloat();
 
-                armorSave = (int) ceil(damage[0] * armor_protection);
+                armorSave = (int) ceil(damage.getVal() * armor_protection);
                 if (armorSave >= inventory.armor) {
                     armorSave = inventory.armor;
                 }
 
-                if (0 == damage[0]) {
+                if (0 == damage.getVal()) {
                     armorSave = 0;
-                } else if (armorSave >= damage[0]) {
-                    armorSave = damage[0] - 1;
-                    damage[0] = 1;
+                } else if (armorSave >= damage.getVal()) {
+                    armorSave = damage.getVal() - 1;
+                    damage.setVal(1);
                 } else {
-                    damage[0] -= armorSave;
+                    damage.setVal(damage.getVal() -  armorSave);
                 }
             } else {
                 armorSave = 0;
@@ -3329,11 +3330,11 @@ public class Player {
                     && player != null
                     && !player.equals(this)// you get self damage no matter what
                     && player.team == team) {
-                damage[0] = 0;
+                damage.setVal(0);
             }
 
-            health[0] = damage[0];
-            armor[0] = armorSave;
+            health.setVal(damage.getVal());
+            armor.setVal(armorSave);
         }
 
         /*
@@ -3355,12 +3356,12 @@ public class Player {
         @Override
         public void Damage(idEntity inflictor, idEntity attacker, final idVec3 dir, final String damageDefName, final float damageScale, final int location) {
             idVec3 kick;
-            int[] damage = {0};
-            int[] armorSave = {0};
-            int[] knockback = {0};
+            CInt damage = new CInt();
+            CInt armorSave = new CInt();
+            CInt knockback = new CInt();
             idVec3 damage_from;
             idVec3 localDamageVector = new idVec3();
-            float[] attackerPushScale = {0};
+            CFloat attackerPushScale = new CFloat();
 
             // damage is only processed on server
             if (gameLocal.isClient) {
@@ -3403,25 +3404,25 @@ public class Player {
             // determine knockback
             damageDef.dict.GetInt("knockback", "20", knockback);
 
-            if (knockback[0] != 0 && !fl.noknockback) {
+            if (knockback.getVal() != 0 && !fl.noknockback) {
                 if (attacker == this) {
                     damageDef.dict.GetFloat("attackerPushScale", "0", attackerPushScale);
                 } else {
-                    attackerPushScale[0] = 1.0f;
+                    attackerPushScale.setVal(1.0f);
                 }
 
                 kick = dir;
                 kick.Normalize();
-                kick.oMulSet(g_knockback.GetFloat() * knockback[0] * attackerPushScale[0] / 200);
+                kick.oMulSet(g_knockback.GetFloat() * knockback.getVal() * attackerPushScale.getVal() / 200);
                 physicsObj.SetLinearVelocity(physicsObj.GetLinearVelocity().oPlus(kick));
 
                 // set the timer so that the player can't cancel out the movement immediately
-                physicsObj.SetKnockBack(idMath.ClampInt(50, 200, knockback[0] * 2));
+                physicsObj.SetKnockBack(idMath.ClampInt(50, 200, knockback.getVal() * 2));
             }
 
             // give feedback on the player view and audibly when armor is helping
-            if (armorSave[0] != 0) {
-                inventory.armor -= armorSave[0];
+            if (armorSave.getVal() != 0) {
+                inventory.armor -= armorSave.getVal();
 
                 if (gameLocal.time > lastArmorPulse + 200) {
                     StartSound("snd_hitArmor", SND_CHANNEL_ITEM, 0, false, null);
@@ -3432,14 +3433,14 @@ public class Player {
             if (damageDef.dict.GetBool("burn")) {
                 StartSound("snd_burn", SND_CHANNEL_BODY3, 0, false, null);
             } else if (damageDef.dict.GetBool("no_air")) {
-                if (0 == armorSave[0] && health > 0) {
+                if (0 == armorSave.getVal() && health > 0) {
                     StartSound("snd_airGasp", SND_CHANNEL_ITEM, 0, false, null);
                 }
             }
 
             if (g_debugDamage.GetInteger() != 0) {
                 gameLocal.Printf("client:%d health:%d damage:%d armor:%d\n",
-                        entityNumber, health, damage[0], armorSave[0]);
+                        entityNumber, health, damage.getVal(), armorSave.getVal());
             }
 
             // move the world direction vector to local coordinates
@@ -3456,7 +3457,7 @@ public class Player {
             }
 
             // do the damage
-            if (damage[0] > 0) {
+            if (damage.getVal() > 0) {
 
                 if (!gameLocal.isMultiplayer) {
                     float scale = g_damageScale.GetFloat();
@@ -3468,16 +3469,16 @@ public class Player {
                     }
 
                     if (scale > 0) {
-                        damage[0] *= scale;
+                        damage.setVal((int) (damage.getVal() * scale));
                     }
                 }
 
-                if (damage[0] < 1) {
-                    damage[0] = 1;
+                if (damage.getVal() < 1) {
+                    damage.setVal(1);
                 }
 
                 int oldHealth = health;
-                health -= damage[0];
+                health -= damage.getVal();
 
                 if (health <= 0) {
 
@@ -3488,14 +3489,14 @@ public class Player {
                     isTelefragged = damageDef.dict.GetBool("telefrag");
 
                     lastDmgTime = gameLocal.time;
-                    Killed(inflictor, attacker, damage[0], dir, location);
+                    Killed(inflictor, attacker, damage.getVal(), dir, location);
 
                 } else {
                     // force a blink
                     blink_time = 0;
 
                     // let the anim script know we took damage
-                    AI_PAIN.underscore(Pain(inflictor, attacker, damage[0], dir, location));
+                    AI_PAIN.underscore(Pain(inflictor, attacker, damage.getVal(), dir, location));
                     if (!g_testDeath.GetBool()) {
                         lastDmgTime = gameLocal.time;
                     }
@@ -3756,11 +3757,11 @@ public class Player {
 
                 // field of view
                 {
-                    float[] fov_x = {renderView.fov_x};
-                    float[] fov_y = {renderView.fov_y};
+                    CFloat fov_x = new CFloat(renderView.fov_x);
+                    CFloat fov_y = new CFloat(renderView.fov_y);
                     gameLocal.CalcFov(CalcFov(true), fov_x, fov_y);
-                    renderView.fov_x = fov_x[0];
-                    renderView.fov_y = fov_y[0];
+                    renderView.fov_x = fov_x.getVal();
+                    renderView.fov_y = fov_y.getVal();
                 }
             }
 
@@ -4008,10 +4009,10 @@ public class Player {
         public void OffsetThirdPersonView(float angle, float range, float height, boolean clip) {
             idVec3 view;
 //            idVec3 focusAngles;
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idVec3 focusPoint;
             float focusDist;
-            float[] forwardScale = {0}, sideScale = {0};
+            CFloat forwardScale = new CFloat(), sideScale = new CFloat();
             idVec3 origin = new idVec3();
             idAngles angles;
             idMat3 axis = new idMat3();
@@ -4037,22 +4038,22 @@ public class Player {
             renderView.viewaxis = angles.ToMat3().oMultiply(physicsObj.GetGravityAxis());
 
             idMath.SinCos(DEG2RAD(angle), sideScale, forwardScale);
-            view.oMinSet(renderView.viewaxis.oGet(0).oMultiply(range * forwardScale[0]));
-            view.oPluSet(renderView.viewaxis.oGet(1).oMultiply(range * sideScale[0]));
+            view.oMinSet(renderView.viewaxis.oGet(0).oMultiply(range * forwardScale.getVal()));
+            view.oPluSet(renderView.viewaxis.oGet(1).oMultiply(range * sideScale.getVal()));
 
             if (clip) {
                 // trace a ray from the origin to the viewpoint to make sure the view isn't
                 // in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
                 bounds = new idBounds(new idVec3(-4, -4, -4), new idVec3(4, 4, 4));
                 gameLocal.clip.TraceBounds(trace, origin, view, bounds, MASK_SOLID, this);
-                if (trace[0].fraction != 1.0f) {
-                    view = trace[0].endpos;
-                    view.z += (1.0f - trace[0].fraction) * 32.0f;
+                if (trace.fraction != 1.0f) {
+                    view = trace.endpos;
+                    view.z += (1.0f - trace.fraction) * 32.0f;
 
                     // try another trace to this position, because a tunnel may have the ceiling
                     // close enough that this is poking out
                     gameLocal.clip.TraceBounds(trace, origin, view, bounds, MASK_SOLID, this);
-                    view = trace[0].endpos;
+                    view = trace.endpos;
                 }
             }
 
@@ -4117,9 +4118,9 @@ public class Player {
                     airTics = pm_airTics.GetInteger();
                 }
             } else {
-                int[] idealWeapon = {this.idealWeapon};
+                CInt idealWeapon = new CInt(this.idealWeapon);
                 boolean result = inventory.Give(this, spawnArgs, statname, value, idealWeapon, true);
-                this.idealWeapon = idealWeapon[0];
+                this.idealWeapon = idealWeapon.getVal();
                 return result;
             }
             return true;
@@ -5058,8 +5059,8 @@ public class Player {
                     // if the player box spans multiple areas, get the area from the origin point instead,
                     // otherwise a rotating player box may poke into an outside area
                     if (num == 1) {
-                        final int[] pvsAreas = GetPVSAreas();
-                        areaNum = pvsAreas[0];
+                        final CInt pvsAreas = new CInt(GetPVSAreas()[0]);
+                        areaNum = pvsAreas.getVal();
                     } else {
                         areaNum = gameRenderWorld.PointInArea(this.GetPhysics().GetOrigin());
                     }
@@ -5187,11 +5188,11 @@ public class Player {
             if (token.Icmp("playpdaaudio") == 0) {
                 if (objectiveSystem != null && objectiveSystemOpen && pdaAudio.Length() > 0) {
                     final idSoundShader shader = declManager.FindSound(pdaAudio);
-                    final int[] ms = new int[1];
+                    final CInt ms = new CInt();
                     StartSoundShader(shader, SND_CHANNEL_PDA, 0, false, ms);
                     StartAudioLog();
                     CancelEvents(EV_Player_StopAudioLog);
-                    PostEventMS(EV_Player_StopAudioLog, ms[0] + 150);
+                    PostEventMS(EV_Player_StopAudioLog, ms.getVal() + 150);
                 }
                 return true;
             }
@@ -6636,10 +6637,10 @@ public class Player {
                     idBounds b = new idBounds(getVec3_origin()).Expand(pm_spectatebbox.GetFloat() * 0.5f);
                     idVec3 start = player.GetPhysics().GetOrigin();
                     start.oPluSet(2, pm_spectatebbox.GetFloat() * 0.5f);
-                    trace_s[] t = {null};
+                    trace_s t = new trace_s();
                     // assuming spectate bbox is inside stand or crouch box
                     gameLocal.clip.TraceBounds(t, start, newOrig, b, MASK_PLAYERSOLID, player);
-                    newOrig.Lerp(start, newOrig, t[0].fraction);
+                    newOrig.Lerp(start, newOrig, t.fraction);
                     SetOrigin(newOrig);
                     idAngles angle = player.viewAngles;
                     angle.oSet(2, 0);
@@ -6691,15 +6692,15 @@ public class Player {
             idAngles current = loggedViewAngles[gameLocal.framenum & (NUM_LOGGED_VIEW_ANGLES - 1)];
 
             idAngles av;//, base;
-            int[] weaponAngleOffsetAverages = {0};
-            float[] weaponAngleOffsetScale = {0}, weaponAngleOffsetMax = {0};
+            CInt weaponAngleOffsetAverages = new CInt();
+            CFloat weaponAngleOffsetScale = new CFloat(), weaponAngleOffsetMax = new CFloat();
 
             weapon.GetEntity().GetWeaponAngleOffsets(weaponAngleOffsetAverages, weaponAngleOffsetScale, weaponAngleOffsetMax);
 
             av = current;
 
             // calcualte this so the wrap arounds work properly
-            for (int j = 1; j < weaponAngleOffsetAverages[0]; j++) {
+            for (int j = 1; j < weaponAngleOffsetAverages.getVal(); j++) {
                 idAngles a2 = loggedViewAngles[(gameLocal.framenum - j) & (NUM_LOGGED_VIEW_ANGLES - 1)];
 
                 idAngles delta = a2.oMinus(current);
@@ -6710,16 +6711,16 @@ public class Player {
                     delta.oPluSet(1, 360);
                 }
 
-                av.oPluSet(delta.oMultiply(1.0f / weaponAngleOffsetAverages[0]));
+                av.oPluSet(delta.oMultiply(1.0f / weaponAngleOffsetAverages.getVal()));
             }
 
-            a = (av.oMinus(current)).oMultiply(weaponAngleOffsetScale[0]);
+            a = (av.oMinus(current)).oMultiply(weaponAngleOffsetScale.getVal());
 
             for (int i = 0; i < 3; i++) {
-                if (a.oGet(i) < -weaponAngleOffsetMax[0]) {
-                    a.oSet(i, -weaponAngleOffsetMax[0]);
-                } else if (a.oGet(i) > weaponAngleOffsetMax[0]) {
-                    a.oSet(i, weaponAngleOffsetMax[0]);
+                if (a.oGet(i) < -weaponAngleOffsetMax.getVal()) {
+                    a.oSet(i, -weaponAngleOffsetMax.getVal());
+                } else if (a.oGet(i) > weaponAngleOffsetMax.getVal()) {
+                    a.oSet(i, weaponAngleOffsetMax.getVal());
                 }
             }
 
@@ -6741,7 +6742,7 @@ public class Player {
         private idVec3 GunAcceleratingOffset() {
             idVec3 ofs = new idVec3();
 
-            float[] weaponOffsetTime = {0}, weaponOffsetScale = {0};
+            CFloat weaponOffsetTime = new CFloat(), weaponOffsetScale = new CFloat();
 
             ofs.Zero();
 
@@ -6756,13 +6757,13 @@ public class Player {
 
                 float f;
                 float t = gameLocal.time - acc.time;
-                if (t >= weaponOffsetTime[0]) {
+                if (t >= weaponOffsetTime.getVal()) {
                     break;    // remainder are too old to care about
                 }
 
-                f = t / weaponOffsetTime[0];
+                f = t / weaponOffsetTime.getVal();
                 f = (float) ((Math.cos(f * 2.0f * idMath.PI) - 1.0f) * 0.5f);
-                ofs.oPluSet(acc.dir.oMultiply(f * weaponOffsetScale[0]));
+                ofs.oPluSet(acc.dir.oMultiply(f * weaponOffsetScale.getVal()));
             }
 
             return ofs;
@@ -7587,7 +7588,7 @@ public class Player {
             idVec3 start, end;
             boolean allowFocus;
             String command;
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             guiPoint_t pt;
             idKeyValue kv;
             sysEvent_s ev;
@@ -7624,8 +7625,8 @@ public class Player {
                 idVec3 end2 = start.oPlus(viewAngles.ToForward().oMultiply(768.0f));
                 gameLocal.clip.TracePoint(trace, start, end2, MASK_SHOT_BOUNDINGBOX, this);
                 int iclient = -1;
-                if ((trace[0].fraction < 1.0f) && (trace[0].c.entityNum < MAX_CLIENTS)) {
-                    iclient = trace[0].c.entityNum;
+                if ((trace.fraction < 1.0f) && (trace.c.entityNum < MAX_CLIENTS)) {
+                    iclient = trace.c.entityNum;
                 }
                 if (MPAim != iclient) {
                     lastMPAim = MPAim;
@@ -7655,7 +7656,7 @@ public class Player {
                         if (body != null && body.IsType(idAI.class)
                                 && etoi(((idAI) body).GetTalkState()) >= etoi(TALK_OK)) {
                             gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
-                            if ((trace[0].fraction < 1.0f) && (trace[0].c.entityNum == ent.entityNumber)) {
+                            if ((trace.fraction < 1.0f) && (trace.c.entityNum == ent.entityNumber)) {
                                 ClearFocus();
                                 focusCharacter = (idAI) body;
                                 talkCursor = 1;
@@ -7669,7 +7670,7 @@ public class Player {
                     if (ent.IsType(idAI.class)) {
                         if (etoi(((idAI) ent).GetTalkState()) >= etoi(TALK_OK)) {
                             gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
-                            if ((trace[0].fraction < 1.0f) && (trace[0].c.entityNum == ent.entityNumber)) {
+                            if ((trace.fraction < 1.0f) && (trace.c.entityNum == ent.entityNumber)) {
                                 ClearFocus();
                                 focusCharacter = (idAI) ent;
                                 talkCursor = 1;
@@ -7682,7 +7683,7 @@ public class Player {
 
                     if (ent.IsType(idAFEntity_Vehicle.class)) {
                         gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
-                        if ((trace[0].fraction < 1.0f) && (trace[0].c.entityNum == ent.entityNumber)) {
+                        if ((trace.fraction < 1.0f) && (trace.c.entityNum == ent.entityNumber)) {
                             ClearFocus();
                             focusVehicle = (idAFEntity_Vehicle) ent;
                             focusTime = gameLocal.time + FOCUS_TIME;
@@ -8062,7 +8063,7 @@ public class Player {
         }
 
         private void UseVehicle() {
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
             idVec3 start, end;
             idEntity ent;
 
@@ -8073,8 +8074,8 @@ public class Player {
                 start = GetEyePosition();
                 end = start.oPlus(viewAngles.ToForward().oMultiply(80.0f));
                 gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
-                if (trace[0].fraction < 1.0f) {
-                    ent = gameLocal.entities[trace[0].c.entityNum];
+                if (trace.fraction < 1.0f) {
+                    ent = gameLocal.entities[trace.c.entityNum];
                     if (ent != null && ent.IsType(idAFEntity_Vehicle.class)) {
                         Hide();
                         ((idAFEntity_Vehicle) ent).Use(this);

@@ -1,5 +1,6 @@
 package neo.idlib.geometry;
 
+import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Matrix.idMat3;
@@ -83,7 +84,10 @@ public class Surface {
             assert (verts != null && indexes != null && numVerts > 0 && numIndexes > 0);
             this.verts.SetNum(numVerts);
 //	memcpy( this.verts.Ptr(), verts, numVerts * sizeof( verts[0] ) );
-            System.arraycopy(verts, 0, this.verts.getList(), 0, numVerts);
+            //System.arraycopy(verts, 0, this.verts.getList(), 0, numVerts);
+            for (int i = 0; i < numVerts; i++) {
+                this.verts.oSet(i, verts[i]);
+            }
             this.indexes.SetNum(numIndexes);
 //	memcpy( this.indexes.Ptr(), indexes, numIndexes * sizeof( indexes[0] ) );
             System.arraycopy(indexes, 0, this.indexes.getList(), 0, numIndexes);
@@ -887,27 +891,27 @@ public class Surface {
         // returns true if the line intersects one of the surface triangles
 
         public boolean LineIntersection(final idVec3 start, final idVec3 end, boolean backFaceCull) {
-            float[] scale = new float[1];//TODO:check bakref
+            CFloat scale = new CFloat();
 
             RayIntersection(start, end.oMinus(start), scale, false);
-            return (scale[0] >= 0.0f && scale[0] <= 1.0f);
+            return (scale.getVal() >= 0.0f && scale.getVal() <= 1.0f);
         }
 
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale) {
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale) {
             return RayIntersection(start, dir, scale, false);
         }
         // intersection point is start + dir * scale
 
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale, boolean backFaceCull) {
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale, boolean backFaceCull) {
             int i, i0, i1, i2, s0, s1, s2;
             float d;
-            float[] s = new float[0];
+            CFloat s = new CFloat();
             byte[] sidedness;
             idPluecker rayPl = new idPluecker(), pl = new idPluecker();
             idPlane plane = new idPlane();
 
             sidedness = new byte[edges.Num()];
-            scale[0] = idMath.INFINITY;
+            scale.setVal(idMath.INFINITY);
 
             rayPl.FromRay(start, dir);
 
@@ -933,8 +937,8 @@ public class Surface {
                             verts.oGet(indexes.oGet(i + 1)).xyz,
                             verts.oGet(indexes.oGet(i + 2)).xyz);
                     plane.RayIntersection(start, dir, s);
-                    if (Math.abs(s[0]) < Math.abs(scale[0])) {
-                        scale[0] = s[0];
+                    if (Math.abs(s.getVal()) < Math.abs(scale.getVal())) {
+                        scale.setVal(s.getVal());
                     }
                 } else if (!backFaceCull && ((s0 | s1 | s2)) == 0) {
                     plane.FromPoints(
@@ -942,13 +946,13 @@ public class Surface {
                             verts.oGet(indexes.oGet(i + 1)).xyz,
                             verts.oGet(indexes.oGet(i + 2)).xyz);
                     plane.RayIntersection(start, dir, s);
-                    if (Math.abs(s[0]) < Math.abs(scale[0])) {
-                        scale[0] = s[0];
+                    if (Math.abs(s.getVal()) < Math.abs(scale.getVal())) {
+                        scale.setVal(s.getVal());
                     }
                 }
             }
 
-            return Math.abs(scale[0]) < idMath.INFINITY;
+            return Math.abs(scale.getVal()) < idMath.INFINITY;
         }
 
         /*

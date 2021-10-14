@@ -1,7 +1,6 @@
 package neo.framework.Async;
 
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork;
-import neo.framework.CVarSystem.*;
 import neo.framework.DeclEntityDef.idDeclEntityDef;
 import neo.framework.DeclManager.idDecl;
 import neo.idlib.Dict_h.idDict;
@@ -120,6 +119,16 @@ public class ServerScan {
         private static final int MAX_PINGREQUESTS = 32;     // how many servers to query at once
         private static final int REFRESH_START = 10000;  // how long to wait when sending the initial refresh request
         private static final int REPLY_TIMEOUT = 999;    // how long should we wait for a reply from a game server
+        private final idList<Integer> m_sortedServers;            // use ascending for the walking order
+        //
+        // servers we're waiting for a reply from
+        // won't exceed MAX_PINGREQUESTS elements
+        // holds index of net_servers elements, indexed by 'from' string
+        private final idDict net_info;
+        //
+        private final idList<inServer_t> net_servers;
+        //
+        private final idStr screenshot;
         private int challenge;                              // challenge for current scan
         // where we are in net_servers list for getInfo emissions ( NET_SCAN only )
         // we may either be waiting on MAX_PINGREQUESTS, or for net_servers to grow some more ( through AddServer )
@@ -138,18 +147,8 @@ public class ServerScan {
         //
         private serverSort_t m_sort;
         private boolean m_sortAscending;
-        private final idList<Integer> m_sortedServers;            // use ascending for the walking order
-        //
-        // servers we're waiting for a reply from
-        // won't exceed MAX_PINGREQUESTS elements
-        // holds index of net_servers elements, indexed by 'from' string
-        private final idDict net_info;
-        //
-        private final idList<inServer_t> net_servers;
         //
         private scan_state_t scan_state;
-        //
-        private final idStr screenshot;
         //
         //
 
@@ -195,8 +194,7 @@ public class ServerScan {
 
                 // check for duplicate servers
                 for (int i = 0; i < Num(); i++) {
-//                    if (memcmp((this.oGet(i).adr, server.adr, sizeof(netadr_t)) == 0) {
-                    if (!this.oGet(i).adr.equals(server.adr)) {//TODO:override equals?
+                    if (!this.oGet(i).adr.equals(server.adr)) {
                         common.DPrintf("idServerScan::InfoResponse LAN_SCAN: duplicate server %s\n", serv.toString());
                         return 1;
                     }
@@ -407,7 +405,7 @@ public class ServerScan {
 
         // update the GUI fields with information about the currently selected server
         public void GUIUpdateSelected() throws idException {
-            String[] screenshot = {null};//new char[MAX_STRING_CHARS];
+            StringBuffer screenshot = new StringBuffer();//new char[MAX_STRING_CHARS];
 
             if (NOT(m_pGUI)) {
                 return;
@@ -439,7 +437,7 @@ public class ServerScan {
                 }
                 m_pGUI.SetStateString("server_map", this.oGet(i).serverInfo.GetString("si_mapName"));
                 fileSystem.FindMapScreenshot(this.oGet(i).serverInfo.GetString("si_map"), screenshot, MAX_STRING_CHARS);
-                m_pGUI.SetStateString("browser_levelshot", screenshot[0]);
+                m_pGUI.SetStateString("browser_levelshot", screenshot.toString());
                 m_pGUI.SetStateString("server_gameType", this.oGet(i).serverInfo.GetString("si_gameType"));
                 m_pGUI.SetStateString("server_IP", Sys_NetAdrToString(this.oGet(i).adr));
                 if (this.oGet(i).serverInfo.GetBool("si_usePass")) {
@@ -463,7 +461,6 @@ public class ServerScan {
         public void ApplyFilter() throws idException {
             int i;
             networkServer_t serv;
-            idStr s;
 
             listGUI.SetStateChanges(false);
             listGUI.Clear();
@@ -558,20 +555,8 @@ public class ServerScan {
             int i;
             idKeyValue keyval;
 
-            // OS support filter
-//            if (false) {
-//                // filter out pure servers that won't provide checksumed game code for client OS
-//                keyval = server.serverInfo.FindKey("si_pure");
-//                if (keyval != null && 0 == idStr.Cmp(keyval.GetValue().toString(), "1")) {
-//                    if ((server.OSMask & (1 << BUILD_OS_ID)) == 0) {
-//                        return true;
-//                    }
-//                }
-//            } else
-            {
-                if ((server.OSMask & (1 << BUILD_OS_ID)) == 0) {
-                    return true;
-                }
+            if ((server.OSMask & (1 << BUILD_OS_ID)) == 0) {
+                return true;
             }
             // password filter
             keyval = server.serverInfo.FindKey("si_usePass");

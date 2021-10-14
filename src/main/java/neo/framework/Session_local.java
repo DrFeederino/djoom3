@@ -20,6 +20,7 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
 import neo.sys.sys_public.sysEvent_s;
@@ -1834,9 +1835,9 @@ public class Session_local {
                 }
 
                 {// version
-                    int[] savegameVersion = {0};
+                    CInt savegameVersion = new CInt();
                     savegameFile.ReadInt(savegameVersion);
-                    this.savegameVersion = savegameVersion[0];
+                    this.savegameVersion = savegameVersion.getVal();
                 }
 
                 // map
@@ -2660,10 +2661,10 @@ public class Session_local {
             }
 
             while (skipFrames > -1) {
-                int[] ds = {DS_FINISHED.ordinal()};
+                CInt ds = new CInt(DS_FINISHED.ordinal());
 
                 readDemo.ReadInt(ds);
-                if (ds[0] == DS_FINISHED.ordinal()) {
+                if (ds.getVal() == DS_FINISHED.ordinal()) {
                     if (numDemoFrames != 1) {
                         // if the demo has a single frame (a demoShot), continuously replay
                         // the renderView that has already been read
@@ -2672,26 +2673,26 @@ public class Session_local {
                     }
                     break;
                 }
-                if (ds[0] == DS_RENDER.ordinal()) {
-                    int[] demoTimeOffset = {0};
+                if (ds.getVal() == DS_RENDER.ordinal()) {
+                    CInt demoTimeOffset = new CInt();
                     if (rw.ProcessDemoCommand(readDemo, currentDemoRenderView, demoTimeOffset)) {
                         // a view is ready to render
                         skipFrames--;
                         numDemoFrames++;
                     }
-                    this.demoTimeOffset = demoTimeOffset[0];
+                    this.demoTimeOffset = demoTimeOffset.getVal();
                     continue;
                 }
-                if (ds[0] == DS_SOUND.ordinal()) {
+                if (ds.getVal() == DS_SOUND.ordinal()) {
                     sw.ProcessDemoCommand(readDemo);
                     continue;
                 }
                 // appears in v1.2, with savegame format 17
-                if (ds[0] == DS_VERSION.ordinal()) {
-                    int[] renderdemoVersion = {0};
+                if (ds.getVal() == DS_VERSION.ordinal()) {
+                    CInt renderdemoVersion = new CInt();
                     readDemo.ReadInt(renderdemoVersion);
-                    this.renderdemoVersion = renderdemoVersion[0];
-                    common.Printf("reading a v%d render demo\n", renderdemoVersion[0]);
+                    this.renderdemoVersion = renderdemoVersion.getVal();
+                    common.Printf("reading a v%d render demo\n", renderdemoVersion.getVal());
                     // set the savegameVersion to current for render demo paths that share the savegame paths
                     savegameVersion = SAVEGAME_VERSION;
                     continue;
@@ -3238,9 +3239,9 @@ public class Session_local {
             DispatchCommand(guiActive, menuCommand);
         }
 
-        public boolean HandleSaveGameMenuCommand(idCmdArgs args, int icmd) throws idException {
+        public boolean HandleSaveGameMenuCommand(idCmdArgs args, CInt icmd) throws idException {
 
-            final String cmd = args.Argv(icmd - 1);
+            final String cmd = args.Argv(icmd.getVal() - 1);
 
             if (0 == idStr.Icmp(cmd, "loadGame")) {
                 int choice = guiActive.State().GetInt("loadgame_sel_0");
@@ -3255,7 +3256,7 @@ public class Session_local {
                 if (saveGameName != null && saveGameName.isEmpty()) {
 
                     // First see if the file already exists unless they pass '1' to authorize the overwrite
-                    if (icmd == args.Argc() || Integer.parseInt(args.Argv(icmd++)) == 0) {
+                    if (icmd.getVal() == args.Argc() || Integer.parseInt(args.Argv(icmd.increment())) == 0) {
                         idStr saveFileName = new idStr(saveGameName);
                         sessLocal.ScrubSaveGameFileName(saveFileName);
                         saveFileName = new idStr("savegames/" + saveFileName);
@@ -3398,13 +3399,13 @@ public class Session_local {
          */
         public void HandleMainMenuCommands(final String menuCommand) throws idException {
             // execute the command from the menu
-            int icmd;
+            CInt icmd = new CInt();
             idCmdArgs args = new idCmdArgs();
 
             args.TokenizeString(menuCommand, false);
 
-            for (icmd = 0; icmd < args.Argc(); ) {
-                final String cmd = args.Argv(icmd++);
+            for (icmd.setVal(0); icmd.getVal() < args.Argc(); ) {
+                final String cmd = args.Argv(icmd.increment());
 
                 if (HandleSaveGameMenuCommand(args, icmd)) {
                     continue;
@@ -3417,8 +3418,8 @@ public class Session_local {
 
                 if (0 == idStr.Icmp(cmd, "startGame")) {
                     cvarSystem.SetCVarInteger("g_skill", guiMainMenu.State().GetInt("skill"));
-                    if (icmd < args.Argc()) {
-                        StartNewGame(args.Argv(icmd++));
+                    if (icmd.getVal() < args.Argc()) {
+                        StartNewGame(args.Argv(icmd.increment()));
                     } else {
                         if (ID_DEMO_BUILD) {
                             StartNewGame("game/mars_city1");
@@ -3646,8 +3647,8 @@ public class Session_local {
 
                 if (0 == idStr.Icmp(cmd, "mpSkin")) {
                     idStr skin;
-                    if (args.Argc() - icmd >= 1) {
-                        skin = new idStr(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        skin = new idStr(args.Argv(icmd.increment()));
                         cvarSystem.SetCVarString("ui_skin", skin.toString());
                         SetMainMenuSkin();
                     }
@@ -3669,9 +3670,9 @@ public class Session_local {
                 }
 
                 if (0 == idStr.Icmp(cmd, "bind")) {
-                    if (args.Argc() - icmd >= 2) {
-                        int key = Integer.parseInt(args.Argv(icmd++));
-                        String bind = args.Argv(icmd++);
+                    if (args.Argc() - icmd.getVal() >= 2) {
+                        int key = Integer.parseInt(args.Argv(icmd.increment()));
+                        String bind = args.Argv(icmd.increment());
                         if (idKeyInput.NumBinds(bind) >= 2 && !idKeyInput.KeyIsBoundTo(key, bind)) {
                             idKeyInput.UnbindBinding(bind);
                         }
@@ -3682,12 +3683,12 @@ public class Session_local {
                 }
 
                 if (0 == idStr.Icmp(cmd, "play")) {
-                    if (args.Argc() - icmd >= 1) {
-                        idStr snd = new idStr(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        idStr snd = new idStr(args.Argv(icmd.increment()));
                         int channel = 1;
                         if (snd.Length() == 1) {
                             channel = Integer.parseInt(snd.toString());
-                            snd = new idStr(args.Argv(icmd++));
+                            snd = new idStr(args.Argv(icmd.getVal()));
                         }
                         menuSoundWorld.PlayShaderDirectly(snd.toString(), channel);
 
@@ -3696,8 +3697,8 @@ public class Session_local {
                 }
 
                 if (0 == idStr.Icmp(cmd, "music")) {
-                    if (args.Argc() - icmd >= 1) {
-                        idStr snd = new idStr(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        idStr snd = new idStr(args.Argv(icmd.increment()));
                         menuSoundWorld.PlayShaderDirectly(snd.toString(), 2);
                     }
                     continue;
@@ -3706,8 +3707,8 @@ public class Session_local {
                 // triggered from mainmenu or mpmain
                 if (0 == idStr.Icmp(cmd, "sound")) {
                     idStr vcmd = new idStr();
-                    if (args.Argc() - icmd >= 1) {
-                        vcmd = new idStr(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        vcmd = new idStr(args.Argv(icmd.getVal()));
                     }
                     if (0 == vcmd.Length() || 0 == vcmd.Icmp("speakers")) {
                         int old = cvarSystem.GetCVarInteger("s_numberOfSpeakers");
@@ -3759,8 +3760,8 @@ public class Session_local {
 
                 if (0 == idStr.Icmp(cmd, "video")) {
                     idStr vcmd = new idStr();
-                    if (args.Argc() - icmd >= 1) {
-                        vcmd = new idStr(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        vcmd = new idStr(args.Argv(icmd.increment()));
                     }
 
                     int oldSpec = com_machineSpec.GetInteger();
@@ -3792,8 +3793,8 @@ public class Session_local {
                 }
 
                 if (0 == idStr.Icmp(cmd, "clearBind")) {
-                    if (args.Argc() - icmd >= 1) {
-                        idKeyInput.UnbindBinding(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        idKeyInput.UnbindBinding(args.Argv(icmd.increment()));
                         guiMainMenu.SetKeyBindingNames();
                     }
                     continue;
@@ -3812,8 +3813,8 @@ public class Session_local {
                     //Backup the language so we can restore it after defaults.
                     idStr lang = new idStr(cvarSystem.GetCVarString("sys_lang"));
 
-                    cmdSystem.BufferCommandText(CMD_EXEC_NOW, args.Argv(icmd++));
-                    if (idStr.Icmp("cvar_restart", args.Argv(icmd - 1)) == 0) {
+                    cmdSystem.BufferCommandText(CMD_EXEC_NOW, args.Argv(icmd.getVal()));
+                    if (idStr.Icmp("cvar_restart", args.Argv(icmd.getVal() - 1)) == 0) {
                         cmdSystem.BufferCommandText(CMD_EXEC_NOW, "exec default.cfg");
                         cmdSystem.BufferCommandText(CMD_EXEC_NOW, "setMachineSpec\n");
 
@@ -3875,8 +3876,8 @@ public class Session_local {
                 // triggered from mainmenu or mpmain
                 if (0 == idStr.Icmp(cmd, "punkbuster")) {
                     idStr vcmd;
-                    if (args.Argc() - icmd >= 1) {
-                        vcmd = new idStr(args.Argv(icmd++));
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        vcmd = new idStr(args.Argv(icmd.increment()));
                     }
                     // filtering PB based on enabled/disabled
                     idAsyncNetwork.client.serverList.ApplyFilter();
@@ -3965,13 +3966,13 @@ public class Session_local {
          */
         public void HandleRestartMenuCommands(final String menuCommand) throws idException {
             // execute the command from the menu
-            int icmd;
+            CInt icmd = new CInt();
             idCmdArgs args = new idCmdArgs();
 
             args.TokenizeString(menuCommand, false);
 
-            for (icmd = 0; icmd < args.Argc(); ) {
-                final String cmd = args.Argv(icmd++);
+            for (icmd.setVal(0); icmd.getVal() < args.Argc(); ) {
+                final String cmd = args.Argv(icmd.increment());
 
                 if (HandleSaveGameMenuCommand(args, icmd)) {
                     continue;
@@ -3992,13 +3993,13 @@ public class Session_local {
                 }
 
                 if (0 == idStr.Icmp(cmd, "exec")) {
-                    cmdSystem.BufferCommandText(CMD_EXEC_APPEND, args.Argv(icmd++));
+                    cmdSystem.BufferCommandText(CMD_EXEC_APPEND, args.Argv(icmd.increment()));
                     continue;
                 }
 
                 if (0 == idStr.Icmp(cmd, "play")) {
-                    if (args.Argc() - icmd >= 1) {
-                        String snd = args.Argv(icmd++);
+                    if (args.Argc() - icmd.getVal() >= 1) {
+                        String snd = args.Argv(icmd.increment());
                         sw.PlayShaderDirectly(snd);
                     }
                     continue;
@@ -4048,7 +4049,7 @@ public class Session_local {
                     }
                     Sys_Sleep(500);
                 }
-                int[] noteNumber = {1000};
+                CInt noteNumber = new CInt();
                 if (file != null) {
                     file.ReadInt(noteNumber);//4);
                     fileSystem.CloseFile(file);
@@ -4107,7 +4108,7 @@ public class Session_local {
                     workName = fileList.get(i);
                     workName.Append("/");
                     workName.Append(p);
-                    int[] workNote = {noteNumber[0]};
+                    CInt workNote = new CInt(noteNumber.getVal());
                     R_ScreenshotFilename(workNote, workName.toString(), shotName);
 
                     noteNum = shotName;
@@ -4127,7 +4128,7 @@ public class Session_local {
                     UpdateScreen();
                     renderSystem.TakeScreenshot(renderSystem.GetScreenWidth(), renderSystem.GetScreenHeight(), shotName.toString(), 1, null);
                 }
-                noteNumber[0]++;
+                noteNumber.increment();
 
                 for (int tries = 0; tries < 10; tries++) {
                     file = fileSystem.OpenExplicitFileWrite("p:/viewnotes/notenumber.dat");
@@ -4137,7 +4138,7 @@ public class Session_local {
                     Sys_Sleep(500);
                 }
                 if (file != null) {
-                    file.WriteInt(noteNumber[0]);//, 4);
+                    file.WriteInt(noteNumber.getVal());//, 4);
                     fileSystem.CloseFile(file);
                 }
 
@@ -4227,9 +4228,9 @@ public class Session_local {
 
         public void UpdateMPLevelShot() {
 //            char[] screenshot = new char[MAX_STRING_CHARS];
-            String[] screenshot = {null};
+            StringBuffer screenshot = new StringBuffer();
             fileSystem.FindMapScreenshot(cvarSystem.GetCVarString("si_map"), screenshot, MAX_STRING_CHARS);
-            guiMainMenu.SetStateString("current_levelshot", screenshot[0]);
+            guiMainMenu.SetStateString("current_levelshot", screenshot.toString());
         }
 
         public void SetSaveGameGuiVars() {

@@ -1,5 +1,6 @@
 package neo.idlib.math;
 
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
@@ -131,7 +132,7 @@ public class Rotation {
             float xy, xz, zz;
             float x2, y2, z2;
             float a, x, y, z;
-            final float[] c = new float[1], s = new float[1];
+            final CFloat c = new CFloat(), s = new CFloat();
 
             if (axisValid) {
                 return axis;
@@ -140,9 +141,9 @@ public class Rotation {
             a = angle * (idMath.M_DEG2RAD * 0.5f);
             idMath.SinCos(a, s, c);
 
-            x = vec.oGet(0) * s[0];
-            y = vec.oGet(1) * s[0];
-            z = vec.oGet(2) * s[0];
+            x = vec.oGet(0) * s.getVal();
+            y = vec.oGet(1) * s.getVal();
+            z = vec.oGet(2) * s.getVal();
 
             x2 = x + x;
             y2 = y + y;
@@ -156,9 +157,9 @@ public class Rotation {
             yz = y * z2;
             zz = z * z2;
 
-            wx = c[0] * x2;
-            wy = c[0] * y2;
-            wz = c[0] * z2;
+            wx = c.getVal() * x2;
+            wy = c.getVal() * y2;
+            wz = c.getVal() * z2;
 
             axis.oSet(0, 0, 1.0f - (yy + zz));
             axis.oSet(0, 1, xy - wz);

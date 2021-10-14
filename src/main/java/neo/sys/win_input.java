@@ -2,6 +2,8 @@ package neo.sys;
 
 import neo.TempDump.TODO_Exception;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CInt;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.event.InputEvent;
@@ -679,6 +681,9 @@ public class win_input {
         return -1;
     }
 
+    public static int Sys_ReturnKeyboardInputEvent(final int n, CInt ch, CBool state) {
+        return  0;
+    }
     /*
      ====================
      Sys_PollKeyboardInputEvents
@@ -782,7 +787,10 @@ public class win_input {
 //	return dwElements;
     }
 
-    @Deprecated
+    public static void Sys_ReturnMouseInputEvent(final int n, CInt action, CInt value) {
+    }
+
+        @Deprecated
     public static void Sys_ReturnMouseInputEvent(int[] action, int[] value) {
 
 //        final long dwTimeStamp = Mouse.getEventNanoseconds();

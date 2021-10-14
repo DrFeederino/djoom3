@@ -66,6 +66,24 @@ public class VertexCache {
         private int /*GLuint*/ vbo = 0;
         private ByteBuffer virtMem;    // only one of vbo / virtMem will be set
 
+        public vertCache_s() {
+        }
+
+        public vertCache_s(vertCache_s val) {
+            if (val != null) {
+                this.frameUsed = val.frameUsed;
+                this.indexBuffer = val.indexBuffer;
+                this.next = val.next;
+                this.prev = val.prev;
+                this.offset = val.offset;
+                this.size = val.size;
+                this.tag = val.tag;
+                this.user = val.user;
+                this.vbo = val.vbo;
+                this.virtMem = val.virtMem;
+            }
+        }
+
         /**
          * Creates an array starting at the current object, till it reaches
          * NULL.

@@ -7,6 +7,7 @@ import neo.framework.UsercmdGen.usercmd_t;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.idStrList;
 import neo.idlib.math.Math_h.idMath;
 import neo.sys.sys_public.idPort;
@@ -15,8 +16,9 @@ import neo.sys.sys_public.netadr_t;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.stream.Stream;
 
-import static java.lang.Math.random;
 import static neo.Game.Game.allowReply_t.ALLOW_YES;
 import static neo.Game.Game_local.game;
 import static neo.TempDump.*;
@@ -105,6 +107,7 @@ public class AsyncServer {
             "AUTH_WAIT",
             "AUTH_DENY"
     };
+
     // message from auth to be forwarded back to the client
     // some are locally hardcoded to save space, auth has the possibility to send a custom reply
     enum authReplyMsg_t {
@@ -116,6 +119,7 @@ public class AsyncServer {
         AUTH_REPLY_SRVWAIT, // auth server replied and tells us he's working on it
         AUTH_REPLY_MAXSTATES
     }
+
     // states from the auth server, while the client is in CDK_WAIT
     enum authReply_t {
 
@@ -125,6 +129,7 @@ public class AsyncServer {
         AUTH_DENY, // denied - don't send me anything about this client anymore
         AUTH_MAXSTATES
     }
+
     // states for the server's authorization process
     enum authState_t {
 
@@ -137,6 +142,7 @@ public class AsyncServer {
         CDK_PUREOK,
         CDK_MAXSTATES
     }
+
     enum serverClientState_t {
 
         SCS_FREE, // can be reused for a new connection
@@ -191,7 +197,7 @@ public class AsyncServer {
         int snapshotSequence;
 
         boolean isClientConnected() {
-            return etoi(clientState) < etoi(SCS_CONNECTED);
+            return clientState.ordinal() < SCS_CONNECTED.ordinal();
         }
     }/* serverClient_t*/
 
@@ -201,10 +207,12 @@ public class AsyncServer {
         // track the max outgoing rate over the last few secs to watch for spikes
         // dependent on net_serverSnapshotDelay. 50ms, for a 3 seconds backlog -> 60 samples
         private static final int stats_numsamples = 60;
+        private final idPort serverPort;                                                // UDP port
+        private final int[] stats_outrate = new int[stats_numsamples];
         private boolean active;                                                    // true if server is active
         //
-        private final challenge_s[] challenges = new challenge_s[MAX_CHALLENGES];        // to prevent invalid IPs from connecting
-        private final serverClient_s[] clients = new serverClient_s[MAX_ASYNC_CLIENTS];  // clients
+        private challenge_s[] challenges = new challenge_s[MAX_CHALLENGES];        // to prevent invalid IPs from connecting
+        private serverClient_s[] clients = new serverClient_s[MAX_ASYNC_CLIENTS];  // clients
         private int gameFrame;                                                   // local game frame
         //
         private int gameInitId;                                                  // game initialization identification
@@ -223,7 +231,6 @@ public class AsyncServer {
         private int realTime;                                                  // absolute time
         private BigInteger serverDataChecksum;                                        // checksum of the data used by the server
         private int serverId;                                                  // server identification
-        private final idPort serverPort;                                                // UDP port
         //
         private boolean serverReloadingEngine;                                       // flip-flop to not loop over when net_serverReloadEngine is on
         //
@@ -232,13 +239,12 @@ public class AsyncServer {
         private int stats_current;
         private int stats_max;
         private int stats_max_index;
-        private final int[] stats_outrate = new int[stats_numsamples];
         private usercmd_t[][] userCmds = new usercmd_t[MAX_USERCMD_BACKUP][MAX_ASYNC_CLIENTS];
         //
         //
 
         public idAsyncServer() {
-            int i, j;
+            int i;
 
             active = false;
             realTime = 0;
@@ -250,16 +256,13 @@ public class AsyncServer {
             gameFrame = 0;
             gameTime = 0;
             gameTimeResidual = 0;
-            for (i = 0; i < MAX_CHALLENGES; i++) {
-//            memset(challenges, 0, sizeof(challenges));
-                challenges[i] = new challenge_s();
-            }
+            challenges = Stream.generate(challenge_s::new)
+                    .limit(MAX_CHALLENGES)
+                    .toArray(challenge_s[]::new);
             for (i = 0; i < MAX_ASYNC_CLIENTS; i++) {
-//            memset(challenges, 0, sizeof(challenges));
                 clients[i] = new serverClient_s();
                 ClearClient(i);
-//            memset(userCmds, 0, sizeof(userCmds));
-                for (j = 0; j < MAX_USERCMD_BACKUP; j++) {
+                for (int j = 0; j < MAX_USERCMD_BACKUP; j++) {
                     userCmds[j][i] = new usercmd_t();
                 }
             }
@@ -307,19 +310,17 @@ public class AsyncServer {
         }
 
         public void ClosePort() {
-            int i;
-
             serverPort.Close();
-            for (i = 0; i < MAX_CHALLENGES; i++) {
+            for (int i = 0; i < MAX_CHALLENGES; i++) {
                 challenges[i].authReplyPrint.Clear();
             }
         }
 
         public void Spawn() {
             int i;
-            int[] size = new int[1];
+            CInt size = new CInt();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
-            netadr_t[] from = new netadr_t[1];
+            netadr_t from = new netadr_t();
 
             // shutdown any current game
             session.Stop();
@@ -483,15 +484,11 @@ public class AsyncServer {
             } else {
                 localClientNum = -1;
             }
-
             // re-initialize all connected clients for the new map
             for (i = 0; i < MAX_ASYNC_CLIENTS; i++) {
                 if (clients[i].clientState.ordinal() >= SCS_PUREWAIT.ordinal() && i != localClientNum) {
-
                     InitClient(i, clients[i].clientId, clients[i].clientRate);
-
                     SendGameInitToClient(i);
-
                     if (sessLocal.mapSpawnData.serverInfo.GetBool("si_pure")) {
                         clients[i].clientState = SCS_PUREWAIT;
                     }
@@ -702,11 +699,11 @@ public class AsyncServer {
 
         public void RunFrame() throws idException {
             int i, msec;
-            int[] size = new int[1];
+            CInt size = new CInt();
             boolean newPacket;
             idBitMsg msg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
-            netadr_t[] from = new netadr_t[1];
+            netadr_t from = new netadr_t();
             int outgoingRate, incomingRate;
             float outgoingCompression, incomingCompression;
 
@@ -730,9 +727,9 @@ public class AsyncServer {
                     newPacket = serverPort.GetPacketBlocking(from, msgBuf, size, msgBuf.capacity(), USERCMD_MSEC - gameTimeResidual - 1);
                     if (newPacket) {
                         msg.Init(msgBuf, msgBuf.capacity());
-                        msg.SetSize(size[0]);
+                        msg.SetSize(size.getVal());
                         msg.BeginReading();
-                        if (ProcessMessage(from[0], msg)) {
+                        if (ProcessMessage(from, msg)) {
                             return;    // return because rcon was used
                         }
                     }
@@ -758,7 +755,7 @@ public class AsyncServer {
             }
 
             // make sure the time doesn't wrap
-            if (serverTime > 0x70000000) {
+            if (serverTime > 1879048192) {
                 ExecuteMapChange();
                 return;
             }
@@ -873,10 +870,10 @@ public class AsyncServer {
 
         public void ProcessConnectionLessMessages() {
             int id;
-            int[] size = new int[1];
+            CInt size = new CInt();
             idBitMsg msg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
-            netadr_t[] from = new netadr_t[1];
+            netadr_t from = new netadr_t();
 
             if (0 == serverPort.GetPort()) {
                 return;
@@ -884,11 +881,11 @@ public class AsyncServer {
 
             while (serverPort.GetPacket(from, msgBuf, size, msgBuf.capacity())) {
                 msg.Init(msgBuf, msgBuf.capacity());
-                msg.SetSize(size[0]);
+                msg.SetSize(size.getVal());
                 msg.BeginReading();
                 id = msg.ReadShort();
                 if (id == CONNECTIONLESS_MESSAGE_ID) {
-                    ConnectionlessMessage(from[0], msg);
+                    ConnectionlessMessage(from, msg);
                 }
             }
         }
@@ -1174,7 +1171,6 @@ public class AsyncServer {
 
         private void InitClient(int clientNum, int clientId, int clientRate) {
             int i;
-
             // clear the user info
             sessLocal.mapSpawnData.userInfo[clientNum].Clear();    // always start with a clean base
 
@@ -1202,9 +1198,7 @@ public class AsyncServer {
 
             // clear the user commands
             for (i = 0; i < MAX_USERCMD_BACKUP; i++) {
-//                memset( & userCmds[i][clientNum], 0, sizeof(userCmds[i][clientNum]));
                 userCmds[i][clientNum] = new usercmd_t();
-//                userCmds[i][clientNum] = null;//TODO:which?
             }
 
             // let the game know a player connected
@@ -1404,7 +1398,7 @@ public class AsyncServer {
                 }
             }
 
-            sessLocal.mapSpawnData.syncedCVars = cvars;
+            sessLocal.mapSpawnData.syncedCVars = new idDict(cvars);
         }
 
         private void SendSyncedCvarsToClient(int clientNum, final idDict cvars) {
@@ -1666,51 +1660,49 @@ public class AsyncServer {
 
             // process the unreliable message
             id = msg.ReadByte();
-            if (id < CLIENT_UNRELIABLE.values().length) {
-                switch (CLIENT_UNRELIABLE.values()[id]) {
-                    case CLIENT_UNRELIABLE_MESSAGE_EMPTY: {
-                        if (idAsyncNetwork.verbose.GetInteger() != 0) {
-                            common.Printf("received empty message for client %d\n", clientNum);
-                        }
-                        break;
+            switch (CLIENT_UNRELIABLE.values()[id]) {
+                case CLIENT_UNRELIABLE_MESSAGE_EMPTY: {
+                    if (idAsyncNetwork.verbose.GetInteger() != 0) {
+                        common.Printf("received empty message for client %d\n", clientNum);
                     }
-                    case CLIENT_UNRELIABLE_MESSAGE_PINGRESPONSE: {
-                        client.clientPing = realTime - msg.ReadLong();
-                        break;
-                    }
-                    case CLIENT_UNRELIABLE_MESSAGE_USERCMD: {
-
-                        client.clientPrediction = msg.ReadShort();
-
-                        // read user commands
-                        clientGameFrame = msg.ReadLong();
-                        numUsercmds = msg.ReadByte();
-                        for (last = null, i = clientGameFrame - numUsercmds + 1; i <= clientGameFrame; i++) {
-                            index = i & (MAX_USERCMD_BACKUP - 1);
-                            idAsyncNetwork.ReadUserCmdDelta(msg, userCmds[index][clientNum], last);
-                            userCmds[index][clientNum].gameFrame = i;
-                            userCmds[index][clientNum].duplicateCount = 0;
-                            if (idAsyncNetwork.UsercmdInputChanged(userCmds[(i - 1) & (MAX_USERCMD_BACKUP - 1)][clientNum], userCmds[index][clientNum])) {
-                                client.lastInputTime = serverTime;
-                            }
-                            last = userCmds[index][clientNum];
-                        }
-
-                        if (last != null) {
-                            client.gameFrame = last.gameFrame;
-                            client.gameTime = last.gameTime;
-                        }
-
-                        if (idAsyncNetwork.verbose.GetInteger() == 2) {
-                            common.Printf("received user command for client %d, gameInitId = %d, gameFrame, %d gameTime %d\n", clientNum, clientGameInitId, client.gameFrame, client.gameTime);
-                        }
-                        break;
-                    }
+                    break;
                 }
-            } else {
-//                default: {
-                common.Printf("unknown unreliable message %d from client %d\n", id, clientNum);
-//                    break;
+                case CLIENT_UNRELIABLE_MESSAGE_PINGRESPONSE: {
+                    client.clientPing = realTime - msg.ReadLong();
+                    break;
+                }
+                case CLIENT_UNRELIABLE_MESSAGE_USERCMD: {
+
+                    client.clientPrediction = msg.ReadShort();
+
+                    // read user commands
+                    clientGameFrame = msg.ReadLong();
+                    numUsercmds = msg.ReadByte();
+                    for (last = null, i = clientGameFrame - numUsercmds + 1; i <= clientGameFrame; i++) {
+                        index = i & (MAX_USERCMD_BACKUP - 1);
+                        idAsyncNetwork.ReadUserCmdDelta(msg, userCmds[index][clientNum], last);
+                        userCmds[index][clientNum].gameFrame = i;
+                        userCmds[index][clientNum].duplicateCount = 0;
+                        if (idAsyncNetwork.UsercmdInputChanged(userCmds[(i - 1) & (MAX_USERCMD_BACKUP - 1)][clientNum], userCmds[index][clientNum])) {
+                            client.lastInputTime = serverTime;
+                        }
+                        last = userCmds[index][clientNum];
+                    }
+
+                    if (last != null) {
+                        client.gameFrame = last.gameFrame;
+                        client.gameTime = last.gameTime;
+                    }
+
+                    if (idAsyncNetwork.verbose.GetInteger() == 2) {
+                        common.Printf("received user command for client %d, gameInitId = %d, gameFrame, %d gameTime %d\n", clientNum, clientGameInitId, client.gameFrame, client.gameTime);
+                    }
+                    break;
+                }
+                default: {
+                    common.Printf("unknown unreliable message %d from client %d\n", id, clientNum);
+                    break;
+                }
             }
         }
 
@@ -1725,7 +1717,6 @@ public class AsyncServer {
 
             while (client.channel.GetReliableMessage(msg)) {
                 id = msg.ReadByte();
-                if (id < CLIENT_RELIABLE.values().length) {
                     switch (CLIENT_RELIABLE.values()[id]) {
                         case CLIENT_RELIABLE_MESSAGE_CLIENTINFO: {
                             idDict info = new idDict();
@@ -1748,12 +1739,11 @@ public class AsyncServer {
                             ProcessReliablePure(clientNum, msg);
                             break;
                         }
+                    default: {
+                        // pass reliable message on to game code
+                        game.ServerProcessReliableMessage(clientNum, msg);
+                        break;
                     }
-                } else {
-//                    default: {
-                    // pass reliable message on to game code
-                    game.ServerProcessReliableMessage(clientNum, msg);
-//                        break;
                 }
             }
         }
@@ -1766,7 +1756,7 @@ public class AsyncServer {
             clientId = msg.ReadLong();
 
             oldest = 0;
-            oldestTime = 0x7fffffff;
+            oldestTime = 2147483647;
 
             // see if we already have a challenge for this ip
             for (i = 0; i < MAX_CHALLENGES; i++) {
@@ -1781,10 +1771,12 @@ public class AsyncServer {
 
             if (i >= MAX_CHALLENGES) {
                 // this is the first time this client has asked for a challenge
+                Random random = new Random();
                 i = oldest;
                 challenges[i].address = from;
                 challenges[i].clientId = clientId;
-                challenges[i].challenge = (((int) random() << 16) ^ ((int) random())) ^ serverTime;
+                // note: in C++ rand() is an int value in range [0, 32767]. The upper bound is at least 32767, however depends on impl.
+                challenges[i].challenge = ((random.nextInt(32767) << 16) ^ (random.nextInt(32767))) ^ serverTime;
                 challenges[i].time = serverTime;
                 challenges[i].connected = false;
                 challenges[i].authState = CDK_WAIT;
@@ -1878,8 +1870,7 @@ public class AsyncServer {
                         common.DPrintf("%s: Authorize server timed out\n", Sys_NetAdrToString(from));
                         break; // will continue with the connecting process
                     }
-                    String msg2,
-                            l_msg;
+                    String msg2, l_msg;
                     if (challenges[ichallenge].authReplyMsg != AUTH_REPLY_PRINT) {
                         msg2 = authReplyMsg[challenges[ichallenge].authReplyMsg.ordinal()];
                     } else {
@@ -2034,12 +2025,10 @@ public class AsyncServer {
             clients[clientNum].snapshotSequence = 1;
 
             // clear the challenge struct so a reconnect from this client IP starts clean
-//            memset( & challenges[ichallenge], 0, sizeof(challenge_t));
             challenges[ichallenge] = new challenge_s();
         }
 
         private void ProcessRemoteConsoleMessage(final netadr_t from, final idBitMsg msg) {
-            idBitMsg outMsg;
             StringBuilder msgBuf = new StringBuilder(952);
             char[] string = new char[MAX_STRING_CHARS];
 
@@ -2175,7 +2164,7 @@ public class AsyncServer {
 
         private boolean ProcessMessage(final netadr_t from, idBitMsg msg) {
             int i, id;
-            int[] sequence = new int[1];
+            CInt sequence = new CInt();
             idBitMsg outMsg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
 
@@ -2318,7 +2307,7 @@ public class AsyncServer {
             idBitMsg outMsg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             int[] serverChecksums = new int[MAX_PURE_PAKS];
-            int[] gamePakChecksum = new int[1];
+            CInt gamePakChecksum = new CInt();
             int i;
 
             fileSystem.GetPureServerChecksums(serverChecksums, OS, gamePakChecksum);
@@ -2341,7 +2330,7 @@ public class AsyncServer {
             outMsg.WriteLong(0);
 
             // write the pak checksum for game code
-            outMsg.WriteLong(gamePakChecksum[0]);
+            outMsg.WriteLong(gamePakChecksum.getVal());
 
             serverPort.SendPacket(to, outMsg.GetData(), outMsg.GetSize());
             return true;
@@ -2409,7 +2398,7 @@ public class AsyncServer {
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             int[] serverChecksums = new int[MAX_PURE_PAKS];
             int i;
-            int[] gamePakChecksum = new int[1];
+            CInt gamePakChecksum = new CInt();
 
             fileSystem.GetPureServerChecksums(serverChecksums, clients[clientNum].OS, gamePakChecksum);
             if (0 == serverChecksums[0]) {
@@ -2430,7 +2419,7 @@ public class AsyncServer {
                 msg.WriteLong(serverChecksums[i++]);
             }
             msg.WriteLong(0);
-            msg.WriteLong(gamePakChecksum[0]);
+            msg.WriteLong(gamePakChecksum.getVal());
 
             SendReliableMessage(clientNum, msg);
 
@@ -2468,12 +2457,13 @@ public class AsyncServer {
             clients[clientNum].clientState = SCS_CONNECTED;
         }
 
-        private boolean VerifyChecksumMessage(int clientNum, final netadr_t from, final idBitMsg msg, idStr reply, int OS) { // if from is null, clientNum is used for error messages
+        private boolean VerifyChecksumMessage(int clientNum, final netadr_t from, final idBitMsg msg, idStr reply,
+                                              int OS) { // if from is null, clientNum is used for error messages
             int i, numChecksums;
             int[] checksums = new int[MAX_PURE_PAKS];
             int gamePakChecksum;
             int[] serverChecksums = new int[MAX_PURE_PAKS];
-            int[] serverGamePakChecksum = new int[1];
+            CInt serverGamePakChecksum = new CInt();
 
             // pak checksums, in a 0-terminated list
             numChecksums = 0;
@@ -2496,7 +2486,7 @@ public class AsyncServer {
             assert (serverChecksums[0] != 0);
 
             // compare the lists
-            if (serverGamePakChecksum[0] != gamePakChecksum) {
+            if (serverGamePakChecksum.getVal() != gamePakChecksum) {
                 common.Printf("client %s: invalid game code pak ( 0x%x )\n", from != null ? Sys_NetAdrToString(from) : va("%d", clientNum), gamePakChecksum);
                 reply.oSet("#str_07145");
                 return false;

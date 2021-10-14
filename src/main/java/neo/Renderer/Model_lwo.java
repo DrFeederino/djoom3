@@ -2702,7 +2702,9 @@ public class Model_lwo {
         }
         if (oldpt != null) {
 //            memcpy(point.pt, oldpt, point.offset * sizeof(lwPoint));
-            System.arraycopy(oldpt, 0, point.pt, 0, point.offset);
+            for (i = 0; i < point.offset; i++) {
+                point.pt[i] = new lwPoint(oldpt[i]);
+            }
 //            Mem_Free(oldpt);
             oldpt = null;
         }
@@ -2781,7 +2783,9 @@ public class Model_lwo {
 //        }
         if (oldpol != null) {
 //            memcpy(plist.pol, oldpol, plist.offset);
-            System.arraycopy(oldpol, 0, plist.pol, 0, plist.offset);
+            for (i = 0; i < plist.offset; i++) {
+                plist.pol[i] = new lwPolygon(oldpol[i]);
+            }
 //            Mem_Free(oldpol);
             oldpol = null;
         }
@@ -2799,7 +2803,9 @@ public class Model_lwo {
         }
         if (oldpolv != null) {
 //            memcpy(plist.pol[0].v, oldpolv, plist.voffset);
-            System.arraycopy(oldpolv, 0, plist.pol[0].v, 0, plist.voffset);
+            for (i = 0; i < plist.offset; i++) {
+                plist.pol[0].v[i] = new lwPolVert(oldpolv[i]);
+            }
             oldpolv = null;//Mem_Free(oldpolv);
         }
 //        memset(plist.pol[ 0].v + plist.voffset, 0, nverts);
@@ -4832,7 +4838,7 @@ public class Model_lwo {
 
         short enabled;
         int flags;
-        lwEParam size;
+        lwEParam size = new lwEParam();
     }
 
     static class lwSurface extends lwNode {
@@ -5012,6 +5018,19 @@ public class Model_lwo {
         int[] pol;               // array of polygon indexes
         float[] pos = new float[3];
         lwVMapPt[] vm;           // array of vmap references
+
+        public lwPoint() {
+        }
+
+        public lwPoint(lwPoint val) {
+            if (val != null) {
+                this.npols = val.npols;
+                this.nvmaps = val.nvmaps;
+                this.pol = val.pol;
+                this.pos = val.pos;
+                this.vm = val.vm;
+            }
+        }
     }
 
     static class lwPolVert {
@@ -5020,6 +5039,19 @@ public class Model_lwo {
         float[] norm = new float[3];
         int nvmaps;
         lwVMapPt[] vm;           // array of vmap references
+
+
+        public lwPolVert() {
+        }
+
+        public lwPolVert(lwPolVert val) {
+            if (val != null) {
+                this.index = val.index;
+                this.norm = val.norm;
+                this.nvmaps = val.nvmaps;
+                this.vm = val.vm;
+            }
+        }
     }
 
     static class lwPolygon {
@@ -5043,6 +5075,22 @@ public class Model_lwo {
             this.vOffset = vOffset;
         }
 
+        public lwPolygon() {
+        }
+
+        public lwPolygon(lwPolygon val) {
+            if (val != null) {
+                this.flags = val.flags;
+                this.norm = val.norm;
+                this.nverts = val.nverts;
+                this.part = val.part;
+                this.smoothgrp = val.smoothgrp;
+                this.surf = val.surf;
+                this.type = val.type;
+                this.v = val.v;
+                this.vOffset = val.vOffset;
+            }
+        }
     }
 
     static class lwPointList {

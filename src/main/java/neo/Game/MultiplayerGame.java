@@ -4,7 +4,6 @@ import neo.Game.Entity.idEntity;
 import neo.Game.Player.idPlayer;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.TempDump;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.framework.File_h.idFile;
 import neo.idlib.BitMsg.idBitMsg;
@@ -3103,14 +3102,14 @@ public class MultiplayerGame {
 
         private void SetMapShot() {
 //            char[] screenshot = new char[MAX_STRING_CHARS];
-            String[] screenshot = {null};
+            StringBuffer screenshot = new StringBuffer();
             int mapNum = mapList.GetSelection(null, 0);
             idDict dict = null;
             if (mapNum >= 0) {
                 dict = fileSystem.GetMapDecl(mapNum);
             }
             fileSystem.FindMapScreenshot(dict != null ? dict.GetString("path") : "", screenshot, MAX_STRING_CHARS);
-            mainGui.SetStateString("current_levelshot", screenshot[0]);
+            mainGui.SetStateString("current_levelshot", screenshot.toString());
         }
 
         private void TeamScore(int entityNumber, int team, int delta) {

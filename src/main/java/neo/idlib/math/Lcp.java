@@ -2,6 +2,8 @@ package neo.idlib.math;
 
 import neo.TempDump;
 import neo.framework.CVarSystem.idCVar;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMatX;
 import neo.idlib.math.Vector.idVecX;
@@ -162,10 +164,10 @@ public class Lcp {
         @Override
         public boolean Solve(final idMatX o_m, idVecX o_x, final idVecX o_b, final idVecX o_lo, final idVecX o_hi, final int[] o_boxIndex) {
             int i, j, n, boxStartIndex;
-            int[] limit = new int[1], limitSide = new int[1];
+            CInt limit = new CInt(), limitSide = new CInt();
             float dir, s;
-            float[] dot = new float[1];
-            float[] maxStep = new float[1];
+            CFloat dot = new CFloat();
+            CFloat maxStep = new CFloat();
             char[] failed;
 
             // true when the matrix rows are 16 byte padded
@@ -298,7 +300,7 @@ public class Lcp {
 
                 // calculate acceleration for current variable
                 SIMDProcessor.Dot(dot, rowPtrs[i], f.ToFloatPtr(), i);
-                a.p[i] = dot[0] - b.p[i];
+                a.p[i] = dot.getVal() - b.p[i];
 
                 // if already at the low boundary
                 if (lo.p[i] >= -LCP_BOUND_EPSILON && a.p[i] >= -LCP_ACCEL_EPSILON) {
@@ -338,7 +340,7 @@ public class Lcp {
                     // maximum step we can take
                     GetMaxStep(i, dir, maxStep, limit, limitSide);
 
-                    if (maxStep[0] <= 0.0f) {
+                    if (maxStep.getVal() <= 0.0f) {
 //#ifdef IGNORE_UNSATISFIABLE_VARIABLES
                         // ignore the current variable completely
                         lo.p[i] = hi.p[i] = 0.0f;
@@ -352,37 +354,37 @@ public class Lcp {
                     }
 
                     // change force
-                    ChangeForce(i, maxStep[0]);
+                    ChangeForce(i, maxStep.getVal());
 
                     // change acceleration
-                    ChangeAccel(i, maxStep[0]);
+                    ChangeAccel(i, maxStep.getVal());
 
                     // clamp/unclamp the variable that limited this step
-                    side[limit[0]] = limitSide[0];
-                    switch (limitSide[0]) {
+                    side[limit.getVal()] = limitSide.getVal();
+                    switch (limitSide.getVal()) {
                         case 0: {
-                            a.p[limit[0]] = 0.0f;
-                            AddClamped(limit[0]);
+                            a.p[limit.getVal()] = 0.0f;
+                            AddClamped(limit.getVal());
                             break;
                         }
                         case -1: {
-                            f.p[limit[0]] = lo.p[limit[0]];
-                            if (limit[0] != i) {
-                                RemoveClamped(limit[0]);
+                            f.p[limit.getVal()] = lo.p[limit.getVal()];
+                            if (limit.getVal() != i) {
+                                RemoveClamped(limit.getVal());
                             }
                             break;
                         }
                         case 1: {
-                            f.p[limit[0]] = hi.p[limit[0]];
-                            if (limit[0] != i) {
-                                RemoveClamped(limit[0]);
+                            f.p[limit.getVal()] = hi.p[limit.getVal()];
+                            if (limit.getVal() != i) {
+                                RemoveClamped(limit.getVal());
                             }
                             break;
                         }
                     }
 
                     // if the current variable limited the step we can continue with the next variable
-                    if (limit[0] == i) {
+                    if (limit.getVal() == i) {
                         break;
                     }
                 }
@@ -739,13 +741,13 @@ public class Lcp {
          */
         private void CalcAccelDelta(int d) {
             int j;
-            float[] dot = new float[1];
+            CFloat dot = new CFloat();
 
             // only the not clamped variables, including the current variable, can have a change in acceleration
             for (j = numClamped; j <= d; j++) {
                 // only the clamped variables and the current variable have a force delta unequal zero
                 SIMDProcessor.Dot(dot, rowPtrs[j], delta_f.ToFloatPtr(), numClamped);
-                delta_a.p[j] = dot[0] + rowPtrs[j].get(d) * delta_f.p[d];
+                delta_a.p[j] = dot.getVal() + rowPtrs[j].get(d) * delta_f.p[d];
             }
         }
 
@@ -780,34 +782,34 @@ public class Lcp {
             unClam(delta_a, clampedDeltaA);
         }
 
-        private void GetMaxStep(int d, float dir, float[] maxStep, int[] limit, int[] limitSide) {
+        private void GetMaxStep(int d, float dir, CFloat maxStep, CInt limit, CInt limitSide) {
             int i;
             float s;
 
             // default to a full step for the current variable
             if (Math.abs(delta_a.p[d]) > LCP_DELTA_ACCEL_EPSILON) {
-                maxStep[0] = -a.p[d] / delta_a.p[d];
+                maxStep.setVal(-a.p[d] / delta_a.p[d]);
             } else {
-                maxStep[0] = 0.0f;
+                maxStep.setVal(0.0f);
             }
-            limit[0] = d;
-            limitSide[0] = 0;
+            limit.setVal(d);
+            limitSide.setVal(0);
 
             // test the current variable
             if (dir < 0.0f) {
                 if (lo.p[d] != -idMath.INFINITY) {
                     s = (lo.p[d] - f.p[d]) / dir;
-                    if (s < maxStep[0]) {
-                        maxStep[0] = s;
-                        limitSide[0] = -1;
+                    if (s < maxStep.getVal()) {
+                        maxStep.setVal(s);
+                        limitSide.setVal(-1);
                     }
                 }
             } else {
                 if (hi.p[d] != idMath.INFINITY) {
                     s = (hi.p[d] - f.p[d]) / dir;
-                    if (s < maxStep[0]) {
-                        maxStep[0] = s;
-                        limitSide[0] = 1;
+                    if (s < maxStep.getVal()) {
+                        maxStep.setVal(s);
+                        limitSide.setVal(1);
                     }
                 }
             }
@@ -818,20 +820,20 @@ public class Lcp {
                     // if there is a low boundary
                     if (lo.p[i] != -idMath.INFINITY) {
                         s = (lo.p[i] - f.p[i]) / delta_f.p[i];
-                        if (s < maxStep[0]) {
-                            maxStep[0] = s;
-                            limit[0] = i;
-                            limitSide[0] = -1;
+                        if (s < maxStep.getVal()) {
+                            maxStep.setVal(s);
+                            limit.setVal(i);
+                            limitSide.setVal(-1);
                         }
                     }
                 } else if (delta_f.p[i] > LCP_DELTA_FORCE_EPSILON) {
                     // if there is a high boundary
                     if (hi.p[i] != idMath.INFINITY) {
                         s = (hi.p[i] - f.p[i]) / delta_f.p[i];
-                        if (s < maxStep[0]) {
-                            maxStep[0] = s;
-                            limit[0] = i;
-                            limitSide[0] = 1;
+                        if (s < maxStep.getVal()) {
+                            maxStep.setVal(s);
+                            limit.setVal(i);
+                            limitSide.setVal(1);
                         }
                     }
                 }
@@ -855,10 +857,10 @@ public class Lcp {
                     continue;
                 }
                 s = -a.p[i] / delta_a.p[i];
-                if (s < maxStep[0]) {
-                    maxStep[0] = s;
-                    limit[0] = i;
-                    limitSide[0] = 0;
+                if (s < maxStep.getVal()) {
+                    maxStep.setVal(s);
+                    limit.setVal(i);
+                    limitSide.setVal(0);
                 }
             }
         }
@@ -871,26 +873,26 @@ public class Lcp {
     //===============================================================
     static class idLCP_Symmetric extends idLCP {
 
+        private final idVecX a;                 // force and acceleration
         private final idVecX b;                    // right hand side
-        private int[] boxIndex;             // box index
         private final idMatX clamped;              // LDLt factored sub matrix for clamped variables
-        private int clampedChangeStart;   // lowest row/column changed in the clamped matrix during an iteration
-        private final idVecX delta_f;
         private final idVecX delta_a;     // delta force and delta acceleration
+        private final idVecX delta_f;
         private final idVecX diagonal;             // reciprocal of diagonal of LDLt factored sub matrix for clamped variables
         private final idVecX f;
-        private final idVecX a;                 // force and acceleration
-        private final idVecX lo;
         private final idVecX hi;               // low and high bounds
+        private final idVecX lo;
         private final idMatX m;                    // original matrix
+        private final idVecX solveCache1;          // intermediate result cached in SolveClamped
+        private final idVecX solveCache2;          // "
+        private int[] boxIndex;             // box index
+        private int clampedChangeStart;   // lowest row/column changed in the clamped matrix during an iteration
         private int numClamped;           // number of clamped variables
         private int numUnbounded;         // number of unbounded variables
         private boolean padded;               // set to true if the rows of the initial matrix are 16 byte padded
         private int[] permuted;             // index to keep track of the permutation
         private FloatBuffer[] rowPtrs;              // pointers to the rows of m
         private int[] side;                 // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
-        private final idVecX solveCache1;          // intermediate result cached in SolveClamped
-        private final idVecX solveCache2;          // "
         //
         //
 
@@ -912,10 +914,10 @@ public class Lcp {
         @Override
         public boolean Solve(final idMatX o_m, idVecX o_x, final idVecX o_b, final idVecX o_lo, final idVecX o_hi, final int[] o_boxIndex) {
             int i, j, n, boxStartIndex;
-            int[] limit = new int[1], limitSide = new int[1];
+            CInt limit = new CInt(), limitSide = new CInt();
             float dir, s;
-            float[] dot = new float[1];
-            float[] maxStep = new float[1];
+            CFloat dot = new CFloat();
+            CFloat maxStep = new CFloat();
             char[] failed;
 
             // true when the matrix rows are 16 byte padded
@@ -1049,7 +1051,7 @@ public class Lcp {
 
                 // calculate acceleration for current variable
                 SIMDProcessor.Dot(dot, rowPtrs[i], f.ToFloatPtr(), i);
-                a.p[i] = dot[0] - b.p[i];
+                a.p[i] = dot.getVal() - b.p[i];
 
                 // if already at the low boundary
                 if (lo.p[i] >= -LCP_BOUND_EPSILON && a.p[i] >= -LCP_ACCEL_EPSILON) {
@@ -1089,7 +1091,7 @@ public class Lcp {
                     // maximum step we can take
                     GetMaxStep(i, dir, maxStep, limit, limitSide);
 
-                    if (maxStep[0] <= 0.0f) {
+                    if (maxStep.getVal() <= 0.0f) {
 //#ifdef IGNORE_UNSATISFIABLE_VARIABLES
                         // ignore the current variable completely
                         lo.p[i] = hi.p[i] = 0.0f;
@@ -1103,37 +1105,37 @@ public class Lcp {
                     }
 
                     // change force
-                    ChangeForce(i, maxStep[0]);
+                    ChangeForce(i, maxStep.getVal());
 
                     // change acceleration
-                    ChangeAccel(i, maxStep[0]);
+                    ChangeAccel(i, maxStep.getVal());
 
                     // clamp/unclamp the variable that limited this step
-                    side[limit[0]] = limitSide[0];
-                    switch (limitSide[0]) {
+                    side[limit.getVal()] = limitSide.getVal();
+                    switch (limitSide.getVal()) {
                         case 0: {
-                            a.p[limit[0]] = 0.0f;
-                            AddClamped(limit[0], (limit[0] == i));
+                            a.p[limit.getVal()] = 0.0f;
+                            AddClamped(limit.getVal(), (limit.getVal() == i));
                             break;
                         }
                         case -1: {
-                            f.p[limit[0]] = lo.p[limit[0]];
-                            if (limit[0] != i) {
-                                RemoveClamped(limit[0]);
+                            f.p[limit.getVal()] = lo.p[limit.getVal()];
+                            if (limit.getVal() != i) {
+                                RemoveClamped(limit.getVal());
                             }
                             break;
                         }
                         case 1: {
-                            f.p[limit[0]] = hi.p[limit[0]];
-                            if (limit[0] != i) {
-                                RemoveClamped(limit[0]);
+                            f.p[limit.getVal()] = hi.p[limit.getVal()];
+                            if (limit.getVal() != i) {
+                                RemoveClamped(limit.getVal());
                             }
                             break;
                         }
                     }
 
                     // if the current variable limited the step we can continue with the next variable
-                    if (limit[0] == i) {
+                    if (limit.getVal() == i) {
                         break;
                     }
                 }
@@ -1264,7 +1266,7 @@ public class Lcp {
 
         private void AddClamped(int r, boolean useSolveCache) {
             float d;
-            float[] dot = new float[1];
+            CFloat dot = new CFloat();
 
             assert (r >= numClamped);
 
@@ -1299,7 +1301,7 @@ public class Lcp {
             }
 
             // update diagonal[numClamped]
-            d = rowPtrs[numClamped].get(numClamped) - dot[0];
+            d = rowPtrs[numClamped].get(numClamped) - dot.getVal();
 
             if (d == 0.0f) {
                 idLib.common.Printf("idLCP_Symmetric::AddClamped: updating factorization failed\n");
@@ -1315,7 +1317,8 @@ public class Lcp {
 
         private void RemoveClamped(int r) {
             int i, j, n;
-            float[] addSub, v, v1, v2, dot = new float[1];
+            float[] addSub, v, v1, v2;
+            CFloat dot = new CFloat();
             double sum, diag, newDiag, invNewDiag, p1, p2, alpha1, alpha2, beta1, beta2;
             FloatBuffer original, ptr;
 
@@ -1375,7 +1378,7 @@ public class Lcp {
                     // only calculate new diagonal
                     SIMDProcessor.Dot(dot, clampedArray, v, r);
                     unClam(clamped, clampedArray);
-                    diag = rowPtrs[r].get(r) - dot[0];
+                    diag = rowPtrs[r].get(r) - dot.getVal();
                     if (diag == 0.0f) {
                         idLib.common.Printf("idLCP_Symmetric::RemoveClamped: updating factorization failed\n");
                         return;
@@ -1531,13 +1534,13 @@ public class Lcp {
          */
         private void CalcAccelDelta(int d) {
             int j;
-            float[] dot = new float[1];
+            CFloat dot = new CFloat();
 
             // only the not clamped variables, including the current variable, can have a change in acceleration
             for (j = numClamped; j <= d; j++) {
                 // only the clamped variables and the current variable have a force delta unequal zero
                 SIMDProcessor.Dot(dot, rowPtrs[j], delta_f.ToFloatPtr(), numClamped);
-                delta_a.p[j] = dot[0] + rowPtrs[j].get(d) * delta_f.p[d];
+                delta_a.p[j] = dot.getVal() + rowPtrs[j].get(d) * delta_f.p[d];
                 int a = 0;
             }
         }
@@ -1574,34 +1577,34 @@ public class Lcp {
             int a = 0;
         }
 
-        private void GetMaxStep(int d, float dir, float[] maxStep, int[] limit, int[] limitSide) {
+        private void GetMaxStep(int d, float dir, CFloat maxStep, CInt limit, CInt limitSide) {
             int i;
             float s;
 
             // default to a full step for the current variable
             if (Math.abs(delta_a.p[d]) > LCP_DELTA_ACCEL_EPSILON) {
-                maxStep[0] = -a.p[d] / delta_a.p[d];
+                maxStep.setVal(-a.p[d] / delta_a.p[d]);
             } else {
-                maxStep[0] = 0.0f;
+                maxStep.setVal(0.0f);
             }
-            limit[0] = d;
-            limitSide[0] = 0;
+            limit.setVal(d);
+            limitSide.setVal(0);
 
             // test the current variable
             if (dir < 0.0f) {
                 if (lo.p[d] != -idMath.INFINITY) {
                     s = (lo.p[d] - f.p[d]) / dir;
-                    if (s < maxStep[0]) {
-                        maxStep[0] = s;
-                        limitSide[0] = -1;
+                    if (s < maxStep.getVal()) {
+                        maxStep.setVal(s);
+                        limitSide.setVal(-1);
                     }
                 }
             } else {
                 if (hi.p[d] != idMath.INFINITY) {
                     s = (hi.p[d] - f.p[d]) / dir;
-                    if (s < maxStep[0]) {
-                        maxStep[0] = s;
-                        limitSide[0] = 1;
+                    if (s < maxStep.getVal()) {
+                        maxStep.setVal(s);
+                        limitSide.setVal(1);
                     }
                 }
             }
@@ -1612,20 +1615,20 @@ public class Lcp {
                     // if there is a low boundary
                     if (lo.p[i] != -idMath.INFINITY) {
                         s = (lo.p[i] - f.p[i]) / delta_f.p[i];
-                        if (s < maxStep[0]) {
-                            maxStep[0] = s;
-                            limit[0] = i;
-                            limitSide[0] = -1;
+                        if (s < maxStep.getVal()) {
+                            maxStep.setVal(s);
+                            limit.setVal(i);
+                            limitSide.setVal(-1);
                         }
                     }
                 } else if (delta_f.p[i] > LCP_DELTA_FORCE_EPSILON) {
                     // if there is a high boundary
                     if (hi.p[i] != idMath.INFINITY) {
                         s = (hi.p[i] - f.p[i]) / delta_f.p[i];
-                        if (s < maxStep[0]) {
-                            maxStep[0] = s;
-                            limit[0] = i;
-                            limitSide[0] = 1;
+                        if (s < maxStep.getVal()) {
+                            maxStep.setVal(s);
+                            limit.setVal(i);
+                            limitSide.setVal(1);
                         }
                     }
                 }
@@ -1649,10 +1652,10 @@ public class Lcp {
                     continue;
                 }
                 s = -a.p[i] / delta_a.p[i];
-                if (s < maxStep[0]) {
-                    maxStep[0] = s;
-                    limit[0] = i;
-                    limitSide[0] = 0;
+                if (s < maxStep.getVal()) {
+                    maxStep.setVal(s);
+                    limit.setVal(i);
+                    limitSide.setVal(0);
                 }
             }
         }

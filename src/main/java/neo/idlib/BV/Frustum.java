@@ -4,9 +4,13 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.BV.Box.idBox;
 import neo.idlib.BV.Sphere.idSphere;
 import neo.idlib.Lib;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.stream.Stream;
 
 import static neo.idlib.Lib.Max;
 import static neo.idlib.Lib.Min;
@@ -232,14 +236,14 @@ public class Frustum {
         }
 
         public float PlaneDistance(final idPlane plane) {
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
 
             AxisProjection(plane.Normal(), min, max);
-            if (min[0] + plane.oGet(3) > 0.0f) {
-                return min[0] + plane.oGet(0);
+            if (min.getVal() + plane.oGet(3) > 0.0f) {
+                return min.getVal() + plane.oGet(0);
             }
-            if (max[0] + plane.oGet(3) < 0.0f) {
-                return max[0] + plane.oGet(3);
+            if (max.getVal() + plane.oGet(3) < 0.0f) {
+                return max.getVal() + plane.oGet(3);
             }
             return 0.0f;
         }
@@ -250,13 +254,13 @@ public class Frustum {
         }
 
         public int PlaneSide(final idPlane plane, final float epsilon) {
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
 
             AxisProjection(plane.Normal(), min, max);
-            if (min[0] + plane.oGet(3) > epsilon) {
+            if (min.getVal() + plane.oGet(3) > epsilon) {
                 return PLANESIDE_FRONT;
             }
-            if (max[0] + plane.oGet(3) < epsilon) {
+            if (max.getVal() + plane.oGet(3) < epsilon) {
                 return PLANESIDE_BACK;
             }
             return PLANESIDE_CROSS;
@@ -650,7 +654,7 @@ public class Frustum {
         public boolean IntersectsWinding(final idWinding winding) {
             int i, j;
             int[] pointCull;
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
             idVec3[] localPoints, indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
             idMat3 transpose;
             idPlane plane = new idPlane();
@@ -674,7 +678,7 @@ public class Frustum {
             AxisProjection(indexPoints, cornerVecs, plane.Normal(), min, max);
 
             // if the frustum does not cross the winding plane
-            if (min[0] + plane.oGet(3) > 0.0f || max[0] + plane.oGet(3) < 0.0f) {
+            if (min.getVal() + plane.oGet(3) > 0.0f || max.getVal() + plane.oGet(3) < 0.0f) {
                 return false;
             }
 
@@ -733,11 +737,11 @@ public class Frustum {
          If start is inside the frustum then scale1 < 0 and scale2 > 0.
          ============
          */
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale1, float[] scale2) {
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
             if (LocalRayIntersection((start.oMinus(origin)).oMultiply(axis.Transpose()), dir.oMultiply(axis.Transpose()), scale1, scale2)) {//TODO:scale back ref??
                 return true;
             }
-            return scale1[0] <= scale2[0];
+            return scale1.getVal() <= scale2.getVal();
         }
 
         /*
@@ -963,11 +967,11 @@ public class Frustum {
          */
         // moves the far plane so it extends just beyond the bounding volume
         public boolean ConstrainToBounds(final idBounds bounds) {
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
             float newdFar;
 
             bounds.AxisProjection(axis.oGet(0), min, max);
-            newdFar = max[0] - origin.oMultiply(axis.oGet(0));
+            newdFar = max.getVal() - origin.oMultiply(axis.oGet(0));
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f);
                 return false;
@@ -984,11 +988,11 @@ public class Frustum {
          ============
          */
         public boolean ConstrainToBox(final idBox box) {
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
             float newdFar;
 
             box.AxisProjection(axis.oGet(0), min, max);
-            newdFar = max[0] - origin.oMultiply(axis.oGet(0));
+            newdFar = max.getVal() - origin.oMultiply(axis.oGet(0));
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f);
                 return false;
@@ -1005,11 +1009,11 @@ public class Frustum {
          ============
          */
         public boolean ConstrainToSphere(final idSphere sphere) {
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
             float newdFar;
 
             sphere.AxisProjection(axis.oGet(0), min, max);
-            newdFar = max[0] - origin.oMultiply(axis.oGet(0));
+            newdFar = max.getVal() - origin.oMultiply(axis.oGet(0));
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f);
                 return false;
@@ -1027,11 +1031,11 @@ public class Frustum {
          ============
          */
         public boolean ConstrainToFrustum(final idFrustum frustum) {
-            float[] min = new float[1], max = new float[1];
+            CFloat min = new CFloat(), max = new CFloat();
             float newdFar;
 
             frustum.AxisProjection(axis.oGet(0), min, max);
-            newdFar = max[0] - origin.oMultiply(axis.oGet(0));
+            newdFar = max.getVal() - origin.oMultiply(axis.oGet(0));
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f);
                 return false;
@@ -1106,7 +1110,7 @@ public class Frustum {
          ============
          */
         // calculates the projection of this frustum onto the given axis
-        public void AxisProjection(final idVec3 dir, float[] min, float[] max) {
+        public void AxisProjection(final idVec3 dir, CFloat min, CFloat max) {
             idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
 
             ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
@@ -1123,20 +1127,24 @@ public class Frustum {
          */
         public void AxisProjection(final idMat3 ax, idBounds bounds) {
             idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
-            final float[] b00 = {bounds.oGet(0).oGet(0)}, b01 = {bounds.oGet(0).oGet(1)}, b02 = {bounds.oGet(0).oGet(2)},
-                    b10 = {bounds.oGet(1).oGet(0)}, b11 = {bounds.oGet(1).oGet(1)}, b12 = {bounds.oGet(1).oGet(2)};
+            final CFloat b00 = new CFloat(bounds.oGet(0).oGet(0)),
+                    b01 = new CFloat(bounds.oGet(0).oGet(1)),
+                    b02 = new CFloat(bounds.oGet(0).oGet(2)),
+                    b10 = new CFloat(bounds.oGet(1).oGet(0)),
+                    b11 = new CFloat(bounds.oGet(1).oGet(1)),
+                    b12 = new CFloat(bounds.oGet(1).oGet(2));
 
             ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
             AxisProjection(indexPoints, cornerVecs, ax.oGet(0), b00, b11);
             AxisProjection(indexPoints, cornerVecs, ax.oGet(1), b01, b11);
             AxisProjection(indexPoints, cornerVecs, ax.oGet(2), b02, b12);
 
-            bounds.oSet(0, 0, b00[0]);
-            bounds.oSet(0, 1, b01[0]);
-            bounds.oSet(0, 2, b02[0]);
-            bounds.oSet(1, 0, b10[0]);
-            bounds.oSet(1, 1, b11[0]);
-            bounds.oSet(1, 2, b12[0]);
+            bounds.oSet(0, 0, b00.getVal());
+            bounds.oSet(0, 1, b01.getVal());
+            bounds.oSet(0, 2, b02.getVal());
+            bounds.oSet(1, 0, b10.getVal());
+            bounds.oSet(1, 1, b11.getVal());
+            bounds.oSet(1, 2, b12.getVal());
 
         }
 
@@ -1147,8 +1155,8 @@ public class Frustum {
 
         public boolean ProjectionBounds(final idBox box, idBounds projectionBounds) {
             int i, p1, p2, culled, outside;
-            int[][] pointCull = new int[8][1];
-            float[] scale1 = new float[1], scale2 = new float[1];
+            CInt[] pointCull = Stream.generate(CInt::new).limit(8).toArray(CInt[]::new);
+            CFloat scale1 = new CFloat(), scale2 = new CFloat();
             idFrustum localFrustum;
             idVec3[] points = new idVec3[8];
             idVec3 localOrigin;
@@ -1158,14 +1166,14 @@ public class Frustum {
             // if the frustum origin is inside the bounds
             if (bounds.ContainsPoint((origin.oMinus(box.GetCenter())).oMultiply(box.GetAxis().Transpose()))) {
                 // bounds that cover the whole frustum
-                float[] boxMin = new float[1], boxMax = new float[1];
+                CFloat boxMin = new CFloat(), boxMax = new CFloat();
                 float base;
 
                 base = origin.oMultiply(axis.oGet(0));
                 box.AxisProjection(axis.oGet(0), boxMin, boxMax);
 
-                projectionBounds.oSet(0, 0, boxMin[0] - base);
-                projectionBounds.oSet(1, 0, boxMax[0] - base);
+                projectionBounds.oSet(0, 0, boxMin.getVal() - base);
+                projectionBounds.oSet(1, 0, boxMax.getVal() - base);
                 projectionBounds.oSet(0, 1, -1.0f);
                 projectionBounds.oSet(0, 2, -1.0f);
                 projectionBounds.oSet(1, 1, 1.0f);
@@ -1188,8 +1196,8 @@ public class Frustum {
                 p1 = i;
                 p2 = 4 + i;
                 AddLocalLineToProjectionBoundsSetCull(points[p1], points[p2], pointCull[p1], pointCull[p2], projectionBounds);
-                culled &= pointCull[p1][0] & pointCull[p2][0];
-                outside |= pointCull[p1][0] | pointCull[p2][0];
+                culled &= pointCull[p1].getVal() & pointCull[p2].getVal();
+                outside |= pointCull[p1].getVal() | pointCull[p2].getVal();
             }
 
             // if the bounds are completely outside this frustum
@@ -1206,13 +1214,13 @@ public class Frustum {
             for (i = 0; i < 4; i++) {
                 p1 = i;
                 p2 = (i + 1) & 3;
-                AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1][0], pointCull[p2][0], projectionBounds);
+                AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1].getVal(), pointCull[p2].getVal(), projectionBounds);
             }
 
             for (i = 0; i < 4; i++) {
                 p1 = 4 + i;
                 p2 = 4 + ((i + 1) & 3);
-                AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1][0], pointCull[p2][0], projectionBounds);
+                AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1].getVal(), pointCull[p2].getVal(), projectionBounds);
             }
 
             // if the bounds extend beyond two or more boundaries of this frustum
@@ -1227,30 +1235,30 @@ public class Frustum {
                 // test the outer edges of this frustum for intersection with the bounds
                 if ((outside & 2) == 2 && (outside & 8) == 8) {
                     BoundsRayIntersection(bounds, localOrigin, localScaled.oGet(0).oMinus(localScaled.oGet(1).oMinus(localScaled.oGet(2))), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, -1.0f, -1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, -1.0f, -1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, -1.0f, -1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, -1.0f, -1.0f));
                     }
                 }
                 if ((outside & 2) == 2 && (outside & 4) == 4) {
                     BoundsRayIntersection(bounds, localOrigin, localScaled.oGet(0).oMinus(localScaled.oGet(1).oPlus(localScaled.oGet(2))), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, -1.0f, 1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, -1.0f, 1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, -1.0f, 1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, -1.0f, 1.0f));
                     }
                 }
                 if ((outside & 1) == 1 && (outside & 8) == 8) {
                     BoundsRayIntersection(bounds, localOrigin, localScaled.oGet(0).oPlus(localScaled.oGet(1).oMinus(localScaled.oGet(2))), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, 1.0f, -1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, 1.0f, -1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, 1.0f, -1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, 1.0f, -1.0f));
                     }
                 }
                 if ((outside & 1) == 1 && (outside & 2) == 2) {
                     BoundsRayIntersection(bounds, localOrigin, localScaled.oGet(0).oPlus(localScaled.oGet(1).oPlus(localScaled.oGet(2))), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, 1.0f, 1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, 1.0f, 1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, 1.0f, 1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, 1.0f, 1.0f));
                     }
                 }
             }
@@ -1291,8 +1299,8 @@ public class Frustum {
 
         public boolean ProjectionBounds(final idFrustum frustum, idBounds projectionBounds) {
             int i, p1, p2, culled, outside;
-            int[][] pointCull = new int[8][1];
-            float[] scale1 = new float[1], scale2 = new float[1];
+            CInt[] pointCull = Stream.generate(CInt::new).limit(8).toArray(CInt[]::new);
+            CFloat scale1 = new CFloat(), scale2 = new CFloat();
             idFrustum localFrustum;
             idVec3[] points = new idVec3[8];
             idVec3 localOrigin;
@@ -1301,14 +1309,14 @@ public class Frustum {
             // if the frustum origin is inside the other frustum
             if (frustum.ContainsPoint(origin)) {
                 // bounds that cover the whole frustum
-                float[] frustumMin = new float[1], frustumMax = new float[1];
+                CFloat frustumMin = new CFloat(), frustumMax = new CFloat();
                 float base;
 
                 base = origin.oMultiply(axis.oGet(0));
                 frustum.AxisProjection(axis.oGet(0), frustumMin, frustumMax);
 
-                projectionBounds.oGet(0).x = frustumMin[0] - base;
-                projectionBounds.oGet(1).x = frustumMax[0] - base;
+                projectionBounds.oGet(0).x = frustumMin.getVal() - base;
+                projectionBounds.oGet(1).x = frustumMax.getVal() - base;
                 projectionBounds.oGet(0).y = projectionBounds.oGet(0).z = -1.0f;
                 projectionBounds.oGet(1).y = projectionBounds.oGet(1).z = 1.0f;
                 return true;
@@ -1329,8 +1337,8 @@ public class Frustum {
                 p1 = i;
                 p2 = 4 + i;
                 AddLocalLineToProjectionBoundsSetCull(points[p1], points[p2], pointCull[p1], pointCull[p2], projectionBounds);
-                culled &= pointCull[p1][0] & pointCull[p2][0];
-                outside |= pointCull[p1][0] | pointCull[p2][0];
+                culled &= pointCull[p1].getVal() & pointCull[p2].getVal();
+                outside |= pointCull[p1].getVal() | pointCull[p2].getVal();
             }
 
             // if the other frustum is completely outside this frustum
@@ -1348,14 +1356,14 @@ public class Frustum {
                 for (i = 0; i < 4; i++) {
                     p1 = i;
                     p2 = (i + 1) & 3;
-                    AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1][0], pointCull[p2][0], projectionBounds);
+                    AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1].getVal(), pointCull[p2].getVal(), projectionBounds);
                 }
             }
 
             for (i = 0; i < 4; i++) {
                 p1 = 4 + i;
                 p2 = 4 + ((i + 1) & 3);
-                AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1][0], pointCull[p2][0], projectionBounds);
+                AddLocalLineToProjectionBoundsUseCull(points[p1], points[p2], pointCull[p1].getVal(), pointCull[p2].getVal(), projectionBounds);
             }
 
             // if the other frustum extends beyond two or more boundaries of this frustum
@@ -1370,30 +1378,30 @@ public class Frustum {
                 // test the outer edges of this frustum for intersection with the other frustum
                 if ((outside & 2) == 2 && (outside & 8) == 8) {
                     frustum.LocalRayIntersection(localOrigin, localScaled.oGet(0).oMinus(localScaled.oGet(1)).oMinus(localScaled.oGet(2)), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, -1.0f, -1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, -1.0f, -1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, -1.0f, -1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, -1.0f, -1.0f));
                     }
                 }
                 if ((outside & 2) == 2 && (outside & 4) == 4) {
                     frustum.LocalRayIntersection(localOrigin, localScaled.oGet(0).oMinus(localScaled.oGet(1)).oPlus(localScaled.oGet(2)), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, -1.0f, 1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, -1.0f, 1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, -1.0f, 1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, -1.0f, 1.0f));
                     }
                 }
                 if ((outside & 1) == 1 && (outside & 8) == 8) {
                     frustum.LocalRayIntersection(localOrigin, localScaled.oGet(0).oPlus(localScaled.oGet(1)).oMinus(localScaled.oGet(2)), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, 1.0f, -1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, 1.0f, -1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, 1.0f, -1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, 1.0f, -1.0f));
                     }
                 }
                 if ((outside & 1) == 1 && (outside & 2) == 2) {
                     frustum.LocalRayIntersection(localOrigin, localScaled.oGet(0).oPlus(localScaled.oGet(1)).oPlus(localScaled.oGet(2)), scale1, scale2);
-                    if (scale1[0] <= scale2[0] && scale1[0] >= 0.0f) {
-                        projectionBounds.AddPoint(new idVec3(scale1[0] * dFar, 1.0f, 1.0f));
-                        projectionBounds.AddPoint(new idVec3(scale2[0] * dFar, 1.0f, 1.0f));
+                    if (scale1.getVal() <= scale2.getVal() && scale1.getVal() >= 0.0f) {
+                        projectionBounds.AddPoint(new idVec3(scale1.getVal() * dFar, 1.0f, 1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale2.getVal() * dFar, 1.0f, 1.0f));
                     }
                 }
             }
@@ -1403,8 +1411,7 @@ public class Frustum {
 
         public boolean ProjectionBounds(final idWinding winding, idBounds projectionBounds) {
             int i, p1, p2, culled, outside;
-            int[][] pointCull;
-            float[] scale = new float[1];
+            CFloat scale = new CFloat();
             idVec3[] localPoints;
             idMat3 transpose, scaled = new idMat3();
             idPlane plane = new idPlane();
@@ -1421,13 +1428,13 @@ public class Frustum {
             // test the winding edges
             culled = -1;
             outside = 0;
-            pointCull = new int[winding.GetNumPoints()][1];
+            CInt[] pointCull = Stream.generate(CInt::new).limit(winding.GetNumPoints()).toArray(CInt[]::new);
             for (i = 0; i < winding.GetNumPoints(); i += 2) {
                 p1 = i;
                 p2 = (i + 1) % winding.GetNumPoints();
                 AddLocalLineToProjectionBoundsSetCull(localPoints[p1], localPoints[p2], pointCull[p1], pointCull[p2], projectionBounds);
-                culled &= pointCull[p1][0] & pointCull[p2][0];
-                outside |= pointCull[p1][0] | pointCull[p2][0];
+                culled &= pointCull[p1].getVal() & pointCull[p2].getVal();
+                outside |= pointCull[p1].getVal() | pointCull[p2].getVal();
             }
 
             // if completely culled
@@ -1444,7 +1451,7 @@ public class Frustum {
             for (i = 1; i < winding.GetNumPoints(); i += 2) {
                 p1 = i;
                 p2 = (i + 1) % winding.GetNumPoints();
-                AddLocalLineToProjectionBoundsUseCull(localPoints[p1], localPoints[p2], pointCull[p1][0], pointCull[p2][0], projectionBounds);
+                AddLocalLineToProjectionBoundsUseCull(localPoints[p1], localPoints[p2], pointCull[p1].getVal(), pointCull[p2].getVal(), projectionBounds);
             }
 
             // if the winding extends beyond two or more boundaries of this frustum
@@ -1458,22 +1465,22 @@ public class Frustum {
                 // test the outer edges of this frustum for intersection with the winding
                 if ((outside & 2) == 2 && (outside & 8) == 8) {
                     if (winding.RayIntersection(plane, origin, scaled.oGet(0).oMinus(scaled.oGet(1)).oMinus(scaled.oGet(2)), scale)) {
-                        projectionBounds.AddPoint(new idVec3(scale[0] * dFar, -1.0f, -1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale.getVal() * dFar, -1.0f, -1.0f));
                     }
                 }
                 if ((outside & 2) == 2 && (outside & 4) == 4) {
                     if (winding.RayIntersection(plane, origin, scaled.oGet(0).oMinus(scaled.oGet(1)).oPlus(scaled.oGet(2)), scale)) {
-                        projectionBounds.AddPoint(new idVec3(scale[0] * dFar, -1.0f, 1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale.getVal() * dFar, -1.0f, 1.0f));
                     }
                 }
                 if ((outside & 1) == 1 && (outside & 8) == 8) {
                     if (winding.RayIntersection(plane, origin, scaled.oGet(0).oPlus(scaled.oGet(1)).oMinus(scaled.oGet(2)), scale)) {
-                        projectionBounds.AddPoint(new idVec3(scale[0] * dFar, 1.0f, -1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale.getVal() * dFar, 1.0f, -1.0f));
                     }
                 }
                 if ((outside & 1) == 1 && (outside & 2) == 2) {
                     if (winding.RayIntersection(plane, origin, scaled.oGet(0).oPlus(scaled.oGet(1)).oPlus(scaled.oGet(2)), scale)) {
-                        projectionBounds.AddPoint(new idVec3(scale[0] * dFar, 1.0f, 1.0f));
+                        projectionBounds.AddPoint(new idVec3(scale.getVal() * dFar, 1.0f, 1.0f));
                     }
                 }
             }
@@ -1484,11 +1491,13 @@ public class Frustum {
         // calculates the bounds for the projection in this frustum of the given frustum clipped to the given box
         public boolean ClippedProjectionBounds(final idFrustum frustum, final idBox clipBox, idBounds projectionBounds) {
             int i, p1, p2, usedClipPlanes, nearCull, farCull, outside;
-            int[] clipPointCull = new int[8], clipPlanes = new int[4];
-            int[] pointCull = new int[2], startClip = {0}, endClip = {0}, boxPointCull = new int[8];
+            CInt[] clipPointCull = Stream.generate(CInt::new).limit(8).toArray(CInt[]::new), clipPlanes = Stream.generate(CInt::new).limit(4).toArray(CInt[]::new);
+            ;
+            CInt[] pointCull = Stream.generate(CInt::new).limit(2).toArray(CInt[]::new), boxPointCull = Stream.generate(CInt::new).limit(8).toArray(CInt[]::new);
+            CInt startClip = new CInt(), endClip = new CInt();
             float leftScale, upScale;
-            float[] s1 = {0}, s2 = {0}, t1 = {0}, t2 = {0};
-            float[] clipFractions = new float[4];
+            CFloat s1 = new CFloat(), s2 = new CFloat(), t1 = new CFloat(), t2 = new CFloat();
+            CFloat[] clipFractions = Stream.generate(CFloat::new).limit(4).toArray(CFloat[]::new);
             idFrustum localFrustum;
             idVec3 localOrigin1, localOrigin2, start = new idVec3(), end = new idVec3();
             idVec3[] clipPoints = new idVec3[8], localPoints1 = new idVec3[8], localPoints2 = new idVec3[8];
@@ -1498,14 +1507,14 @@ public class Frustum {
             // if the frustum origin is inside the other frustum
             if (frustum.ContainsPoint(origin)) {
                 // bounds that cover the whole frustum
-                float[] clipBoxMin = {0}, clipBoxMax = {0}, frustumMin = {0}, frustumMax = {0}, base = {0};
+                CFloat clipBoxMin = new CFloat(), clipBoxMax = new CFloat(), frustumMin = new CFloat(), frustumMax = new CFloat(), base = new CFloat();
 
-                base[0] = origin.oMultiply(axis.oGet(0));
+                base.setVal(origin.oMultiply(axis.oGet(0)));
                 clipBox.AxisProjection(axis.oGet(0), clipBoxMin, clipBoxMax);
                 frustum.AxisProjection(axis.oGet(0), frustumMin, frustumMax);
 
-                projectionBounds.oGet(0).x = Max(clipBoxMin[0], frustumMin[0]) - base[0];
-                projectionBounds.oGet(1).x = Min(clipBoxMax[0], frustumMax[0]) - base[0];
+                projectionBounds.oGet(0).x = Max(clipBoxMin.getVal(), frustumMin.getVal()) - base.getVal();
+                projectionBounds.oGet(1).x = Min(clipBoxMax.getVal(), frustumMax.getVal()) - base.getVal();
                 projectionBounds.oGet(0).y = projectionBounds.oGet(0).z = -1.0f;
                 projectionBounds.oGet(1).y = projectionBounds.oGet(1).z = 1.0f;
                 return true;
@@ -1515,7 +1524,7 @@ public class Frustum {
 
             // clip the outer edges of the given frustum to the clip bounds
             frustum.ClipFrustumToBox(clipBox, clipFractions, clipPlanes);
-            usedClipPlanes = clipPlanes[0] | clipPlanes[1] | clipPlanes[2] | clipPlanes[3];
+            usedClipPlanes = clipPlanes[0].getVal() | clipPlanes[1].getVal() | clipPlanes[2].getVal() | clipPlanes[3].getVal();
 
             // transform the clipped frustum to the space of this frustum
             transpose = new idMat3(axis);
@@ -1529,17 +1538,17 @@ public class Frustum {
             for (i = 0; i < 4; i++) {
                 p1 = i;
                 p2 = 4 + i;
-                int[] clipPointCull_p1 = {0}, clipPointCull_p2 = {0};
+                CInt clipPointCull_p1 = new CInt(), clipPointCull_p2 = new CInt();
                 AddLocalLineToProjectionBoundsSetCull(clipPoints[p1], clipPoints[p2], clipPointCull_p1, clipPointCull_p2, projectionBounds);
-                clipPointCull[p1] = clipPointCull_p1[0];
-                clipPointCull[p2] = clipPointCull_p2[0];
+                clipPointCull[p1].setVal(clipPointCull_p1.getVal());
+                clipPointCull[p2].setVal(clipPointCull_p2.getVal());
             }
 
             // get cull bits for the clipped frustum
-            outside = clipPointCull[0] | clipPointCull[1] | clipPointCull[2] | clipPointCull[3]
-                    | clipPointCull[4] | clipPointCull[5] | clipPointCull[6] | clipPointCull[7];
-            nearCull = clipPointCull[0] & clipPointCull[1] & clipPointCull[2] & clipPointCull[3];
-            farCull = clipPointCull[4] & clipPointCull[5] & clipPointCull[6] & clipPointCull[7];
+            outside = clipPointCull[0].getVal() | clipPointCull[1].getVal() | clipPointCull[2].getVal() | clipPointCull[3].getVal()
+                    | clipPointCull[4].getVal() | clipPointCull[5].getVal() | clipPointCull[6].getVal() | clipPointCull[7].getVal();
+            nearCull = clipPointCull[0].getVal() & clipPointCull[1].getVal() & clipPointCull[2].getVal() & clipPointCull[3].getVal();
+            farCull = clipPointCull[4].getVal() & clipPointCull[5].getVal() & clipPointCull[6].getVal() & clipPointCull[7].getVal();
 
             // if the clipped frustum is not completely inside this frustum
             if (outside != 0) {
@@ -1549,7 +1558,7 @@ public class Frustum {
                     for (i = 0; i < 4; i++) {
                         p1 = i;
                         p2 = (i + 1) & 3;
-                        AddLocalLineToProjectionBoundsUseCull(clipPoints[p1], clipPoints[p2], clipPointCull[p1], clipPointCull[p2], projectionBounds);
+                        AddLocalLineToProjectionBoundsUseCull(clipPoints[p1], clipPoints[p2], clipPointCull[p1].getVal(), clipPointCull[p2].getVal(), projectionBounds);
                     }
                 }
 
@@ -1557,7 +1566,7 @@ public class Frustum {
                     for (i = 0; i < 4; i++) {
                         p1 = 4 + i;
                         p2 = 4 + ((i + 1) & 3);
-                        AddLocalLineToProjectionBoundsUseCull(clipPoints[p1], clipPoints[p2], clipPointCull[p1], clipPointCull[p2], projectionBounds);
+                        AddLocalLineToProjectionBoundsUseCull(clipPoints[p1], clipPoints[p2], clipPointCull[p1].getVal(), clipPointCull[p2].getVal(), projectionBounds);
                     }
                 }
             }
@@ -1580,14 +1589,14 @@ public class Frustum {
                 for (i = 0; i < 8; i++) {
                     idVec3 p = localPoints1[i];
                     if (0 == (boxVertPlanes[i] & usedClipPlanes) || p.x <= 0.0f) {
-                        boxPointCull[i] = 1 | 2 | 4 | 8;
+                        boxPointCull[i].setVal(1 | 2 | 4 | 8);
                     } else {
-                        boxPointCull[i] = 0;
+                        boxPointCull[i].setVal(0);
                         if (Math.abs(p.y) > p.x * leftScale) {
-                            boxPointCull[i] |= 1 << FLOATSIGNBITSET(p.y);
+                            boxPointCull[i].setVal(boxPointCull[i].getVal() | 1 << FLOATSIGNBITSET(p.y));
                         }
                         if (Math.abs(p.z) > p.x * upScale) {
-                            boxPointCull[i] |= 4 << FLOATSIGNBITSET(p.z);
+                            boxPointCull[i].setVal(boxPointCull[i].getVal() | 4 << FLOATSIGNBITSET(p.z));
                         }
                     }
                 }
@@ -1603,12 +1612,12 @@ public class Frustum {
                 for (i = 0; i < 4; i++) {
                     p1 = i;
                     p2 = 4 + i;
-                    if (0 == (boxPointCull[p1] & boxPointCull[p2])) {
+                    if (0 == (boxPointCull[p1].getVal() & boxPointCull[p2].getVal())) {
                         if (frustum.ClipLine(localPoints1, localPoints2, p1, p2, start, end, startClip, endClip)) {
-                            AddLocalLineToProjectionBoundsSetCull(start, end, pointCull, projectionBounds);
-                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, start, pointCull[0], startClip[0], projectionBounds);
-                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, end, pointCull[1], endClip[0], projectionBounds);
-                            outside |= pointCull[0] | pointCull[1];
+                            AddLocalLineToProjectionBoundsSetCull(start, end, pointCull[1], projectionBounds);
+                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, start, pointCull[0].getVal(), startClip.getVal(), projectionBounds);
+                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, end, pointCull[1].getVal(), endClip.getVal(), projectionBounds);
+                            outside |= pointCull[0].getVal() | pointCull[1].getVal();
                         }
                     }
                 }
@@ -1616,12 +1625,12 @@ public class Frustum {
                 for (i = 0; i < 4; i++) {
                     p1 = i;
                     p2 = (i + 1) & 3;
-                    if (0 == (boxPointCull[p1] & boxPointCull[p2])) {
+                    if (0 == (boxPointCull[p1].getVal() & boxPointCull[p2].getVal())) {
                         if (frustum.ClipLine(localPoints1, localPoints2, p1, p2, start, end, startClip, endClip)) {
-                            AddLocalLineToProjectionBoundsSetCull(start, end, pointCull, projectionBounds);
-                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, start, pointCull[0], startClip[0], projectionBounds);
-                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, end, pointCull[1], endClip[0], projectionBounds);
-                            outside |= pointCull[0] | pointCull[1];
+                            AddLocalLineToProjectionBoundsSetCull(start, end, pointCull[1], projectionBounds);
+                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, start, pointCull[0].getVal(), startClip.getVal(), projectionBounds);
+                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, end, pointCull[1].getVal(), endClip.getVal(), projectionBounds);
+                            outside |= pointCull[0].getVal() | pointCull[1].getVal();
                         }
                     }
                 }
@@ -1629,12 +1638,12 @@ public class Frustum {
                 for (i = 0; i < 4; i++) {
                     p1 = 4 + i;
                     p2 = 4 + ((i + 1) & 3);
-                    if (0 == (boxPointCull[p1] & boxPointCull[p2])) {
+                    if (0 == (boxPointCull[p1].getVal() & boxPointCull[p2].getVal())) {
                         if (frustum.ClipLine(localPoints1, localPoints2, p1, p2, start, end, startClip, endClip)) {
-                            AddLocalLineToProjectionBoundsSetCull(start, end, pointCull, projectionBounds);
-                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, start, pointCull[0], startClip[0], projectionBounds);
-                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, end, pointCull[1], endClip[0], projectionBounds);
-                            outside |= pointCull[0] | pointCull[1];
+                            AddLocalLineToProjectionBoundsSetCull(start, end, pointCull[1], projectionBounds);
+                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, start, pointCull[0].getVal(), startClip.getVal(), projectionBounds);
+                            AddLocalCapsToProjectionBounds(clipPoints, 4, clipPointCull, 4, end, pointCull[1].getVal(), endClip.getVal(), projectionBounds);
+                            outside |= pointCull[0].getVal() | pointCull[1].getVal();
                         }
                     }
                 }
@@ -1667,41 +1676,41 @@ public class Frustum {
                 // test the outer edges of this frustum for intersection with both the other frustum and the clip bounds
                 if ((outside & 2) != 0 && (outside & 8) != 0) {
                     frustum.LocalRayIntersection(localOrigin1, localAxis1.oGet(0).oMinus(localAxis1.oGet(1).oMinus(localAxis1.oGet(2))), s1, s2);
-                    if (s1[0] <= s2[0] && s1[0] >= 0.0f) {
+                    if (s1.getVal() <= s2.getVal() && s1.getVal() >= 0.0f) {
                         BoundsRayIntersection(clipBounds, localOrigin2, localAxis2.oGet(0).oMinus(localAxis2.oGet(1).oMinus(localAxis2.oGet(2))), t1, t2);
-                        if (t1[0] <= t2[0] && t2[0] > s1[0] && t1[0] < s2[0]) {
-                            projectionBounds.AddPoint(new idVec3(s1[0] * dFar, -1.0f, -1.0f));
-                            projectionBounds.AddPoint(new idVec3(s2[0] * dFar, -1.0f, -1.0f));
+                        if (t1.getVal() <= t2.getVal() && t2.getVal() > s1.getVal() && t1.getVal() < s2.getVal()) {
+                            projectionBounds.AddPoint(new idVec3(s1.getVal() * dFar, -1.0f, -1.0f));
+                            projectionBounds.AddPoint(new idVec3(s2.getVal() * dFar, -1.0f, -1.0f));
                         }
                     }
                 }
                 if ((outside & 2) != 0 && (outside & 4) != 0) {
                     frustum.LocalRayIntersection(localOrigin1, localAxis1.oGet(0).oMinus(localAxis1.oGet(1).oPlus(localAxis1.oGet(2))), s1, s2);
-                    if (s1[0] <= s2[0] && s1[0] >= 0.0f) {
+                    if (s1.getVal() <= s2.getVal() && s1.getVal() >= 0.0f) {
                         BoundsRayIntersection(clipBounds, localOrigin2, localAxis2.oGet(0).oMinus(localAxis2.oGet(1).oPlus(localAxis2.oGet(2))), t1, t2);
-                        if (t1[0] <= t2[0] && t2[0] > s1[0] && t1[0] < s2[0]) {
-                            projectionBounds.AddPoint(new idVec3(s1[0] * dFar, -1.0f, 1.0f));
-                            projectionBounds.AddPoint(new idVec3(s2[0] * dFar, -1.0f, 1.0f));
+                        if (t1.getVal() <= t2.getVal() && t2.getVal() > s1.getVal() && t1.getVal() < s2.getVal()) {
+                            projectionBounds.AddPoint(new idVec3(s1.getVal() * dFar, -1.0f, 1.0f));
+                            projectionBounds.AddPoint(new idVec3(s2.getVal() * dFar, -1.0f, 1.0f));
                         }
                     }
                 }
                 if ((outside & 1) != 0 && (outside & 8) != 0) {
                     frustum.LocalRayIntersection(localOrigin1, localAxis1.oGet(0).oPlus(localAxis1.oGet(1).oMinus(localAxis1.oGet(2))), s1, s2);
-                    if (s1[0] <= s2[0] && s1[0] >= 0.0f) {
+                    if (s1.getVal() <= s2.getVal() && s1.getVal() >= 0.0f) {
                         BoundsRayIntersection(clipBounds, localOrigin2, localAxis2.oGet(0).oPlus(localAxis2.oGet(1).oMinus(localAxis2.oGet(2))), t1, t2);
-                        if (t1[0] <= t2[0] && t2[0] > s1[0] && t1[0] < s2[0]) {
-                            projectionBounds.AddPoint(new idVec3(s1[0] * dFar, 1.0f, -1.0f));
-                            projectionBounds.AddPoint(new idVec3(s2[0] * dFar, 1.0f, -1.0f));
+                        if (t1.getVal() <= t2.getVal() && t2.getVal() > s1.getVal() && t1.getVal() < s2.getVal()) {
+                            projectionBounds.AddPoint(new idVec3(s1.getVal() * dFar, 1.0f, -1.0f));
+                            projectionBounds.AddPoint(new idVec3(s2.getVal() * dFar, 1.0f, -1.0f));
                         }
                     }
                 }
                 if ((outside & 1) != 0 && (outside & 2) != 0) {
                     frustum.LocalRayIntersection(localOrigin1, localAxis1.oGet(0).oPlus(localAxis1.oGet(1).oPlus(localAxis1.oGet(2))), s1, s2);
-                    if (s1[0] <= s2[0] && s1[0] >= 0.0f) {
+                    if (s1.getVal() <= s2.getVal() && s1.getVal() >= 0.0f) {
                         BoundsRayIntersection(clipBounds, localOrigin2, localAxis2.oGet(0).oPlus(localAxis2.oGet(1).oPlus(localAxis2.oGet(2))), t1, t2);
-                        if (t1[0] <= t2[0] && t2[0] > s1[0] && t1[0] < s2[0]) {
-                            projectionBounds.AddPoint(new idVec3(s1[0] * dFar, 1.0f, 1.0f));
-                            projectionBounds.AddPoint(new idVec3(s2[0] * dFar, 1.0f, 1.0f));
+                        if (t1.getVal() <= t2.getVal() && t2.getVal() > s1.getVal() && t1.getVal() < s2.getVal()) {
+                            projectionBounds.AddPoint(new idVec3(s1.getVal() * dFar, 1.0f, 1.0f));
+                            projectionBounds.AddPoint(new idVec3(s2.getVal() * dFar, 1.0f, 1.0f));
                         }
                     }
                 }
@@ -2091,7 +2100,7 @@ public class Frustum {
          If there was an intersection scale1 <= scale2
          ============
          */
-        private boolean LocalRayIntersection(final idVec3 start, final idVec3 dir, float[] scale1, float[] scale2) {
+        private boolean LocalRayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
             idVec3 end;
             float d1, d2, fstart, fend, lstart, lend, f, x;
             float leftScale, upScale;
@@ -2101,8 +2110,8 @@ public class Frustum {
             upScale = dUp * invFar;
             end = start.oPlus(dir);
 
-            scale1[0] = idMath.INFINITY;
-            scale2[0] = -idMath.INFINITY;
+            scale1.setVal(idMath.INFINITY);
+            scale2.setVal(-idMath.INFINITY);
 
             // test near plane
             if (dNear > 0.0f) {
@@ -2113,11 +2122,11 @@ public class Frustum {
                     f = d1 / (d1 - d2);
                     if (Math.abs(start.y + f * dir.y) <= dNear * leftScale) {
                         if (Math.abs(start.z + f * dir.z) <= dNear * upScale) {
-                            if (f < scale1[0]) {
-                                scale1[0] = f;
+                            if (f < scale1.getVal()) {
+                                scale1.setVal(f);
                             }
-                            if (f > scale2[0]) {
-                                scale2[0] = f;
+                            if (f > scale2.getVal()) {
+                                scale2.setVal(f);
                             }
                         }
                     }
@@ -2132,11 +2141,11 @@ public class Frustum {
                 f = d1 / (d1 - d2);
                 if (Math.abs(start.y + f * dir.y) <= dFar * leftScale) {
                     if (Math.abs(start.z + f * dir.z) <= dFar * upScale) {
-                        if (f < scale1[0]) {
-                            scale1[0] = f;
+                        if (f < scale1.getVal()) {
+                            scale1.setVal(f);
                         }
-                        if (f > scale2[0]) {
-                            scale2[0] = f;
+                        if (f > scale2.getVal()) {
+                            scale2.setVal(f);
                         }
                     }
                 }
@@ -2156,11 +2165,11 @@ public class Frustum {
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
                     if (Math.abs(start.z + f * dir.z) <= x * upScale) {
-                        if (f < scale1[0]) {
-                            scale1[0] = f;
+                        if (f < scale1.getVal()) {
+                            scale1.setVal(f);
                         }
-                        if (f > scale2[0]) {
-                            scale2[0] = f;
+                        if (f > scale2.getVal()) {
+                            scale2.setVal(f);
                         }
                     }
                 }
@@ -2175,11 +2184,11 @@ public class Frustum {
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
                     if (Math.abs(start.z + f * dir.z) <= x * upScale) {
-                        if (f < scale1[0]) {
-                            scale1[0] = f;
+                        if (f < scale1.getVal()) {
+                            scale1.setVal(f);
                         }
-                        if (f > scale2[0]) {
-                            scale2[0] = f;
+                        if (f > scale2.getVal()) {
+                            scale2.setVal(f);
                         }
                     }
                 }
@@ -2199,11 +2208,11 @@ public class Frustum {
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
                     if (Math.abs(start.y + f * dir.y) <= x * leftScale) {
-                        if (f < scale1[0]) {
-                            scale1[0] = f;
+                        if (f < scale1.getVal()) {
+                            scale1.setVal(f);
                         }
-                        if (f > scale2[0]) {
-                            scale2[0] = f;
+                        if (f > scale2.getVal()) {
+                            scale2.setVal(f);
                         }
                     }
                 }
@@ -2218,11 +2227,11 @@ public class Frustum {
                 x = start.x + f * dir.x;
                 if (x >= dNear && x <= dFar) {
                     if (Math.abs(start.y + f * dir.y) <= x * leftScale) {
-                        if (f < scale1[0]) {
-                            scale1[0] = f;
+                        if (f < scale1.getVal()) {
+                            scale1.setVal(f);
                         }
-                        if (f > scale2[0]) {
-                            scale2[0] = f;
+                        if (f > scale2.getVal()) {
+                            scale2.setVal(f);
                         }
                     }
                 }
@@ -2281,7 +2290,7 @@ public class Frustum {
             return false;
         }
 
-        private void ToClippedPoints(final float[] fractions, idVec3[] points) {
+        private void ToClippedPoints(final CFloat[] fractions, idVec3[] points) {
             idMat3 scaled = new idMat3();
 
             scaled.oSet(0, origin.oPlus(axis.oGet(0).oMultiply(dNear)));
@@ -2306,10 +2315,10 @@ public class Frustum {
             points[4].oPluSet(scaled.oGet(2));
             points[5].oPluSet(scaled.oGet(2));
 
-            points[4] = origin.oPlus(points[4].oMultiply(fractions[0]));
-            points[5] = origin.oPlus(points[5].oMultiply(fractions[1]));
-            points[6] = origin.oPlus(points[6].oMultiply(fractions[2]));
-            points[7] = origin.oPlus(points[7].oMultiply(fractions[3]));
+            points[4] = origin.oPlus(points[4].oMultiply(fractions[0].getVal()));
+            points[5] = origin.oPlus(points[5].oMultiply(fractions[1].getVal()));
+            points[6] = origin.oPlus(points[6].oMultiply(fractions[2].getVal()));
+            points[7] = origin.oPlus(points[7].oMultiply(fractions[3].getVal()));
         }
 
         private void ToIndexPoints(idVec3[] indexPoints) {
@@ -2383,7 +2392,7 @@ public class Frustum {
          18 muls
          ============
          */
-        private void AxisProjection(final idVec3[] indexPoints, final idVec3[] cornerVecs, final idVec3 dir, float[] min, float[] max) {
+        private void AxisProjection(final idVec3[] indexPoints, final idVec3[] cornerVecs, final idVec3 dir, CFloat min, CFloat max) {
             float dx, dy, dz;
             int index;
 
@@ -2392,20 +2401,20 @@ public class Frustum {
             index = (FLOATSIGNBITSET(dy) << 1) | FLOATSIGNBITSET(dz);
             dx = dir.x * cornerVecs[index].x + dir.y * cornerVecs[index].y + dir.z * cornerVecs[index].z;
             index |= (FLOATSIGNBITSET(dx) << 2);
-            min[0] = indexPoints[index].oMultiply(dir);
+            min.setVal(indexPoints[index].oMultiply(dir));
             index = ~index & 3;
             dx = -dir.x * cornerVecs[index].x - dir.y * cornerVecs[index].y - dir.z * cornerVecs[index].z;
             index |= (FLOATSIGNBITSET(dx) << 2);
-            max[0] = indexPoints[index].oMultiply(dir);
+            max.setVal(indexPoints[index].oMultiply(dir));
         }
 
-        private void AddLocalLineToProjectionBoundsSetCull(final idVec3 start, final idVec3 end, int[] cull, idBounds bounds) {
-            int[] cull2 = {0};
+        private void AddLocalLineToProjectionBoundsSetCull(final idVec3 start, final idVec3 end, CInt cull, idBounds bounds) {
+            CInt cull2 = new CInt();
             AddLocalLineToProjectionBoundsSetCull(start, end, cull, cull2, bounds);
-            cull[1] = cull2[0];
+            cull.setVal(cull2.getVal());
         }
 
-        private void AddLocalLineToProjectionBoundsSetCull(final idVec3 start, final idVec3 end, int[] startCull, int[] endCull, idBounds bounds) {
+        private void AddLocalLineToProjectionBoundsSetCull(final idVec3 start, final idVec3 end, CInt startCull, CInt endCull, idBounds bounds) {
             idVec3 dir, p = new idVec3();
             float d1, d2, fstart, fend, lstart, lend, f;
             float leftScale, upScale;
@@ -2534,8 +2543,8 @@ public class Frustum {
                 bounds.oGet(0).x = end.x < 0.0f ? 0.0f : end.x;
             }
 
-            startCull[0] = cull1;
-            endCull[0] = cull2;
+            startCull.setVal(cull1);
+            endCull.setVal(cull2);
         }
 
         private void AddLocalLineToProjectionBoundsUseCull(final idVec3 start, final idVec3 end, int startCull, int endCull, idBounds bounds) {
@@ -2656,19 +2665,19 @@ public class Frustum {
             }
         }
 
-        private boolean AddLocalCapsToProjectionBounds(final idVec3[] endPoints, final int endPointsOffset, final int[] endPointCull, final int endPointCullOffset, final idVec3 point, int pointCull, int pointClip, idBounds projectionBounds) {
+        private boolean AddLocalCapsToProjectionBounds(final idVec3[] endPoints, final int endPointsOffset, final CInt[] endPointCull, final int endPointCullOffset, final idVec3 point, int pointCull, int pointClip, idBounds projectionBounds) {
             int[] p;
 
             if (pointClip < 0) {
                 return false;
             }
             p = capPointIndex[pointClip];
-            AddLocalLineToProjectionBoundsUseCull(endPoints[endPointsOffset + p[0]], point, endPointCull[endPointCullOffset + p[0]], pointCull, projectionBounds);
-            AddLocalLineToProjectionBoundsUseCull(endPoints[endPointsOffset + p[1]], point, endPointCull[endPointCullOffset + p[1]], pointCull, projectionBounds);
+            AddLocalLineToProjectionBoundsUseCull(endPoints[endPointsOffset + p[0]], point, endPointCull[endPointCullOffset + p[0]].getVal(), pointCull, projectionBounds);
+            AddLocalLineToProjectionBoundsUseCull(endPoints[endPointsOffset + p[1]], point, endPointCull[endPointCullOffset + p[1]].getVal(), pointCull, projectionBounds);
             return true;
         }
 
-        private boolean AddLocalCapsToProjectionBounds(final idVec3[] endPoints, final int[] endPointCull, final idVec3 point, int pointCull, int pointClip, idBounds projectionBounds) {
+        private boolean AddLocalCapsToProjectionBounds(final idVec3[] endPoints, final CInt[] endPointCull, final idVec3 point, int pointCull, int pointClip, idBounds projectionBounds) {
             return AddLocalCapsToProjectionBounds(endPoints, 0, endPointCull, 0, point, pointCull, pointClip, projectionBounds);
         }
 
@@ -2680,13 +2689,13 @@ public class Frustum {
          If there was an intersection scale1 <= scale2
          ============
          */
-        private boolean BoundsRayIntersection(final idBounds bounds, final idVec3 start, final idVec3 dir, float[] scale1, float[] scale2) {
+        private boolean BoundsRayIntersection(final idBounds bounds, final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
             idVec3 end, p = new idVec3();
             float d1, d2, f;
             int i, startInside = 1;
 
-            scale1[0] = idMath.INFINITY;
-            scale2[0] = -idMath.INFINITY;
+            scale1.setVal(idMath.INFINITY);
+            scale2.setVal(-idMath.INFINITY);
 
             end = start.oPlus(dir);
 
@@ -2700,11 +2709,11 @@ public class Frustum {
                     if (bounds.oGet(0).y <= p.y && p.y <= bounds.oGet(1).y) {
                         p.z = start.z + f * dir.z;
                         if (bounds.oGet(0).z <= p.z && p.z <= bounds.oGet(1).z) {
-                            if (f < scale1[0]) {
-                                scale1[0] = f;
+                            if (f < scale1.getVal()) {
+                                scale1.setVal(f);
                             }
-                            if (f > scale2[0]) {
-                                scale2[0] = f;
+                            if (f > scale2.getVal()) {
+                                scale2.setVal(f);
                             }
                         }
                     }
@@ -2719,11 +2728,11 @@ public class Frustum {
                     if (bounds.oGet(0).x <= p.x && p.x <= bounds.oGet(1).x) {
                         p.z = start.z + f * dir.z;
                         if (bounds.oGet(0).z <= p.z && p.z <= bounds.oGet(1).z) {
-                            if (f < scale1[0]) {
-                                scale1[0] = f;
+                            if (f < scale1.getVal()) {
+                                scale1.setVal(f);
                             }
-                            if (f > scale2[0]) {
-                                scale2[0] = f;
+                            if (f > scale2.getVal()) {
+                                scale2.setVal(f);
                             }
                         }
                     }
@@ -2738,11 +2747,11 @@ public class Frustum {
                     if (bounds.oGet(0).x <= p.x && p.x <= bounds.oGet(1).x) {
                         p.y = start.y + f * dir.y;
                         if (bounds.oGet(0).y <= p.y && p.y <= bounds.oGet(1).y) {
-                            if (f < scale1[0]) {
-                                scale1[0] = f;
+                            if (f < scale1.getVal()) {
+                                scale1.setVal(f);
                             }
-                            if (f > scale2[0]) {
-                                scale2[0] = f;
+                            if (f > scale2.getVal()) {
+                                scale2.setVal(f);
                             }
                         }
                     }
@@ -2759,7 +2768,7 @@ public class Frustum {
          Clips the frustum far extents to the box.
          ============
          */
-        private void ClipFrustumToBox(final idBox box, float[] clipFractions, int[] clipPlanes) {
+        private void ClipFrustumToBox(final idBox box, CFloat[] clipFractions, CInt[] clipPlanes) {
             int i, index;
             float f, minf;
             idMat3 scaled = new idMat3(), localAxis, transpose;
@@ -2791,26 +2800,26 @@ public class Frustum {
 
                 index = FLOATSIGNBITNOTSET(cornerVecs[i].x);
                 f = (bounds.oGet(index).x - localOrigin.x) / cornerVecs[i].x;
-                clipFractions[i] = f;
-                clipPlanes[i] = 1 << index;
+                clipFractions[i].setVal(f);
+                clipPlanes[i].setVal(1 << index);
 
                 index = FLOATSIGNBITNOTSET(cornerVecs[i].y);
                 f = (bounds.oGet(index).y - localOrigin.y) / cornerVecs[i].y;
-                if (f < clipFractions[i]) {
-                    clipFractions[i] = f;
-                    clipPlanes[i] = 4 << index;
+                if (f < clipFractions[i].getVal()) {
+                    clipFractions[i].setVal(f);
+                    clipPlanes[i].setVal(4 << index);
                 }
 
                 index = FLOATSIGNBITNOTSET(cornerVecs[i].z);
                 f = (bounds.oGet(index).z - localOrigin.z) / cornerVecs[i].z;
-                if (f < clipFractions[i]) {
-                    clipFractions[i] = f;
-                    clipPlanes[i] = 16 << index;
+                if (f < clipFractions[i].getVal()) {
+                    clipFractions[i].setVal(f);
+                    clipPlanes[i].setVal(16 << index);
                 }
 
                 // make sure the frustum is not clipped between the frustum origin and the near plane
-                if (clipFractions[i] < minf) {
-                    clipFractions[i] = minf;
+                if (clipFractions[i].getVal() < minf) {
+                    clipFractions[i].setVal(minf);
                 }
             }
         }
@@ -2823,7 +2832,7 @@ public class Frustum {
          Does not clip to the near and far plane.
          ============
          */
-        private boolean ClipLine(final idVec3[] localPoints, final idVec3[] points, int startIndex, int endIndex, idVec3 start, idVec3 end, int[] startClip, int[] endClip) {
+        private boolean ClipLine(final idVec3[] localPoints, final idVec3[] points, int startIndex, int endIndex, idVec3 start, idVec3 end, CInt startClip, CInt endClip) {
             float d1, d2, fstart, fend, lstart, lend, f, x;
             float leftScale, upScale;
             float scale1, scale2;
@@ -2837,7 +2846,7 @@ public class Frustum {
             localEnd = localPoints[endIndex];
             localDir = localEnd.oMinus(localStart);
 
-            startClip[0] = endClip[0] = -1;
+            startClip.setVal(endClip.getVal() - 1);
             scale1 = idMath.INFINITY;
             scale2 = -idMath.INFINITY;
 
@@ -2859,11 +2868,11 @@ public class Frustum {
                         if (Math.abs(localStart.z + f * localDir.z) <= x * upScale) {
                             if (f < scale1) {
                                 scale1 = f;
-                                startClip[0] = 0;
+                                startClip.setVal(0);
                             }
                             if (f > scale2) {
                                 scale2 = f;
-                                endClip[0] = 0;
+                                endClip.setVal(0);
                             }
                         }
                     }
@@ -2883,11 +2892,11 @@ public class Frustum {
                         if (Math.abs(localStart.z + f * localDir.z) <= x * upScale) {
                             if (f < scale1) {
                                 scale1 = f;
-                                startClip[0] = 1;
+                                startClip.setVal(1);
                             }
                             if (f > scale2) {
                                 scale2 = f;
-                                endClip[0] = 1;
+                                endClip.setVal(1);
                             }
                         }
                     }
@@ -2912,11 +2921,11 @@ public class Frustum {
                         if (Math.abs(localStart.y + f * localDir.y) <= x * leftScale) {
                             if (f < scale1) {
                                 scale1 = f;
-                                startClip[0] = 2;
+                                startClip.setVal(2);
                             }
                             if (f > scale2) {
                                 scale2 = f;
-                                endClip[0] = 2;
+                                endClip.setVal(2);
                             }
                         }
                     }
@@ -2936,11 +2945,11 @@ public class Frustum {
                         if (Math.abs(localStart.y + f * localDir.y) <= x * leftScale) {
                             if (f < scale1) {
                                 scale1 = f;
-                                startClip[0] = 3;
+                                startClip.setVal(3);
                             }
                             if (f > scale2) {
                                 scale2 = f;
-                                endClip[0] = 3;
+                                endClip.setVal(3);
                             }
                         }
                     }
@@ -2955,13 +2964,13 @@ public class Frustum {
             } else if (scale1 <= scale2) {
                 if (0 == startCull) {
                     start.oSet(points[startIndex]);
-                    startClip[0] = -1;
+                    startClip.setVal(-1);
                 } else {
                     start.oSet(points[startIndex].oPlus(points[endIndex].oMinus(points[startIndex])).oMultiply(scale1));
                 }
                 if (0 == endCull) {
                     end.oSet(points[endIndex]);
-                    endClip[0] = -1;
+                    endClip.setVal(-1);
                 } else {
                     end.oSet(points[startIndex].oPlus(points[endIndex].oMinus(points[startIndex])).oMultiply(scale2));
                 }

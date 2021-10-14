@@ -27,8 +27,10 @@ import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
-import neo.idlib.geometry.TraceModel.*;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
@@ -577,7 +579,7 @@ public class SaveGame {
             cls.Save.run(this);
         }
 
-        private void CallSave_r(final java.lang.Class/*idTypeInfo*/ cls, final idClass obj) {
+        private void CallSave_r(final java.lang.Class<? extends idClass>/*idTypeInfo*/ cls, final idClass obj) {
             throw new TODO_Exception();
         }
     }
@@ -594,24 +596,21 @@ public class SaveGame {
         private final idFile file;
         //
         private idList<idClass> objects;
-        //
-        //
 
         public idRestoreGame(idFile savefile) {
             file = savefile;
         }
-        // ~idRestoreGame();
 
         public void CreateObjects() {
             int i;
-            int[] num = {0};
+            CInt num = new CInt();
             idStr className = new idStr();
             idTypeInfo type;
 
             ReadInt(num);
 
             // create all the objects
-            objects.SetNum(num[0] + 1);
+            objects.SetNum(num.getVal() + 1);
 //            memset(objects.Ptr(), 0, sizeof(objects[ 0]) * objects.Num());
             Arrays.fill(objects.getList(), 0, objects.Num(), 0);
 
@@ -622,10 +621,6 @@ public class SaveGame {
                     Error("idRestoreGame::CreateObjects: Unknown class '%s'", className.toString());
                 }
                 objects.oSet(i, type.CreateInstance.run());
-
-// #ifdef ID_DEBUG_MEMORY
-                // InitTypeVariables( objects[i], type.classname, 0xce );
-// #endif
             }
         }
 
@@ -690,27 +685,27 @@ public class SaveGame {
             file.Read(buffer);
         }
 
-        public void ReadInt(int[] value) {
+        public void ReadInt(CInt value) {
             file.ReadInt(value);
         }
 
         public int ReadInt() {
-            int[] value = {0};
+            CInt value = new CInt();
 
             this.ReadInt(value);
 
-            return value[0];
+            return value.getVal();
         }
 
-        public void ReadJoint(int[] jointHandle_t) {
+        public void ReadJoint(CInt jointHandle_t) {
             file.ReadInt(jointHandle_t);
         }
 
         public int ReadJoint() {
-            int[] jointHandle_t = {0};
+            CInt jointHandle_t = new CInt();
             this.ReadJoint(jointHandle_t);
 
-            return jointHandle_t[0];
+            return jointHandle_t.getVal();
         }
 
         public void ReadShort(short[] value) {
@@ -749,39 +744,39 @@ public class SaveGame {
             return c[0];
         }
 
-        public void ReadFloat(float[] value) {
+        public void ReadFloat(CFloat value) {
             file.ReadFloat(value);
         }
 
         public float ReadFloat() {
-            float[] value = {0};
+            CFloat value = new CFloat();
 
             this.ReadFloat(value);
 
-            return value[0];
+            return value.getVal();
         }
 
-        public void ReadBool(boolean[] value) {
+        public void ReadBool(CBool value) {
             file.ReadBool(value);
         }
 
         public boolean ReadBool() {
-            boolean[] value = {false};
+            CBool value = new CBool(false);
             this.ReadBool(value);
 
-            return value[0];
+            return value.isVal();
         }
 
         public void ReadString(idStr string) {
-            int[] len = {0};
+            CInt len = new CInt();
 
             ReadInt(len);
-            if (len[0] < 0) {
+            if (len.getVal() < 0) {
                 Error("idRestoreGame::ReadString: invalid length");
             }
 
-            string.Fill(' ', len[0]);
-            file.Read(atobb(string), len[0]);
+            string.Fill(' ', len.getVal());
+            file.Read(atobb(string), len.getVal());
         }
 
         public void ReadVec2(idVec2 vec) {
@@ -802,12 +797,11 @@ public class SaveGame {
 
         public void ReadWinding(idWinding w) {
             int i;
-            int[] num = {0};
+            CInt num = new CInt();
             file.ReadInt(num);
-            w.SetNumPoints(num[0]);
-            for (i = 0; i < num[0]; i++) {
+            w.SetNumPoints(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
                 file.Read(w.oGet(i)/*, sizeof(idVec5)*/);
-//                LittleRevBytes(w.oGet(i), sizeof(float), sizeof(idVec5) / sizeof(float));
                 LittleRevBytes(w.oGet(i)/*, sizeof(float), sizeof(idVec5) / sizeof(float)*/);
             }
         }
@@ -843,18 +837,18 @@ public class SaveGame {
         }
 
         public void ReadDict(idDict dict) {
-            int[] num = {0};
+            CInt num = new CInt();
             int i;
             idStr key = new idStr();
             idStr value = new idStr();
 
             ReadInt(num);
 
-            if (num[0] < 0) {
+            if (num.getVal() < 0) {
                 dict.oSet(null);
             } else {
                 dict.Clear();
-                for (i = 0; i < num[0]; i++) {
+                for (i = 0; i < num.getVal(); i++) {
                     ReadString(key);
                     ReadString(value);
                     dict.Set(key, value);
@@ -946,9 +940,9 @@ public class SaveGame {
             if (0 == name.Length()) {
                 ui.oSet(null);
             } else {
-                boolean[] unique = {false};
+                CBool unique = new CBool(false);
                 ReadBool(unique);
-                ui.oSet(uiManager.FindGui(name.toString(), true, unique[0]));
+                ui.oSet(uiManager.FindGui(name.toString(), true, unique.isVal()));
                 if (ui != null) {
                     if (ui.ReadFromSaveGame(file) == false) {
                         Error("idSaveGame::ReadUserInterface: ui failed to read properly\n");
@@ -961,7 +955,7 @@ public class SaveGame {
 
         public void ReadRenderEntity(renderEntity_s renderEntity) {
             int i;
-            int[] index = {0};
+            CInt index = new CInt();
 
             ReadModel(renderEntity.hModel);
 
@@ -987,7 +981,7 @@ public class SaveGame {
             ReadSkin(renderEntity.customSkin);
 
             ReadInt(index);
-            renderEntity.referenceSound = gameSoundWorld.EmitterForIndex(index[0]);
+            renderEntity.referenceSound = gameSoundWorld.EmitterForIndex(index.getVal());
 
             for (i = 0; i < MAX_ENTITY_SHADER_PARMS; i++) {
                 renderEntity.shaderParms[i] = ReadFloat();
@@ -1014,7 +1008,7 @@ public class SaveGame {
         }
 
         public void ReadRenderLight(renderLight_s renderLight) {
-            int[] index = {0};
+            CInt index = new CInt();
             int i;
 
             ReadMat3(renderLight.axis);
@@ -1049,14 +1043,14 @@ public class SaveGame {
             }
 
             ReadInt(index);
-            renderLight.referenceSound = gameSoundWorld.EmitterForIndex(index[0]);
+            renderLight.referenceSound = gameSoundWorld.EmitterForIndex(index.getVal());
         }
 
         public void ReadRefSound(refSound_t refSound) {
-            int[] index = {0};
+            CInt index = new CInt();
             ReadInt(index);
 
-            refSound.referenceSound = gameSoundWorld.EmitterForIndex(index[0]);
+            refSound.referenceSound = gameSoundWorld.EmitterForIndex(index.getVal());
             ReadVec3(refSound.origin);
             refSound.listenerId = ReadInt();
             ReadSoundShader(refSound.shader);
@@ -1182,9 +1176,9 @@ public class SaveGame {
         }
 
         public void ReadBuildNumber() {
-            int[] buildNumber = {0};
+            CInt buildNumber = new CInt();
             file.ReadInt(buildNumber);
-            this.buildNumber = buildNumber[0];
+            this.buildNumber = buildNumber.getVal();
         }
 
         //						Used to retrieve the saved game buildNumber from within class Restore methods
@@ -1204,7 +1198,7 @@ public class SaveGame {
             cls.Restore.run(this);
         }
 
-        private void CallRestore_r(final java.lang.Class/*idTypeInfo*/ cls, idClass obj) {
+        private void CallRestore_r(final java.lang.Class<? extends idClass>/*idTypeInfo*/ cls, idClass obj) {
             throw new TODO_Exception();
         }
 

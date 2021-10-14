@@ -6,6 +6,7 @@ import neo.Tools.Compilers.AAS.AASFile.idAASSettings;
 import neo.Tools.Compilers.AAS.AASFile.idReachability;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 
@@ -129,19 +130,19 @@ public class AAS {
         public abstract int TravelTimeToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags);
 
         // Get the travel time and first reachability to be used towards the goal, returns true if there is a path.
-        public abstract boolean RouteToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags, int[] travelTime, idReachability[] reach);
+        public abstract boolean RouteToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags, CInt travelTime, idReachability[] reach);
 
         // Creates a walk path towards the goal.
         public abstract boolean WalkPathToGoal(aasPath_s path, int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags);
 
         // Returns true if one can walk along a straight line from the origin to the goal origin.
-        public abstract boolean WalkPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, int[] endAreaNum);
+        public abstract boolean WalkPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, CInt endAreaNum);
 
         // Creates a fly path towards the goal.
         public abstract boolean FlyPathToGoal(aasPath_s path, int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags);
 
         // Returns true if one can fly along a straight line from the origin to the goal origin.
-        public abstract boolean FlyPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, int[] endAreaNum);
+        public abstract boolean FlyPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, CInt endAreaNum);
 
         // Show the walk path from the origin towards the area.
         public abstract void ShowWalkPath(final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin);

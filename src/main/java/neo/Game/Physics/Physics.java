@@ -279,9 +279,9 @@ public class Physics {
         public abstract idVec3 GetGravityNormal();
 
         // get first collision when translating or rotating this physics object
-        public abstract void ClipTranslation(trace_s[] results, final idVec3 translation, final idClipModel model);
+        public abstract void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model);
 
-        public abstract void ClipRotation(trace_s[] results, final idRotation rotation, final idClipModel model);
+        public abstract void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model);
 
         public abstract int ClipContents(final idClipModel model);
 

@@ -154,6 +154,17 @@ public class Anim {
         int channel;
         int/*jointHandle_t*/ num;
         int/*jointHandle_t*/ parentNum;
+
+        public jointInfo_t() {
+        }
+
+        public jointInfo_t(jointInfo_t val) {
+            if (val != null) {
+                this.channel = val.channel;
+                this.num = val.num;
+                this.parentNum = val.parentNum;
+            }
+        }
     }
 
     public static final class jointMod_t {
@@ -174,6 +185,16 @@ public class Anim {
 
         int firstCommand;
         int num;
+
+        public frameLookup_t() {
+        }
+
+        public frameLookup_t(frameLookup_t val) {
+            if (val != null) {
+                this.firstCommand = val.firstCommand;
+                this.num = val.num;
+            }
+        }
     }
 
     public static final class frameCommand_t {

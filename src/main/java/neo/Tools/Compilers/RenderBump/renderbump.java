@@ -14,7 +14,6 @@ import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.Winding.idWinding;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
-import neo.idlib.math.Vector.*;
 import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
@@ -864,7 +863,9 @@ public class renderbump {
             final srfTriangles_s tri = surf.geometry;
 
 //            memcpy(verts + numVerts, tri.verts, tri.numVerts * sizeof(tri.verts[0]));
-            System.arraycopy(tri.verts, 0, verts, numVerts, tri.numVerts);
+            for (i = 0; i < tri.numVerts; i++) {
+                verts[i] = new idDrawVert(tri.verts[i]);
+            }
             for (j = 0; j < tri.numIndexes; j++) {
                 indexes[numIndexes + j] = numVerts + tri.indexes[j];
             }

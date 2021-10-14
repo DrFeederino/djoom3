@@ -656,8 +656,6 @@ public class Material {
         private static int DEBUG_ParseStage = 0;
         //
         //
-        private static int debug_creation_counter = 0;
-        private final int dbg_count;
         private final int[] deformRegisters = new int[4];// numeric parameter for deforms
         //
         private final int[] texGenRegisters = new int[MAX_TEXGEN_REGISTERS];// for wobbleSky
@@ -729,7 +727,6 @@ public class Material {
         private boolean unsmoothedTangents;
 
         public idMaterial() {
-            dbg_count = debug_creation_counter++;
             this.decalInfo = new decalInfo_t();
             CommonInit();
 
@@ -738,48 +735,47 @@ public class Material {
             surfaceArea = 0;
         }
 
-        idMaterial(idMaterial shader) {//TODO:clone?
-            throw new UnsupportedOperationException();
-//            this.desc =shader. desc;
-//            this.renderBump =shader. renderBump;
-//            this.lightFalloffImage =shader. lightFalloffImage;
-//            this.entityGui =shader. entityGui;
-//            this.gui =shader. gui;
-//            this.noFog =shader. noFog;
-//            this.spectrum =shader. spectrum;
-//            this.polygonOffset =shader. polygonOffset;
-//            this.contentFlags =shader. contentFlags;
-//            this.surfaceFlags =shader. surfaceFlags;
-//            this.materialFlags =shader. materialFlags;
-//            this.decalInfo =shader. decalInfo;
-//            this.sort =shader. sort;
-//            this.deform =shader. deform;
-//            this.deformDecl =shader. deformDecl;
-//            this.coverage =shader. coverage;
-//            this.cullType =shader. cullType;
-//            this.shouldCreateBackSides =shader. shouldCreateBackSides;
-//            this.fogLight =shader. fogLight;
-//            this.blendLight =shader. blendLight;
-//            this.ambientLight =shader. ambientLight;
-//            this.unsmoothedTangents =shader. unsmoothedTangents;
-//            this.hasSubview =shader. hasSubview;
-//            this.allowOverlays =shader. allowOverlays;
-//            this.numOps =shader. numOps;
-//            this.ops =shader. ops;
-//            this.numRegisters =shader. numRegisters;
-//            this.expressionRegisters =shader. expressionRegisters;
-//            this.constantRegisters =shader. constantRegisters;
-//            this.numStages =shader. numStages;
-//            this.numAmbientStages =shader. numAmbientStages;
-//            this.stages =shader. stages;
-//            this.pd =shader. pd;
-//            this.surfaceArea =shader. surfaceArea;
-//            this.editorImageName =shader. editorImageName;
-//            this.editorImage =shader. editorImage;
-//            this.editorAlpha =shader. editorAlpha;
-//            this.suppressInSubview =shader. suppressInSubview;
-//            this.portalSky =shader. portalSky;
-//            this.refCount =shader. refCount;
+        public idMaterial(idMaterial shader) {
+            this.desc = shader.desc;
+            this.renderBump = shader.renderBump;
+            this.lightFalloffImage = shader.lightFalloffImage;
+            this.entityGui = shader.entityGui;
+            this.gui = shader.gui;
+            this.noFog = shader.noFog;
+            this.spectrum = shader.spectrum;
+            this.polygonOffset = shader.polygonOffset;
+            this.contentFlags = shader.contentFlags;
+            this.surfaceFlags = shader.surfaceFlags;
+            this.materialFlags = shader.materialFlags;
+            this.decalInfo = shader.decalInfo;
+            this.sort = shader.sort;
+            this.deform = shader.deform;
+            this.deformDecl = shader.deformDecl;
+            this.coverage = shader.coverage;
+            this.cullType = shader.cullType;
+            this.shouldCreateBackSides = shader.shouldCreateBackSides;
+            this.fogLight = shader.fogLight;
+            this.blendLight = shader.blendLight;
+            this.ambientLight = shader.ambientLight;
+            this.unsmoothedTangents = shader.unsmoothedTangents;
+            this.hasSubview = shader.hasSubview;
+            this.allowOverlays = shader.allowOverlays;
+            this.numOps = shader.numOps;
+            this.ops = shader.ops;
+            this.numRegisters = shader.numRegisters;
+            this.expressionRegisters = shader.expressionRegisters;
+            this.constantRegisters = shader.constantRegisters;
+            this.numStages = shader.numStages;
+            this.numAmbientStages = shader.numAmbientStages;
+            this.stages = shader.stages;
+            this.pd = shader.pd;
+            this.surfaceArea = shader.surfaceArea;
+            this.editorImageName = shader.editorImageName;
+            this.editorImage = shader.editorImage;
+            this.editorAlpha = shader.editorAlpha;
+            this.suppressInSubview = shader.suppressInSubview;
+            this.portalSky = shader.portalSky;
+            this.refCount = shader.refCount;
         }
 
         @Override
@@ -792,7 +788,7 @@ public class Material {
         public boolean SetDefaultText() {
             // if there exists an image with the same name
             if (true) { //fileSystem->ReadFile( GetName(), NULL ) != -1 ) {
-                StringBuilder generated = new StringBuilder(2048);
+                StringBuffer generated = new StringBuffer(2048);
                 idStr.snPrintf(generated, generated.capacity(),
                         "material %s // IMPLICITLY GENERATED\n"
                                 + "{\n"
@@ -1484,12 +1480,12 @@ public class Material {
 
         public int GetImageWidth() {
             assert (GetStage(0) != null && GetStage(0).texture.image[0] != null);
-            return GetStage(0).texture.image[0].uploadWidth;
+            return GetStage(0).texture.image[0].uploadWidth.getVal();
         }
 
         public int GetImageHeight() {
             assert (GetStage(0) != null && GetStage(0).texture.image[0] != null);
-            return GetStage(0).texture.image[0].uploadHeight;
+            return GetStage(0).texture.image[0].uploadHeight.getVal();
         }
 
         public void SetGui(final String _gui) {

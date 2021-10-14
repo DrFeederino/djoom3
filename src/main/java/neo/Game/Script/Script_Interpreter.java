@@ -2,12 +2,11 @@ package neo.Game.Script;
 
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.Class.idEventArg;
-import neo.Game.GameSys.Event.*;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
-import neo.Game.Script.Script_Program.*;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
 
@@ -15,13 +14,13 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import static neo.Game.GameSys.Event.*;
-import static neo.Game.GameSys.SysCvar.developer;
 import static neo.Game.Game_local.MAX_GENTITIES;
 import static neo.Game.Game_local.gameLocal;
 import static neo.Game.Script.Script_Compiler.*;
 import static neo.Game.Script.Script_Program.*;
 import static neo.Game.Script.Script_Program.idVarDef.initialized_t.stackVariable;
 import static neo.TempDump.*;
+import static neo.framework.Common.com_developer;
 import static neo.framework.Common.common;
 import static neo.idlib.Text.Str.va;
 import static neo.idlib.math.Vector.getVec3_zero;
@@ -285,7 +284,7 @@ public class Script_Interpreter {
             eventEntity = GetEntity(var.getEntityNumberPtr());
 
             if (null == eventEntity || !eventEntity.RespondsTo(evdef)) {
-                if (eventEntity != null && developer.GetBool()) {
+                if (eventEntity != null && com_developer.GetBool()) {
                     // give a warning in developer mode
                     Warning("Function '%s' not supported on entity '%s'", evdef.GetName(), eventEntity.name.toString());
                 }
@@ -515,15 +514,15 @@ public class Script_Interpreter {
         public void Restore(idRestoreGame savefile) {                // unarchives object from save game file
             int i;
             idStr funcname = new idStr();
-            int[] func_index = {0};
+            CInt func_index = new CInt();
 
             callStackDepth = savefile.ReadInt();
             for (i = 0; i < callStackDepth; i++) {
                 callStack[i].s = savefile.ReadInt();
 
                 savefile.ReadInt(func_index);
-                if (func_index[0] >= 0) {
-                    callStack[i].f = gameLocal.program.GetFunction(func_index[0]);
+                if (func_index.getVal() >= 0) {
+                    callStack[i].f = gameLocal.program.GetFunction(func_index.getVal());
                 } else {
                     callStack[i].f = null;
                 }
@@ -539,8 +538,8 @@ public class Script_Interpreter {
             maxLocalstackUsed = savefile.ReadInt();
 
             savefile.ReadInt(func_index);
-            if (func_index[0] >= 0) {
-                currentFunction = gameLocal.program.GetFunction(func_index[0]);
+            if (func_index.getVal() >= 0) {
+                currentFunction = gameLocal.program.GetFunction(func_index.getVal());
             } else {
                 currentFunction = null;
             }

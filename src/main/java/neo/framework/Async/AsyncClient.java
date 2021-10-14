@@ -1,8 +1,6 @@
 package neo.framework.Async;
 
 import neo.Game.Game.gameReturn_t;
-import neo.framework.Async.AsyncNetwork.*;
-import neo.framework.Async.MsgChannel.*;
 import neo.framework.Async.ServerScan.idServerScan;
 import neo.framework.Async.ServerScan.networkServer_t;
 import neo.framework.FileSystem_h.backgroundDownload_s;
@@ -16,6 +14,7 @@ import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StrPool;
 import neo.idlib.math.Math_h.idMath;
@@ -555,11 +554,11 @@ public class AsyncClient {
 
         public void RunFrame() {
             int msec;
-            int[] size = new int[1];
+            CInt size = new CInt();
             boolean newPacket;
             idBitMsg msg = new idBitMsg();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
-            netadr_t[] from = {null};
+            netadr_t from = new netadr_t();
 
             msec = UpdateTime(100);
 
@@ -581,9 +580,9 @@ public class AsyncClient {
                     newPacket = clientPort.GetPacketBlocking(from, msgBuf, size, msgBuf.capacity(), USERCMD_MSEC - (gameTimeResidual + clientPredictTime) - 1);
                     if (newPacket) {
                         msg.Init(msgBuf, msgBuf.capacity());
-                        msg.SetSize(size[0]);
+                        msg.SetSize(size.getVal());
                         msg.BeginReading();
-                        ProcessMessage(from[0], msg);
+                        ProcessMessage(from, msg);
                     }
 
                     msec = UpdateTime(100);
@@ -798,9 +797,9 @@ public class AsyncClient {
         }
 
         private void ClearPendingPackets() {
-            int[] size = new int[1];
+            CInt size = new CInt();
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
-            netadr_t[] from = new netadr_t[1];
+            netadr_t from = new netadr_t();
 
             while (clientPort.GetPacket(from, msgBuf, size, msgBuf.capacity())) ;
         }
@@ -1609,12 +1608,12 @@ public class AsyncClient {
                 return;
             }
 
-            int[] serverMessageSequence = {0};
+            CInt serverMessageSequence = new CInt();
             if (!channel.Process(from, clientTime, msg, serverMessageSequence)) {
-                this.serverMessageSequence = serverMessageSequence[0];
+                this.serverMessageSequence = serverMessageSequence.getVal();
                 return;        // out of order, duplicated, fragment, etc.
             }
-            this.serverMessageSequence = serverMessageSequence[0];
+            this.serverMessageSequence = serverMessageSequence.getVal();
 
             lastPacketTime = clientTime;
             ProcessReliableServerMessages();
@@ -1691,7 +1690,7 @@ public class AsyncClient {
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             int i;
             int[] inChecksums = new int[MAX_PURE_PAKS];
-            int[] gamePakChecksum = new int[1];
+            CInt gamePakChecksum = new CInt();
 
             if (clientState != CS_CONNECTING) {
                 common.Printf("clientState != CS_CONNECTING, pure msg ignored\n");
@@ -1713,7 +1712,7 @@ public class AsyncClient {
                 outMsg.WriteLong(inChecksums[i++]);
             }
             outMsg.WriteLong(0);
-            outMsg.WriteLong(gamePakChecksum[0]);
+            outMsg.WriteLong(gamePakChecksum.getVal());
             clientPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize());
         }
 
@@ -1825,7 +1824,7 @@ public class AsyncClient {
             ByteBuffer msgBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE);
             int[] inChecksums = new int[MAX_PURE_PAKS];
             int i;
-            int[] gamePakChecksum = new int[1];
+            CInt gamePakChecksum = new CInt();
             int serverGameInitId;
 
             session.SetGUI(null, null);
@@ -1861,7 +1860,7 @@ public class AsyncClient {
                 outMsg.WriteLong(inChecksums[i++]);
             }
             outMsg.WriteLong(0);
-            outMsg.WriteLong(gamePakChecksum[0]);
+            outMsg.WriteLong(gamePakChecksum.getVal());
 
             if (!channel.SendReliableMessage(outMsg)) {
                 common.Error("client.server reliable messages overflow\n");

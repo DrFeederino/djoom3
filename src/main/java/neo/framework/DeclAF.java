@@ -7,6 +7,7 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.traceModel_t;
@@ -271,11 +272,11 @@ public class DeclAF {
 
         public idAngles angles;
         public float angularFriction;
-        public int[] clipMask = {0};
+        public CInt clipMask = new CInt();
         public float contactFriction;
         public idAFVector contactMotorDirection;
         public idStr containedJoints;
-        public int[] contents = {0};
+        public CInt contents = new CInt();
         public float density;
         public idAFVector frictionDirection;
         public idMat3 inertiaScale;
@@ -376,8 +377,8 @@ public class DeclAF {
 
         public final idList<idDeclAF_Body> bodies = new idList<>(idDeclAF_Body.class);
         public final idList<idDeclAF_Constraint> constraints = new idList<>(idDeclAF_Constraint.class);
-        public int[] clipMask = new int[1];
-        public int[] contents = new int[1];
+        public CInt clipMask = new CInt();
+        public CInt contents = new CInt();
         public float defaultAngularFriction;
         public float defaultConstraintFriction;
         public float defaultContactFriction;
@@ -646,8 +647,8 @@ public class DeclAF {
             minMoveTime = -1.0f;
             maxMoveTime = -1.0f;
             selfCollision = true;
-            contents[0] = CONTENTS_CORPSE;
-            clipMask[0] = CONTENTS_SOLID | CONTENTS_CORPSE;
+            contents.setVal(CONTENTS_CORPSE);
+            clipMask.setVal(CONTENTS_SOLID | CONTENTS_CORPSE);
             bodies.DeleteContents(true);
             constraints.DeleteContents(true);
         }
@@ -780,7 +781,7 @@ public class DeclAF {
             }
         }
 
-        private boolean ParseContents(idLexer src, int[] c) throws idException {
+        private boolean ParseContents(idLexer src, CInt c) throws idException {
             idToken token = new idToken();
             idStr str = new idStr();
 
@@ -791,7 +792,7 @@ public class DeclAF {
                 }
                 str.Append(",");
             }
-            c[0] = ContentsFromString(str.toString());
+            c.setVal(ContentsFromString(str.toString()));
             return true;
         }
 
@@ -962,7 +963,7 @@ public class DeclAF {
                 return false;
             }
 
-            body.clipMask[0] |= CONTENTS_MOVEABLECLIP;
+            body.clipMask.setVal(body.clipMask.getVal() | CONTENTS_MOVEABLECLIP);
 
             return true;
         }
@@ -1469,8 +1470,8 @@ public class DeclAF {
             if (body.linearFriction != -1) {
                 f.WriteFloatString("\tfriction %f, %f, %f\n", body.linearFriction, body.angularFriction, body.contactFriction);
             }
-            f.WriteFloatString("\tcontents %s\n", ContentsToString(body.contents[0], str));
-            f.WriteFloatString("\tclipMask %s\n", ContentsToString(body.clipMask[0], str));
+            f.WriteFloatString("\tcontents %s\n", ContentsToString(body.contents.getVal(), str));
+            f.WriteFloatString("\tclipMask %s\n", ContentsToString(body.clipMask.getVal(), str));
             f.WriteFloatString("\tselfCollision %d\n", body.selfCollision);
             if (body.frictionDirection.ToVec3() != Vector.getVec3_origin()) {
                 f.WriteFloatString("\tfrictionDirection ");
@@ -1633,8 +1634,8 @@ public class DeclAF {
             f.WriteFloatString("\tminMoveTime %f\n", minMoveTime);
             f.WriteFloatString("\tmaxMoveTime %f\n", maxMoveTime);
             f.WriteFloatString("\ttotalMass %f\n", totalMass);
-            f.WriteFloatString("\tcontents %s\n", ContentsToString(contents[0], str));
-            f.WriteFloatString("\tclipMask %s\n", ContentsToString(clipMask[0], str));
+            f.WriteFloatString("\tcontents %s\n", ContentsToString(contents.getVal(), str));
+            f.WriteFloatString("\tclipMask %s\n", ContentsToString(clipMask.getVal(), str));
             f.WriteFloatString("\tselfCollision %d\n", selfCollision);
             f.WriteFloatString("}\n");
             return true;

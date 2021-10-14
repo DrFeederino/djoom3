@@ -2,17 +2,14 @@ package neo.Game;
 
 import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
-import neo.Game.Entity.*;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameSys.Class;
-import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody;
 import neo.Game.Player.idPlayer;
-import neo.Renderer.Material.*;
 import neo.Renderer.RenderWorld.deferredEntityCallback_t;
 import neo.Renderer.RenderWorld.renderEntity_s;
 import neo.Renderer.RenderWorld.renderView_s;
@@ -24,6 +21,8 @@ import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
@@ -166,14 +165,14 @@ public class Item {
 
             String giveTo;
             idEntity ent;
-            float[] tsize = {0};
+            CFloat tsize = new CFloat();
 
             if (spawnArgs.GetBool("dropToFloor")) {
                 PostEventMS(EV_DropToFloor, 0);
             }
 
             if (spawnArgs.GetFloat("triggersize", "0", tsize)) {
-                GetPhysics().GetClipModel().LoadModel(new idTraceModel(new idBounds(getVec3_origin()).Expand(tsize[0])));
+                GetPhysics().GetClipModel().LoadModel(new idTraceModel(new idBounds(getVec3_origin()).Expand(tsize.getVal())));
                 GetPhysics().GetClipModel().Link(gameLocal.clip);
             }
 
@@ -454,7 +453,7 @@ public class Item {
         }
 
         private void Event_DropToFloor() {
-            trace_s[] trace = {null};
+            trace_s trace = new trace_s();
 
             // don't drop the floor if bound to another entity
             if (GetBindMaster() != null && !GetBindMaster().equals(this)) {
@@ -462,7 +461,7 @@ public class Item {
             }
 
             gameLocal.clip.TraceBounds(trace, renderEntity.origin, renderEntity.origin.oMinus(new idVec3(0, 0, 64)), renderEntity.bounds, MASK_SOLID | CONTENTS_CORPSE, this);
-            SetOrigin(trace[0].endpos);
+            SetOrigin(trace.endpos);
         }
 
         private void Event_Touch(idEventArg<idEntity> _other, idEventArg<trace_s> trace) {
@@ -575,20 +574,20 @@ public class Item {
     public static class idItemPowerup extends idItem {
 // public 	CLASS_PROTOTYPE( idItemPowerup );
 
-        private final int[] time = {0};
-        private final int[] type = {0};
+        private final CInt time = new CInt();
+        private final CInt type = new CInt();
         //
         //
 
         public idItemPowerup() {
-            time[0] = 0;
-            type[0] = 0;
+            time.setVal(0);
+            type.setVal(0);
         }
 
         @Override
         public void Save(idSaveGame savefile) {
-            savefile.WriteInt(time[0]);
-            savefile.WriteInt(type[0]);
+            savefile.WriteInt(time.getVal());
+            savefile.WriteInt(type.getVal());
         }
 
         @Override
@@ -601,8 +600,8 @@ public class Item {
         public void Spawn() {
             super.Spawn();
 
-            time[0] = spawnArgs.GetInt("time", "30");
-            type[0] = spawnArgs.GetInt("type", "0");
+            time.setVal(spawnArgs.GetInt("time", "30"));
+            type.setVal(spawnArgs.GetInt("type", "0"));
         }
 
         @Override
@@ -610,7 +609,7 @@ public class Item {
             if (player.spectating) {
                 return false;
             }
-            player.GivePowerUp(type[0], time[0] * 1000);
+            player.GivePowerUp(type.getVal(), time.getVal() * 1000);
             return true;
         }
 
@@ -977,13 +976,13 @@ public class Item {
             super.Spawn();
 
             idTraceModel trm = new idTraceModel();
-            float[] density = {0}, friction = {0}, bouncyness = {0}, tsize = {0};
+            CFloat density = new CFloat(), friction = new CFloat(), bouncyness = new CFloat(), tsize = new CFloat();
             idStr clipModelName = new idStr();
 //            idBounds bounds = new idBounds();
 
             // create a trigger for item pickup
             spawnArgs.GetFloat("triggersize", "16.0", tsize);
-            trigger = new idClipModel(new idTraceModel(new idBounds(getVec3_origin()).Expand(tsize[0])));
+            trigger = new idClipModel(new idTraceModel(new idBounds(getVec3_origin()).Expand(tsize.getVal())));
             trigger.Link(gameLocal.clip, this, 0, GetPhysics().GetOrigin(), GetPhysics().GetAxis());
             trigger.SetContents(CONTENTS_TRIGGER);
 
@@ -1006,19 +1005,19 @@ public class Item {
 
             // get rigid body properties
             spawnArgs.GetFloat("density", "0.5", density);
-            density[0] = idMath.ClampFloat(0.001f, 1000.0f, density[0]);
+            density.setVal(idMath.ClampFloat(0.001f, 1000.0f, density.getVal()));
             spawnArgs.GetFloat("friction", "0.05", friction);
-            friction[0] = idMath.ClampFloat(0.0f, 1.0f, friction[0]);
+            friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction.getVal()));
             spawnArgs.GetFloat("bouncyness", "0.6", bouncyness);
-            bouncyness[0] = idMath.ClampFloat(0.0f, 1.0f, bouncyness[0]);
+            bouncyness.setVal(idMath.ClampFloat(0.0f, 1.0f, bouncyness.getVal()));
 
             // setup the physics
             physicsObj.SetSelf(this);
-            physicsObj.SetClipModel(new idClipModel(trm), density[0]);
+            physicsObj.SetClipModel(new idClipModel(trm), density.getVal());
             physicsObj.SetOrigin(GetPhysics().GetOrigin());
             physicsObj.SetAxis(GetPhysics().GetAxis());
-            physicsObj.SetBouncyness(bouncyness[0]);
-            physicsObj.SetFriction(0.6f, 0.6f, friction[0]);
+            physicsObj.SetBouncyness(bouncyness.getVal());
+            physicsObj.SetFriction(0.6f, 0.6f, friction.getVal());
             physicsObj.SetGravity(gameLocal.GetGravity());
             physicsObj.SetContents(CONTENTS_RENDERMODEL);
             physicsObj.SetClipMask(MASK_SOLID | CONTENTS_MOVEABLECLIP);
@@ -1165,11 +1164,6 @@ public class Item {
 
         @Override
         public Class.idClass CreateInstance() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 

@@ -118,10 +118,6 @@ public class WorldSpawn {
             Game_local.idGameLocal.Error("Tried to remove world");
         }
 
-        @Override
-        public java.lang.Class/*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public idClass CreateInstance() {

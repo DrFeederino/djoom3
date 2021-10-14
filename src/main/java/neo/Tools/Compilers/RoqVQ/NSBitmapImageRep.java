@@ -55,9 +55,10 @@ public class NSBitmapImageRep {
             bmap = null;//Mem_Free(bmap);
         }
         bmap = new byte[a.width * a.height * 4];// Mem_Alloc(a.width * a.height * 4);
-//	memcpy( bmap, a.bmap, a.width * a.height * 4 );
 //        System.arraycopy(a.bmap, 0, this.bmap, 0, a.width * a.height * 4);
-        this.bmap = a.bmap;
+        for (int i = 0; i < a.width * a.height * 4; i++) {
+            this.bmap[i] = a.bmap[i];
+        }
         width = a.width;
         height = a.height;
         timestamp = a.timestamp;

@@ -89,6 +89,9 @@ import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Timer.idTimer;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.LinkList.idLinkList;
 import neo.idlib.containers.List.cmp_t;
@@ -145,6 +148,7 @@ import static neo.framework.CVarSystem.*;
 import static neo.framework.CmdSystem.*;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_NOW;
+import static neo.framework.Common.com_developer;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declState_t.DS_DEFAULTED;
@@ -243,7 +247,7 @@ public class Game_local {
     public static final int MAX_GENTITIES = 1 << GENTITYNUM_BITS;
     public static final int ENTITYNUM_NONE = MAX_GENTITIES - 1;
     public static final int ENTITYNUM_WORLD = MAX_GENTITIES - 2;
-// };
+    // };
     public static final int ENTITYNUM_MAX_NORMAL = MAX_GENTITIES - 2;
 
     public static final int ENTITY_PVS_SIZE = ((MAX_GENTITIES + 31) >> 5);
@@ -263,6 +267,8 @@ public class Game_local {
 
     //
     static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM, "force generic platform independent SIMD");
+    //
+    private static final gameExport_t gameExport = new gameExport_t();
     //#endif
 //    #ifdef ID_DEBUG_UNINITIALIZED_MEMORY
 //// This is real evil but allows the code to inspect arbitrary class variables.//KEH:java reflection forever!
@@ -272,8 +278,6 @@ public class Game_local {
 //
     public static idRenderWorld gameRenderWorld;
     public static idSoundWorld gameSoundWorld;
-    //
-    private static final gameExport_t gameExport = new gameExport_t();
 
     /*
      ===========
@@ -368,6 +372,7 @@ public class Game_local {
             }
         }
     }
+
     //
 // these defines work for all startsounds from all entity types
 // make sure to change script/doom_defs.script if you add any channels, or change their order
@@ -390,6 +395,7 @@ public class Game_local {
         SND_CHANNEL_AMBIENT,
         SND_CHANNEL_DAMAGE
     }
+
     public enum gameState_t {
 
         GAMESTATE_UNINITIALIZED, // prior to Init being called
@@ -458,9 +464,9 @@ public class Game_local {
         }
 
         public void Restore(idRestoreGame savefile) {                    // unarchives object from save game file
-            int[] spawnId = {0};
+            CInt spawnId = new CInt();
             savefile.ReadInt(spawnId);
-            this.spawnId = spawnId[0];
+            this.spawnId = spawnId.getVal();
         }
 
         public idEntityPtr<type> oSet(type ent) {
@@ -540,8 +546,22 @@ public class Game_local {
          ======================
          */private static int DBG_SpreadLocations = 0;
         //
+        private final idList<idAAS> aasList = new idList<>(); // area system
+        private final idStrList aasNames = new idStrList();
+        //
         private final idList<Integer>[][] clientDeclRemap = new idList[MAX_CLIENTS][etoi(DECL_MAX_TYPES)];
+        //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
+//        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
+//
+        private final idEventQueue eventQueue = new idEventQueue();
+        //
+        private final idVec3 gravity = new idVec3();          // global gravity vector
         private final idStaticList<idEntity> initialSpots = new idStaticList<>(MAX_GENTITIES);
+        //
+        private final idStr mapFileName = new idStr();    // name of the map, empty string if no map loaded
+        private final idEventQueue savedEventQueue = new idEventQueue();
+        //
+        private final idDict spawnArgs = new idDict();        // spawn args used during entity spawning  FIXME: shouldn't be necessary anymore
         //
         private final idStaticList<spawnSpot_t> spawnSpots = new idStaticList<>(MAX_GENTITIES);
         public idLinkList<idEntity> activeEntities = new idLinkList<>();       // all thinking entities (idEntity::thinkFlags != 0)
@@ -614,23 +634,14 @@ public class Game_local {
         public int vacuumAreaNum;      // -1 if level doesn't have any outside areas
         public idWorldspawn world;                                              // world entity
         //
-        private final idList<idAAS> aasList = new idList<>(); // area system
-        private final idStrList aasNames = new idStrList();
-        //
         private idCamera camera;
         //
         private entityState_s[][] clientEntityStates = new entityState_s[MAX_CLIENTS][MAX_GENTITIES];
         private int[][] clientPVS = new int[MAX_CLIENTS][ENTITY_PVS_SIZE];
         private snapshot_s[] clientSnapshots = new snapshot_s[MAX_CLIENTS];
         private int currentInitialSpot;
-        //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
-//        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
-//
-        private final idEventQueue eventQueue = new idEventQueue();
         private gameState_t gamestate;            // keeps track of whether we're spawning, shutting down, or normal gameplay
         private idMaterial globalMaterial;     // for overriding everything
-        //
-        private final idVec3 gravity = new idVec3();          // global gravity vector
         private boolean influenceActive;        // true when a phantasm is happening
         //
         private byte[][][] lagometer = new byte[LAGO_IMG_HEIGHT][LAGO_IMG_WIDTH][4];
@@ -641,24 +652,19 @@ public class Game_local {
         private idLocationEntity[] locationEntities;   // for location names, etc
         private boolean mapCycleLoaded;
         private idMapFile mapFile;            // will be NULL during the game unless in-game editing is used
-        //
-        private final idStr mapFileName = new idStr();    // name of the map, empty string if no map loaded
         private int mapSpawnCount;      // it's handy to know which entities are part of the map
         //
         private idDict newInfo = new idDict();
         private int nextGibTime;
         private pvsHandle_t playerConnectedAreas = new pvsHandle_t();// all areas connected to any player area
-//
+        //
 //
 //
         // ---------------------- Public idGame Interface -------------------
         //
         private pvsHandle_t playerPVS = new pvsHandle_t();// merged pvs of all players
-        private final idEventQueue savedEventQueue = new idEventQueue();
         //
         private idStrList shakeSounds;
-        //
-        private final idDict spawnArgs = new idDict();        // spawn args used during entity spawning  FIXME: shouldn't be necessary anymore
         //
         private int spawnCount;
 
@@ -1052,7 +1058,6 @@ public class Game_local {
                 if (!InhibitEntitySpawn(mapEnt.epairs)) {
                     CacheDictionaryMedia(mapEnt.epairs);
                     final String classname = mapEnt.epairs.GetString("classname");
-//			if ( classname != '\0' ) {
                     if (!classname.isEmpty()) {
                         FindEntityDef(classname, false);
                     }
@@ -1643,7 +1648,9 @@ public class Game_local {
 
                 // set the user commands for this frame
 //                memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
-                System.arraycopy(clientCmds, 0, usercmds, 0, numClients);
+                for (int i = 0; i < numClients; i++) {
+                    usercmds[i] = new usercmd_t(clientCmds[i]);
+                }
 
                 if (player != null) {
                     player.Think();
@@ -1683,7 +1690,9 @@ public class Game_local {
 
                     // set the user commands for this frame
 //                    memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
-                    System.arraycopy(clientCmds, 0, usercmds, 0, numClients);
+                    for (int i = 0; i < numClients; i++) {
+                        usercmds[i] = new usercmd_t(clientCmds[i]);
+                    }
 
                     // free old smoke particles
                     smokeParticles.FreeSmokes();
@@ -2081,7 +2090,7 @@ public class Game_local {
         @Override
         public void ServerWriteSnapshot(int clientNum, int sequence, idBitMsg msg, byte[] clientInPVS, int numPVSClients) {
             int i;
-            int[] msgSize = {0}, msgWriteBit = {0};
+            CInt msgSize = new CInt(), msgWriteBit = new CInt();
             idPlayer player, spectated;
             idEntity ent;
             pvsHandle_t pvsHandle;
@@ -2166,7 +2175,7 @@ public class Game_local {
                 ent.WriteToSnapshot(deltaMsg);
 
                 if (!deltaMsg.HasChanged()) {
-                    msg.RestoreWriteState(msgSize[0], msgWriteBit[0]);
+                    msg.RestoreWriteState(msgSize.getVal(), msgWriteBit.getVal());
 //                    entityStateAllocator.Free(newBase);
                 } else {
                     newBase.next = snapshot.firstEntityState;
@@ -2568,7 +2577,9 @@ public class Game_local {
 
             // set the user commands for this frame
 //            memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
-            System.arraycopy(clientCmds, 0, usercmds, 0, numClients);
+            for (int i = 0; i < numClients; i++) {
+                usercmds[i] = new usercmd_t(clientCmds[i]);
+            }
 
             // run prediction on all entities from the last snapshot
             for (ent = snapshotEntities.Next(); ent != null; ent = ent.snapshotNode.Next()) {
@@ -2918,7 +2929,7 @@ public class Game_local {
             StringBuilder text = new StringBuilder(MAX_STRING_CHARS);
             idThread thread;
 
-            if (!developer.GetBool()) {
+            if (!com_developer.GetBool()) {
                 return;
             }
 
@@ -2939,7 +2950,7 @@ public class Game_local {
 //	va_list		argptr;
 //	char		text[MAX_STRING_CHARS];
 
-            if (!developer.GetBool()) {
+            if (!com_developer.GetBool()) {
                 return;
             }
 
@@ -3104,7 +3115,7 @@ public class Game_local {
                 return false;
             }
 
-            if (developer.GetBool()) {
+            if (com_developer.GetBool()) {
                 return true;
             }
 
@@ -3214,8 +3225,6 @@ public class Game_local {
             String[] classname = {null};
             DBG_SpawnEntityDef++;
             String[] spawn = {null};
-            idTypeInfo cls;
-//            idClass obj;
             String error = "";
             String[] name = new String[1];
 
@@ -3244,7 +3253,7 @@ public class Game_local {
             spawnArgs.GetString("spawnclass", null, spawn);
             if (spawn[0] != null) {
                 final idEntity obj;
-                switch (spawn[0]) {//TODO:mayhaps implement some other cases
+                switch (spawn[0]) {
                     case "idWorldspawn":
                         obj = new idWorldspawn();
                         break;
@@ -3519,11 +3528,13 @@ public class Game_local {
                         obj = new idPlat();
                         break;
                     default:
-                        obj = null;
+                        idGameLocal.Error("Could not spawn '%s'. Class '%s' not found%s.\"", classname[0], spawn[0], error);
+                        return false;
                 }
 
                 if (obj == null) {
-                    idGameLocal.Error("Could not spawn '%s'. Class '%s' not found.", spawn[0], classname[0]);
+                    idGameLocal.Error("Could not spawn '%s'. Instance could not be created%s.", spawn[0], classname[0]);
+                    return false;
                 }
 
                 // many objects rely on spawn args and default state may break spawns for many classes.
@@ -3595,7 +3606,7 @@ public class Game_local {
         }
 
         public void RegisterEntity(idEntity ent) {
-            int[] spawn_entnum = {0};
+            CInt spawn_entnum = new CInt();
 
             if (spawnCount >= (1 << (32 - GENTITYNUM_BITS))) {
                 Error("idGameLocal::RegisterEntity: spawn count overflow");
@@ -3608,16 +3619,16 @@ public class Game_local {
                 if (firstFreeIndex >= ENTITYNUM_MAX_NORMAL) {
                     Error("no free entities");
                 }
-                spawn_entnum[0] = firstFreeIndex++;
+                spawn_entnum.setVal(firstFreeIndex++);
             }
 
-            entities[spawn_entnum[0]] = ent;
-            spawnIds[spawn_entnum[0]] = spawnCount++;
-            ent.entityNumber = spawn_entnum[0];
+            entities[spawn_entnum.getVal()] = ent;
+            spawnIds[spawn_entnum.getVal()] = spawnCount++;
+            ent.entityNumber = spawn_entnum.getVal();
             ent.spawnNode.AddToEnd(spawnedEntities);
             ent.spawnArgs.TransferKeyValues(spawnArgs);
 
-            if (spawn_entnum[0] >= num_entities) {
+            if (spawn_entnum.getVal() >= num_entities) {
                 num_entities++;
             }
         }
@@ -3823,7 +3834,7 @@ public class Game_local {
          Calculates the horizontal and vertical field of view based on a horizontal field of view and custom aspect ratio
          ====================
          */
-        public void CalcFov(float base_fov, float[] fov_x, float[] fov_y) {
+        public void CalcFov(float base_fov, CFloat fov_x, CFloat fov_y) {
             float x;
             float y;
             float ratio_x;
@@ -3837,11 +3848,11 @@ public class Game_local {
             // first, calculate the vertical fov based on a 640x480 view
             x = (float) (640.0f / tan(base_fov / 360.0f * idMath.PI));
             y = (float) atan2(480.0f, x);
-            fov_y[0] = y * 360.0f / idMath.PI;
+            fov_y.setVal(y * 360.0f / idMath.PI);
 
             // FIXME: somehow, this is happening occasionally
-            assert (fov_y[0] > 0);
-            if (fov_y[0] <= 0) {
+            assert (fov_y.getVal() > 0);
+            if (fov_y.getVal() <= 0) {
                 Printf(sys.FPU_GetState());
                 Error("idGameLocal::CalcFov: bad result");
             }
@@ -3850,7 +3861,7 @@ public class Game_local {
                 default:
                 case 0:
                     // 4:3
-                    fov_x[0] = base_fov;
+                    fov_x.setVal(base_fov);
                     return;
 //                    break;
 
@@ -3867,18 +3878,18 @@ public class Game_local {
                     break;
             }
 
-            y = (float) (ratio_y / tan(fov_y[0] / 360.0f * idMath.PI));
-            fov_x[0] = (float) (atan2(ratio_x, y) * 360.0f / idMath.PI);
+            y = (float) (ratio_y / tan(fov_y.getVal() / 360.0f * idMath.PI));
+            fov_x.setVal((float) (atan2(ratio_x, y) * 360.0f / idMath.PI));
 
-            if (fov_x[0] < base_fov) {
-                fov_x[0] = base_fov;
-                x = (float) (ratio_x / tan(fov_x[0] / 360.0f * idMath.PI));
-                fov_y[0] = (float) (atan2(ratio_y, x) * 360.0f / idMath.PI);
+            if (fov_x.getVal() < base_fov) {
+                fov_x.setVal(base_fov);
+                x = (float) (ratio_x / tan(fov_x.getVal() / 360.0f * idMath.PI));
+                fov_y.setVal((float) (atan2(ratio_y, x) * 360.0f / idMath.PI));
             }
 
             // FIXME: somehow, this is happening occasionally
-            assert ((fov_x[0] > 0) && (fov_y[0] > 0));
-            if ((fov_y[0] <= 0) || (fov_x[0] <= 0)) {
+            assert ((fov_x.getVal() > 0) && (fov_y.getVal() > 0));
+            if ((fov_y.getVal() <= 0) || (fov_x.getVal() <= 0)) {
                 Printf(sys.FPU_GetState());
                 Error("idGameLocal::CalcFov: bad result");
             }
@@ -3960,7 +3971,7 @@ public class Game_local {
         public idEntity FindTraceEntity(idVec3 start, idVec3 end, final Class/*idTypeInfo*/ c, final idEntity skip) {
             idEntity ent;
             idEntity bestEnt;
-            float[] scale = {0};
+            CFloat scale = new CFloat();
             float bestScale;
             idBounds b;
 
@@ -3970,9 +3981,9 @@ public class Game_local {
                 if (ent.IsType(c) && ent != skip) {
                     b = ent.GetPhysics().GetAbsBounds().Expand(16);
                     if (b.RayIntersection(start, end.oMinus(start), scale)) {
-                        if (scale[0] >= 0.0f && scale[0] < bestScale) {
+                        if (scale.getVal() >= 0.0f && scale.getVal() < bestScale) {
                             bestEnt = ent;
-                            bestScale = scale[0];
+                            bestScale = scale.getVal();
                         }
                     }
                 }
@@ -4109,14 +4120,14 @@ public class Game_local {
 
         public void RadiusDamage(final idVec3 origin, idEntity inflictor, idEntity attacker, idEntity ignoreDamage, idEntity ignorePush, final String damageDefName, float dmgPower /*= 1.0f*/) {
             float dist, damageScale;
-            float[] attackerDamageScale = {0}, attackerPushScale = {0};
+            CFloat attackerDamageScale = new CFloat(), attackerPushScale =  new CFloat();
             idEntity ent;
             idEntity[] entityList = new idEntity[MAX_GENTITIES];
             int numListedEntities;
             idBounds bounds;
             idVec3 v = new idVec3(), damagePoint = new idVec3(), dir;
             int i, e;
-            int[] damage = {0}, radius = {0}, push = {0};
+            CInt damage = new CInt(), radius = new CInt(), push = new CInt();
 
             final idDict damageDef = FindEntityDefDict(damageDefName, false);
             if (null == damageDef) {
@@ -4126,15 +4137,15 @@ public class Game_local {
 
             damageDef.GetInt("damage", "20", damage);
             damageDef.GetInt("radius", "50", radius);
-            damageDef.GetInt("push", va("%d", damage[0] * 100), push);
+            damageDef.GetInt("push", va("%d", damage.getVal() * 100), push);
             damageDef.GetFloat("attackerDamageScale", "0.5", attackerDamageScale);
             damageDef.GetFloat("attackerPushScale", "0", attackerPushScale);
 
-            if (radius[0] < 1) {
-                radius[0] = 1;
+            if (radius.getVal() < 1) {
+                radius.setVal(1);
             }
 
-            bounds = new idBounds(origin).Expand(radius[0]);
+            bounds = new idBounds(origin).Expand(radius.getVal());
 
             // get all entities touching the bounds
             numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, MAX_GENTITIES);
@@ -4183,7 +4194,7 @@ public class Game_local {
                 }
 
                 dist = v.Length();
-                if (dist >= radius[0]) {
+                if (dist >= radius.getVal()) {
                     continue;
                 }
 
@@ -4194,9 +4205,9 @@ public class Game_local {
                     dir.oPluSet(2, 24);
 
                     // get the damage scale
-                    damageScale = dmgPower * (1.0f - dist / radius[0]);
+                    damageScale = dmgPower * (1.0f - dist / radius.getVal());
                     if (ent == attacker || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody() == attacker)) {
-                        damageScale *= attackerDamageScale[0];
+                        damageScale *= attackerDamageScale.getVal();
                     }
 
                     ent.Damage(inflictor, attacker, dir, damageDefName, damageScale, INVALID_JOINT);
@@ -4204,8 +4215,8 @@ public class Game_local {
             }
 
             // push physics objects
-            if (push[0] != 0) {
-                RadiusPush(origin, radius[0], push[0] * dmgPower, attacker, ignorePush, attackerPushScale[0], false);
+            if (push.getVal() != 0) {
+                RadiusPush(origin, radius.getVal(), push.getVal() * dmgPower, attacker, ignorePush, attackerPushScale.getVal(), false);
             }
         }
 
@@ -4336,7 +4347,7 @@ public class Game_local {
         }
 
         public void ProjectDecal(final idVec3 origin, final idVec3 dir, float depth, boolean parallel, float size, final String material, float angle /*= 0*/) {
-            float[] s = {0}, c = {0};
+            CFloat s = new CFloat(), c = new CFloat();
             idMat3 axis = new idMat3(), axistemp = new idMat3();
             idFixedWinding winding = new idFixedWinding();
             idVec3 windingOrigin, projectionOrigin;
@@ -4352,8 +4363,8 @@ public class Game_local {
             axis.oSet(2, dir);
             axis.oGet(2).Normalize();
             axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1));
-            axis.oSet(0, axistemp.oGet(0).oMultiply(c[0]).oPlus(axistemp.oGet(1).oMultiply(-s[0])));
-            axis.oSet(1, axistemp.oGet(0).oMultiply(-s[0]).oPlus(axistemp.oGet(1).oMultiply(-c[0])));
+            axis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())));
+            axis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())));
 
             windingOrigin = origin.oPlus(axis.oGet(2).oMultiply(depth));
             if (parallel) {
@@ -4384,7 +4395,7 @@ public class Game_local {
                     new idVec3(0.0f, -halfSize, +halfSize)};
             idTraceModel trm = new idTraceModel();
             idClipModel mdl = new idClipModel();
-            trace_s[] results = {null};
+            trace_s results = new trace_s();
 
             // FIXME: get from damage def
             if (!g_bloodEffects.GetBool()) {
@@ -4395,7 +4406,7 @@ public class Game_local {
             trm.SetupPolygon(verts, 4);
             mdl.LoadModel(trm);
             clip.Translation(results, origin, origin.oPlus(dir.oMultiply(64.0f)), mdl, getMat3_identity(), CONTENTS_SOLID, null);
-            ProjectDecal(results[0].endpos, dir, 2.0f * size, true, size, material);
+            ProjectDecal(results.endpos, dir, 2.0f * size, true, size, material);
         }
 
         public void CallFrameCommand(idEntity ent, final function_t frameCommand) {
@@ -4881,7 +4892,7 @@ public class Game_local {
         // returns true if the entity shouldn't be spawned at all in this game type or difficulty level
         private boolean InhibitEntitySpawn(idDict spawnArgs) {
 
-            boolean[] result = {false};
+            CBool result = new CBool(false);
 
             if (isMultiplayer) {
                 spawnArgs.GetBool("not_multiplayer", "0", result);
@@ -4898,7 +4909,7 @@ public class Game_local {
                 if (g_skill.GetInteger() == 3) {
                     name = spawnArgs.GetString("classname");
                     if (idStr.Icmp(name, "item_medkit") == 0 || idStr.Icmp(name, "item_medkit_small") == 0) {
-                        result[0] = true;
+                        result.setVal(true);
                     }
                 }
             }
@@ -4906,11 +4917,11 @@ public class Game_local {
             if (gameLocal.isMultiplayer) {
                 name = spawnArgs.GetString("classname");
                 if (idStr.Icmp(name, "weapon_bfg") == 0 || idStr.Icmp(name, "weapon_soulcube") == 0) {
-                    result[0] = true;
+                    result.setVal(true);
                 }
             }
 
-            return result[0];
+            return result.isVal();
         }
 
         /*
@@ -5003,6 +5014,7 @@ public class Game_local {
             int i;
 
             for (i = (clearClients ? 0 : MAX_CLIENTS); i < MAX_GENTITIES; i++) {
+                entities[i] = null;
 //		delete entities[ i ];
                 // ~idEntity is in charge of setting the pointer to NULL
                 // it will also clear pending events for this entity
@@ -5208,11 +5220,11 @@ public class Game_local {
                     continue;
                 }
 
-                float[] dist = {0};
+                CFloat dist = new CFloat();
                 idVec3 dir = totalBounds.GetCenter().oMinus(viewPos);
                 dir.NormalizeFast();
                 totalBounds.RayIntersection(viewPos, dir, dist);
-                float frac = (512.0f - dist[0]) / 512.0f;
+                float frac = (512.0f - dist.getVal()) / 512.0f;
                 if (frac < 0.0f) {
                     continue;
                 }

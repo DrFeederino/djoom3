@@ -1,18 +1,15 @@
 package neo.Game.AI;
 
-import neo.Game.AI.AAS.*;
-import neo.Game.AI.AAS_routing.*;
 import neo.Game.AI.AI.idAASFindCover;
 import neo.Game.AI.AI_pathing.wallEdge_s;
 import neo.Game.Game_local;
 import neo.Game.Physics.Physics.idPhysics;
 import neo.Game.Player.idPlayer;
-import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Angles.idAngles;
-import neo.idlib.math.Math_h.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
@@ -477,7 +474,7 @@ public class AAS_local {
 
         @Override
         public int TravelTimeToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags) {
-            int[] travelTime = {0};
+            CInt travelTime = new CInt();
             idReachability[] reach = {null};
 
             if (NOT(file)) {
@@ -487,11 +484,11 @@ public class AAS_local {
             if (!RouteToGoalArea(areaNum, origin, goalAreaNum, travelFlags, travelTime, reach)) {
                 return 0;
             }
-            return travelTime[0];
+            return travelTime.getVal();
         }
 
         @Override
-        public boolean RouteToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags, int[] travelTime, idReachability[] reach) {
+        public boolean RouteToGoalArea(int areaNum, final idVec3 origin, int goalAreaNum, int travelFlags, CInt travelTime, idReachability[] reach) {
             int clusterNum, goalClusterNum, portalNum, i, clusterAreaNum;
             /*unsigned short*/
             int t, bestTime;
@@ -500,7 +497,7 @@ public class AAS_local {
             idRoutingCache areaCache, portalCache, clusterCache;
             idReachability bestReach, r, nextr;
 
-            travelTime[0] = 0;
+            travelTime.setVal(0);
             reach[0] = null;
 
             if (NOT(file)) {
@@ -538,7 +535,7 @@ public class AAS_local {
                 // get the portal routing cache
                 portalCache = GetPortalRoutingCache(goalClusterNum, goalAreaNum, travelFlags);
                 reach[0] = GetAreaReachability(areaNum, portalCache.reachabilities[-clusterNum]);
-                travelTime[0] = portalCache.travelTimes[-clusterNum] + AreaTravelTime(areaNum, origin, (reach[0]).start);
+                travelTime.setVal(portalCache.travelTimes[-clusterNum] + AreaTravelTime(areaNum, origin, (reach[0]).start));
                 return true;
             }
 
@@ -636,7 +633,7 @@ public class AAS_local {
             }
 
             reach[0] = bestReach;
-            travelTime[0] = bestTime;
+            travelTime.setVal(bestTime);
 
             return true;
         }
@@ -651,7 +648,7 @@ public class AAS_local {
         @Override
         public boolean WalkPathToGoal(aasPath_s path, int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags) {
             int i, curAreaNum, lastAreaIndex;
-            int[] travelTime = {0}, endAreaNum = {0}, moveAreaNum = {0};
+            CInt travelTime = new CInt(), endAreaNum = new CInt(), moveAreaNum = new CInt();
             int[] lastAreas = new int[4];
             idReachability[] reach = {null};
             idVec3 endPos = new idVec3();
@@ -688,7 +685,7 @@ public class AAS_local {
                     if ((reach[0].start.oMinus(origin)).LengthSqr() > Square(maxWalkPathDistance)) {
                         if (SUBSAMPLE_WALK_PATH != 0) {
                             path.moveGoal = SubSampleWalkPath(areaNum, origin, path.moveGoal, reach[0].start, travelFlags, moveAreaNum);
-                            path.moveAreaNum = moveAreaNum[0];
+                            path.moveAreaNum = moveAreaNum.getVal();
                         }
                         return true;
                     }
@@ -696,7 +693,7 @@ public class AAS_local {
                     if (!this.WalkPathValid(areaNum, origin, 0, reach[0].start, travelFlags, endPos, endAreaNum)) {
                         if (SUBSAMPLE_WALK_PATH != 0) {
                             path.moveGoal = SubSampleWalkPath(areaNum, origin, path.moveGoal, reach[0].start, travelFlags, moveAreaNum);
-                            path.moveAreaNum = moveAreaNum[0];
+                            path.moveAreaNum = moveAreaNum.getVal();
                         }
                         return true;
                     }
@@ -720,7 +717,7 @@ public class AAS_local {
                     if (!this.WalkPathValid(areaNum, origin, 0, goalOrigin, travelFlags, endPos, endAreaNum)) {
                         if (SUBSAMPLE_WALK_PATH != 0) {
                             path.moveGoal = SubSampleWalkPath(areaNum, origin, path.moveGoal, goalOrigin, travelFlags, moveAreaNum);
-                            path.moveAreaNum = moveAreaNum[0];
+                            path.moveAreaNum = moveAreaNum.getVal();
                         }
                         return true;
                     }
@@ -776,7 +773,7 @@ public class AAS_local {
          ============
          */
         @Override
-        public boolean WalkPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, int[] endAreaNum) {
+        public boolean WalkPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, CInt endAreaNum) {
             int curAreaNum, lastAreaNum, lastAreaIndex;
             int[] lastAreas = new int[4];
             idPlane pathPlane = new idPlane(), frontPlane = new idPlane(), farPlane = new idPlane();
@@ -786,7 +783,7 @@ public class AAS_local {
 
             if (file == null) {
                 endPos.oSet(goalOrigin);
-                endAreaNum[0] = 0;
+                endAreaNum.setVal(0);
                 return true;
             }
 
@@ -857,7 +854,7 @@ public class AAS_local {
                     // direction parallel to gravity
                     dir = (file.GetSettings().gravityDir.oMultiply(endPos.oMultiply(file.GetSettings().gravityDir))).
                             oMinus(file.GetSettings().gravityDir.oMultiply(p.oMultiply(file.GetSettings().gravityDir)));
-                    if (dir.LengthSqr() > Square(file.GetSettings().maxStepHeight[0])) {
+                    if (dir.LengthSqr() > Square(file.GetSettings().maxStepHeight.getVal())) {
                         continue;
                     }
 
@@ -880,7 +877,7 @@ public class AAS_local {
                 curAreaNum = reach.toAreaNum;
             }
 
-            endAreaNum[0] = curAreaNum;
+            endAreaNum.setVal(curAreaNum);
 
             return true;
         }
@@ -895,7 +892,7 @@ public class AAS_local {
         @Override
         public boolean FlyPathToGoal(aasPath_s path, int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags) {
             int i, curAreaNum, lastAreaIndex;
-            int[] travelTime = {0}, endAreaNum = {0}, moveAreaNum = {0};
+            CInt travelTime = new CInt(), endAreaNum = new CInt(), moveAreaNum = new CInt();
             int[] lastAreas = new int[4];
             idReachability[] reach = {null};
             idVec3 endPos = new idVec3();
@@ -931,7 +928,7 @@ public class AAS_local {
                     if ((reach[0].start.oMinus(origin)).LengthSqr() > Square(maxFlyPathDistance)) {
                         if (SUBSAMPLE_FLY_PATH != 0) {
                             path.moveGoal = SubSampleFlyPath(areaNum, origin, path.moveGoal, reach[0].start, travelFlags, moveAreaNum);
-                            path.moveAreaNum = moveAreaNum[0];
+                            path.moveAreaNum = moveAreaNum.getVal();
                         }
                         return true;
                     }
@@ -939,7 +936,7 @@ public class AAS_local {
                     if (!this.FlyPathValid(areaNum, origin, 0, reach[0].start, travelFlags, endPos, endAreaNum)) {
                         if (SUBSAMPLE_FLY_PATH != 0) {
                             path.moveGoal = SubSampleFlyPath(areaNum, origin, path.moveGoal, reach[0].start, travelFlags, moveAreaNum);
-                            path.moveAreaNum = moveAreaNum[0];
+                            path.moveAreaNum = moveAreaNum.getVal();
                         }
                         return true;
                     }
@@ -959,7 +956,7 @@ public class AAS_local {
                     if (!this.FlyPathValid(areaNum, origin, 0, goalOrigin, travelFlags, endPos, endAreaNum)) {
                         if (SUBSAMPLE_FLY_PATH != 0) {
                             path.moveGoal = SubSampleFlyPath(areaNum, origin, path.moveGoal, goalOrigin, travelFlags, moveAreaNum);
-                            path.moveAreaNum = moveAreaNum[0];
+                            path.moveAreaNum = moveAreaNum.getVal();
                         }
                         return true;
                     }
@@ -991,19 +988,19 @@ public class AAS_local {
          ============
          */
         @Override
-        public boolean FlyPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, int[] endAreaNum) {
+        public boolean FlyPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, idVec3 endPos, CInt endAreaNum) {
             aasTrace_s trace = new aasTrace_s();
 
             if (file == null) {
                 endPos = goalOrigin;
-                endAreaNum[0] = 0;
+                endAreaNum.setVal(0);
                 return true;
             }
 
             file.Trace(trace, origin, goalOrigin);
 
             endPos = trace.endpos;
-            endAreaNum[0] = trace.lastAreaNum;
+            endAreaNum.setVal(trace.lastAreaNum);
 
             return trace.fraction >= 1.0f;
         }
@@ -1011,7 +1008,7 @@ public class AAS_local {
         @Override
         public void ShowWalkPath(final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin) {
             int i, areaNum, curAreaNum;
-            int[] travelTime = {0};
+            CInt travelTime = new CInt();
             idReachability[] reach = {null};
             idVec3 org, areaCenter = new idVec3();
             aasPath_s path = new aasPath_s();
@@ -1054,7 +1051,7 @@ public class AAS_local {
         @Override
         public void ShowFlyPath(final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin) {
             int i, areaNum, curAreaNum;
-            int[] travelTime = {0};
+            CInt travelTime = new CInt();
             idReachability[] reach = {null};
             idVec3 org, areaCenter;
             aasPath_s path = new aasPath_s();
@@ -2063,9 +2060,9 @@ public class AAS_local {
             }
         }
 
-        private idVec3 SubSampleWalkPath(int areaNum, final idVec3 origin, final idVec3 start, final idVec3 end, int travelFlags, int[] endAreaNum) {
+        private idVec3 SubSampleWalkPath(int areaNum, final idVec3 origin, final idVec3 start, final idVec3 end, int travelFlags, CInt endAreaNum) {
             int i, numSamples;
-            int[] curAreaNum = {0};
+            CInt curAreaNum = new CInt();
             idVec3 dir, point, nextPoint, endPos = new idVec3();
 
             dir = end.oMinus(start);
@@ -2081,14 +2078,14 @@ public class AAS_local {
                     return point;
                 }
                 point = nextPoint;
-                endAreaNum[0] = curAreaNum[0];
+                endAreaNum.setVal(curAreaNum.getVal());
             }
             return point;
         }
 
-        private idVec3 SubSampleFlyPath(int areaNum, final idVec3 origin, final idVec3 start, final idVec3 end, int travelFlags, int[] endAreaNum) {
+        private idVec3 SubSampleFlyPath(int areaNum, final idVec3 origin, final idVec3 start, final idVec3 end, int travelFlags, CInt endAreaNum) {
             int i, numSamples;
-            int[] curAreaNum = {0};
+            CInt curAreaNum = new CInt();
             idVec3 dir, point, nextPoint, endPos = new idVec3();
 
             dir = end.oMinus(start);
@@ -2104,7 +2101,7 @@ public class AAS_local {
                     return point;
                 }
                 point = nextPoint;
-                endAreaNum[0] = curAreaNum[0];
+                endAreaNum.setVal(curAreaNum.getVal());
             }
             return point;
         }
@@ -2230,11 +2227,11 @@ public class AAS_local {
             PushPointIntoAreaNum(areaNum, org);
 
             if (aas_goalArea.GetInteger() != 0) {
-                int[] travelTime = {0};
+                CInt travelTime = new CInt();
                 idReachability[] reach = {null};
 
                 RouteToGoalArea(areaNum, org, aas_goalArea.GetInteger(), TFL_WALK | TFL_AIR, travelTime, reach);
-                gameLocal.Printf("\rtt = %4d", travelTime[0]);
+                gameLocal.Printf("\rtt = %4d", travelTime.getVal());
                 if (reach[0] != null) {
                     gameLocal.Printf(" to area %4d", reach[0].toAreaNum);
                     DrawArea(reach[0].toAreaNum);

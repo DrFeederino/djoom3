@@ -8,6 +8,9 @@ import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CFloat;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.cmp_t;
 import neo.idlib.containers.List.idList;
@@ -554,30 +557,30 @@ public class Dict_h {
             return false;
         }
 
-        public boolean GetFloat(final String key, final String defaultString, float[] out) throws idException {
+        public boolean GetFloat(final String key, final String defaultString, CFloat out) throws idException {
             String[] s = new String[1];
             boolean found;
 
             found = GetString(key, defaultString, s);
-            out[0] = atof(s[0]);
+            out.setVal(atof(s[0]));
             return found;
         }
 
-        public boolean GetInt(final String key, final String defaultString, int[] out) throws idException {
+        public boolean GetInt(final String key, final String defaultString, CInt out) throws idException {
             String[] s = new String[1];
             boolean found;
 
             found = GetString(key, defaultString, s);
-            out[0] = atoi(s[0]);
+            out.setVal(atoi(s[0]));
             return found;
         }
 
-        public boolean GetBool(final String key, final String defaultString, boolean[] out) throws idException {
+        public boolean GetBool(final String key, final String defaultString, CBool out) throws idException {
             String[] s = new String[1];
             boolean found;
 
             found = GetString(key, defaultString, s);
-            out[0] = atob(s[0]);
+            out.setVal(atob(s[0]));
             return found;
         }
 
@@ -822,15 +825,15 @@ public class Dict_h {
         }
 
         public void ReadFromFileHandle(idFile f) throws idException {
-            int[] c = new int[1];
+            CInt c = new CInt();
             idStr key, val;
 
             Clear();
 
 //            f.Read(c, sizeof(c));
             f.ReadInt(c);
-            c[0] = LittleLong(c[0]);
-            for (int i = 0; i < c[0]; i++) {
+            c.setVal(LittleLong(c.getVal()));
+            for (int i = 0; i < c.getVal(); i++) {
                 key = ReadString(f);
                 val = ReadString(f);
                 Set(key, val);

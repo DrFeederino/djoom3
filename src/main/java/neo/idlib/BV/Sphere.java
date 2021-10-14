@@ -1,5 +1,6 @@
 package neo.idlib.BV;
 
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
@@ -251,7 +252,7 @@ public class Sphere {
          ============
          */
         // intersection points are (start + dir * scale1) and (start + dir * scale2)
-        public boolean RayIntersection(final idVec3 start, final idVec3 dir, float[] scale1, float[] scale2) {
+        public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
             float a, b, c, d, sqrtd;
             idVec3 p;
 
@@ -268,8 +269,8 @@ public class Sphere {
             sqrtd = idMath.Sqrt(d);
             a = 1.0f / a;
 
-            scale1[0] = (-b + sqrtd) * a;
-            scale2[0] = (-b - sqrtd) * a;
+            scale1.setVal((-b + sqrtd) * a);
+            scale2.setVal((-b - sqrtd) * a);
 
             return true;
         }
@@ -325,11 +326,11 @@ public class Sphere {
             radius = idMath.Sqrt(0.5f * (end.oMinus(sphere.origin)).LengthSqr()) + sphere.radius;
         }
 
-        public void AxisProjection(final idVec3 dir, float[] min, float[] max) {
+        public void AxisProjection(final idVec3 dir, CFloat min, CFloat max) {
             float d;
             d = dir.oMultiply(origin);
-            min[0] = d - radius;
-            max[0] = d + radius;
+            min.setVal(d - radius);
+            max.setVal( d + radius );
         }
     }
 

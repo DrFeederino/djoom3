@@ -3,6 +3,7 @@ package neo.idlib.math;
 import neo.TempDump;
 import neo.TempDump.SERiAL;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
@@ -1284,24 +1285,23 @@ public class Vector {
         }
 
         @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = (int) (53 * hash + this.x);
-            hash = (int) (53 * hash + this.y);
-            hash = (int) (53 * hash + this.z);
-            return hash;
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof idVec3)) return false;
+
+            idVec3 idVec3 = (idVec3) o;
+
+            if (Float.compare(idVec3.x, x) != 0) return false;
+            if (Float.compare(idVec3.y, y) != 0) return false;
+            return Float.compare(idVec3.z, z) == 0;
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (obj == null
-                    || getClass() != obj.getClass()) {
-                return false;
-            }
-
-            final idVec3 other = (idVec3) obj;
-
-            return (this.x == other.x) && (this.y == other.y) && (this.z == other.z);
+        public int hashCode() {
+            int result = (x != +0.0f ? Float.floatToIntBits(x) : 0);
+            result = 31 * result + (y != +0.0f ? Float.floatToIntBits(y) : 0);
+            result = 31 * result + (z != +0.0f ? Float.floatToIntBits(z) : 0);
+            return result;
         }
 
         public void ToVec2_oPluSet(idVec2 v) {
@@ -2257,12 +2257,7 @@ public class Vector {
         //public	idVecX &		operator=( const idVecX &a );
         public idVecX oSet(final idVecX a) {
             SetSize(a.size);
-//#ifdef VECX_SIMD
-//	SIMDProcessor->Copy16( p, a.p, a.size );
-//#else
-//	memcpy( p, a.p, a.size * sizeof( float ) );
-            System.arraycopy(a.p, 0, this.p, 0, a.p.length);//TODO:use a.size??
-//#endif
+            System.arraycopy(a.p, 0, this.p, 0, this.p.length);
             idVecX.tempIndex = 0;
             return this;
         }
@@ -2360,10 +2355,8 @@ public class Vector {
             int alloc = (newSize + 3) & ~3;
             if (alloc > alloced && alloced != -1) {
                 if (p != null) {
-//			Mem_Free16( p );
                     p = null;
                 }
-//		p = (float *) Mem_Alloc16( alloc * sizeof( float ) );
                 p = new float[alloc];
                 alloced = alloc;
             }
@@ -2673,11 +2666,11 @@ public class Vector {
 //public	idPolar3		operator-() const;
 //public	idPolar3 &		operator=( const idPolar3 &a );
         public idVec3 ToVec3() {
-            float[] sp = new float[1], cp = new float[1], st = new float[1], ct = new float[1];
+            CFloat sp = new CFloat(), cp = new CFloat(), st = new CFloat(), ct = new CFloat();
 //            sp = cp = st = ct = 0.0f;
             idMath.SinCos(phi, sp, cp);
             idMath.SinCos(theta, st, ct);
-            return new idVec3(cp[0] * radius * ct[0], cp[0] * radius * st[0], radius * sp[0]);
+            return new idVec3(cp.getVal() * radius * ct.getVal(), cp.getVal() * radius * st.getVal(), radius * sp.getVal());
         }
     }
 }

@@ -1,19 +1,19 @@
 package neo.Game;
 
-import neo.Game.Entity.*;
 import neo.Game.GameSys.Class.*;
 import neo.Game.GameSys.Event.idEventDef;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Physics.Clip.idClipModel;
 import neo.Game.Script.Script_Thread.idThread;
-import neo.Renderer.RenderWorld.*;
 import neo.Sound.snd_shader.idSoundShader;
 import neo.idlib.BitMsg.idBitMsg;
 import neo.idlib.BitMsg.idBitMsgDelta;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CBool;
+import neo.idlib.containers.CInt;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static neo.Game.Entity.*;
-import static neo.Game.GameSys.SysCvar.developer;
 import static neo.Game.GameSys.SysCvar.g_editEntityMode;
 import static neo.Game.Game_local.gameLocal;
 import static neo.Game.Game_local.gameRenderWorld;
@@ -33,8 +32,7 @@ import static neo.Renderer.ModelManager.renderModelManager;
 import static neo.Renderer.RenderWorld.*;
 import static neo.TempDump.NOT;
 import static neo.TempDump.etoi;
-import static neo.framework.Common.EDITOR_LIGHT;
-import static neo.framework.Common.EDITOR_SOUND;
+import static neo.framework.Common.*;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
 import static neo.idlib.Lib.*;
@@ -102,7 +100,7 @@ public class Light {
         private final idVec4 fadeFrom;
         private int fadeStart;
         private idVec4 fadeTo;
-        private final int[] levels = {0};
+        private final CInt levels = new CInt();
         private int/*qhandle_t*/ lightDefHandle;    // handle to renderer light def
         private idEntity lightParent;
         private idMat3 localLightAxis;              // light axis relative to physics axis
@@ -121,7 +119,7 @@ public class Light {
             localLightAxis = getMat3_identity();
             lightDefHandle = -1;
             brokenModel = new idStr();
-            levels[0] = 0;
+            levels.setVal(0);
             currentLevel = 0;
             baseColor = getVec3_zero();
             breakOnTrigger = false;
@@ -143,7 +141,7 @@ public class Light {
         public void Spawn() {
             super.Spawn();
 
-            boolean[] start_off = {false};
+            CBool start_off = new CBool(false);
             boolean needBroken;
             String[] demonic_shader = {null};
 
@@ -159,8 +157,8 @@ public class Light {
 
             // set the number of light levels
             spawnArgs.GetInt("levels", "1", levels);
-            currentLevel = levels[0];
-            if (levels[0] <= 0) {
+            currentLevel = levels.getVal();
+            if (levels.getVal() <= 0) {
                 Game_local.idGameLocal.Error("Invalid light level set on entity #%d(%s)", entityNumber, name);
             }
 
@@ -188,7 +186,7 @@ public class Light {
             }
 
             spawnArgs.GetBool("start_off", "0", start_off);
-            if (start_off[0]) {
+            if (start_off.isVal()) {
                 Off();
             }
 
@@ -270,7 +268,7 @@ public class Light {
             savefile.WriteMat3(localLightAxis);
 
             savefile.WriteString(brokenModel);
-            savefile.WriteInt(levels[0]);
+            savefile.WriteInt(levels.getVal());
             savefile.WriteInt(currentLevel);
 
             savefile.WriteVec3(baseColor);
@@ -295,15 +293,15 @@ public class Light {
          */
         @Override
         public void Restore(idRestoreGame savefile) {
-            boolean[] hadPrelightModel = {false};
+            CBool hadPrelightModel = new CBool(false);
 
             savefile.ReadRenderLight(renderLight);
 
             savefile.ReadBool(hadPrelightModel);
             renderLight.prelightModel = renderModelManager.CheckModel(va("_prelight_%s", name));
-            if ((renderLight.prelightModel == null) && hadPrelightModel[0]) {
+            if ((renderLight.prelightModel == null) && hadPrelightModel.isVal()) {
                 assert (false);
-                if (developer.GetBool()) {
+                if (com_developer.GetBool()) {
                     // we really want to know if this happens
                     Game_local.idGameLocal.Error("idLight::Restore: prelightModel '_prelight_%s' not found", name);
                 } else {
@@ -504,7 +502,7 @@ public class Light {
         }
 
         public void On() {
-            currentLevel = levels[0];
+            currentLevel = levels.getVal();
             // offset the start time of the shader to sync it to the game time
             renderLight.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC(gameLocal.time);
             if ((soundWasPlaying || refSound.waitfortrigger) && refSound.shader != null) {
@@ -542,7 +540,7 @@ public class Light {
             idVec3 color = new idVec3();
             idVec4 color4 = new idVec4();
 
-            currentLevel = levels[0];
+            currentLevel = levels.getVal();
             spawnArgs.GetVector("_color", "1 1 1", color);
             color4.Set(color.x, color.y, color.z, 1.0f);
             Fade(color4, time);
@@ -622,7 +620,7 @@ public class Light {
             idVec3 color;
             float intensity;
 
-            intensity = (float) currentLevel / (float) levels[0];
+            intensity = (float) currentLevel / (float) levels.getVal();
             color = baseColor.oMultiply(intensity);
             renderLight.shaderParms[SHADERPARM_RED] = color.oGet(0);
             renderLight.shaderParms[SHADERPARM_GREEN] = color.oGet(1);
@@ -902,10 +900,6 @@ public class Light {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        @Override
-        public java.lang.Class /*idTypeInfo*/ GetType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
 
         @Override
         public eventCallback_t getEventCallBack(idEventDef event) {

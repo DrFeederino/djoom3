@@ -59,7 +59,7 @@ public class AASReach {
                 if (0 == (file.areas.oGet(i).flags & AREA_REACHABLE_WALK)) {
                     continue;
                 }
-                if (file.GetSettings().allowSwimReachabilities[0]) {
+                if (file.GetSettings().allowSwimReachabilities.isVal()) {
                     Reachability_Swim(i);
                 }
                 Reachability_EqualFloorHeight(i);
@@ -99,7 +99,7 @@ public class AASReach {
                 }
             }
 
-            if (file.GetSettings().allowFlyReachabilities[0]) {
+            if (file.GetSettings().allowFlyReachabilities.isVal()) {
                 for (i = 1; i < file.areas.Num(); i++) {
                     Reachability_Fly(i);
                 }
@@ -123,7 +123,7 @@ public class AASReach {
                         || ((file.areas.oGet(i).contents & AREACONTENTS_WATER) != 0)) {
                     file.areas.oGet(i).flags |= AREA_REACHABLE_WALK;
                 }
-                if (file.GetSettings().allowFlyReachabilities[0]) {
+                if (file.GetSettings().allowFlyReachabilities.isVal()) {
                     file.areas.oGet(i).flags |= AREA_REACHABLE_FLY;
                 }
                 numReachableAreas++;
@@ -399,7 +399,7 @@ public class AASReach {
 
                         // face plane must be more or less horizontal
                         plane = file.planeList.oGet(floorFace1.planeNum ^ ((!faceSide1) ? 1 : 0));
-                        if (plane.Normal().oMultiply(file.settings.invGravityDir) < file.settings.minFloorCos[0]) {
+                        if (plane.Normal().oMultiply(file.settings.invGravityDir) < file.settings.minFloorCos.getVal()) {
                             continue;
                         }
                     } else {
@@ -621,7 +621,7 @@ public class AASReach {
             if (floor_foundReach != 0) {
                 // if area2 is higher but lower than the maximum step height
                 // NOTE: floor_bestDist >= 0 also catches equal floor reachabilities
-                if (floor_bestDist >= 0 && floor_bestDist < file.settings.maxStepHeight[0]) {
+                if (floor_bestDist >= 0 && floor_bestDist < file.settings.maxStepHeight.getVal()) {
                     // create walk reachability from area1 to area2
                     walkReach = new idReachability_Walk();
                     walkReach.travelType = TFL_WALK;
@@ -632,7 +632,7 @@ public class AASReach {
                     walkReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
                     walkReach.travelTime = 0;
                     if ((area2.flags & AREA_CROUCH) != 0) {
-                        walkReach.travelTime += file.settings.tt_startCrouching[0];
+                        walkReach.travelTime += file.settings.tt_startCrouching.getVal();
                     }
                     AddReachabilityToArea(walkReach, fromAreaNum);
                     return true;
@@ -661,11 +661,11 @@ public class AASReach {
                 // get a test point a little bit towards area1
                 testPoint = water_bestEnd.oMinus(water_bestNormal.oMultiply(INSIDEUNITS));
                 // go down the maximum waterjump height
-                testPoint.oMinSet(2, file.settings.maxWaterJumpHeight[0]);
+                testPoint.oMinSet(2, file.settings.maxWaterJumpHeight.getVal());
                 // if there IS water the sv_maxwaterjump height below the bestend point
                 if ((area1.flags & AREA_LIQUID) != 0) {
                     // don't create rediculous water jump reachabilities from areas very far below the water surface
-                    if (water_bestDist < file.settings.maxWaterJumpHeight[0] + 24) {
+                    if (water_bestDist < file.settings.maxWaterJumpHeight.getVal() + 24) {
                         // water jumping from or towards a crouch only areas is not possible
                         if (0 == (area1.flags & AREA_CROUCH) && 0 == (area2.flags & AREA_CROUCH)) {
                             // create water jump reachability from area1 to area2
@@ -676,7 +676,7 @@ public class AASReach {
                             waterJumpReach.start = water_bestStart;
                             waterJumpReach.end = water_bestEnd.oPlus(water_bestNormal.oMultiply(INSIDEUNITS_WATERJUMP));
                             waterJumpReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
-                            waterJumpReach.travelTime = file.settings.tt_waterJump[0];
+                            waterJumpReach.travelTime = file.settings.tt_waterJump.getVal();
                             AddReachabilityToArea(waterJumpReach, fromAreaNum);
                             return true;
                         }
@@ -703,7 +703,7 @@ public class AASReach {
             // check for a barrier jump reachability
             if (floor_foundReach != 0) {
                 //if area2 is higher but lower than the maximum barrier jump height
-                if (floor_bestDist > 0 && floor_bestDist < file.settings.maxBarrierHeight[0]) {
+                if (floor_bestDist > 0 && floor_bestDist < file.settings.maxBarrierHeight.getVal()) {
                     //if no water in area1 or a very thin layer of water on the ground
                     if (0 == water_foundReach || (floor_bestDist - water_bestDist < 16)) {
                         // cannot perform a barrier jump towards or from a crouch area
@@ -716,7 +716,7 @@ public class AASReach {
                             barrierJumpReach.start = floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART));
                             barrierJumpReach.end = floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND));
                             barrierJumpReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
-                            barrierJumpReach.travelTime = file.settings.tt_barrierJump[0];
+                            barrierJumpReach.travelTime = file.settings.tt_barrierJump.getVal();
                             AddReachabilityToArea(barrierJumpReach, fromAreaNum);
                             return true;
                         }
@@ -747,7 +747,7 @@ public class AASReach {
             // check for a walk or walk off ledge reachability
             if (floor_foundReach != 0) {
                 if (floor_bestDist < 0) {
-                    if (floor_bestDist > -file.settings.maxStepHeight[0]) {
+                    if (floor_bestDist > -file.settings.maxStepHeight.getVal()) {
                         // create walk reachability from area1 to area2
                         walkReach = new idReachability_Walk();
                         walkReach.travelType = TFL_WALK;
@@ -761,7 +761,7 @@ public class AASReach {
                         return true;
                     }
                     // if no maximum fall height set or less than the max
-                    if (0 == file.settings.maxFallHeight[0] || Math.abs(floor_bestDist) < file.settings.maxFallHeight[0]) {
+                    if (0 == file.settings.maxFallHeight.getVal() || Math.abs(floor_bestDist) < file.settings.maxFallHeight.getVal()) {
                         // trace a bounding box vertically to check for solids
                         floor_bestEnd.oPluSet(floor_bestNormal.oMultiply(INSIDEUNITS));
                         start = floor_bestEnd;
@@ -790,7 +790,7 @@ public class AASReach {
                                     walkOffLedgeReach.start = floor_bestStart;
                                     walkOffLedgeReach.end = floor_bestEnd;
                                     walkOffLedgeReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
-                                    walkOffLedgeReach.travelTime = (int) (file.settings.tt_startWalkOffLedge[0] + Math.abs(floor_bestDist) * 50 / file.settings.gravityValue);
+                                    walkOffLedgeReach.travelTime = (int) (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(floor_bestDist) * 50 / file.settings.gravityValue);
                                     AddReachabilityToArea(walkOffLedgeReach, fromAreaNum);
                                     return true;
                                 }
@@ -849,7 +849,7 @@ public class AASReach {
 
                     mid = (v1.oPlus(v2)).oMultiply(0.5f);
                     testEnd = mid.oPlus(dir.oMultiply(INSIDEUNITS_WALKEND));
-                    testEnd.oMinSet(2, file.settings.maxFallHeight[0] + 1.0f);
+                    testEnd.oMinSet(2, file.settings.maxFallHeight.getVal() + 1.0f);
                     trace.areas = areas;
                     trace.maxAreas = areas.length;
                     file.Trace(trace, mid, testEnd);
@@ -858,7 +858,7 @@ public class AASReach {
                     if (0 == reachAreaNum || reachAreaNum == areaNum) {
                         continue;
                     }
-                    if (Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) > file.settings.maxFallHeight[0]) {
+                    if (Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) > file.settings.maxFallHeight.getVal()) {
                         continue;
                     }
                     if (!AreaHasFloor(reachAreaNum) && !CanSwimInArea(reachAreaNum)) {
@@ -884,7 +884,7 @@ public class AASReach {
                     reach.start = mid;
                     reach.end = trace.endpos;
                     reach.edgeNum = abs(edgeNum);
-                    reach.travelTime = (int) (file.settings.tt_startWalkOffLedge[0] + Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) * 50 / file.settings.gravityValue);
+                    reach.travelTime = (int) (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) * 50 / file.settings.gravityValue);
                     AddReachabilityToArea(reach, areaNum);
                 }
             }

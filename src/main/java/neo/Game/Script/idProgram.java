@@ -14,6 +14,7 @@ import neo.Game.Script.Script_Compiler.opcode_s;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.framework.File_h.idFile;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.HashIndex.idHashIndex;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.StaticList.idStaticList;
@@ -168,34 +169,34 @@ public final class idProgram {
 
     public boolean Restore(idRestoreGame savefile) {
         int i;
-        int[] num = {0}, index = {0};
+        CInt num = new CInt(), index = new CInt();
         boolean result = true;
         idStr scriptname = new idStr();
 
         savefile.ReadInt(num);
-        for (i = 0; i < num[0]; i++) {
+        for (i = 0; i < num.getVal(); i++) {
             savefile.ReadString(scriptname);
             CompileFile(scriptname.toString());
         }
 
         savefile.ReadInt(index);
-        while (index[0] >= 0) {
-            variables[index[0]] = savefile.ReadByte();
+        while (index.getVal() >= 0) {
+            variables[index.getVal()] = savefile.ReadByte();
             savefile.ReadInt(index);
         }
 
         savefile.ReadInt(num);
-        for (i = variableDefaults.Num(); i < num[0]; i++) {
+        for (i = variableDefaults.Num(); i < num.getVal(); i++) {
             variables[i] = savefile.ReadByte();
         }
 
-        int[] saved_checksum = {0};
+        CInt saved_checksum = new CInt();
         int checksum;
 
         savefile.ReadInt(saved_checksum);
         checksum = CalculateChecksum();
 
-        if (saved_checksum[0] != checksum) {
+        if (saved_checksum.getVal() != checksum) {
             result = false;
         }
 

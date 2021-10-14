@@ -439,7 +439,7 @@ public class Class {
 
         public abstract idClass CreateInstance();
 
-        public abstract java.lang.Class/*idTypeInfo*/ GetType();
+        public abstract java.lang.Class<? extends idClass> /*idTypeInfo*/ GetType();
 
         public abstract eventCallback_t getEventCallBack(idEventDef event);
 

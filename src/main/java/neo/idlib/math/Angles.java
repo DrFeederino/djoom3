@@ -3,6 +3,7 @@ package neo.idlib.math;
 import neo.TempDump.SERiAL;
 import neo.TempDump.TODO_Exception;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMat4;
@@ -329,54 +330,54 @@ public class Angles {
         }
 
         public void ToVectors(idVec3 forward, idVec3 right, idVec3 up) {
-            float[] sr = new float[1], sp = new float[1], sy = new float[1], cr = new float[1], cp = new float[1], cy = new float[1];
+            CFloat sr = new CFloat(), sp = new CFloat(), sy = new CFloat(), cr = new CFloat(), cp = new CFloat(), cy = new CFloat();
 
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy);
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp);
             idMath.SinCos(Math_h.DEG2RAD(roll), sr, cr);
 
             if (forward != null) {
-                forward.Set(cp[0] * cy[0], cp[0] * sy[0], -sp[0]);
+                forward.Set(cp.getVal() * cy.getVal(), cp.getVal() * sy.getVal(), -sp.getVal());
             }
 
             if (right != null) {
-                right.Set(-sr[0] * sp[0] * cy[0] + cr[0] * sy[0], -sr[0] * sp[0] * sy[0] + -cr[0] * cy[0], -sr[0] * cp[0]);
+                right.Set(-sr.getVal() * sp.getVal() * cy.getVal() + cr.getVal() * sy.getVal(), -sr.getVal() * sp.getVal() * sy.getVal() + -cr.getVal() * cy.getVal(), -sr.getVal() * cp.getVal());
             }
 
             if (up != null) {
-                up.Set(cr[0] * sp[0] * cy[0] + -sr[0] * -sy[0], cr[0] * sp[0] * sy[0] + -sr[0] * cy[0], cr[0] * cp[0]);
+                up.Set(cr.getVal() * sp.getVal() * cy.getVal() + -sr.getVal() * -sy.getVal(), cr.getVal() * sp.getVal() * sy.getVal() + -sr.getVal() * cy.getVal(), cr.getVal() * cp.getVal());
             }
         }
 
         public idVec3 ToForward() {
-            float[] sp = new float[1], sy = new float[1], cp = new float[1], cy = new float[1];
+            CFloat sp = new CFloat(), sy = new CFloat(), cp = new CFloat(), cy = new CFloat();
 
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy);
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp);
 
-            return new idVec3(cp[0] * cy[0], cp[0] * sy[0], -sp[0]);
+            return new idVec3(cp.getVal() * cy.getVal(), cp.getVal() * sy.getVal(), -sp.getVal());
         }
 
         public idQuat ToQuat() {
-            float[] sx = new float[1], cx = new float[1], sy = new float[1], cy = new float[1], sz = new float[1], cz = new float[1];
+            CFloat sx = new CFloat(), cx = new CFloat(), sy = new CFloat(), cy = new CFloat(), sz = new CFloat(), cz = new CFloat();
             float sxcy, cxcy, sxsy, cxsy;
 
             idMath.SinCos(Math_h.DEG2RAD(yaw) * 0.5f, sz, cz);
             idMath.SinCos(Math_h.DEG2RAD(pitch) * 0.5f, sy, cy);
             idMath.SinCos(Math_h.DEG2RAD(roll) * 0.5f, sx, cx);
 
-            sxcy = sx[0] * cy[0];
-            cxcy = cx[0] * cy[0];
-            sxsy = sx[0] * sy[0];
-            cxsy = cx[0] * sy[0];
+            sxcy = sx.getVal() * cy.getVal();
+            cxcy = cx.getVal() * cy.getVal();
+            sxsy = sx.getVal() * sy.getVal();
+            cxsy = cx.getVal() * sy.getVal();
 
-            return new idQuat(cxsy * sz[0] - sxcy * cz[0], -cxsy * cz[0] - sxcy * sz[0], sxsy * cz[0] - cxcy * sz[0], cxcy * cz[0] + sxsy * sz[0]);
+            return new idQuat(cxsy * sz.getVal() - sxcy * cz.getVal(), -cxsy * cz.getVal() - sxcy * sz.getVal(), sxsy * cz.getVal() - cxcy * sz.getVal(), cxcy * cz.getVal() + sxsy * sz.getVal());
         }
 
         public idRotation ToRotation() {
             idVec3 vec = new idVec3();
             float angle, w;
-            float[] sx = new float[1], cx = new float[1], sy = new float[1], cy = new float[1], sz = new float[1], cz = new float[1];
+            CFloat sx = new CFloat(), cx = new CFloat(), sy = new CFloat(), cy = new CFloat(), sz = new CFloat(), cz = new CFloat();
             float sxcy, cxcy, sxsy, cxsy;
 
             if (pitch == 0.0f) {
@@ -394,15 +395,15 @@ public class Angles {
             idMath.SinCos(Math_h.DEG2RAD(pitch) * 0.5f, sy, cy);
             idMath.SinCos(Math_h.DEG2RAD(roll) * 0.5f, sx, cx);
 
-            sxcy = sx[0] * cy[0];
-            cxcy = cx[0] * cy[0];
-            sxsy = sx[0] * sy[0];
-            cxsy = cx[0] * sy[0];
+            sxcy = sx.getVal() * cy.getVal();
+            cxcy = cx.getVal() * cy.getVal();
+            sxsy = sx.getVal() * sy.getVal();
+            cxsy = cx.getVal() * sy.getVal();
 
-            vec.x = cxsy * sz[0] - sxcy * cz[0];
-            vec.y = -cxsy * cz[0] - sxcy * sz[0];
-            vec.z = sxsy * cz[0] - cxcy * sz[0];
-            w = cxcy * cz[0] + sxsy * sz[0];
+            vec.x = cxsy * sz.getVal() - sxcy * cz.getVal();
+            vec.y = -cxsy * cz.getVal() - sxcy * sz.getVal();
+            vec.z = sxsy * cz.getVal() - cxcy * sz.getVal();
+            w = cxcy * cz.getVal() + sxsy * sz.getVal();
             angle = idMath.ACos(w);
             if (angle == 0.0f) {
                 vec.Set(0.0f, 0.0f, 1.0f);
@@ -417,15 +418,15 @@ public class Angles {
 
         public idMat3 ToMat3() {
             idMat3 mat = new idMat3();
-            float[] sr = new float[1], sp = new float[1], sy = new float[1], cr = new float[1], cp = new float[1], cy = new float[1];
+            CFloat sr = new CFloat(), sp = new CFloat(), sy = new CFloat(), cr = new CFloat(), cp = new CFloat(), cy = new CFloat();
 
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy);
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp);
             idMath.SinCos(Math_h.DEG2RAD(roll), sr, cr);
 
-            mat.setRow(0, cp[0] * cy[0], cp[0] * sy[0], -sp[0]);
-            mat.setRow(1, sr[0] * sp[0] * cy[0] + cr[0] * -sy[0], sr[0] * sp[0] * sy[0] + cr[0] * cy[0], sr[0] * cp[0]);
-            mat.setRow(2, cr[0] * sp[0] * cy[0] + -sr[0] * -sy[0], cr[0] * sp[0] * sy[0] + -sr[0] * cy[0], cr[0] * cp[0]);
+            mat.setRow(0, cp.getVal() * cy.getVal(), cp.getVal() * sy.getVal(), -sp.getVal());
+            mat.setRow(1, sr.getVal() * sp.getVal() * cy.getVal() + cr.getVal() * -sy.getVal(), sr.getVal() * sp.getVal() * sy.getVal() + cr.getVal() * cy.getVal(), sr.getVal() * cp.getVal());
+            mat.setRow(2, cr.getVal() * sp.getVal() * cy.getVal() + -sr.getVal() * -sy.getVal(), cr.getVal() * sp.getVal() * sy.getVal() + -sr.getVal() * cy.getVal(), cr.getVal() * cp.getVal());
 
             return mat;
         }

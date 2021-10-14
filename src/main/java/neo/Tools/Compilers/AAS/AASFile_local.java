@@ -1,14 +1,12 @@
 package neo.Tools.Compilers.AAS;
 
 import neo.TempDump;
-import neo.Tools.Compilers.AAS.AASFile.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
+import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
-import neo.idlib.math.Plane.*;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
@@ -1162,15 +1160,15 @@ public class AASFile_local {
             return 0;
         }
 
-        private void MaxTreeDepth_r(int nodeNum, int[] depth, int[] maxDepth) {
+        private void MaxTreeDepth_r(int nodeNum, CInt depth, CInt maxDepth) {
             final aasNode_s node;
 
             if (nodeNum <= 0) {
                 return;
             }
 
-            depth[0]++;
-            if (depth[0] > maxDepth[0]) {
+            depth.setVal(depth.getVal() + 1);
+            if (depth.getVal() > maxDepth.getVal()) {
                 maxDepth = depth;
             }
 
@@ -1178,15 +1176,15 @@ public class AASFile_local {
             MaxTreeDepth_r(node.children[0], depth, maxDepth);
             MaxTreeDepth_r(node.children[1], depth, maxDepth);
 
-            depth[0]--;
+            depth.setVal(depth.getVal() - 1);
         }
 
         private int MaxTreeDepth() {
-            int[] depth = new int[1], maxDepth = new int[1];
+            CInt depth = new CInt(0), maxDepth = new CInt(0);
 
 //	depth = maxDepth = 0;
             MaxTreeDepth_r(1, depth, maxDepth);
-            return maxDepth[0];
+            return maxDepth.getVal();
         }
 
         private int AreaContentsTravelFlags(int areaNum) {

@@ -17,6 +17,7 @@ import neo.Game.Pvs.pvsHandle_t;
 import neo.Renderer.RenderWorld.renderView_s;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Str.idStr;
+import neo.idlib.containers.CFloat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Math_h.idMath;
@@ -368,7 +369,7 @@ public class SecurityCamera {
             int i;
             float dist;
             idPlayer ent;
-            trace_s[] tr = {null};
+            trace_s tr = new trace_s();
             idVec3 dir;
             pvsHandle_t handle;
 
@@ -402,7 +403,7 @@ public class SecurityCamera {
                 eye = ent.EyeOffset();
 
                 gameLocal.clip.TracePoint(tr, GetPhysics().GetOrigin(), ent.GetPhysics().GetOrigin().oPlus(eye), MASK_OPAQUE, this);
-                if (tr[0].fraction == 1.0f || (gameLocal.GetTraceEntity(tr[0]).equals(ent))) {
+                if (tr.fraction == 1.0f || (gameLocal.GetTraceEntity(tr).equals(ent))) {
                     gameLocal.pvs.FreeCurrentPVS(handle);
                     return true;
                 }
@@ -424,7 +425,7 @@ public class SecurityCamera {
         private void DrawFov() {
             int i;
             float radius, a, halfRadius;
-            float[] s = new float[1], c = new float[1];
+            CFloat s = new CFloat(), c = new CFloat();
             idVec3 right = new idVec3(), up = new idVec3();
             idVec4 color = new idVec4(1, 0, 0, 1), color2 = new idVec4(0, 0, 1, 1);
             idVec3 lastPoint, point, lastHalfPoint, halfPoint, center;
@@ -444,14 +445,14 @@ public class SecurityCamera {
             for (i = 1; i < 12; i++) {
                 a = idMath.TWO_PI * i / 12.0f;
                 idMath.SinCos(a, s, c);
-                point = dir.oPlus(right.oMultiply(s[0] * radius).oPlus(up.oMultiply(c[0] * radius)));
+                point = dir.oPlus(right.oMultiply(s.getVal() * radius).oPlus(up.oMultiply(c.getVal() * radius)));
                 point.Normalize();
                 point = GetPhysics().GetOrigin().oPlus(point.oMultiply(scanDist));
                 gameRenderWorld.DebugLine(color, lastPoint, point);
                 gameRenderWorld.DebugLine(color, GetPhysics().GetOrigin(), point);
                 lastPoint = point;
 
-                halfPoint = dir.oPlus(right.oMultiply(s[0] * halfRadius).oPlus(up.oMultiply(c[0] * halfRadius)));
+                halfPoint = dir.oPlus(right.oMultiply(s.getVal() * halfRadius).oPlus(up.oMultiply(c.getVal() * halfRadius)));
                 halfPoint.Normalize();
                 halfPoint = GetPhysics().GetOrigin().oPlus(halfPoint.oMultiply(scanDist));
                 gameRenderWorld.DebugLine(color2, point, halfPoint);
