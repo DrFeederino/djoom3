@@ -3412,8 +3412,8 @@ public class RenderWorld_local {
 //            strncpy(header.mapname, mapName.c_str(), sizeof(header.mapname) - 1);
             header.mapname = mapName.c_str();
             header.version.setVal(4);
-            header.sizeofRenderEntity.setVal(sizeof(renderEntity_s.class));
-            header.sizeofRenderLight.setVal(sizeof(renderLight_s.class));
+            header.sizeofRenderEntity.setVal(4);
+            header.sizeofRenderLight.setVal(4);
             session.writeDemo.WriteInt(header.version.getVal());
             session.writeDemo.WriteInt(header.sizeofRenderEntity.getVal());
             session.writeDemo.WriteInt(header.sizeofRenderLight.getVal());

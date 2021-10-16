@@ -42,9 +42,9 @@ public abstract class AbstractCollisionModel_local {
 
         Bounds.idBounds bounds = new Bounds.idBounds();                             // bounds of all windings in list
         int contents;                                            // winding surface contents
-        Vector.idVec3 normal;                                              // normal for all windings
+        Vector.idVec3 normal = new Vector.idVec3();                                              // normal for all windings
         int numWindings;                                              // number of windings
-        Vector.idVec3 origin;                                              // origin for radius
+        Vector.idVec3 origin = new Vector.idVec3();                                              // origin for radius
         int primitiveNum;                                        // number of primitive the windings came from
         float radius;                                              // radius relative to origin for all windings
         Winding.idFixedWinding[] w = new Winding.idFixedWinding[MAX_WINDING_LIST];    // windings
@@ -60,24 +60,17 @@ public abstract class AbstractCollisionModel_local {
     public static class cm_vertex_s {
         static final int SIZE = Vector.idVec3.SIZE + Integer.SIZE + Long.SIZE + Long.SIZE;
         static final int BYTES = SIZE / Byte.SIZE;
-        int checkcount = 0;                  // for multi-check avoidance
+        int checkcount;                  // for multi-check avoidance
         Vector.idVec3 p;                 // vertex point
-        long side = 0L;                       // each bit tells at which side this vertex passes one of the trace model edges
-        long sideSet = 0L;                    // each bit tells if sidedness for the trace model edge has been calculated yet
+        long side;                       // each bit tells at which side this vertex passes one of the trace model edges
+        long sideSet;                    // each bit tells if sidedness for the trace model edge has been calculated yet
 
         public cm_vertex_s() {
             this.p = new Vector.idVec3();
         }
 
-        public cm_vertex_s(cm_vertex_s val) {
-            if (val == null) {
-                this.p = new Vector.idVec3();
-            } else {
-                this.checkcount = val.checkcount;
-                this.p = new Vector.idVec3(val.p);
-                this.side = val.side;
-                this.sideSet = val.sideSet;
-            }
+        public cm_vertex_s(Vector.idVec3 p) {
+            this.p = p;
         }
 
         static cm_vertex_s[] generateArray(final int length) {
@@ -93,29 +86,11 @@ public abstract class AbstractCollisionModel_local {
 
         int checkcount;                   // for multi-check avoidance
         boolean internal;                   // a trace model can never collide with internal edges
-        Vector.idVec3 normal;       // edge normal
+        Vector.idVec3 normal = new Vector.idVec3();       // edge normal
         short numUsers;                   // number of polygons using this edge
         long side;                        // each bit tells at which side of this edge one of the trace model vertices passes
         long sideSet;                      // each bit tells if sidedness for the trace model vertex has been calculated yet
         int[] vertexNum = new int[2];       // start and end point of edge
-
-        public cm_edge_s() {
-            this.normal = new Vector.idVec3();
-        }
-
-        public cm_edge_s(cm_edge_s val) {
-            if (val == null) {
-                this.normal = new Vector.idVec3();
-            } else {
-                this.checkcount = val.checkcount;
-                this.internal = val.internal;
-                this.normal = new Vector.idVec3(val.normal);
-                this.numUsers = val.numUsers;
-                this.side = val.side;
-                this.sideSet = val.sideSet;
-                this.vertexNum = val.vertexNum;
-            }
-        }
 
         static cm_edge_s[] generateArray(final int length) {
             return Stream.generate(cm_edge_s::new).
@@ -151,22 +126,6 @@ public abstract class AbstractCollisionModel_local {
             this.bounds = new Bounds.idBounds();
             this.material = new Material.idMaterial();
             this.plane = new Plane.idPlane();
-        }
-
-        public cm_polygon_s(cm_polygon_s val) {
-            if (val != null) {
-                this.bounds = new Bounds.idBounds(val.bounds);
-                this.checkcount = val.checkcount;
-                this.contents = val.contents;
-                this.edges = val.edges;
-                this.material = new Material.idMaterial(val.material);
-                this.numEdges = val.numEdges;
-                this.plane = new Plane.idPlane(val.plane);
-            } else {
-                this.bounds = new Bounds.idBounds();
-                this.material = new Material.idMaterial();
-                this.plane = new Plane.idPlane();
-            }
         }
 
         public void oSet(final cm_polygon_s p) {
@@ -216,24 +175,6 @@ public abstract class AbstractCollisionModel_local {
         public cm_polygonRef_s() {
             this.p = new cm_polygon_s();
         }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof cm_polygonRef_s)) return false;
-
-            cm_polygonRef_s that = (cm_polygonRef_s) o;
-
-            if (next != null ? !next.equals(that.next) : that.next != null) return false;
-            return p != null ? p.equals(that.p) : that.p == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = next != null ? next.hashCode() : 0;
-            result = 31 * result + (p != null ? p.hashCode() : 0);
-            return result;
-        }
     }
 
     public static class cm_polygonRefBlock_s {
@@ -272,24 +213,6 @@ public abstract class AbstractCollisionModel_local {
         public static final int BYTES = cm_brush_s.BYTES + Integer.BYTES;
         cm_brush_s b;                    // pointer to brush
         cm_brushRef_s next;                 // next brush in chain
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof cm_brushRef_s)) return false;
-
-            cm_brushRef_s that = (cm_brushRef_s) o;
-
-            if (b != null ? !b.equals(that.b) : that.b != null) return false;
-            return next != null ? next.equals(that.next) : that.next == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = b != null ? b.hashCode() : 0;
-            result = 31 * result + (next != null ? next.hashCode() : 0);
-            return result;
-        }
     }
 
     public static class cm_brushRefBlock_s {
@@ -351,41 +274,8 @@ public abstract class AbstractCollisionModel_local {
         int usedMemory;
         cm_vertex_s[] vertices;      // array with all vertices used by the model
 
-        public cm_model_s() {
+        cm_model_s() {
             bounds = new Bounds.idBounds();
-        }
-
-        public cm_model_s(cm_model_s val) {
-            if (val != null) {
-                this.bounds = val.bounds;
-                this.brushBlock = val.brushBlock;
-                this.brushMemory = val.brushMemory;
-                this.brushRefBlocks = val.brushRefBlocks;
-                this.contents = val.contents;
-                this.edges = val.edges;
-                isConvex = val.isConvex;
-                this.maxEdges = val.maxEdges;
-                this.maxVertices = val.maxVertices;   // size of vertex array
-                this.name = val.name;          // model name
-                this.node = val.node;          // first node of spatial subdivision
-                this.nodeBlocks = val.nodeBlocks;    // list with blocks of nodes
-                this.numBrushRefs = val.numBrushRefs;
-                this.numBrushes = val.numBrushes;
-                this.numEdges = val.numEdges;      // number of edges
-                this.numInternalEdges = val.numInternalEdges;
-                this.numMergedPolys = val.numMergedPolys;
-                this.numNodes = val.numNodes;
-                this.numPolygonRefs = val.numPolygonRefs;
-                this.numPolygons = val.numPolygons;
-                this.numRemovedPolys = val.numRemovedPolys;
-                this.numSharpEdges = val.numSharpEdges;
-                this.numVertices = val.numVertices;   // number of vertices
-                this.polygonBlock = val.polygonBlock;  // memory block with all polygons
-                this.polygonMemory = val.polygonMemory;
-                this.polygonRefBlocks = val.polygonRefBlocks;// list with blocks of polygon references
-                this.usedMemory = val.usedMemory;
-                this.vertices = val.vertices;      // a
-            }
         }
 
         public static cm_model_s[] generateArray(final int length) {
@@ -447,7 +337,7 @@ public abstract class AbstractCollisionModel_local {
         int numEdges;                   // number of edges
         Plane.idPlane plane;                      // polygon plane
         Bounds.idBounds rotationBounds;            // rotation bounds for this polygon
-        int used;
+        boolean used;
 
         public cm_trmPolygon_s() {
             this.plane = new Plane.idPlane();

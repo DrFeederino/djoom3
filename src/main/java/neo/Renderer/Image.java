@@ -50,7 +50,6 @@ import static neo.framework.Session.session;
 import static neo.idlib.Lib.LittleLong;
 import static neo.idlib.Text.Str.FILE_HASH_SIZE;
 import static neo.idlib.Text.Str.va;
-import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 import static neo.sys.win_shared.Sys_Milliseconds;
 import static org.lwjgl.opengl.ARBTextureCompression.GL_COMPRESSED_RGBA_ARB;
 import static org.lwjgl.opengl.ARBTextureCompression.GL_COMPRESSED_RGB_ARB;
@@ -2380,7 +2379,7 @@ public class Image {
                 // build a hash for checking duplicate image files
                 // NOTE: takes about 10% of image load times (SD)
                 // may not be strictly necessary, but some code uses it, so let's leave it in
-                imageHash = MD4_BlockChecksum(pic, width[0] * height[0] * 4);
+                //imageHash = MD4_BlockChecksum(pic, width[0] * height[0] * 4);
 
                 GenerateImage(pic, width[0], height[0], filter, allowDownSize, repeat, depth);
                 timestamp = timestamp;//why, because we rock!

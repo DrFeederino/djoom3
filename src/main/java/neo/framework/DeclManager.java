@@ -643,10 +643,6 @@ public class DeclManager {
             base.FreeData();
         }
 
-        // Returns the size of the decl in memory.
-        public /*abstract*/ /*size_t*/ long Size() {
-            return base.Size();
-        }
 
         // If this isn't overridden, it will just print the decl name.
         // The manager will have printed 7 characters on the line already,
@@ -2375,7 +2371,7 @@ public class DeclManager {
                     for (j = 0; j < num; j++) {
                         size += declManagerLocal.linearLists[i].oGet(j).Size();
                         if (declManagerLocal.linearLists[i].oGet(j).self != null) {
-                            size += declManagerLocal.linearLists[i].oGet(j).self.Size();
+                            size += 4;
                         }
                     }
                     totalStructs += size;
@@ -2501,15 +2497,6 @@ public class DeclManager {
         public huffmanCode_s(huffmanCode_s code) {
             this.numBits = code.numBits;
             System.arraycopy(code.bits, 0, this.bits, 0, this.bits.length);
-//            this.bits = code.bits;
-//            this.bits[0] = code.bits[0];
-//            this.bits[1] = code.bits[1];
-//            this.bits[2] = code.bits[2];
-//            this.bits[3] = code.bits[3];
-//            this.bits[4] = code.bits[4];
-//            this.bits[5] = code.bits[5];
-//            this.bits[6] = code.bits[6];
-//            this.bits[7] = code.bits[7];
         }
 
     }

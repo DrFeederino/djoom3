@@ -25,7 +25,6 @@ import neo.ui.Winvar.idWinVar;
 import java.nio.ByteBuffer;
 
 import static neo.Renderer.RenderSystem_init.r_skipGuiShaders;
-import static neo.TempDump.sizeof;
 import static neo.framework.Common.common;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_MATERIAL;
@@ -509,14 +508,6 @@ public class UserInterfaceLocal {
             return cursorY;
         }
 
-        public int/*size_t*/ Size() {
-            int sz = (int) (sizeof(this) + state.Size() + source.Allocated());
-            if (desktop != null) {
-                sz += desktop.Size();
-            }
-            return sz;
-        }
-
         public idDict GetStateDict() {
             return state;
         }
@@ -732,15 +723,14 @@ public class UserInterfaceLocal {
             int unique = 0;
             for (int i = 0; i < c; i++) {
                 idUserInterfaceLocal gui = guis.oGet(i);
-                int /*size_t*/ sz = gui.Size();
                 boolean isUnique = guis.oGet(i).interactive;
                 if (isUnique) {
                     unique++;
                 } else {
                     copies++;
                 }
-                common.Printf("%6.1fk %4d (%s) %s ( %d transitions )\n", sz / 1024.0f, guis.oGet(i).GetRefs(), isUnique ? "unique" : "copy", guis.oGet(i).GetSourceFile(), guis.oGet(i).desktop.NumTransitions());
-                total += sz;
+                common.Printf("%6.1fk %4d (%s) %s ( %d transitions )\n", 0 / 1024.0f, guis.oGet(i).GetRefs(), isUnique ? "unique" : "copy", guis.oGet(i).GetSourceFile(), guis.oGet(i).desktop.NumTransitions());
+                total += 0;
             }
             common.Printf("===========\n  %d total Guis ( %d copies, %d unique ), %.2f total Mbytes", c, copies, unique, total / (1024.0f * 1024.0f));
         }

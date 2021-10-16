@@ -12,7 +12,6 @@ import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Script.Script_Thread;
 import neo.TempDump.CPP_class;
-import neo.TempDump.TODO_Exception;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.CInt;
 import neo.idlib.containers.LinkList.idLinkList;
@@ -573,9 +572,6 @@ public class Event {
             }
 
             ClearEventList();
-//
-//            eventDataAllocator.Shutdown();
-//
             // say it is now shutdown
             initialized = false;
         }
@@ -684,57 +680,57 @@ public class Event {
                     savefile.Error("idEvent::Restore: arg size (%d) doesn't match saved arg size(%d) on event '%s'", event.eventdef.GetArgSize(), argsize.getVal(), event.eventdef.GetName());
                 }
 
-                throw new TODO_Exception();
-//                if (argsize[0] != 0) {
-//                    event.data = new Object[argsize[0]];//eventDataAllocator.Alloc(argsize[0]);
-//                    format = event.eventdef.GetArgFormat();
-//                    assert (format != null);
-//                    for (j = 0, size = 0; j < event.eventdef.GetNumArgs(); ++j) {
-//                        switch (format.charAt(j)) {//TODOS:reint
-//                            case D_EVENT_FLOAT:
-//                                event.data[j] = savefile.ReadFloat( /*reinterpret_cast<float *>( dataPtr )*/);
-//                                size += Float.BYTES;
-//                                break;
-//                            case D_EVENT_INTEGER:
-//                            case D_EVENT_ENTITY:
-//                            case D_EVENT_ENTITY_NULL:
-//                                event.data[j] = savefile.ReadInt( /*reinterpret_cast<int *>( dataPtr )*/);
-//                                size += Integer.BYTES;
-//                                break;
-//                            case D_EVENT_VECTOR:
-//                                idVec3 buffer = new idVec3();
-////						savefile.ReadVec3( *reinterpret_cast<idVec3 *>( dataPtr ) );
-//                                savefile.ReadVec3(buffer);
-//                                event.data[j] = buffer.Write();
-//                                size += idVec3.BYTES;
-//                                break;
-//                            case D_EVENT_TRACE:
-//                                boolean bOOl = savefile.ReadBool( /*reinterpret_cast<bool *>( dataPtr )*/);
-//                                event.data[j] = ((byte) btoi(bOOl));
-//                                size++;
-////						if ( *reinterpret_cast<bool *>( dataPtr ) ) {
-//                                if (bOOl) {
-//                                    size += sizeof(trace_s.class);
-////							trace_s t = *reinterpret_cast<trace_t *>( dataPtr + sizeof( bool ) );
-//                                    trace_s t = new trace_s();
-//                                    RestoreTrace(savefile, t);
-//                                    event.data[j] = t.Write();
-//                                    if (t.c.material != null) {
-//                                        size += MAX_STRING_LEN;
-////								str = reinterpret_cast<char *>( dataPtr + sizeof( bool ) + sizeof( trace_t ) );
-//                                        savefile.Read(str, MAX_STRING_LEN);
-//                                        event.data[j] = str;
-//                                    }
-//                                }
-//                                break;
-//                            default:
-//                                break;
-//                        }
-//                    }
-//                    assert (size == event.eventdef.GetArgSize());
-//                } else {
-//                    event.data = null;
-//                }
+                if (argsize.getVal() != 0) {
+                    event.data = new idEventArg[argsize.getVal()];//eventDataAllocator.Alloc(argsize[0]);
+                    format = event.eventdef.GetArgFormat();
+                    assert (format != null);
+                    for (j = 0, size = 0; j < event.eventdef.GetNumArgs(); ++j) {
+                        switch (format.charAt(j)) {
+                            case D_EVENT_FLOAT:
+                                event.data[j] = new idEventArg(D_EVENT_FLOAT, savefile.ReadFloat());
+                                size += Float.BYTES;
+                                break;
+                            case D_EVENT_INTEGER:
+                                event.data[j] = new idEventArg(D_EVENT_INTEGER, savefile.ReadInt());
+                                break;
+                            case D_EVENT_ENTITY:
+                                event.data[j] = new idEventArg(D_EVENT_ENTITY, savefile.ReadInt());
+                                break;
+                            case D_EVENT_ENTITY_NULL:
+                                event.data[j] = new idEventArg(D_EVENT_ENTITY_NULL, savefile.ReadInt());
+                                size += Integer.BYTES;
+                                break;
+                            case D_EVENT_VECTOR:
+                                idVec3 buffer = new idVec3();
+                                savefile.ReadVec3(buffer);
+                                buffer.Write();
+                                event.data[j] = new idEventArg(D_EVENT_VECTOR, buffer);
+                                size += idVec3.BYTES;
+                                break;
+                            case D_EVENT_TRACE:
+                                boolean readBool = savefile.ReadBool( /*reinterpret_cast<bool *>( dataPtr )*/);
+                                event.data[j] = new idEventArg(D_EVENT_TRACE, readBool ? 1 : 0);
+                                size++;
+//						if ( *reinterpret_cast<bool *>( dataPtr ) ) {
+                                if (readBool) {
+                                    size += trace_s.BYTES;
+                                    trace_s t = new trace_s();
+                                    RestoreTrace(savefile, t);
+                                    event.data[j] = new idEventArg(D_EVENT_TRACE, t);
+                                    if (t.c.material != null) {
+                                        size += MAX_STRING_LEN;
+                                        savefile.Read(str, MAX_STRING_LEN);
+                                    }
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    assert (size == event.eventdef.GetArgSize());
+                } else {
+                    event.data = null;
+                }
             }
         }
 

@@ -1,6 +1,5 @@
 package neo.idlib.containers;
 
-import neo.TempDump;
 import neo.TempDump.CPP_class;
 import neo.framework.CVarSystem;
 import neo.framework.CVarSystem.idInternalCVar;
@@ -590,18 +589,6 @@ public class List {
             num++;
 
             return num - 1;
-        }
-
-        /**
-         * Appends a shallow copy of the object.
-         * <p>
-         * Because we have a mix of const refs and member pointers that we don't
-         * want to rewrite in java, we will copy the const refs where necessary.
-         *
-         * @see #Append(type)
-         */
-        public int AppendClone(final type obj) {
-            return this.Append(TempDump.clone(obj));//TODO:create copy constructors instead of reflecting.
         }
 
         /*

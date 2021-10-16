@@ -23,7 +23,6 @@ import neo.idlib.containers.idStrList;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
@@ -65,7 +64,6 @@ import static neo.idlib.Text.Lexer.*;
 import static neo.idlib.Text.Str.va;
 import static neo.idlib.Text.Token.TT_STRING;
 import static neo.idlib.containers.idStrList.idStrListSortPaths;
-import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 import static neo.sys.sys_public.Sys_ListFiles;
 import static neo.sys.sys_public.*;
 import static neo.sys.sys_public.xthreadPriority.THREAD_NORMAL;
@@ -295,7 +293,7 @@ public class FileSystem_h {
     static idInitExclusions initExclusions;
     private static idFileSystemLocal fileSystemLocal = new idFileSystemLocal();
 
-    public static idFileSystem fileSystem = fileSystemLocal;//TODO:make a [] pointer of this??
+    public static idFileSystem fileSystem = fileSystemLocal;//TODO:make a [] pointer of this?? NO BOI
 
     public static void setFileSystem(idFileSystem fileSystem) {
         FileSystem_h.fileSystem = FileSystem_h.fileSystemLocal = (idFileSystemLocal) fileSystem;
@@ -3972,7 +3970,7 @@ public class FileSystem_h {
                     }
                 }
 
-                pack.checksum = new BigInteger(MD4_BlockChecksum(fs_headerLongs, fs_numHeaderLongs)).intValue();
+                pack.checksum = 0; //new BigInteger(MD4_BlockChecksum(fs_headerLongs, fs_numHeaderLongs)).intValue();
                 pack.checksum = LittleLong(pack.checksum);
 
 //            Mem_Free(fs_headerLongs);
@@ -4014,7 +4012,7 @@ public class FileSystem_h {
             if (file.Read(buf, len) != len) {
                 common.FatalError("Short read in idFileSystemLocal::GetFileChecksum()\n");
             }
-            ret = new BigInteger(MD4_BlockChecksum(buf, len)).intValue();
+            ret = 0;//new BigInteger(MD4_BlockChecksum(buf, len)).intValue();
 //            Mem_Free(buf);
             return ret;
         }

@@ -1,6 +1,5 @@
 package neo.idlib.math;
 
-import neo.TempDump;
 import neo.TempDump.SERiAL;
 import neo.idlib.math.Extrapolate.idExtrapolate;
 import neo.idlib.math.Math_h.idMath;
@@ -39,10 +38,10 @@ public class Interpolate {
         public void Init(final float startTime, final float duration, final type startValue, final type endValue) {
             this.startTime = startTime;
             this.duration = duration;
-            this.startValue = TempDump.clone(startValue);
-            this.endValue = TempDump.clone(endValue);
+            this.startValue = startValue;
+            this.endValue = endValue;
             this.currentTime = startTime - 1;
-            this.currentValue = TempDump.clone(startValue);
+            this.currentValue = startValue;
         }
 
         public void SetStartTime(float time) {
@@ -54,11 +53,11 @@ public class Interpolate {
         }
 
         public void SetStartValue(final type startValue) {
-            this.startValue = TempDump.clone(startValue);
+            this.startValue = startValue;
         }
 
         public void SetEndValue(final type endValue) {
-            this.endValue = TempDump.clone(endValue);
+            this.endValue = endValue;
         }
 
         public type GetCurrentValue(float time) {
@@ -68,9 +67,9 @@ public class Interpolate {
             if (time != currentTime) {
                 currentTime = time;
                 if (deltaTime <= 0) {
-                    currentValue = TempDump.clone(startValue);
+                    currentValue = startValue;
                 } else if (deltaTime >= duration) {
-                    currentValue = TempDump.clone(endValue);
+                    currentValue = endValue;
                 } else {
                     if (currentValue instanceof Integer) {
                         final int e = (Integer) this.endValue;

@@ -525,14 +525,16 @@ public class Player {
             nextArmorDepleteTime = 0;
 
 //	memset( ammo, 0, sizeof( ammo ) );
+            Arrays.fill(ammo, 0);
             ClearPowerUps();
 
             // set to -1 so that the gun knows to have a full clip the first time we get it and at the start of the level
 //	memset( clip, -1, sizeof( clip ) );
-            Arrays.asList(clip, -1);
+            Arrays.fill(clip, -1);
 
             items.DeleteContents(true);
 //	memset(pdasViewed, 0, 4 * sizeof( pdasViewed[0] ) );
+            Arrays.fill(pdasViewed, 0);
             pdas.clear();
             videos.clear();
             emails.clear();

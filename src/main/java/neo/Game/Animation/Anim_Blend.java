@@ -131,7 +131,7 @@ public class Anim_Blend {
             frameLookup.SetNum(anim.frameLookup.Num());
             if (frameLookup.Num() > 0) {
                 for (i = 0; i < frameLookup.MemoryUsed(); i++) {
-                    frameLookup_t frameLookup_t = new frameLookup_t(anim.frameLookup.oGet(i));
+                    frameLookup_t frameLookup_t = anim.frameLookup.oGet(i);
                     frameLookup.oSet(i, frameLookup_t);
                 }
             }
@@ -1001,10 +1001,6 @@ public class Anim_Blend {
             skin = null;
         }
 
-        @Override
-        public long/*size_t*/ Size() {
-            return sizeof(idDeclModelDef.class);
-        }
 
         @Override
         public String DefaultDefinition() {
@@ -2748,12 +2744,8 @@ public class Anim_Blend {
         public int/*size_t*/ Allocated() {
             int/*size_t*/ size;
 
-            size = jointMods.Allocated() + numJoints * sizeof(joints[0].getClass()) + jointMods.Num() * sizeof(jointMods.oGet(0).getClass()) + AFPoseJointMods.Allocated() + AFPoseJointFrame.Allocated() + AFPoseJoints.Allocated();
+            size = jointMods.Allocated() + numJoints + AFPoseJointMods.Allocated() + AFPoseJointFrame.Allocated() + AFPoseJoints.Allocated();
             return size;
-        }
-
-        public int/*size_t*/ Size() {
-            return sizeof(this) + Allocated();
         }
 
         /*

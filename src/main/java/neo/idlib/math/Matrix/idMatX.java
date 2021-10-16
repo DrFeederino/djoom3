@@ -98,7 +98,7 @@ public class idMatX {
 
         size = 6;
         original.Random(size, size, 0);
-        original = new idMatX(original.oMultiply(original.Transpose()));
+        original = original.oMultiply(original.Transpose());
 
         index1 = new int[size + 1];
         index2 = new int[size + 1];
@@ -106,9 +106,9 @@ public class idMatX {
         /*
          idMatX::LowerTriangularInverse
          */
-        m1 = new idMatX(original);
+        m1.oSet(original);
         m1.ClearUpperTriangle();
-        m2 = new idMatX(m1);
+        m2.oSet(m1);
 
         m2.InverseSelf();
         m1.LowerTriangularInverse();
@@ -120,9 +120,9 @@ public class idMatX {
         /*
          idMatX::UpperTriangularInverse
          */
-        m1 = new idMatX(original);
+        m1.oSet(original);
         m1.ClearLowerTriangle();
-        m2 = new idMatX(m1);
+        m2.oSet(m1);
 
         m2.InverseSelf();
         m1.UpperTriangularInverse();
@@ -134,10 +134,10 @@ public class idMatX {
         /*
          idMatX::Inverse_GaussJordan
          */
-        m1 = new idMatX(original);
+        m1.oSet(original);
 
         m1.Inverse_GaussJordan();
-        m1 = new idMatX(m1.oMulSet(original));
+        m1.oSet(m1.oMulSet(original));
 
         if (!m1.IsIdentity(1e-4f)) {
             idLib.common.Warning("idMatX::Inverse_GaussJordan failed");
@@ -146,8 +146,8 @@ public class idMatX {
         /*
          idMatX::Inverse_UpdateRankOne
          */
-        m1 = new idMatX(original);
-        m2 = new idMatX(original);
+        m1.oSet(original);
+        m2.oSet(original);
 
         w.Random(size, 1);
         v.Random(size, 2);
@@ -172,8 +172,8 @@ public class idMatX {
          idMatX::Inverse_UpdateRowColumn
          */
         for (offset = 0; offset < size; offset++) {
-            m1 = new idMatX(original);
-            m2 = new idMatX(original);
+            m1.oSet(original);
+            m2.oSet(original);
 
             v.Random(size, 1);
             w.Random(size, 2);
@@ -199,8 +199,8 @@ public class idMatX {
         /*
          idMatX::Inverse_UpdateIncrement
          */
-        m1 = new idMatX(original);
-        m2 = new idMatX(original);
+        m1.oSet(original);
+        m2.oSet(original);
 
         v.Random(size + 1, 1);
         w.Random(size + 1, 2);
@@ -226,8 +226,8 @@ public class idMatX {
          idMatX::Inverse_UpdateDecrement
          */
         for (offset = 0; offset < size; offset++) {
-            m1 = new idMatX(original);
-            m2 = new idMatX(original);
+            m1.oSet(original);
+            m2.oSet(original);
 
             v.SetSize(6);
             w.SetSize(6);
@@ -2377,39 +2377,23 @@ public class idMatX {
     }
 
     public void TransposeMultiply(idVecX dst, final idVecX vec) {// dst = this->Transpose() * vec
-//        assert (numRows == a.numRows);
-//        assert ( dst != vec && dst != this );
-//
-//        dst.SetSize(numColumns, vec.GetSize());
-//        float*dstPtr = dst.ToFloatPtr();
-//        int k = numColumns;
-//        int l = a.numColumns;
-//        for (int i = 0; i < k; i++) {
-//            for (int j = 0; j < l; j++) {
-//			const float*m1Ptr = ToFloatPtr() + i;
-//			const float*m2Ptr = a.ToFloatPtr() + j;
-//                float sum = m1Ptr[0] * m2Ptr[0];
-//                for (int n = 1; n < numRows; n++) {
-//                    m1Ptr += numColumns;
-//                    m2Ptr += a.numColumns;
-//                    sum += m1Ptr[0] * m2Ptr[0];
-//                }
-//			*dstPtr++ = sum;
-//            }
-//        }
-        int i, j, mPtr;
-        final float[] vPtr, dstPtr;
+        if (MATX_SIMD) {
+            SIMDProcessor.MatX_TransposeMultiplyVecX(dst, this, vec);
+        } else {
+            int i, j, mPtr;
+            final float[] vPtr, dstPtr;
 
-        vPtr = vec.ToFloatPtr();
-        dstPtr = dst.ToFloatPtr();
-        for (i = 0; i < numColumns; i++) {
-            mPtr = i;
-            float sum = mat[mPtr] * vPtr[0];
-            for (j = 1; j < numRows; j++) {
-                mPtr += numColumns;
-                sum += mat[mPtr] * vPtr[j];
+            vPtr = vec.ToFloatPtr();
+            dstPtr = dst.ToFloatPtr();
+            for (i = 0; i < numColumns; i++) {
+                mPtr = i;
+                float sum = mat[mPtr] * vPtr[0];
+                for (j = 1; j < numRows; j++) {
+                    mPtr += numColumns;
+                    sum += mat[mPtr] * vPtr[j];
+                }
+                dstPtr[i] = sum;
             }
-            dstPtr[i] = sum;
         }
     }
 
@@ -2594,7 +2578,6 @@ public class idMatX {
         for (i = 0; i < numRows; i++) {
             s = alpha * v.p[i];
             for (j = 0; j < numColumns; j++) {
-                //this.mat[i + j] += s * w.p[j];
                 this.oPluSet(i, j, s * w.p[j]);
             }
         }

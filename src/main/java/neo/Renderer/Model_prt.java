@@ -19,7 +19,6 @@ import java.util.Arrays;
 import static neo.Renderer.Model.dynamicModel_t.DM_CONTINUOUS;
 import static neo.Renderer.RenderWorld.*;
 import static neo.Renderer.tr_trisurf.*;
-import static neo.TempDump.sizeof;
 import static neo.framework.DeclManager.declManager;
 import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 
@@ -253,14 +252,6 @@ public class Model_prt {
             int total = 0;
 
             total += super.Memory();
-
-            if (particleSystem != null) {
-                total += sizeof(particleSystem);
-
-                for (int i = 0; i < particleSystem.stages.Num(); i++) {
-                    total += sizeof(particleSystem.stages.oGet(i));
-                }
-            }
 
             return total;
         }

@@ -1035,7 +1035,7 @@ public class AI_pathing {
                 continue;
             }
             d = idMath.Sqrt(p[i]);
-            bal[n] = new ballistics_s();
+            //bal[n] = new ballistics_s();
             bal[n].angle = (float) atan2(0.5f * (2.0f * y * p[i] - gravity) / d, d * x);
             bal[n].time = (float) (x / (cos(bal[n].angle) * speed));
             bal[n].angle = idMath.AngleNormalize180(RAD2DEG(bal[n].angle));

@@ -21,7 +21,6 @@ import neo.idlib.containers.StaticList.idStaticList;
 import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec3;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -36,7 +35,6 @@ import static neo.TempDump.isNotNullOrEmpty;
 import static neo.framework.FileSystem_h.fsMode_t.FS_WRITE;
 import static neo.idlib.Lib.idLib.fileSystem;
 import static neo.idlib.Text.Str.va;
-import static neo.idlib.hashing.MD4.MD4_BlockChecksum;
 
 /* **********************************************************************
 
@@ -252,7 +250,7 @@ public final class idProgram {
             System.arraycopy(statementList[i].toArray(), 0, statementIntArray, i * 6, 6);
         }
 
-        result = new BigInteger(MD4_BlockChecksum(statementIntArray, /*sizeof(statementBlock_t)*/ statements.Num())).intValue();
+        result = 0;// new BigInteger(MD4_BlockChecksum(statementIntArray, /*sizeof(statementBlock_t)*/ statements.Num())).intValue();
 
 //	delete [] statementList;
         return result;

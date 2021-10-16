@@ -307,7 +307,9 @@ public class DeclAF {
             v2.ToVec3().x = v2.ToVec3().y = v2.ToVec3().z = 10.0f;
             numSides = 3;
             origin = new idAFVector();
+            origin.ToVec3().Zero();
             angles = new idAngles();
+            angles.Zero();
             density = 0.2f;
             inertiaScale = getMat3_identity();
             linearFriction = file.defaultLinearFriction;
@@ -320,7 +322,7 @@ public class DeclAF {
             contactMotorDirection = new idAFVector();
             jointName.oSet("origin");
             jointMod = DECLAF_JOINTMOD_AXIS;
-            containedJoints.oSet("origin");
+            containedJoints.oSet("*origin");
         }
     }
 
@@ -497,12 +499,6 @@ public class DeclAF {
                 }
             }
             return "orientation";
-        }
-
-        @Override
-        public long Size() {
-//            return sizeof( idDeclAF );
-            return super.Size();
         }
 
         @Override

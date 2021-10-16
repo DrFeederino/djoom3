@@ -2037,9 +2037,6 @@ public class Projectile {
         private idDeclParticle smokeFly;
         private int smokeFlyTime;
         private idSoundShader sndBounce;
-        private final idDebris type = new idDebris();
-        //
-        //
 
         public idDebris() {
             owner = null;

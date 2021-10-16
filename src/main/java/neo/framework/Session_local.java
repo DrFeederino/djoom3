@@ -1823,7 +1823,8 @@ public class Session_local {
                 // Game Name / Version / Map Name / Persistant Player Info
                 // game
                 savegameFile.ReadString(gamename);
-
+                gamename.oSet(gamename.toString().substring(0, 6));
+                assert (gamename.toString().equals(GAME_NAME));
                 // if this isn't a savegame for the correct game, abort loadgame
                 if (!gamename.toString().equals(GAME_NAME)) {
                     common.Warning("Attempted to load an invalid savegame: %s", in.toString());
@@ -1834,11 +1835,9 @@ public class Session_local {
                     return false;
                 }
 
-                {// version
-                    CInt savegameVersion = new CInt();
-                    savegameFile.ReadInt(savegameVersion);
-                    this.savegameVersion = savegameVersion.getVal();
-                }
+                CInt readVersion = new CInt();
+                savegameFile.ReadInt(readVersion);
+                this.savegameVersion = readVersion.getVal();
 
                 // map
                 savegameFile.ReadString(saveMap);
@@ -4235,7 +4234,7 @@ public class Session_local {
 
         public void SetSaveGameGuiVars() {
             int i;
-            idStr name;
+            idStr name = new idStr();
             idStrList fileList = new idStrList();
             idList<fileTIME_T> fileTimes = new idList<>();
 
@@ -4253,7 +4252,7 @@ public class Session_local {
                 if (src.LoadFile(va("savegames/%s.txt", loadGameList.get(i)))) {
                     idToken tok = new idToken();
                     src.ReadToken(tok);
-                    name = tok;
+                    name.oSet(tok.toString());
                 } else {
                     name = loadGameList.get(i);
                 }

@@ -33,7 +33,6 @@ import static neo.Game.Game_local.*;
 import static neo.Renderer.Material.CONTENTS_BODY;
 import static neo.Renderer.Material.CONTENTS_RENDERMODEL;
 import static neo.Renderer.Model.INVALID_JOINT;
-import static neo.TempDump.sizeof;
 import static neo.idlib.Lib.*;
 import static neo.idlib.math.Math_h.Square;
 import static neo.idlib.math.Matrix.idMat3.getMat3_default;
@@ -224,10 +223,6 @@ public class Clip {
         public static void ClearTraceModelCache() {
             traceModelCache.DeleteContents(true);
             traceModelHash.Free();
-        }
-
-        public static int TraceModelCacheSize() {
-            return traceModelCache.Num() * sizeof(idTraceModel.class);
         }
 
         public static void SaveTraceModels(idSaveGame savefile) {

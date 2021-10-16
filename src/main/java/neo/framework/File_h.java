@@ -352,6 +352,15 @@ public class File_h {
             return result;
         }
 
+        // Endian portable alternatives to Read(...)
+        public int ReadInt(CLong value) {
+            ByteBuffer intBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
+            int result = Read(intBytes);
+            value.setVal(LittleLong(intBytes.getInt(0)));
+            return result;
+        }
+
+
         public int ReadInt() {
             CInt value = new CInt();
             this.ReadInt(value);
@@ -505,13 +514,16 @@ public class File_h {
         }
 
         public int ReadString(idStr string) {
-            CInt len = new CInt(0);
+            CInt len = new CInt();
             int result = 0;
             ByteBuffer stringBytes;
 
             ReadInt(len);
-            if (len.getVal() >= 0) {
-                stringBytes = ByteBuffer.allocate(len.getVal() * 2);//2 bytes per char
+            if (len.getVal() > 0) {
+                int capacity = (len.getVal() * 2);
+                capacity = capacity < len.getVal() ? Integer.MAX_VALUE - 1 : Math.abs(capacity); //just in case
+
+                stringBytes = ByteBuffer.allocate(capacity);//2 bytes per char
 //                string.Fill(' ', len[0]);
                 result = Read(stringBytes);
                 string.oSet(new String(stringBytes.array()));

@@ -42,11 +42,6 @@ public class DeclSkin {
         //
         //
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclSkin );
-            return super.Size();
-        }
 
         @Override
         public boolean SetDefaultText() throws idException {

@@ -1894,7 +1894,7 @@ public class AsyncServer {
                     PrintOOB(from, SERVER_PRINT_MISC.ordinal(), msg2);
 
                     // update the guid in the challenges
-                    idStr.snPrintf(challenges[ichallenge].guid, sizeof(challenges[ichallenge].guid), ctos(guid));
+                    idStr.snPrintf(challenges[ichallenge].guid, challenges[ichallenge].guid.length, ctos(guid));
 
                     // once auth replied denied, stop sending further requests
                     if (challenges[ichallenge].authReply != AUTH_DENY) {

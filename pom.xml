@@ -137,8 +137,6 @@
             <artifactId>lwjgl-stb</artifactId>
             <version>${lwjgl.version}</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl</artifactId>
@@ -168,12 +166,6 @@
             <artifactId>lwjgl-stb</artifactId>
             <version>${lwjgl.version}</version>
             <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>uk.com.robust-it</groupId>
-            <artifactId>cloning</artifactId>
-            <version>${cloning.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

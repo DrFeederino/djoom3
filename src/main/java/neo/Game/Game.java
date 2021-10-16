@@ -1044,7 +1044,7 @@ public class Game {
             originalJoints = new idJointMat[numMD5joints];
 
             for (i = 0; i < numMD5joints; i++) {
-                originalJoints[i] = new idJointMat(ent.joints[i]);
+                originalJoints[i] = ent.joints[i];
             }
             // buffer to store the joint mods
             jointMod = new declAFJointMod_t[numMD5joints];//memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));

@@ -12,7 +12,6 @@ import neo.idlib.math.Math_h.idMath;
 import static neo.Sound.snd_local.WAVE_FORMAT_TAG_OGG;
 import static neo.Sound.snd_system.soundSystemLocal;
 import static neo.TempDump.etoi;
-import static neo.TempDump.sizeof;
 import static neo.framework.CVarSystem.cvarSystem;
 import static neo.framework.Common.com_makingBuild;
 import static neo.framework.Common.common;
@@ -103,12 +102,6 @@ public class snd_shader {
             this.parms = new soundShaderParms_t();
             this.desc = new idStr();
             Init();
-        }
-        // virtual					~idSoundShader();
-
-        @Override
-        public long Size() {
-            return sizeof(idSoundShader.class);
         }
 
         @Override

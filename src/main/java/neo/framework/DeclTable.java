@@ -31,11 +31,6 @@ public class DeclTable {
         //
 
         @Override
-        public long Size() {
-            return /*sizeof(idDeclTable) +*/ values.Allocated();
-        }
-
-        @Override
         public String DefaultDefinition() {
             return "{ { 0 } }";
         }

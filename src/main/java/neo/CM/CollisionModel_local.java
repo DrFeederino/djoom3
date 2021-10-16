@@ -120,7 +120,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private boolean getContacts;
         private boolean loaded;
         private long mapFileTime;
-        private idStr mapName = new idStr();
+        private idStr mapName;
         private int maxContacts;
         // models
         private int maxModels;
@@ -132,9 +132,11 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private cm_procNode_s[] procNodes;
         private idMaterial trmMaterial;
         // polygons and brush for trm model
-        private cm_polygonRef_s[] trmPolygons = new cm_polygonRef_s[MAX_TRACEMODEL_POLYS];
+        private cm_polygonRef_s[] trmPolygons;
 
         public idCollisionModelManagerLocal() {
+            this.mapName = new idStr();
+            this.trmPolygons = new cm_polygonRef_s[MAX_TRACEMODEL_POLYS];
         }
 
         @Override// load collision models from a map file
@@ -162,7 +164,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // models
             maxModels = MAX_SUBMODELS;
             numModels = 0;
-            models = Stream.generate(cm_model_s::new).limit(maxModels + 1).toArray(cm_model_s[]::new); //cm_model_s.generateArray(maxModels + 1);
+            models = new cm_model_s[maxModels + 1]; //cm_model_s.generateArray(maxModels + 1);
 
             // setup hash to speed up finding shared vertices and edges
             SetupHash();
@@ -174,7 +176,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             BuildModels(mapFile);
 
             // save name and time stamp
-            mapName = new idStr(mapFile.GetNameStr());
+            mapName = mapFile.GetNameStr();
             mapFileTime = mapFile.GetFileTime();
             loaded = true;
 
@@ -269,10 +271,10 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             assert (models != null);
 
             if (material == null) {
-                material = new idMaterial(trmMaterial);
+                material = trmMaterial;
             }
 
-            model = new cm_model_s(models[MAX_SUBMODELS]);
+            model = models[MAX_SUBMODELS];
             model.node.brushes = null;
             model.node.polygons = null;
             // if not a valid trace model
@@ -284,7 +286,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             vertex = model.vertices;
             trmVert = trm.verts;
             for (i = 0; i < trm.numVerts; i++) {
-                vertex[i].p.oSet(trmVert[i]);
+                vertex[i].p = trm.verts[i];
                 vertex[i].sideSet = 0;
             }
             // edges
@@ -292,11 +294,13 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             edge = model.edges;
             trmEdge = trm.edges;
             for (i = 0; i < trm.numEdges; i++) {
-                edge[i + 1].vertexNum[0] = trmEdge[i + 1].v[0];
-                edge[i + 1].vertexNum[1] = trmEdge[i + 1].v[1];
-                edge[i + 1].normal = trmEdge[i].normal;
-                edge[i + 1].internal = false;
-                edge[i + 1].sideSet = 0;
+                trmEdge[i] = trm.edges[i + 1];
+                edge[i] = model.edges[i + 1];
+                edge[i].vertexNum[0] = trmEdge[i].v[0];
+                edge[i].vertexNum[1] = trmEdge[i].v[1];
+                edge[i].normal.oSet(trmEdge[i].normal);
+                edge[i].internal = false;//false
+                edge[i].sideSet = 0;
             }
             // polygons
             model.numPolygons = trm.numPolys;
@@ -467,7 +471,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             cm_trmEdge_s edge;
             cm_trmVertex_s vert;
 
-            //results = new trace_s();
+            results = new trace_s();
 
             if (model < 0 || model > MAX_SUBMODELS || model > this.maxModels) {
                 common.Printf("idCollisionModelManagerLocal::Translation: invalid model handle\n");
@@ -660,7 +664,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 dist = poly.plane.Normal().oMultiply(tw.dir);
                 if (dist > 0.0f || (!trm.isConvex && dist == 0.0f)) {
                     // this trm poly and it's edges and vertices need to be used for collision
-                    poly.used = 1;//true;
+                    poly.used = true;
                     for (j = 0; j < poly.numEdges; j++) {
                         edge = tw.edges[Math.abs(poly.edges[j])];
                         edge.used = true;
@@ -706,7 +710,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // set trm plane distances
             for (i = 0; i < tw.numPolys; i++) {
                 poly = tw.polys[i];
-                if (poly.used != 0) {
+                if (!poly.used) {
                     poly.plane.FitThroughPoint(tw.edges[Math.abs(poly.edges[0])].start);
                 }
             }
@@ -1296,7 +1300,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, edgeNum;
             float dist, d1, d2;
             CFloat f1 = new CFloat(), f2 = new CFloat();
-            idVec3 start = new idVec3(), end = new idVec3(), normal = new idVec3();
+            idVec3 start, end, normal = new idVec3();
             cm_edge_s edge;
             cm_vertex_s v1, v2;
             idPluecker pl, epsPl = new idPluecker();
@@ -1304,7 +1308,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // check edges for a collision
             for (i = 0; i < poly.numEdges; i++) {
                 edgeNum = poly.edges[i];
-                edge = new cm_edge_s(tw.model.edges[Math.abs(edgeNum)]);
+                edge = tw.model.edges[Math.abs(edgeNum)];
                 // if this edge is already checked
                 if (edge.checkcount == this.checkCount) {
                     continue;
@@ -1313,7 +1317,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 if (edge.internal) {
                     continue;
                 }
-                pl = new idPluecker(tw.polygonEdgePlueckerCache[i]);
+                pl = tw.polygonEdgePlueckerCache[i];
                 // get the sides at which the trm edge vertices pass the polygon edge
                 CM_SetEdgeSidedness(edge, pl, tw.vertices[trmEdge.vertexNum[0]].pl, trmEdge.vertexNum[0]);
                 CM_SetEdgeSidedness(edge, pl, tw.vertices[trmEdge.vertexNum[1]].pl, trmEdge.vertexNum[1]);
@@ -1322,10 +1326,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     continue;
                 }
                 // get the sides at which the polygon edge vertices pass the trm edge
-                //v1 = new cm_vertex_s(tw.model.vertices[edge.vertexNum[INTSIGNBITSET(edgeNum)]]);
                 v1 = tw.model.vertices[edge.vertexNum[INTSIGNBITSET(edgeNum)]];
                 CM_SetVertexSidedness(v1, tw.polygonVertexPlueckerCache[i], trmEdge.pl, trmEdge.bitNum);
-                //v2 = new cm_vertex_s(tw.model.vertices[edge.vertexNum[INTSIGNBITNOTSET(edgeNum)]]);
                 v2 = tw.model.vertices[edge.vertexNum[INTSIGNBITNOTSET(edgeNum)]];
                 CM_SetVertexSidedness(v2, tw.polygonVertexPlueckerCache[i + 1], trmEdge.pl, trmEdge.bitNum);
                 // if the polygon edge start and end vertex do not pass the trm edge at different sides
@@ -1360,8 +1362,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 if (f2.getVal() < tw.trace.fraction) {
                     tw.trace.fraction = f2.getVal();
                     // create plane with normal vector orthogonal to both the polygon edge and the trm edge
-                    start.oSet(tw.model.vertices[edge.vertexNum[0]].p);
-                    end.oSet(tw.model.vertices[edge.vertexNum[1]].p);
+                    start = new idVec3(tw.model.vertices[edge.vertexNum[0]].p);
+                    end = new idVec3(tw.model.vertices[edge.vertexNum[1]].p);
                     tw.trace.c.normal.oSet((end.oMinus(start)).Cross(trmEdge.end.oMinus(trmEdge.start)));
                     // FIXME: do this normalize when we know the first collision
                     tw.trace.c.normal.Normalize();
@@ -1372,7 +1374,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                         tw.trace.c.dist = -tw.trace.c.dist;
                     }
                     tw.trace.c.contents = poly.contents;
-                    tw.trace.c.material = new idMaterial(poly.material);
+                    tw.trace.c.material = poly.material;
                     tw.trace.c.type = CONTACT_EDGE;
                     tw.trace.c.modelFeature = edgeNum;
                     tw.trace.c.trmFeature = Arrays.asList(tw.edges).indexOf(trmEdge);
@@ -1385,7 +1387,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     d2 = normal.oMultiply(end) - dist;
                     f1.setVal(d1 / (d1 - d2));
                     //assert( f1 >= 0.0f && f1 <= 1.0f );
-                    tw.trace.c.point.oSet(start.oPlus(end.oMinus(start).oMultiply(f1.getVal()))); // start + (end - start) * f1
+                    tw.trace.c.point.oSet(start.oPlus(end.oMinus(start).oMultiply(f1.getVal())));
                     // if retrieving contacts
                     if (tw.getContacts) {
                         CM_AddContact(tw);
@@ -1637,7 +1639,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     // set edge check count
                     e.checkcount = this.checkCount;
                     // can never collide with internal edges
-                    if (!e.internal) {
+                    if (e.internal) {
                         continue;
                     }
                     // got to check both vertices because we skip internal edges
@@ -1663,7 +1665,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
                         for (j = 0; j < tw.numPolys; j++) {
                             bp = tw.polys[j];
-                            if (bp.used != 0) {
+                            if (!bp.used) {
                                 this.TranslateVertexThroughTrmPolygon(tw, bp, p, v, endp, pl);
                             }
                         }
@@ -1694,7 +1696,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idVec3 dir, normal1 = new idVec3(), normal2 = new idVec3();
 
             // calculate trace heart planes
-            dir = idCollisionModelManagerLocal.tw.dir;
+            dir = new idVec3(idCollisionModelManagerLocal.tw.dir);
             dir.Normalize();
             dir.NormalVectors(normal1, normal2);
             idCollisionModelManagerLocal.tw.heartPlane1.SetNormal(normal1);
@@ -1709,7 +1711,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // vertices
             tw.numVerts = trm.numVerts;
             for (i = 0; i < trm.numVerts; i++) {
-                tw.vertices[i].p = trm.verts[i];
+                tw.vertices[i].p.oSet(trm.verts[i]);
                 tw.vertices[i].used = false;//false;
             }
             // edges
@@ -1725,7 +1727,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 tw.polys[i].numEdges = trm.polys[i].numEdges;
                 System.arraycopy(trm.polys[i].edges, 0, tw.polys[i].edges, 0, trm.polys[i].numEdges);
                 tw.polys[i].plane.SetNormal(trm.polys[i].normal);
-                tw.polys[i].used = 0;//false;
+                tw.polys[i].used = false;
             }
             // is the trace model convex or not
             tw.isConvex = trm.isConvex;
@@ -1746,8 +1748,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idVec3 at, bt, dir, dir1, dir2;
             idPluecker pl1 = new idPluecker(), pl2 = new idPluecker();
 
-            at = va;
-            bt = vb;
+            at = new idVec3(va);
+            bt = new idVec3(vb);
             if (tanHalfAngle.getVal() != 0.0f) {
                 CM_RotateEdge(at, bt, tw.origin, tw.axis, tanHalfAngle);
             }
@@ -2001,8 +2003,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             tanHalfAngle.setVal(0.0f);
 
             // transform rotation axis to z-axis
-            ct = vc.oMinus(tw.origin).oMultiply(tw.matrix);
-            dt = vd.oMinus(tw.origin).oMultiply(tw.matrix);
+            ct = (vc.oMinus(tw.origin)).oMultiply(tw.matrix);
+            dt = (vd.oMinus(tw.origin)).oMultiply(tw.matrix);
 
             pl2.FromLine(ct, dt);
 
@@ -2117,7 +2119,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 }
 
                 // can never collide with internal edges
-                if (!edge.internal) {
+                if (edge.internal) {
                     continue;
                 }
 
@@ -2193,12 +2195,12 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
                 // fill in trace structure
                 tw.maxTan = Math.abs(tanHalfAngle.getVal());
-                tw.trace.c.normal = collisionNormal;
+                tw.trace.c.normal.oSet(collisionNormal);
                 tw.trace.c.normal.Normalize();
                 tw.trace.c.dist = tw.trace.c.normal.oMultiply(v1.p);
                 // make sure the collision plane faces the trace model
                 if ((tw.trace.c.normal.oMultiply(trmEdge.start)) - tw.trace.c.dist < 0) {
-                    tw.trace.c.normal = tw.trace.c.normal.oNegative();
+                    tw.trace.c.normal.oSet(tw.trace.c.normal.oNegative());
                     tw.trace.c.dist = -tw.trace.c.dist;
                 }
                 tw.trace.c.contents = poly.contents;
@@ -2206,7 +2208,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 tw.trace.c.type = CONTACT_EDGE;
                 tw.trace.c.modelFeature = edgeNum;
                 tw.trace.c.trmFeature = Arrays.asList(tw.edges).indexOf(trmEdge);
-                tw.trace.c.point = collisionPoint;
+                tw.trace.c.point.oSet(collisionPoint);
                 // if no collision can be closer
                 if (tw.maxTan == 0.0f) {
                     break;
@@ -2435,7 +2437,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idPlane epsPlane;
 
             // epsilon expanded plane
-            epsPlane = plane;
+            epsPlane = new idPlane(plane);
             epsPlane.SetDist(epsPlane.Dist() + CM_CLIP_EPSILON);
 
             // if the rotation sphere at the rotation origin is too far away from the polygon plane
@@ -2588,7 +2590,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             // calculate vertex end position
-            endp = v.p;
+            endp = new idVec3(v.p);
             tw.modelVertexRotation.RotatePoint(endp);
 
             // rotate the vertex through the epsilon plane
@@ -2747,7 +2749,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     // set edge check count
                     e.checkcount = this.checkCount;
                     // can never collide with internal edges
-                    if (!e.internal) {
+                    if (e.internal) {
                         continue;
                     }
                     // got to check both vertices because we skip internal edges
@@ -2767,11 +2769,11 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                             continue;
                         }
 
-                        rotationOrigin = tw.polygonRotationOriginCache[i + k];
+                        rotationOrigin = new idVec3(tw.polygonRotationOriginCache[i + k]);
 
                         for (j = 0; j < tw.numPolys; j++) {
                             bp = tw.polys[j];
-                            if (bp.used != 0) {
+                            if (!bp.used) {
                                 RotateVertexThroughTrmPolygon(tw, bp, p, v, rotationOrigin);
                             }
                         }
@@ -2856,17 +2858,17 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             tw.axisIntersectsTrm = false;
             tw.quickExit = false;
             tw.angle = endAngle - startAngle;
-            // assert (tw.angle > -180.0f && tw.angle < 180.0f);
+            assert (tw.angle > -180.0f && tw.angle < 180.0f);
             tw.maxTan = initialTan = Math.abs((float) Math.tan((idMath.PI / 360.0f) * tw.angle));
             tw.model = this.models[model];
-            tw.start = start.oMinus(modelOrigin);
+            tw.start.oSet(start.oMinus(modelOrigin));
             // rotation axis, axis is assumed to be normalized
-            tw.axis = axis;
+            tw.axis.oSet(axis);
             assert (tw.axis.oGet(0) * tw.axis.oGet(0) + tw.axis.oGet(1) * tw.axis.oGet(1) + tw.axis.oGet(2) * tw.axis.oGet(2) > 0.99f);
             // rotation origin projected into rotation plane through tw.start
-            tw.origin = rorg.oMinus(modelOrigin);
+            tw.origin.oSet(rorg.oMinus(modelOrigin));
             d = (tw.axis.oMultiply(tw.origin)) - (tw.axis.oMultiply(tw.start));
-            tw.origin = tw.origin.oMinus(tw.axis.oMultiply(d));
+            tw.origin.oSet(tw.origin.oMinus(tw.axis.oMultiply(d)));
             // radius of rotation
             tw.radius = (tw.start.oMinus(tw.origin)).Length();
             // maximum error of the circle approximation traced through the axial BSP tree
@@ -3080,7 +3082,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // setup trm polygons
             for (i = 0; i < tw.numPolys; i++) {
                 poly = tw.polys[i];
-                poly.used = 1;//true;
+                poly.used = true;
                 // set trm polygon plane distance
                 poly.plane.FitThroughPoint(tw.edges[Math.abs(poly.edges[0])].start);
                 // get polygon bounds from edge bounds
@@ -3806,7 +3808,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     // number of steps for the approximation
                     numSteps = (int) (CIRCLE_APPROXIMATION_LENGTH / d);
                     // start of approximation
-                    start = tw.start;
+                    start = new idVec3(tw.start);
                     // trace circle approximation steps through the BSP tree
                     for (i = 0; i < numSteps; i++) {
                         // calculate next point on approximated circle
@@ -3821,7 +3823,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                         start.oSet(end);
                     }
                 } else {
-                    start = tw.start;
+                    start = new idVec3(tw.start);
                 }
                 // last step of the approximation
                 this.TraceThroughAxialBSPTree_r(tw, tw.model.node, 0, 1, start, tw.end);
@@ -3880,7 +3882,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             while (node != null) {
                 for (pref = node.polygons; pref != null; pref = pref.next) {
-                    if (pref.p.equals(p)) {
+                    if (pref.p == p) {
                         pref.p = null;
                         // cannot return here because we can have links down the tree due to polygon merging
                         //return;
@@ -3906,7 +3908,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             while (node != null) {
                 for (bref = node.brushes; bref != null; bref = bref.next) {
-                    if (bref.b != null && bref.b.equals(b)) {
+                    if (bref.b == b) {
                         bref.b = null;
                         return;
                     }
@@ -3946,7 +3948,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             // free all polygons at this node
             for (pref = node.polygons; pref != null; pref = node.polygons) {
-                p = new cm_polygon_s(pref.p);
+                p = pref.p;
                 if (p != null) {
                     // remove all other references to this polygon
                     RemovePolygonReferences_r(headNode, p);
@@ -4036,7 +4038,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     //
                     p = pref.p;
                     // if this polygon reference should change
-                    if (p.equals(p1) || p.equals(p2)) {
+                    if (p == p1 || p == p2) {
                         // if the new polygon is already linked at this node
                         if (linked) {
                             if (lastpref != null) {
@@ -4084,7 +4086,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             float dot;
             boolean keep1, keep2;
 
-            if (!p1.material.equals(p2.material)) {
+            if (p1.material != p2.material) {
                 return null;
             }
             if (Math.abs(p1.plane.Dist() - p2.plane.Dist()) > NORMAL_EPSILON) {
@@ -4171,7 +4173,6 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
             keep2 = (dot > CONTINUOUS_EPSILON);
 
-            newEdgeNum1[0] = newEdgeNum2[0] = 0;
             // get new edges if we need to replace colinear ones
             if (!keep1) {
                 edgeNum1 = p1.edges[p1BeforeShare];
@@ -4264,7 +4265,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 for (pref = node.polygons; pref != null; pref = pref.next) {
                     p = pref.p;
                     //
-                    if (p.equals(polygon)) {
+                    if (p == polygon) {
                         continue;
                     }
                     //
@@ -4470,7 +4471,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     }
                 }
                 // we got another internal edge
-                edge.internal = true;
+                edge.internal = true;//true;
                 model.numInternalEdges++;
             }
         }
@@ -4494,7 +4495,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     if (p.contents != polygon.contents) {
                         continue;
                     }
-                    if (p.equals(polygon)) {
+                    if (polygon.equals(p)) {
                         continue;
                     }
                     FindInternalEdgesOnPolygon(model, polygon, p);
@@ -4627,7 +4628,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 src.Error("idCollisionModelManagerLocal::LoadProcBSP: bad token \"%s\"", token.toString());
             }
 
-            src = null;
+//	delete src;
         }
 
         /*
@@ -4698,7 +4699,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 return false;
             }
             // make a local copy of the winding
-            neww = w;
+            neww = new idFixedWinding(w);
             neww.GetBounds(bounds);
             origin.oSet((bounds.oGet(1).oMinus(bounds.oGet(0))).oMultiply(0.5f));
             radius = origin.Length() + CHOP_EPSILON;
@@ -4914,15 +4915,16 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             for (i = 0; i < w.GetNumPoints(); i++) {
                 cm_windingList.bounds.AddPoint(w.oGet(i).ToVec3());
             }
-            cm_windingList.origin = cm_windingList.bounds.oGet(1).oMinus(cm_windingList.bounds.oGet(0)).oMultiply(0.5f);
+
+            cm_windingList.origin.oSet((cm_windingList.bounds.oGet(1).oMinus(cm_windingList.bounds.oGet(0)).oMultiply(0.5f)));
             cm_windingList.radius = cm_windingList.origin.Length() + CHOP_EPSILON;
-            cm_windingList.origin = cm_windingList.bounds.oGet(0).oPlus(cm_windingList.origin);
+            cm_windingList.origin.oSet(cm_windingList.bounds.oGet(0).oPlus(cm_windingList.origin));
             cm_windingList.bounds.oGet(0).oMinSet(new idVec3(CHOP_EPSILON, CHOP_EPSILON, CHOP_EPSILON));
             cm_windingList.bounds.oGet(1).oPluSet(new idVec3(CHOP_EPSILON, CHOP_EPSILON, CHOP_EPSILON));
 
-            cm_windingList.w[0] = w;
+            cm_windingList.w[0] = new idFixedWinding(w);
             cm_windingList.numWindings = 1;
-            cm_windingList.normal = plane.Normal();
+            cm_windingList.normal.oSet(plane.Normal());
             cm_windingList.contents = contents;
             cm_windingList.primitiveNum = patch;
             //
@@ -5233,10 +5235,10 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             //
             model.numNodes += 2;
             // set front node bounds
-            frontBounds = bounds;
+            frontBounds = new idBounds(bounds);
             frontBounds.oGet(0).oSet(planeType.getVal(), planeDist.getVal());
             // set back node bounds
-            backBounds = bounds;
+            backBounds = new idBounds(bounds);
             backBounds.oGet(1).oSet(planeType.getVal(), planeDist.getVal());
             //
             node.planeType = planeType.getVal();
@@ -5345,7 +5347,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             cm_vertexHash.Clear();
             cm_edgeHash.Clear();
 
-            cm_modelBounds = bounds;
+            cm_modelBounds = new idBounds(bounds);
             max = bounds.oGet(1).x - bounds.oGet(0).x;
             f = bounds.oGet(1).y - bounds.oGet(0).y;
             if (f > max) {
@@ -5412,10 +5414,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 model.maxVertices = (int) (model.maxVertices * 1.5f + 1);
                 oldVertices = model.vertices;
                 model.vertices = cm_vertex_s.generateArray(model.maxVertices);
-                for (i = 0; i < model.numVertices; i++) {
-                    model.vertices[i] = oldVertices[i];
-                }
-                //System.arraycopy(oldVertices, 0, model.vertices, 0, model.numVertices);
+                System.arraycopy(oldVertices, 0, model.vertices, 0, model.numVertices);
 
                 cm_vertexHash.ResizeIndex(model.maxVertices);
             }
@@ -5831,7 +5830,6 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             brush.bounds = bounds;
             brush.numPlanes = mapBrush.GetNumSides();
             for (i = 0; i < mapBrush.GetNumSides(); i++) {
-                //brush.planes[i] = planes[i];
                 brush.planes[i] = new idPlane(planes[i]);
             }
             AddBrushToNode(model, model.node, brush);
@@ -5963,22 +5961,14 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             oldVertices = model.vertices;
             if (oldVertices != null && oldVertices.length != 0) {
                 model.vertices = cm_vertex_s.generateArray(model.numVertices);
-                //System.arraycopy(oldVertices, 0, model.vertices, 0, model.numVertices);
-                for (i = 0; i < model.numVertices; i++) {
-                    //model.vertices[i] = oldVertices[i];
-                    model.vertices[i] = new cm_vertex_s(oldVertices[i]);
-                }
+                System.arraycopy(oldVertices, 0, model.vertices, 0, model.numVertices);
             }
 
             // realloc edges
             oldEdges = model.edges;
             if (oldEdges != null && oldEdges.length != 0) {
                 model.edges = cm_edge_s.generateArray(model.numEdges);
-                //System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges);
-                for (i = 0; i < model.numEdges; i++) {
-                    //model.edges[i] = oldEdges[i];
-                    model.edges[i] = new cm_edge_s(oldEdges[i]);
-                }
+                System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges);
             }
         }
 
@@ -6403,7 +6393,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             // offset to center of model
-            trm.offset = trm.bounds.GetCenter();
+            trm.offset = new idVec3(trm.bounds.GetCenter());
 
             trm.GenerateEdgeNormals();
 
@@ -6952,8 +6942,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             if (cm_backFaceCull.GetBool()) {
                 edgeNum = p.edges[0];
-                edge = new cm_edge_s(model.edges[Math.abs(edgeNum)]);
-                dir = new idVec3(model.vertices[edge.vertexNum[0]].p.oMinus(viewOrigin));
+                edge = model.edges[Math.abs(edgeNum)];
+                dir = model.vertices[edge.vertexNum[0]].p.oMinus(viewOrigin);
                 if (dir.oMultiply(p.plane.Normal()) > 0.0f) {
                     return;
                 }

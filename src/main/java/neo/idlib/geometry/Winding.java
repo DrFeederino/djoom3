@@ -482,7 +482,7 @@ public class Winding {
 
             numPoints = newNumPoints;
             for (i = 0; i < newNumPoints; i++) {
-                p[i] = new idVec5(newPoints[i]);
+                p[i] = newPoints[i];
             }
             return this;
         }

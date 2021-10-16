@@ -37,7 +37,8 @@ import static neo.Renderer.VertexCache.vertexCache;
 import static neo.Renderer.tr_local.demoCommand_t.DC_DEFINE_MODEL;
 import static neo.Renderer.tr_local.tr;
 import static neo.Renderer.tr_trisurf.*;
-import static neo.TempDump.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.ctos;
 import static neo.framework.CVarSystem.CVAR_BOOL;
 import static neo.framework.CVarSystem.CVAR_RENDERER;
 import static neo.framework.Common.common;
@@ -285,7 +286,8 @@ public class Model_local {
 
         @Override
         public void AddSurface(modelSurface_s surface) {
-            surfaces.AppendClone(surface);
+            surfaces.Append(new modelSurface_s(surface));
+            //surfaces.AppendClone(surface);
             if (surface.geometry != null) {
                 bounds.oPluSet(surface.geometry.bounds);
             }
@@ -539,7 +541,7 @@ public class Model_local {
         public int Memory() {
             int totalBytes = 0;
 
-            totalBytes += sizeof(this);
+            totalBytes += 4;
             totalBytes += name.DynamicMemoryUsed();
             totalBytes += surfaces.MemoryUsed();
 

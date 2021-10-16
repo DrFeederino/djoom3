@@ -20,7 +20,8 @@ import java.util.stream.Stream;
 import static neo.Renderer.Interaction.LIGHT_TRIS_DEFERRED;
 import static neo.Renderer.VertexCache.vertexCache;
 import static neo.Renderer.tr_local.*;
-import static neo.TempDump.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.btoi;
 import static neo.framework.BuildDefines._DEBUG;
 import static neo.framework.Common.common;
 import static neo.idlib.math.Simd.SIMDProcessor;
@@ -336,7 +337,7 @@ public class tr_trisurf {
             total += tri.numIndexes;//* sizeof( tri.silIndexes[0] );
         }
         if (tri.silEdges != null) {
-            total += tri.numSilEdges * sizeof(tri.silEdges[0]);
+            total += tri.numSilEdges * 4;
         }
         if (tri.dominantTris != null) {
             total += tri.numVerts;//* sizeof( tri.dominantTris[0] );
@@ -348,7 +349,7 @@ public class tr_trisurf {
             total += tri.numDupVerts;// * sizeof( tri.dupVerts[0] );
         }
 
-        total += sizeof(tri);
+        total += 4;
 
         return total;
     }
@@ -2256,7 +2257,7 @@ public class tr_trisurf {
             total += deformInfo.numDupVerts;// * sizeof( deformInfo.dupVerts[0] );
         }
 
-        total += sizeof(deformInfo_s.class);
+        total += 4;
         return total;
     }
 

@@ -10,12 +10,10 @@ import neo.idlib.math.Vector.idVec3;
 import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import neo.ui.Window.*;
 import neo.ui.Winvar.*;
 
 import static neo.Renderer.Material.SS_GUI;
 import static neo.TempDump.itob;
-import static neo.TempDump.sizeof;
 import static neo.framework.DeclManager.declManager;
 import static neo.idlib.Lib.colorBlack;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
@@ -42,16 +40,16 @@ public class SimpleWindow {
     public static class idSimpleWindow {
 //	friend class idWindow;
 
+        private static final idVec3 org = new idVec3();
+        private static final idRotation rot = new idRotation();
+        private static final idMat3 smat = new idMat3();
+        private static final idVec3 vec = new idVec3(0, 0, 1);
         public static int DBG_idSimpleWindow = 0;
         //
         //
         private static int DBG_countersOfCreation = 0;
-        private static final idVec3 org = new idVec3();
-        private static final idRotation rot = new idRotation();
-        private static final idMat3 smat = new idMat3();
         //
         private static idMat3 trans = new idMat3();
-        private static final idVec3 vec = new idVec3(0, 0, 1);
         private final int DBG_count = DBG_countersOfCreation++;
         //
         public idStr name;
@@ -291,14 +289,6 @@ public class SimpleWindow {
 //		owner->simp = this;
 //	}
             return ret;
-        }
-
-        public int/*size_t*/ Size() {
-            int sz = sizeof(this);
-            sz += name.Size();
-            sz += text.Size();
-            sz += backGroundName.Size();
-            return sz;
         }
 
         public idWindow GetParent() {

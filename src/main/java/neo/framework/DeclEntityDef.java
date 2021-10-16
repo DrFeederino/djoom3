@@ -32,11 +32,6 @@ public class DeclEntityDef {
 
         public idDict dict = new idDict();
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclEntityDef ) + dict.Allocated();
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {

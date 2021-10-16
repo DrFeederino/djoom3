@@ -13,7 +13,8 @@ import neo.ui.Window.idWindow;
 import neo.ui.Winvar.*;
 
 import static neo.Renderer.Material.SS_GUI;
-import static neo.TempDump.*;
+import static neo.TempDump.atoi;
+import static neo.TempDump.dynamic_cast;
 import static neo.framework.CmdSystem.cmdExecution_t.CMD_EXEC_APPEND;
 import static neo.framework.CmdSystem.cmdSystem;
 import static neo.framework.Common.*;
@@ -304,7 +305,7 @@ public class GuiScript {
         }
 
         public int/*size_t*/ Size() {
-            int sz = sizeof(this);
+            int sz = 4;
             for (int i = 0; i < parms.Num(); i++) {
                 sz += parms.oGet(i).var.Size();
             }
@@ -388,7 +389,7 @@ public class GuiScript {
         }
 
         public int/*size_t*/ Size() {
-            int sz = sizeof(this);
+            int sz = 4;
             for (int i = 0; i < list.Num(); i++) {
                 sz += list.oGet(i).Size();
             }

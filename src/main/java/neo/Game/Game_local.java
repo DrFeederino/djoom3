@@ -10,7 +10,6 @@ import neo.Game.AI.AI_Vagary;
 import neo.Game.Actor.idActor;
 import neo.Game.Animation.Anim.idAnimManager;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
-import neo.Game.Animation.Anim_Import.idModelExport;
 import neo.Game.Animation.Anim_Testmodel.idTestModel;
 import neo.Game.BrittleFracture.idBrittleFracture;
 import neo.Game.Camera.idCamera;
@@ -629,7 +628,7 @@ public class Game_local {
         public idTestModel testmodel;               // for development testing of models
         public int time;                   // in msec
         public idDict[] userInfo = new idDict[MAX_CLIENTS];      // client specific settings
-        public usercmd_t[] usercmds = new usercmd_t[MAX_CLIENTS];   // client input commands
+        public usercmd_t[] usercmds = Stream.generate(usercmd_t::new).limit(MAX_CLIENTS).toArray(usercmd_t[]::new); // client input commands
         //
         public int vacuumAreaNum;      // -1 if level doesn't have any outside areas
         public idWorldspawn world;                                              // world entity
@@ -818,7 +817,7 @@ public class Game_local {
             idAI.FreeObstacleAvoidanceNodes();
 
             // shutdown the model exporter
-            idModelExport.Shutdown();
+            //idModelExport.Shutdown();
 
             idEvent.Shutdown();
 
@@ -837,7 +836,6 @@ public class Game_local {
             program.FreeData();
 
             // delete the .map file
-//	delete mapFile;
             mapFile = null;
 
             // free the collision map
@@ -860,7 +858,6 @@ public class Game_local {
 
                 // shutdown idLib
                 idLib.ShutDown();
-
             }
         }
 
@@ -1649,7 +1646,7 @@ public class Game_local {
                 // set the user commands for this frame
 //                memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
                 for (int i = 0; i < numClients; i++) {
-                    usercmds[i] = new usercmd_t(clientCmds[i]);
+                    usercmds[i] = clientCmds[i];
                 }
 
                 if (player != null) {
@@ -2705,12 +2702,11 @@ public class Game_local {
 
             if (!sameMap || (mapFile != null && mapFile.NeedsReload())) {
                 // load the .map file
-//		if ( mapFile) {
-//			delete mapFile;
-//		}
+                if (mapFile != null) {
+                    mapFile = null;
+                }
                 mapFile = new idMapFile();
                 if (!mapFile.Parse(mapName + ".map")) {
-//			delete mapFile;
                     mapFile = null;
                     Error("Couldn't load %s", mapName);
                 }
@@ -2738,7 +2734,6 @@ public class Game_local {
 
             globalMaterial = null;
 
-//	memset( globalShaderParms, 0, sizeof( globalShaderParms ) );
             globalShaderParms = new float[globalShaderParms.length];
 
             // always leave room for the max number of clients,
@@ -3252,7 +3247,7 @@ public class Game_local {
             // check if we should spawn a class object
             spawnArgs.GetString("spawnclass", null, spawn);
             if (spawn[0] != null) {
-                final idEntity obj;
+                idEntity obj = null;
                 switch (spawn[0]) {
                     case "idWorldspawn":
                         obj = new idWorldspawn();
@@ -3474,7 +3469,7 @@ public class Game_local {
                         obj = new idTarget_GiveSecurity();
                         break;
                     case "idTrigger_EntityName":
-                        obj = new idTrigger_EntityName(); //requires entity_name.
+                        obj = new idTrigger_EntityName();
                         break;
                     case "idBarrel":
                         obj = new Moveable.idBarrel();

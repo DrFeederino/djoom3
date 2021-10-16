@@ -65,8 +65,8 @@ public class Physics_Base {
             this.contacts = new idList<>(contactInfo_t.class);
             this.contactEntities = new idList<>(contactEntity_t.class);
             //SetGravity(gameLocal.GetGravity());
-            gravityVector = gameLocal.GetGravity();
-            gravityNormal = gameLocal.GetGravity();
+            gravityVector = new idVec3(gameLocal.GetGravity());
+            gravityNormal = new idVec3(gameLocal.GetGravity());
             gravityNormal.Normalize();
             ClearContacts();
         }
@@ -322,7 +322,14 @@ public class Physics_Base {
         @Override
         public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );
-            results = new trace_s();
+            if (results == null) {
+                results = new trace_s();
+            } else {
+                results.endpos = new idVec3();
+                results.fraction = 0.0f;
+                results.endAxis = new idMat3();
+                results.c = new contactInfo_t();
+            }
         }
 
         @Override

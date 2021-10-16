@@ -1,6 +1,5 @@
 package neo;
 
-import com.rits.cloning.Cloner;
 import neo.Game.Entity.idEntity;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Model.idRenderModel;
@@ -53,7 +52,6 @@ import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 public class TempDump {//TODO:rename/refactor to ToolBox or something
 
     private static final Map<String, Integer> CALL_STACK_MAP = new HashMap<>();
-    private static final Cloner CLONER = Cloner.standard();
 
     /**
      * Our humble java implementation of the C++ strlen function, with NULL
@@ -126,15 +124,6 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
                 Arrays.copyOf(b, length)));
     }
 
-    @Deprecated
-    public static int sizeof(char[] object) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Deprecated
-    public static int sizeof(Object object) {
-        throw new UnsupportedOperationException();
-    }
 
     /**
      * returns the serialized size of the object in bytes.<p>
@@ -609,12 +598,6 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         }
     }
 
-    /**
-     * shallow clone
-     */
-    public static <T> T clone(T obj) {
-        return CLONER.shallowClone(obj);
-    }
 
     @Deprecated
     public static <T> T[] allocArray(Class<T> clazz, int length) {

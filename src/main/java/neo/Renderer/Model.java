@@ -356,14 +356,20 @@ public class Model {
 
     public static class modelSurface_s {
 
-        private static int DBG_counter = 0;
-        public final int DBG_count = DBG_counter++;
         public srfTriangles_s geometry;
         public int id;
         public idMaterial shader;
 
         public modelSurface_s() {
-            int a = 1;
+        }
+
+        public modelSurface_s(modelSurface_s other) {
+            if (other != null) {
+                this.geometry = other.geometry;
+                this.id = other.id;
+                this.shader = other.shader;
+            }
+
         }
     }
     //} jointHandle_t;

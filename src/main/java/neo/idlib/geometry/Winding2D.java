@@ -387,7 +387,7 @@ public class Winding2D {
             numPoints = newNumPoints;
 //	memcpy( p, newPoints, newNumPoints * sizeof(idVec2) );
             for (i = 0; i < newNumPoints; i++) {
-                p[i] = new idVec2(newPoints[i]);
+                p[i] = newPoints[i];
             }
 
             return true;

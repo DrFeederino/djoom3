@@ -1,6 +1,5 @@
 package neo.Renderer;
 
-import neo.TempDump.TODO_Exception;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.containers.CFloat;
 import neo.idlib.containers.List.cmp_t;
@@ -12,8 +11,6 @@ import neo.idlib.math.Vector.idVec;
 import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 
@@ -254,26 +251,6 @@ public class tr_main {
 //        return buf;
     }
 
-    /*
-     =================
-     R_ClearedStaticAlloc
-     =================
-     */
-    @Deprecated
-    private static <T> T[] R_ClearedStaticAlloc(int length, Class<T> clazz) {
-        T[] array = (T[]) Array.newInstance(clazz, length);
-
-        for (int a = 0; a < length; a++) {
-            try {
-                array[a] = clazz.getConstructor().newInstance();
-            } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                throw new TODO_Exception();
-//                Logger.getLogger(tr_main.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        return array;
-    }
 
     /*
      =================

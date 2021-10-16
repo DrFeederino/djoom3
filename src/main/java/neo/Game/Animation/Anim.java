@@ -22,7 +22,8 @@ import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_AXIS;
 import static neo.Game.Game_local.animationLib;
 import static neo.Game.Game_local.gameLocal;
 import static neo.Renderer.Model.*;
-import static neo.TempDump.*;
+import static neo.TempDump.NOT;
+import static neo.TempDump.indexOf;
 import static neo.idlib.Text.Lexer.*;
 import static neo.idlib.math.Matrix.idMat3.getMat3_identity;
 import static neo.idlib.math.Simd.SIMDProcessor;
@@ -186,15 +187,6 @@ public class Anim {
         int firstCommand;
         int num;
 
-        public frameLookup_t() {
-        }
-
-        public frameLookup_t(frameLookup_t val) {
-            if (val != null) {
-                this.firstCommand = val.firstCommand;
-                this.num = val.num;
-            }
-        }
     }
 
     public static final class frameCommand_t {
@@ -282,10 +274,6 @@ public class Anim {
         public int/*size_t*/ Allocated() {
             int/*size_t*/ size = bounds.Allocated() + jointInfo.Allocated() + componentFrames.Allocated() + name.Allocated();
             return size;
-        }
-
-        public int/*size_t*/ Size() {
-            return sizeof(this.getClass()) + Allocated();
         }
 
         public boolean LoadAnim(final String filename) throws idException {
@@ -1136,7 +1124,7 @@ public class Anim {
                 animptr = animations.GetIndex(i);
                 if (animptr != null) {// && *animptr ) {//TODO:check this locl shit
                     anim = animptr;
-                    s = anim.Size();
+                    s = 0;
                     gameLocal.Printf("%8d bytes : %2d refs : %s\n", s, anim.NumRefs(), anim.Name());
                     size += s;
                     num++;

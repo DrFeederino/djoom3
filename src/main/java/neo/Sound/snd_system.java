@@ -354,20 +354,18 @@ public class snd_system {
 
                 for (int/*ALsizei*/ i = 0; i < openalSources.length; i++) {
                     // stop source
-                    alSourceStop(openalSources[i].handle);
-                    alSourcei(openalSources[i].handle, AL_BUFFER, 0);
+                    if (openalSources[i] != null) {
+                        alSourceStop(openalSources[i].handle);
+                        alSourcei(openalSources[i].handle, AL_BUFFER, 0);
+                        alDeleteSources(openalSources[i].handle);
 
-                    // delete source
-//                    alDeleteSources(1, openalSources[i].handle);
-                    alDeleteSources(openalSources[i].handle);
-
-                    // clear entry in source array
-                    openalSources[i].handle = 0;
-                    openalSources[i].startTime = 0;
-                    openalSources[i].chan = null;
-                    openalSources[i].inUse = false;
-                    openalSources[i].looping = false;
-
+                        // clear entry in source array
+                        openalSources[i].handle = 0;
+                        openalSources[i].startTime = 0;
+                        openalSources[i].chan = null;
+                        openalSources[i].inUse = false;
+                        openalSources[i].looping = false;
+                    }
                 }
             }
 

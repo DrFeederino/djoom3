@@ -1773,7 +1773,7 @@ public class Script_Interpreter {
                 return false;
             }
 
-            idStr.Copynz(funcObject, func.Name(), sizeof(funcObject));
+            idStr.Copynz(funcObject, func.Name(), 4);
             funcIndex = funcObject[0].indexOf("::");
             if (funcIndex != -1) {
 //                funcName = "\0";

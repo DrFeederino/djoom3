@@ -973,11 +973,6 @@ public class DeclParticle {
             bounds = new idBounds();
         }
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclParticle );
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {

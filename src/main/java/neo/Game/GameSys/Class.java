@@ -30,7 +30,6 @@ import static neo.Game.GameSys.SysCvar.g_debugTriggers;
 import static neo.Game.Game_local.gameLocal;
 import static neo.Game.Game_local.gameState_t.GAMESTATE_STARTUP;
 import static neo.TempDump.NOT;
-import static neo.TempDump.sizeof;
 import static neo.idlib.math.Math_h.SEC2MS;
 
 /**
@@ -164,7 +163,7 @@ public class Class {
             value = data;
         }
 
-        private idEventArg(int type, T data) {
+        public idEventArg(int type, T data) {
             this.type = type;
             value = data;
         }
@@ -1054,7 +1053,7 @@ public class Class {
             num = idEventDef.NumEventCommands();
             eventMap = new eventCallback_t[num];
 //	memset( eventMap, 0, sizeof( eventCallback_t ) * num );
-            eventCallbackMemory += sizeof(eventCallback_t.class) * num;
+            eventCallbackMemory += (num * 4);
 
             // allocate temporary memory for flags so that the subclass's event callbacks
             // override the superclass's event callback

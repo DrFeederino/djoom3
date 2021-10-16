@@ -6965,14 +6965,14 @@ public class Physics_AF {
                             body.clipModel, body.current.worldAxis, body.clipMask, passEntity)) {
 
                         // set the next state to the state at the moment of impact
-                        body.next.worldOrigin.oSet(collision.endpos);
-                        body.next.worldAxis.oSet(collision.endAxis);
+                        body.next.worldOrigin = collision.endpos;
+                        body.next.worldAxis = collision.endAxis;
 
                         // add collision to the list
                         index = collisions.Num();
                         collisions.SetNum(index + 1, false);
                         collisions.oSet(index, new AFCollision_s());
-                        collisions.oGet(index).trace = new trace_s(collision);
+                        collisions.oGet(index).trace = collision;
                         collisions.oGet(index).body = body;
                     }
 

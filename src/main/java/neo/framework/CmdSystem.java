@@ -492,18 +492,14 @@ public class CmdSystem {
 
         @Override
         public void RemoveFlaggedCommands(int flags) {
-            commandDef_s cmd, last;
-
-            for (last = commands, cmd = last; cmd != null; cmd = last) {
-                if ((cmd.flags & flags) != 0) {
-                    commands = cmd.next;
-//                    cmd.name = cmd.description = null;
-//                    Mem_Free(cmd.name);
-//                    Mem_Free(cmd.description);
-//			delete cmd;
-                    continue;
-                }
-                last = cmd.next;
+            commandDef_s cmd = commands;
+            while (cmd != null) {
+                commandDef_s next = cmd.next;
+                cmd.description = null;
+                cmd.name = null;
+                cmd.function = null;
+                cmd.argCompletion = null;
+                cmd = next;
             }
         }
 

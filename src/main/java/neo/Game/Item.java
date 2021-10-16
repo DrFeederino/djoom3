@@ -197,7 +197,6 @@ public class Item {
                 BecomeActive(TH_THINK);
             }
 
-            //pulse = !spawnArgs.GetBool( "nopulse" );
             //temp hack for tim
             pulse = false;
             orgOrigin = GetPhysics().GetOrigin();

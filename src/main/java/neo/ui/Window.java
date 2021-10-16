@@ -5,12 +5,10 @@ import neo.framework.CVarSystem.idCVar;
 import neo.framework.DeclTable.idDeclTable;
 import neo.framework.DemoFile.idDemoFile;
 import neo.framework.File_h.idFile;
-import neo.framework.KeyInput.*;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.Text.Token.*;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Interpolate.idInterpolateAccelDecelLinear;
 import neo.idlib.math.Matrix.idMat3;
@@ -39,7 +37,6 @@ import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.SimpleWindow.idSimpleWindow;
 import neo.ui.SliderWindow.idSliderWindow;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import neo.ui.Winvar.*;
 
 import static neo.Renderer.Material.MF_DEFAULTED;
 import static neo.Renderer.Material.SS_GUI;
@@ -205,9 +202,6 @@ public class Window {
 //		delete event;
 //	}
 
-        int/*size_t*/ Size() {
-            return sizeof(this) + event.Size();
-        }
     }
 
     static class rvNamedEvent {
@@ -224,9 +218,6 @@ public class Window {
             mName = new idStr(name);
         }
 
-        public int /*size_t */ Size() {
-            return sizeof(this) + mEvent.Size();
-        }
     }
 
     static class idTransitionData {
@@ -636,7 +627,7 @@ public class Window {
             for (int i = 0; i < c; i++) {
                 sz += children.oGet(i).Size();
             }
-            sz += sizeof(this) + Allocated();
+            sz += Allocated();
             return sz;
         }
 
@@ -658,18 +649,18 @@ public class Window {
             }
             c = timeLineEvents.Num();
             for (i = 0; i < c; i++) {
-                sz += timeLineEvents.oGet(i).Size();
+                sz += 4;
             }
 
             c = namedEvents.Num();
             for (i = 0; i < c; i++) {
-                sz += namedEvents.oGet(i).Size();
+                sz += 4;
             }
 
             c = drawWindows.Num();
             for (i = 0; i < c; i++) {
                 if (drawWindows.oGet(i).simp != null) {
-                    sz += drawWindows.oGet(i).simp.Size();
+                    sz += 4;
                 }
             }
 

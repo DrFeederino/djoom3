@@ -778,11 +778,6 @@ public class Material {
             this.refCount = shader.refCount;
         }
 
-        @Override
-        public long Size() {
-//            return sizeof( idMaterial );
-            return super.Size();
-        }
 
         @Override
         public boolean SetDefaultText() {

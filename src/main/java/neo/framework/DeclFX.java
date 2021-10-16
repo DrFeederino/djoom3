@@ -97,11 +97,6 @@ public class DeclFX {
         public idList<idFXSingleAction> events = new idList<>();
         public idStr joint = new idStr();
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclFX );
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {

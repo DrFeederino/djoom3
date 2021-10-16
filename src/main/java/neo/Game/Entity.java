@@ -56,6 +56,7 @@ import neo.idlib.math.Vector.idVec4;
 import neo.ui.UserInterface.idUserInterface;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -391,7 +392,7 @@ public class Entity {
         private int/*jointHandle_t*/ bindJoint;                       // joint bound to if unequal INVALID_JOINT
         private idEntity bindMaster;                      // entity bound to if unequal NULL
         //
-        private final idPhysics_Static defaultPhysicsObj;               // default physics object
+        private idPhysics_Static defaultPhysicsObj = new idPhysics_Static();               // default physics object
         //
         private int mpGUIState;                                // local cache to avoid systematic SetStateInt
         //
@@ -443,6 +444,7 @@ public class Entity {
             signals = null;
 
 //            memset(PVSAreas, 0, sizeof(PVSAreas));
+            Arrays.fill(PVSAreas, 0);
             numPVSAreas = -1;
 
             fl = new entityFlags_s();//	memset( &fl, 0, sizeof( fl ) );
@@ -451,8 +453,6 @@ public class Entity {
             renderEntity = new renderEntity_s();//memset( &renderEntity, 0, sizeof( renderEntity ) );
             modelDefHandle = -1;
             refSound = new refSound_t();//memset( &refSound, 0, sizeof( refSound ) );
-            defaultPhysicsObj = new idPhysics_Static();
-            physics = defaultPhysicsObj;
 
 
             mpGUIState = -1;
@@ -3645,7 +3645,6 @@ public class Entity {
         private void InitDefaultPhysics(final idVec3 origin, final idMat3 axis) {
             String[] temp = new String[1];
             idClipModel clipModel = null;
-            DBG_InitDefaultPhysics++;
 
             // check if a clipmodel key/value pair is set
             if (spawnArgs.GetString("clipmodel", "", temp)) {

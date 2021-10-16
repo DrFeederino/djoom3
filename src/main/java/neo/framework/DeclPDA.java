@@ -38,11 +38,6 @@ public class DeclPDA {
         public idDeclEmail() {
         }
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclEmail );
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {
@@ -181,11 +176,6 @@ public class DeclPDA {
         public idDeclVideo() {
         }
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclEmail );
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {
@@ -304,11 +294,6 @@ public class DeclPDA {
         public idDeclAudio() {
         }
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclEmail );
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {
@@ -435,11 +420,6 @@ public class DeclPDA {
             originalEmails = originalVideos = 0;
         }
 
-        @Override
-        public long Size() {
-//            return sizeof( idDeclEmail );
-            return super.Size();
-        }
 
         @Override
         public String DefaultDefinition() {
