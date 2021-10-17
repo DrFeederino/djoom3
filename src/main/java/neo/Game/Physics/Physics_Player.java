@@ -1475,7 +1475,7 @@ public class Physics_Player {
             if (groundTrace.fraction == 1.0f) {
                 groundPlane = false;
                 walking = false;
-                groundEntityPtr = new idEntityPtr<>(null);
+                groundEntityPtr.oSet(null);
                 return;
             }
 

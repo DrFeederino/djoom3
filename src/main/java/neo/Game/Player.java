@@ -1187,7 +1187,7 @@ public class Player {
         //
         public idPlayerView playerView;            // handles damage kicks and effects
         public boolean scoreBoardOpen;
-        public idEntityPtr<idProjectile> soulCubeProjectile;
+        public final idEntityPtr<idProjectile> soulCubeProjectile;
         public idAngles spawnAngles;
         //
         public boolean spawnAnglesSet;        // on first usercmd, we must set deltaAngles
@@ -1196,7 +1196,7 @@ public class Player {
         public int spectator;
         public float stamina;
         //
-        public idEntityPtr<idEntity> teleportEntity;           // while being teleported, this is set to the entity we'll use for exit
+        public final idEntityPtr<idEntity> teleportEntity;           // while being teleported, this is set to the entity we'll use for exit
         public int teleportKiller;           // entity number of an entity killing us at teleporter exit
         public int tourneyLine;              // client side - our spot in the wait line. 0 means no info.
         public int tourneyRank;              // for tourney cycling - the higher, the more likely to play next - server
@@ -1207,7 +1207,7 @@ public class Player {
         public idAngles viewAngles;            // player view angles
         public boolean wantSpectate;             // from userInfo
         //
-        public idEntityPtr<idWeapon> weapon;
+        public final idEntityPtr<idWeapon> weapon;
         public boolean weaponGone;               // force stop firing
         public int weapon_fists;
         public int weapon_pda;
@@ -1519,6 +1519,7 @@ public class Player {
             isChatting = false;
 
             selfSmooth = false;
+            soulCubeProjectile = new idEntityPtr<>(null);
         }
 //	virtual					~idPlayer();
 //

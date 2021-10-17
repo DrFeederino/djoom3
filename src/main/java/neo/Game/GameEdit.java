@@ -137,12 +137,12 @@ public class GameEdit {
 
         private idStr bodyName;         // name of the body being dragged
         private idCursor3D cursor;           // cursor entity
-        private idEntityPtr<idEntity> dragEnt;          // entity being dragged
+        private final idEntityPtr<idEntity> dragEnt;          // entity being dragged
         private int id;               // id of body being dragged
         private int/*jointHandle_t*/  joint;            // joint being dragged
         private final idVec3 localEntityPoint; // dragged point in entity space
         private final idVec3 localPlayerPoint; // dragged point in player space
-        private idEntityPtr<idEntity> selected;         // last dragged entity
+        private final idEntityPtr<idEntity> selected;         // last dragged entity
         //
         //
 
@@ -151,18 +151,20 @@ public class GameEdit {
             localEntityPoint = new idVec3();
             localPlayerPoint = new idVec3();
             bodyName = new idStr();
+            selected = new idEntityPtr<>();
+            dragEnt = new idEntityPtr<>();
             Clear();
         }
         // ~idDragEntity( void );
 
         public void Clear() {
-            dragEnt = null;
+            dragEnt.oSet(null);
             joint = INVALID_JOINT;
             id = 0;
             localEntityPoint.Zero();
             localPlayerPoint.Zero();
             bodyName.Clear();
-            selected = null;
+            selected.oSet(null);
         }
 
         public void Update(idPlayer player) {
@@ -300,7 +302,7 @@ public class GameEdit {
 
         public void DeleteSelected() {
 //	delete selected.GetEntity();
-            selected = null;
+            selected.oSet(null);
             StopDrag();
         }
 
@@ -383,7 +385,7 @@ public class GameEdit {
         }
 
         private void StopDrag() {
-            dragEnt = null;
+            dragEnt.oSet(null);
             if (cursor != null) {
                 cursor.BecomeInactive(TH_THINK);
             }

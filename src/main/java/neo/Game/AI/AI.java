@@ -281,7 +281,7 @@ public class AI {
         public int anim;
         public int blockTime;
         public int duration;
-        public idEntityPtr<idEntity> goalEntity;
+        public final idEntityPtr<idEntity> goalEntity;
         public idVec3 goalEntityOrigin;  // move to entity uses this to avoid checking the floor position every frame
         public idVec3 lastMoveOrigin;
         public int lastMoveTime;
@@ -291,7 +291,7 @@ public class AI {
         public moveStatus_t moveStatus;
         public moveType_t moveType;
         public int nextWanderTime;
-        public idEntityPtr<idEntity> obstacle;
+        public final idEntityPtr<idEntity> obstacle;
         public float range;
         public float speed;             // only used by flying creatures
         public int startTime;
@@ -306,7 +306,7 @@ public class AI {
             moveStatus = MOVE_STATUS_DONE;
             moveDest = new idVec3();
             moveDir = new idVec3(1.0f, 0.0f, 0.0f);
-            goalEntity = new idEntityPtr<>(null);
+            goalEntity = new idEntityPtr<>();
             goalEntityOrigin = new idVec3();
             toAreaNum = 0;
             startTime = 0;
@@ -316,7 +316,7 @@ public class AI {
             wanderYaw = 0;
             nextWanderTime = 0;
             blockTime = 0;
-            obstacle = new idEntityPtr<>(null);
+            obstacle = new idEntityPtr<>();
             lastMoveOrigin = getVec3_origin();
             lastMoveTime = 0;
             anim = 0;
@@ -680,7 +680,7 @@ public class AI {
         protected boolean disableGravity;           // disables gravity and allows vertical movement by the animation
         //
         // enemy variables
-        protected idEntityPtr<idActor> enemy;
+        protected final idEntityPtr<idActor> enemy;
         protected idAngles eyeAng;
         protected float eyeFocusRate;
         protected float eyeHorizontalOffset;
@@ -707,7 +707,7 @@ public class AI {
         protected float fly_seek_scale;
         protected float fly_speed;
         protected int focusAlignTime;
-        protected idEntityPtr<idEntity> focusEntity;
+        protected final idEntityPtr<idEntity> focusEntity;
         protected int/*jointHandle_t*/             focusJoint;
         protected int focusTime;
         protected int forceAlignHeadTime;
@@ -745,7 +745,7 @@ public class AI {
         //
         // physics
         protected idPhysics_Monster physicsObj;
-        protected idEntityPtr<idProjectile> projectile;
+        protected final idEntityPtr<idProjectile> projectile;
         protected idClipModel projectileClipModel;
         //
         protected idDict projectileDef;
@@ -761,7 +761,7 @@ public class AI {
         // special fx
         protected float shrivel_rate;
         protected int shrivel_start;
-        protected idEntityPtr<idActor> talkTarget;
+        protected final idEntityPtr<idActor> talkTarget;
         protected talkState_t talk_state;
         protected int travelFlags;
         protected float turnRate;
@@ -810,7 +810,7 @@ public class AI {
             projectile_height_to_distance_ratio = 1.0f;
             missileLaunchOffset = new idList<>();
             projectileDef = null;
-            projectile = new idEntityPtr<>(null);
+            projectile = new idEntityPtr<>();
             attack = new idStr();
             projectileClipModel = null;
             projectileRadius = 0.0f;
@@ -822,7 +822,7 @@ public class AI {
             chat_max = 0;
             chat_time = 0;
             talk_state = TALK_NEVER;
-            talkTarget = new idEntityPtr<>(null);
+            talkTarget = new idEntityPtr<>();
 
             particles = new idList<>();
             restartParticles = true;
@@ -832,7 +832,7 @@ public class AI {
             worldMuzzleFlash = new renderLight_s();//memset( &worldMuzzleFlash, 0, sizeof ( worldMuzzleFlash ) );
             worldMuzzleFlashHandle = -1;
 
-            enemy = new idEntityPtr<>(null);
+            enemy = new idEntityPtr<>();
             lastVisibleEnemyPos = new idVec3();
             lastVisibleEnemyEyeOffset = new idVec3();
             lastVisibleReachableEnemyPos = new idVec3();
@@ -849,7 +849,7 @@ public class AI {
             allowEyeFocus = true;
             allowPain = true;
             allowJointMod = true;
-            focusEntity = new idEntityPtr<>(null);
+            focusEntity = new idEntityPtr<>();
             focusTime = 0;
             alignHeadTime = 0;
             forceAlignHeadTime = 0;
@@ -911,7 +911,7 @@ public class AI {
          */
         public static boolean FindPathAroundObstacles(final idPhysics physics, final idAAS aas, final idEntity ignore, final idVec3 startPos, final idVec3 seekPos, obstaclePath_s path) {
             int numObstacles, areaNum;
-            int[] insideObstacle = {0};
+            CInt insideObstacle = new CInt();
             obstacle_s[] obstacles = Stream.generate(obstacle_s::new).limit(MAX_OBSTACLES).toArray(obstacle_s[]::new);
             idBounds clipBounds = new idBounds();
             idBounds bounds = new idBounds();
@@ -942,14 +942,14 @@ public class AI {
 
             // get a source position outside the obstacles
             GetPointOutsideObstacles(obstacles, numObstacles, path.startPosOutsideObstacles.ToVec2(), insideObstacle, null);
-            if (insideObstacle[0] != -1) {
-                path.startPosObstacle = obstacles[insideObstacle[0]].entity;
+            if (insideObstacle.getVal() != -1) {
+                path.startPosObstacle = obstacles[insideObstacle.getVal()].entity;
             }
 
             // get a goal position outside the obstacles
             GetPointOutsideObstacles(obstacles, numObstacles, path.seekPosOutsideObstacles.ToVec2(), insideObstacle, null);
-            if (insideObstacle[0] != -1) {
-                path.seekPosObstacle = obstacles[insideObstacle[0]].entity;
+            if (insideObstacle.getVal() != -1) {
+                path.seekPosObstacle = obstacles[insideObstacle.getVal()].entity;
             }
 
             // if start and destination are pushed to the same point, we don't have a path around the obstacle
@@ -1158,7 +1158,7 @@ public class AI {
         public static boolean TestTrajectory(final idVec3 start, final idVec3 end, float zVel, float gravity, float time, float max_height, final idClipModel clip, int clipmask, final idEntity ignore, final idEntity targetEntity, int drawtime) {
             int i, numSegments;
             float maxHeight, t, t2;
-            idVec3[] points = new idVec3[5];
+            idVec3[] points = idVec3.generateArray(5);
             trace_s trace = new trace_s();
             boolean result;
 
@@ -1246,10 +1246,10 @@ public class AI {
             float zVel, a, t, pitch;
             CFloat s = new CFloat(), c = new CFloat();
             trace_s trace = new trace_s();
-            ballistics_s[] ballistics = new ballistics_s[2];
-            idVec3[] dir = new idVec3[2];
-            idVec3 velocity;
-            idVec3 lastPos, pos;
+            ballistics_s[] ballistics = Stream.generate(ballistics_s::new).limit(2).toArray(ballistics_s[]::new);
+            idVec3[] dir = idVec3.generateArray(2);
+            idVec3 velocity = new idVec3();
+            idVec3 lastPos = new idVec3(), pos = new idVec3();
 
             assert (targetEntity != null);
 
@@ -1311,14 +1311,14 @@ public class AI {
 
                 if (ai_debugTrajectory.GetBool()) {
                     t = ballistics[i].time / 100.0f;
-                    velocity = dir[i].oMultiply(projectileSpeed);
-                    lastPos = firePos;
-                    pos = firePos;
+                    velocity.oSet(dir[i].oMultiply(projectileSpeed));
+                    lastPos.oSet(firePos);
+                    pos.oSet(firePos);
                     for (j = 1; j < 100; j++) {
                         pos.oPluSet(velocity.oMultiply(t));
                         velocity.oPluSet(projGravity.oMultiply(t));
                         gameRenderWorld.DebugLine(colorCyan, lastPos, pos);
-                        lastPos = pos;
+                        lastPos.oSet(pos);
                     }
                 }
 
@@ -3658,7 +3658,7 @@ public class AI {
 
         protected boolean MoveOutOfRange(idEntity ent, float range) {
             int areaNum;
-            aasObstacle_s[] obstacle = new aasObstacle_s[1];
+            aasObstacle_s[] obstacle = {new aasObstacle_s()};
             aasGoal_s goal = new aasGoal_s();
 //            idBounds bounds;
             idVec3 pos;
@@ -3710,9 +3710,8 @@ public class AI {
 
         protected boolean MoveToAttackPosition(idEntity ent, int attack_anim) {
             int areaNum;
-            aasObstacle_s[] obstacle = new aasObstacle_s[1];
+            aasObstacle_s[] obstacle = {new aasObstacle_s()};
             aasGoal_s goal = new aasGoal_s();
-            idBounds bounds;
             idVec3 pos;
 
             if (null == aas || null == ent) {

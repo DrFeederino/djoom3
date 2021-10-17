@@ -591,7 +591,7 @@ public class Game_local {
         public boolean isNewFrame;         // true if this is a new game frame, not a rerun due to prediction
         public boolean isServer;           // set if the game is run for a dedicated or listen server
         public int lastGUI;           // last GUI on the lastGUIEnt
-        public idEntityPtr<idEntity> lastGUIEnt;        // last entity with a GUI, used by Cmd_NextGUI_f
+        public final idEntityPtr<idEntity> lastGUIEnt;        // last entity with a GUI, used by Cmd_NextGUI_f
         // discriminates between the RunFrame path and the ClientPrediction path
         // NOTE: on a listen server, isClient is false
         public int localClientNum;     // number of the local client. MP: -1 on a dedicated
@@ -645,7 +645,7 @@ public class Game_local {
         //
         private byte[][][] lagometer = new byte[LAGO_IMG_HEIGHT][LAGO_IMG_WIDTH][4];
         //
-        private idEntityPtr<idActor> lastAIAlertEntity;
+        private final idEntityPtr<idActor> lastAIAlertEntity;
         private int lastAIAlertTime;
         //
         private idLocationEntity[] locationEntities;   // for location names, etc
@@ -672,7 +672,8 @@ public class Game_local {
                 userInfo[u] = new idDict();
                 persistentPlayerInfo[u] = new idDict();
             }
-
+            lastGUIEnt = new idEntityPtr<>();
+            lastAIAlertEntity = new idEntityPtr<>();
             Clear();
         }
 
@@ -4841,7 +4842,7 @@ public class Game_local {
             camera = null;
             aasList.Clear();
             aasNames.clear();
-            lastAIAlertEntity = new idEntityPtr<>(null);
+            lastAIAlertEntity.oSet(null);
             lastAIAlertTime = 0;
             spawnArgs.Clear();
             gravity.Set(0, 0, -1);
@@ -4863,7 +4864,7 @@ public class Game_local {
             nextGibTime = 0;
             globalMaterial = null;
             newInfo.Clear();
-            lastGUIEnt = new idEntityPtr<>(null);
+            lastGUIEnt.oSet(null);
             lastGUI = 0;
 
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );

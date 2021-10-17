@@ -129,7 +129,8 @@ public class AI_pathing {
      GetPointOutsideObstacles
      ============
      */
-    static void GetPointOutsideObstacles(final obstacle_s[] obstacles, final int numObstacles, idVec2 point, int[] obstacle, int[] edgeNum) {
+    // all calls to this function are with edgeNum = null, what is the point of it?
+    static void GetPointOutsideObstacles(final obstacle_s[] obstacles, final int numObstacles, idVec2 point, CInt obstacle, CInt edgeNum) {
         int i, j, k, n, bestObstacle, bestEdgeNum, queueStart, queueEnd;
         int[] edgeNums = new int[2];
         float d, bestd;
@@ -143,10 +144,10 @@ public class AI_pathing {
         idWinding2D w1, w2;
 
         if (obstacle != null) {
-            obstacle[0] = -1;
+            obstacle.setVal(-1);
         }
         if (edgeNum != null) {
-            edgeNum[0] = -1;
+            edgeNum.setVal(-1);
         }
 
         bestObstacle = PointInsideObstacle(obstacles, numObstacles, point);
@@ -175,10 +176,10 @@ public class AI_pathing {
         if (PointInsideObstacle(obstacles, numObstacles, newPoint) == -1) {
             point.oSet(newPoint);
             if (obstacle != null) {
-                obstacle[0] = bestObstacle;
+                obstacle.setVal(bestObstacle);
             }
             if (edgeNum != null) {
-                edgeNum[0] = bestEdgeNum;
+                edgeNum.setVal(bestEdgeNum);
             }
             return;
         }
@@ -238,10 +239,10 @@ public class AI_pathing {
             if (bestd < idMath.INFINITY) {
                 point.oSet(bestPoint);
                 if (obstacle != null) {
-                    obstacle[0] = bestObstacle;
+                    obstacle.setVal(bestObstacle);
                 }
                 if (edgeNum != null) {
-                    edgeNum[0] = bestEdgeNum;
+                    edgeNum.setVal(bestEdgeNum);
                 }
                 return;
             }
@@ -259,7 +260,7 @@ public class AI_pathing {
         int[] edgeNums = new int[2];
         float dist;
         CFloat scale1 = new CFloat(), scale2 = new CFloat();
-        idVec2[] bounds = new idVec2[2];
+        idVec2[] bounds = idVec2.generateArray(2);
 
         // get bounds for the current movement delta
         bounds[0] = startPos.oMinus(new idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON));
@@ -301,16 +302,16 @@ public class AI_pathing {
         int numWallEdges;
         CFloat stepHeight = new CFloat(), headHeight = new CFloat(), blockingScale = new CFloat(), min = new CFloat(), max = new CFloat();
         idVec3 seekDelta, start = new idVec3(), end = new idVec3(), nextStart = new idVec3(), nextEnd = new idVec3();
-        idVec3[] silVerts = new idVec3[32];
+        idVec3[] silVerts = idVec3.generateArray(32);
         idVec2 edgeDir, edgeNormal = new idVec2(), nextEdgeDir,
                 nextEdgeNormal = new idVec2(), lastEdgeNormal = new idVec2();
-        idVec2[] expBounds = new idVec2[2];
+        idVec2[] expBounds = idVec2.generateArray(2);
         idVec2 obDelta;
         idPhysics obPhys;
         idBox box;
         idEntity obEnt;
         idClipModel clipModel;
-        idClipModel[] clipModelList = new idClipModel[MAX_GENTITIES];
+        idClipModel[] clipModelList = Stream.generate(idClipModel::new).limit(MAX_GENTITIES).toArray(idClipModel[]::new);
 
         numObstacles = 0;
 
@@ -524,7 +525,7 @@ public class AI_pathing {
     static boolean GetPathNodeDelta(pathNode_s node, final obstacle_s[] obstacles, final idVec2 seekPos, boolean blocked) {
         int numPoints, edgeNum;
         boolean facing;
-        idVec2 seekDelta, dir;
+        idVec2 seekDelta = new idVec2();
         pathNode_s n;
 
         numPoints = obstacles[node.obstacle].winding.GetNumPoints();
@@ -543,7 +544,7 @@ public class AI_pathing {
         if (!blocked) {
 
             // test if the current edge faces the goal
-            seekDelta = seekPos.oMinus(node.pos);
+            seekDelta.oSet(seekPos.oMinus(node.pos));
             facing = ((2 * node.dir - 1) * (node.delta.x * seekDelta.y - node.delta.y * seekDelta.x)) >= 0.0f;
 
             // if the current edge faces goal and the line from the current
@@ -745,7 +746,7 @@ public class AI_pathing {
         int[] edgeNums = new int[2];
         pathNode_s curNode, nextNode;
         idVec2 curPos, curDelta;
-        idVec2[] bounds = new idVec2[2];
+        idVec2[] bounds = idVec2.generateArray(2);
         float curLength;
         CFloat scale1 = new CFloat(), scale2 = new CFloat();
 
@@ -830,7 +831,7 @@ public class AI_pathing {
     static boolean FindOptimalPath(final pathNode_s root, final obstacle_s[] obstacles, int numObstacles, final float height, final idVec3 curDir, idVec3 seekPos) {
         int i, numPathPoints, bestNumPathPoints;
         pathNode_s node, lastNode, bestNode;
-        idVec2[] optimizedPath = new idVec2[MAX_OBSTACLE_PATH];
+        idVec2[] optimizedPath = idVec2.generateArray(MAX_OBSTACLE_PATH);
         float pathLength, bestPathLength;
         boolean pathToGoalExists, optimizedPathCalculated;
 
@@ -1035,7 +1036,6 @@ public class AI_pathing {
                 continue;
             }
             d = idMath.Sqrt(p[i]);
-            //bal[n] = new ballistics_s();
             bal[n].angle = (float) atan2(0.5f * (2.0f * y * p[i] - gravity) / d, d * x);
             bal[n].time = (float) (x / (cos(bal[n].angle) * speed));
             bal[n].angle = idMath.AngleNormalize180(RAD2DEG(bal[n].angle));
@@ -1081,7 +1081,7 @@ public class AI_pathing {
     }
 
     static class obstacle_s {
-        idVec2[] bounds = new idVec2[2];
+        idVec2[] bounds = idVec2.generateArray(2);
         idEntity entity;
         idWinding2D winding = new idWinding2D();
     }

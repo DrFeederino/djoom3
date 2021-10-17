@@ -111,7 +111,7 @@ public class Projectile {
         protected int lightEndTime;
         protected idVec3 lightOffset;
         protected int lightStartTime;
-        protected idEntityPtr<idEntity> owner;
+        protected final idEntityPtr<idEntity> owner;
         protected idPhysics_RigidBody physicsObj;
         //
         protected projectileFlags_s projectileFlags;
@@ -1255,7 +1255,7 @@ public class Projectile {
     public static class idGuidedProjectile extends idProjectile {
         // CLASS_PROTOTYPE( idGuidedProjectile );
 
-        protected idEntityPtr<idEntity> enemy;
+        protected final idEntityPtr<idEntity> enemy;
         //
         protected float speed;
         private idAngles angles;
@@ -1640,7 +1640,7 @@ public class Projectile {
 
         int/*qhandle_t*/ modelDefHandle;
         renderEntity_s renderEntity;
-        idEntityPtr<idEntity> target;
+        final idEntityPtr<idEntity> target = new idEntityPtr<>();
     }
 
     /*
@@ -2032,7 +2032,7 @@ public class Projectile {
         }
 
 
-        private idEntityPtr<idEntity> owner;
+        private final idEntityPtr<idEntity> owner;
         private final idPhysics_RigidBody physicsObj;
         private idDeclParticle smokeFly;
         private int smokeFlyTime;
@@ -2079,7 +2079,7 @@ public class Projectile {
         public void Spawn() {
             super.Spawn();
 
-            owner = null;
+            owner.oSet(null);
             smokeFly = null;
             smokeFlyTime = 0;
         }
@@ -2089,7 +2089,7 @@ public class Projectile {
             GetPhysics().SetOrigin(start);
             GetPhysics().SetAxis(axis);
             GetPhysics().SetContents(0);
-            this.owner = new idEntityPtr<>(owner);
+            this.owner.oSet(owner);
             smokeFly = null;
             smokeFlyTime = 0;
             sndBounce = null;

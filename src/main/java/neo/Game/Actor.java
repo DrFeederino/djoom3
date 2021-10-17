@@ -312,7 +312,7 @@ public class Actor {
     public static class idAttachInfo {
 
         public int channel;
-        public idEntityPtr<idEntity> ent;
+        public final idEntityPtr<idEntity> ent;
 
         public idAttachInfo() {
             this.ent = new idEntityPtr<>();
@@ -418,7 +418,7 @@ public class Actor {
         //
         //
         protected float fovDot;               // cos( fovDegrees )
-        protected idEntityPtr<idAFAttachment> head;
+        protected final idEntityPtr<idAFAttachment> head;
         protected idAnimState headAnim;
         protected function_t idealState;
         //
@@ -2136,7 +2136,7 @@ public class Actor {
                 attach.channel = animator.GetChannelForJoint(joint);
                 animator.GetJointTransform(joint, gameLocal.time, origin, axis);
                 origin = renderEntity.origin.oPlus((origin.oPlus(modelOffset)).oMultiply(renderEntity.axis));
-                attach.ent = new idEntityPtr<>();
+                //attach.ent.oSet(new idEntityPtr<>());
                 attach.ent.oSet(headEnt);
                 headEnt.SetOrigin(origin);
                 headEnt.SetAxis(renderEntity.axis);

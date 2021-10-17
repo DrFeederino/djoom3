@@ -553,7 +553,7 @@ public class Physics_Monster {
 
             if (gravityNormal.equals(getVec3_zero())) {
                 state.onGround = false;
-                groundEntityPtr = new idEntityPtr<>(null);
+                groundEntityPtr.oSet(null);
                 return;
             }
 
@@ -562,7 +562,7 @@ public class Physics_Monster {
 
             if (groundTrace.fraction == 1.0f) {
                 state.onGround = false;
-                groundEntityPtr = new idEntityPtr<>(null);
+                groundEntityPtr.oSet(null);
                 return;
             }
 

@@ -251,7 +251,7 @@ public class Mover {
         //
         private final rotationState_t rot;
         private int rotate_thread;
-        private idEntityPtr<idEntity> splineEnt;
+        private final idEntityPtr<idEntity> splineEnt;
         private boolean stopRotation;
         private boolean useSplineAngles;
         public idMover() {
@@ -276,6 +276,7 @@ public class Mover {
             areaPortal = 0;
             fl.networkSync = true;
             physicsObj = new idPhysics_Parametric();
+            splineEnt = new idEntityPtr<>();
         }
 
         public static Map<idEventDef, eventCallback_t> getEventCallBacks() {
@@ -1317,7 +1318,7 @@ public class Mover {
             }
 
             // Needed for savegames
-            splineEnt = new idEntityPtr<>(splineEntity);
+            splineEnt.oSet(splineEntity);
 
             spline = splineEntity.GetSpline();
             if (null == spline) {
@@ -1345,7 +1346,7 @@ public class Mover {
 
         private void Event_StopSpline() {
             physicsObj.SetSpline(null, 0, 0, useSplineAngles);
-            splineEnt = null;
+            splineEnt.oSet(null);
         }
 
         private void Event_Activate(idEventArg<idEntity> activator) {
@@ -1925,7 +1926,7 @@ public class Mover {
 
         protected int accelTime;
         protected idMover_Binary activateChain;
-        protected idEntityPtr<idEntity> activatedBy;
+        protected final idEntityPtr<idEntity> activatedBy;
         protected int/*qhandle_t*/              areaPortal;          // 0 = no portal
         protected boolean blocked;
         protected idStrList buddies;

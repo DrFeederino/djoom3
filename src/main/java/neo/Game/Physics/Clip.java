@@ -80,7 +80,7 @@ public class Clip {
      */
     public static boolean TestHugeTranslation(trace_s results, final idClipModel mdl, final idVec3 start, final idVec3 end, final idMat3 trmAxis) {
         if (mdl != null && (end.oMinus(start)).LengthSqr() > Square(CM_MAX_TRACE_DIST)) {
-            assert (false);
+           // assert (false);
 
             results.fraction = 0.0f;
             results.endpos.oSet(start);

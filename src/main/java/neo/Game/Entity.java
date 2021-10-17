@@ -397,11 +397,13 @@ public class Entity {
         private int mpGUIState;                                // local cache to avoid systematic SetStateInt
         //
         private int numPVSAreas;                     // number of renderer areas the entity covers
-        private idPhysics physics;                         // physics used for this entity
+        // set by default. Triggers are static.
+        private idPhysics physics = new idPhysics_Static();                         // physics used for this entity
         //
         private signalList_t signals;
         private idEntity teamChain;                       // next entity in physics team
         private idEntity teamMaster;                      // master of the physics team
+
         //        public static final idTypeInfo Type;
 //
 //        public static idClass CreateInstance();
@@ -443,7 +445,6 @@ public class Entity {
             teamChain = null;
             signals = null;
 
-//            memset(PVSAreas, 0, sizeof(PVSAreas));
             Arrays.fill(PVSAreas, 0);
             numPVSAreas = -1;
 

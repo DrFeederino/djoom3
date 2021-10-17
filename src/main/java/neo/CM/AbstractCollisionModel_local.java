@@ -69,10 +69,6 @@ public abstract class AbstractCollisionModel_local {
             this.p = new Vector.idVec3();
         }
 
-        public cm_vertex_s(Vector.idVec3 p) {
-            this.p = p;
-        }
-
         static cm_vertex_s[] generateArray(final int length) {
             return Stream.generate(cm_vertex_s::new).
                     limit(length).

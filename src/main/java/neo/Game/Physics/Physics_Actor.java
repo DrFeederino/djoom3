@@ -38,7 +38,7 @@ public class Physics_Actor {
         protected idMat3 clipModelAxis;// axis of clip model aligned with gravity direction
         //
         // results of last evaluate
-        protected idEntityPtr<idEntity> groundEntityPtr;
+        protected final idEntityPtr<idEntity> groundEntityPtr;
         protected float invMass;
         //
         // derived properties
