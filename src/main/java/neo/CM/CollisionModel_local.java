@@ -471,8 +471,6 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             cm_trmEdge_s edge;
             cm_trmVertex_s vert;
 
-            results = new trace_s();
-
             if (model < 0 || model > MAX_SUBMODELS || model > this.maxModels) {
                 common.Printf("idCollisionModelManagerLocal::Translation: invalid model handle\n");
                 return;
@@ -819,7 +817,6 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                              final idMat3 trmAxis, int contentMask, int model, final idVec3 modelOrigin, final idMat3 modelAxis) {
             float maxa, stepa, a, lasta;
 
-            results = new trace_s();
 
             // if special position test
             if (rotation.GetAngle() == 0.0f) {
@@ -3629,7 +3626,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // trace through the model
             TraceThroughModel(tw);
 
-            results = tw.trace;
+            results.oSet(tw.trace);
             results.fraction = (results.c.contents == 0 ? 1 : 0);
             results.endpos.oSet(start);
             results.endAxis.oSet(trmAxis);

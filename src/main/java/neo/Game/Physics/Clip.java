@@ -802,8 +802,6 @@ public class Clip {
                     return true;        // blocked immediately by the world
                 }
             } else {
-//		memset( &results, 0, sizeof( results ) );
-                results = new trace_s();
                 results.fraction = 1.0f;
                 results.endpos.oSet(end);
                 results.endAxis.oSet(trmAxis);
@@ -835,7 +833,7 @@ public class Clip {
                 }
 
                 if (trace.fraction < results.fraction) {
-                    results = trace;
+                    results.oSet(trace);
                     results.c.entityNum = touch.entity.entityNumber;
                     results.c.id = touch.id;
                     if (results.fraction == 0.0f) {
@@ -868,7 +866,6 @@ public class Clip {
                 }
             } else {
 //		memset( &results, 0, sizeof( results ) );
-                results = new trace_s();
                 results.fraction = 1.0f;
                 results.endpos.oSet(start);
                 results.endAxis.oSet(trmAxis.oMultiply(rotation.ToMat3()));
@@ -898,7 +895,7 @@ public class Clip {
                 collisionModelManager.Rotation(trace, start, rotation, trm, trmAxis, contentMask, touch.Handle(), touch.origin, touch.axis);
 
                 if (trace.fraction < results.fraction) {
-                    results = trace;
+                    results.oSet(trace);
                     results.c.entityNum = touch.entity.entityNumber;
                     results.c.id = touch.id;
                     if (results.fraction == 0.0f) {
@@ -1286,7 +1283,7 @@ public class Clip {
                 }
 
                 if (trace.fraction < results.fraction) {
-                    results = trace;
+                    results.oSet(trace);
                     results.c.entityNum = touch.entity.entityNumber;
                     results.c.id = touch.id;
                     if (results.fraction == 0.0f) {

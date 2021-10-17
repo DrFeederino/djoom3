@@ -407,7 +407,7 @@ public class Physics_Player {
             if (IsOutsideWorld()) {
                 gameLocal.Warning("clip model outside world bounds for entity '%s' at (%s)", self.name, current.origin.ToString(0));
             }
-
+            assert (current.origin != oldOrigin);
             return true; //( current.origin != oldOrigin );
         }
 
