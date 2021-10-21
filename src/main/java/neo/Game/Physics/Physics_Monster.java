@@ -113,7 +113,6 @@ public class Physics_Monster {
     public static class idPhysics_Monster extends idPhysics_Actor {
         // CLASS_PROTOTYPE( idPhysics_Monster );
 
-        private static int DBG_Evaluate = 0;
         private idEntity blockingEntity;
         // monster physics state
         private monsterPState_s current;
@@ -252,7 +251,6 @@ public class Physics_Monster {
         // common physics interface
         @Override
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
-            DBG_Evaluate++;
             idVec3 masterOrigin = new idVec3(), oldOrigin;
             idMat3 masterAxis = new idMat3();
             float timeStep;

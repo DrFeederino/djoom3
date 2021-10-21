@@ -42,7 +42,6 @@ public class Force_Drag {
 
         public idForce_Drag() {
             damping = 0.5f;
-            dragPosition = getVec3_zero();
             physics = null;
             id = 0;
             p = getVec3_zero();

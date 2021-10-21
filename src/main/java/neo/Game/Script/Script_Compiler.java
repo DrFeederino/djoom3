@@ -1959,7 +1959,6 @@ public class Script_Compiler {
                 case D_EVENT_ENTITY_NULL:
                     type = type_entity;
                     break;
-
                 case D_EVENT_VOID:
                     type = type_void;
                     break;

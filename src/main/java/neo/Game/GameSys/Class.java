@@ -142,8 +142,8 @@ public class Class {
 
     public static class idEventArg<T> {
 
-        public final int type;
-        public final T value;
+        public int type;
+        public T value;
 //
 //
 

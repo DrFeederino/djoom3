@@ -1014,7 +1014,7 @@ public class Physics_Player {
                 if (!(groundMaterial != null && ((groundMaterial.GetSurfaceFlags() & SURF_SLICK) != 0))) {
                     // if getting knocked back, no friction
                     if (0 == (current.movementFlags & PMF_TIME_KNOCKBACK)) {
-                        control = speed < PM_STOPSPEED ? PM_STOPSPEED : speed;
+                        control = Math.max(speed, PM_STOPSPEED);
                         drop += control * PM_FRICTION * frametime;
                     }
                 }

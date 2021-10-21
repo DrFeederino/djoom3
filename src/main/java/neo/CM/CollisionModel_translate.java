@@ -32,14 +32,13 @@ public class CollisionModel_translate {
      ================
      CM_AddContact
      ================
-     */          private static int DBG_CM_AddContact = 0;
+     */
 
     static void CM_AddContact(cm_traceWork_s tw) {
 
         if (tw.numContacts >= tw.maxContacts) {
             return;
         }
-        DBG_CM_AddContact++;
         // copy contact information from trace_t
         // re-creates contactInfo_t? In src code it's just a ref
         //tw.contacts[tw.numContacts] = new contactInfo_t(tw.trace.c);

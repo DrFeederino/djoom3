@@ -16,6 +16,7 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec4;
 
 import java.nio.IntBuffer;
+import java.util.stream.Stream;
 
 import static java.lang.Math.*;
 import static neo.Game.AI.AAS.*;
@@ -2293,7 +2294,7 @@ public class AAS_local {
             int areaNum, numObstacles;
             idVec3 target;
             aasGoal_s goal = new aasGoal_s();
-            aasObstacle_s[] obstacles = new aasObstacle_s[10];
+            aasObstacle_s[] obstacles = Stream.generate(aasObstacle_s::new).limit(10).toArray(aasObstacle_s[]::new);
 
             areaNum = PointReachableAreaNum(origin, DefaultSearchBounds(), (AREA_REACHABLE_WALK | AREA_REACHABLE_FLY));
             target = AreaCenter(targetAreaNum);

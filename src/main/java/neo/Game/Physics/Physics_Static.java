@@ -56,7 +56,6 @@ public class Physics_Static {
         private static final idVec3 gravity = new idVec3(0, 0, -g_gravity.GetFloat());
         private static final idVec3 gravityNormal = new idVec3(0, 0, -1);
         private static idBounds absBounds;
-        private static contactInfo_t info;
         protected idClipModel clipModel;        // collision model
         //
         //
@@ -470,7 +469,7 @@ public class Physics_Static {
         @Override
         public contactInfo_t GetContact(int num) {
 //	memset( &info, 0, sizeof( info ) );
-            return info = new contactInfo_t();
+            return null;
         }
 
         @Override

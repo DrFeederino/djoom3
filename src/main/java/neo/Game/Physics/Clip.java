@@ -116,8 +116,6 @@ public class Clip {
 
     public static class clipLink_s {
 
-        private static int DBG_counter = 0;
-        private final int DBG_count = DBG_counter++;
         idClipModel clipModel;
         clipLink_s nextInSector;
         clipLink_s nextLink;
@@ -127,8 +125,6 @@ public class Clip {
 
     public static class trmCache_s {
 
-        private static int DBG_counter = 0;
-        private final int DBG_count = DBG_counter++;
         idVec3 centerOfMass;
         idMat3 inertiaTensor;
         int refCount;
@@ -143,12 +139,6 @@ public class Clip {
 
     public static class idClipModel {
 
-        private static int DBG_AllocTraceModel = 0;
-        private static int DBG_Link = 0;
-        //
-        //
-        private static int DBG_counter = 0;
-        private final int DBG_count = DBG_counter++;
         private final idBounds absBounds = new idBounds();    // absolute bounds
         private final idMat3 axis = new idMat3();      // orientation of clip model
         private final idBounds bounds = new idBounds();    // bounds
@@ -194,9 +184,6 @@ public class Clip {
             id = model.id;
             owner = model.owner;
             origin.oSet(model.origin);
-            if (Float.isNaN(origin.oGet(0))) {
-                int a = 0;
-            }
             axis.oSet(model.axis);
             bounds.oSet(model.bounds);
             absBounds.oSet(model.absBounds);
@@ -264,7 +251,6 @@ public class Clip {
         }
 
         private static int AllocTraceModel(final idTraceModel trm) {
-            DBG_AllocTraceModel++;
             int i, hashKey, traceModelIndex;
             trmCache_s entry;
 
@@ -416,7 +402,6 @@ public class Clip {
         }
 
         public void Link(idClip clp) {                // must have been linked with an entity and id before
-            DBG_Link++;
             assert (this.entity != null);
             if (null == this.entity) {
                 return;
@@ -457,9 +442,6 @@ public class Clip {
             this.entity = ent;
             this.id = newId;
             this.origin.oSet(newOrigin);
-            if (Float.isNaN(origin.z)) {
-                int a = 0;
-            }
             this.axis.oSet(newAxis);
             if (renderModelHandle != -1) {
                 this.renderModelHandle = renderModelHandle;
@@ -493,26 +475,17 @@ public class Clip {
                 Unlink();    // unlink from old position
             }
             origin.oSet(newOrigin);
-            if (Float.isNaN(origin.z)) {
-                int a = 0;
-            }
             axis.oSet(newAxis);
         }
 
         public void Translate(final idVec3 translation) {                            // unlinks the clip model
             Unlink();
             origin.oPluSet(translation);
-            if (Float.isNaN(origin.z)) {
-                int a = 0;
-            }
         }
 
         public void Rotate(final idRotation rotation) {                            // unlinks the clip model
             Unlink();
             origin.oMulSet(rotation);
-            if (Float.isNaN(origin.z)) {
-                int a = 0;
-            }
             axis.oMulSet(rotation.ToMat3());
         }
 
@@ -669,18 +642,8 @@ public class Clip {
             link.sector = node;
             link.nextInSector = node.clipLinks;
             link.prevInSector = null;
-            if (link.clipModel.entity.name.equals("env_gibs_leftleg_1")) {
-                int a = 0;
-                float x = origin.oGet(0);
-                if (Float.isNaN(x) || Float.isInfinite(x))
-                    System.out.println("~~~~~" + this.origin);
-            }
             if (node.clipLinks != null) {
                 node.clipLinks.prevInSector = link;
-            }
-            if (this.entity.name.equals("marscity_cinematic_player_1") &&
-                    node.clipLinks.clipModel.entity.name.equals("env_gibs_leftleg_1")) {
-                int a = 0;
             }
             node.clipLinks = link;
             link.nextLink = clipLinks;
@@ -1513,15 +1476,10 @@ public class Clip {
             anode.children[0] = CreateClipSectors_r(depth + 1, front, maxSector);
             anode.children[1] = CreateClipSectors_r(depth + 1, back, maxSector);
 
-            if (anode.children[1] != null &&
-                    anode.children[1].clipLinks != null &&
-                    anode.children[1].clipLinks.clipModel.entity.name.equals("env_gibs_leftleg_1")) {
-                int b = 0;
-            }
             return anode;
         }
 
-        private void ClipModelsTouchingBounds_r(clipSector_s node, listParms_s parms) {
+        private void ClipModelsTouchingBounds_r(clipSector_s node, final listParms_s parms) {
             while (node.axis != -1) {
                 if (parms.bounds.oGet(0, node.axis) > node.dist) {
                     node = node.children[0];
@@ -1533,10 +1491,8 @@ public class Clip {
                 }
             }
 
-            int i = 0;
             for (clipLink_s link = node.clipLinks; link != null; link = link.nextInSector) {
                 idClipModel check = link.clipModel;
-                i++;
 
                 // if the clip model is enabled
                 if (!check.enabled) {

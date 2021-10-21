@@ -2944,7 +2944,7 @@ public class Player {
             spec = (idStr.Icmp(userInfo.GetString("ui_spectate"), "Spectate") == 0);
             if (gameLocal.serverInfo.GetBool("si_spectators")) {
                 // never let spectators go back to game while sudden death is on
-                if (canModify && gameLocal.mpGame.GetGameState() == SUDDENDEATH && !spec && wantSpectate == true) {
+                if (canModify && gameLocal.mpGame.GetGameState() == SUDDENDEATH && !spec && wantSpectate) {
                     userInfo.Set("ui_spectate", "Spectate");
                     modifiedInfo |= true;
                 } else {
@@ -3186,21 +3186,21 @@ public class Player {
         }
 
         @Override
-        public void GetAASLocation(idAAS aas, idVec3 pos, CInt areaNum) {
+        public void GetAASLocation(idAAS aas, final idVec3 pos, CInt areaNum) {
             int i;
 
             if (aas != null) {
                 for (i = 0; i < aasLocation.Num(); i++) {
                     if (aas == gameLocal.GetAAS(i)) {
                         areaNum.setVal(aasLocation.oGet(i).areaNum);
-                        pos = aasLocation.oGet(i).pos;
+                        pos.oSet(aasLocation.oGet(i).pos);
                         return;
                     }
                 }
             }
 
             areaNum.setVal(0);
-            pos = physicsObj.GetOrigin();
+            pos.oSet(physicsObj.GetOrigin());
         }
 
         /*
@@ -3211,7 +3211,7 @@ public class Player {
          =====================
          */
         @Override
-        public void GetAIAimTargets(final idVec3 lastSightPos, idVec3 headPos, idVec3 chestPos) {
+        public void GetAIAimTargets(final idVec3 lastSightPos, final idVec3 headPos, final idVec3 chestPos) {
             idVec3 offset = new idVec3();
             idMat3 axis = new idMat3();
             idVec3 origin;
@@ -3219,10 +3219,10 @@ public class Player {
             origin = lastSightPos.oMinus(physicsObj.GetOrigin());
 
             GetJointWorldTransform(chestJoint, gameLocal.time, offset, axis);
-            headPos = offset.oPlus(origin);
+            headPos.oSet(offset.oPlus(origin));
 
             GetJointWorldTransform(headJoint, gameLocal.time, offset, axis);
-            chestPos = offset.oPlus(origin);
+            chestPos.oSet(offset.oPlus(origin));
         }
 
         /*
@@ -6094,7 +6094,7 @@ public class Player {
         }
 
         @Override
-        public boolean GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToVisualTransform(final idVec3 origin, final idMat3 axis) {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis);
                 return true;
@@ -6137,7 +6137,7 @@ public class Player {
         }
 
         @Override
-        public boolean GetPhysicsToSoundTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToSoundTransform(final idVec3 origin, final idMat3 axis) {
             idCamera camera;
 
             if (privateCameraView != null) {

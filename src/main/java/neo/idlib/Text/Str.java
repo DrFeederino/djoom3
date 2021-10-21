@@ -2464,7 +2464,6 @@ public class Str {
         }
 
         @Override
-        @Deprecated
         public String toString() {
             return data;
         }

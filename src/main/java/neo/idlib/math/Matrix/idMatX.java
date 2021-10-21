@@ -2910,8 +2910,7 @@ public class idMatX {
         v2.SetData(numRows, new float[numRows]);
         v2 = v;
         v2.oSet(numRows - 1, v.oGet(numRows - 1) - 1.0f); //v2.p[numRows - 1] -= 1.0f;
-        boolean isInversed = Inverse_UpdateRowColumn(v2, w, numRows - 1);
-        return isInversed;
+        return Inverse_UpdateRowColumn(v2, w, numRows - 1);
     }
 
     /**

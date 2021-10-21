@@ -262,7 +262,7 @@ public class Physics {
         public abstract idVec3 GetLinearVelocity(int id /*= 0*/);
 
         public idVec3 GetLinearVelocity() {
-            return new idVec3(GetLinearVelocity(00));
+            return new idVec3(GetLinearVelocity(0));
         }
 
         public abstract idVec3 GetAngularVelocity(int id /*= 0*/);

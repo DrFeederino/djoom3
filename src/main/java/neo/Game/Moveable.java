@@ -604,7 +604,7 @@ public class Moveable {
             boolean wasAtRest, onGround;
             float movedDistance, rotatedDistance, angle;
             idVec3 curOrigin, gravityNormal, dir;
-            idMat3 curAxis, axis;
+            idMat3 curAxis;
 
             wasAtRest = IsAtRest();
 

@@ -418,10 +418,11 @@ public class Event {
             for (i = 0; i < numargs; i++) {
                 idEventArg arg = args[i];
                 if (format[i] != arg.type) {
+                    arg.type = D_EVENT_STRING; // try to force the string type
                     // when NULL is passed in for an entity, it gets cast as an integer 0, so don't give an error when it happens
-                    if (!(((format[i] == D_EVENT_TRACE) || (format[i] == D_EVENT_ENTITY)) && (arg.type == 'd') && (arg.value == Integer.valueOf(0)))) {
-                        Game_local.idGameLocal.Error("idEvent::CopyArgs : Wrong type passed in for arg # %d on '%s' event.", i, evdef.GetName());
-                    }
+//                    if (!(((format[i] == D_EVENT_TRACE) || (format[i] == D_EVENT_ENTITY)) && (arg.type == 'd') && (arg.value == Integer.valueOf(0)))) {
+//                        Game_local.idGameLocal.Error("idEvent::CopyArgs : Wrong type passed in for arg # %d on '%s' event.", i, evdef.GetName());
+//                    }
                 }
 
                 data[i] = arg;

@@ -685,7 +685,7 @@ public class AF {
             return true;
         }
 
-        public void GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public void GetPhysicsToVisualTransform(final idVec3 origin, final idMat3 axis) {
             origin.oSet(baseOrigin.oNegative());
             axis.oSet(baseAxis.Transpose());
         }

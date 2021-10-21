@@ -658,7 +658,7 @@ public class Push {
                     }
                 } else {
                     // vector along which the entity is pushed
-                    checkMove = move;
+                    checkMove = new idVec3(move);
                 }
             } else {
                 // move entity in reverse only colliding with pusher

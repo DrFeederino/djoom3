@@ -111,7 +111,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         static final float SHARP_EDGE_DOT = -0.7f;
         static char[] contentsString = new char[MAX_STRING_CHARS];
         private static int entered = 0;
-        private static cm_traceWork_s tw = new cm_traceWork_s();
+        private static final cm_traceWork_s tw = new cm_traceWork_s();
         private final cm_brushRef_s[] trmBrushes = new cm_brushRef_s[1];
         // for multi-check avoidance
         private int checkCount;
@@ -4604,22 +4604,22 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     break;
                 }
 
-                if (token.equals("model")) {
+                if (token.toString().equals("model")) {
                     src.SkipBracedSection();
                     continue;
                 }
 
-                if (token.equals("shadowModel")) {
+                if (token.toString().equals("shadowModel")) {
                     src.SkipBracedSection();
                     continue;
                 }
 
-                if (token.equals("interAreaPortals")) {
+                if (token.toString().equals("interAreaPortals")) {
                     src.SkipBracedSection();
                     continue;
                 }
 
-                if (token.equals("nodes")) {
+                if (token.toString().equals("nodes")) {
                     ParseProcNodes(src);
                     break;
                 }
@@ -5485,9 +5485,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 oldEdges = model.edges;
                 model.edges = cm_edge_s.generateArray(model.maxEdges);
                 //System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges);
-                for (int i = 0; i < model.numEdges; i++) {
-                    model.edges[i] = oldEdges[i];
-                }
+                if (model.numEdges >= 0) System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges);
                 cm_edgeHash.ResizeIndex(model.maxEdges);
             }
             // setup edge
@@ -6743,29 +6741,29 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
                 src.ReadToken(token);
 
-                if (token.equals("vertices")) {
+                if (token.toString().equals("vertices")) {
                     ParseVertices(src, model);
                     continue;
                 }
 
-                if (token.equals("edges")) {
+                if (token.toString().equals("edges")) {
                     ParseEdges(src, model);
                     continue;
                 }
 
-                if (token.equals("nodes")) {
+                if (token.toString().equals("nodes")) {
                     src.ExpectTokenString("{");
                     model.node = ParseNodes(src, model, null);
                     src.ExpectTokenString("}");
                     continue;
                 }
 
-                if (token.equals("polygons")) {
+                if (token.toString().equals("polygons")) {
                     ParsePolygons(src, model);
                     continue;
                 }
 
-                if (token.equals("brushes")) {
+                if (token.toString().equals("brushes")) {
                     ParseBrushes(src, model);
                     continue;
                 }
@@ -6814,7 +6812,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 return false;
             }
 
-            if (!src.ReadToken(token) || !token.equals(CM_FILEVERSION)) {
+            if (!src.ReadToken(token) || !token.toString().equals(CM_FILEVERSION)) {
                 common.Warning("%s has version %s instead of %s", fileName, token, CM_FILEVERSION);
                 src = null;
                 return false;
@@ -6839,7 +6837,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     break;
                 }
 
-                if (token.equals("collisionModel")) {
+                if (token.toString().equals("collisionModel")) {
                     if (!ParseCollisionModel(src)) {
                         src = null;
                         return false;
@@ -6860,7 +6858,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idToken token = new idToken();
 
             while (src.ReadToken(token)) {
-                if (token.equals(",")) {
+                if (token.toString().equals(",")) {
                     continue;
                 }
                 for (i = 1; cm_contentsNameByIndex[i] != null; i++) {

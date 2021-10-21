@@ -49,12 +49,11 @@ public class Physics_Base {
     public static class idPhysics_Base extends idPhysics {
         // CLASS_PROTOTYPE( idPhysics_Base );
 
-        private static int DBG_IsOutsideWorld = 0;
         protected int clipMask;         // contents the physics object collides with
         protected idList<contactEntity_t> contactEntities;  // entities touching this physics object
         protected idList<contactInfo_t> contacts;         // contacts with other physics objects
         protected idVec3 gravityNormal;    // normalized direction of gravity
-        protected idVec3 gravityVector = new idVec3();    // direction and magnitude of gravity
+        protected idVec3 gravityVector;    // direction and magnitude of gravity
         //
         //
         protected idEntity self;             // entity using this physics object
@@ -554,7 +553,6 @@ public class Physics_Base {
 
         // returns true if the whole physics object is outside the world bounds
         protected boolean IsOutsideWorld() {
-            DBG_IsOutsideWorld++;
             return !gameLocal.clip.GetWorldBounds().Expand(128.0f).IntersectsBounds(GetAbsBounds());
         }
 

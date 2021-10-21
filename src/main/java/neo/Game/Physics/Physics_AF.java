@@ -185,7 +185,7 @@ public class Physics_AF {
         protected idMatX invI;                      // transformed inertia
         protected idVecX lm;                        // lagrange multipliers
         protected idVecX lo, hi, e;                 // low and high bounds and lcp epsilon
-        protected idStr name = new idStr();         // name of constraint
+        protected idStr name;         // name of constraint
         protected idPhysics_AF physics;             // for adding additional constraints like limits
         protected idVecX s;                         // temp solution
 //
@@ -363,7 +363,7 @@ public class Physics_AF {
         }
 
         public void SetRelativeAxis(final idMat3 axis) {
-            this.relAxis = axis;
+            this.relAxis.oSet(axis);
         }
 
         @Override
@@ -417,7 +417,7 @@ public class Physics_AF {
 
         @Override
         public void GetCenter(idVec3 center) {
-            center = body1.GetWorldOrigin();
+            center.oSet(body1.GetWorldOrigin());
         }
 
         @Override
@@ -468,7 +468,6 @@ public class Physics_AF {
             c1.SubVec3_oSet(1, r.GetVec().oMultiply(-(float) DEG2RAD(r.GetAngle())).oMultiply(-(invTimeStep * ERROR_REDUCTION)));
 
             c1.Clamp(-ERROR_REDUCTION_MAX, ERROR_REDUCTION_MAX);
-            int a = 0;
         }
 
         @Override
@@ -848,11 +847,8 @@ public class Physics_AF {
     // like a ball and socket joint but also constrains the rotation about the cardan shafts
     public static class idAFConstraint_UniversalJoint extends idAFConstraint {
 
-        private static int DBG_SetAnchor = 0;
         //
         //
-        private static int DBG_counter = 0;
-        private final int DBG_count = DBG_counter++;
         protected idVec3 anchor1;        // anchor in body1 space
         protected idVec3 anchor2;        // anchor in body2 space
         protected idVec3 axis1;          // cardan axis in body1 space
@@ -887,7 +883,6 @@ public class Physics_AF {
         }
 
         public void SetAnchor(final idVec3 worldPosition) {
-            DBG_SetAnchor++;
 
             // get anchor relative to center of mass of body1
             anchor1.oSet((worldPosition.oMinus(body1.GetWorldOrigin())).oMultiply(body1.GetWorldAxis().Transpose()));
@@ -1573,7 +1568,7 @@ public class Physics_AF {
 
         @Override
         public void GetCenter(idVec3 center) {
-            center = body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis()));
+            center.oSet(body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis())));
         }
 
         @Override
@@ -2083,7 +2078,6 @@ public class Physics_AF {
             c1.p[4] = -(invTimeStep * ERROR_REDUCTION) * (vecY.oMultiply(ofs));
 
             c1.Clamp(-ERROR_REDUCTION_MAX, ERROR_REDUCTION_MAX);
-            int a = 0;
         }
 
         @Override
@@ -2256,7 +2250,6 @@ public class Physics_AF {
             c1.p[0] = -(invTimeStep * ERROR_REDUCTION) * (a1.oMultiply(normal) - a2.oMultiply(normal));
 
             c1.Clamp(-ERROR_REDUCTION_MAX, ERROR_REDUCTION_MAX);
-            int a = 0;
         }
 
         @Override
@@ -2513,7 +2506,6 @@ public class Physics_AF {
             }
 
             c1.Clamp(-ERROR_REDUCTION_MAX, ERROR_REDUCTION_MAX);
-            int a = 0;
         }
 
         @Override
@@ -2622,7 +2614,7 @@ public class Physics_AF {
 
         @Override
         protected void ApplyFriction(float invTimeStep) {
-            idVec3 r, velocity, normal, dir1, dir2;
+            idVec3 r, velocity, normal;
             float friction, magnitude, forceNumerator, forceDenominator;
             idVecX impulse = new idVecX(), dv = new idVecX();
 
@@ -5706,7 +5698,7 @@ public class Physics_AF {
             for (i = 0; i < bodies.Num(); i++) {
                 body = bodies.oGet(i);
 
-                final idMat3 old = body.GetWorldAxis();
+                final idMat3 old = new idMat3(body.GetWorldAxis());
                 body.current.worldOrigin.oMulSet(rotation);
                 body.current.worldAxis.oMulSet(rotation.ToMat3());
                 int a = 0;

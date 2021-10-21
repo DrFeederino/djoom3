@@ -102,6 +102,7 @@ public class CollisionModel {
             endpos = new idVec3(other.endpos);
             endAxis = new idMat3(other.endAxis);
             this.c = new contactInfo_t(other.c);
+            this.fraction = other.fraction;
         }
 
         @Override

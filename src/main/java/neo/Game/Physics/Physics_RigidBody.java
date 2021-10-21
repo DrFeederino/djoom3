@@ -1113,7 +1113,7 @@ public class Physics_RigidBody {
          If there is a collision the next state is set to the state at the moment of impact.
          ================
          */
-        private boolean CheckForCollisions(final float deltaTime, rigidBodyPState_s next, trace_s collision) {
+        private boolean CheckForCollisions(final float deltaTime, final rigidBodyPState_s next, final trace_s collision) {
 //#define TEST_COLLISION_DETECTION
             idMat3 axis = new idMat3();
             idRotation rotation;
@@ -1167,6 +1167,9 @@ public class Physics_RigidBody {
 
             // get info from other entity involved
             ent = gameLocal.entities[collision.c.entityNum];
+            if (ent == null) {
+                return false;
+            }
             info = ent.GetImpactInfo(self, collision.c.id, collision.c.point);
 
             // collision point relative to the body center of mass

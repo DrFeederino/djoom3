@@ -2740,7 +2740,7 @@ public class AI {
                 goalDelta = move.moveDest.oMinus(oldOrigin);
                 goalDist = goalDelta.LengthFast();
                 if (goalDist < delta.LengthFast()) {
-                    delta = goalDelta;
+                    delta.oSet(goalDelta);
                 }
             }
 
@@ -4308,8 +4308,7 @@ public class AI {
 
         protected boolean TurnToward(float yaw) {
             ideal_yaw = idMath.AngleNormalize180(yaw);
-            boolean result = FacingIdeal();
-            return result;
+            return FacingIdeal();
         }
 
         protected boolean TurnToward(final idVec3 pos) {
@@ -4325,8 +4324,7 @@ public class AI {
                 ideal_yaw = idMath.AngleNormalize180(local_dir.ToYaw());
             }
 
-            boolean result = FacingIdeal();
-            return result;
+            return FacingIdeal();
         }
 
         // enemy management
@@ -5501,8 +5499,8 @@ public class AI {
             TriggerWeaponEffects(muzzle);
         }
 
-        protected void Event_CreateMissile(final idEventArg<String> _jointname) {
-            String jointname = _jointname.value;
+        protected void Event_CreateMissile(final idEventArg<char[]> _jointname) {
+            String jointname = String.valueOf(_jointname.value);
             idVec3 muzzle = new idVec3();
             idMat3 axis = new idMat3();
 
@@ -5523,10 +5521,10 @@ public class AI {
             idThread.ReturnEntity(projectile.GetEntity());
         }
 
-        protected void Event_AttackMissile(final idEventArg<String> jointname) {
+        protected void Event_AttackMissile(final idEventArg<char[]> jointname) {
             idProjectile proj;
 
-            proj = LaunchProjectile(jointname.value, enemy.GetEntity(), true);
+            proj = LaunchProjectile(String.valueOf(jointname.value), enemy.GetEntity(), true);
             idThread.ReturnEntity(proj);
         }
 
@@ -5595,10 +5593,8 @@ public class AI {
             lastAttackTime = gameLocal.time;
         }
 
-        protected void Event_AttackMelee(final idEventArg<String> meleeDefName) {
-            int hit;
-
-            hit = AttackMelee(meleeDefName.value) ? 1 : 0;
+        protected void Event_AttackMelee(final idEventArg<char[]> meleeDefName) {
+            int hit = AttackMelee(String.valueOf(meleeDefName.value)) ? 1 : 0;
             idThread.ReturnInt(hit);
         }
 
