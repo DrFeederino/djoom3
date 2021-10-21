@@ -15,7 +15,6 @@ import neo.idlib.Timer.idTimer;
 import neo.idlib.containers.CFloat;
 import neo.idlib.containers.CInt;
 import neo.idlib.geometry.Winding.idFixedWinding;
-import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Ode.deriveFunction_t;
 import neo.idlib.math.Ode.idODE;
@@ -129,8 +128,6 @@ public class Physics_RigidBody {
                 + idMat3.BYTES
                 + idVec3.BYTES
                 + idVec3.BYTES;
-        private static int DBG_counter = 0;
-        private final int DBG_count = DBG_counter++;
         idVec3 angularMomentum;             // rotational momentum relative to center of mass
         idVec3 linearMomentum;              // translational momentum relative to center of mass
         idMat3 orientation;                 // orientation of trace model
@@ -149,10 +146,10 @@ public class Physics_RigidBody {
         }
 
         private rigidBodyIState_s(rigidBodyIState_s r) {
-            position = r.position;
-            orientation = r.orientation;
-            linearMomentum = r.linearMomentum;
-            angularMomentum = r.angularMomentum;
+            position = new idVec3(r.position);
+            orientation = new idMat3(r.orientation);
+            linearMomentum = new idVec3(r.linearMomentum);
+            angularMomentum = new idVec3(r.angularMomentum);
         }
 
         private float[] toFloats() {
@@ -228,7 +225,7 @@ public class Physics_RigidBody {
 
          Drops the object straight down to the floor and verifies if the object is at rest on the floor.
          ================
-         */                   private static int DBG_DropToFloorAndRest = 0;
+         */
         private final idVec3 centerOfMass;         // center of mass of trace model
         private final idMat3 inertiaTensor;        // mass distribution
         //
@@ -511,7 +508,6 @@ public class Physics_RigidBody {
         @Override
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
             rigidBodyPState_s next;
-            idAngles angles;
             trace_s collision = new trace_s();
             idVec3 impulse = new idVec3();
             idEntity ent;
@@ -1269,13 +1265,8 @@ public class Physics_RigidBody {
         }
 
         private void DropToFloorAndRest() {
-            DBG_DropToFloorAndRest++;
             idVec3 down;
             trace_s tr = new trace_s();
-
-            if (this.DBG_count == 8209) {
-                int bla = 1;
-            }
 
             if (testSolid) {
 

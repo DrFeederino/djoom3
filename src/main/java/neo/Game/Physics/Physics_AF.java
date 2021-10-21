@@ -1981,12 +1981,12 @@ public class Physics_AF {
             idVec3 normAxis;
 
             // get normalized axis relative to body1
-            normAxis = ax;//TODO:unreferenced clone!?
+            normAxis = new idVec3(ax);//TODO:unreferenced clone!?
             normAxis.Normalize();
             if (body2 != null) {
                 axis = normAxis.oMultiply(body2.GetWorldAxis().Transpose());
             } else {
-                axis = normAxis;
+                axis.oSet(normAxis);
             }
         }
 
@@ -2024,9 +2024,9 @@ public class Physics_AF {
 
             master = body2 != null ? body2 : physics.GetMasterBody();
             if (master != null) {
-                center = master.GetWorldOrigin().oPlus(master.GetWorldAxis().oMultiply(offset).oMinus(body1.GetWorldOrigin()));
+                center.oSet(master.GetWorldOrigin().oPlus(master.GetWorldAxis().oMultiply(offset).oMinus(body1.GetWorldOrigin())));
             } else {
-                center = offset.oMinus(body1.GetWorldOrigin());
+                center.oSet(offset.oMinus(body1.GetWorldOrigin()));
             }
         }
 

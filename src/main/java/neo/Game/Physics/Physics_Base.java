@@ -322,20 +322,17 @@ public class Physics_Base {
         @Override
         public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );
-            if (results == null) {
-                results = new trace_s();
-            } else {
-                results.endpos = new idVec3();
-                results.fraction = 0.0f;
-                results.endAxis = new idMat3();
-                results.c = new contactInfo_t();
-            }
+            results.endpos = new idVec3();
+            results.fraction = 0.0f;
+            results.endAxis = new idMat3();
+            results.c = new contactInfo_t();
         }
 
         @Override
         public void ClipRotation(trace_s results, final idRotation rotation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );
-            results = new trace_s();
+            //results = new trace_s();
+            // wtf??
         }
 
         @Override

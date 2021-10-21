@@ -2377,8 +2377,8 @@ public class idMatX {
     }
 
     public void TransposeMultiply(idVecX dst, final idVecX vec) {// dst = this->Transpose() * vec
-        if (MATX_SIMD) {
-            SIMDProcessor.MatX_TransposeMultiplyVecX(dst, this, vec);
+        if (!MATX_SIMD) {
+            SIMDProcessor.MatX_TransposeMultiplyVecX(dst, this, vec); // <- buggy?
         } else {
             int i, j, mPtr;
             final float[] vPtr, dstPtr;

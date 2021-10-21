@@ -713,7 +713,7 @@ public class Physics_Player {
             int bumpcount, numbumps, numplanes;
             float d, time_left, into, totalMass;
             idVec3 dir;
-            idVec3[] planes = new idVec3[MAX_CLIP_PLANES];
+            idVec3[] planes = idVec3.generateArray(MAX_CLIP_PLANES);
             idVec3 end, stepEnd, primal_velocity = new idVec3(), endVelocity = new idVec3(), endClipVelocity = new idVec3(), clipVelocity = new idVec3();
             trace_s trace = new trace_s(), stepTrace = new trace_s(), downTrace = new trace_s();
             boolean nearGround, stepped, pushed;

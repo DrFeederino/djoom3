@@ -2648,7 +2648,7 @@ public class Weapon {
                 // predict instant hit projectiles
                 if (projectileDict.GetBool("net_instanthit")) {
                     float spreadRad = DEG2RAD(spread);
-                    muzzle_pos = muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f));
+                    muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f)));
                     for (i = 0; i < num_projectiles; i++) {
                         ang = idMath.Sin(spreadRad * gameLocal.random.RandomFloat());
                         spin = DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
@@ -2700,7 +2700,7 @@ public class Weapon {
 
                     // make sure the projectile starts inside the bounding box of the owner
                     if (i == 0) {
-                        muzzle_pos = muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f));
+                        muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f)));
                         if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle_pos, playerViewAxis.oGet(0), distance)) {
                             start = muzzle_pos.oPlus(playerViewAxis.oGet(0).oMultiply(distance.getVal()));
                         } else {
