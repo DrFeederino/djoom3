@@ -660,7 +660,7 @@ public class Physics_Monster {
                 }
             }
 
-            if (blockingEntity != null && blockingEntity.IsType(idActor.class)) {
+            if (blockingEntity != null && blockingEntity instanceof idActor) {
                 // try to step down in case walking into an actor while going down steps
                 down = noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
                 gameLocal.clip.Translation(tr, noStepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);

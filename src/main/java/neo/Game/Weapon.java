@@ -1289,7 +1289,7 @@ public class Weapon {
 
             if (gameLocal.localClientNum != owner.entityNumber) {
                 // if updating the hud for a followed client
-                if (gameLocal.localClientNum >= 0 && gameLocal.entities[gameLocal.localClientNum] != null && gameLocal.entities[gameLocal.localClientNum].IsType(idPlayer.class)) {
+                if (gameLocal.localClientNum >= 0 && gameLocal.entities[gameLocal.localClientNum] != null && gameLocal.entities[gameLocal.localClientNum] instanceof idPlayer) {
                     idPlayer p = (idPlayer) gameLocal.entities[gameLocal.localClientNum];
                     if (!p.spectating || p.spectator != owner.entityNumber) {
                         return;
@@ -2080,9 +2080,9 @@ public class Weapon {
 
             if (tr.fraction < 1.0f) {
                 ent = gameLocal.GetTraceEntity(tr);
-                if (ent.IsType(idAI.class)) {
+                if (ent instanceof idAI) {
                     ((idAI) ent).TouchedByFlashlight(owner);
-                } else if (ent.IsType(idTrigger.class)) {
+                } else if (ent instanceof idTrigger) {
                     ent.Signal(SIG_TOUCH);
                     ent.ProcessEvent(EV_Touch, owner, tr);
                 }
@@ -2099,9 +2099,9 @@ public class Weapon {
 
             if (tr.fraction < 1.0f) {
                 ent = gameLocal.GetTraceEntity(tr);
-                if (ent.IsType(idAI.class)) {
+                if (ent instanceof idAI) {
                     ((idAI) ent).TouchedByFlashlight(owner);
-                } else if (ent.IsType(idTrigger.class)) {
+                } else if (ent instanceof idTrigger) {
                     ent.Signal(SIG_TOUCH);
                     ent.ProcessEvent(EV_Touch, owner, tr);
                 }
@@ -2683,7 +2683,7 @@ public class Weapon {
                         gameLocal.SpawnEntityDef(projectileDict, ent, false);
                     }
 
-                    if (null == ent[0] || !ent[0].IsType(idProjectile.class)) {
+                    if (null == ent[0] || !(ent[0] instanceof idProjectile)) {
                         final String projectileName = weaponDef.dict.GetString("def_projectile");
                         idGameLocal.Error("'%s' is not an idProjectile", projectileName);
                     }
@@ -2774,7 +2774,7 @@ public class Weapon {
             }
 
             gameLocal.SpawnEntityDef(brassDict, ent, false);
-            if (NOT(ent[0]) || !ent[0].IsType(idDebris.class)) {
+            if (NOT(ent[0]) || !(ent[0] instanceof idDebris)) {
                 idGameLocal.Error("'%s' is not an idDebris", weaponDef != null ? weaponDef.dict.GetString("def_ejectBrass") : "def_ejectBrass");
             }
             idDebris debris = (idDebris) ent[0];
@@ -2821,7 +2821,7 @@ public class Weapon {
                     float push = meleeDef.dict.GetFloat("push");
                     idVec3 impulse = tr.c.normal.oMultiply(-push * owner.PowerUpModifier(SPEED));
 
-                    if (gameLocal.world.spawnArgs.GetBool("no_Weapons") && (ent.IsType(idActor.class) || ent.IsType(idAFAttachment.class))) {
+                    if (gameLocal.world.spawnArgs.GetBool("no_Weapons") && (ent instanceof idActor || ent instanceof idAFAttachment)) {
                         idThread.ReturnInt(0);
                         return;
                     }
@@ -2831,7 +2831,7 @@ public class Weapon {
                     // weapon stealing - do this before damaging so weapons are not dropped twice
                     if (gameLocal.isMultiplayer
                             && weaponDef != null && weaponDef.dict.GetBool("stealing")
-                            && ent.IsType(idPlayer.class)
+                            && ent instanceof idPlayer
                             && !owner.PowerUpActive(BERSERK)
                             && (gameLocal.gameType != GAME_TDM || gameLocal.serverInfo.GetBool("si_teamDamage") || (owner.team != ((idPlayer) ent).team))) {
                         owner.StealWeapon((idPlayer) ent);

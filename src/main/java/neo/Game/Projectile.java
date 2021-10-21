@@ -226,11 +226,11 @@ public class Projectile {
             }
 
             // don't do anything if hitting a noclip player
-            if (ent.IsType(idPlayer.class) && ((idPlayer) ent).noclip) {
+            if (ent instanceof idPlayer && ((idPlayer) ent).noclip) {
                 return false;
             }
 
-            if (ent.IsType(idActor.class) || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody().IsType(idActor.class))) {
+            if (ent instanceof idActor || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() instanceof idActor)) {
                 if (!projectileDef.GetBool("detonate_on_actor")) {
                     return false;
                 }
@@ -421,7 +421,7 @@ public class Projectile {
             int clipMask;
 
             // allow characters to throw projectiles during cinematics, but not the player
-            if (owner.GetEntity() != null && !owner.GetEntity().IsType(idPlayer.class)) {
+            if (owner.GetEntity() != null && !(owner.GetEntity() instanceof idPlayer)) {
                 cinematic = owner.GetEntity().cinematic;
             } else {
                 cinematic = false;
@@ -681,7 +681,7 @@ public class Projectile {
             }
 
             // just get rid of the projectile when it hits a player in noclip
-            if (ent.IsType(idPlayer.class) && ((idPlayer) ent).noclip) {
+            if (ent instanceof idPlayer && ((idPlayer) ent).noclip) {
                 PostEventMS(EV_Remove, 0);
                 return true;
             }
@@ -696,11 +696,11 @@ public class Projectile {
             }
 
             // MP: projectiles open doors
-            if (gameLocal.isMultiplayer && ent.IsType(idDoor.class) && !((idDoor) ent).IsOpen() && !ent.spawnArgs.GetBool("no_touch")) {
+            if (gameLocal.isMultiplayer && ent instanceof idDoor && !((idDoor) ent).IsOpen() && !ent.spawnArgs.GetBool("no_touch")) {
                 ent.ProcessEvent(EV_Activate, this);
             }
 
-            if (ent.IsType(idActor.class) || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody().IsType(idActor.class))) {
+            if (ent instanceof idActor || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() instanceof idActor)) {
                 if (!projectileFlags.detonate_on_actor) {
                     return false;
                 }
@@ -736,9 +736,9 @@ public class Projectile {
                 }
 
                 // if the projectile owner is a player
-                if (owner.GetEntity() != null && owner.GetEntity().IsType(idPlayer.class)) {
+                if (owner.GetEntity() != null && owner.GetEntity() instanceof idPlayer) {
                     // if the projectile hit an actor
-                    if (ent.IsType(idActor.class)) {
+                    if (ent instanceof idActor) {
                         idPlayer player = (idPlayer) owner.GetEntity();
                         player.AddProjectileHits(1);
                         damageScale *= player.PowerUpModifier(PROJECTILE_DAMAGE);
@@ -911,7 +911,7 @@ public class Projectile {
                         dir.Normalize();
 
                         gameLocal.SpawnEntityDef(debris, ent, false);
-                        if (null == ent[0] || !ent[0].IsType(idDebris.class)) {
+                        if (null == ent[0] || !(ent[0] instanceof idDebris)) {
                             idGameLocal.Error("'projectile_debris' is not an idDebris");
                         }
 
@@ -933,7 +933,7 @@ public class Projectile {
                         dir.Normalize();
 
                         gameLocal.SpawnEntityDef(debris, ent, false);
-                        if (null == ent[0] || !ent[0].IsType(idDebris.class)) {
+                        if (null == ent[0] || !(ent[0] instanceof idDebris)) {
                             idGameLocal.Error("'projectile_shrapnel' is not an idDebris");
                         }
 
@@ -1401,9 +1401,9 @@ public class Projectile {
         public void Launch(final idVec3 start, final idVec3 dir, final idVec3 pushVelocity, final float timeSinceFire /*= 0.0f*/, final float launchPower /*= 1.0f*/, final float dmgPower /*= 1.0f*/) {
             super.Launch(start, dir, pushVelocity, timeSinceFire, launchPower, dmgPower);
             if (owner.GetEntity() != null) {
-                if (owner.GetEntity().IsType(idAI.class)) {
+                if (owner.GetEntity() instanceof idAI) {
                     enemy.oSet(((idAI) owner.GetEntity()).GetEnemy());
-                } else if (owner.GetEntity().IsType(idPlayer.class)) {
+                } else if (owner.GetEntity() instanceof idPlayer) {
                     trace_s tr = new trace_s();
                     idPlayer player = (idPlayer) owner.GetEntity();
                     idVec3 start2 = player.GetEyePosition();
@@ -1413,7 +1413,7 @@ public class Projectile {
                         enemy.oSet(gameLocal.GetTraceEntity(tr));
                     }
                     // ignore actors on the player's team
-                    if (enemy.GetEntity() == null || !enemy.GetEntity().IsType(idActor.class) || (((idActor) enemy.GetEntity()).team == player.team)) {
+                    if (enemy.GetEntity() == null || !(enemy.GetEntity() instanceof idActor) || (((idActor) enemy.GetEntity()).team == player.team)) {
                         enemy.oSet(player.EnemyWithMostHealth());
                     }
                 }
@@ -1434,7 +1434,7 @@ public class Projectile {
         protected void GetSeekPos(idVec3 out) {
             idEntity enemyEnt = enemy.GetEntity();
             if (enemyEnt != null) {
-                if (enemyEnt.IsType(idActor.class)) {
+                if (enemyEnt instanceof idActor) {
                     out.oSet(((idActor) enemyEnt).GetEyePosition());
                     out.z -= 12.0f;
                 } else {
@@ -1543,7 +1543,7 @@ public class Projectile {
                         PostEventSec(EV_Remove, 2.0f);
 
                         ownerEnt = owner.GetEntity();
-                        if (ownerEnt != null && ownerEnt.IsType(idPlayer.class)) {
+                        if (ownerEnt != null && ownerEnt instanceof idPlayer) {
                             ((idPlayer) ownerEnt).SetSoulCubeProjectile(null);
                         }
 
@@ -1566,7 +1566,7 @@ public class Projectile {
             offs = spawnArgs.GetVector("launchOffset", "0 0 -4");
             newStart.oPluSet(offs);
             super.Launch(newStart, dir, pushVelocity, timeSinceFire, launchPower, dmgPower);
-            if (enemy.GetEntity() == null || !enemy.GetEntity().IsType(idActor.class)) {
+            if (enemy.GetEntity() == null || !(enemy.GetEntity() instanceof idActor)) {
                 destOrg = start.oPlus(dir.oMultiply(256.0f));
             } else {
                 destOrg.Zero();
@@ -1581,7 +1581,7 @@ public class Projectile {
             UpdateVisuals();
 
             ownerEnt = owner.GetEntity();
-            if (ownerEnt != null && ownerEnt.IsType(idPlayer.class)) {
+            if (ownerEnt != null && ownerEnt instanceof idPlayer) {
                 ((idPlayer) ownerEnt).SetSoulCubeProjectile(this);
             }
 
@@ -1589,7 +1589,7 @@ public class Projectile {
 
         @Override
         protected void GetSeekPos(idVec3 out) {
-            if (returnPhase && owner.GetEntity() != null && owner.GetEntity().IsType(idActor.class)) {
+            if (returnPhase && owner.GetEntity() != null && owner.GetEntity() instanceof idActor) {
                 idActor act = (idActor) owner.GetEntity();
                 out.oSet(act.GetEyePosition());
                 return;
@@ -1614,7 +1614,7 @@ public class Projectile {
             idActor act;
 
             ReturnToOwner();
-            if (enemy.GetEntity() != null && enemy.GetEntity().IsType(idActor.class)) {
+            if (enemy.GetEntity() != null && enemy.GetEntity() instanceof idActor) {
                 act = (idActor) enemy.GetEntity();
                 killPhase = true;
                 orbitOrg = act.GetPhysics().GetAbsBounds().GetCenter();
@@ -1626,7 +1626,7 @@ public class Projectile {
                     smokeKillTime = gameLocal.time;
                 }
                 ownerEnt = owner.GetEntity();
-                if ((act.health > 0) && ownerEnt != null && ownerEnt.IsType(idPlayer.class) && (ownerEnt.health > 0) && !act.spawnArgs.GetBool("boss")) {
+                if ((act.health > 0) && ownerEnt != null && ownerEnt instanceof idPlayer && (ownerEnt.health > 0) && !act.spawnArgs.GetBool("boss")) {
                     ((idPlayer) ownerEnt).GiveHealthPool(act.health);
                 }
                 act.Damage(this, owner.GetEntity(), dir, spawnArgs.GetString("def_damage"), 1.0f, INVALID_JOINT);
@@ -1766,7 +1766,7 @@ public class Projectile {
                     if (beamTargets.oGet(i).target.GetEntity() == null) {
                         continue;
                     }
-                    idPlayer player = (beamTargets.oGet(i).target.GetEntity().IsType(idPlayer.class)) ? (idPlayer) beamTargets.oGet(i).target.GetEntity() : null;
+                    idPlayer player = (beamTargets.oGet(i).target.GetEntity() instanceof idPlayer) ? (idPlayer) beamTargets.oGet(i).target.GetEntity() : null;
                     idVec3 org = beamTargets.oGet(i).target.GetEntity().GetPhysics().GetAbsBounds().GetCenter();
                     beamTargets.oGet(i).renderEntity.origin.oSet(GetPhysics().GetOrigin());
                     beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BEAM_END_X] = org.x;
@@ -1869,7 +1869,7 @@ public class Projectile {
                 ent = entityList[e];
                 assert (ent != null);
 
-                if (ent == this || ent == owner.GetEntity() || ent.IsHidden() || !ent.IsActive() || !ent.fl.takedamage || ent.health <= 0 || !ent.IsType(idActor.class)) {
+                if (ent == this || ent == owner.GetEntity() || ent.IsHidden() || !ent.IsActive() || !ent.fl.takedamage || ent.health <= 0 || !(ent instanceof idActor)) {
                     continue;
                 }
 
@@ -1877,7 +1877,7 @@ public class Projectile {
                     continue;
                 }
 
-                if (ent.IsType(idPlayer.class)) {
+                if (ent instanceof idPlayer) {
                     idPlayer player = (idPlayer) ent;
                     player.playerView.EnableBFGVision(true);
                 }
@@ -1922,7 +1922,7 @@ public class Projectile {
             idEntity ownerEnt;
 
             ownerEnt = owner.GetEntity();
-            if (ownerEnt != null && ownerEnt.IsType(idPlayer.class)) {
+            if (ownerEnt != null && ownerEnt instanceof idPlayer) {
                 player = (idPlayer) ownerEnt;
             } else {
                 player = null;
@@ -1952,7 +1952,7 @@ public class Projectile {
                 // if the projectile owner is a player
                 if (player != null) {
                     // if the projectile hit an actor
-                    if (beamTargets.oGet(i).target.GetEntity().IsType(idActor.class)) {
+                    if (beamTargets.oGet(i).target.GetEntity() instanceof idActor) {
                         player.SetLastHitTime(gameLocal.time);
                         player.AddProjectileHits(1);
                         damageScale *= player.PowerUpModifier(PROJECTILE_DAMAGE);
@@ -2039,7 +2039,7 @@ public class Projectile {
         private idSoundShader sndBounce;
 
         public idDebris() {
-            owner = null;
+            owner = new idEntityPtr<>();
             physicsObj = new idPhysics_RigidBody();
             smokeFly = null;
             smokeFlyTime = 0;

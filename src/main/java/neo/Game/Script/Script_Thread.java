@@ -570,7 +570,7 @@ public class Script_Thread {
                 return;
             }
 
-            if (!ent.IsType(idCamera.class)) {
+            if (!(ent instanceof idCamera)) {
                 t.Error("Entity is not a camera");
                 return;
             }
@@ -1033,7 +1033,7 @@ public class Script_Thread {
         private void Event_GetTraceJoint() {
             if (trace.fraction < 1.0f && trace.c.id < 0) {
                 idAFEntity_Base af = (idAFEntity_Base) gameLocal.entities[trace.c.entityNum];
-                if (af != null && af.IsType(idAFEntity_Base.class) && af.IsActiveAF()) {
+                if (af != null && af instanceof idAFEntity_Base && af.IsActiveAF()) {
                     ReturnString(af.GetAnimator().GetJointName(CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id)));
                     return;
                 }
@@ -1044,7 +1044,7 @@ public class Script_Thread {
         private void Event_GetTraceBody() {
             if (trace.fraction < 1.0f && trace.c.id < 0) {
                 idAFEntity_Base af = (idAFEntity_Base) gameLocal.entities[trace.c.entityNum];
-                if (af != null && af.IsType(idAFEntity_Base.class) && af.IsActiveAF()) {
+                if (af != null && af instanceof idAFEntity_Base && af.IsActiveAF()) {
                     int bodyId = af.BodyForClipModelId(trace.c.id);
                     idAFBody body = af.GetAFPhysics().GetBody(bodyId);
                     if (body != null) {

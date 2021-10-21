@@ -639,7 +639,7 @@ public class SaveGame {
 
             // regenerate render entities and render lights because are not saved
             for (i = 1; i < objects.Num(); i++) {
-                if (objects.oGet(i).IsType(idEntity.class)) {
+                if (objects.oGet(i) instanceof idEntity) {
                     idEntity ent = ((idEntity) objects.oGet(i));
                     ent.UpdateVisuals();
                     ent.Present();

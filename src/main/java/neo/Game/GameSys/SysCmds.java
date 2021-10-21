@@ -118,7 +118,7 @@ public class SysCmds {
         }
 
         for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-            if (ent.IsType(superClass)) {
+            if (superClass.isInstance(ent)) {
                 for (i = 0; i < ignore.size(); i++) {
                     if (ignore.get(i).equals(ent.name)) {
                         break;
@@ -1461,7 +1461,7 @@ public class SysCmds {
             lastLight = null;
             last = -1;
             for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                if (!ent.IsType(idLight.class)) {
+                if (!(ent instanceof idLight)) {
                     continue;
                 }
 
@@ -1515,7 +1515,7 @@ public class SysCmds {
             gameLocal.Printf("Clearing all lights.\n");
             for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = next) {
                 next = ent.spawnNode.Next();
-                if (!ent.IsType(idLight.class)) {
+                if (!(ent instanceof idLight)) {
                     continue;
                 }
 
@@ -2269,11 +2269,11 @@ public class SysCmds {
                 mapEnt.epairs.Set("name", s.name);
             }
 
-            if (s.IsType(idMoveable.class)) {
+            if (s instanceof idMoveable) {
                 // save the moveable state
                 mapEnt.epairs.Set("origin", s.GetPhysics().GetOrigin().ToString(8));
                 mapEnt.epairs.Set("rotation", s.GetPhysics().GetAxis().ToString(8));
-            } else if (s.IsType(idAFEntity_Generic.class) || s.IsType(idAFEntity_WithAttachedHead.class)) {
+            } else if (s instanceof idAFEntity_Generic || s instanceof idAFEntity_WithAttachedHead) {
                 // save the articulated figure state
                 dict.Clear();
                 ((idAFEntity_Base) s).SaveState(dict);
@@ -2348,7 +2348,7 @@ public class SysCmds {
             for (e = 0; e < MAX_GENTITIES; e++) {
                 m = ((idMoveable) gameLocal.entities[e]);
 
-                if (NOT(m) || !m.IsType(idMoveable.class)) {
+                if (NOT(m) || !(m instanceof idMoveable)) {
                     continue;
                 }
 
@@ -2376,7 +2376,7 @@ public class SysCmds {
             for (e = 0; e < MAX_GENTITIES; e++) {
                 m = ((idMoveable) gameLocal.entities[e]);
 
-                if (NOT(m) || !m.IsType(idMoveable.class)) {
+                if (NOT(m) || !(m instanceof idMoveable)) {
                     continue;
                 }
 
@@ -2454,7 +2454,7 @@ public class SysCmds {
                     continue;
                 }
 
-                if (!af.IsType(idAFEntity_WithAttachedHead.class) && !af.IsType(idAFEntity_Generic.class)) {
+                if (!(af instanceof idAFEntity_WithAttachedHead) && !(af instanceof idAFEntity_Generic)) {
                     continue;
                 }
 
@@ -2618,7 +2618,7 @@ public class SysCmds {
             for (e = 0; e < MAX_GENTITIES; e++) {
                 light = ((idLight) gameLocal.entities[e]);
 
-                if (NOT(light) || !light.IsType(idLight.class)) {
+                if (NOT(light) || !(light instanceof idLight)) {
                     continue;
                 }
 

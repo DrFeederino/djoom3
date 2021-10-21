@@ -386,7 +386,7 @@ public class MultiplayerGame {
                         // put everyone back in from endgame spectate
                         for (i = 0; i < gameLocal.numClients; i++) {
                             idEntity ent = gameLocal.entities[i];
-                            if (ent != null && ent.IsType(idPlayer.class)) {
+                            if (ent != null && ent instanceof idPlayer) {
                                 if (!((idPlayer) ent).wantSpectate) {
                                     CheckRespawns((idPlayer) ent);
                                 }
@@ -741,7 +741,7 @@ public class MultiplayerGame {
                 String kickList = "";
                 j = 0;
                 for (i = 0; i < gameLocal.numClients; i++) {
-                    if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idPlayer.class)) {
+                    if (gameLocal.entities[i] != null && gameLocal.entities[i] instanceof idPlayer) {
                         if (!kickList.isEmpty()) {
                             kickList += ";";
                         }
@@ -1120,7 +1120,7 @@ public class MultiplayerGame {
                     break;
                 case MSG_FORCEREADY:
                     AddChatLine(common.GetLanguageDict().GetString("#str_04286"), gameLocal.userInfo[parm1].GetString("ui_name"));
-                    if (gameLocal.entities[parm1] != null && gameLocal.entities[parm1].IsType(idPlayer.class)) {
+                    if (gameLocal.entities[parm1] != null && gameLocal.entities[parm1] instanceof idPlayer) {
                         ((idPlayer) gameLocal.entities[parm1]).forcedReady = true;
                     }
                     break;
@@ -1362,7 +1362,7 @@ public class MultiplayerGame {
             voteTimeOut = gameLocal.time + 20000;
             // mark players allowed to vote - only current ingame players, players joining during vote will be ignored
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idPlayer.class)) {
+                if (gameLocal.entities[i] != null && gameLocal.entities[i] instanceof idPlayer) {
                     playerState[i].vote = (i == clientNum) ? PLAYER_VOTE_YES : PLAYER_VOTE_WAIT;
                 } else {
                     playerState[i].vote = PLAYER_VOTE_NONE;
@@ -1515,7 +1515,7 @@ public class MultiplayerGame {
 
         public void WantKilled(int clientNum) {
             idEntity ent = gameLocal.entities[clientNum];
-            if (ent != null && ent.IsType(idPlayer.class)) {
+            if (ent != null && ent instanceof idPlayer) {
                 ((idPlayer) ent).Kill(false, false);
             }
         }
@@ -1529,7 +1529,7 @@ public class MultiplayerGame {
             }
             for (int i = 0; i < gameLocal.numClients; i++) {
                 idEntity ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 p = (idPlayer) ent;
@@ -1546,7 +1546,7 @@ public class MultiplayerGame {
         public void DropWeapon(int clientNum) {
             assert (!gameLocal.isClient);
             idEntity ent = gameLocal.entities[clientNum];
-            if (null == ent || !ent.IsType(idPlayer.class)) {
+            if (null == ent || !(ent instanceof idPlayer)) {
                 return;
             }
             ((idPlayer) ent).DropWeapon(false);
@@ -1563,7 +1563,7 @@ public class MultiplayerGame {
             }
             if (g_balanceTDM.GetBool() && lastGameType != GAME_TDM && gameLocal.gameType == GAME_TDM) {
                 for (clientNum = 0; clientNum < gameLocal.numClients; clientNum++) {
-                    if (gameLocal.entities[clientNum] != null && gameLocal.entities[clientNum].IsType(idPlayer.class)) {
+                    if (gameLocal.entities[clientNum] != null && gameLocal.entities[clientNum] instanceof idPlayer) {
                         if (((idPlayer) gameLocal.entities[clientNum]).BalanceTDM()) {
                             // core is in charge of syncing down userinfo changes
                             // it will also call back game through SetUserInfo with the current info for update
@@ -1592,7 +1592,7 @@ public class MultiplayerGame {
                     continue;
                 }
                 ent = gameLocal.entities[i];
-                if (ent != null && ent.IsType(idPlayer.class) && ((idPlayer) ent).team == newteam) {
+                if (ent != null && ent instanceof idPlayer && ((idPlayer) ent).team == newteam) {
                     playerState[clientNum].teamFragCount = playerState[i].teamFragCount;
                     break;
                 }
@@ -1631,7 +1631,7 @@ public class MultiplayerGame {
 
             if (clientNum >= 0) {
                 p = (idPlayer) gameLocal.entities[clientNum];
-                if (!(p != null && p.IsType(idPlayer.class))) {
+                if (!(p != null && p instanceof idPlayer)) {
                     return;
                 }
 
@@ -1675,7 +1675,7 @@ public class MultiplayerGame {
             } else {
                 for (i = 0; i < gameLocal.numClients; i++) {
                     ent = gameLocal.entities[i];
-                    if (null == ent || !ent.IsType(idPlayer.class)) {
+                    if (null == ent || !(ent instanceof idPlayer)) {
                         continue;
                     }
                     if (send_to == 1 && ((idPlayer) ent).spectating) {
@@ -1710,7 +1710,7 @@ public class MultiplayerGame {
             idPlayer p;
 
             p = (idPlayer) gameLocal.entities[clientNum];
-            if (!(p != null && p.IsType(idPlayer.class))) {
+            if (!(p != null && p instanceof idPlayer)) {
                 return;
             }
 
@@ -1888,7 +1888,7 @@ public class MultiplayerGame {
             // send the powerup states and the spectate states
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
-                if (i != clientNum && ent != null && ent.IsType(idPlayer.class)) {
+                if (i != clientNum && ent != null && ent instanceof idPlayer) {
                     outMsg.WriteShort(i);
                     outMsg.WriteShort(((idPlayer) ent).inventory.powerups);
                     outMsg.WriteBits(btoi(((idPlayer) ent).spectating), 1);
@@ -1920,7 +1920,7 @@ public class MultiplayerGame {
             matchStartedTime = msg.ReadLong();
             startFragLimit = msg.ReadShort();
             while ((client = msg.ReadShort()) != MAX_CLIENTS) {
-                assert (gameLocal.entities[client] != null && gameLocal.entities[client].IsType(idPlayer.class));
+                assert (gameLocal.entities[client] != null && gameLocal.entities[client] instanceof idPlayer);
                 powerup = msg.ReadShort();
                 for (i = 0; i < MAX_POWERUPS; i++) {
                     if ((powerup & (1 << i)) != 0) {
@@ -1958,7 +1958,7 @@ public class MultiplayerGame {
 
             // find which team this player is on
             ent = gameLocal.entities[clientNum];
-            if (ent != null && ent.IsType(idPlayer.class)) {
+            if (ent != null && ent instanceof idPlayer) {
                 team = ((idPlayer) ent).team;
             } else {
                 return;
@@ -1981,7 +1981,7 @@ public class MultiplayerGame {
 
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 player = (idPlayer) ent;
@@ -2087,7 +2087,7 @@ public class MultiplayerGame {
             for (k = 0; k < (gameState == WARMUP ? 2 : 1); k++) {
                 for (i = 0; i < MAX_CLIENTS; i++) {
                     ent = gameLocal.entities[i];
-                    if (null == ent || !ent.IsType(idPlayer.class)) {
+                    if (null == ent || !(ent instanceof idPlayer)) {
                         continue;
                     }
                     if (gameState != WARMUP) {
@@ -2301,7 +2301,7 @@ public class MultiplayerGame {
             numVoters = 0;
             for (i = 0; i < gameLocal.numClients; i++) {
                 idEntity ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 if (playerState[i].vote != PLAYER_VOTE_NONE) {
@@ -2351,7 +2351,7 @@ public class MultiplayerGame {
                     continue;
                 }
                 ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 p = (idPlayer) ent;
@@ -2390,7 +2390,7 @@ public class MultiplayerGame {
                 assert (!leader.lastManOver);
                 for (i = 0; i < gameLocal.numClients; i++) {
                     idEntity ent = gameLocal.entities[i];
-                    if (null == ent || !ent.IsType(idPlayer.class)) {
+                    if (null == ent || !(ent instanceof idPlayer)) {
                         continue;
                     }
                     if (!CanPlay((idPlayer) ent)) {
@@ -2437,7 +2437,7 @@ public class MultiplayerGame {
 
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 if (!CanPlay((idPlayer) ent)) {
@@ -2460,7 +2460,7 @@ public class MultiplayerGame {
 
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 p = (idPlayer) ent;
@@ -2534,7 +2534,7 @@ public class MultiplayerGame {
                     fragLimitTimeout = 0;
                     for (i = 0; i < gameLocal.numClients; i++) {
                         idEntity ent = gameLocal.entities[i];
-                        if (null == ent || !ent.IsType(idPlayer.class)) {
+                        if (null == ent || !(ent instanceof idPlayer)) {
                             continue;
                         }
                         idPlayer p = (idPlayer) ent;
@@ -2566,7 +2566,7 @@ public class MultiplayerGame {
                     // set all players not ready and spectating
                     for (i = 0; i < gameLocal.numClients; i++) {
                         idEntity ent = gameLocal.entities[i];
-                        if (NOT(ent) || !ent.IsType(idPlayer.class)) {
+                        if (NOT(ent) || !(ent instanceof idPlayer)) {
                             continue;
                         }
                         ((idPlayer) ent).forcedReady = false;
@@ -2609,7 +2609,7 @@ public class MultiplayerGame {
                 // run back through and update win/loss count
                 for (int i = 0; i < gameLocal.numClients; i++) {
                     idEntity ent = gameLocal.entities[i];
-                    if (null == ent || !ent.IsType(idPlayer.class)) {
+                    if (null == ent || !(ent instanceof idPlayer)) {
                         continue;
                     }
                     idPlayer player = (idPlayer) ent;
@@ -2672,7 +2672,7 @@ public class MultiplayerGame {
                 rankmaxindex = -1;
                 for (j = 0; j < gameLocal.numClients; j++) {
                     ent = gameLocal.entities[j];
-                    if (null == ent || !ent.IsType(idPlayer.class)) {
+                    if (null == ent || !(ent instanceof idPlayer)) {
                         continue;
                     }
                     if (currentTourneyPlayer[0] == j || currentTourneyPlayer[1] == j) {
@@ -2708,7 +2708,7 @@ public class MultiplayerGame {
             // if any, winner from last round will play again
             if (lastWinner != -1) {
                 idEntity ent2 = gameLocal.entities[lastWinner];
-                if (ent2 != null && ent2.IsType(idPlayer.class)) {
+                if (ent2 != null && ent2 instanceof idPlayer) {
                     currentTourneyPlayer[0] = lastWinner;
                 }
             }
@@ -2720,7 +2720,7 @@ public class MultiplayerGame {
                     player.ServerSpectate(false);
                 } else {
                     ent = gameLocal.entities[i];
-                    if (ent != null && ent.IsType(idPlayer.class)) {
+                    if (ent != null && ent instanceof idPlayer) {
                         player = (idPlayer) gameLocal.entities[i];
                         player.ServerSpectate(true);
                     }
@@ -2912,7 +2912,7 @@ public class MultiplayerGame {
         private void CheckRespawns(idPlayer spectator /*= NULL*/) {
             for (int i = 0; i < gameLocal.numClients; i++) {
                 idEntity ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 idPlayer p = (idPlayer) ent;
@@ -3020,7 +3020,7 @@ public class MultiplayerGame {
 
             for (int i = 0; i < gameLocal.numClients; i++) {
                 idEntity ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 idPlayer p = (idPlayer) ent;
@@ -3116,7 +3116,7 @@ public class MultiplayerGame {
             playerState[entityNumber].fragCount += delta;
             for (int i = 0; i < gameLocal.numClients; i++) {
                 idEntity ent = gameLocal.entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
                 idPlayer player = (idPlayer) ent;
@@ -3174,7 +3174,7 @@ public class MultiplayerGame {
         private void DumpTourneyLine() {
             int i;
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idPlayer.class)) {
+                if (gameLocal.entities[i] != null && gameLocal.entities[i] instanceof idPlayer) {
                     common.Printf("client %d: rank %d\n", i, ((idPlayer) gameLocal.entities[i]).tourneyRank);
                 }
             }
@@ -3195,7 +3195,7 @@ public class MultiplayerGame {
             }
 
             for (i = 0; i < gameLocal.numClients; i++) {
-                if (null == gameLocal.entities[i] || !gameLocal.entities[i].IsType(idPlayer.class)) {
+                if (null == gameLocal.entities[i] || !(gameLocal.entities[i] instanceof idPlayer)) {
                     continue;
                 }
                 if (!CanPlay((idPlayer) gameLocal.entities[i])) {

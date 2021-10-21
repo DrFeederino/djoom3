@@ -79,7 +79,7 @@ public class AI_Vagary {
                     index = 0;
                 }
                 ent = entityList[index];
-                if (!ent.IsType(idMoveable.class)) {
+                if (!(ent instanceof idMoveable)) {
                     continue;
                 }
 
@@ -130,7 +130,7 @@ public class AI_Vagary {
 
             entPhys.SetLinearVelocity(vel);
 
-            if (ent.IsType(idMoveable.class)) {
+            if (ent instanceof idMoveable) {
                 idMoveable ment = (idMoveable) ent;
                 ment.EnableDamage(true, 2.5f);
             }

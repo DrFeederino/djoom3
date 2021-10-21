@@ -1277,7 +1277,7 @@ public class Entity {
                     teamMaster.BecomeActive(TH_PHYSICS);
                 } else if (0 == (thinkFlags & TH_PHYSICS)) {
                     // if this is a pusher
-                    if (physics.IsType(idPhysics_Parametric.class) || physics.IsType(idPhysics_Actor.class)) {
+                    if (physics instanceof idPhysics_Parametric || physics instanceof idPhysics_Actor) {
                         gameLocal.sortPushers = true;
                     }
                 }
@@ -2018,7 +2018,7 @@ public class Entity {
             idEntity ent;
 
             // remove any bind constraints from an articulated figure
-            if (IsType(idAFEntity_Base.class)) {
+            if (this instanceof idAFEntity_Base) {
                 ((idAFEntity_Base) this).RemoveBindConstraints();
             }
 
@@ -2485,7 +2485,7 @@ public class Entity {
         // set the axis of the physics object (relative to bindMaster if not NULL)
         public void SetAxis(final idMat3 axis) {
 
-            if (GetPhysics().IsType(idPhysics_Actor.class)) {
+            if (GetPhysics() instanceof idPhysics_Actor) {
                 ((idActor) this).viewAxis.oSet(axis);
             } else {
                 GetPhysics().SetAxis(axis);
@@ -3714,7 +3714,7 @@ public class Entity {
         // update visual position from the physics
         private void UpdateFromPhysics(boolean moveBack) {
 
-            if (IsType(idActor.class)) {
+            if (this instanceof idActor) {
                 idActor actor = (idActor) this;
 
                 // set master delta angles for actors
@@ -3754,7 +3754,7 @@ public class Entity {
             Unbind();
 
             // add any bind constraints to an articulated figure
-            if (master != null && IsType(idAFEntity_Base.class)) {
+            if (master != null && this instanceof idAFEntity_Base) {
                 ((idAFEntity_Base) this).AddBindConstraints();
             }
 
@@ -4029,11 +4029,11 @@ public class Entity {
                 if (part.bindMaster != this) {
                     continue;
                 }
-                if (part.GetPhysics().IsType(idPhysics_Parametric.class)) {
+                if (part.GetPhysics() instanceof idPhysics_Parametric) {
                     if (((idPhysics_Parametric) part.GetPhysics()).IsPusher()) {
                         gameLocal.Warning("teleported '%s' which has the pushing mover '%s' bound to it\n", GetName(), part.GetName());
                     }
-                } else if (part.GetPhysics().IsType(idPhysics_AF.class)) {
+                } else if (part.GetPhysics() instanceof idPhysics_AF) {
                     gameLocal.Warning("teleported '%s' which has the articulated figure '%s' bound to it\n", GetName(), part.GetName());
                 }
             }
@@ -4595,7 +4595,7 @@ public class Entity {
             }
 
             // can't see wounds on the player model in single player mode
-            if (!(IsType(idPlayer.class) && !gameLocal.isMultiplayer)) {
+            if (!(this instanceof idPlayer) && !gameLocal.isMultiplayer) {
                 // place a wound overlay on the model
                 key = va("mtr_wound_%s", materialType);
                 decal = spawnArgs.RandomPrefix(key, gameLocal.random);

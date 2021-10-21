@@ -899,7 +899,7 @@ public class Actor {
                 next = ent.GetNextTeamEntity();
                 if (ent.GetBindMaster().equals(this)) {
                     ent.Hide();
-                    if (ent.IsType(idLight.class)) {
+                    if (ent instanceof idLight) {
                         ((idLight) ent).Off();
                     }
                 }
@@ -921,7 +921,7 @@ public class Actor {
                 next = ent.GetNextTeamEntity();
                 if (ent.GetBindMaster() == this) {
                     ent.Show();
-                    if (ent.IsType(idLight.class)) {
+                    if (ent instanceof idLight) {
                         ((idLight) ent).On();
                     }
                 }
@@ -1269,7 +1269,7 @@ public class Actor {
                 return false;
             }
 
-            if (ent.IsType(idActor.class)) {
+            if (ent instanceof idActor) {
                 toPos = ((idActor) ent).GetEyePosition();
             } else {
                 toPos = ent.GetPhysics().GetOrigin();
@@ -1398,7 +1398,7 @@ public class Actor {
                 attacker = gameLocal.world;
             }
 
-            if (finalBoss && !inflictor.IsType(idSoulCubeMissile.class)) {
+            if (finalBoss && !(inflictor instanceof idSoulCubeMissile)) {
                 return;
             }
 
@@ -2796,7 +2796,7 @@ public class Actor {
             if (null == ent || (ent.equals(this))) {
                 actor = enemyList.Next();
             } else {
-                if (!ent.IsType(idActor.class)) {
+                if (!(ent instanceof idActor)) {
                     Game_local.idGameLocal.Error("'%s' cannot be an enemy", ent.name);
                 }
 

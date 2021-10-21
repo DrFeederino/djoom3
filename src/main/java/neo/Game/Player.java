@@ -3000,7 +3000,7 @@ public class Player {
             teamCount[0] = teamCount[1] = 0;
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
-                if (ent != null && ent.IsType(idPlayer.class)) {
+                if (ent != null && ent instanceof idPlayer) {
                     teamCount[((idPlayer) ent).team]++;
                 }
             }
@@ -3236,7 +3236,7 @@ public class Player {
         public void DamageFeedback(idEntity victim, idEntity inflictor, CInt damage) {
             assert (!gameLocal.isClient);
             damage.setVal((int) (PowerUpModifier(BERSERK) * damage.getVal()));
-            if (damage.getVal() != 0 && (victim != this) && victim.IsType(idActor.class)) {
+            if (damage.getVal() != 0 && (victim != this) && victim instanceof idActor) {
                 SetLastHitTime(gameLocal.time);
             }
         }
@@ -3258,7 +3258,7 @@ public class Player {
             damageDef.GetInt("damage", "20", damage);
             damage.setVal(GetDamageForLocation(damage.getVal(), location));
 
-            idPlayer player = attacker.IsType(idPlayer.class) ? (idPlayer) attacker : null;
+            idPlayer player = attacker instanceof idPlayer ? (idPlayer) attacker : null;
             if (!gameLocal.isMultiplayer) {
                 if (inflictor != gameLocal.world) {
                     switch (g_skill.GetInteger()) {
@@ -3382,7 +3382,7 @@ public class Player {
                 attacker = gameLocal.world;
             }
 
-            if (attacker.IsType(idAI.class)) {
+            if (attacker instanceof idAI) {
                 if (PowerUpActive(BERSERK)) {
                     return;
                 }
@@ -3646,7 +3646,7 @@ public class Player {
             if (gameLocal.isMultiplayer || g_testDeath.GetBool()) {
                 idPlayer killer = null;
                 // no gibbing in MP. Event_Gib will early out in MP
-                if (attacker.IsType(idPlayer.class)) {
+                if (attacker instanceof idPlayer) {
                     killer = (idPlayer) attacker;
                     if (health < -20 || killer.PowerUpActive(BERSERK)) {
                         gibDeath = true;
@@ -4858,7 +4858,7 @@ public class Player {
             }
             if (hud != null) {
                 if (MPAim != -1) {
-                    if (gameLocal.entities[MPAim] != null && gameLocal.entities[MPAim].IsType(idPlayer.class)) {
+                    if (gameLocal.entities[MPAim] != null && gameLocal.entities[MPAim] instanceof idPlayer) {
                         aimed = (idPlayer) gameLocal.entities[MPAim];
                     }
                     assert (aimed != null);
@@ -4871,7 +4871,7 @@ public class Player {
                     MPAimHighlight = true;
                     MPAimFadeTime = 0;
                 } else if (lastMPAim != -1) {
-                    if (gameLocal.entities[lastMPAim] != null && gameLocal.entities[lastMPAim].IsType(idPlayer.class)) {
+                    if (gameLocal.entities[lastMPAim] != null && gameLocal.entities[lastMPAim] instanceof idPlayer) {
                         aimed = (idPlayer) gameLocal.entities[lastMPAim];
                     }
                     assert (aimed != null);
@@ -5466,7 +5466,7 @@ public class Player {
 
             if (gameLocal.realClientTime == lastMPAimTime) {
                 if (MPAim != -1 && gameLocal.gameType == GAME_TDM
-                        && gameLocal.entities[MPAim] != null && gameLocal.entities[MPAim].IsType(idPlayer.class)
+                        && gameLocal.entities[MPAim] != null && gameLocal.entities[MPAim] instanceof idPlayer
                         && ((idPlayer) gameLocal.entities[MPAim]).team == team) {
                     aimed = (idPlayer) gameLocal.entities[MPAim];
                     hud.SetStateString("aim_text", gameLocal.userInfo[MPAim].GetString("ui_name"));
@@ -5544,7 +5544,7 @@ public class Player {
             if (level != influenceActive) {
                 if (level != 0) {
                     for (idEntity ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                        if (ent.IsType(idProjectile.class)) {
+                        if (ent instanceof idProjectile) {
                             // remove all projectiles
                             ent.PostEventMS(EV_Remove, 0);
                         }
@@ -5591,7 +5591,7 @@ public class Player {
             idUserInterface hud = this.hud;
 
             // if updating the hud of a followed client
-            if (gameLocal.localClientNum >= 0 && gameLocal.entities[gameLocal.localClientNum] != null && gameLocal.entities[gameLocal.localClientNum].IsType(idPlayer.class)) {
+            if (gameLocal.localClientNum >= 0 && gameLocal.entities[gameLocal.localClientNum] != null && gameLocal.entities[gameLocal.localClientNum] instanceof idPlayer) {
                 idPlayer p = (idPlayer) gameLocal.entities[gameLocal.localClientNum];
                 if (p.spectating && p.spectator == entityNumber) {
                     assert (p.hud != null);
@@ -7123,8 +7123,8 @@ public class Player {
         }
 
         private void AdjustSpeed() {
-            float speed;
-            float rate;
+            float speed = 0.0f;
+            float rate = 0.0f;
 
             if (spectating) {
                 speed = pm_spectatespeed.GetFloat();
@@ -7377,7 +7377,7 @@ public class Player {
                 newEyeOffset = pm_deadviewheight.GetFloat();
             } else if (physicsObj.IsCrouching()) {
                 newEyeOffset = pm_crouchviewheight.GetFloat();
-            } else if (GetBindMaster() != null && GetBindMaster().IsType(idAFEntity_Vehicle.class)) {
+            } else if (GetBindMaster() != null && GetBindMaster() instanceof idAFEntity_Vehicle) {
                 newEyeOffset = 0.0f;
             } else {
                 newEyeOffset = pm_normalviewheight.GetFloat();
@@ -7405,7 +7405,7 @@ public class Player {
 
                 // check if we're standing on top of a monster and give a push if we are
                 idEntity groundEnt = physicsObj.GetGroundEntity();
-                if (groundEnt != null && groundEnt.IsType(idAI.class)) {
+                if (groundEnt instanceof idAI) {
                     idVec3 vel = physicsObj.GetLinearVelocity();
                     if (vel.ToVec2().LengthSqr() < 0.1f) {
                         vel.oSet(physicsObj.GetOrigin().ToVec2().oMinus(groundEnt.GetPhysics().GetAbsBounds().GetCenter().ToVec2()));
@@ -7654,9 +7654,9 @@ public class Player {
                 }
 
                 if (allowFocus) {
-                    if (ent.IsType(idAFAttachment.class)) {
+                    if (ent instanceof idAFAttachment) {
                         idEntity body = ((idAFAttachment) ent).GetBody();
-                        if (body != null && body.IsType(idAI.class)
+                        if (body != null && body instanceof idAI
                                 && etoi(((idAI) body).GetTalkState()) >= etoi(TALK_OK)) {
                             gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
                             if ((trace.fraction < 1.0f) && (trace.c.entityNum == ent.entityNumber)) {
@@ -7670,7 +7670,7 @@ public class Player {
                         continue;
                     }
 
-                    if (ent.IsType(idAI.class)) {
+                    if (ent instanceof idAI) {
                         if (etoi(((idAI) ent).GetTalkState()) >= etoi(TALK_OK)) {
                             gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
                             if ((trace.fraction < 1.0f) && (trace.c.entityNum == ent.entityNumber)) {
@@ -7684,7 +7684,7 @@ public class Player {
                         continue;
                     }
 
-                    if (ent.IsType(idAFEntity_Vehicle.class)) {
+                    if (ent instanceof idAFEntity_Vehicle) {
                         gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
                         if ((trace.fraction < 1.0f) && (trace.c.entityNum == ent.entityNumber)) {
                             ClearFocus();
@@ -8070,7 +8070,7 @@ public class Player {
             idVec3 start, end;
             idEntity ent;
 
-            if (GetBindMaster() != null && GetBindMaster().IsType(idAFEntity_Vehicle.class)) {
+            if (GetBindMaster() != null && GetBindMaster() instanceof idAFEntity_Vehicle) {
                 Show();
                 ((idAFEntity_Vehicle) GetBindMaster()).Use(this);
             } else {
@@ -8079,7 +8079,7 @@ public class Player {
                 gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
                 if (trace.fraction < 1.0f) {
                     ent = gameLocal.entities[trace.c.entityNum];
-                    if (ent != null && ent.IsType(idAFEntity_Vehicle.class)) {
+                    if (ent != null && ent instanceof idAFEntity_Vehicle) {
                         Hide();
                         ((idAFEntity_Vehicle) ent).Use(this);
                     }

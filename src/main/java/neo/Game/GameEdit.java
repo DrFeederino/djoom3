@@ -198,7 +198,7 @@ public class GameEdit {
                                 newEnt = newEnt.GetBindMaster();
                             }
 
-                            if (newEnt.IsType(idAFEntity_Base.class) && ((idAFEntity_Base) newEnt).IsActiveAF()) {
+                            if (newEnt instanceof idAFEntity_Base && ((idAFEntity_Base) newEnt).IsActiveAF()) {
                                 idAFEntity_Base af = (idAFEntity_Base) newEnt;
 
                                 // joint being dragged
@@ -208,7 +208,7 @@ public class GameEdit {
                                 // get the name of the body being dragged
                                 newBodyName = af.GetAFPhysics().GetBody(trace.c.id).GetName();
 
-                            } else if (!newEnt.IsType(idWorldspawn.class)) {
+                            } else if (!(newEnt instanceof idWorldspawn)) {
 
                                 if (trace.c.id < 0) {
                                     newJoint = CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id);
@@ -244,9 +244,9 @@ public class GameEdit {
                             cursor.drag.SetPhysics(phys, id, localEntityPoint);
                             cursor.Show();
 
-                            if (phys.IsType(idPhysics_AF.class)
-                                    || phys.IsType(idPhysics_RigidBody.class)
-                                    || phys.IsType(idPhysics_Monster.class)) {
+                            if (phys instanceof idPhysics_AF
+                                    || phys instanceof idPhysics_RigidBody
+                                    || phys instanceof idPhysics_Monster) {
                                 cursor.BecomeActive(TH_THINK);
                             }
                         }
@@ -317,7 +317,7 @@ public class GameEdit {
 
             af = (idAFEntity_Base) dragEnt.GetEntity();
 
-            if (null == af || !af.IsType(idAFEntity_Base.class) || !af.IsActiveAF()) {
+            if (null == af || !(af instanceof idAFEntity_Base) || !af.IsActiveAF()) {
                 return;
             }
 
@@ -364,7 +364,7 @@ public class GameEdit {
 
             af = (idAFEntity_Base) selected.GetEntity();
 
-            if (null == af || !af.IsType(idAFEntity_Base.class) || !af.IsActiveAF()) {
+            if (null == af || !(af instanceof idAFEntity_Base) || !af.IsActiveAF()) {
                 return;
             }
 

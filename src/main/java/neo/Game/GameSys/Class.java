@@ -458,20 +458,6 @@ public class Class {
 //            CallSpawnFunc(type);
         }
 
-        /*
-         ================
-         idClass::IsType
-
-         Checks if the object's class is a subclass of the class defined by the
-         passed in idTypeInfo.
-         ================
-         */
-        public boolean IsType(final java.lang.Class/*idTypeInfo*/ superclass) {
-            java.lang.Class/*idTypeInfo*/ subclass;
-
-            subclass = this.getClass();
-            return superclass.isAssignableFrom(subclass);
-        }
 
         /*
          ================
@@ -653,9 +639,9 @@ public class Class {
             assert (ev != null);
             assert (idEvent.initialized);
 
-            if (g_debugTriggers.GetBool() && (ev == EV_Activate) && IsType(idEntity.class)) {
+            if (g_debugTriggers.GetBool() && (ev == EV_Activate) && this instanceof idEntity) {
                 final String name;
-                if (data[0] != null && ((idClass) data[0].value).IsType(idEntity.class))
+                if (data[0] != null && ((idClass) data[0].value) instanceof idEntity)
                     name = ((idEntity) data[0].value).GetName();
                 else
                     name = "NULL";
@@ -823,7 +809,7 @@ public class Class {
             // we service events on the client to avoid any bad code filling up the event pool
             // we don't want them processed usually, unless when the map is (re)loading.
             // we allow threads to run fine, though.
-            if (gameLocal.isClient && (gameLocal.GameState() != GAMESTATE_STARTUP) && !IsType(idThread.class)) {
+            if (gameLocal.isClient && (gameLocal.GameState() != GAMESTATE_STARTUP) && !(this instanceof idThread)) {
                 return true;
             }
 

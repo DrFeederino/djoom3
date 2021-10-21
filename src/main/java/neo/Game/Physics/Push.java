@@ -196,7 +196,7 @@ public class Push {
                 }
 
                 // if the blocking entity is a projectile
-                if (check.IsType(idProjectile.class)) {
+                if (check instanceof idProjectile) {
                     check.ProcessEvent(EV_Explode);
                     continue;
                 }
@@ -208,14 +208,14 @@ public class Push {
                 }
 
                 // if the entity is an active articulated figure and gibs
-                if (check.IsType(idAFEntity_Base.class) && check.spawnArgs.GetBool("gib")) {
+                if (check instanceof idAFEntity_Base && check.spawnArgs.GetBool("gib")) {
                     if (((idAFEntity_Base) check).IsActiveAF()) {
                         check.ProcessEvent(EV_Gib, "damage_Gib");
                     }
                 }
 
                 // if the entity is a moveable item and gibs
-                if (check.IsType(idMoveableItem.class) && check.spawnArgs.GetBool("gib")) {
+                if (check instanceof idMoveableItem && check.spawnArgs.GetBool("gib")) {
                     check.ProcessEvent(EV_Gib, "damage_Gib");
                 }
 
@@ -365,7 +365,7 @@ public class Push {
                 }
 
                 // if the blocking entity is a projectile
-                if (check.IsType(idProjectile.class)) {
+                if (check instanceof idProjectile) {
                     check.ProcessEvent(EV_Explode);
                     continue;
                 }
@@ -377,7 +377,7 @@ public class Push {
                 }
 
                 // if the entity is an active articulated figure and gibs
-                if (check.IsType(idAFEntity_Base.class) && check.spawnArgs.GetBool("gib")) {
+                if (check instanceof idAFEntity_Base && check.spawnArgs.GetBool("gib")) {
                     if (((idAFEntity_Base) check).IsActiveAF()) {
                         check.ProcessEvent(EV_Gib, "damage_Gib");
                     }
@@ -482,7 +482,7 @@ public class Push {
             for (i = 0; i < numPushed; i++) {
 
                 // if the entity is an actor
-                if (pushed[i].ent.IsType(idActor.class)) {
+                if (pushed[i].ent instanceof idActor) {
                     // set back the delta view angles
                     ((idActor) pushed[i].ent).SetDeltaViewAngles(pushed[i].deltaViewAngles);
                 }
@@ -524,7 +524,7 @@ public class Push {
             pushed[numPushed].ent = ent;
 
             // if the entity is an actor
-            if (ent.IsType(idActor.class)) {
+            if (ent instanceof idActor) {
                 // save the delta view angles
                 pushed[numPushed].deltaViewAngles = ((idActor) ent).GetDeltaViewAngles();
             }
@@ -842,7 +842,7 @@ public class Push {
             // }
 // #endif
             // if the entity uses actor physics
-            if (physics.IsType(idPhysics_Actor.class)) {
+            if (physics instanceof idPhysics_Actor) {
 
                 // rotate the collision model back to axial
                 if (!RotateEntityToAxial(check, rotationPoint)) {
@@ -859,7 +859,7 @@ public class Push {
             // }
 // #endif
             // if the entity is an actor using actor physics
-            if (check.IsType(idActor.class) && physics.IsType(idPhysics_Actor.class)) {
+            if (check instanceof idActor && physics instanceof idPhysics_Actor) {
 
                 // if the entity is standing ontop of the pusher
                 if (physics.IsGroundClipModel(clipModel.GetEntity().entityNumber, clipModel.GetId())) {
@@ -893,12 +893,12 @@ public class Push {
                 }
 
                 // don't push players in noclip mode
-                if (check.IsType(idPlayer.class) && ((idPlayer) check).noclip) {
+                if (check instanceof idPlayer && ((idPlayer) check).noclip) {
                     continue;
                 }
 
                 // if we should only push idMoveable entities
-                if (((flags & PUSHFL_ONLYMOVEABLE) != 0) && !check.IsType(idMoveable.class)) {
+                if (((flags & PUSHFL_ONLYMOVEABLE) != 0) && !(check instanceof idMoveable)) {
                     continue;
                 }
 

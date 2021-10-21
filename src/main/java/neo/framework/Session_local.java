@@ -27,6 +27,7 @@ import neo.sys.sys_public.sysEvent_s;
 import neo.sys.win_main;
 import neo.ui.ListGUI.idListGUI;
 import neo.ui.UserInterface.idUserInterface;
+import neo.ui.UserInterfaceLocal;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -797,13 +798,13 @@ public class Session_local {
             if (NOT(guiActive) && event.evType == SE_KEY && event.evValue2 == 1 && event.evValue == K_ESCAPE) {
                 console.Close();
                 if (game != null) {
-                    idUserInterface[] gui = {null};
+                    idUserInterface gui = new UserInterfaceLocal.idUserInterfaceLocal();
                     escReply_t op;
                     op = game.HandleESC(gui);
                     if (op == ESC_IGNORE) {
                         return true;
                     } else if (op == ESC_GUI) {
-                        SetGUI(gui[0], null);
+                        SetGUI(gui, null);
                         return true;
                     }
                 }

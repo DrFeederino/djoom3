@@ -445,7 +445,7 @@ public class Clip {
             absBounds.oMinSet(0, vec3_boxEpsilon);
             absBounds.oPluSet(1, vec3_boxEpsilon);
 
-            Link_r(clp.clipSectors[0]);//TODO:check if [0] is good enough.
+            Link_r(clp.clipSectors[0]);//TODO:check if [0] is good enough. upd: seems it is
         }
 
         public void Link(idClip clp, idEntity ent, int newId, final idVec3 newOrigin, final idMat3 newAxis) {
@@ -1333,7 +1333,7 @@ public class Clip {
                     }
                     case CONTACT_TRMVERTEX: {
                         // the model contact feature is a collision model polygon
-//                        collisionModelManager.GetModelPolygon(handle, contact.modelFeature, winding);//TODO:is this function necessary?
+                        collisionModelManager.GetModelPolygon(handle, contact.modelFeature, winding);//TODO:is this function necessary?
                         break;
                     }
                 }
@@ -1522,7 +1522,6 @@ public class Clip {
         }
 
         private void ClipModelsTouchingBounds_r(clipSector_s node, listParms_s parms) {
-
             while (node.axis != -1) {
                 if (parms.bounds.oGet(0, node.axis) > node.dist) {
                     node = node.children[0];

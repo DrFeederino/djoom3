@@ -1029,7 +1029,7 @@ public class tr_trisurf {
         }
 
         if (c_duplicatedEdges != 0 || c_tripledEdges != 0) {
-            common.DWarning("%s tri has %d duplicated edge directions, %d tripled edges", tri.silEdges, c_duplicatedEdges, c_tripledEdges);
+            common.DWarning("%d duplicated edge directions, %d tripled edges", c_duplicatedEdges, c_tripledEdges);
         }
 
         // if we know that the vertexes aren't going

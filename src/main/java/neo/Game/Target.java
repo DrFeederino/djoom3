@@ -487,7 +487,7 @@ public class Target {
                 ent = targets.oGet(i).GetEntity();
                 if (ent != null) {
                     ent.SetShaderParm(SHADERPARM_TIMEOFFSET, time);
-                    if (ent.IsType(idLight.class)) {
+                    if (ent instanceof idLight) {
                         ((idLight) ent).SetLightParm(SHADERPARM_TIMEOFFSET, time);
                     }
                 }
@@ -646,7 +646,7 @@ public class Target {
                 if (null == ent) {
                     continue;
                 }
-                if (ent.IsType(idLight.class)) {
+                if (ent instanceof idLight) {
                     light = (idLight) ent;
                     light.FadeIn(time);
                 } else {
@@ -699,7 +699,7 @@ public class Target {
                 if (null == ent) {
                     continue;
                 }
-                if (ent.IsType(idLight.class)) {
+                if (ent instanceof idLight) {
                     light = (idLight) ent;
                     light.FadeOut(time);
                 } else {
@@ -759,7 +759,7 @@ public class Target {
                         d2.Copy(dict);
                         d2.Set("name", va("givenitem_%d", giveNum++));
                         idEntity[] ent = {null};
-                        if (gameLocal.SpawnEntityDef(d2, ent) && ent[0] != null && ent[0].IsType(idItem.class)) {
+                        if (gameLocal.SpawnEntityDef(d2, ent) && ent[0] != null && ent[0] instanceof idItem) {
                             idItem item = (idItem) ent[0];
                             item.GiveToPlayer(gameLocal.GetLocalPlayer());
                         }
@@ -1107,7 +1107,7 @@ public class Target {
 
             for (i = 0; i < lightList.Num(); i++) {
                 ent = gameLocal.entities[lightList.oGet(i)];
-                if (ent == null || !ent.IsType(idLight.class)) {
+                if (ent == null || !(ent instanceof idLight)) {
                     continue;
                 }
                 light = (idLight) ent;
@@ -1124,7 +1124,7 @@ public class Target {
 
             for (i = 0; i < soundList.Num(); i++) {
                 ent = gameLocal.entities[soundList.oGet(i)];
-                if (ent == null || !ent.IsType(idSound.class)) {
+                if (ent == null || !(ent instanceof idSound)) {
                     continue;
                 }
                 sound = (idSound) ent;
@@ -1214,7 +1214,7 @@ public class Target {
 
             for (i = 0; i < lightList.Num(); i++) {
                 ent = gameLocal.entities[lightList.oGet(i)];
-                if (ent == null || !ent.IsType(idLight.class)) {
+                if (ent == null || !(ent instanceof idLight)) {
                     continue;
                 }
                 light = (idLight) ent;
@@ -1229,7 +1229,7 @@ public class Target {
 
             for (i = 0; i < soundList.Num(); i++) {
                 ent = gameLocal.entities[soundList.oGet(i)];
-                if (ent == null || !ent.IsType(idSound.class)) {
+                if (ent == null || !(ent instanceof idSound)) {
                     continue;
                 }
                 sound = (idSound) ent;
@@ -1300,11 +1300,11 @@ public class Target {
             for (i = 0; i < listedEntities; i++) {
                 idEntity ent = entityList[i];
                 if (ent != null) {
-                    if (lights && ent.IsType(idLight.class) && ent.spawnArgs.FindKey("color_demonic") != null) {
+                    if (lights && ent instanceof idLight && ent.spawnArgs.FindKey("color_demonic") != null) {
                         lightList.Append(ent.entityNumber);
                         continue;
                     }
-                    if (sounds && ent.IsType(idSound.class) && ent.spawnArgs.FindKey("snd_demonic") != null) {
+                    if (sounds && ent instanceof idSound && ent.spawnArgs.FindKey("snd_demonic") != null) {
                         soundList.Append(ent.entityNumber);
                         continue;
                     }
@@ -1312,7 +1312,7 @@ public class Target {
                         guiList.Append(ent.entityNumber);
                         continue;
                     }
-                    if (ent.IsType(idStaticEntity.class) && ent.spawnArgs.FindKey("color_demonic") != null) {
+                    if (ent instanceof idStaticEntity && ent.spawnArgs.FindKey("color_demonic") != null) {
                         genericList.Append(ent.entityNumber);
 //                        continue;
                     }
@@ -1575,7 +1575,7 @@ public class Target {
             lock = spawnArgs.GetInt("locked", "1");
             for (i = 0; i < targets.Num(); i++) {
                 ent = targets.oGet(i).GetEntity();
-                if (ent != null && ent.IsType(idDoor.class)) {
+                if (ent != null && ent instanceof idDoor) {
                     if (((idDoor) ent).IsLocked() != 0) {
                         ((idDoor) ent).Lock(0);
                     } else {

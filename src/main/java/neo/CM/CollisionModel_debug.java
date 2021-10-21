@@ -72,7 +72,7 @@ public class CollisionModel_debug {
     static final idCVar cm_testRotation = new idCVar("cm_testRotation", "1", CVAR_GAME | CVAR_BOOL, "");
     static final idCVar cm_testTimes = new idCVar("cm_testTimes", "1000", CVAR_GAME | CVAR_INTEGER, "");
     static final idCVar cm_testWalk = new idCVar("cm_testWalk", "1", CVAR_GAME | CVAR_BOOL, "");
-    static idVec4 cm_color;
+    static idVec4 cm_color = new idVec4();
 
     static int max_rotation = -999999;
     static int max_translation = -999999;

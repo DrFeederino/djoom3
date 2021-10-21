@@ -522,7 +522,6 @@ public class File_h {
             if (len.getVal() > 0) {
                 int capacity = (len.getVal() * 2);
                 capacity = capacity < len.getVal() ? Integer.MAX_VALUE - 1 : Math.abs(capacity); //just in case
-
                 stringBytes = ByteBuffer.allocate(capacity);//2 bytes per char
 //                string.Fill(' ', len[0]);
                 result = Read(stringBytes);

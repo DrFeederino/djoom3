@@ -871,7 +871,7 @@ public class Light {
 
             for (i = 0; i < targets.Num(); i++) {
                 targetEnt = targets.oGet(i).GetEntity();
-                if (targetEnt != null && targetEnt.IsType(idLight.class)) {
+                if (targetEnt != null && targetEnt instanceof idLight) {
                     idLight light = (idLight) targetEnt;
                     light.lightParent = this;
 

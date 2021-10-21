@@ -76,7 +76,7 @@ public class CollisionModel {
             this.normal.oSet(c.normal);
             this.dist = c.dist;
             this.contents = c.contents;
-            this.material = c.material;
+            this.material = new idMaterial(c.material);
             this.modelFeature = c.modelFeature;
             this.trmFeature = c.trmFeature;
             this.entityNum = c.entityNum;
@@ -98,10 +98,10 @@ public class CollisionModel {
             this.c = new contactInfo_t();
         }
 
-        public trace_s(final trace_s bla) {
-            endpos = new idVec3(bla.endpos);
-            endAxis = new idMat3(bla.endAxis);
-            this.c = new contactInfo_t(bla.c);
+        public trace_s(final trace_s other) {
+            endpos = new idVec3(other.endpos);
+            endAxis = new idMat3(other.endAxis);
+            this.c = new contactInfo_t(other.c);
         }
 
         @Override
@@ -123,7 +123,7 @@ public class CollisionModel {
             this.fraction = s.fraction;
             this.endpos.oSet(s.endpos);
             this.endAxis.oSet(s.endAxis);
-            this.c = new contactInfo_t(s.c);
+            this.c = s.c;
         }
     }
 
@@ -144,26 +144,26 @@ public class CollisionModel {
         // Sets up a trace model for collision with other trace models.
         public abstract int SetupTrmModel(final idTraceModel trm, final idMaterial material);
 
-        // Creates a trace model from a collision model, returns true if succesfull.
-        public abstract boolean TrmFromModel(final idStr modelName, idTraceModel trm);
+        // Creates a trace model from a collision model, returns true if successful.
+        public abstract boolean TrmFromModel(final idStr modelName, final idTraceModel trm);
 
         // Gets the name of a model.
         public abstract String GetModelName(int model);
 
         // Gets the bounds of a model.
-        public abstract boolean GetModelBounds(int model, idBounds bounds);
+        public abstract boolean GetModelBounds(int model, final idBounds bounds);
 
         // Gets all contents flags of brushes and polygons of a model ored together.
-        public abstract boolean GetModelContents(int model, CInt contents);
+        public abstract boolean GetModelContents(int model, final CInt contents);
 
         // Gets a vertex of a model.
-        public abstract boolean GetModelVertex(int model, int vertexNum, idVec3 vertex);
+        public abstract boolean GetModelVertex(int model, int vertexNum, final idVec3 vertex);
 
         // Gets an edge of a model.
-        public abstract boolean GetModelEdge(int model, int edgeNum, idVec3 start, idVec3 end);
+        public abstract boolean GetModelEdge(int model, int edgeNum, final idVec3 start, final idVec3 end);
 
         // Gets a polygon of a model.
-        public abstract boolean GetModelPolygon(int model, /*int*/ AbstractCollisionModel_local.cm_polygon_s polygonNum, idFixedWinding winding);
+        public abstract boolean GetModelPolygon(int model, int polygonNum, final idFixedWinding winding);
 
         // Translates a trace model and reports the first collision if any.
         public abstract void Translation(trace_s results, final idVec3 start, final idVec3 end,

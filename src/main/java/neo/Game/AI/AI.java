@@ -1902,7 +1902,7 @@ public class AI {
 
             if (aimAtEnt.equals(enemy.GetEntity())) {
                 ((idActor) aimAtEnt).GetAIAimTargets(lastVisibleEnemyPos, targetPos1, targetPos2);
-            } else if (aimAtEnt.IsType(idActor.class)) {
+            } else if (aimAtEnt instanceof idActor) {
                 ((idActor) aimAtEnt).GetAIAimTargets(aimAtEnt.GetPhysics().GetOrigin(), targetPos1, targetPos2);
             } else {
                 targetPos1 = aimAtEnt.GetPhysics().GetAbsBounds().GetCenter();
@@ -1913,7 +1913,7 @@ public class AI {
             delta = firePos.oMinus(targetPos1);
             max_height = delta.LengthFast() * projectile_height_to_distance_ratio;
             result = PredictTrajectory(firePos, targetPos1, projectileSpeed, projectileGravity, projectileClipModel, MASK_SHOT_RENDERMODEL, max_height, ignore, aimAtEnt, ai_debugTrajectory.GetBool() ? 1000 : 0, aimDir);
-            if (result || !aimAtEnt.IsType(idActor.class)) {
+            if (result || !(aimAtEnt instanceof idActor)) {
                 return result;
             }
 
@@ -2132,7 +2132,7 @@ public class AI {
                 PlayCinematic();
             } else {
                 AI_ACTIVATED.underscore(true);
-                if (NOT(activator) || !activator.IsType(idPlayer.class)) {
+                if (NOT(activator) || !(activator instanceof idPlayer)) {
                     player = gameLocal.GetLocalPlayer();
                 } else {
                     player = ((idPlayer) activator);
@@ -2177,12 +2177,12 @@ public class AI {
                 return ATTACK_IGNORE;
             }
 
-            if (!ent.IsType(idActor.class)) {
+            if (!(ent instanceof idActor)) {
                 return ATTACK_IGNORE;
             }
 
             final idActor actor = ((idActor) ent);
-            if (actor.IsType(idPlayer.class) && ((idPlayer) actor).noclip) {
+            if (actor instanceof idPlayer && ((idPlayer) actor).noclip) {
                 // ignore players in noclip mode
                 return ATTACK_IGNORE;
             }
@@ -2565,7 +2565,7 @@ public class AI {
 
             // if we had an obstacle, set our move status based on the type, and kick it out of the way if it's a moveable
             if (obstacle != null) {
-                if (obstacle.IsType(idActor.class)) {
+                if (obstacle instanceof idActor) {
                     // monsters aren't kickable
                     if (obstacle == enemy.GetEntity()) {
                         move.moveStatus = MOVE_STATUS_BLOCKED_BY_ENEMY;
@@ -2674,7 +2674,7 @@ public class AI {
                 DirectDamage(attack, enemy.GetEntity());
             } else {
                 idEntity blockEnt = physicsObj.GetSlideMoveEntity();
-                if (blockEnt != null && blockEnt.IsType(idMoveable.class) && blockEnt.GetPhysics().IsPushable()) {
+                if (blockEnt != null && blockEnt instanceof idMoveable && blockEnt.GetPhysics().IsPushable()) {
                     KickObstacles(viewAxis.oGet(0), kickForce, blockEnt);
                 }
             }
@@ -2780,7 +2780,7 @@ public class AI {
                 DirectDamage(attack, enemy.GetEntity());
             } else {
                 idEntity blockEnt = physicsObj.GetSlideMoveEntity();
-                if (blockEnt != null && blockEnt.IsType(idMoveable.class) && blockEnt.GetPhysics().IsPushable()) {
+                if (blockEnt != null && blockEnt instanceof idMoveable && blockEnt.GetPhysics().IsPushable()) {
                     KickObstacles(viewAxis.oGet(0), kickForce, blockEnt);
                 }
             }
@@ -2993,7 +2993,7 @@ public class AI {
                 DirectDamage(attack, enemy.GetEntity());
             } else {
                 idEntity blockEnt = physicsObj.GetSlideMoveEntity();
-                if (blockEnt != null && blockEnt.IsType(idMoveable.class) && blockEnt.GetPhysics().IsPushable()) {
+                if (blockEnt != null && blockEnt instanceof idMoveable && blockEnt.GetPhysics().IsPushable()) {
                     KickObstacles(viewAxis.oGet(0), kickForce, blockEnt);
                 } else if (moveResult == MM_BLOCKED) {
                     move.blockTime = gameLocal.time + 500;
@@ -3069,7 +3069,7 @@ public class AI {
                     AI_SPECIAL_DAMAGE.underscore(0f);
                 }
 
-                if (enemy.GetEntity() != attacker && attacker.IsType(idActor.class)) {
+                if (enemy.GetEntity() != attacker && attacker instanceof idActor) {
                     actor = (idActor) attacker;
                     if ((ReactionTo(actor) & ATTACK_ON_DAMAGE) != 0) {
                         gameLocal.AlertAI(actor);
@@ -3123,7 +3123,7 @@ public class AI {
             // end our looping ambient sound
             StopSound(etoi(SND_CHANNEL_AMBIENT), false);
 
-            if (attacker != null && attacker.IsType(idActor.class)) {
+            if (attacker != null && attacker instanceof idActor) {
                 gameLocal.AlertAI(attacker);
             }
 
@@ -3173,7 +3173,7 @@ public class AI {
                 kv = spawnArgs.MatchPrefix("def_drops", kv);
             }
 
-            if ((attacker != null && attacker.IsType(idPlayer.class)) && (inflictor != null && !inflictor.IsType(idSoulCubeMissile.class))) {
+            if ((attacker != null && attacker instanceof idPlayer) && (inflictor != null && !(inflictor instanceof idSoulCubeMissile))) {
                 ((idPlayer) attacker).AddAIKill();
             }
         }
@@ -3212,7 +3212,7 @@ public class AI {
                     continue;
                 }
 
-                if (obEnt.IsType(idMoveable.class) && obEnt.GetPhysics().IsPushable()) {
+                if (obEnt instanceof idMoveable && obEnt.GetPhysics().IsPushable()) {
                     delta = obEnt.GetPhysics().GetOrigin().oMinus(org);
                     delta.NormalizeFast();
                     perpendicular.x = -delta.y;
@@ -4572,7 +4572,7 @@ public class AI {
                     idGameLocal.Error("Could not spawn entityDef '%s'", clsname);
                 }
 
-                if (!ent[0].IsType(idProjectile.class)) {
+                if (!(ent[0] instanceof idProjectile)) {
                     clsname = ent[0].GetClassname();
                     idGameLocal.Error("'%s' is not an idProjectile", clsname);
                 }
@@ -4723,7 +4723,7 @@ public class AI {
          */
         @Override
         public void DamageFeedback(idEntity victim, idEntity inflictor, CInt damage) {
-            if ((victim.equals(this)) && inflictor.IsType(idProjectile.class)) {
+            if ((victim.equals(this)) && inflictor instanceof idProjectile) {
                 // monsters only get half damage from their own projectiles
                 damage.setVal((damage.getVal() + 1) / 2);  // round up so we don't do 0 damage
 
@@ -4860,7 +4860,7 @@ public class AI {
             // check for the "saving throw" automatic melee miss on lethal blow
             // stupid place for this.
             boolean forceMiss = false;
-            if (enemyEnt.IsType(idPlayer.class) && g_skill.GetInteger() < 2) {
+            if (enemyEnt instanceof idPlayer && g_skill.GetInteger() < 2) {
                 CInt damage = new CInt(), armor = new CInt();
                 idPlayer player = (idPlayer) enemyEnt;
                 player.CalcDamagePoints(this, this, meleeDef, 1.0f, INVALID_JOINT, damage, armor);
@@ -4932,7 +4932,7 @@ public class AI {
             af.ChangePose(this, gameLocal.time);
             int num = af.EntitiesTouchingAF(touchList);
             for (i = 0; i < num; i++) {
-                if (touchList[i].touchedEnt.IsType(idProjectile.class)) {
+                if (touchList[i].touchedEnt instanceof idProjectile) {
                     // skip projectiles
                     continue;
                 }
@@ -4948,7 +4948,7 @@ public class AI {
                     pushed_ents[num_pushed++] = ent;
                     vel = ent.GetPhysics().GetAbsBounds().GetCenter().oMinus(touchList[i].touchedByBody.GetWorldOrigin());
                     vel.Normalize();
-                    if (attack.Length() != 0 && ent.IsType(idActor.class)) {
+                    if (attack.Length() != 0 && ent instanceof idActor) {
                         ent.Damage(this, this, vel, attack.toString(), 1.0f, INVALID_JOINT);
                     } else {
                         ent.GetPhysics().SetLinearVelocity(vel.oMultiply(100.0f), touchList[i].touchedClipModel.GetId());
@@ -5115,7 +5115,7 @@ public class AI {
                 focusPos = currentFocusPos;
             } else if (focusEnt.equals(enemy.GetEntity())) {
                 focusPos = lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset).oMinus(enemy.GetEntity().GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset));
-            } else if (focusEnt.IsType(idActor.class)) {
+            } else if (focusEnt instanceof idActor) {
                 focusPos = ((idActor) focusEnt).GetEyePosition().oMinus(focusEnt.GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset));
             } else {
                 focusPos = focusEnt.GetPhysics().GetOrigin();
@@ -5320,7 +5320,7 @@ public class AI {
                 for (i = 0; i < gameLocal.numClients; i++) {
                     ent = gameLocal.entities[i];
 
-                    if (null == ent || !ent.IsType(idActor.class)) {
+                    if (null == ent || !(ent instanceof idActor)) {
                         continue;
                     }
 
@@ -5353,7 +5353,7 @@ public class AI {
             bestDist = idMath.INFINITY;
             bestEnemy = null;
             for (ent = gameLocal.activeEntities.Next(); ent != null; ent = ent.activeNode.Next()) {
-                if (ent.fl.hidden || ent.fl.isDormant || !ent.IsType(idActor.class)) {
+                if (ent.fl.hidden || ent.fl.isDormant || !(ent instanceof idActor)) {
                     continue;
                 }
 
@@ -5394,7 +5394,7 @@ public class AI {
             for (i = 0; i < gameLocal.numClients; i++) {
                 ent = gameLocal.entities[i];
 
-                if (null == ent || !ent.IsType(idActor.class)) {
+                if (null == ent || !(ent instanceof idActor)) {
                     continue;
                 }
 
@@ -5405,7 +5405,7 @@ public class AI {
 
                 for (j = 0; j < targets.Num(); j++) {
                     targetEnt = targets.oGet(j).GetEntity();
-                    if (null == targetEnt || !targetEnt.IsType(idCombatNode.class)) {
+                    if (null == targetEnt || !(targetEnt instanceof idCombatNode)) {
                         continue;
                     }
 
@@ -5432,7 +5432,7 @@ public class AI {
             int enemyAreaNum;
             aasPath_s path = new aasPath_s();
 
-            if (!team_mate.IsType(idActor.class)) {
+            if (!(team_mate instanceof idActor)) {
                 idGameLocal.Error("Entity '%s' is not an AI character or player", team_mate.GetName());
             }
 
@@ -5482,7 +5482,7 @@ public class AI {
             idEntity ent = _ent.value;
             if (null == ent) {
                 ClearEnemy();
-            } else if (!ent.IsType(idActor.class)) {
+            } else if (!(ent instanceof idActor)) {
                 idGameLocal.Error("'%s' is not an idActor (player or ai controlled character)", ent.name);
             } else {
                 SetEnemy((idActor) ent);
@@ -5655,7 +5655,7 @@ public class AI {
             gameLocal.clip.TranslationEntities(trace, start, end, null, getMat3_identity(), MASK_SHOT_BOUNDINGBOX, this);
             if (trace.fraction < 1.0f) {
                 hitEnt = gameLocal.GetTraceEntity(trace);
-                if (hitEnt != null && hitEnt.IsType(idActor.class)) {
+                if (hitEnt != null && hitEnt instanceof idActor) {
                     DirectDamage(meleeDefName.value, hitEnt);
                     idThread.ReturnInt(true);
                     return;
@@ -5893,7 +5893,7 @@ public class AI {
             bestDist = (myPos.oMinus(lastVisibleEnemyPos)).LengthSqr();
             for (i = 0; i < targets.Num(); i++) {
                 targetEnt = targets.oGet(i).GetEntity();
-                if (null == targetEnt || !targetEnt.IsType(idCombatNode.class)) {
+                if (null == targetEnt || !(targetEnt instanceof idCombatNode)) {
                     continue;
                 }
 
@@ -5929,7 +5929,7 @@ public class AI {
                 return;
             }
 
-            if (null == ent || !ent.IsType(idCombatNode.class)) {
+            if (null == ent || !(ent instanceof idCombatNode)) {
                 // not a combat node
                 idThread.ReturnInt(false);
                 return;
@@ -6030,7 +6030,7 @@ public class AI {
 
         protected void Event_SetTalkTarget(idEventArg<idEntity> _target) {
             idEntity target = _target.value;
-            if (target != null && !target.IsType(idActor.class)) {
+            if (target != null && !(target instanceof idActor)) {
                 idGameLocal.Error("Cannot set talk target to '%s'.  Not a character or player.", target.GetName());
             }
             talkTarget.oSet((idActor) target);
@@ -6142,7 +6142,7 @@ public class AI {
             hit = gameLocal.GetTraceEntity(tr);
             if (tr.fraction >= 1.0f || (hit.equals(enemyEnt))) {
                 lastHitCheckResult = true;
-            } else lastHitCheckResult = (tr.fraction < 1.0f) && (hit.IsType(idAI.class))
+            } else lastHitCheckResult = (tr.fraction < 1.0f) && (hit instanceof idAI)
                     && (((idAI) hit).team != team);
 
             idThread.ReturnInt(lastHitCheckResult);
@@ -6796,7 +6796,7 @@ public class AI {
             idEntity moveable = null;
 
             for (ent = GetNextTeamEntity(); ent != null; ent = ent.GetNextTeamEntity()) {
-                if (ent.GetBindMaster().equals(this) && ent.IsType(idMoveable.class)) {
+                if (ent.GetBindMaster().equals(this) && ent instanceof idMoveable) {
                     moveable = ent;
                     break;
                 }
@@ -6812,7 +6812,7 @@ public class AI {
             idEntity af = null;
 
             for (ent = GetNextTeamEntity(); ent != null; ent = ent.GetNextTeamEntity()) {
-                if (ent.GetBindMaster().equals(this) && ent.IsType(idAFEntity_Base.class)) {
+                if (ent.GetBindMaster().equals(this) && ent instanceof idAFEntity_Base) {
                     af = ent;
                     break;
                 }
@@ -6949,7 +6949,7 @@ public class AI {
             numListedEntities = gameLocal.clip.EntitiesTouchingBounds(new idBounds(mins.value, maxs.value), CONTENTS_BODY, entityList, MAX_GENTITIES);
             for (i = 0; i < numListedEntities; i++) {
                 ent = entityList[i];
-                if (!ent.equals(this) && !ent.IsHidden() && (ent.health > 0) && ent.IsType(idActor.class)) {
+                if (!ent.equals(this) && !ent.IsHidden() && (ent.health > 0) && ent instanceof idActor) {
                     idThread.ReturnEntity(ent);
                     return;
                 }
@@ -6985,7 +6985,7 @@ public class AI {
                     idThread.ReturnInt(false);
                     return;
                 }
-                if (ent.IsType(idActor.class) && ((idActor) ent).OnLadder()) {
+                if (ent instanceof idActor && ((idActor) ent).OnLadder()) {
                     idThread.ReturnInt(false);
                     return;
                 }
@@ -7050,7 +7050,7 @@ public class AI {
                     /*return*/
                     idThread.ReturnVector(getVec3_zero());
                 }
-                if (ent.IsType(idActor.class) && ((idActor) ent).OnLadder()) {
+                if (ent instanceof idActor && ((idActor) ent).OnLadder()) {
                     /*return*/// NOTE: not a good way to return 'false'
                     /*return*/
                     idThread.ReturnVector(getVec3_zero());
@@ -7116,7 +7116,7 @@ public class AI {
                 gameLocal.Printf("------------------------------------------------\n");
                 for (e = 0; e < MAX_GENTITIES; e++) {
                     check = ((idAI) gameLocal.entities[e]);
-                    if (NOT(check) || !check.IsType(idAI.class)) {
+                    if (NOT(check) || !(check instanceof idAI)) {
                         continue;
                     }
 
@@ -7177,7 +7177,7 @@ public class AI {
             idBounds bounds = new idBounds(new idVec3(-16, -16, 0), new idVec3(16, 16, 0));
 
             for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                if (!ent.IsType(idCombatNode.class)) {
+                if (!(ent instanceof idCombatNode)) {
                     continue;
                 }
 

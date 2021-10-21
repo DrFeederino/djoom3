@@ -340,7 +340,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         }
 
         @Override// create trace model from a collision model, returns true if successful
-        public boolean TrmFromModel(final idStr modelName, idTraceModel trm) {
+        public boolean TrmFromModel(final idStr modelName, final idTraceModel trm) {
             /*cmHandle_t*/
             int handle;
 
@@ -364,7 +364,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         }
 
         @Override// bounds of the model
-        public boolean GetModelBounds( /*cmHandle_t*/int model, idBounds bounds) {
+        public boolean GetModelBounds(int model, final idBounds bounds) {
 
             if (model < 0 || model > MAX_SUBMODELS || model >= numModels || null == models[model]) {
                 common.Printf("idCollisionModelManagerLocal::GetModelBounds: invalid model handle\n");
@@ -376,7 +376,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         }
 
         @Override// all contents flags of brushes and polygons ored together
-        public boolean GetModelContents( /*cmHandle_t*/int model, CInt contents) {
+        public boolean GetModelContents(int model, final CInt contents) {
             if (model < 0 || model > MAX_SUBMODELS || model >= numModels || null == models[model]) {
                 common.Printf("idCollisionModelManagerLocal::GetModelContents: invalid model handle\n");
                 return false;
@@ -388,7 +388,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         }
 
         @Override// get the vertex of a model
-        public boolean GetModelVertex( /*cmHandle_t*/int model, int vertexNum, idVec3 vertex) {
+        public boolean GetModelVertex(int model, int vertexNum, final idVec3 vertex) {
             if (model < 0 || model > MAX_SUBMODELS || model >= numModels || null == models[model]) {
                 common.Printf("idCollisionModelManagerLocal::GetModelVertex: invalid model handle\n");
                 return false;
@@ -412,7 +412,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          */
 
         @Override// get the edge of a model
-        public boolean GetModelEdge( /*cmHandle_t*/int model, int edgeNum, idVec3 start, idVec3 end) {
+        public boolean GetModelEdge(int model, int edgeNum, final idVec3 start, final idVec3 end) {
             if (model < 0 || model > MAX_SUBMODELS || model >= numModels || null == models[model]) {
                 common.Printf("idCollisionModelManagerLocal::GetModelEdge: invalid model handle\n");
                 return false;
@@ -431,16 +431,18 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         }
 
         @Override// get the polygon of a model
-        public boolean GetModelPolygon( /*cmHandle_t*/int model, cm_polygon_s polygonNum, idFixedWinding winding) {
+        public boolean GetModelPolygon(int model, int polygonNum, final idFixedWinding winding) {
             int i, edgeNum;
-            cm_polygon_s poly;
+            cm_polygon_s poly = new cm_polygon_s();
 
             if (model < 0 || model > MAX_SUBMODELS || model >= numModels || null == models[model]) {
                 common.Printf("idCollisionModelManagerLocal::GetModelPolygon: invalid model handle\n");
                 return false;
             }
 
-            poly = /* reinterpret_cast<cm_polygon_t **>*/ (polygonNum);
+            // I have no idea how an *int* can be cast into an instance
+            // Supposedly the func interprets int as bits and tries to "restore" object? but...why?
+            //poly = /* reinterpret_cast<cm_polygon_t **>*/ (polygonNum);
             winding.Clear();
             for (i = 0; i < poly.numEdges; i++) {
                 edgeNum = poly.edges[i];
@@ -1074,7 +1076,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                                              final idMat3 modelAxis, final idVec3 viewOrigin, final float radius) {
 
             cm_model_s model;
-            idVec3 viewPos;
+            final idVec3 viewPos = new idVec3();
             Scanner sscanf;
 
             if (handle < 0 && handle >= numModels) {
@@ -1088,7 +1090,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             model = models[handle];
-            viewPos = viewOrigin.oMinus(modelOrigin).oMultiply(modelAxis.Transpose());
+            viewPos.oSet(viewOrigin.oMinus(modelOrigin).oMultiply(modelAxis.Transpose()));
             checkCount++;
             DrawNodePolygons(model, model.node, modelOrigin, modelAxis, viewPos, radius);
         }
@@ -1174,7 +1176,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          ================
          */
         // CollisionMap_translate.cpp
-        private boolean TranslateEdgeThroughEdge(idVec3 cross, idPluecker l1, idPluecker l2, CFloat fraction) {
+        private boolean TranslateEdgeThroughEdge(final idVec3 cross, final idPluecker l1, final idPluecker l2, CFloat fraction) {
             float d, t;
             /*
 
@@ -1479,7 +1481,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
         }
 
-        private void TranslateVertexThroughTrmPolygon(cm_traceWork_s tw, cm_trmPolygon_s trmpoly, cm_polygon_s poly, cm_vertex_s v, idVec3 endp, idPluecker pl) {
+        private void TranslateVertexThroughTrmPolygon(cm_traceWork_s tw, cm_trmPolygon_s trmpoly, cm_polygon_s poly, cm_vertex_s v, final idVec3 endp, final idPluecker pl) {
             int i, edgeNum;
             float f;
             cm_trmEdge_s edge;
@@ -1740,7 +1742,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          */
         // CollisionMap_rotate.cpp
         private boolean CollisionBetweenEdgeBounds(cm_traceWork_s tw, final idVec3 va, final idVec3 vb, final idVec3 vc,
-                                                   final idVec3 vd, CFloat tanHalfAngle, idVec3 collisionPoint, idVec3 collisionNormal) {
+                                                   final idVec3 vd, CFloat tanHalfAngle, final idVec3 collisionPoint, final idVec3 collisionNormal) {
             float d1, d2, d;
             idVec3 at, bt, dir, dir1, dir2;
             idPluecker pl1 = new idPluecker(), pl2 = new idPluecker();
@@ -1970,7 +1972,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          ================
          */
         private boolean EdgeFurthestFromEdge(cm_traceWork_s tw, final idPluecker pl1,
-                                             final idVec3 vc, final idVec3 vd, CFloat tanHalfAngle, CFloat dir) {
+                                             final idVec3 vc, final idVec3 vd, final CFloat tanHalfAngle, final CFloat dir) {
             double v0, v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
             idVec3 ct, dt;
             idPluecker pl2 = new idPluecker();
@@ -2221,7 +2223,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          ================
          */
         private boolean RotatePointThroughPlane(final cm_traceWork_s tw, final idVec3 point, final idPlane plane,
-                                                final float angle, final float minTan, CFloat tanHalfAngle) {
+                                                final float angle, final float minTan, final CFloat tanHalfAngle) {
             double v0, v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
             idVec3 p, normal;
 
@@ -2323,7 +2325,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          ================
          */
         private boolean PointFurthestFromPlane(final cm_traceWork_s tw, final idVec3 point, final idPlane plane,
-                                               final float angle, CFloat tanHalfAngle, CFloat dir) {
+                                               final float angle, final CFloat tanHalfAngle, final CFloat dir) {
 
             double v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
             idVec3 p, normal;
@@ -2426,7 +2428,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
         private boolean RotatePointThroughEpsilonPlane(final cm_traceWork_s tw, final idVec3 point, final idVec3 endPoint,
                                                        final idPlane plane, final float angle, final idVec3 origin,
-                                                       CFloat tanHalfAngle, idVec3 collisionPoint, idVec3 endDir) {
+                                                       final CFloat tanHalfAngle, final idVec3 collisionPoint, final idVec3 endDir) {
             float d;
             CFloat dir = new CFloat();
             CFloat startTan = new CFloat();
@@ -2563,7 +2565,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
         }
 
-        private void RotateVertexThroughTrmPolygon(cm_traceWork_s tw, cm_trmPolygon_s trmpoly, cm_polygon_s poly, cm_vertex_s v, idVec3 rotationOrigin) {
+        private void RotateVertexThroughTrmPolygon(cm_traceWork_s tw, cm_trmPolygon_s trmpoly, cm_polygon_s poly, cm_vertex_s v, final idVec3 rotationOrigin) {
             int i, edgeNum;
             CFloat tanHalfAngle = new CFloat();
             idVec3 dir, endp, endDir = new idVec3(), collisionPoint = new idVec3();
@@ -2788,7 +2790,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          only for rotations < 180 degrees
          ================
          */
-        private void BoundsForRotation(final idVec3 origin, final idVec3 axis, final idVec3 start, final idVec3 end, idBounds bounds) {
+        private void BoundsForRotation(final idVec3 origin, final idVec3 axis, final idVec3 start, final idVec3 end, final idBounds bounds) {
             int i;
             float radiusSqr;
 
@@ -3686,7 +3688,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
         }
 
-        private void TraceThroughAxialBSPTree_r(cm_traceWork_s tw, cm_node_s node, float p1f, float p2f, idVec3 p1, idVec3 p2) {
+        private void TraceThroughAxialBSPTree_r(cm_traceWork_s tw, cm_node_s node, float p1f, float p2f, final idVec3 p1, final idVec3 p2) {
             float t1, t2, offset;
             float frac, frac2;
             float idist;
@@ -4356,7 +4358,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
          */
         // finding internal edges
-        private boolean PointInsidePolygon(cm_model_s model, cm_polygon_s p, idVec3 v) {
+        private boolean PointInsidePolygon(cm_model_s model, cm_polygon_s p, final idVec3 v) {
             int i, edgeNum;
             idVec3 v1 = new idVec3(), v2 = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3(), vec = new idVec3();
             cm_edge_s edge;
@@ -5337,7 +5339,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             cm_windingList = null;
         }
 
-        private void ClearHash(idBounds bounds) {
+        private void ClearHash(final idBounds bounds) {
             int i;
             float f, max;
 
@@ -5379,7 +5381,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             return (x + y * VERTEX_HASH_BOXSIZE + z) & (VERTEX_HASH_SIZE - 1);
         }
 
-        private boolean GetVertex(cm_model_s model, final idVec3 v, CInt vertexNum) {
+        private boolean GetVertex(cm_model_s model, final idVec3 v, final CInt vertexNum) {
             int i, hashKey, vn;
             idVec3 vert = new idVec3(), p = new idVec3();
 
@@ -5660,7 +5662,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
         }
 
-        private void CreatePatchPolygons(cm_model_s model, idSurface_Patch mesh, final idMaterial material, int primitiveNum) {
+        private void CreatePatchPolygons(cm_model_s model, final idSurface_Patch mesh, final idMaterial material, int primitiveNum) {
             int i, j;
             float dot;
             int v1, v2, v3, v4;
@@ -6264,7 +6266,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             return model;
         }
 
-        private boolean TrmFromModel_r(idTraceModel trm, cm_node_s node) {
+        private boolean TrmFromModel_r(final idTraceModel trm, cm_node_s node) {
             cm_polygonRef_s pref;
             cm_polygon_s p;
             int i;
@@ -6312,7 +6314,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          NOTE: polygon merging can merge colinear edges and as such might cause dangling edges.
          ==================
          */
-        private boolean TrmFromModel(final cm_model_s model, idTraceModel trm) {
+        private boolean TrmFromModel(final cm_model_s model, final idTraceModel trm) {
             int i, j;
             int[] numEdgeUsers = new int[MAX_TRACEMODEL_EDGES + 1];
 

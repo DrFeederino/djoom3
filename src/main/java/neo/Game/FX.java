@@ -509,7 +509,7 @@ public class FX {
                                 gameLocal.Warning("projectile '%s' not found", fxaction.data);
                             } else {
                                 gameLocal.SpawnEntityDef(projectileDef, ent, false);
-                                if (ent[0] != null && ent[0].IsType(idProjectile.class)) {
+                                if (ent[0] != null && ent[0] instanceof idProjectile) {
                                     projectile = (idProjectile) ent[0];
                                     projectile.Create(this, GetPhysics().GetOrigin(), GetPhysics().GetAxis().oGet(0));
                                     projectile.Launch(GetPhysics().GetOrigin(), GetPhysics().GetAxis().oGet(0), getVec3_origin());

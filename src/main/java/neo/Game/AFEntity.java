@@ -531,7 +531,7 @@ public class AFEntity {
                 args.Set("classname", kv.GetValue());
                 gameLocal.SpawnEntityDef(args, newEnt);
 
-                if (newEnt[0] != null && newEnt[0].IsType(idAFEntity_Base.class)) {
+                if (newEnt[0] != null && newEnt[0] instanceof idAFEntity_Base) {
                     af = (idAFEntity_Base) newEnt[0];
                     af.GetPhysics().SetOrigin(ent.GetPhysics().GetOrigin());
                     af.GetPhysics().SetAxis(ent.GetPhysics().GetAxis());

@@ -191,11 +191,11 @@ public class Force_Field {
                 idPhysics physics = entity.GetPhysics();
 
                 if (playerOnly) {
-                    if (!physics.IsType(idPhysics_Player.class)) {
+                    if (!(physics instanceof idPhysics_Player)) {
                         continue;
                     }
                 } else if (monsterOnly) {
-                    if (!physics.IsType(idPhysics_Monster.class)) {
+                    if (!(physics instanceof idPhysics_Monster)) {
                         continue;
                     }
                 }

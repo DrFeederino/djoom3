@@ -896,7 +896,7 @@ public class Game_local {
                         if (i == clientNum) {
                             continue;
                         }
-                        if (entities[i] != null && entities[i].IsType(idPlayer.class)) {
+                        if (entities[i] != null && entities[i] instanceof idPlayer) {
                             if (0 == idStr.Icmp(this.userInfo[clientNum].GetString("ui_name"), this.userInfo[i].GetString("ui_name"))) {
                                 this.userInfo[clientNum].Set("ui_name", va("%s_", this.userInfo[clientNum].GetString("ui_name")));
                                 modifiedInfo = true;
@@ -907,7 +907,7 @@ public class Game_local {
                     }
                 }
 
-                if (entities[clientNum] != null && entities[clientNum].IsType(idPlayer.class)) {
+                if (entities[clientNum] != null && entities[clientNum] instanceof idPlayer) {
                     modifiedInfo |= ((idPlayer) entities[clientNum]).UserInfoChanged(canModify);
                 }
 
@@ -927,7 +927,7 @@ public class Game_local {
 
         @Override
         public idDict GetUserInfo(int clientNum) {
-            if (entities[clientNum] != null && entities[clientNum].IsType(idPlayer.class)) {
+            if (entities[clientNum] != null && entities[clientNum] instanceof idPlayer) {
                 return userInfo[clientNum];
             }
             return null;
@@ -956,7 +956,7 @@ public class Game_local {
 
             persistentPlayerInfo[clientNum].Clear();
             ent = entities[clientNum];
-            if (ent != null && ent.IsType(idPlayer.class)) {
+            if (ent != null && ent instanceof idPlayer) {
                 ((idPlayer) ent).SavePersistantInfo();
             }
 
@@ -1613,7 +1613,7 @@ public class Game_local {
             }
 
             // make sure it's a compatible class
-            if (!ent[0].IsType(idPlayer.class)) {
+            if (!(ent[0] instanceof idPlayer)) {
                 Error("'%s' spawned the player as a '%s'.  Player spawnclass must be a subclass of idPlayer.", args.GetString("classname"), ent[0].GetClassname());
             }
 
@@ -1865,9 +1865,9 @@ public class Game_local {
         }
 
         @Override
-        public escReply_t HandleESC(idUserInterface[] gui) {
+        public escReply_t HandleESC(idUserInterface gui) {
             if (isMultiplayer) {
-                gui[0] = StartMenu();
+                gui = StartMenu();
                 // we may set the gui back to NULL to hide it
                 return ESC_GUI;
             }
@@ -2217,7 +2217,7 @@ public class Game_local {
             newBase.state.Init(newBase.stateBuf);
             newBase.state.BeginWriting();
             deltaMsg.Init(base != null ? base.state : null, newBase.state, msg);
-            if (player.spectating && player.spectator != player.entityNumber && gameLocal.entities[player.spectator] != null && gameLocal.entities[player.spectator].IsType(idPlayer.class)) {
+            if (player.spectating && player.spectator != player.entityNumber && gameLocal.entities[player.spectator] != null && gameLocal.entities[player.spectator] instanceof idPlayer) {
                 ((idPlayer) gameLocal.entities[player.spectator]).WritePlayerStateToSnapshot(deltaMsg);
             } else {
                 player.WritePlayerStateToSnapshot(deltaMsg);
@@ -2805,7 +2805,7 @@ public class Game_local {
             gamestate = GAMESTATE_SHUTDOWN;
 
             for (i = 0; i < MAX_CLIENTS; i++) {
-                if (entities[i] != null && entities[i].IsType(idPlayer.class)) {
+                if (entities[i] != null && entities[i] instanceof idPlayer) {
                     ((idPlayer) entities[i]).PrepareForRestart();
                 }
             }
@@ -2842,7 +2842,7 @@ public class Game_local {
 
             // setup the client entities again
             for (i = 0; i < MAX_CLIENTS; i++) {
-                if (entities[i] != null && entities[i].IsType(idPlayer.class)) {
+                if (entities[i] != null && entities[i] instanceof idPlayer) {
                     ((idPlayer) entities[i]).Restart();
                 }
             }
@@ -3161,7 +3161,7 @@ public class Game_local {
                 assert !isClient || (bIsClientReadSnapshot);
             }
 
-            if (!classdef.IsType(idEntity.class)) {
+            if (!(classdef.IsType(idEntity.class))) {
                 Error("Attempted to spawn non-entity class '%s'", classdef.classname);
             }
 
@@ -3537,7 +3537,7 @@ public class Game_local {
                 obj.spawnArgs.oSet(args);
                 obj.Spawn();
 
-                if (ent != null) {// && obj.IsType(idEntity.class)) {
+                if (ent != null) {// && obj instanceof idEntity.class)) {
                     ent[0] = obj;
                 }
 
@@ -3649,7 +3649,7 @@ public class Game_local {
 
         public boolean RequirementMet(idEntity activator, final idStr requires, int removeItem) {
             if (requires.Length() != 0) {
-                if (activator.IsType(idPlayer.class)) {
+                if (activator instanceof idPlayer) {
                     idPlayer player = (idPlayer) activator;
                     idDict item = player.FindInventoryItem(requires);
                     if (item != null) {
@@ -3667,7 +3667,7 @@ public class Game_local {
         }
 
         public void AlertAI(idEntity ent) {
-            if (ent != null && ent.IsType(idActor.class)) {
+            if (ent != null && ent instanceof idActor) {
                 // alert them for the next frame
                 lastAIAlertTime = time + msec;
                 lastAIAlertEntity.oSet((idActor) ent);
@@ -3756,13 +3756,13 @@ public class Game_local {
                             continue;
                         }
 
-                        if (ent.IsType(idAI.class)) {
+                        if (ent instanceof idAI) {
                             ai = (idAI) ent;
                             if (NOT(ai.GetEnemy()) || !ai.IsActive()) {
                                 // no enemy, or inactive, so probably safe to ignore
                                 continue;
                             }
-                        } else if (ent.IsType(idProjectile.class)) {
+                        } else if (ent instanceof idProjectile) {
                             // remove all projectiles
                         } else if (ent.spawnArgs.GetBool("cinematic_remove")) {
                             // remove anything marked to be removed during cinematics
@@ -3974,7 +3974,7 @@ public class Game_local {
             bestEnt = null;
             bestScale = 1.0f;
             for (ent = spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                if (ent.IsType(c) && ent != skip) {
+                if (c.isInstance(ent) && ent != skip) {
                     b = ent.GetPhysics().GetAbsBounds().Expand(16);
                     if (b.RayIntersection(start, end.oMinus(start), scale)) {
                         if (scale.getVal() >= 0.0f && scale.getVal() < bestScale) {
@@ -4097,7 +4097,7 @@ public class Game_local {
                 }
 
                 // nail it
-                if (hit.IsType(idPlayer.class) && ((idPlayer) hit).IsInTeleport()) {
+                if (hit instanceof idPlayer && ((idPlayer) hit).IsInTeleport()) {
                     ((idPlayer) hit).TeleportDeath(ent.entityNumber);
                 } else if (!catch_teleport) {
                     hit.Damage(ent, ent, getVec3_origin(), "damage_telefrag", 1.0f, INVALID_JOINT);
@@ -4146,13 +4146,13 @@ public class Game_local {
             // get all entities touching the bounds
             numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, MAX_GENTITIES);
 
-            if (inflictor != null && inflictor.IsType(idAFAttachment.class)) {
+            if (inflictor != null && inflictor instanceof idAFAttachment) {
                 inflictor = ((idAFAttachment) inflictor).GetBody();
             }
-            if (attacker != null && attacker.IsType(idAFAttachment.class)) {
+            if (attacker != null && attacker instanceof idAFAttachment) {
                 attacker = ((idAFAttachment) attacker).GetBody();
             }
-            if (ignoreDamage != null && ignoreDamage.IsType(idAFAttachment.class)) {
+            if (ignoreDamage != null && ignoreDamage instanceof idAFAttachment) {
                 ignoreDamage = ((idAFAttachment) ignoreDamage).GetBody();
             }
 
@@ -4165,16 +4165,16 @@ public class Game_local {
                     continue;
                 }
 
-                if (ent == inflictor || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody() == inflictor)) {
+                if (ent == inflictor || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() == inflictor)) {
                     continue;
                 }
 
-                if (ent == ignoreDamage || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody() == ignoreDamage)) {
+                if (ent == ignoreDamage || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() == ignoreDamage)) {
                     continue;
                 }
 
                 // don't damage a dead player
-                if (isMultiplayer && ent.entityNumber < MAX_CLIENTS && ent.IsType(idPlayer.class) && ent.health < 0) {
+                if (isMultiplayer && ent.entityNumber < MAX_CLIENTS && ent instanceof idPlayer && ent.health < 0) {
                     continue;
                 }
 
@@ -4202,7 +4202,7 @@ public class Game_local {
 
                     // get the damage scale
                     damageScale = dmgPower * (1.0f - dist / radius.getVal());
-                    if (ent == attacker || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody() == attacker)) {
+                    if (ent == attacker || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() == attacker)) {
                         damageScale *= attackerDamageScale.getVal();
                     }
 
@@ -4237,10 +4237,10 @@ public class Game_local {
             // get all clip models touching the bounds
             numListedClipModels = clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, MAX_GENTITIES);
 
-            if (inflictor != null && inflictor.IsType(idAFAttachment.class)) {
+            if (inflictor != null && inflictor instanceof idAFAttachment) {
                 inflictor.oSet(((idAFAttachment) inflictor).GetBody());
             }
-            if (ignore != null && ignore.IsType(idAFAttachment.class)) {
+            if (ignore != null && ignore instanceof idAFAttachment) {
                 ignore.oSet(((idAFAttachment) ignore).GetBody());
             }
 
@@ -4257,17 +4257,17 @@ public class Game_local {
                 ent = clipModel.GetEntity();
 
                 // never push projectiles
-                if (ent.IsType(idProjectile.class)) {
+                if (ent instanceof idProjectile) {
                     continue;
                 }
 
                 // players use "knockback" in idPlayer::Damage
-                if (ent.IsType(idPlayer.class) && !quake) {
+                if (ent instanceof idPlayer && !quake) {
                     continue;
                 }
 
                 // don't push the ignore entity
-                if (ent == ignore || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody() == ignore)) {
+                if (ent == ignore || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() == ignore)) {
                     continue;
                 }
 
@@ -4276,7 +4276,7 @@ public class Game_local {
                 }
 
                 // scale the push for the inflictor
-                if (ent == inflictor || (ent.IsType(idAFAttachment.class) && ((idAFAttachment) ent).GetBody() == inflictor)) {
+                if (ent == inflictor || (ent instanceof idAFAttachment && ((idAFAttachment) ent).GetBody() == inflictor)) {
                     scale = inflictorScale;
                 } else {
                     scale = 1.0f;
@@ -4415,7 +4415,7 @@ public class Game_local {
 
             func = ent.scriptObject.GetFunction(frameCommand);
             if (null == func) {
-                if (!ent.IsType(idTestModel.class)) {
+                if (!(ent instanceof idTestModel)) {
                     Error("Unknown function '%s' called for frame command on entity '%s'", frameCommand, ent.name);
                 }
             } else {
@@ -4447,7 +4447,7 @@ public class Game_local {
             current = 0;
             for (i = 0; i < numClients; i++) {
                 current = (_current + i + 1) % numClients;
-                if (entities[current] != null && entities[current].IsType(idPlayer.class)) {
+                if (entities[current] != null && entities[current] instanceof idPlayer) {
                     return current;
                 }
             }
@@ -4470,7 +4470,7 @@ public class Game_local {
             idEntity ent;
             for (i = 0; i < numClients; i++) {
                 ent = entities[i];
-                if (ent != null && ent.IsType(idPlayer.class)) {
+                if (ent != null && ent instanceof idPlayer) {
                     if (idStr.IcmpNoColor(name, userInfo[i].GetString("ui_name")) == 0) {
                         return (idPlayer) ent;
                     }
@@ -4512,7 +4512,7 @@ public class Game_local {
                 return null;
             }
 
-            if (null == entities[localClientNum] || !entities[localClientNum].IsType(idPlayer.class)) {
+            if (null == entities[localClientNum] || !(entities[localClientNum] instanceof idPlayer)) {
                 // not fully in game yet
                 return null;
             }
@@ -4530,7 +4530,7 @@ public class Game_local {
 
             // for each location entity, make pointers from every area it touches
             for (ent = spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                if (!ent.IsType(idLocationEntity.class)) {
+                if (!(ent instanceof idLocationEntity)) {
                     continue;
                 }
                 idVec3 point = ent.spawnArgs.GetVector("origin");
@@ -4633,7 +4633,7 @@ public class Game_local {
                     pos = spawnSpots.oGet(i).ent.GetPhysics().GetOrigin();
                     spawnSpots.oGet(i).dist = 0x7fffffff;
                     for (j = 0; j < MAX_CLIENTS; j++) {
-                        if (null == entities[j] || !entities[j].IsType(idPlayer.class)
+                        if (null == entities[j] || !(entities[j] instanceof idPlayer)
                                 || entities[j].equals(player)
                                 || ((idPlayer) entities[j]).spectating) {
                             continue;
@@ -4955,7 +4955,7 @@ public class Game_local {
             mapEnt = mapFile.GetEntity(0);
             args = mapEnt.epairs;
             args.SetInt("spawn_entnum", ENTITYNUM_WORLD);
-            if (!SpawnEntityDef(args) || null == entities[ENTITYNUM_WORLD] || !entities[ENTITYNUM_WORLD].IsType(idWorldspawn.class)) {
+            if (!SpawnEntityDef(args) || null == entities[ENTITYNUM_WORLD] || !(entities[ENTITYNUM_WORLD] instanceof idWorldspawn)) {
                 Error("Problem spawning world entity");
             }
 
@@ -5061,7 +5061,7 @@ public class Game_local {
             playerPVS.i = -1;
             for (i = 0; i < numClients; i++) {
                 ent = entities[i];
-                if (null == ent || !ent.IsType(idPlayer.class)) {
+                if (null == ent || !(ent instanceof idPlayer)) {
                     continue;
                 }
 
@@ -5111,7 +5111,7 @@ public class Game_local {
 
                 // update all physics objects
                 for (ent = spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                    if (ent.IsType(idAFEntity_Generic.class)) {
+                    if (ent instanceof idAFEntity_Generic) {
                         idPhysics phys = ent.GetPhysics();
                         if (phys != null) {
                             phys.SetGravity(gravity);
@@ -5154,7 +5154,7 @@ public class Game_local {
                     if (null == master || master == ent) {
                         // check if there is an actor on the team
                         for (part = ent; part != null; part = part.GetNextTeamEntity()) {
-                            if (part.GetPhysics().IsType(idPhysics_Actor.class)) {
+                            if (part.GetPhysics() instanceof idPhysics_Actor) {
                                 break;
                             }
                         }
@@ -5172,7 +5172,7 @@ public class Game_local {
                     if (null == master || master == ent) {
                         // check if there is an entity on the team using parametric physics
                         for (part = ent; part != null; part = part.GetNextTeamEntity()) {
-                            if (part.GetPhysics().IsType(idPhysics_Parametric.class)) {
+                            if (part.GetPhysics() instanceof idPhysics_Parametric) {
                                 break;
                             }
                         }
@@ -5314,11 +5314,11 @@ public class Game_local {
             if (g_showTargets.GetBool()) {
                 ShowTargets();
             }
-//
-//            if (g_showTriggers.GetBool()) {
-//                idTrigger.DrawDebugInfo();//TODO:
-//            }
-//
+
+            if (g_showTriggers.GetBool()) {
+                idTrigger.DrawDebugInfo();//TODO:
+            }
+
             if (ai_showCombatNodes.GetBool()) {
                 idCombatNode.DrawDebugInfo();
             }

@@ -208,7 +208,7 @@ public class Misc {
         private static void Event_TeleportPlayer(idPlayerStart p, idEventArg<idEntity> activator) {
             idPlayer player;
 
-            if (activator.value.IsType(idPlayer.class)) {
+            if (activator.value instanceof idPlayer) {
                 player = (idPlayer) activator.value;
             } else {
                 player = gameLocal.GetLocalPlayer();
@@ -245,7 +245,7 @@ public class Misc {
          */
         private static void Event_TeleportStage(idPlayerStart p, idEventArg<idEntity> _player) {
             idPlayer player;
-            if (!_player.value.IsType(idPlayer.class)) {
+            if (!(_player.value instanceof idPlayer)) {
                 common.Warning("idPlayerStart::Event_TeleportStage: entity is not an idPlayer\n");
                 return;
             }
@@ -311,7 +311,7 @@ public class Misc {
                 case EVENT_TELEPORTPLAYER: {
                     entityNumber = msg.ReadBits(GENTITYNUM_BITS);
                     idPlayer player = (idPlayer) gameLocal.entities[entityNumber];
-                    if (player != null && player.IsType(idPlayer.class)) {
+                    if (player != null && player instanceof idPlayer) {
                         Event_TeleportPlayer(player);
                     }
                     return true;
@@ -490,7 +490,7 @@ public class Misc {
             idBounds bnds = new idBounds(new idVec3(-4.0f, -4.0f, -8.0f), new idVec3(4.0f, 4.0f, 64.0f));
 
             for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                if (!ent.IsType(idPathCorner.class)) {
+                if (!(ent instanceof idPathCorner)) {
                     continue;
                 }
 
@@ -509,7 +509,7 @@ public class Misc {
             num = 0;
             for (i = 0; i < source.targets.Num(); i++) {
                 ent = source.targets.oGet(i).GetEntity();
-                if (ent != null && (ent != ignore) && ent.IsType(idPathCorner.class)) {
+                if (ent != null && (ent != ignore) && ent instanceof idPathCorner) {
                     path[num++] = (idPathCorner) ent;
                     if (num >= MAX_GENTITIES) {
                         break;
@@ -1390,7 +1390,7 @@ public class Misc {
             dir.Normalize();
 
             gameLocal.SpawnEntityDef(projectileDef, ent, false);
-            if (null == ent[0] || !ent[0].IsType(idProjectile.class)) {
+            if (null == ent[0] || !(ent[0] instanceof idProjectile)) {
                 idGameLocal.Error("idAnimated '%s' at (%s): in 'launchMissiles' call '%s' is not an idProjectile", name, GetPhysics().GetOrigin().ToString(0), projectilename);
             }
             projectile = (idProjectile) ent[0];
@@ -2285,7 +2285,7 @@ public class Misc {
             targetBeam = null;
             for (i = 0; i < targets.Num(); i++) {
                 targetEnt = targets.oGet(i).GetEntity();
-                if (targetEnt != null && targetEnt.IsType(idBeam.class)) {
+                if (targetEnt != null && targetEnt instanceof idBeam) {
                     targetBeam = (idBeam) targetEnt;
                     break;
                 }
@@ -2912,7 +2912,7 @@ public class Misc {
             idSoundShader shader;
             CInt length = new CInt();
 
-            if (activator.value.IsType(idPlayer.class)) {
+            if (activator.value instanceof idPlayer) {
                 player = (idPlayer) activator.value;
             } else {
                 player = gameLocal.GetLocalPlayer();
@@ -2934,7 +2934,7 @@ public class Misc {
 
         private void Event_ResetRadioHud(idEventArg<idEntity> _activator) {
             idEntity activator = _activator.value;
-            idPlayer player = (activator.IsType(idPlayer.class)) ? (idPlayer) activator : gameLocal.GetLocalPlayer();
+            idPlayer player = (activator instanceof idPlayer) ? (idPlayer) activator : gameLocal.GetLocalPlayer();
             player.hud.HandleNamedEvent("radioChatterDown");
             ActivateTargets(activator);
         }
@@ -3148,7 +3148,7 @@ public class Misc {
                     } else {
                         targetTime.oSet(i, gameLocal.time + gameLocal.random.RandomInt(max_wait - min_wait) + min_wait);
                     }
-                    if (ent.IsType(idMoveable.class)) {
+                    if (ent instanceof idMoveable) {
                         idMoveable ment = (idMoveable) ent;
                         ment.EnableDamage(true, 2.5f);
                     }
@@ -3182,7 +3182,7 @@ public class Misc {
                 return;
             }
 
-            if (null == activator || !activator.IsType(idActor.class)) {
+            if (null == activator || !(activator instanceof idActor)) {
                 target.oSet(gameLocal.GetLocalPlayer());
             } else {
                 target.oSet((idActor) activator);

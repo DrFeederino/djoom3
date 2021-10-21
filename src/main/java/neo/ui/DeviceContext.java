@@ -1,9 +1,7 @@
 package neo.ui;
 
 import neo.Renderer.Material.idMaterial;
-import neo.Renderer.RenderSystem.*;
 import neo.framework.CVarSystem.idCVar;
-import neo.idlib.Text.Str.*;
 import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Math_h.idMath;
@@ -257,6 +255,9 @@ public class DeviceContext {
         }
 
         public int DrawText(String text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, idList<Integer> breaks /*= NULL*/, int limit /*= 0*/) {
+            if (text == null || text.isEmpty()) {
+                return -1; // why call DrawText if text is garbage?
+            }
             char p, textPtr;
             int p_i, newLinePtr = 0;
             final char[] buff = new char[1024];
@@ -273,8 +274,6 @@ public class DeviceContext {
 
             SetFontByScale(textScale);
 
-//            textWidth = 0;
-//	newLinePtr = NULL;
             if (!calcOnly && !(text != null && !text.isEmpty())) {
                 if (cursor == 0) {
                     renderSystem.SetColor(color);

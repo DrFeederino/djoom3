@@ -668,7 +668,7 @@ public class IK /*ea*/ {
             boolean onPlat = false;
             for (i = 0; i < phys.GetNumContacts(); i++) {
                 idEntity ent = gameLocal.entities[phys.GetContact(i).entityNum];
-                if (ent != null && ent.IsType(idPlat.class)) {
+                if (ent != null && ent instanceof idPlat) {
                     onPlat = true;
                     break;
                 }

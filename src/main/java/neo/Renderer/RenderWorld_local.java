@@ -1496,7 +1496,7 @@ public class RenderWorld_local {
         @Override
         public void DebugBounds(idVec4 color, idBounds bounds, idVec3 org, int lifetime) {
             int i;
-            idVec3[] v = new idVec3[8];
+            idVec3[] v = idVec3.generateArray(8);
 
             if (bounds.IsCleared()) {
                 return;

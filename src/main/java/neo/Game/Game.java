@@ -194,7 +194,7 @@ public class Game {
         public abstract boolean Draw(int clientNum);
 
         // Let the game do it's own UI when ESCAPE is used
-        public abstract escReply_t HandleESC(idUserInterface[] gui);
+        public abstract escReply_t HandleESC(idUserInterface gui);
 
         // get the games menu if appropriate ( multiplayer )
         public abstract idUserInterface StartMenu();
@@ -861,7 +861,7 @@ public class Game {
 
             // reload any idAFEntity_Generic which uses the given articulated figure file
             for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                if (ent.IsType(idAFEntity_Base.class)) {
+                if (ent instanceof idAFEntity_Base) {
                     af = (idAFEntity_Base) ent;
                     if (name.Icmp(af.GetAFName()) == 0) {
                         af.LoadAF();
@@ -889,7 +889,7 @@ public class Game {
 
                 // reload all AF entities using the file
                 for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                    if (ent.IsType(idAFEntity_Base.class)) {
+                    if (ent instanceof idAFEntity_Base) {
                         af = (idAFEntity_Base) ent;
                         if (idStr.Icmp(decl.GetName(), af.GetAFName()) == 0) {
                             af.LoadAF();

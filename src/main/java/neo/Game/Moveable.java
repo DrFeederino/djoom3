@@ -924,7 +924,7 @@ public class Moveable {
                     dir2.Normalize();
 
                     gameLocal.SpawnEntityDef(debris_args, ent, false);
-                    if (null == ent[0] || !ent[0].IsType(idDebris.class)) {
+                    if (null == ent[0] || !(ent[0] instanceof idDebris)) {
                         idGameLocal.Error("'projectile_debris' is not an idDebris");
                     }
 
@@ -1079,7 +1079,7 @@ public class Moveable {
             if (minRespawnDist != 0) {
                 float minDist = -1;
                 for (i = 0; i < gameLocal.numClients; i++) {
-                    if (NOT(gameLocal.entities[i]) || !gameLocal.entities[i].IsType(idPlayer.class)) {
+                    if (NOT(gameLocal.entities[i]) || !(gameLocal.entities[i] instanceof idPlayer)) {
                         continue;
                     }
                     idVec3 v = gameLocal.entities[i].GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());

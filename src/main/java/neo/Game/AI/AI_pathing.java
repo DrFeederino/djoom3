@@ -339,7 +339,7 @@ public class AI_pathing {
                 continue;
             }
 
-            if (obEnt.IsType(idActor.class)) {
+            if (obEnt instanceof idActor) {
                 obPhys = obEnt.GetPhysics();
                 // ignore myself, my enemy, and dead bodies
                 if ((obPhys == physics) || (obEnt == ignore) || (obEnt.health <= 0)) {
@@ -356,7 +356,7 @@ public class AI_pathing {
                         }
                     }
                 }
-            } else if (obEnt.IsType(idMoveable.class)) {
+            } else if (obEnt instanceof idMoveable) {
                 // moveables are considered obstacles
             } else {
                 // ignore everything else

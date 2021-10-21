@@ -104,7 +104,7 @@ public class Trigger {
                     if (viewTextBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())) {
                         gameRenderWorld.DrawText(ent.name.toString(), ent.GetPhysics().GetAbsBounds().GetCenter(), 0.1f, colorWhite, axis, 1);
                         gameRenderWorld.DrawText(ent.GetEntityDefName(), ent.GetPhysics().GetAbsBounds().GetCenter().oPlus(up), 0.1f, colorWhite, axis, 1);
-                        if (ent.IsType(idTrigger.class)) {
+                        if (ent instanceof idTrigger) {
                             func = ((idTrigger) ent).GetScriptFunction();
                         } else {
                             func = null;
@@ -366,7 +366,7 @@ public class Trigger {
 
         private boolean CheckFacing(idEntity activator) {
             if (spawnArgs.GetBool("facing")) {
-                if (!activator.IsType(idPlayer.class)) {
+                if (!(activator instanceof idPlayer)) {
                     return true;
                 }
                 idPlayer player = (idPlayer) activator;
@@ -444,7 +444,7 @@ public class Trigger {
                 return;
             }
 
-            boolean player = other.IsType(idPlayer.class);
+            boolean player = other instanceof idPlayer;
             if (player) {
                 if (!touchClient) {
                     return;

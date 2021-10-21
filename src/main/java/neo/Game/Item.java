@@ -465,7 +465,7 @@ public class Item {
 
         private void Event_Touch(idEventArg<idEntity> _other, idEventArg<trace_s> trace) {
             idEntity other = _other.value;
-            if (!other.IsType(idPlayer.class)) {
+            if (!(other instanceof idPlayer)) {
                 return;
             }
 
@@ -483,7 +483,7 @@ public class Item {
                 return;
             }
 
-            if (activator != null && activator.IsType(idPlayer.class)) {
+            if (activator != null && activator instanceof idPlayer) {
                 Pickup((idPlayer) activator);
             }
         }
@@ -684,7 +684,7 @@ public class Item {
 
                         // a tad slow but keeps from having to update all objectives in all maps with a name ptr
                         for (int i = 0; i < gameLocal.num_entities; i++) {
-                            if (gameLocal.entities[i] != null && gameLocal.entities[i].IsType(idObjectiveComplete.class)) {
+                            if (gameLocal.entities[i] != null && gameLocal.entities[i] instanceof idObjectiveComplete) {
                                 if (idStr.Icmp(spawnArgs.GetString("objectivetitle"), gameLocal.entities[i].spawnArgs.GetString("objectivetitle")) == 0) {
                                     gameLocal.entities[i].spawnArgs.SetBool("objEnabled", true);
                                     break;
@@ -1156,7 +1156,7 @@ public class Item {
 
         private void Event_Trigger(idEventArg<idEntity> _activator) {
             idEntity activator = _activator.value;
-            if (activator.IsType(idPlayer.class)) {
+            if (activator instanceof idPlayer) {
                 RemoveItem((idPlayer) activator);
             }
         }

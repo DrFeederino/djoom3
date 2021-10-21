@@ -1708,7 +1708,7 @@ public class Mover {
                 return;
             }
 
-            if (!other.value.IsType(idPlayer.class)) {
+            if (!(other.value instanceof idPlayer)) {
                 return;
             }
 
@@ -1732,11 +1732,11 @@ public class Mover {
             doorEnt = null;
             if (name != null && !name.isEmpty()) {
                 ent = gameLocal.FindEntity(name);
-                if (ent != null && ent.IsType(idDoor.class)) {
+                if (ent != null && ent instanceof idDoor) {
                     doorEnt = (idDoor) ent;
                     master = doorEnt.GetMoveMaster();
                     if (master != doorEnt) {
-                        if (master.IsType(idDoor.class)) {
+                        if (master instanceof idDoor) {
                             doorEnt = (idDoor) master;
                         } else {
                             doorEnt = null;
@@ -1852,7 +1852,7 @@ public class Mover {
         private void Event_TeamBlocked(idEventArg<idEntity> blockedEntity, idEventArg<idEntity> blockingEntity) {
             if (blockedEntity.value == this) {
                 Event_GotoFloor(idEventArg.toArg(lastFloor));
-            } else if (blockedEntity != null && blockedEntity.value.IsType(idDoor.class)) {
+            } else if (blockedEntity != null && blockedEntity.value instanceof idDoor) {
                 // open the inner doors if one is blocked
                 idDoor blocked = (idDoor) blockedEntity.value;
                 idDoor door = GetDoor(spawnArgs.GetString("innerdoor"));
@@ -2049,7 +2049,7 @@ public class Mover {
             } else {
                 // find the first entity spawned on this team (which could be us)
                 for (ent = gameLocal.spawnedEntities.Next(); ent != null; ent = ent.spawnNode.Next()) {
-                    if (ent.IsType(idMover_Binary.class) && NOT(idStr.Icmp(((idMover_Binary) ent).team.toString(), temp[0]))) {
+                    if (ent instanceof idMover_Binary && NOT(idStr.Icmp(((idMover_Binary) ent).team.toString(), temp[0]))) {
                         break;
                     }
                 }
@@ -3107,7 +3107,7 @@ public class Mover {
                 master.Hide();
             } else {
                 for (slave = this; slave != null; slave = slave.GetActivateChain()) {
-                    if (slave.IsType(idDoor.class)) {
+                    if (slave instanceof idDoor) {
                         slaveDoor = (idDoor) slave;
                         companion = slaveDoor.companionDoor;
                         if (companion != null && (!companion.equals(master)) && (!companion.GetMoveMaster().equals(master))) {
@@ -3142,7 +3142,7 @@ public class Mover {
                 master.Show();
             } else {
                 for (slave = this; slave != null; slave = slave.GetActivateChain()) {
-                    if (slave.IsType(idDoor.class)) {
+                    if (slave instanceof idDoor) {
                         slaveDoor = (idDoor) slave;
                         companion = slaveDoor.companionDoor;
                         if (companion != null && (!companion.equals(master)) && (!companion.GetMoveMaster().equals(master))) {
@@ -3182,7 +3182,7 @@ public class Mover {
 
             // lock all the doors on the team
             for (other = moveMaster; other != null; other = other.GetActivateChain()) {
-                if (other.IsType(idDoor.class)) {
+                if (other instanceof idDoor) {
                     idDoor door = (idDoor) other;
                     if (other.equals(moveMaster)) {
                         if (door.sndTrigger == null) {
@@ -3212,7 +3212,7 @@ public class Mover {
             if (gameLocal.RequirementMet(activator, requires, removeItem)) {
                 if (syncLock.Length() != 0) {
                     idEntity sync = gameLocal.FindEntity(syncLock);
-                    if (sync != null && sync.IsType(idDoor.class)) {
+                    if (sync != null && sync instanceof idDoor) {
                         if (((idDoor) sync).IsOpen()) {
                             return;
                         }
@@ -3270,7 +3270,7 @@ public class Mover {
 
             fl.takedamage = true;
             for (other = activateChain; other != null; other = other.GetActivateChain()) {
-                if (other.IsType(idDoor.class)) {
+                if (other instanceof idDoor) {
                     // find the bounds of everything on the team
                     bounds.AddBounds(other.GetPhysics().GetAbsBounds());
 
@@ -3354,7 +3354,7 @@ public class Mover {
                     Use(this, other);
                 }
             } else if (sndTrigger != null && trace.c.id == sndTrigger.GetId()) {
-                if (other != null && other.IsType(idPlayer.class) && IsLocked() != 0 && gameLocal.time > nextSndTriggerTime) {
+                if (other != null && other instanceof idPlayer && IsLocked() != 0 && gameLocal.time > nextSndTriggerTime) {
                     StartSound("snd_locked", SND_CHANNEL_ANY, 0, false, null);
                     nextSndTriggerTime = gameLocal.time + 10000;
                 }
@@ -3385,7 +3385,7 @@ public class Mover {
 
             if (syncLock.Length() != 0) {
                 idEntity sync = gameLocal.FindEntity(syncLock);
-                if (sync != null && sync.IsType(idDoor.class)) {
+                if (sync != null && sync instanceof idDoor) {
                     if (((idDoor) sync).IsOpen()) {
                         return;
                     }
@@ -3445,7 +3445,7 @@ public class Mover {
             // check if any of the doors are marked as toggled
             toggle = false;
             for (other = moveMaster; other != null; other = other.GetActivateChain()) {
-                if (other.IsType(idDoor.class) && other.spawnArgs.GetBool("toggle")) {
+                if (other instanceof idDoor && other.spawnArgs.GetBool("toggle")) {
                     toggle = true;
                     break;
                 }
@@ -3454,7 +3454,7 @@ public class Mover {
             if (toggle) {
                 // mark them all as toggled
                 for (other = moveMaster; other != null; other = other.GetActivateChain()) {
-                    if (other.IsType(idDoor.class)) {
+                    if (other instanceof idDoor) {
                         other.spawnArgs.Set("toggle", "1");
                     }
                 }
@@ -3532,7 +3532,7 @@ public class Mover {
             idBounds bounds;
             idPlayer p;
 
-            assert (other != null && other.IsType(idPlayer.class) && ((idPlayer) other).spectating);
+            assert (other != null && other instanceof idPlayer && ((idPlayer) other).spectating);
 
             p = (idPlayer) other;
             // avoid flicker when stopping right at clip box boundaries
@@ -3569,7 +3569,7 @@ public class Mover {
             idDoor slaveDoor;
 
             for (slave = this; slave != null; slave = slave.GetActivateChain()) {
-                if (slave.IsType(idDoor.class)) {
+                if (slave instanceof idDoor) {
                     slaveDoor = (idDoor) slave;
                     if (slaveDoor.areaPortal != 0) {
                         slaveDoor.SetPortalState(true);
@@ -3593,7 +3593,7 @@ public class Mover {
 
             for (slave = this; slave != null; slave = slave.GetActivateChain()) {
                 if (!slave.IsHidden()) {
-                    if (slave.IsType(idDoor.class)) {
+                    if (slave instanceof idDoor) {
                         slaveDoor = (idDoor) slave;
                         if (slaveDoor.areaPortal != 0) {
                             slaveDoor.SetPortalState(false);
@@ -3792,7 +3792,7 @@ public class Mover {
 
         private void Event_Touch(idEventArg<idEntity> _other, idEventArg<trace_s> trace) {
             idEntity other = _other.value;
-            if (!other.IsType(idPlayer.class)) {
+            if (!(other instanceof idPlayer)) {
                 return;
             }
 

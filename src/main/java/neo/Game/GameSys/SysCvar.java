@@ -146,7 +146,7 @@ public class SysCvar {
     public static final idCVar g_showBrass = new idCVar("g_showBrass", "1", CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "enables ejected shells from weapon");
     public static final idCVar g_showCollisionModels = new idCVar("g_showCollisionModels", "0", CVAR_GAME | CVAR_BOOL, "");
     public static final idCVar g_showCollisionTraces = new idCVar("g_showCollisionTraces", "0", CVAR_GAME | CVAR_BOOL, "");
-    public static final idCVar g_showCollisionWorld = new idCVar("g_showCollisionWorld", "0", CVAR_GAME | CVAR_BOOL, "");
+    public static final idCVar g_showCollisionWorld = new idCVar("g_showCollisionWorld", "1", CVAR_GAME | CVAR_BOOL, "");
     public static final idCVar g_showEnemies = new idCVar("g_showEnemies", "0", CVAR_GAME | CVAR_BOOL, "draws boxes around monsters that have targeted the the player");
     public static final idCVar g_showEntityInfo = new idCVar("g_showEntityInfo", "0", CVAR_GAME | CVAR_BOOL, "");
     public static final idCVar g_showHud = new idCVar("g_showHud", "1", CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "");
