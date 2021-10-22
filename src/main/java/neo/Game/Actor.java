@@ -1901,19 +1901,19 @@ public class Actor {
         public boolean InAnimState(int channel, final String stateName) {
             switch (channel) {
                 case ANIMCHANNEL_HEAD:
-                    if (headAnim.state.equals(stateName)) {
+                    if (headAnim.state.toString().equals(stateName)) {
                         return true;
                     }
                     break;
 
                 case ANIMCHANNEL_TORSO:
-                    if (torsoAnim.state.equals(stateName)) {
+                    if (torsoAnim.state.toString().equals(stateName)) {
                         return true;
                     }
                     break;
 
                 case ANIMCHANNEL_LEGS:
-                    if (legsAnim.state.equals(stateName)) {
+                    if (legsAnim.state.toString().equals(stateName)) {
                         return true;
                     }
                     break;
@@ -2111,7 +2111,7 @@ public class Actor {
                 damageJoint = joint;
                 for (i = 0; i < damageGroups.size(); i++) {
                     final idStr d = damageGroups.get(i);
-                    if (d != null && d.equals("head")) {
+                    if (d != null && d.toString().equals("head")) {
                         damageJoint = /*(jointHandle_t)*/ i;
                         break;
                     }
@@ -2145,7 +2145,7 @@ public class Actor {
         }
 
         private void PlayFootStepSound() {
-            String sound = null;
+            String sound = "";
             idMaterial material;
 
             if (!GetPhysics().HasGroundContacts()) {
@@ -2166,7 +2166,7 @@ public class Actor {
         }
 
         private void Event_EnableEyeFocus() {
-            String sound = null;
+            String sound = "";
             idMaterial material;
 
             if (!GetPhysics().HasGroundContacts()) {
@@ -2677,7 +2677,7 @@ public class Actor {
         }
 
         private void Event_FinishAction(final idEventArg<String> actionname) {
-            if (waitState.equals(actionname.value)) {
+            if (waitState.toString().equals(actionname.value)) {
                 SetWaitState("");
             }
         }

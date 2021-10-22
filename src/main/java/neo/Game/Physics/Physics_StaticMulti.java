@@ -306,7 +306,7 @@ public class Physics_StaticMulti {
         @Override
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
             int i;
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (hasMaster) {
@@ -384,7 +384,7 @@ public class Physics_StaticMulti {
 
         @Override
         public void SetOrigin(final idVec3 newOrigin, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (id >= 0 && id < clipModels.Num()) {
@@ -410,7 +410,7 @@ public class Physics_StaticMulti {
 
         @Override
         public void SetAxis(final idMat3 newAxis, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (id >= 0 && id < clipModels.Num()) {
@@ -467,7 +467,7 @@ public class Physics_StaticMulti {
         @Override
         public void Rotate(final idRotation rotation, int id /*= -1*/) {
             int i;
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (id >= 0 && id < clipModels.Num()) {
@@ -510,7 +510,7 @@ public class Physics_StaticMulti {
         @Override
         public idVec3 GetOrigin(int id /*= 0*/) {
             if (id >= 0 && id < clipModels.Num()) {
-                return new idVec3(current.oGet(id).origin);
+                return new idVec3(current.oGet(id).origin); // why?
             }
             if (clipModels.Num() != 0) {
                 return new idVec3(current.oGet(0).origin);
@@ -698,7 +698,7 @@ public class Physics_StaticMulti {
         @Override
         public void SetMaster(idEntity master, final boolean orientated /*= true*/) {
             int i;
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (master != null) {

@@ -204,7 +204,7 @@ public class AF {
                 return false;
             }
 
-            if (file.bodies.Num() == 0 || !file.bodies.oGet(0).jointName.equals("origin")) {
+            if (file.bodies.Num() == 0 || !file.bodies.oGet(0).jointName.toString().equals("origin")) {
                 gameLocal.Warning("idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no body which modifies the origin joint.",
                         name.toString(), ent.name.toString(), ent.GetPhysics().GetOrigin().ToString(0));
                 return false;
@@ -1012,7 +1012,7 @@ public class AF {
             body.SetClipMask(fb.clipMask.getVal());
             body.SetSelfCollision(fb.selfCollision);
 
-            if (fb.jointName.equals("origin")) {
+            if (fb.jointName.toString().equals("origin")) {
                 SetBase(body, joints);
             } else {
                 AFJointModType_t mod;
@@ -1052,8 +1052,8 @@ public class AF {
 
         protected boolean LoadConstraint(final idDeclAF_Constraint fc) {
             idAFBody body1, body2;
-            idAngles angles;
-            idMat3 axis;
+            idAngles angles = new idAngles();
+            idMat3 axis = new idMat3();
 
             body1 = physicsObj.GetBody(fc.body1.toString());
             body2 = physicsObj.GetBody(fc.body2.toString());
@@ -1089,9 +1089,9 @@ public class AF {
                             break;
                         }
                         case idDeclAF_Constraint.LIMIT_PYRAMID: {
-                            angles = fc.limitAxis.ToVec3().ToAngles();
+                            angles.oSet(fc.limitAxis.ToVec3().ToAngles());
                             angles.roll = fc.limitAngles[2];
-                            axis = angles.ToMat3();
+                            axis.oSet(angles.ToMat3());
                             c.SetPyramidLimit(axis.oGet(0), axis.oGet(1), fc.limitAngles[0], fc.limitAngles[1], fc.shaft[0].ToVec3());
                             break;
                         }
@@ -1121,9 +1121,9 @@ public class AF {
                             break;
                         }
                         case idDeclAF_Constraint.LIMIT_PYRAMID: {
-                            angles = fc.limitAxis.ToVec3().ToAngles();
+                            angles.oSet(fc.limitAxis.ToVec3().ToAngles());
                             angles.roll = fc.limitAngles[2];
-                            axis = angles.ToMat3();
+                            axis.oSet(angles.ToMat3());
                             c.SetPyramidLimit(axis.oGet(0), axis.oGet(1), fc.limitAngles[0], fc.limitAngles[1]);
                             break;
                         }

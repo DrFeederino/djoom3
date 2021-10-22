@@ -60,8 +60,8 @@ public class Physics {
 
         idMat3 invInertiaTensor;// inverse inertia tensor
         float invMass;         // inverse mass
-        idVec3 position;        // impact position relative to center of mass
-        idVec3 velocity;        // velocity at the impact position
+        final idVec3 position;        // impact position relative to center of mass
+        final idVec3 velocity;        // velocity at the impact position
 
         public impactInfo_s() {
             invInertiaTensor = new idMat3();

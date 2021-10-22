@@ -5620,15 +5620,15 @@ public class AI {
             gameLocal.RadiusDamage(org, this, this, this, this, damageDefName.value);
         }
 
-        protected void Event_BeginAttack(final idEventArg<String> name) {
-            BeginAttack(name.value);
+        protected void Event_BeginAttack(final idEventArg<char[]> name) {
+            BeginAttack(String.valueOf(name.value));
         }
 
         protected void Event_EndAttack() {
             EndAttack();
         }
 
-        protected void Event_MeleeAttackToJoint(final idEventArg<String> jointname, final idEventArg<String> meleeDefName) {
+        protected void Event_MeleeAttackToJoint(final idEventArg<String> jointname, final idEventArg<char[]> meleeDefName) {
             int/*jointHandle_t*/ joint;
             idVec3 start;
             idVec3 end = new idVec3();
@@ -5652,7 +5652,7 @@ public class AI {
             if (trace.fraction < 1.0f) {
                 hitEnt = gameLocal.GetTraceEntity(trace);
                 if (hitEnt != null && hitEnt instanceof idActor) {
-                    DirectDamage(meleeDefName.value, hitEnt);
+                    DirectDamage(String.valueOf(meleeDefName.value), hitEnt);
                     idThread.ReturnInt(true);
                     return;
                 }
@@ -5805,12 +5805,12 @@ public class AI {
             MoveOutOfRange(entity.value, range.value);
         }
 
-        protected void Event_MoveToAttackPosition(idEventArg<idEntity> entity, final idEventArg<String> attack_anim) {
+        protected void Event_MoveToAttackPosition(idEventArg<idEntity> entity, final idEventArg<char[]> attack_anim) {
             int anim;
 
             StopMove(MOVE_STATUS_DEST_NOT_FOUND);
 
-            anim = GetAnim(ANIMCHANNEL_LEGS, attack_anim.value);
+            anim = GetAnim(ANIMCHANNEL_LEGS, String.valueOf(attack_anim.value));
             if (0 == anim) {
                 idGameLocal.Error("Unknown anim '%s'", attack_anim.value);
             }
@@ -6207,7 +6207,7 @@ public class AI {
             idThread.ReturnInt(GetAimDir(fromPos, enemy.GetEntity(), this, dir));
         }
 
-        protected void Event_CanHitEnemyFromJoint(final idEventArg<String> jointname) {
+        protected void Event_CanHitEnemyFromJoint(final idEventArg<char[]> jointname) {
             trace_s tr = new trace_s();
             idVec3 muzzle = new idVec3();
             idMat3 axis = new idMat3();
@@ -6230,7 +6230,7 @@ public class AI {
 
             final idVec3 org = physicsObj.GetOrigin();
             idVec3 toPos = enemyEnt.GetEyePosition();
-            int/*jointHandle_t*/ joint = animator.GetJointHandle(jointname.value);
+            int/*jointHandle_t*/ joint = animator.GetJointHandle(String.valueOf(jointname.value));
             if (joint == INVALID_JOINT) {
                 idGameLocal.Error("Unknown joint '%s' on %s", jointname.value, GetEntityDefName());
             }
@@ -6273,7 +6273,7 @@ public class AI {
             idThread.ReturnInt(result);
         }
 
-        protected void Event_ChargeAttack(final idEventArg<String> damageDef) {
+        protected void Event_ChargeAttack(final idEventArg<char[]> damageDef) {
             idActor enemyEnt = enemy.GetEntity();
 
             StopMove(MOVE_STATUS_DEST_NOT_FOUND);
@@ -6288,7 +6288,7 @@ public class AI {
                     enemyOrg = enemyEnt.GetPhysics().GetOrigin();
                 }
 
-                BeginAttack(damageDef.value);
+                BeginAttack(String.valueOf(damageDef.value));
                 DirectMoveToPosition(enemyOrg);
                 TurnToward(enemyOrg);
             }
@@ -6329,7 +6329,7 @@ public class AI {
             }
         }
 
-        protected void Event_TestAnimMoveTowardEnemy(final idEventArg<String> animname) {
+        protected void Event_TestAnimMoveTowardEnemy(final idEventArg<char[]> animname) {
             int anim;
             predictedPath_s path = new predictedPath_s();
             idVec3 moveVec;
@@ -6343,7 +6343,7 @@ public class AI {
                 return;
             }
 
-            anim = GetAnim(ANIMCHANNEL_LEGS, animname.value);
+            anim = GetAnim(ANIMCHANNEL_LEGS, String.valueOf(animname.value));
             if (0 == anim) {
                 gameLocal.DWarning("missing '%s' animation on '%s' (%s)", animname.value, name, GetEntityDefName());
                 idThread.ReturnInt(false);
@@ -6409,11 +6409,11 @@ public class AI {
             idThread.ReturnInt(result);
         }
 
-        protected void Event_TestAnimAttack(final idEventArg<String> animname) {
+        protected void Event_TestAnimAttack(final idEventArg<char[]> animname) {
             int anim;
             predictedPath_s path = new predictedPath_s();
 
-            anim = GetAnim(ANIMCHANNEL_LEGS, animname.value);
+            anim = GetAnim(ANIMCHANNEL_LEGS, String.valueOf(animname.value));
             if (0 == anim) {
                 gameLocal.DWarning("missing '%s' animation on '%s' (%s)", animname.value, name, GetEntityDefName());
                 idThread.ReturnInt(false);
@@ -6684,7 +6684,7 @@ public class AI {
             bestTime = idMath.INFINITY;
             for (i = 0; i < targets.Num(); i++) {
                 ent = targets.oGet(i).GetEntity();
-                if (ent != null && idStr.Cmp(ent.GetEntityDefName(), type.value) == 0) {
+                if (ent != null && idStr.Cmp(ent.GetEntityDefName(), String.valueOf(type.value)) == 0) {
                     final idVec3 destOrg = ent.GetPhysics().GetOrigin();
                     time = TravelDistance(org, destOrg);
                     if ((time >= 0.0f) && (time < bestTime)) {
@@ -6698,7 +6698,7 @@ public class AI {
             idThread.ReturnEntity(bestEnt);
         }
 
-        protected void Event_GetRandomTarget(final idEventArg<String> type) {
+        protected void Event_GetRandomTarget(final idEventArg<char[]> type) {
             int i;
             int num;
             int which;
@@ -6708,7 +6708,7 @@ public class AI {
             num = 0;
             for (i = 0; i < targets.Num(); i++) {
                 ent = targets.oGet(i).GetEntity();
-                if (ent != null && idStr.Cmp(ent.GetEntityDefName(), type.value) == 0) {
+                if (ent != null && idStr.Cmp(ent.GetEntityDefName(), String.valueOf(type.value)) == 0) {
                     ents[num++] = ent;
                     if (num >= MAX_GENTITIES) {
                         break;
@@ -6932,8 +6932,8 @@ public class AI {
             allowHiddenMovement = (enable.value != 0);
         }
 
-        protected void Event_TriggerParticles(final idEventArg<String> jointName) {
-            TriggerParticles(jointName.value);
+        protected void Event_TriggerParticles(final idEventArg<char[]> jointName) {
+            TriggerParticles(String.valueOf(jointName.value));
         }
 
         protected void Event_FindActorsInBounds(final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs) {

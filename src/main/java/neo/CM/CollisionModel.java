@@ -89,7 +89,7 @@ public class CollisionModel {
 
         public contactInfo_t c;            // contact information, only valid if fraction < 1.0
         public idMat3 endAxis;      // final axis of trace model
-        public idVec3 endpos;       // final position of trace model
+        public final idVec3 endpos;       // final position of trace model
         public float fraction;     // fraction of movement completed, 1.0 = didn't hit anything
 
         public trace_s() {

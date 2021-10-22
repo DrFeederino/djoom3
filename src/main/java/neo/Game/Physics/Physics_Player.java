@@ -142,14 +142,14 @@ public class Physics_Player {
 
     public static final class playerPState_s {
 
-        idVec3 localOrigin;
+        final idVec3 localOrigin;
         int movementFlags;
         int movementTime;
         int movementType;
-        idVec3 origin;
-        idVec3 pushVelocity;
+        final idVec3 origin;
+        final idVec3 pushVelocity;
         float stepUp;
-        idVec3 velocity;
+        final idVec3 velocity;
 
         public playerPState_s() {
             origin = new idVec3();
@@ -377,12 +377,11 @@ public class Physics_Player {
         @Override
         // common physics interface
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
-            idVec3 masterOrigin = new idVec3(), oldOrigin;
+            final idVec3 masterOrigin = new idVec3(), oldOrigin = new idVec3(current.origin);
             idMat3 masterAxis = new idMat3();
 
             waterLevel = WATERLEVEL_NONE;
             waterType = 0;
-            oldOrigin = new idVec3(current.origin);
 
             clipModel.Unlink();
 
@@ -463,7 +462,7 @@ public class Physics_Player {
 
         @Override
         public void SetOrigin(final idVec3 newOrigin, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localOrigin.oSet(newOrigin);
@@ -493,7 +492,7 @@ public class Physics_Player {
 
         @Override
         public void Rotate(final idRotation rotation, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.origin.oMulSet(rotation);
@@ -519,7 +518,7 @@ public class Physics_Player {
 
         @Override
         public void SetPushed(int deltaTime) {
-            idVec3 velocity;
+            final idVec3 velocity;
             float d;
 
             // velocity with which the player is pushed
@@ -556,7 +555,7 @@ public class Physics_Player {
          */
         @Override
         public void SetMaster(idEntity master, final boolean orientated /*= true*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (master != null) {
@@ -712,9 +711,9 @@ public class Physics_Player {
             int i, j, k, pushFlags;
             int bumpcount, numbumps, numplanes;
             float d, time_left, into, totalMass;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idVec3[] planes = idVec3.generateArray(MAX_CLIP_PLANES);
-            idVec3 end, stepEnd, primal_velocity = new idVec3(), endVelocity = new idVec3(), endClipVelocity = new idVec3(), clipVelocity = new idVec3();
+            final idVec3 end = new idVec3(), stepEnd = new idVec3(), primal_velocity = new idVec3(), endVelocity = new idVec3(), endClipVelocity = new idVec3(), clipVelocity = new idVec3();
             trace_s trace = new trace_s(), stepTrace = new trace_s(), downTrace = new trace_s();
             boolean nearGround, stepped, pushed;
 
@@ -739,20 +738,20 @@ public class Physics_Player {
             // never turn against the ground plane
             if (groundPlane) {
                 numplanes = 1;
-                planes[0] = groundTrace.c.normal;
+                planes[0].oSet(groundTrace.c.normal);
             } else {
                 numplanes = 0;
             }
 
             // never turn against original velocity
-            planes[numplanes] = new idVec3(current.velocity);
+            planes[numplanes].oSet(current.velocity);
             planes[numplanes].Normalize();
             numplanes++;
 
             for (bumpcount = 0; bumpcount < numbumps; bumpcount++) {
 
                 // calculate position we are trying to move to
-                end = current.origin.oPlus(current.velocity.oMultiply(time_left));
+                end.oSet(current.origin.oPlus(current.velocity.oMultiply(time_left)));
 
                 // see if we can make it there
                 gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
@@ -775,7 +774,7 @@ public class Physics_Player {
                     if (!nearGround) {
                         // trace down to see if the player is near the ground
                         // step checking when near the ground allows the player to move up stairs smoothly while jumping
-                        stepEnd = current.origin.oPlus(gravityNormal.oMultiply(maxStepHeight));
+                        stepEnd.oSet(current.origin.oPlus(gravityNormal.oMultiply(maxStepHeight)));
                         gameLocal.clip.Translation(downTrace, current.origin, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
                         nearGround = (downTrace.fraction < 1.0f && (downTrace.c.normal.oMultiply(gravityNormal.oNegative())) > MIN_WALK_NORMAL);
                     }
@@ -784,15 +783,15 @@ public class Physics_Player {
                     if (nearGround) {
 
                         // step up
-                        stepEnd = current.origin.oMinus(gravityNormal.oMultiply(maxStepHeight));
+                        stepEnd.oSet(current.origin.oMinus(gravityNormal.oMultiply(maxStepHeight)));
                         gameLocal.clip.Translation(downTrace, current.origin, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
 
                         // trace along velocity
-                        stepEnd = downTrace.endpos.oPlus(current.velocity.oMultiply(time_left));
+                        stepEnd.oSet(downTrace.endpos.oPlus(current.velocity.oMultiply(time_left)));
                         gameLocal.clip.Translation(stepTrace, downTrace.endpos, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
 
                         // step down
-                        stepEnd = stepTrace.endpos.oPlus(gravityNormal.oMultiply(maxStepHeight));
+                        stepEnd.oSet(stepTrace.endpos.oPlus(gravityNormal.oMultiply(maxStepHeight)));
                         gameLocal.clip.Translation(downTrace, stepTrace.endpos, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
 
                         if (downTrace.fraction >= 1.0f || (downTrace.c.normal.oMultiply(gravityNormal.oNegative())) > MIN_WALK_NORMAL) {
@@ -875,7 +874,7 @@ public class Physics_Player {
                 if (i < numplanes) {
                     continue;
                 }
-                planes[numplanes] = trace.c.normal;
+                planes[numplanes].oSet(trace.c.normal);
                 numplanes++;
 
                 //
@@ -915,12 +914,12 @@ public class Physics_Player {
                         }
 
                         // slide the original velocity along the crease
-                        dir = planes[i].Cross(planes[j]);
+                        dir.oSet(planes[i].Cross(planes[j]));
                         dir.Normalize();
                         d = dir.oMultiply(current.velocity);
                         clipVelocity.oSet(dir.oMultiply(d));
 
-                        dir = planes[i].Cross(planes[j]);
+                        dir.oSet(planes[i].Cross(planes[j]));
                         dir.Normalize();
                         d = dir.oMultiply(endVelocity);
                         endClipVelocity.oSet(dir.oMultiply(d));
@@ -949,7 +948,7 @@ public class Physics_Player {
 
             // step down
             if (stepDown && groundPlane) {
-                stepEnd = current.origin.oPlus(gravityNormal.oMultiply(maxStepHeight));
+                stepEnd.oSet(current.origin.oPlus(gravityNormal.oMultiply(maxStepHeight)));
                 gameLocal.clip.Translation(downTrace, current.origin, stepEnd, clipModel, clipModel.GetAxis(), clipMask, self);
                 if (downTrace.fraction > 1e-4f && downTrace.fraction < 1.0f) {
                     current.stepUp -= (downTrace.endpos.oMinus(current.origin)).oMultiply(gravityNormal);
@@ -964,8 +963,8 @@ public class Physics_Player {
             }
 
             // come to a dead stop when the velocity orthogonal to the gravity flipped
-            clipVelocity = current.velocity.oMinus(gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal)));
-            endClipVelocity = endVelocity.oMinus(gravityNormal.oMultiply(endVelocity.oMultiply(gravityNormal)));
+            clipVelocity.oSet(current.velocity.oMinus(gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal))));
+            endClipVelocity.oSet(endVelocity.oMinus(gravityNormal.oMultiply(endVelocity.oMultiply(gravityNormal))));
             if (clipVelocity.oMultiply(endClipVelocity) < 0.0f) {
                 current.velocity.oSet(gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal)));
             }
@@ -981,11 +980,10 @@ public class Physics_Player {
          ==================
          */
         private void Friction() {
-            idVec3 vel;
+            final idVec3 vel = new idVec3(current.velocity);
             float speed, newspeed, control;
             float drop;
 
-            vel = current.velocity;
             if (walking) {
                 // ignore slope movement, remove all velocity in gravity direction
                 vel.oPluSet(gravityNormal.oMultiply(vel.oMultiply(gravityNormal)));
@@ -1057,9 +1055,9 @@ public class Physics_Player {
         }
 
         private void WaterMove() {
-            idVec3 wishvel;
+            final idVec3 wishvel = new idVec3();
             float wishspeed;
-            idVec3 wishdir;
+            final idVec3 wishdir = new idVec3();
             float scale;
             float vel;
 
@@ -1074,13 +1072,13 @@ public class Physics_Player {
 
             // user intentions
             if (0 == scale) {
-                wishvel = gravityNormal.oMultiply(60); // sink towards bottom
+                wishvel.oSet(gravityNormal.oMultiply(60)); // sink towards bottom
             } else {
-                wishvel = (viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale);
+                wishvel.oSet((viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale));
                 wishvel.oMinSet(gravityNormal.oMultiply(command.upmove).oMultiply(scale));
             }
 
-            wishdir = wishvel;
+            wishdir.oSet(wishvel);
             wishspeed = wishdir.Normalize();
 
             if (wishspeed > playerSpeed * PM_SWIMSCALE) {
@@ -1103,9 +1101,9 @@ public class Physics_Player {
         }
 
         private void FlyMove() {
-            idVec3 wishvel;
+            final idVec3 wishvel = new idVec3();
             float wishspeed;
-            idVec3 wishdir;
+            final idVec3 wishdir = new idVec3();
             float scale;
 
             // normal slowdown
@@ -1114,13 +1112,13 @@ public class Physics_Player {
             scale = this.CmdScale(command);
 
             if (0 == scale) {
-                wishvel = getVec3_origin();
+                wishvel.oSet(getVec3_origin());
             } else {
-                wishvel = (viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale);
+                wishvel.oSet((viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale));
                 wishvel.oMinSet(gravityNormal.oMultiply(command.upmove).oMultiply(scale));
             }
 
-            wishdir = wishvel;
+            wishdir.oSet(wishvel);
             wishspeed = wishdir.Normalize();
 
             this.Accelerate(wishdir, wishspeed, PM_FLYACCELERATE);
@@ -1129,8 +1127,8 @@ public class Physics_Player {
         }
 
         private void AirMove() {
-            idVec3 wishvel;
-            idVec3 wishdir;
+            final idVec3 wishvel = new idVec3();
+            final idVec3 wishdir = new idVec3();
             float wishspeed;
             float scale;
 
@@ -1144,9 +1142,9 @@ public class Physics_Player {
             viewForward.Normalize();
             viewRight.Normalize();
 
-            wishvel = (viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale);
+            wishvel.oSet((viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale));
             wishvel.oMinSet(gravityNormal.oMultiply(command.upmove).oMultiply(scale));
-            wishdir = wishvel;
+            wishdir.oSet(wishvel);
             wishspeed = wishdir.Normalize();
             wishspeed *= scale;
 
@@ -1164,12 +1162,12 @@ public class Physics_Player {
         }
 
         private void WalkMove() {
-            idVec3 wishvel;
-            idVec3 wishdir;
+            final idVec3 wishvel = new idVec3();
+            final idVec3 wishdir = new idVec3();
             float wishspeed;
             float scale;
             float accelerate;
-            idVec3 oldVelocity, vel;
+            final idVec3 oldVelocity = new idVec3(), vel = new idVec3();
             float oldVel, newVel;
 
             if (etoi(waterLevel) > etoi(WATERLEVEL_WAIST) && (viewForward.oMultiply(groundTrace.c.normal)) > 0.0f) {
@@ -1203,8 +1201,8 @@ public class Physics_Player {
             viewForward.Normalize();
             viewRight.Normalize();
 
-            wishvel = viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove));
-            wishdir = wishvel;
+            wishvel.oSet(viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove)));
+            wishdir.oSet(wishvel);
             wishspeed = wishdir.Normalize();
             wishspeed *= scale;
 
@@ -1232,7 +1230,7 @@ public class Physics_Player {
                 current.velocity.oPluSet(gravityVector.oMultiply(frametime));
             }
 
-            oldVelocity = current.velocity;
+            oldVelocity.oSet(current.velocity);
 
             // slide along the ground plane
             current.velocity.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP);
@@ -1250,7 +1248,7 @@ public class Physics_Player {
             }
 
             // don't do anything if standing still
-            vel = current.velocity.oMinus(gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal)));
+            vel.oSet(current.velocity.oMinus(gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal))));
             if (0 == vel.LengthSqr()) {
                 return;
             }
@@ -1281,7 +1279,7 @@ public class Physics_Player {
         private void NoclipMove() {
             float speed, drop, friction, newspeed, stopspeed;
             float scale, wishspeed;
-            idVec3 wishdir;
+            final idVec3 wishdir = new idVec3();
 
             // friction
             speed = current.velocity.Length();
@@ -1307,7 +1305,7 @@ public class Physics_Player {
             // accelerate
             scale = this.CmdScale(command);
 
-            wishdir = (viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale);
+            wishdir.oSet((viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale));
             wishdir.oMinSet(gravityNormal.oMultiply(command.upmove).oMultiply(scale));
             wishspeed = wishdir.Normalize();
             wishspeed *= scale;
@@ -1319,13 +1317,14 @@ public class Physics_Player {
         }
 
         private void SpectatorMove() {
-            idVec3 wishvel;
+            final idVec3 wishvel = new idVec3();
             float wishspeed;
-            idVec3 wishdir;
+            final idVec3 wishdir = new idVec3();
+            ;
             float scale;
 
             trace_s trace;
-            idVec3 end;
+            final idVec3 end = new idVec3();
 
             // fly movement
             this.Friction();
@@ -1333,12 +1332,12 @@ public class Physics_Player {
             scale = this.CmdScale(command);
 
             if (0 == scale) {
-                wishvel = getVec3_origin();
+                wishvel.oSet(getVec3_origin());
             } else {
-                wishvel = (viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale);
+                wishvel.oSet((viewForward.oMultiply(command.forwardmove).oPlus(viewRight.oMultiply(command.rightmove))).oMultiply(scale));
             }
 
-            wishdir = wishvel;
+            wishdir.oSet(wishvel);
             wishspeed = wishdir.Normalize();
 
             this.Accelerate(wishdir, wishspeed, PM_FLYACCELERATE);
@@ -1347,12 +1346,12 @@ public class Physics_Player {
         }
 
         private void LadderMove() {
-            idVec3 wishdir, wishvel, right;
+            final idVec3 wishdir = new idVec3(), wishvel = new idVec3(), right = new idVec3();
             float wishspeed, scale;
             float upscale;
 
             // stick to the ladder
-            wishvel = ladderNormal.oMultiply(-100.0f);
+            wishvel.oSet(ladderNormal.oMultiply(-100.0f));
             current.velocity.oSet((gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal))).oPlus(wishvel));
 
             upscale = (gravityNormal.oNegative().oMultiply(viewForward) + 0.5f) * 2.5f;
@@ -1363,19 +1362,19 @@ public class Physics_Player {
             }
 
             scale = this.CmdScale(command);
-            wishvel = gravityNormal.oMultiply(upscale * scale * (float) command.forwardmove * -0.9f);
+            wishvel.oSet(gravityNormal.oMultiply(upscale * scale * (float) command.forwardmove * -0.9f));
 
             // strafe
             if (command.rightmove != 0) {
                 // right vector orthogonal to gravity
-                right = viewRight.oMinus(gravityNormal.oMultiply(viewRight.oMultiply(gravityNormal)));
+                right.oSet(viewRight.oMinus(gravityNormal.oMultiply(viewRight.oMultiply(gravityNormal))));
                 // project right vector into ladder plane
-                right = right.oMinus(ladderNormal.oMultiply(right.oMultiply(ladderNormal)));
+                right.oSet(right.oMinus(ladderNormal.oMultiply(right.oMultiply(ladderNormal))));
                 right.Normalize();
 
                 // if we are looking away from the ladder, reverse the right vector
                 if (ladderNormal.oMultiply(viewForward) > 0.0f) {
-                    right = right.oNegative();
+                    right.oSet(right.oNegative());
                 }
                 wishvel.oPluSet(right.oMultiply(scale * (float) command.rightmove * 2.0f));
             }
@@ -1441,7 +1440,7 @@ public class Physics_Player {
 
         private void CheckGround() {
             int i, contents;
-            idVec3 point;
+            final idVec3 point = new idVec3();
             boolean hadGroundContacts;
 
             hadGroundContacts = HasGroundContacts();
@@ -1550,7 +1549,7 @@ public class Physics_Player {
          */
         private void CheckDuck() {
             trace_s trace = new trace_s();
-            idVec3 end;
+            final idVec3 end = new idVec3();
             idBounds bounds;
             float maxZ;
 
@@ -1565,7 +1564,7 @@ public class Physics_Player {
                     // stand up if possible
                     if ((current.movementFlags & PMF_DUCKED) != 0) {
                         // try to stand up
-                        end = current.origin.oMinus(gravityNormal.oMultiply(pm_normalheight.GetFloat() - pm_crouchheight.GetFloat()));
+                        end.oSet(current.origin.oMinus(gravityNormal.oMultiply(pm_normalheight.GetFloat() - pm_crouchheight.GetFloat())));
                         gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
                         if (trace.fraction >= 1.0f) {
                             current.movementFlags &= ~PMF_DUCKED;
@@ -1594,7 +1593,7 @@ public class Physics_Player {
         }
 
         private void CheckLadder() {
-            idVec3 forward, start, end;
+            final idVec3 forward = new idVec3(), start = new idVec3(), end = new idVec3();
             trace_s trace = new trace_s();
             float tracedist;
 
@@ -1608,7 +1607,7 @@ public class Physics_Player {
             }
 
             // forward vector orthogonal to gravity
-            forward = viewForward.oMinus(gravityNormal.oMultiply(viewForward.oMultiply(gravityNormal)));
+            forward.oSet(viewForward.oMinus(gravityNormal.oMultiply(viewForward.oMultiply(gravityNormal))));
             forward.Normalize();
 
             if (walking) {
@@ -1618,7 +1617,7 @@ public class Physics_Player {
                 tracedist = 48.0f;
             }
 
-            end = current.origin.oPlus(forward.oMultiply(tracedist));
+            end.oSet(current.origin.oPlus(forward.oMultiply(tracedist)));
             gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
 
             // if near a surface
@@ -1629,10 +1628,10 @@ public class Physics_Player {
                         && ((trace.c.material.GetSurfaceFlags() & SURF_LADDER) != 0)) {
 
                     // check a step height higher
-                    end = current.origin.oMinus(gravityNormal.oMultiply(maxStepHeight * 0.75f));
+                    end.oSet(current.origin.oMinus(gravityNormal.oMultiply(maxStepHeight * 0.75f)));
                     gameLocal.clip.Translation(trace, current.origin, end, clipModel, clipModel.GetAxis(), clipMask, self);
-                    start = trace.endpos;
-                    end = start.oPlus(forward.oMultiply(tracedist));
+                    start.oSet(trace.endpos);
+                    end.oSet(start.oPlus(forward.oMultiply(tracedist)));
                     gameLocal.clip.Translation(trace, start, end, clipModel, clipModel.GetAxis(), clipMask, self);
 
                     // if also near a surface a step height higher
@@ -1650,7 +1649,7 @@ public class Physics_Player {
         }
 
         private boolean CheckJump() {
-            idVec3 addVelocity;
+            final idVec3 addVelocity = new idVec3();
 
             if (command.upmove < 10) {
                 // not holding jump
@@ -1671,7 +1670,7 @@ public class Physics_Player {
             walking = false;
             current.movementFlags |= PMF_JUMP_HELD | PMF_JUMPED;
 
-            addVelocity = gravityVector.oNegative().oMultiply(2.0f * maxJumpHeight);
+            addVelocity.oSet(gravityVector.oNegative().oMultiply(2.0f * maxJumpHeight));
             addVelocity.oMulSet(idMath.Sqrt(addVelocity.Normalize()));
             current.velocity.oPluSet(addVelocity);
 
@@ -1679,9 +1678,9 @@ public class Physics_Player {
         }
 
         private boolean CheckWaterJump() {
-            idVec3 spot;
+            final idVec3 spot = new idVec3();
             int cont;
-            idVec3 flatforward;
+            final idVec3 flatforward = new idVec3();
 
             if (current.movementTime != 0) {
                 return false;
@@ -1692,10 +1691,10 @@ public class Physics_Player {
                 return false;
             }
 
-            flatforward = viewForward.oMinus(gravityNormal.oMultiply(viewForward.oMultiply(gravityNormal)));
+            flatforward.oSet(viewForward.oMinus(gravityNormal.oMultiply(viewForward.oMultiply(gravityNormal))));
             flatforward.Normalize();
 
-            spot = current.origin.oPlus(flatforward.oMultiply(30.0f));
+            spot.oSet(current.origin.oPlus(flatforward.oMultiply(30.0f)));
             spot.oMinSet(gravityNormal.oMultiply(4.0f));
             cont = gameLocal.clip.Contents(spot, null, getMat3_identity(), -1, self);
             if (0 == (cont & CONTENTS_SOLID)) {
@@ -1717,7 +1716,7 @@ public class Physics_Player {
         }
 
         private void SetWaterLevel() {
-            idVec3 point;
+            final idVec3 point = new idVec3();
             idBounds bounds;
             int contents;
 
@@ -1730,7 +1729,7 @@ public class Physics_Player {
             bounds = clipModel.GetBounds();
 
             // check at feet level
-            point = current.origin.oMinus(gravityNormal.oMultiply(bounds.oGet(0, 2) + 1.0f));
+            point.oSet(current.origin.oMinus(gravityNormal.oMultiply(bounds.oGet(0, 2) + 1.0f)));
             contents = gameLocal.clip.Contents(point, null, getMat3_identity(), -1, self);
             if ((contents & MASK_WATER) != 0) {
 
@@ -1738,14 +1737,14 @@ public class Physics_Player {
                 waterLevel = WATERLEVEL_FEET;
 
                 // check at waist level
-                point = current.origin.oMinus(gravityNormal.oMultiply((bounds.oGet(1, 2) - bounds.oGet(0, 2)) * 0.5f));
+                point.oSet(current.origin.oMinus(gravityNormal.oMultiply((bounds.oGet(1, 2) - bounds.oGet(0, 2)) * 0.5f)));
                 contents = gameLocal.clip.Contents(point, null, getMat3_identity(), -1, self);
                 if ((contents & MASK_WATER) != 0) {
 
                     waterLevel = WATERLEVEL_WAIST;
 
                     // check at head level
-                    point = current.origin.oMinus(gravityNormal.oMultiply(bounds.oGet(1, 2) - 1.0f));
+                    point.oSet(current.origin.oMinus(gravityNormal.oMultiply(bounds.oGet(1, 2) - 1.0f)));
                     contents = gameLocal.clip.Contents(point, null, getMat3_identity(), -1, self);
                     if ((contents & MASK_WATER) != 0) {
                         waterLevel = WATERLEVEL_HEAD;

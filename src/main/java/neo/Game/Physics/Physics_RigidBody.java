@@ -128,10 +128,10 @@ public class Physics_RigidBody {
                 + idMat3.BYTES
                 + idVec3.BYTES
                 + idVec3.BYTES;
-        idVec3 angularMomentum;             // rotational momentum relative to center of mass
-        idVec3 linearMomentum;              // translational momentum relative to center of mass
+        final idVec3 angularMomentum;             // rotational momentum relative to center of mass
+        final idVec3 linearMomentum;              // translational momentum relative to center of mass
         idMat3 orientation;                 // orientation of trace model
-        idVec3 position;                    // position of trace model
+        final idVec3 position;                    // position of trace model
 
         private rigidBodyIState_s() {
             position = new idVec3();
@@ -185,12 +185,12 @@ public class Physics_RigidBody {
     public static class rigidBodyPState_s {
 
         int atRest;           // set when simulation is suspended
-        idVec3 externalForce;    // external force relative to center of mass
-        idVec3 externalTorque;   // external torque relative to center of mass
+        final idVec3 externalForce;    // external force relative to center of mass
+        final idVec3 externalTorque;   // external torque relative to center of mass
         rigidBodyIState_s i;                // state used for integration
         float lastTimeStep;     // length of last time step
         idMat3 localAxis;        // axis relative to master
-        idVec3 localOrigin;      // origin relative to master
+        final idVec3 localOrigin;      // origin relative to master
         idVec6 pushVelocity;     // push velocity
 
         public rigidBodyPState_s() {
@@ -217,8 +217,8 @@ public class Physics_RigidBody {
         // CLASS_PROTOTYPE( idPhysics_RigidBody );
 
         static final float MAX_INERTIA_SCALE = 10.0f;
-        static idVec3 curAngularVelocity;
-        static idVec3 curLinearVelocity;
+        static final idVec3 curAngularVelocity = new idVec3();
+        static final idVec3 curLinearVelocity = new idVec3();
         /*
          ================
          idPhysics_RigidBody::DropToFloorAndRest
@@ -509,9 +509,9 @@ public class Physics_RigidBody {
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
             rigidBodyPState_s next;
             trace_s collision = new trace_s();
-            idVec3 impulse = new idVec3();
+            final idVec3 impulse = new idVec3();
             idEntity ent;
-            idVec3 oldOrigin, masterOrigin = new idVec3();
+            final idVec3 oldOrigin = new idVec3(current.i.position), masterOrigin = new idVec3();
             idMat3 oldAxis, masterAxis = new idMat3();
             float timeStep;
             boolean collided, cameToRest = false;
@@ -520,7 +520,6 @@ public class Physics_RigidBody {
             current.lastTimeStep = timeStep;
 
             if (hasMaster) {
-                oldOrigin = new idVec3(current.i.position);
                 oldAxis = new idMat3(current.i.orientation);
                 self.GetMasterPosition(masterOrigin, masterAxis);
                 current.i.position.oSet(masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis)));
@@ -681,18 +680,18 @@ public class Physics_RigidBody {
 
         @Override
         public impactInfo_s GetImpactInfo(final int id, final idVec3 point) {
-            idVec3 linearVelocity, angularVelocity;
+            final idVec3 linearVelocity = new idVec3(), angularVelocity = new idVec3();
             idMat3 inverseWorldInertiaTensor;
             impactInfo_s info = new impactInfo_s();
 
-            linearVelocity = current.i.linearMomentum.oMultiply(inverseMass);
+            linearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass));
             inverseWorldInertiaTensor = current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation));
-            angularVelocity = inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum);
+            angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum));
 
             info.invMass = inverseMass;
             info.invInertiaTensor.oSet(inverseWorldInertiaTensor);
-            info.position = point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation)));
-            info.velocity = linearVelocity.oPlus(angularVelocity.Cross(info.position));
+            info.position.oSet(point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation))));
+            info.velocity.oSet(linearVelocity.oPlus(angularVelocity.Cross(info.position)));
             return info;
         }
 
@@ -765,7 +764,7 @@ public class Physics_RigidBody {
 
         @Override
         public void SetOrigin(final idVec3 newOrigin, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localOrigin.oSet(newOrigin);
@@ -783,7 +782,7 @@ public class Physics_RigidBody {
 
         @Override
         public void SetAxis(final idMat3 newAxis, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localAxis.oSet(newAxis);
@@ -812,7 +811,7 @@ public class Physics_RigidBody {
 
         @Override
         public void Rotate(final idRotation rotation, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.i.orientation.oMulSet(rotation.ToMat3());
@@ -856,7 +855,7 @@ public class Physics_RigidBody {
 
         @Override
         public idVec3 GetLinearVelocity(int id /*= 0*/) {
-            curLinearVelocity = current.i.linearMomentum.oMultiply(inverseMass);
+            curLinearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass));
             return curLinearVelocity;
         }
 
@@ -865,7 +864,7 @@ public class Physics_RigidBody {
             idMat3 inverseWorldInertiaTensor;
 
             inverseWorldInertiaTensor = current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation));
-            curAngularVelocity = inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum);
+            curAngularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum));
             return curAngularVelocity;
         }
 
@@ -970,7 +969,7 @@ public class Physics_RigidBody {
 
         @Override
         public void SetMaster(idEntity master, final boolean orientated) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (master != null) {
@@ -1081,9 +1080,8 @@ public class Physics_RigidBody {
          ================
          */
         private void Integrate(final float deltaTime, rigidBodyPState_s next) {
-            idVec3 position;
+            final idVec3 position = new idVec3(current.i.position);
 
-            position = new idVec3(current.i.position);
             current.i.position.oPluSet(centerOfMass.oMultiply(current.i.orientation));
 
             current.i.orientation.TransposeSelf();
@@ -1159,7 +1157,7 @@ public class Physics_RigidBody {
          ================
          */
         private boolean CollisionImpulse(final trace_s collision, idVec3 impulse) {
-            idVec3 r, linearVelocity, angularVelocity, velocity;
+            final idVec3 r = new idVec3(), linearVelocity = new idVec3(), angularVelocity = new idVec3(), velocity = new idVec3();
             idMat3 inverseWorldInertiaTensor;
             float impulseNumerator, impulseDenominator, vel;
             impactInfo_s info;
@@ -1173,12 +1171,12 @@ public class Physics_RigidBody {
             info = ent.GetImpactInfo(self, collision.c.id, collision.c.point);
 
             // collision point relative to the body center of mass
-            r = collision.c.point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation)));
+            r.oSet(collision.c.point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation))));
             // the velocity at the collision point
-            linearVelocity = current.i.linearMomentum.oMultiply(inverseMass);
+            linearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass));
             inverseWorldInertiaTensor = current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation));
-            angularVelocity = inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum);
-            velocity = linearVelocity.oPlus(angularVelocity.Cross(r));
+            angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum));
+            velocity.oSet(linearVelocity.oPlus(angularVelocity.Cross(r)));
             // subtract velocity of other entity
             velocity.oMinSet(info.velocity);
 
@@ -1222,31 +1220,31 @@ public class Physics_RigidBody {
             int i;
             float magnitude, impulseNumerator, impulseDenominator;
             idMat3 inverseWorldInertiaTensor;
-            idVec3 linearVelocity, angularVelocity;
-            idVec3 massCenter, r, velocity, normal, impulse, normalVelocity;
+            final idVec3 linearVelocity = new idVec3(), angularVelocity = new idVec3();
+            final idVec3 massCenter = new idVec3(), r = new idVec3(), velocity = new idVec3(), normal = new idVec3(), impulse = new idVec3(), normalVelocity = new idVec3();
 
             inverseWorldInertiaTensor = current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation));
 
-            massCenter = current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation));
+            massCenter.oSet(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation)));
 
             for (i = 0; i < contacts.Num(); i++) {
 
-                r = contacts.oGet(i).point.oMinus(massCenter);
+                r.oSet(contacts.oGet(i).point.oMinus(massCenter));
 
                 // calculate velocity at contact point
-                linearVelocity = current.i.linearMomentum.oMultiply(inverseMass);
-                angularVelocity = inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum);
-                velocity = linearVelocity.oPlus(angularVelocity.Cross(r));
+                linearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass));
+                angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum));
+                velocity.oSet(linearVelocity.oPlus(angularVelocity.Cross(r)));
 
                 // velocity along normal vector
-                normalVelocity = contacts.oGet(i).normal.oMultiply(velocity.oMultiply(contacts.oGet(i).normal));
+                normalVelocity.oSet(contacts.oGet(i).normal.oMultiply(velocity.oMultiply(contacts.oGet(i).normal)));
 
                 // calculate friction impulse
-                normal = (velocity.oMinus(normalVelocity)).oNegative();
+                normal.oSet((velocity.oMinus(normalVelocity)).oNegative());
                 magnitude = normal.Normalize();
                 impulseNumerator = contactFriction * magnitude;
                 impulseDenominator = inverseMass + ((inverseWorldInertiaTensor.oMultiply(r.Cross(normal))).Cross(r).oMultiply(normal));
-                impulse = normal.oMultiply((impulseNumerator / impulseDenominator));
+                impulse.oSet(normal.oMultiply((impulseNumerator / impulseDenominator)));
 
                 // apply friction impulse
                 current.i.linearMomentum.oPluSet(impulse);
@@ -1255,10 +1253,10 @@ public class Physics_RigidBody {
                 // if moving towards the surface at the contact point
                 if (normalVelocity.oMultiply(contacts.oGet(i).normal) < 0.0f) {
                     // calculate impulse
-                    normal = normalVelocity.oNegative();
+                    normal.oSet(normalVelocity.oNegative());
                     impulseNumerator = normal.Normalize();
                     impulseDenominator = inverseMass + ((inverseWorldInertiaTensor.oMultiply(r.Cross(normal))).Cross(r).oMultiply(normal));
-                    impulse = normal.oMultiply((impulseNumerator / impulseDenominator));
+                    impulse.oSet(normal.oMultiply((impulseNumerator / impulseDenominator)));
 
                     // apply impulse
                     current.i.linearMomentum.oPluSet(impulse);
@@ -1268,7 +1266,7 @@ public class Physics_RigidBody {
         }
 
         private void DropToFloorAndRest() {
-            idVec3 down;
+            final idVec3 down = new idVec3();
             trace_s tr = new trace_s();
 
             if (testSolid) {
@@ -1286,7 +1284,7 @@ public class Physics_RigidBody {
 
 
             // put the body on the floor
-            down = current.i.position.oPlus(gravityNormal.oMultiply(128.0f));
+            down.oSet(current.i.position.oPlus(gravityNormal.oMultiply(128.0f)));
             gameLocal.clip.Translation(tr, current.i.position, down, clipModel, current.i.orientation, clipMask, self);
             current.i.position.oSet(tr.endpos);
             clipModel.Link(gameLocal.clip, self, clipModel.GetId(), tr.endpos, current.i.orientation);
@@ -1320,7 +1318,7 @@ public class Physics_RigidBody {
         private boolean TestIfAtRest() {
             int i;
             float gv;
-            idVec3 v, av, normal = new idVec3(), point;
+            final idVec3 v = new idVec3(), av = new idVec3(), normal = new idVec3(), point = new idVec3();
             idMat3 inverseWorldInertiaTensor;
             idFixedWinding contactWinding = new idFixedWinding();
 
@@ -1350,7 +1348,7 @@ public class Physics_RigidBody {
             contactWinding.Clear();
             for (i = 0; i < contacts.Num(); i++) {
                 // project point onto plane through origin orthogonal to the gravity
-                point = contacts.oGet(i).point.oMinus(gravityNormal.oMultiply(contacts.oGet(i).point.oMultiply(gravityNormal)));
+                point.oSet(contacts.oGet(i).point.oMinus(gravityNormal.oMultiply(contacts.oGet(i).point.oMultiply(gravityNormal))));
                 contactWinding.AddToConvexHull(point, gravityNormal);
             }
 
@@ -1360,7 +1358,7 @@ public class Physics_RigidBody {
             }
 
             // center of mass in world space
-            point = current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation));
+            point.oSet(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation)));
             point.oMinSet(gravityNormal.oMultiply(point.oMultiply(gravityNormal)));
 
             // if the point is not inside the winding
@@ -1369,7 +1367,7 @@ public class Physics_RigidBody {
             }
 
             // linear velocity of body
-            v = current.i.linearMomentum.oMultiply(inverseMass);
+            v.oSet(current.i.linearMomentum.oMultiply(inverseMass));
             // linear velocity in gravity direction
             gv = v.oMultiply(gravityNormal);
             // linear velocity orthogonal to gravity direction
@@ -1386,7 +1384,7 @@ public class Physics_RigidBody {
 
             // calculate rotational velocity
             inverseWorldInertiaTensor = current.i.orientation.oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation.Transpose()));
-            av = inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum);
+            av.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum));
 
             // if too much rotational velocity
             return !(av.LengthSqr() > STOP_SPEED);
@@ -1430,14 +1428,14 @@ public class Physics_RigidBody {
                             idVec3.BYTES +
                             idVec3.BYTES;
             idMat3 angularMatrix;
-            idVec3 force;
-            idVec3 linearVelocity;
-            idVec3 torque;
+            final idVec3 force = new idVec3();
+            final idVec3 linearVelocity = new idVec3();
+            final idVec3 torque = new idVec3();
 
             private rigidBodyDerivatives_s(float[] derivatives) {
                 FloatBuffer b = FloatBuffer.wrap(derivatives);
                 if (b.hasRemaining()) {
-                    linearVelocity = new idVec3(b.get(), b.get(), b.get());
+                    linearVelocity.oSet(new idVec3(b.get(), b.get(), b.get()));
                 }
                 if (b.hasRemaining()) {
                     angularMatrix = new idMat3(
@@ -1446,10 +1444,10 @@ public class Physics_RigidBody {
                             b.get(), b.get(), b.get());
                 }
                 if (b.hasRemaining()) {
-                    force = new idVec3(b.get(), b.get(), b.get());
+                    force.oSet(new idVec3(b.get(), b.get(), b.get()));
                 }
                 if (b.hasRemaining()) {
-                    torque = new idVec3(b.get(), b.get(), b.get());
+                    torque.oSet(new idVec3(b.get(), b.get(), b.get()));
                 }
             }
 
@@ -1477,16 +1475,16 @@ public class Physics_RigidBody {
                 rigidBodyIState_s s = new rigidBodyIState_s(state);//TODO:from float array to object
                 // NOTE: this struct should be build conform rigidBodyIState_t
                 rigidBodyDerivatives_s d = new rigidBodyDerivatives_s(derivatives);
-                idVec3 angularVelocity;
+                final idVec3 angularVelocity = new idVec3();
                 idMat3 inverseWorldInertiaTensor;
 
                 inverseWorldInertiaTensor = s.orientation.oMultiply(p.inverseInertiaTensor.oMultiply(s.orientation.Transpose()));
-                angularVelocity = inverseWorldInertiaTensor.oMultiply(s.angularMomentum);
+                angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(s.angularMomentum));
                 // derivatives
-                d.linearVelocity = s.linearMomentum.oMultiply(p.inverseMass);
+                d.linearVelocity.oSet(s.linearMomentum.oMultiply(p.inverseMass));
                 d.angularMatrix = SkewSymmetric(angularVelocity).oMultiply(s.orientation);
-                d.force = s.linearMomentum.oMultiply(-p.linearFriction).oPlus(p.current.externalForce);
-                d.torque = s.angularMomentum.oMultiply(-p.angularFriction).oPlus(p.current.externalTorque);
+                d.force.oSet(s.linearMomentum.oMultiply(-p.linearFriction).oPlus(p.current.externalForce));
+                d.torque.oSet(s.angularMomentum.oMultiply(-p.angularFriction).oPlus(p.current.externalTorque));
 
                 System.arraycopy(d.toFloats(), 0, derivatives, 0, derivatives.length);
             }

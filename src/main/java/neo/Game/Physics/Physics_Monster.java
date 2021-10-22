@@ -96,11 +96,11 @@ public class Physics_Monster {
     private static class monsterPState_s {
 
         int atRest;
-        idVec3 localOrigin;
+        final idVec3 localOrigin;
         boolean onGround;
-        idVec3 origin;
-        idVec3 pushVelocity;
-        idVec3 velocity;
+        final idVec3 origin;
+        final idVec3 pushVelocity;
+        final idVec3 velocity;
 
         public monsterPState_s() {
             this.origin = new idVec3();
@@ -251,7 +251,7 @@ public class Physics_Monster {
         // common physics interface
         @Override
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
-            idVec3 masterOrigin = new idVec3(), oldOrigin;
+            final idVec3 masterOrigin = new idVec3(), oldOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
             float timeStep;
 
@@ -259,7 +259,7 @@ public class Physics_Monster {
 
             moveResult = MM_OK;
             blockingEntity = null;
-            oldOrigin = current.origin;
+            oldOrigin.oSet(current.origin);
 
             // if bound to a master
             if (masterEntity != null) {
@@ -413,7 +413,7 @@ public class Physics_Monster {
 
         @Override
         public void SetOrigin(final idVec3 newOrigin, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localOrigin.oSet(newOrigin);
@@ -444,7 +444,7 @@ public class Physics_Monster {
 
         @Override
         public void Rotate(final idRotation rotation, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.origin.oMulSet(rotation);
@@ -489,7 +489,7 @@ public class Physics_Monster {
          */
         @Override
         public void SetMaster(idEntity master, final boolean orientated /*= true*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (master != null) {
@@ -547,7 +547,7 @@ public class Physics_Monster {
 
         private void CheckGround(monsterPState_s state) {
             trace_s groundTrace = new trace_s();
-            idVec3 down;
+            final idVec3 down = new idVec3();
 
             if (gravityNormal.equals(getVec3_zero())) {
                 state.onGround = false;
@@ -555,7 +555,7 @@ public class Physics_Monster {
                 return;
             }
 
-            down = state.origin.oPlus(gravityNormal.oMultiply(CONTACT_EPSILON));
+            down.oSet(state.origin.oPlus(gravityNormal.oMultiply(CONTACT_EPSILON)));
             gameLocal.clip.Translation(groundTrace, state.origin, down, clipModel, clipModel.GetAxis(), clipMask, self);
 
             if (groundTrace.fraction == 1.0f) {
@@ -585,10 +585,10 @@ public class Physics_Monster {
             }
         }
 
-        private monsterMoveResult_t SlideMove(idVec3 start, idVec3 velocity, final idVec3 delta) {
+        private monsterMoveResult_t SlideMove(final idVec3 start, final idVec3 velocity, final idVec3 delta) {
             int i;
             trace_s tr = new trace_s();
-            idVec3 move = new idVec3();
+            final idVec3 move = new idVec3();
 
             blockingEntity = null;
             move.oSet(delta);
@@ -624,9 +624,9 @@ public class Physics_Monster {
          the velocity is clipped conform any collisions
          =====================
          */
-        private monsterMoveResult_t StepMove(idVec3 start, idVec3 velocity, final idVec3 delta) {
+        private monsterMoveResult_t StepMove(final idVec3 start, final idVec3 velocity, final idVec3 delta) {
             trace_s tr = new trace_s();
-            idVec3 up, down, noStepPos, noStepVel, stepPos, stepVel;
+            final idVec3 up = new idVec3(), down = new idVec3(), noStepPos = new idVec3(), noStepVel = new idVec3(), stepPos = new idVec3(), stepVel = new idVec3();
             monsterMoveResult_t result1, result2;
             float stepdist;
             float nostepdist;
@@ -636,8 +636,8 @@ public class Physics_Monster {
             }
 
             // try to move without stepping up
-            noStepPos = start;
-            noStepVel = velocity;
+            noStepPos.oSet(start);
+            noStepVel.oSet(velocity);
             result1 = SlideMove(noStepPos, noStepVel, delta);
             if (result1 == MM_OK) {
                 velocity.oSet(noStepVel);
@@ -647,7 +647,7 @@ public class Physics_Monster {
                 }
 
                 // try to step down so that we walk down slopes and stairs at a normal rate
-                down = noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
+                down.oSet(noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight)));
                 gameLocal.clip.Translation(tr, noStepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);
                 if (tr.fraction < 1.0f) {
                     start.oSet(tr.endpos);
@@ -660,7 +660,7 @@ public class Physics_Monster {
 
             if (blockingEntity != null && blockingEntity instanceof idActor) {
                 // try to step down in case walking into an actor while going down steps
-                down = noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
+                down.oSet(noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight)));
                 gameLocal.clip.Translation(tr, noStepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);
                 start.oSet(tr.endpos);
                 velocity.oSet(noStepVel);
@@ -672,7 +672,7 @@ public class Physics_Monster {
             }
 
             // try to step up
-            up = start.oMinus(gravityNormal.oMultiply(maxStepHeight));
+            up.oSet(start.oMinus(gravityNormal.oMultiply(maxStepHeight)));
             gameLocal.clip.Translation(tr, start, up, clipModel, clipModel.GetAxis(), clipMask, self);
             if (tr.fraction == 0.0f) {
                 start.oSet(noStepPos);
@@ -681,8 +681,8 @@ public class Physics_Monster {
             }
 
             // try to move at the stepped up position
-            stepPos = tr.endpos;
-            stepVel = velocity;
+            stepPos.oSet(tr.endpos);
+            stepVel.oSet(velocity);
             result2 = SlideMove(stepPos, stepVel, delta);
             if (result2 == MM_BLOCKED) {
                 start.oSet(noStepPos);
@@ -691,9 +691,9 @@ public class Physics_Monster {
             }
 
             // step down again
-            down = stepPos.oPlus(gravityNormal.oMultiply(maxStepHeight));
+            down.oSet(stepPos.oPlus(gravityNormal.oMultiply(maxStepHeight)));
             gameLocal.clip.Translation(tr, stepPos, down, clipModel, clipModel.GetAxis(), clipMask, self);
-            stepPos = tr.endpos;
+            stepPos.oSet(tr.endpos);
 
             // if the move is further without stepping up, or the slope is too steap, don't step up
             nostepdist = (noStepPos.oMinus(start)).LengthSqr();

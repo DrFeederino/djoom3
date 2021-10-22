@@ -52,8 +52,8 @@ public class Physics_Base {
         protected int clipMask;         // contents the physics object collides with
         protected idList<contactEntity_t> contactEntities;  // entities touching this physics object
         protected idList<contactInfo_t> contacts;         // contacts with other physics objects
-        protected idVec3 gravityNormal;    // normalized direction of gravity
-        protected idVec3 gravityVector;    // direction and magnitude of gravity
+        protected final idVec3 gravityNormal;    // normalized direction of gravity
+        protected final idVec3 gravityVector;    // direction and magnitude of gravity
         //
         //
         protected idEntity self;             // entity using this physics object
@@ -321,7 +321,6 @@ public class Physics_Base {
         @Override
         public void ClipTranslation(trace_s results, final idVec3 translation, final idClipModel model) {
 //	memset( &results, 0, sizeof( trace_t ) );
-            results.endpos = new idVec3();
             results.fraction = 0.0f;
             results.endAxis = new idMat3();
             results.c = new contactInfo_t();
@@ -558,19 +557,19 @@ public class Physics_Base {
 
         // draw linear and angular velocity
         protected void DrawVelocity(int id, float linearScale, float angularScale) {
-            idVec3 dir, org = new idVec3(), vec, start, end;
+            final idVec3 dir = new idVec3(), org = new idVec3(), vec = new idVec3(), start = new idVec3(), end = new idVec3();
             idMat3 axis;
             float length, a;
 
-            dir = GetLinearVelocity(id);
+            dir.oSet(GetLinearVelocity(id));
             dir.oMulSet(linearScale);
             if (dir.LengthSqr() > Square(0.1f)) {
                 dir.Truncate(10.0f);
-                org = GetOrigin(id);
+                org.oSet(GetOrigin(id));
                 gameRenderWorld.DebugArrow(colorRed, org, org.oPlus(dir), 1);
             }
 
-            dir = GetAngularVelocity(id);
+            dir.oSet(GetAngularVelocity(id));
             length = dir.Normalize();
             length *= angularScale;
             if (length > 0.1f) {
@@ -580,20 +579,20 @@ public class Physics_Base {
                     length = 360.0f;
                 }
                 axis = GetAxis(id);
-                vec = axis.oGet(2);
+                vec.oSet(axis.oGet(2));
                 if (Math.abs(dir.oMultiply(vec)) > 0.99f) {
-                    vec = axis.oGet(0);
+                    vec.oSet(axis.oGet(0));
                 }
                 vec.oMinSet(vec.oMultiply(dir.oMultiply(vec)));
                 vec.Normalize();
                 vec.oMulSet(4.0f);
-                start = org.oPlus(vec);
+                start.oSet(org.oPlus(vec));
                 for (a = 20.0f; a < length; a += 20.0f) {
-                    end = org.oPlus(new idRotation(getVec3_origin(), dir, -a).ToMat3().oMultiply(vec));
+                    end.oSet(org.oPlus(new idRotation(getVec3_origin(), dir, -a).ToMat3().oMultiply(vec)));
                     gameRenderWorld.DebugLine(colorBlue, start, end, 1);
-                    start = end;
+                    start.oSet(end);
                 }
-                end = org.oPlus(new idRotation(getVec3_origin(), dir, -length).ToMat3().oMultiply(vec));
+                end.oSet(org.oPlus(new idRotation(getVec3_origin(), dir, -length).ToMat3().oMultiply(vec)));
                 gameRenderWorld.DebugArrow(colorBlue, start, end, 1);
             }
         }

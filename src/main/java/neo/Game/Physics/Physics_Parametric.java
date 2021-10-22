@@ -87,7 +87,7 @@ public class Physics_Parametric {
      */
     static void idPhysics_Parametric_RestorePState(idRestoreGame savefile, parametricPState_s state) {
         CFloat startTime = new CFloat(), duration = new CFloat(), accelTime = new CFloat(), decelTime = new CFloat(), startValue = new CFloat(), endValue = new CFloat();
-        idVec3 linearStartValue = new idVec3(), linearBaseSpeed = new idVec3(), linearSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
+        final idVec3 linearStartValue = new idVec3(), linearBaseSpeed = new idVec3(), linearSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
         idAngles angularStartValue = new idAngles(), angularBaseSpeed = new idAngles(), angularSpeed = new idAngles(), startAng = new idAngles(), endAng = new idAngles();
         CInt time = new CInt(), atRest = new CInt(), etype = new CInt();
         CBool useSplineAngles = new CBool(false);
@@ -175,8 +175,8 @@ public class Physics_Parametric {
         idExtrapolate<idVec3> linearExtrapolation;  // extrapolation based description of the position over time
         idInterpolateAccelDecelLinear<idVec3> linearInterpolation;  // interpolation based description of the position over time
         idAngles localAngles;          // local angles
-        idVec3 localOrigin;          // local origin
-        idVec3 origin;               // world origin
+        final idVec3 localOrigin = new idVec3();          // local origin
+        final idVec3 origin = new idVec3();               // world origin
         idCurve_Spline<idVec3> spline;               // spline based description of the position over time
         idInterpolateAccelDecelLinear<Float> splineInterpolate;    // position along the spline over time
         int time;                 // physics time
@@ -186,8 +186,8 @@ public class Physics_Parametric {
     public static class idPhysics_Parametric extends idPhysics_Base {
         // CLASS_PROTOTYPE( idPhysics_Parametric );
 
-        private static idVec3 curAngularVelocity;
-        private static idVec3 curLinearVelocity;
+        private static final idVec3 curAngularVelocity = new idVec3();
+        private static final idVec3 curLinearVelocity = new idVec3();
         private idClipModel clipModel;
         // parametric physics state
         private parametricPState_s current;
@@ -213,10 +213,8 @@ public class Physics_Parametric {
             current.time = gameLocal.time;
             current.atRest = -1;
             current.useSplineAngles = false;
-            current.origin = new idVec3();
             current.angles = new idAngles();
             current.axis = idMat3.getMat3_identity();
-            current.localOrigin = new idVec3();
             current.localAngles = new idAngles();
             current.linearExtrapolation = new idExtrapolate<>();
             current.linearExtrapolation.Init(0, 0, getVec3_zero(), getVec3_zero(), getVec3_zero(), EXTRAPOLATION_NONE);
@@ -454,13 +452,13 @@ public class Physics_Parametric {
 
         @Override
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
-            idVec3 oldLocalOrigin, oldOrigin, masterOrigin = new idVec3();
+            final idVec3 oldLocalOrigin = new idVec3(), oldOrigin = new idVec3(), masterOrigin = new idVec3();
             idAngles oldLocalAngles, oldAngles;
             idMat3 oldAxis, masterAxis = new idMat3();
 
             isBlocked = false;
-            oldLocalOrigin = new idVec3(current.localOrigin);
-            oldOrigin = new idVec3(current.origin);
+            oldLocalOrigin.oSet(current.localOrigin);
+            oldOrigin.oSet(current.origin);
             oldLocalAngles = new idAngles(current.localAngles);
             oldAngles = new idAngles(current.angles);
             oldAxis = new idMat3(current.axis);
@@ -495,7 +493,7 @@ public class Physics_Parametric {
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis);
                 if (masterAxis.IsRotated()) {
-                    current.origin = current.origin.oMultiply(masterAxis).oPlus(masterOrigin);
+                    current.origin.oSet(current.origin.oMultiply(masterAxis).oPlus(masterOrigin));
                     if (isOrientated) {
                         current.axis.oMulSet(masterAxis);
                         current.angles = current.axis.ToAngles();
@@ -514,8 +512,8 @@ public class Physics_Parametric {
                 }
                 if (pushResults.fraction < 1.0f) {
                     clipModel.Link(gameLocal.clip, self, 0, oldOrigin, oldAxis);
-                    current.localOrigin = oldLocalOrigin;
-                    current.origin = oldOrigin;
+                    current.localOrigin.oSet(oldLocalOrigin);
+                    current.origin.oSet(oldOrigin);
                     current.localAngles = oldLocalAngles;
                     current.angles = oldAngles;
                     current.axis = oldAxis;
@@ -598,16 +596,16 @@ public class Physics_Parametric {
 
         @Override
         public void SetOrigin(final idVec3 newOrigin, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.linearExtrapolation.SetStartValue(newOrigin);
             current.linearInterpolation.SetStartValue(newOrigin);
 
-            current.localOrigin = current.linearExtrapolation.GetCurrentValue(current.time);
+            current.localOrigin.oSet(current.linearExtrapolation.GetCurrentValue(current.time));
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis);
-                current.origin = masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis));
+                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis)));
             } else {
                 current.origin.oSet(current.localOrigin);
             }
@@ -619,7 +617,7 @@ public class Physics_Parametric {
 
         @Override
         public void SetAxis(final idMat3 newAxis, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localAngles = newAxis.ToAngles();
@@ -670,10 +668,9 @@ public class Physics_Parametric {
         @Override
         public void SetAngularVelocity(final idVec3 newAngularVelocity, int id /*= 0*/) {
             idRotation rotation = new idRotation();
-            idVec3 vec;
+            final idVec3 vec = new idVec3(newAngularVelocity);
             float angle;
 
-            vec = newAngularVelocity;
             angle = vec.Normalize();
             rotation.Set(getVec3_origin(), vec, RAD2DEG(angle));
 
@@ -684,7 +681,7 @@ public class Physics_Parametric {
 
         @Override
         public idVec3 GetLinearVelocity(int id /*= 0*/) {
-            curLinearVelocity = current.linearExtrapolation.GetCurrentSpeed(gameLocal.time);
+            curLinearVelocity.oSet(current.linearExtrapolation.GetCurrentSpeed(gameLocal.time));
             return curLinearVelocity;
         }
 
@@ -693,7 +690,7 @@ public class Physics_Parametric {
             idAngles angles;
 
             angles = current.angularExtrapolation.GetCurrentSpeed(gameLocal.time);
-            curAngularVelocity = angles.ToAngularVelocity();
+            curAngularVelocity.oSet(angles.ToAngularVelocity());
             return curAngularVelocity;
         }
 
@@ -727,7 +724,7 @@ public class Physics_Parametric {
 
         @Override
         public void SetMaster(idEntity master, final boolean orientated /*= true*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (master != null) {
@@ -735,7 +732,7 @@ public class Physics_Parametric {
 
                     // transform from world space to master space
                     self.GetMasterPosition(masterOrigin, masterAxis);
-                    current.localOrigin = (current.origin.oMinus(masterOrigin)).oMultiply(masterAxis.Transpose());
+                    current.localOrigin.oSet((current.origin.oMinus(masterOrigin)).oMultiply(masterAxis.Transpose()));
                     if (orientated) {
                         current.localAngles = (current.axis.oMultiply(masterAxis.Transpose())).ToAngles();
                     } else {
@@ -866,7 +863,7 @@ public class Physics_Parametric {
         public void ReadFromSnapshot(final idBitMsgDelta msg) {
             int/*extrapolation_t*/ linearType, angularType;
             float startTime, duration, accelTime, decelTime;
-            idVec3 linearStartValue = new idVec3(), linearSpeed = new idVec3(), linearBaseSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
+            final idVec3 linearStartValue = new idVec3(), linearSpeed = new idVec3(), linearBaseSpeed = new idVec3(), startPos = new idVec3(), endPos = new idVec3();
             idAngles angularStartValue = new idAngles(), angularSpeed = new idAngles(), angularBaseSpeed = new idAngles(), startAng = new idAngles(), endAng = new idAngles();
 
             current.time = msg.ReadLong();

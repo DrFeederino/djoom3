@@ -74,7 +74,7 @@ public class Push {
             idEntity check;
             idEntity[] entityList = new idEntity[MAX_GENTITIES];
             idBounds bounds, pushBounds = new idBounds();
-            idVec3 clipMove, clipOrigin, oldOrigin, dir, impulse = new idVec3();
+            final idVec3 clipMove = new idVec3(), clipOrigin = new idVec3(), oldOrigin = new idVec3(), dir = new idVec3(), impulse = new idVec3();
             trace_s pushResults = new trace_s();
             boolean wasEnabled;
             float totalMass;
@@ -93,7 +93,7 @@ public class Push {
                 return totalMass;
             }
 
-            dir = translation;
+            dir.oSet(translation);
             dir.Normalize();
             dir.z += 1.0f;
             dir.oMulSet(10.0f);
@@ -139,20 +139,19 @@ public class Push {
                     return totalMass;
                 }
 
-                clipMove = results.endpos.oMinus(clipModel.GetOrigin());
-                clipOrigin = results.endpos;
+                clipMove.oSet(results.endpos.oMinus(clipModel.GetOrigin()));
+                clipOrigin.oSet(results.endpos);
 
             } else {
-
-                clipMove = translation;
-                clipOrigin = newOrigin;
+                clipMove.oSet(translation);
+                clipOrigin.oSet(newOrigin);
             }
 
             // we have to enable the clip model because we use it during pushing
             clipModel.Enable();
 
             // save pusher old position
-            oldOrigin = clipModel.GetOrigin();
+            oldOrigin.oSet(clipModel.GetOrigin());
 
             // try to push the entities
             for (i = 0; i < listedEntities; i++) {
@@ -180,7 +179,7 @@ public class Push {
 
                     // wake up this object
                     if ((flags & PUSHFL_APPLYIMPULSE) != 0) {
-                        impulse = dir.oMultiply(physics.GetMass());
+                        impulse.oSet(dir.oMultiply(physics.GetMass()));
                     } else {
                         impulse.Zero();
                     }
@@ -413,7 +412,7 @@ public class Push {
          ============
          */
         public float ClipPush(trace_s results, idEntity pusher, final int flags, final idVec3 oldOrigin, final idMat3 oldAxis, idVec3 newOrigin, idMat3 newAxis) {
-            idVec3 translation;
+            final idVec3 translation = new idVec3();
             idRotation rotation;
             float mass;
 
@@ -425,7 +424,7 @@ public class Push {
             results.c = new contactInfo_t();//memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // translational push
-            translation = newOrigin.oMinus(oldOrigin);
+            translation.oSet(newOrigin.oMinus(oldOrigin));
 
             // if the pusher translates
             if (!translation.equals(getVec3_origin())) {
@@ -535,7 +534,7 @@ public class Push {
             numPushed++;
         }
 
-        private boolean RotateEntityToAxial(idEntity ent, idVec3 rotationPoint) {
+        private boolean RotateEntityToAxial(idEntity ent, final idVec3 rotationPoint) {
             int i;
             trace_s trace = new trace_s();
             idRotation rotation;
@@ -619,8 +618,7 @@ public class Push {
 
         private int TryTranslatePushEntity(trace_s results, idEntity check, idClipModel clipModel, final int flags, final idVec3 newOrigin, final idVec3 move) {
             trace_s trace = new trace_s();
-            idVec3 checkMove;
-//            idVec3 oldOrigin;
+            final idVec3 checkMove = new idVec3();
             idPhysics physics;
 
             physics = check.GetPhysics();
@@ -643,7 +641,7 @@ public class Push {
                 // if there is a collision
                 if (trace.fraction < 1.0f) {
                     // vector along which the entity is pushed
-                    checkMove = move.oMultiply(trace.fraction);
+                    checkMove.oSet(move.oMultiply(trace.fraction));
                     // test if the entity can stay at it's partly pushed position by moving the entity in reverse only colliding with pusher
                     ClipEntityTranslation(results, check, clipModel, null, (move.oMinus(checkMove).oNegative()));
                     // if there is a collision
@@ -658,7 +656,7 @@ public class Push {
                     }
                 } else {
                     // vector along which the entity is pushed
-                    checkMove = new idVec3(move);
+                    checkMove.oSet(move);
                 }
             } else {
                 // move entity in reverse only colliding with pusher
@@ -668,7 +666,7 @@ public class Push {
                     return PUSH_NO;
                 }
                 // vector along which the entity is pushed
-                checkMove = move.oMultiply(1.0f - results.fraction);
+                checkMove.oSet(move.oMultiply(1.0f - results.fraction));
                 // move the entity colliding with all other entities except the pusher itself
                 ClipEntityTranslation(trace, check, null, clipModel, checkMove);
                 // if there is a collisions
@@ -735,7 +733,7 @@ public class Push {
 
         private int TryRotatePushEntity(trace_s results, idEntity check, idClipModel clipModel, final int flags, final idMat3 newAxis, final idRotation rotation) {
             trace_s trace = new trace_s();
-            idVec3 rotationPoint;
+            final idVec3 rotationPoint = new idVec3();
             idRotation newRotation = new idRotation();
             float checkAngle;
             idPhysics physics;
@@ -780,7 +778,7 @@ public class Push {
                     checkAngle = rotation.GetAngle();
                 }
                 // point to rotate entity bbox around back to axial
-                rotationPoint = physics.GetOrigin();
+                rotationPoint.oSet(physics.GetOrigin());
             } else {
                 // rotate entity in reverse only colliding with pusher
                 newRotation = rotation;
@@ -801,7 +799,7 @@ public class Push {
                     return PUSH_NO;
                 }
                 // get point to rotate bbox around back to axial
-                rotationPoint = results.c.point;
+                rotationPoint.oSet(results.c.point);
                 // angle along which the entity will be pushed
                 checkAngle = rotation.GetAngle() * (1.0f - results.fraction);
                 // rotate the entity colliding with all other entities except the pusher itself

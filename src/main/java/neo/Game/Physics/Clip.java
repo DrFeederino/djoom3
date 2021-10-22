@@ -546,7 +546,7 @@ public class Clip {
         }
 
         public idVec3 GetOrigin() {
-            return new idVec3(origin);
+            return origin;
         }
 
         public idMat3 GetAxis() {
@@ -593,7 +593,7 @@ public class Clip {
             return idClipModel.GetCachedTraceModel(traceModelIndex);
         }
 
-        public void GetMassProperties(final float density, CFloat mass, idVec3 centerOfMass, idMat3 inertiaTensor) {
+        public void GetMassProperties(final float density, CFloat mass, final idVec3 centerOfMass, idMat3 inertiaTensor) {
             if (traceModelIndex == -1) {
                 idGameLocal.Error("idClipModel::GetMassProperties: clip model %d on '%s' is not a trace model\n", id, entity.name);
             }

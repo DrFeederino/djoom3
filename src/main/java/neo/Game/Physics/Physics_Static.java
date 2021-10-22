@@ -39,8 +39,8 @@ public class Physics_Static {
 
         idMat3 axis;
         idMat3 localAxis;
-        idVec3 localOrigin;
-        idVec3 origin;
+        final idVec3 localOrigin;
+        final idVec3 origin;
 
         public staticPState_s() {
             this.origin = new idVec3();
@@ -206,7 +206,7 @@ public class Physics_Static {
 
         @Override
         public boolean Evaluate(int timeStepMSec, int endTimeMSec) {
-            idVec3 masterOrigin = new idVec3(), oldOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3(), oldOrigin = new idVec3();
             idMat3 masterAxis = new idMat3(), oldAxis = new idMat3();
 
             if (hasMaster) {
@@ -284,7 +284,7 @@ public class Physics_Static {
 
         @Override
         public void SetOrigin(final idVec3 newOrigin, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localOrigin.oSet(newOrigin);
@@ -303,7 +303,7 @@ public class Physics_Static {
 
         @Override
         public void SetAxis(final idMat3 newAxis, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.localAxis.oSet(newAxis);
@@ -332,7 +332,7 @@ public class Physics_Static {
 
         @Override
         public void Rotate(final idRotation rotation, int id /*= -1*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             current.origin.oMulSet(rotation);
@@ -515,7 +515,7 @@ public class Physics_Static {
 
         @Override
         public void SetMaster(idEntity master, final boolean orientated /*= true*/) {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             if (master != null) {

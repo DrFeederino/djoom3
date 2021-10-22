@@ -451,7 +451,7 @@ public class AFEntity {
         @Override
         public void AddDamageEffect(final trace_s collision, final idVec3 velocity, final String damageDefName) {
             if (body != null) {
-                trace_s c = collision;
+                trace_s c = new trace_s(collision);
                 c.c.id = JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint);
                 body.AddDamageEffect(c, velocity, damageDefName);
             }
