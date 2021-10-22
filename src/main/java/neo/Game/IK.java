@@ -56,10 +56,10 @@ public class IK /*ea*/ {
      */
     public static class idIK {
 
+        protected final idVec3 modelOffset;
         protected idAnimator animator;        // animator on entity
         protected boolean ik_activate;
         protected boolean initialized;
-        protected idVec3 modelOffset;
         protected int modifiedAnim;        // animation modified by the IK
         protected idEntity self;        // entity using the animated model
         //
@@ -146,7 +146,7 @@ public class IK /*ea*/ {
                 return false;
             }
 
-            this.modelOffset = modelOffset;
+            this.modelOffset.oSet(modelOffset);
 
             return true;
         }
@@ -158,11 +158,11 @@ public class IK /*ea*/ {
             ik_activate = false;
         }
 
-        public boolean SolveTwoBones(final idVec3 startPos, final idVec3 endPos, final idVec3 dir, float len0, float len1, idVec3 jointPos) {
+        public boolean SolveTwoBones(final idVec3 startPos, final idVec3 endPos, final idVec3 dir, float len0, float len1, final idVec3 jointPos) {
             float length, lengthSqr, lengthInv, x, y;
-            idVec3 vec0, vec1;
+            final idVec3 vec0 = new idVec3(), vec1 = new idVec3();
 
-            vec0 = endPos.oMinus(startPos);
+            vec0.oSet(endPos.oMinus(startPos));
             lengthSqr = vec0.LengthSqr();
             lengthInv = idMath.InvSqrt(lengthSqr);
             length = lengthInv * lengthSqr;
@@ -174,7 +174,7 @@ public class IK /*ea*/ {
             }
 
             vec0.oMulSet(lengthInv);
-            vec1 = dir.oMinus(vec0.oMultiply(dir.oMultiply(vec0)));
+            vec1.oSet(dir.oMinus(vec0.oMultiply(dir.oMultiply(vec0))));
             vec1.Normalize();
 
             x = (length * length + len0 * len0 - len1 * len1) * (0.5f * lengthInv);
@@ -225,17 +225,19 @@ public class IK /*ea*/ {
         private final int/*jointHandle_t*/[] dirJoints = new int[MAX_LEGS];
         private final int/*jointHandle_t*/[] footJoints = new int[MAX_LEGS];
         //
-        private final idVec3[] hipForward = new idVec3[MAX_LEGS];
+        private final idVec3[] hipForward = idVec3.generateArray(MAX_LEGS);
         private final int/*jointHandle_t*/[] hipJoints = new int[MAX_LEGS];
-        private final idVec3[] kneeForward = new idVec3[MAX_LEGS];
+        private final idVec3[] kneeForward = idVec3.generateArray(MAX_LEGS);
         private final int/*jointHandle_t*/[] kneeJoints = new int[MAX_LEGS];
         private final float[] lowerLegLength = new float[MAX_LEGS];
         private final idMat3[] lowerLegToKneeJoint = new idMat3[MAX_LEGS];
         private final float[] oldAnkleHeights = new float[MAX_LEGS];
+        private final idVec3 pivotPos;
         //
         private final float[] upperLegLength = new float[MAX_LEGS];
         //
         private final idMat3[] upperLegToHipJoint = new idMat3[MAX_LEGS];
+        private final idVec3 waistOffset;
         private int enabledLegs;
         private float footDownTrace;
         //
@@ -251,14 +253,12 @@ public class IK /*ea*/ {
         //
         // state
         private int pivotFoot;
-        private idVec3 pivotPos;
         private float pivotYaw;
         //
         private float smoothing;
         private boolean tiltWaist;
         private boolean usePivot;
         private int/*jointHandle_t*/ waistJoint;
-        private idVec3 waistOffset;
         private float waistShift;
         //
         //
@@ -278,8 +278,6 @@ public class IK /*ea*/ {
                 kneeJoints[i] = INVALID_JOINT;
                 hipJoints[i] = INVALID_JOINT;
                 dirJoints[i] = INVALID_JOINT;
-                hipForward[i] = new idVec3();
-                kneeForward[i] = new idVec3();
                 upperLegLength[i] = 0;
                 lowerLegLength[i] = 0;
                 upperLegToHipJoint[i] = getMat3_identity();
@@ -452,10 +450,10 @@ public class IK /*ea*/ {
         public boolean Init(idEntity self, final String anim, final idVec3 modelOffset) {
             int i;
             float footSize;
-            idVec3[] verts = new idVec3[4];
+            final idVec3[] verts = idVec3.generateArray(4);
             idTraceModel trm = new idTraceModel();
             String jointName;
-            idVec3 dir = new idVec3(), ankleOrigin, kneeOrigin, hipOrigin, dirOrigin;
+            final idVec3 dir = new idVec3(), ankleOrigin = new idVec3(), kneeOrigin = new idVec3(), hipOrigin = new idVec3(), dirOrigin = new idVec3();
             idMat3 axis = new idMat3(), ankleAxis, kneeAxis, hipAxis;
 
             if (null == self) {
@@ -523,24 +521,24 @@ public class IK /*ea*/ {
                 oldAnkleHeights[i] = 0;
 
                 ankleAxis = joints[ankleJoints[i]].ToMat3();
-                ankleOrigin = joints[ankleJoints[i]].ToVec3();
+                ankleOrigin.oSet(joints[ankleJoints[i]].ToVec3());
 
                 kneeAxis = joints[kneeJoints[i]].ToMat3();
-                kneeOrigin = joints[kneeJoints[i]].ToVec3();
+                kneeOrigin.oSet(joints[kneeJoints[i]].ToVec3());
 
                 hipAxis = joints[hipJoints[i]].ToMat3();
-                hipOrigin = joints[hipJoints[i]].ToVec3();
+                hipOrigin.oSet(joints[hipJoints[i]].ToVec3());
 
                 // get the IK direction
                 if (dirJoints[i] != INVALID_JOINT) {
-                    dirOrigin = joints[dirJoints[i]].ToVec3();
-                    dir = dirOrigin.oMinus(kneeOrigin);
+                    dirOrigin.oSet(joints[dirJoints[i]].ToVec3());
+                    dir.oSet(dirOrigin.oMinus(kneeOrigin));
                 } else {
                     dir.Set(1.0f, 0, 0);
                 }
 
-                hipForward[i] = dir.oMultiply(hipAxis.Transpose());
-                kneeForward[i] = dir.oMultiply(kneeAxis.Transpose());
+                hipForward[i].oSet(dir.oMultiply(hipAxis.Transpose()));
+                kneeForward[i].oSet(dir.oMultiply(kneeAxis.Transpose()));
 
                 // conversion from upper leg bone axis to hip joint axis
                 upperLegLength[i] = GetBoneAxis(hipOrigin, kneeOrigin, dir, axis);
@@ -566,7 +564,7 @@ public class IK /*ea*/ {
             footSize = self.spawnArgs.GetFloat("ik_footSize", "4") * 0.5f;
             if (footSize > 0) {
                 for (i = 0; i < 4; i++) {
-                    verts[i] = footWinding[i].oMultiply(footSize);
+                    verts[i].oSet(footWinding[i].oMultiply(footSize));
                 }
                 trm.SetupPolygon(verts, 4);
                 footModel = new idClipModel(trm);
@@ -583,9 +581,9 @@ public class IK /*ea*/ {
             float modelHeight, jointHeight, lowestHeight;
             float[] floorHeights = new float[MAX_LEGS];
             float shift, smallestShift, newHeight, step, newPivotYaw, height, largestAnkleHeight;
-            idVec3 modelOrigin, normal, hipDir, kneeDir, start, end;
-            idVec3[] jointOrigins = new idVec3[MAX_LEGS];
-            idVec3 footOrigin = new idVec3(), ankleOrigin = new idVec3(),
+            final idVec3 modelOrigin = new idVec3(), normal = new idVec3(), hipDir = new idVec3(), kneeDir = new idVec3(), start = new idVec3(), end = new idVec3();
+            final idVec3[] jointOrigins = idVec3.generateArray(MAX_LEGS);
+            final idVec3 footOrigin = new idVec3(), ankleOrigin = new idVec3(),
                     kneeOrigin = new idVec3(), hipOrigin = new idVec3(), waistOrigin = new idVec3();
             idMat3 modelAxis, waistAxis = new idMat3(), axis = new idMat3();
             idMat3[] hipAxis = new idMat3[MAX_LEGS], kneeAxis = new idMat3[MAX_LEGS], ankleAxis = new idMat3[MAX_LEGS];
@@ -600,8 +598,8 @@ public class IK /*ea*/ {
                 return;
             }
 
-            normal = self.GetPhysics().GetGravityNormal().oNegative();
-            modelOrigin = self.GetPhysics().GetOrigin();
+            normal.oSet(self.GetPhysics().GetGravityNormal().oNegative());
+            modelOrigin.oSet(self.GetPhysics().GetOrigin());
             modelAxis = self.GetRenderEntity().axis;
             modelHeight = modelOrigin.oMultiply(normal);
 
@@ -614,7 +612,7 @@ public class IK /*ea*/ {
             lowestHeight = idMath.INFINITY;
             for (i = 0; i < numLegs; i++) {
                 animator.GetJointTransform(footJoints[i], gameLocal.time, footOrigin, axis);
-                jointOrigins[i] = modelOrigin.oPlus(footOrigin.oMultiply(modelAxis));
+                jointOrigins[i].oSet(modelOrigin.oPlus(footOrigin.oMultiply(modelAxis)));
                 jointHeight = jointOrigins[i].oMultiply(normal);
                 if (jointHeight < lowestHeight) {
                     lowestHeight = jointHeight;
@@ -631,11 +629,11 @@ public class IK /*ea*/ {
                     pivotFoot = newPivotFoot;
                     pivotYaw = newPivotYaw;
                     animator.GetJointTransform(footJoints[pivotFoot], gameLocal.time, footOrigin, axis);
-                    pivotPos = modelOrigin.oPlus(footOrigin.oMultiply(modelAxis));
+                    pivotPos.oSet(modelOrigin.oPlus(footOrigin.oMultiply(modelAxis)));
                 }
 
                 // keep pivot foot in place
-                jointOrigins[pivotFoot] = pivotPos;
+                jointOrigins[pivotFoot].oSet(pivotPos);
             }
 
             // get the floor heights for the feet
@@ -645,8 +643,8 @@ public class IK /*ea*/ {
                     continue;
                 }
 
-                start = jointOrigins[i].oPlus(normal.oMultiply(footUpTrace));
-                end = jointOrigins[i].oMinus(normal.oMultiply(footDownTrace));
+                start.oSet(jointOrigins[i].oPlus(normal.oMultiply(footUpTrace)));
+                end.oSet(jointOrigins[i].oMinus(normal.oMultiply(footDownTrace)));
                 gameLocal.clip.Translation(results, start, end, footModel, getMat3_identity(), CONTENTS_SOLID | CONTENTS_IKCLIP, self);
                 floorHeights[i] = results.endpos.oMultiply(normal);
 
@@ -711,15 +709,15 @@ public class IK /*ea*/ {
             }
 
             animator.GetJointTransform(waistJoint, gameLocal.time, waistOrigin, waistAxis);
-            waistOrigin = modelOrigin.oPlus(waistOrigin.oMultiply(modelAxis));
+            waistOrigin.oSet(modelOrigin.oPlus(waistOrigin.oMultiply(modelAxis)));
 
             // adjust position of the waist
-            waistOffset = normal.oMultiply(smallestShift + waistShift);
+            waistOffset.oSet(normal.oMultiply(smallestShift + waistShift));
 
             // if the waist should be at least a certain distance above the floor
             if (minWaistFloorDist > 0 && waistOffset.oMultiply(normal) < 0) {
-                start = waistOrigin;
-                end = waistOrigin.oPlus(waistOffset.oMinus(normal.oMultiply(minWaistFloorDist)));
+                start.oSet(waistOrigin);
+                end.oSet(waistOrigin.oPlus(waistOffset.oMinus(normal.oMultiply(minWaistFloorDist))));
                 gameLocal.clip.Translation(results, start, end, footModel, modelAxis, CONTENTS_SOLID | CONTENTS_IKCLIP, self);
                 height = (waistOrigin.oPlus(waistOffset.oMinus(results.endpos))).oMultiply(normal);
                 if (height < minWaistFloorDist) {
@@ -755,12 +753,12 @@ public class IK /*ea*/ {
 
                 // get the position of the hip in world space
                 animator.GetJointTransform(hipJoints[i], gameLocal.time, hipOrigin, axis);
-                hipOrigin = modelOrigin.oPlus(waistOffset.oPlus(hipOrigin.oMultiply(modelAxis)));
-                hipDir = hipForward[i].oMultiply(axis.oMultiply(modelAxis));
+                hipOrigin.oSet(modelOrigin.oPlus(waistOffset.oPlus(hipOrigin.oMultiply(modelAxis))));
+                hipDir.oSet(hipForward[i].oMultiply(axis.oMultiply(modelAxis)));
 
                 // get the IK bend direction
                 animator.GetJointTransform(kneeJoints[i], gameLocal.time, kneeOrigin, axis);
-                kneeDir = kneeForward[i].oMultiply(axis.oMultiply(modelAxis));
+                kneeDir.oSet(kneeForward[i].oMultiply(axis.oMultiply(modelAxis)));
 
                 // solve IK and calculate knee position
                 SolveTwoBones(hipOrigin, jointOrigins[i], kneeDir, upperLegLength[i], lowerLegLength[i], kneeOrigin);
@@ -849,13 +847,13 @@ public class IK /*ea*/ {
 
         private static final int MAX_ARMS = 2;
         private final int/*jointHandle_t*/[] dirJoints = new int[MAX_ARMS];
-        private final idVec3[] elbowForward = new idVec3[MAX_ARMS];
+        private final idVec3[] elbowForward = idVec3.generateArray(MAX_ARMS);
         private final int/*jointHandle_t*/[] elbowJoints = new int[MAX_ARMS];
         private final int/*jointHandle_t*/[] handJoints = new int[MAX_ARMS];
         private final float[] lowerArmLength = new float[MAX_ARMS];
         private final idMat3[] lowerArmToElbowJoint = new idMat3[MAX_ARMS];
         //
-        private final idVec3[] shoulderForward = new idVec3[MAX_ARMS];
+        private final idVec3[] shoulderForward = idVec3.generateArray(MAX_ARMS);
         private final int/*jointHandle_t*/[] shoulderJoints = new int[MAX_ARMS];
         //
         private final float[] upperArmLength = new float[MAX_ARMS];
@@ -977,7 +975,7 @@ public class IK /*ea*/ {
             int i;
             String jointName;
             idTraceModel trm = new idTraceModel();
-            idVec3 dir = new idVec3(), handOrigin, elbowOrigin, shoulderOrigin, dirOrigin;
+            final idVec3 dir = new idVec3(), handOrigin = new idVec3(), elbowOrigin = new idVec3(), shoulderOrigin = new idVec3(), dirOrigin = new idVec3();
             idMat3 axis = new idMat3(), handAxis = new idMat3(), elbowAxis, shoulderAxis;
 
             if (null == self) {
@@ -1032,24 +1030,24 @@ public class IK /*ea*/ {
             for (i = 0; i < numArms; i++) {
 
                 handAxis = joints[handJoints[i]].ToMat3();
-                handOrigin = joints[handJoints[i]].ToVec3();
+                handOrigin.oSet(joints[handJoints[i]].ToVec3());
 
                 elbowAxis = joints[elbowJoints[i]].ToMat3();
-                elbowOrigin = joints[elbowJoints[i]].ToVec3();
+                elbowOrigin.oSet(joints[elbowJoints[i]].ToVec3());
 
                 shoulderAxis = joints[shoulderJoints[i]].ToMat3();
-                shoulderOrigin = joints[shoulderJoints[i]].ToVec3();
+                shoulderOrigin.oSet(joints[shoulderJoints[i]].ToVec3());
 
                 // get the IK direction
                 if (dirJoints[i] != INVALID_JOINT) {
-                    dirOrigin = joints[dirJoints[i]].ToVec3();
-                    dir = dirOrigin.oMinus(elbowOrigin);
+                    dirOrigin.oSet(joints[dirJoints[i]].ToVec3());
+                    dir.oSet(dirOrigin.oMinus(elbowOrigin));
                 } else {
                     dir.Set(-1.0f, 0.0f, 0.0f);
                 }
 
-                shoulderForward[i] = dir.oMultiply(shoulderAxis.Transpose());
-                elbowForward[i] = dir.oMultiply(elbowAxis.Transpose());
+                shoulderForward[i].oSet(dir.oMultiply(shoulderAxis.Transpose()));
+                elbowForward[i].oSet(dir.oMultiply(elbowAxis.Transpose()));
 
                 // conversion from upper arm bone axis to should joint axis
                 upperArmLength[i] = GetBoneAxis(shoulderOrigin, elbowOrigin, dir, axis);
@@ -1068,12 +1066,12 @@ public class IK /*ea*/ {
         @Override
         public void Evaluate() {
             int i;
-            idVec3 modelOrigin, shoulderOrigin = new idVec3(), elbowOrigin = new idVec3(), handOrigin = new idVec3(), shoulderDir, elbowDir;
+            final idVec3 modelOrigin = new idVec3(), shoulderOrigin = new idVec3(), elbowOrigin = new idVec3(), handOrigin = new idVec3(), shoulderDir = new idVec3(), elbowDir = new idVec3();
             idMat3 modelAxis, axis = new idMat3();
             idMat3[] shoulderAxis = new idMat3[MAX_ARMS], elbowAxis = new idMat3[MAX_ARMS];
             trace_s trace = new trace_s();
 
-            modelOrigin = self.GetRenderEntity().origin;
+            modelOrigin.oSet(self.GetRenderEntity().origin);
             modelAxis = self.GetRenderEntity().axis;
 
             // solve IK
@@ -1081,20 +1079,20 @@ public class IK /*ea*/ {
 
                 // get the position of the shoulder in world space
                 animator.GetJointTransform(shoulderJoints[i], gameLocal.time, shoulderOrigin, axis);
-                shoulderOrigin = modelOrigin.oPlus(shoulderOrigin.oMultiply(modelAxis));
-                shoulderDir = shoulderForward[i].oMultiply(axis.oMultiply(modelAxis));
+                shoulderOrigin.oSet(modelOrigin.oPlus(shoulderOrigin.oMultiply(modelAxis)));
+                shoulderDir.oSet(shoulderForward[i].oMultiply(axis.oMultiply(modelAxis)));
 
                 // get the position of the hand in world space
                 animator.GetJointTransform(handJoints[i], gameLocal.time, handOrigin, axis);
-                handOrigin = modelOrigin.oPlus(handOrigin.oMultiply(modelAxis));
+                handOrigin.oSet(modelOrigin.oPlus(handOrigin.oMultiply(modelAxis)));
 
                 // get first collision going from shoulder to hand
                 gameLocal.clip.TracePoint(trace, shoulderOrigin, handOrigin, CONTENTS_SOLID, self);
-                handOrigin = trace.endpos;
+                handOrigin.oSet(trace.endpos);
 
                 // get the IK bend direction
                 animator.GetJointTransform(elbowJoints[i], gameLocal.time, elbowOrigin, axis);
-                elbowDir = elbowForward[i].oMultiply(axis.oMultiply(modelAxis));
+                elbowDir.oSet(elbowForward[i].oMultiply(axis.oMultiply(modelAxis)));
 
                 // solve IK and calculate elbow position
                 SolveTwoBones(shoulderOrigin, handOrigin, elbowDir, upperArmLength[i], lowerArmLength[i], elbowOrigin);

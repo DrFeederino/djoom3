@@ -62,11 +62,11 @@ public class DeclFX {
         public float fadeOutTime;
         public idStr fire;
         //
-        public idVec3 lightColor;
+        public final idVec3 lightColor = new idVec3();
         public float lightRadius;
         public idStr name;
         public boolean noshadows;
-        public idVec3 offset;
+        public final idVec3 offset = new idVec3();
         public boolean particleTrackVelocity;
         public float random1;
         public float random2;
@@ -231,8 +231,8 @@ public class DeclFX {
             FXAction.random1 = 0.0f;
             FXAction.random2 = 0.0f;
 
-            FXAction.lightColor = Vector.getVec3_origin();
-            FXAction.offset = Vector.getVec3_origin();
+            FXAction.lightColor.oSet(Vector.getVec3_origin());
+            FXAction.offset.oSet(Vector.getVec3_origin());
             FXAction.axis = idMat3.getMat3_identity();
 
             FXAction.bindParticles = false;
@@ -340,7 +340,7 @@ public class DeclFX {
                 }
 
                 if (0 == token.Icmp("axis")) {
-                    idVec3 v = new idVec3();
+                    final idVec3 v = new idVec3();
                     v.x = src.ParseFloat();
                     src.ExpectTokenString(",");
                     v.y = src.ParseFloat();

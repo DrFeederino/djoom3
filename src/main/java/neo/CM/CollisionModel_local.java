@@ -109,9 +109,9 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          ===============================================================================
          */
         static final float SHARP_EDGE_DOT = -0.7f;
+        private static final cm_traceWork_s tw = new cm_traceWork_s();
         static char[] contentsString = new char[MAX_STRING_CHARS];
         private static int entered = 0;
-        private static final cm_traceWork_s tw = new cm_traceWork_s();
         private final cm_brushRef_s[] trmBrushes = new cm_brushRef_s[1];
         // for multi-check avoidance
         private int checkCount;
@@ -286,7 +286,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             vertex = model.vertices;
             trmVert = trm.verts;
             for (i = 0; i < trm.numVerts; i++) {
-                vertex[i].p = trm.verts[i];
+                vertex[i].p.oSet(trm.verts[i]);
                 vertex[i].sideSet = 0;
             }
             // edges
@@ -467,7 +467,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, j;
             float dist;
             boolean model_rotated, trm_rotated;
-            idVec3 dir = new idVec3();
+            final idVec3 dir = new idVec3();
             idMat3 invModelAxis = new idMat3(), tmpAxis;
             cm_trmPolygon_s poly;
             cm_trmEdge_s edge;
@@ -916,14 +916,14 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         public int Contacts(contactInfo_t[] contacts, final int maxContacts, final idVec3 start, final idVec6 dir, final float depth,
                             final idTraceModel trm, final idMat3 trmAxis, int contentMask, int model, final idVec3 modelOrigin, final idMat3 modelAxis) {
             trace_s results = new trace_s();
-            idVec3 end;
+            final idVec3 end = new idVec3();
 
             // same as Translation but instead of storing the first collision we store all collisions as contacts
             this.getContacts = true;
             this.contacts = contacts;
             this.maxContacts = maxContacts;
             this.numContacts = 0;
-            end = start.oPlus(dir.SubVec3(0).oMultiply(depth));
+            end.oSet(start.oPlus(dir.SubVec3(0).oMultiply(depth)));
             this.Translation(results, start, end, trm, trmAxis, contentMask, model, modelOrigin, modelAxis);
             if (dir.SubVec3(1).LengthSqr() != 0.0f) {
                 // FIXME: rotational contacts
@@ -959,7 +959,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             if (cm_testWalk.GetBool()) {
-                start = origin;
+                start.oSet(origin);
                 cm_testOrigin.SetString(va("%1.2f %1.2f %1.2f", start.oGet(0), start.oGet(1), start.oGet(2)));
             } else {
                 sscanf = new Scanner(cm_testOrigin.GetString());
@@ -1039,7 +1039,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             if (cm_testRotation.GetBool()) {
                 // rotational collision detection
-                idVec3 vec = new idVec3(random.CRandomFloat(), random.CRandomFloat(), random.RandomFloat());
+                final idVec3 vec = new idVec3(random.CRandomFloat(), random.CRandomFloat(), random.RandomFloat());
                 vec.Normalize();
                 idRotation rotation = new idRotation(getVec3_origin(), vec, cm_testAngle.GetFloat());
 
@@ -1299,7 +1299,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, edgeNum;
             float dist, d1, d2;
             CFloat f1 = new CFloat(), f2 = new CFloat();
-            idVec3 start, end, normal = new idVec3();
+            final idVec3 start = new idVec3(), end = new idVec3(), normal = new idVec3();
             cm_edge_s edge;
             cm_vertex_s v1, v2;
             idPluecker pl, epsPl = new idPluecker();
@@ -1361,8 +1361,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 if (f2.getVal() < tw.trace.fraction) {
                     tw.trace.fraction = f2.getVal();
                     // create plane with normal vector orthogonal to both the polygon edge and the trm edge
-                    start = new idVec3(tw.model.vertices[edge.vertexNum[0]].p);
-                    end = new idVec3(tw.model.vertices[edge.vertexNum[1]].p);
+                    start.oSet(tw.model.vertices[edge.vertexNum[0]].p);
+                    end.oSet((tw.model.vertices[edge.vertexNum[1]].p));
                     tw.trace.c.normal.oSet((end.oMinus(start)).Cross(trmEdge.end.oMinus(trmEdge.start)));
                     // FIXME: do this normalize when we know the first collision
                     tw.trace.c.normal.Normalize();
@@ -1528,7 +1528,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private boolean TranslateTrmThroughPolygon(cm_traceWork_s tw, cm_polygon_s p) {
             int i, j, k, edgeNum;
             float fraction, d;
-            idVec3 endp;
+            final idVec3 endp = new idVec3();
             idPluecker pl;
             cm_trmVertex_s bv;
             cm_trmEdge_s be;
@@ -1658,7 +1658,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                         }
 
                         // vertex end point after movement
-                        endp = v.p.oMinus(tw.dir);
+                        endp.oSet(v.p.oMinus(tw.dir));
                         // pluecker coordinate for vertex movement vector
                         pl = tw.polygonVertexPlueckerCache[i + k];
 
@@ -1675,7 +1675,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // if there was a collision with this polygon and we are not retrieving contacts
             if (tw.trace.fraction < fraction && !tw.getContacts) {
                 fraction = tw.trace.fraction;
-                endp = tw.start.oPlus(tw.dir.oMultiply(fraction));
+                endp.oSet(tw.start.oPlus(tw.dir.oMultiply(fraction)));
                 // decrease bounds
                 for (i = 0; i < 3; i++) {
                     if (tw.start.oGet(i) < endp.oGet(i)) {
@@ -1692,10 +1692,9 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         }
 
         private void SetupTranslationHeartPlanes() {
-            idVec3 dir, normal1 = new idVec3(), normal2 = new idVec3();
+            final idVec3 dir = new idVec3(idCollisionModelManagerLocal.tw.dir), normal1 = new idVec3(), normal2 = new idVec3();
 
             // calculate trace heart planes
-            dir = new idVec3(idCollisionModelManagerLocal.tw.dir);
             dir.Normalize();
             dir.NormalVectors(normal1, normal2);
             idCollisionModelManagerLocal.tw.heartPlane1.SetNormal(normal1);
@@ -1744,24 +1743,24 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private boolean CollisionBetweenEdgeBounds(cm_traceWork_s tw, final idVec3 va, final idVec3 vb, final idVec3 vc,
                                                    final idVec3 vd, CFloat tanHalfAngle, final idVec3 collisionPoint, final idVec3 collisionNormal) {
             float d1, d2, d;
-            idVec3 at, bt, dir, dir1, dir2;
+            final idVec3 at = new idVec3(), bt = new idVec3(), dir = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3();
             idPluecker pl1 = new idPluecker(), pl2 = new idPluecker();
 
-            at = new idVec3(va);
-            bt = new idVec3(vb);
+            at.oSet(va);
+            bt.oSet(vb);
             if (tanHalfAngle.getVal() != 0.0f) {
                 CM_RotateEdge(at, bt, tw.origin, tw.axis, tanHalfAngle);
             }
 
-            dir1 = (at.oMinus(tw.origin)).Cross(tw.axis);
-            dir2 = (bt.oMinus(tw.origin)).Cross(tw.axis);
+            dir1.oSet((at.oMinus(tw.origin)).Cross(tw.axis));
+            dir2.oSet((bt.oMinus(tw.origin)).Cross(tw.axis));
             if (dir1.oMultiply(dir1) > dir2.oMultiply(dir2)) {
-                dir = dir1;
+                dir.oSet(dir1);
             } else {
-                dir = dir2;
+                dir.oSet(dir2);
             }
             if (tw.angle < 0.0f) {
-                dir = dir.oNegative();
+                dir.oSet(dir.oNegative());
             }
 
             pl1.FromLine(at, bt);
@@ -1783,7 +1782,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             // collision point on the edge at-bt
-            dir1 = (vd.oMinus(vc)).Cross(dir);
+            dir1.oSet((vd.oMinus(vc)).Cross(dir));
             d = dir1.oMultiply(vc);
             d1 = dir1.oMultiply(at) - d;
             d2 = dir1.oMultiply(bt) - d;
@@ -1808,7 +1807,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private boolean RotateEdgeThroughEdge(cm_traceWork_s tw, final idPluecker pl1,
                                               final idVec3 vc, final idVec3 vd, final float minTan, CFloat tanHalfAngle) {
             double v0, v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
-            idVec3 ct, dt;
+            final idVec3 ct = new idVec3(), dt = new idVec3();
             idPluecker pl2 = new idPluecker();
 
             /*
@@ -1909,8 +1908,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             tanHalfAngle.setVal(tw.maxTan);
 
             // transform rotation axis to z-axis
-            ct = vc.oMinus(tw.origin).oMultiply(tw.matrix);
-            dt = vd.oMinus(tw.origin).oMultiply(tw.matrix);
+            ct.oSet(vc.oMinus(tw.origin).oMultiply(tw.matrix));
+            dt.oSet(vd.oMinus(tw.origin).oMultiply(tw.matrix));
 
             pl2.FromLine(ct, dt);
 
@@ -1974,7 +1973,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private boolean EdgeFurthestFromEdge(cm_traceWork_s tw, final idPluecker pl1,
                                              final idVec3 vc, final idVec3 vd, final CFloat tanHalfAngle, final CFloat dir) {
             double v0, v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
-            idVec3 ct, dt;
+            final idVec3 ct = new idVec3(), dt = new idVec3();
             idPluecker pl2 = new idPluecker();
 
             /*
@@ -2002,8 +2001,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             tanHalfAngle.setVal(0.0f);
 
             // transform rotation axis to z-axis
-            ct = (vc.oMinus(tw.origin)).oMultiply(tw.matrix);
-            dt = (vd.oMinus(tw.origin)).oMultiply(tw.matrix);
+            ct.oSet((vc.oMinus(tw.origin)).oMultiply(tw.matrix));
+            dt.oSet((vd.oMinus(tw.origin)).oMultiply(tw.matrix));
 
             pl2.FromLine(ct, dt);
 
@@ -2085,7 +2084,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             CFloat tanHalfAngle = new CFloat();
             cm_edge_s edge;
             cm_vertex_s v1, v2;
-            idVec3 collisionPoint = new idVec3(), collisionNormal = new idVec3(), origin, epsDir;
+            final idVec3 collisionPoint = new idVec3(), collisionNormal = new idVec3(), origin = new idVec3(), epsDir = new idVec3();
             idPluecker epsPl = new idPluecker();
             idBounds bounds = new idBounds();
 
@@ -2144,7 +2143,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 f1 = trmEdge.pl.PermutedInnerProduct(tw.polygonEdgePlueckerCache[i]);
 
                 // pluecker coordinate for epsilon expanded edge
-                epsDir = edge.normal.oMultiply(CM_CLIP_EPSILON + CM_PL_RANGE_EPSILON);
+                epsDir.oSet(edge.normal.oMultiply(CM_CLIP_EPSILON + CM_PL_RANGE_EPSILON));
                 epsPl.FromLine(tw.model.vertices[edge.vertexNum[0]].p.oPlus(epsDir),
                         tw.model.vertices[edge.vertexNum[1]].p.oPlus(epsDir));
 
@@ -2171,7 +2170,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     }
                 } else {
                     // collide with the epsilon expanded edge
-                    epsDir = edge.normal.oMultiply(CM_CLIP_EPSILON);
+                    epsDir.oSet(edge.normal.oMultiply(CM_CLIP_EPSILON));
                     if (!RotateEdgeThroughEdge(tw, trmEdge.plzaxis, v1.p.oPlus(epsDir), v2.p.oPlus(epsDir), 0.0f, tanHalfAngle)) {
                         continue;
                     }
@@ -2187,7 +2186,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 }
 
                 // allow rotation if the rotation axis goes through the collisionPoint
-                origin = tw.origin.oPlus(tw.axis.oMultiply(tw.axis.oMultiply(collisionPoint.oMinus(tw.origin))));
+                origin.oSet(tw.origin.oPlus(tw.axis.oMultiply(tw.axis.oMultiply(collisionPoint.oMinus(tw.origin)))));
                 if ((collisionPoint.oMinus(origin)).LengthSqr() < ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
                     continue;
                 }
@@ -2225,7 +2224,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private boolean RotatePointThroughPlane(final cm_traceWork_s tw, final idVec3 point, final idPlane plane,
                                                 final float angle, final float minTan, final CFloat tanHalfAngle) {
             double v0, v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
-            idVec3 p, normal;
+            final idVec3 p = new idVec3(), normal = new idVec3();
 
             /*
 
@@ -2263,9 +2262,9 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             tanHalfAngle.setVal(tw.maxTan);
 
             // transform rotation axis to z-axis
-            p = (point.oMinus(tw.origin)).oMultiply(tw.matrix);
+            p.oSet((point.oMinus(tw.origin)).oMultiply(tw.matrix));
             d = (plane.oGet(3) + plane.Normal().oMultiply(tw.origin));
-            normal = plane.Normal().oMultiply(tw.matrix);
+            normal.oSet(plane.Normal().oMultiply(tw.matrix));
 
             v0 = normal.oGet(2) * p.oGet(2) + d;
             v1 = normal.oGet(0) * p.oGet(1) - normal.oGet(1) * p.oGet(0);
@@ -2328,7 +2327,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                                                final float angle, final CFloat tanHalfAngle, final CFloat dir) {
 
             double v1, v2, a, b, c, d, sqrtd, q, frac1, frac2;
-            idVec3 p, normal;
+            final idVec3 p = new idVec3(), normal = new idVec3();
 
             /*
 
@@ -2355,8 +2354,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             tanHalfAngle.setVal(0.0f);
 
             // transform rotation axis to z-axis
-            p = (point.oMinus(tw.origin)).oMultiply(tw.matrix);
-            normal = plane.Normal().oMultiply(tw.matrix);
+            p.oSet((point.oMinus(tw.origin)).oMultiply(tw.matrix));
+            normal.oSet(plane.Normal().oMultiply(tw.matrix));
 
             v1 = normal.oGet(0) * p.oGet(1) - normal.oGet(1) * p.oGet(0);
             v2 = normal.oGet(0) * p.oGet(0) + normal.oGet(1) * p.oGet(1);
@@ -2432,7 +2431,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             float d;
             CFloat dir = new CFloat();
             CFloat startTan = new CFloat();
-            idVec3 vec, startDir;
+            final idVec3 vec = new idVec3(), startDir = new idVec3();
             idPlane epsPlane;
 
             // epsilon expanded plane
@@ -2441,13 +2440,13 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             // if the rotation sphere at the rotation origin is too far away from the polygon plane
             d = epsPlane.Distance(origin);
-            vec = point.oMinus(origin);
+            vec.oSet(point.oMinus(origin));
             if (d * d > vec.oMultiply(vec)) {
                 return false;
             }
 
             // calculate direction of motion at vertex start position
-            startDir = (point.oMinus(origin)).Cross(tw.axis);
+            startDir.oSet((point.oMinus(origin)).Cross(tw.axis));
             if (angle < 0.0f) {
                 startDir.oSet(startDir.oNegative());
             }
@@ -2513,7 +2512,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void RotateTrmVertexThroughPolygon(cm_traceWork_s tw, cm_polygon_s poly, cm_trmVertex_s v, int vertexNum) {
             int i;
             CFloat tanHalfAngle = new CFloat();
-            idVec3 endDir = new idVec3(), collisionPoint = new idVec3();
+            final idVec3 endDir = new idVec3(), collisionPoint = new idVec3();
             idPluecker pl = new idPluecker();
 
             // if the trm vertex is behind the polygon plane it cannot collide with the polygon within a 180 degrees rotation
@@ -2568,7 +2567,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void RotateVertexThroughTrmPolygon(cm_traceWork_s tw, cm_trmPolygon_s trmpoly, cm_polygon_s poly, cm_vertex_s v, final idVec3 rotationOrigin) {
             int i, edgeNum;
             CFloat tanHalfAngle = new CFloat();
-            idVec3 dir, endp, endDir = new idVec3(), collisionPoint = new idVec3();
+            final idVec3 dir = new idVec3(), endp = new idVec3(), endDir = new idVec3(), collisionPoint = new idVec3();
             idPluecker pl = new idPluecker();
             cm_trmEdge_s edge;
 
@@ -2583,13 +2582,13 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             // if the rotation axis goes through the polygon vertex
-            dir = v.p.oMinus(rotationOrigin);
+            dir.oSet(v.p.oMinus(rotationOrigin));
             if (dir.oMultiply(dir) < ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
                 return;
             }
 
             // calculate vertex end position
-            endp = new idVec3(v.p);
+            endp.oSet(v.p);
             tw.modelVertexRotation.RotatePoint(endp);
 
             // rotate the vertex through the epsilon plane
@@ -2616,14 +2615,14 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 }
                 tw.maxTan = Math.abs(tanHalfAngle.getVal());
                 // collision plane is the flipped trm polygon plane
-                tw.trace.c.normal = trmpoly.plane.Normal().oNegative();
+                tw.trace.c.normal.oSet(trmpoly.plane.Normal().oNegative());
                 tw.trace.c.dist = tw.trace.c.normal.oMultiply(v.p);
                 tw.trace.c.contents = poly.contents;
                 tw.trace.c.material = poly.material;
                 tw.trace.c.type = CONTACT_MODELVERTEX;
                 tw.trace.c.modelFeature = Arrays.asList(tw.model.vertices).indexOf(v);
                 tw.trace.c.trmFeature = Arrays.asList(tw.polys).indexOf(trmpoly);
-                tw.trace.c.point = v.p;
+                tw.trace.c.point.oSet(v.p);
             }
         }
 
@@ -2642,7 +2641,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             cm_trmPolygon_s bp;
             cm_vertex_s v;
             cm_edge_s e;
-            idVec3 rotationOrigin;
+            final idVec3 rotationOrigin = new idVec3();
 
             // if already checked this polygon
             if (p.checkcount == this.checkCount) {
@@ -2768,7 +2767,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                             continue;
                         }
 
-                        rotationOrigin = new idVec3(tw.polygonRotationOriginCache[i + k]);
+                        rotationOrigin.oSet(tw.polygonRotationOriginCache[i + k]);
 
                         for (j = 0; j < tw.numPolys; j++) {
                             bp = tw.polys[j];
@@ -2795,8 +2794,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             float radiusSqr;
 
             radiusSqr = (start.oMinus(origin)).LengthSqr();
-            idVec3 v1 = (start.oMinus(origin)).Cross(axis);
-            idVec3 v2 = (end.oMinus(origin)).Cross(axis);
+            final idVec3 v1 = new idVec3((start.oMinus(origin)).Cross(axis));
+            final idVec3 v2 = new idVec3((end.oMinus(origin)).Cross(axis));
 
             for (i = 0; i < 3; i++) {
                 // if the derivative changes sign along this axis during the rotation from start to end
@@ -2828,7 +2827,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, j, edgeNum;
             float d, maxErr, initialTan;
             boolean model_rotated, trm_rotated;
-            idVec3 vr = new idVec3(), vup = new idVec3();
+            final idVec3 vr = new idVec3(), vup = new idVec3();
             idMat3 invModelAxis = new idMat3(), endAxis, tmpAxis;
             idRotation startRotation = new idRotation(), endRotation = new idRotation();
             idPluecker plaxis = new idPluecker();
@@ -3050,8 +3049,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 edge.end.oSet(tw.vertices[edge.vertexNum[1]].p);
                 edge.pl.FromLine(edge.start, edge.end);
                 // pluecker coordinate for edge being rotated about the z-axis
-                idVec3 at = (edge.start.oMinus(tw.origin)).oMultiply(tw.matrix);
-                idVec3 bt = (edge.end.oMinus(tw.origin)).oMultiply(tw.matrix);
+                final idVec3 at = new idVec3((edge.start.oMinus(tw.origin)).oMultiply(tw.matrix));
+                final idVec3 bt = new idVec3((edge.end.oMinus(tw.origin)).oMultiply(tw.matrix));
                 edge.plzaxis.FromLine(at, bt);
                 // get edge rotation bounds from the rotation bounds of both vertices
                 edge.rotationBounds.oSet(tw.vertices[edge.vertexNum[0]].rotationBounds);
@@ -3213,7 +3212,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             for (j = 0; j < numVerts; j++) {
-                idVec3 p = tw.vertices[j].p;
+                final idVec3 p = new idVec3(tw.vertices[j].p);
 
                 // see if the point is inside the brush
                 bestPlane = 0;
@@ -3489,7 +3488,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
         private int TransformedPointContents(final idVec3 p, /*cmHandle_t*/ int model, final idVec3 origin, final idMat3 modelAxis) {
             // subtract origin offset
-            idVec3 p_l = p.oMinus(origin);
+            final idVec3 p_l = new idVec3(p.oMinus(origin));
             if (modelAxis.IsRotated()) {
                 p_l.oMulSet(modelAxis);
             }
@@ -3562,7 +3561,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             // add offset to start point
             if (trm_rotated) {
-                idVec3 dir = trm.offset.oMultiply(trmAxis);
+                final idVec3 dir = new idVec3(trm.offset.oMultiply(trmAxis));
                 tw.start.oPluSet(dir);
                 tw.end.oPluSet(dir);
             } else {
@@ -3692,7 +3691,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             float t1, t2, offset;
             float frac, frac2;
             float idist;
-            idVec3 mid = new idVec3();
+            final idVec3 mid = new idVec3();
             int side;
             float midf;
 
@@ -3792,7 +3791,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void TraceThroughModel(cm_traceWork_s tw) {
             float d;
             int i, numSteps;
-            idVec3 start, end;
+            final idVec3 start = new idVec3(), end = new idVec3();
             idRotation rot = new idRotation();
 
             if (!tw.rotation) {
@@ -3807,12 +3806,12 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     // number of steps for the approximation
                     numSteps = (int) (CIRCLE_APPROXIMATION_LENGTH / d);
                     // start of approximation
-                    start = new idVec3(tw.start);
+                    start.oSet(tw.start);
                     // trace circle approximation steps through the BSP tree
                     for (i = 0; i < numSteps; i++) {
                         // calculate next point on approximated circle
                         rot.Set(tw.origin, tw.axis, tw.angle * ((float) (i + 1) / numSteps));
-                        end = rot.oMultiply(start);
+                        end.oSet(rot.oMultiply(start));
                         // trace through spatial subdivision and then through leafs
                         this.TraceThroughAxialBSPTree_r(tw, tw.model.node, 0, 1, start, end);
                         // no need to continue if something was hit already
@@ -3822,7 +3821,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                         start.oSet(end);
                     }
                 } else {
-                    start = new idVec3(tw.start);
+                    start.oSet(tw.start);
                 }
                 // last step of the approximation
                 this.TraceThroughAxialBSPTree_r(tw, tw.model.node, 0, 1, start, tw.end);
@@ -4080,8 +4079,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int[] newEdgeNum2 = new int[1];
             cm_edge_s edge;
             cm_polygon_s newp;
-            idVec3 delta = new idVec3();
-            idVec3 normal = new idVec3();
+            final idVec3 delta = new idVec3();
+            final idVec3 normal = new idVec3();
             float dot;
             boolean keep1, keep2;
 
@@ -4156,9 +4155,9 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             edgeNum = p2.edges[p2BeforeShare];
             edge = model.edges[Math.abs(edgeNum)];
-            delta = model.vertices[edge.vertexNum[INTSIGNBITNOTSET(edgeNum)]].p.oMinus(
-                    model.vertices[edge.vertexNum[INTSIGNBITSET(edgeNum)]].p);
-            normal = p1.plane.Normal().Cross(delta);
+            delta.oSet(model.vertices[edge.vertexNum[INTSIGNBITNOTSET(edgeNum)]].p.oMinus(
+                    model.vertices[edge.vertexNum[INTSIGNBITSET(edgeNum)]].p));
+            normal.oSet(p1.plane.Normal().Cross(delta));
             normal.Normalize();
 
             edgeNum = p1.edges[p1AfterShare];
@@ -4360,7 +4359,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         // finding internal edges
         private boolean PointInsidePolygon(cm_model_s model, cm_polygon_s p, final idVec3 v) {
             int i, edgeNum;
-            idVec3 v1 = new idVec3(), v2 = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3(), vec = new idVec3();
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3(), vec = new idVec3();
             cm_edge_s edge;
 
             for (i = 0; i < p.numEdges; i++) {
@@ -4382,7 +4381,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void FindInternalEdgesOnPolygon(cm_model_s model, cm_polygon_s p1, cm_polygon_s p2) {
             int i, j, k, edgeNum;
             cm_edge_s edge;
-            idVec3 v1 = new idVec3(), v2 = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3();
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3();
             float d;
 
             // bounds of polygons should overlap or touch
@@ -4687,7 +4686,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idFixedWinding neww;
             idBounds bounds = new idBounds();
             float radius;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
 
             // if the .proc file has no BSP tree
             if (procNodes == null) {
@@ -5383,7 +5382,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
         private boolean GetVertex(cm_model_s model, final idVec3 v, final CInt vertexNum) {
             int i, hashKey, vn;
-            idVec3 vert = new idVec3(), p = new idVec3();
+            final idVec3 vert = new idVec3(), p = new idVec3();
 
             for (i = 0; i < 3; i++) {
                 if (Math.abs(v.oGet(i) - idMath.Rint(v.oGet(i))) < INTEGRAL_EPSILON) {
@@ -5611,7 +5610,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             cm_edge_s edge;
             float dot, s;
             int i, edgeNum;
-            idVec3 dir = new idVec3();
+            final idVec3 dir = new idVec3();
 
             while (true) {
                 for (pref = node.polygons; pref != null; pref = pref.next) {
@@ -5629,11 +5628,11 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                             // if the edge is only used by this polygon
                             if (edge.numUsers == 1) {
                                 dir.oSet(model.vertices[edge.vertexNum[edgeNum < 0 ? 1 : 0]].p.oMinus(model.vertices[edge.vertexNum[edgeNum > 0 ? 1 : 0]].p));
-                                edge.normal = p.plane.Normal().Cross(dir);
+                                edge.normal.oSet(p.plane.Normal().Cross(dir));
                                 edge.normal.Normalize();
                             } else {
                                 // the edge is used by more than one polygon
-                                edge.normal = p.plane.Normal();
+                                edge.normal.oSet(p.plane.Normal());
                             }
                         } else {
                             dot = edge.normal.oMultiply(p.plane.Normal());
@@ -5666,7 +5665,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int v1, v2, v3, v4;
             idFixedWinding w = new idFixedWinding();
             idPlane plane = new idPlane();
-            idVec3 d1 = new idVec3(), d2 = new idVec3();
+            final idVec3 d1 = new idVec3(), d2 = new idVec3();
 
             for (i = 0; i < mesh.GetWidth() - 1; i++) {
                 for (j = 0; j < mesh.GetHeight() - 1; j++) {
@@ -6390,7 +6389,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             // offset to center of model
-            trm.offset = new idVec3(trm.bounds.GetCenter());
+            trm.offset.oSet(trm.bounds.GetCenter());
 
             trm.GenerateEdgeNormals();
 
@@ -6636,7 +6635,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 model.edges[i].sideSet = 0;
                 model.edges[i].internal = src.ParseInt() == 1;
                 model.edges[i].numUsers = (short) src.ParseInt();
-                model.edges[i].normal = getVec3_origin();
+                model.edges[i].normal.oSet(getVec3_origin());
                 model.edges[i].checkcount = 0;
                 model.numInternalEdges += model.edges[i].internal ? 1 : 0;
             }
@@ -6646,7 +6645,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void ParsePolygons(idLexer src, cm_model_s model) {
             cm_polygon_s p;
             int i, numEdges;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
             idToken token = new idToken();
 
             if (src.CheckTokenType(TT_NUMBER, 0, token) != 0) {
@@ -6684,7 +6683,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void ParseBrushes(idLexer src, cm_model_s model) {
             cm_brush_s b;
             int i, numPlanes;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
             idToken token = new idToken();
 
             if (src.CheckTokenType(TT_NUMBER, 0, token) != 0) {
@@ -6892,7 +6891,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void DrawEdge(cm_model_s model, int edgeNum, final idVec3 origin, final idMat3 axis) {
             boolean side;
             cm_edge_s edge;
-            idVec3 start, end, mid;
+            final idVec3 start = new idVec3(), end = new idVec3(), mid = new idVec3();
             boolean isRotated;
 
             isRotated = axis.IsRotated();
@@ -6900,8 +6899,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             edge = model.edges[Math.abs(edgeNum)];
             side = edgeNum < 0;
 
-            start = new idVec3(model.vertices[edge.vertexNum[side ? 1 : 0]].p);
-            end = new idVec3(model.vertices[edge.vertexNum[side ? 0 : 1]].p);
+            start.oSet(model.vertices[edge.vertexNum[side ? 1 : 0]].p);
+            end.oSet(model.vertices[edge.vertexNum[side ? 0 : 1]].p);
             if (isRotated) {
                 start.oMulSet(axis);
                 end.oMulSet(axis);
@@ -6922,11 +6921,11 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             }
 
             if (cm_drawNormals.GetBool()) {
-                mid = start.oPlus(end).oMultiply(0.5f);
+                mid.oSet(start.oPlus(end).oMultiply(0.5f));
                 if (isRotated) {
-                    end = mid.oPlus(axis.oMultiply(edge.normal)).oMultiply(5);
+                    end.oSet(mid.oPlus(axis.oMultiply(edge.normal)).oMultiply(5));
                 } else {
-                    end = mid.oPlus(edge.normal.oMultiply(5));
+                    end.oSet(mid.oPlus(edge.normal.oMultiply(5)));
                 }
                 session.rw.DebugArrow(colorCyan, mid, end, 1);
             }
@@ -6935,19 +6934,19 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void DrawPolygon(cm_model_s model, cm_polygon_s p, final idVec3 origin, final idMat3 axis, final idVec3 viewOrigin) {
             int i, edgeNum;
             cm_edge_s edge;
-            idVec3 center, end, dir;
+            final idVec3 center = new idVec3(), end = new idVec3(), dir = new idVec3();
 
             if (cm_backFaceCull.GetBool()) {
                 edgeNum = p.edges[0];
                 edge = model.edges[Math.abs(edgeNum)];
-                dir = model.vertices[edge.vertexNum[0]].p.oMinus(viewOrigin);
+                dir.oSet(model.vertices[edge.vertexNum[0]].p.oMinus(viewOrigin));
                 if (dir.oMultiply(p.plane.Normal()) > 0.0f) {
                     return;
                 }
             }
 
             if (cm_drawNormals.GetBool()) {
-                center = getVec3_origin();
+                center.oSet(getVec3_origin());
                 for (i = 0; i < p.numEdges; i++) {
                     edgeNum = p.edges[i];
                     edge = model.edges[Math.abs(edgeNum)];
@@ -6956,12 +6955,12 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 center.oMulSet(1.0f / p.numEdges);
                 if (axis.IsRotated()) {
                     center.oSet(center.oMultiply(axis).oPluSet(origin));
-                    end = center.oPlus( // center +
-                            axis.oMultiply(p.plane.Normal()).oMultiply(5) // axis * p.planeNormal * 5
+                    end.oSet(center.oPlus( // center +
+                            axis.oMultiply(p.plane.Normal()).oMultiply(5)) // axis * p.planeNormal * 5
                     );
                 } else {
                     center.oPluSet(origin);
-                    end = center.oPlus(p.plane.Normal().oMultiply(5));
+                    end.oSet(center.oPlus(p.plane.Normal().oMultiply(5)));
                 }
                 session.rw.DebugArrow(colorMagenta, center, end, 1);
             }

@@ -610,7 +610,7 @@ public class Model_md5 {
                 if (joint.parent != null) {
                     parentNum = joints.Find(joint.parent);
                     pose.q = (poseMat3[i].ToMat3().oMultiply(poseMat3[parentNum].ToMat3().Transpose())).ToQuat();
-                    pose.t = (poseMat3[i].ToVec3().oMinus(poseMat3[parentNum].ToVec3())).oMultiply(poseMat3[parentNum].ToMat3().Transpose());
+                    pose.t.oSet((poseMat3[i].ToVec3().oMinus(poseMat3[parentNum].ToVec3())).oMultiply(poseMat3[parentNum].ToMat3().Transpose()));
                 }
             }
             parser.ExpectTokenString("}");

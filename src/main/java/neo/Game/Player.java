@@ -196,7 +196,7 @@ public class Player {
     public static final int MAX_WEAPONS = 16;
     public static final int MEGAHEALTH = 2;
     public static final int MELEE_DAMAGE = 2;
-//    
+    //
     public static final int MELEE_DISTANCE = 3;
     //
     // minimum speed to bob and play run/walk animations at
@@ -1044,7 +1044,7 @@ public class Player {
 
     public static class loggedAccel_t {
 
-        idVec3 dir;        // scaled larger for running
+        final idVec3 dir;        // scaled larger for running
         int time;
 
         public loggedAccel_t() {
@@ -1054,8 +1054,8 @@ public class Player {
 
     public static class aasLocation_t {
 
+        final idVec3 pos = new idVec3();
         int areaNum;
-        idVec3 pos;
     }
 
     public static class idPlayer extends idActor {
@@ -1103,8 +1103,37 @@ public class Player {
             eventCallbacks.put(EV_Player_GetIdealWeapon, (eventCallback_t0<idPlayer>) idPlayer::Event_GetIdealWeapon);
         }
 
+        public final idVec3 colorBar;                 // used for scoreboard and hud display
+        //
+        // the first person view values are always calculated, even
+        // if a third person view is used
+        public final idVec3 firstPersonViewOrigin;
+        public final idEntityPtr<idProjectile> soulCubeProjectile;
+        //
+        public final idEntityPtr<idEntity> teleportEntity;           // while being teleported, this is set to the entity we'll use for exit
+        //
+        public final idEntityPtr<idWeapon> weapon;
+        //
+        private final idList<aasLocation_t> aasLocation;              // for AI tracking the player
+        private final idStr baseSkinName;
+        private final idInterpolate<Float> centerView;
+        private final idVec3 gibsDir;
+        private final idVec3 lastDamageDir;
         private final loggedAccel_t[] loggedAccel;                   // [currentLoggedAccel & (NUM_LOGGED_ACCELS-1)]
         private final idAngles[] loggedViewAngles;              // [gameLocal.framenum&(LOGGED_VIEW_ANGLES-1)]
+        //
+        private final idStr pdaAudio;
+        private final idStr pdaVideo;
+        private final idStr pdaVideoWave;
+        //
+        private final idPhysics_Player physicsObj;               // player physics
+        //
+        private final idDeclSkin skin;
+        private final idVec3 smoothedOrigin;
+        private final idVec3 viewBob;
+        private final idAngles viewBobAngles;
+        //
+        private final idInterpolate<Float> zoomFov;
         public idScriptBool AI_ATTACK_HELD = new idScriptBool();
         public idScriptBool AI_BACKWARD = new idScriptBool();
         public idScriptBool AI_CROUCH = new idScriptBool();
@@ -1128,17 +1157,12 @@ public class Player {
         //
         public int buttonMask;
         public idAngles cmdAngles;             // player cmd angles
-        public idVec3 colorBar;                 // used for scoreboard and hud display
         public int colorBarIndex;
         public int deathClearContentsTime;
         public boolean doingDeathSkin;
         //
         public idDragEntity dragEntity;
         public idMat3 firstPersonViewAxis;
-        //
-        // the first person view values are always calculated, even
-        // if a third person view is used
-        public idVec3 firstPersonViewOrigin;
         public boolean forceRespawn;
         public boolean forceScoreBoard;
         public boolean forcedReady;
@@ -1187,7 +1211,6 @@ public class Player {
         //
         public idPlayerView playerView;            // handles damage kicks and effects
         public boolean scoreBoardOpen;
-        public final idEntityPtr<idProjectile> soulCubeProjectile;
         public idAngles spawnAngles;
         //
         public boolean spawnAnglesSet;        // on first usercmd, we must set deltaAngles
@@ -1195,8 +1218,6 @@ public class Player {
         public boolean spectating;
         public int spectator;
         public float stamina;
-        //
-        public final idEntityPtr<idEntity> teleportEntity;           // while being teleported, this is set to the entity we'll use for exit
         public int teleportKiller;           // entity number of an entity killing us at teleporter exit
         public int tourneyLine;              // client side - our spot in the wait line. 0 means no info.
         public int tourneyRank;              // for tourney cycling - the higher, the more likely to play next - server
@@ -1206,8 +1227,6 @@ public class Player {
         public usercmd_t usercmd;
         public idAngles viewAngles;            // player view angles
         public boolean wantSpectate;             // from userInfo
-        //
-        public final idEntityPtr<idWeapon> weapon;
         public boolean weaponGone;               // force stop firing
         public int weapon_fists;
         public int weapon_pda;
@@ -1216,18 +1235,14 @@ public class Player {
         private int MPAim;                   // player num in aim
         private int MPAimFadeTime;  // for GUI fade
         private boolean MPAimHighlight;
-        //
-        private final idList<aasLocation_t> aasLocation;              // for AI tracking the player
         private int airTics;                  // set to pm_airTics at start, drops in vacuum
         //
         private boolean airless;
-        private final idStr baseSkinName;
         private int bobCycle;                 // for view bobbing and footstep generation
         //
         private int bobFoot;
         private float bobFrac;
         private float bobfracsin;
-        private final idInterpolate<Float> centerView;
         private int/*jointHandle_t*/  chestJoint;
         private int currentLoggedAccel;
         //
@@ -1243,7 +1258,6 @@ public class Player {
         private boolean fxFov;
         //
         private boolean gibDeath;
-        private idVec3 gibsDir;
         private boolean gibsLaunched;
         private int/*jointHandle_t*/  headJoint;
         //
@@ -1263,7 +1277,6 @@ public class Player {
         private int lastAirDamage;
         //
         private int lastDamageDef;
-        private idVec3 lastDamageDir;
         private int lastDamageLocation;
         private int lastMPAim;
         private int lastMPAimTime;  // last time the aim changed
@@ -1283,12 +1296,6 @@ public class Player {
         private int oldMouseY;
         private float oldViewYaw;
         //
-        private final idStr pdaAudio;
-        private final idStr pdaVideo;
-        private final idStr pdaVideoWave;
-        //
-        private final idPhysics_Player physicsObj;               // player physics
-        //
         private idPlayerIcon playerIcon;
         private idDeclSkin powerUpSkin;
         private int previousWeapon;
@@ -1301,25 +1308,18 @@ public class Player {
         //
         private boolean selfSmooth;
         private boolean showWeaponViewModel;
-        //
-        private final idDeclSkin skin;
         private idAngles smoothedAngles;
         private int smoothedFrame;
-        private idVec3 smoothedOrigin;
         private boolean smoothedOriginUpdated;
         private float stepUpDelta;
         private int stepUpTime;
         private int talkCursor;     // show the state of the focusCharacter (0 == can't talk/dead, 1 == ready to talk, 2 == busy talking)
         //
         private boolean tipUp;
-        private final idVec3 viewBob;
-        private final idAngles viewBobAngles;
         private boolean weaponCatchup;           // raise up the weapon silently ( state catchups )
         private boolean weaponEnabled;
         private int weaponSwitchTime;
         private float xyspeed;
-        //
-        private final idInterpolate<Float> zoomFov;
         //
         //
 
@@ -2714,7 +2714,7 @@ public class Player {
          use normal spawn selection.
          ============
          */
-        public void SelectInitialSpawnPoint(idVec3 origin, idAngles angles) {
+        public void SelectInitialSpawnPoint(final idVec3 origin, idAngles angles) {
             idEntity spot;
             idStr skin = new idStr();
 
@@ -2741,7 +2741,7 @@ public class Player {
          ============
          */
         public void SpawnFromSpawnSpot() {
-            idVec3 spawn_origin = new idVec3();
+            final idVec3 spawn_origin = new idVec3();
             idAngles spawn_angles = new idAngles();
 
             SelectInitialSpawnPoint(spawn_origin, spawn_angles);
@@ -2760,7 +2760,7 @@ public class Player {
          ============
          */
         public void SpawnToPoint(final idVec3 spawn_origin, final idAngles spawn_angles) {
-            idVec3 spec_origin;
+            final idVec3 spec_origin = new idVec3();
 
             assert (!gameLocal.isClient);
 
@@ -2789,7 +2789,7 @@ public class Player {
             if (!spectating) {
                 SetOrigin(spawn_origin);
             } else {
-                spec_origin = spawn_origin;
+                spec_origin.oSet(spawn_origin);
                 spec_origin.oPluSet(2, pm_normalheight.GetFloat());
                 spec_origin.oPluSet(2, SPECTATE_RAISE);
                 SetOrigin(spec_origin);
@@ -3109,13 +3109,13 @@ public class Player {
         }
 
         public void UpdateConditions() {
-            idVec3 velocity;
+            final idVec3 velocity = new idVec3();
             float fallspeed;
             float forwardspeed;
             float sidespeed;
 
             // minus the push velocity to avoid playing the walking animation and sounds when riding a mover
-            velocity = physicsObj.GetLinearVelocity().oMinus(physicsObj.GetPushedLinearVelocity());
+            velocity.oSet(physicsObj.GetLinearVelocity().oMinus(physicsObj.GetPushedLinearVelocity()));
             fallspeed = velocity.oMultiply(physicsObj.GetGravityNormal());
 
             if (influenceActive != 0) {
@@ -3212,11 +3212,11 @@ public class Player {
          */
         @Override
         public void GetAIAimTargets(final idVec3 lastSightPos, final idVec3 headPos, final idVec3 chestPos) {
-            idVec3 offset = new idVec3();
+            final idVec3 offset = new idVec3();
             idMat3 axis = new idMat3();
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
 
-            origin = lastSightPos.oMinus(physicsObj.GetOrigin());
+            origin.oSet(lastSightPos.oMinus(physicsObj.GetOrigin()));
 
             GetJointWorldTransform(chestJoint, gameLocal.time, offset, axis);
             headPos.oSet(offset.oPlus(origin));
@@ -3280,7 +3280,7 @@ public class Player {
                 }
             }
 
-            damage.setVal((int) (damage.getVal()* damageScale));
+            damage.setVal((int) (damage.getVal() * damageScale));
 
             // always give half damage if hurting self
             if (attacker.equals(this)) {
@@ -3320,7 +3320,7 @@ public class Player {
                     armorSave = damage.getVal() - 1;
                     damage.setVal(1);
                 } else {
-                    damage.setVal(damage.getVal() -  armorSave);
+                    damage.setVal(damage.getVal() - armorSave);
                 }
             } else {
                 armorSave = 0;
@@ -3358,12 +3358,12 @@ public class Player {
          */
         @Override
         public void Damage(idEntity inflictor, idEntity attacker, final idVec3 dir, final String damageDefName, final float damageScale, final int location) {
-            idVec3 kick;
+            final idVec3 kick = new idVec3();
             CInt damage = new CInt();
             CInt armorSave = new CInt();
             CInt knockback = new CInt();
-            idVec3 damage_from;
-            idVec3 localDamageVector = new idVec3();
+            final idVec3 damage_from = new idVec3();
+            final idVec3 localDamageVector = new idVec3();
             CFloat attackerPushScale = new CFloat();
 
             // damage is only processed on server
@@ -3414,7 +3414,7 @@ public class Player {
                     attackerPushScale.setVal(1.0f);
                 }
 
-                kick = dir;
+                kick.oSet(dir);
                 kick.Normalize();
                 kick.oMulSet(g_knockback.GetFloat() * knockback.getVal() * attackerPushScale.getVal() / 200);
                 physicsObj.SetLinearVelocity(physicsObj.GetLinearVelocity().oPlus(kick));
@@ -3447,7 +3447,7 @@ public class Player {
             }
 
             // move the world direction vector to local coordinates
-            damage_from = dir;
+            damage_from.oSet(dir);
             damage_from.Normalize();
 
             viewAxis.ProjectVector(damage_from, localDamageVector);
@@ -3516,14 +3516,14 @@ public class Player {
             }
 
             lastDamageDef = damageDef.Index();
-            lastDamageDir = damage_from;
+            lastDamageDir.oSet(damage_from);
             lastDamageLocation = location;
         }
 
         // use exitEntityNum to specify a teleport with private camera view and delayed exit
         @Override
         public void Teleport(final idVec3 origin, final idAngles angles, idEntity destination) {
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
 
             if (weapon.GetEntity() != null) {
                 weapon.GetEntity().LowerWeapon();
@@ -3650,7 +3650,7 @@ public class Player {
                     killer = (idPlayer) attacker;
                     if (health < -20 || killer.PowerUpActive(BERSERK)) {
                         gibDeath = true;
-                        gibsDir = dir;
+                        gibsDir.oSet(dir);
                         gibsLaunched = false;
                     }
                 }
@@ -3667,7 +3667,7 @@ public class Player {
         }
 
         public void StartFxOnBone(final String fx, final String bone) {
-            idVec3 offset = new idVec3();
+            final idVec3 offset = new idVec3();
             idMat3 axis = new idMat3();
             int/*jointHandle_t*/ jointHandle = GetAnimator().GetJointHandle(bone);
 
@@ -3677,7 +3677,7 @@ public class Player {
             }
 
             if (GetAnimator().GetJointTransform(jointHandle, gameLocal.time, offset, axis)) {
-                offset = GetPhysics().GetOrigin().oPlus(offset.oMultiply(GetPhysics().GetAxis()));
+                offset.oSet(GetPhysics().GetOrigin().oPlus(offset.oMultiply(GetPhysics().GetAxis())));
                 axis = axis.oMultiply(GetPhysics().GetAxis());
             }
 
@@ -3736,7 +3736,7 @@ public class Player {
                 }
             } else {
                 if (g_stopTime.GetBool()) {
-                    renderView.vieworg = new idVec3(firstPersonViewOrigin);
+                    renderView.vieworg.oSet((firstPersonViewOrigin));
                     renderView.viewaxis = new idMat3(firstPersonViewAxis);
 
                     if (!pm_thirdPerson.GetBool()) {
@@ -3750,7 +3750,7 @@ public class Player {
                     range = gameLocal.time < minRespawnTime ? (gameLocal.time + RAGDOLL_DEATH_TIME - minRespawnTime) * (120 / RAGDOLL_DEATH_TIME) : 120;
                     OffsetThirdPersonView(0, 20 + range, 0, false);
                 } else {
-                    renderView.vieworg = new idVec3(firstPersonViewOrigin);
+                    renderView.vieworg.oSet((firstPersonViewOrigin));
                     renderView.viewaxis = new idMat3(firstPersonViewAxis);
 
                     // set the viewID to the clientNum + 1, so we can suppress the right player bodies and
@@ -3787,7 +3787,7 @@ public class Player {
                 //	Displays the view from the point of view of the "camera" joint in the player model
 
                 idMat3 axis = new idMat3();
-                idVec3 origin = new idVec3();
+                final idVec3 origin = new idVec3();
                 idAngles ang;
 
                 ang = viewBobAngles.oPlus(playerView.AngleOffset());
@@ -3795,7 +3795,7 @@ public class Player {
 
                 int joint = animator.GetJointHandle("camera");
                 animator.GetJointTransform(joint, gameLocal.time, origin, axis);
-                firstPersonViewOrigin = (origin.oPlus(modelOffset)).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis())).oPlus(physicsObj.GetOrigin()).oPlus(viewBob);
+                firstPersonViewOrigin.oSet((origin.oPlus(modelOffset)).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis())).oPlus(physicsObj.GetOrigin()).oPlus(viewBob));
                 firstPersonViewAxis = axis.oMultiply(ang.ToMat3()).oMultiply(physicsObj.GetGravityAxis());
             } else {
                 // offset for local bobbing and kicks
@@ -3915,21 +3915,21 @@ public class Player {
          Calculate the bobbing position of the view weapon
          ==============
          */
-        public void CalculateViewWeaponPos(idVec3 origin, idMat3 axis) {
+        public void CalculateViewWeaponPos(final idVec3 origin, idMat3 axis) {
             float scale;
             float fracsin;
             idAngles angles = new idAngles();
             int delta;
 
             // CalculateRenderView must have been called first
-            final idVec3 viewOrigin = firstPersonViewOrigin;
+            final idVec3 viewOrigin = new idVec3(firstPersonViewOrigin);
             final idMat3 viewAxis = firstPersonViewAxis;
 
             // these cvars are just for hand tweaking before moving a value to the weapon def
-            idVec3 gunpos = new idVec3(g_gun_x.GetFloat(), g_gun_y.GetFloat(), g_gun_z.GetFloat());
+            final idVec3 gunpos = new idVec3(g_gun_x.GetFloat(), g_gun_y.GetFloat(), g_gun_z.GetFloat());
 
             // as the player changes direction, the gun will take a small lag
-            idVec3 gunOfs = GunAcceleratingOffset();
+            final idVec3 gunOfs = new idVec3(GunAcceleratingOffset());
             origin.oSet(viewOrigin.oPlus(gunpos.oPlus(gunOfs).oMultiply(viewAxis)));
 
             // on odd legs, invert some angles
@@ -3975,19 +3975,19 @@ public class Player {
 
         @Override
         public idVec3 GetEyePosition() {
-            idVec3 org;
+            final idVec3 org = new idVec3();
 
             // use the smoothed origin if spectating another player in multiplayer
             if (gameLocal.isClient && entityNumber != gameLocal.localClientNum) {
-                org = smoothedOrigin;
+                org.oSet(smoothedOrigin);
             } else {
-                org = GetPhysics().GetOrigin();
+                org.oSet(GetPhysics().GetOrigin());
             }
             return org.oPlus(GetPhysics().GetGravityNormal().oMultiply(-eyeOffset.z));
         }
 
         @Override
-        public void GetViewPos(idVec3 origin, idMat3 axis) {
+        public void GetViewPos(final idVec3 origin, idMat3 axis) {
             idAngles angles = new idAngles();
 
             // if dead, fix the angle and don't add any kick
@@ -4010,13 +4010,13 @@ public class Player {
         }
 
         public void OffsetThirdPersonView(float angle, float range, float height, boolean clip) {
-            idVec3 view;
+            final idVec3 view = new idVec3();
 //            idVec3 focusAngles;
             trace_s trace = new trace_s();
-            idVec3 focusPoint;
+            final idVec3 focusPoint = new idVec3();
             float focusDist;
             CFloat forwardScale = new CFloat(), sideScale = new CFloat();
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idAngles angles;
             idMat3 axis = new idMat3();
             idBounds bounds;
@@ -4032,9 +4032,9 @@ public class Player {
                 }
             }
 
-            focusPoint = origin.oPlus(angles.ToForward().oMultiply(THIRD_PERSON_FOCUS_DISTANCE));
+            focusPoint.oSet(origin.oPlus(angles.ToForward().oMultiply(THIRD_PERSON_FOCUS_DISTANCE)));
             focusPoint.z += height;
-            view = origin;
+            view.oSet(origin);
             view.z += 8 + height;
 
             angles.pitch *= 0.5f;
@@ -4050,13 +4050,13 @@ public class Player {
                 bounds = new idBounds(new idVec3(-4, -4, -4), new idVec3(4, 4, 4));
                 gameLocal.clip.TraceBounds(trace, origin, view, bounds, MASK_SOLID, this);
                 if (trace.fraction != 1.0f) {
-                    view = trace.endpos;
+                    view.oSet(trace.endpos);
                     view.z += (1.0f - trace.fraction) * 32.0f;
 
                     // try another trace to this position, because a tunnel may have the ceiling
                     // close enough that this is poking out
                     gameLocal.clip.TraceBounds(trace, origin, view, bounds, MASK_SOLID, this);
-                    view = trace.endpos;
+                    view.oSet(trace.endpos);
                 }
             }
 
@@ -4070,7 +4070,7 @@ public class Player {
             angles.pitch = -RAD2DEG(atan2(focusPoint.z, focusDist));
             angles.yaw -= angle;
 
-            renderView.vieworg = new idVec3(view);
+            renderView.vieworg.oSet(view);
             renderView.viewaxis = angles.ToMat3().oMulSet(physicsObj.GetGravityAxis());
             renderView.viewID = 0;
         }
@@ -4713,7 +4713,7 @@ public class Player {
         }
 
         public void DropWeapon(boolean died) {
-            idVec3 forward = new idVec3(), up = new idVec3();
+            final idVec3 forward = new idVec3(), up = new idVec3();
             int inclip, ammoavailable;
 
             assert (!gameLocal.isClient);
@@ -5937,7 +5937,7 @@ public class Player {
             deltaViewAngles.oSet(2, msg.ReadDeltaFloat(0));
             health = msg.ReadShort();
             lastDamageDef = gameLocal.ClientRemapDecl(DECL_ENTITYDEF, msg.ReadBits(gameLocal.entityDefBits));
-            lastDamageDir = msg.ReadDir(9);
+            lastDamageDir.oSet(msg.ReadDir(9));
             lastDamageLocation = msg.ReadShort();
             newIdealWeapon = msg.ReadBits(idMath.BitsForInteger(MAX_WEAPONS));
             inventory.weapons = msg.ReadBits(MAX_WEAPONS);
@@ -6105,7 +6105,7 @@ public class Player {
             if (gameLocal.isClient && gameLocal.framenum >= smoothedFrame && (entityNumber != gameLocal.localClientNum || selfSmooth)) {
                 // render origin and axis
                 idMat3 renderAxis = viewAxis.oMultiply(GetPhysics().GetAxis());
-                idVec3 renderOrigin = GetPhysics().GetOrigin().oPlus(modelOffset.oMultiply(renderAxis));
+                final idVec3 renderOrigin = new idVec3(GetPhysics().GetOrigin().oPlus(modelOffset.oMultiply(renderAxis)));
 
                 // update the smoothed origin
                 if (!smoothedOriginUpdated) {
@@ -6119,7 +6119,7 @@ public class Player {
                             renderOrigin.ToVec2_oMinSet(originDiff.oMultiply(gameLocal.clientSmoothing));
                         }
                     }
-                    smoothedOrigin = renderOrigin;
+                    smoothedOrigin.oSet(renderOrigin);
 
                     smoothedFrame = gameLocal.framenum;
                     smoothedOriginUpdated = true;
@@ -6297,7 +6297,7 @@ public class Player {
             } else {
                 colorBarIndex = 0;
             }
-            colorBar = colorBarTable[colorBarIndex];
+            colorBar.oSet(colorBarTable[colorBarIndex]);
             if (PowerUpActive(BERSERK)) {
                 powerUpSkin.oSet(declManager.FindSkin(baseSkinName + "_berserk"));
             }
@@ -6339,14 +6339,14 @@ public class Player {
         }
 
         private void LookAtKiller(idEntity inflictor, idEntity attacker) {
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
 
             if (!this.equals(attacker)) {
-                dir = attacker.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());
+                dir.oSet(attacker.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
             } else if (!this.equals(inflictor)) {
-                dir = inflictor.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());
+                dir.oSet(inflictor.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
             } else {
-                dir = viewAxis.oGet(0);
+                dir.oSet(viewAxis.oGet(0));
             }
 
             idAngles ang = new idAngles(0, dir.ToYaw(), 0);
@@ -6364,7 +6364,7 @@ public class Player {
 
         private void FireWeapon() {
             idMat3 axis = new idMat3();
-            idVec3 muzzle = new idVec3();
+            final idVec3 muzzle = new idVec3();
 
             if (privateCameraView != null) {
                 return;
@@ -6622,15 +6622,15 @@ public class Player {
 
         private void SpectateFreeFly(boolean force) {    // ignore the timeout to force when followed spec is no longer valid
             idPlayer player;
-            idVec3 newOrig;
-            idVec3 spawn_origin = new idVec3();
+            final idVec3 newOrig = new idVec3();
+            final idVec3 spawn_origin = new idVec3();
             idAngles spawn_angles = new idAngles();
 
             player = gameLocal.GetClientByNum(spectator);
             if (force || gameLocal.time > lastSpectateChange) {
                 spectator = entityNumber;
                 if (player != null && player != this && !player.spectating && !player.IsInTeleport()) {
-                    newOrig = player.GetPhysics().GetOrigin();
+                    newOrig.oSet(player.GetPhysics().GetOrigin());
                     if (player.physicsObj.IsCrouching()) {
                         newOrig.oPluSet(2, pm_crouchviewheight.GetFloat());
                     } else {
@@ -6638,7 +6638,7 @@ public class Player {
                     }
                     newOrig.oPluSet(2, SPECTATE_RAISE);
                     idBounds b = new idBounds(getVec3_origin()).Expand(pm_spectatebbox.GetFloat() * 0.5f);
-                    idVec3 start = player.GetPhysics().GetOrigin();
+                    final idVec3 start = new idVec3(player.GetPhysics().GetOrigin());
                     start.oPluSet(2, pm_spectatebbox.GetFloat() * 0.5f);
                     trace_s t = new trace_s();
                     // assuming spectate bbox is inside stand or crouch box
@@ -6743,7 +6743,7 @@ public class Player {
          ==============
          */
         private idVec3 GunAcceleratingOffset() {
-            idVec3 ofs = new idVec3();
+            final idVec3 ofs = new idVec3();
 
             CFloat weaponOffsetTime = new CFloat(), weaponOffsetScale = new CFloat();
 
@@ -6780,8 +6780,8 @@ public class Player {
          =================
          */
         private void CrashLand(final idVec3 oldOrigin, final idVec3 oldVelocity) {
-            idVec3 origin, velocity;
-            idVec3 gravityVector, gravityNormal;
+            final idVec3 origin = new idVec3(), velocity = new idVec3();
+            final idVec3 gravityVector = new idVec3(), gravityNormal = new idVec3();
             float delta;
             float hardDelta, fatalDelta;
             float dist;
@@ -6799,7 +6799,7 @@ public class Player {
                 return;
             }
 
-            gravityNormal = physicsObj.GetGravityNormal();
+            gravityNormal.oSet(physicsObj.GetGravityNormal());
 
             // if the player wasn't going down
             if ((oldVelocity.oMultiply(gravityNormal.oNegative())) >= 0) {
@@ -6824,8 +6824,8 @@ public class Player {
                 }
             }
 
-            origin = GetPhysics().GetOrigin();
-            gravityVector = physicsObj.GetGravity();
+            origin.oSet(GetPhysics().GetOrigin());
+            gravityVector.oSet(physicsObj.GetGravity());
 
             // calculate the exact velocity on landing
             dist = (origin.oMinus(oldOrigin)).oMultiply(gravityNormal.oNegative());
@@ -6902,7 +6902,7 @@ public class Player {
         private void BobCycle(final idVec3 pushVelocity) {
             float bobmove;
             int old, deltaTime;
-            idVec3 vel, gravityDir, velocity;
+            final idVec3 vel = new idVec3(), gravityDir = new idVec3(), velocity = new idVec3();
             idMat3 viewaxis;
             float bob;
             float delta;
@@ -6913,10 +6913,10 @@ public class Player {
             // calculate speed and cycle to be used for
             // all cyclic walking effects
             //
-            velocity = physicsObj.GetLinearVelocity().oMinus(pushVelocity);
+            velocity.oSet(physicsObj.GetLinearVelocity().oMinus(pushVelocity));
 
-            gravityDir = physicsObj.GetGravityNormal();
-            vel = velocity.oMinus(gravityDir.oMultiply(velocity.oMultiply(gravityDir)));
+            gravityDir.oSet(physicsObj.GetGravityNormal());
+            vel.oSet(velocity.oMinus(gravityDir.oMultiply(velocity.oMultiply(gravityDir))));
             xyspeed = vel.LengthFast();
 
             // do not evaluate the bob for other clients
@@ -7001,7 +7001,7 @@ public class Player {
                 stepUpTime = gameLocal.time;
             }
 
-            idVec3 gravity = physicsObj.GetGravityNormal();
+            final idVec3 gravity = new idVec3(physicsObj.GetGravityNormal());
 
             // if the player stepped up recently
             deltaTime = gameLocal.time - stepUpTime;
@@ -7264,10 +7264,10 @@ public class Player {
         private void InitAASLocation() {
             int i;
             int num;
-            idVec3 size;
+            final idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
             idAAS aas;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
 
             GetFloorPos(64.0f, origin);
 
@@ -7277,10 +7277,10 @@ public class Player {
             for (i = 0; i < aasLocation.Num(); i++) {
                 aasLocation.oSet(i, new aasLocation_t());
                 aasLocation.oGet(i).areaNum = 0;
-                aasLocation.oGet(i).pos = new idVec3(origin);
+                aasLocation.oGet(i).pos.oSet(origin);
                 aas = gameLocal.GetAAS(i);
                 if (aas != null && aas.GetSettings() != null) {
-                    size = aas.GetSettings().boundingBoxes[0].oGet(1);
+                    size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1));
                     bounds.oSet(0, size.oNegative());
                     size.z = 32.0f;
                     bounds.oSet(1, size);
@@ -7293,10 +7293,10 @@ public class Player {
         private void SetAASLocation() {
             int i;
             int areaNum;
-            idVec3 size;
+            final idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
             idAAS aas;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
 
             if (!GetFloorPos(64.0f, origin)) {
                 return;
@@ -7308,14 +7308,14 @@ public class Player {
                     continue;
                 }
 
-                size = aas.GetSettings().boundingBoxes[0].oGet(1);
+                size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1));
                 bounds.oSet(0, size.oNegative());
                 size.z = 32.0f;
                 bounds.oSet(1, size);
 
                 areaNum = aas.PointReachableAreaNum(origin, bounds, AREA_REACHABLE_WALK);
                 if (areaNum != 0) {
-                    aasLocation.oGet(i).pos = origin;
+                    aasLocation.oGet(i).pos.oSet(origin);
                     aasLocation.oGet(i).areaNum = areaNum;
                 }
             }
@@ -7323,14 +7323,14 @@ public class Player {
 
         private void Move() {
             float newEyeOffset;
-            idVec3 oldOrigin;
-            idVec3 oldVelocity;
-            idVec3 pushVelocity;
+            final idVec3 oldOrigin = new idVec3();
+            final idVec3 oldVelocity = new idVec3();
+            final idVec3 pushVelocity = new idVec3();
 
             // save old origin and velocity for crashlanding
-            oldOrigin = physicsObj.GetOrigin();
-            oldVelocity = physicsObj.GetLinearVelocity();
-            pushVelocity = physicsObj.GetPushedLinearVelocity();
+            oldOrigin.oSet(physicsObj.GetOrigin());
+            oldVelocity.oSet(physicsObj.GetLinearVelocity());
+            pushVelocity.oSet(physicsObj.GetPushedLinearVelocity());
 
             // set physics variables
             physicsObj.SetMaxStepHeight(pm_stepsize.GetFloat());
@@ -7406,7 +7406,7 @@ public class Player {
                 // check if we're standing on top of a monster and give a push if we are
                 idEntity groundEnt = physicsObj.GetGroundEntity();
                 if (groundEnt instanceof idAI) {
-                    idVec3 vel = physicsObj.GetLinearVelocity();
+                    final idVec3 vel = new idVec3(physicsObj.GetLinearVelocity());
                     if (vel.ToVec2().LengthSqr() < 0.1f) {
                         vel.oSet(physicsObj.GetOrigin().ToVec2().oMinus(groundEnt.GetPhysics().GetAbsBounds().GetCenter().ToVec2()));
                         vel.ToVec2_NormalizeFast();
@@ -7546,9 +7546,9 @@ public class Player {
         }
 
         private void SetSpectateOrigin() {
-            idVec3 neworig;
+            final idVec3 neworig = new idVec3();
 
-            neworig = GetPhysics().GetOrigin();
+            neworig.oSet(GetPhysics().GetOrigin());
             neworig.oPluSet(2, EyeHeight());
             neworig.oPluSet(2, 25);
             SetOrigin(neworig);
@@ -7588,7 +7588,7 @@ public class Player {
             int oldTalkCursor;
             idAFEntity_Vehicle oldVehicle;
             int i, j;
-            idVec3 start, end;
+            final idVec3 start = new idVec3(), end = new idVec3();
             boolean allowFocus;
             String command;
             trace_s trace = new trace_s();
@@ -7620,12 +7620,12 @@ public class Player {
                 return;
             }
 
-            start = GetEyePosition();
-            end = start.oPlus(viewAngles.ToForward().oMultiply(80.0f));
+            start.oSet(GetEyePosition());
+            end.oSet(start.oPlus(viewAngles.ToForward().oMultiply(80.0f)));
 
             // player identification . names to the hud
             if (gameLocal.isMultiplayer && entityNumber == gameLocal.localClientNum) {
-                idVec3 end2 = start.oPlus(viewAngles.ToForward().oMultiply(768.0f));
+                final idVec3 end2 = new idVec3(start.oPlus(viewAngles.ToForward().oMultiply(768.0f)));
                 gameLocal.clip.TracePoint(trace, start, end2, MASK_SHOT_BOUNDINGBOX, this);
                 int iclient = -1;
                 if ((trace.fraction < 1.0f) && (trace.c.entityNum < MAX_CLIENTS)) {
@@ -8067,15 +8067,15 @@ public class Player {
 
         private void UseVehicle() {
             trace_s trace = new trace_s();
-            idVec3 start, end;
+            final idVec3 start = new idVec3(), end = new idVec3();
             idEntity ent;
 
             if (GetBindMaster() != null && GetBindMaster() instanceof idAFEntity_Vehicle) {
                 Show();
                 ((idAFEntity_Vehicle) GetBindMaster()).Use(this);
             } else {
-                start = GetEyePosition();
-                end = start.oPlus(viewAngles.ToForward().oMultiply(80.0f));
+                start.oSet(GetEyePosition());
+                end.oSet(start.oPlus(viewAngles.ToForward().oMultiply(80.0f)));
                 gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_RENDERMODEL, this);
                 if (trace.fraction < 1.0f) {
                     ent = gameLocal.entities[trace.c.entityNum];
@@ -8092,7 +8092,7 @@ public class Player {
         }
 
         private void Event_GetMove() {
-            idVec3 move = new idVec3(usercmd.forwardmove, usercmd.rightmove, usercmd.upmove);
+            final idVec3 move = new idVec3(usercmd.forwardmove, usercmd.rightmove, usercmd.upmove);
             idThread.ReturnVector(move);
         }
 

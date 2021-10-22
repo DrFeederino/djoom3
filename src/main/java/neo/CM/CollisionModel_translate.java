@@ -84,7 +84,7 @@ public class CollisionModel_translate {
      Note: has two implementations, see #if 0 else #endif
      ================
      */
-    static float CM_TranslationPlaneFraction(idPlane plane, idVec3 start, idVec3 end) {
+    static float CM_TranslationPlaneFraction(idPlane plane, final idVec3 start, final idVec3 end) {
         float d1, d2, d2eps;
 
         d2 = plane.Distance(end);

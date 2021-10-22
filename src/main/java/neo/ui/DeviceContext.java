@@ -665,7 +665,7 @@ public class DeviceContext {
                 verts[i].xyz.oMinSet(origTrans);
 
                 //Rotate
-                verts[i].xyz = rotz.oMultiply(verts[i].xyz);
+                verts[i].xyz.oSet(rotz.oMultiply(verts[i].xyz));
 
                 //Translate back
                 verts[i].xyz.oPluSet(origTrans);

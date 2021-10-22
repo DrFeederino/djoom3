@@ -932,34 +932,41 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
         public static class renderLightShadow {
 
             //
-            public CInt allowLightInViewID = new CInt();;
+            public CInt allowLightInViewID = new CInt();
+            ;
             public idMat3 axis;
-            public idVec3 end;
-            public idVec3 lightCenter;
+            public final idVec3 end = new idVec3();
+            public final idVec3 lightCenter = new idVec3();
             //
-            public CInt lightId = new CInt();;
-            public idVec3 lightRadius;
+            public CInt lightId = new CInt();
+            ;
+            public final idVec3 lightRadius = new idVec3();
             //
-            public CBool noShadows = new CBool();;
-            public CBool noSpecular = new CBool();;
-            public idVec3 origin;
-            public CBool parallel = new CBool();;
+            public CBool noShadows = new CBool();
+            ;
+            public CBool noSpecular = new CBool();
+            ;
+            public final idVec3 origin = new idVec3();
+            public CBool parallel = new CBool();
+            ;
             //
-            public CBool pointLight = new CBool();;
+            public CBool pointLight = new CBool();
+            ;
             //
             public idRenderModel prelightModel;
             public idSoundEmitter referenceSound;
-            public idVec3 right;
+            public final idVec3 right = new idVec3();
             //
             //
             public idMaterial shader;
             public float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];
-            public idVec3 start;
+            public final idVec3 start = new idVec3();
             //
-            public CInt suppressLightInViewID = new CInt();;
+            public CInt suppressLightInViewID = new CInt();
+            ;
             //
-            public idVec3 target;
-            public idVec3 up;
+            public final idVec3 target = new idVec3();
+            public final idVec3 up = new idVec3();
         }
 
     }

@@ -90,6 +90,8 @@ public class Item {
             eventCallbacks.put(EV_RespawnFx, (eventCallback_t0<idItem>) idItem::Event_RespawnFx);
         }
 
+        // };
+        private final idVec3 orgOrigin;
         private boolean canPickUp;
         //
         // used to update the item pulse effect
@@ -100,8 +102,6 @@ public class Item {
         private int itemShellHandle;
         private int lastCycle;
         private int lastRenderViewTime;
-        // };
-        private idVec3 orgOrigin;
         private boolean pulse;
         private idMaterial shellMaterial;
         private boolean spin;
@@ -199,7 +199,7 @@ public class Item {
 
             //temp hack for tim
             pulse = false;
-            orgOrigin = GetPhysics().GetOrigin();
+            orgOrigin.oSet(GetPhysics().GetOrigin());
 
             canPickUp = !(spawnArgs.GetBool("triggerFirst") || spawnArgs.GetBool("no_touch"));
 
@@ -292,7 +292,7 @@ public class Item {
             if ((thinkFlags & TH_THINK) != 0) {
                 if (spin) {
                     idAngles ang = new idAngles();
-                    idVec3 org;
+                    final idVec3 org = new idVec3();
 
                     ang.pitch = ang.roll = 0.0f;
                     ang.yaw = (gameLocal.time & 4095) * 360.0f / -4096.0f;
@@ -300,7 +300,7 @@ public class Item {
 
                     float scale = 0.005f + entityNumber * 0.00001f;
 
-                    org = orgOrigin;
+                    org.oSet(orgOrigin);
                     org.z += 4.0f + cos((gameLocal.time + 2000) * scale) * 4.0f;
                     SetOrigin(org);
                 }
@@ -401,7 +401,7 @@ public class Item {
             lastRenderViewTime = renderView.time;
 
             // check for glow highlighting if near the center of the view
-            idVec3 dir = renderEntity.origin.oMinus(renderView.vieworg);
+            final idVec3 dir = new idVec3(renderEntity.origin.oMinus(renderView.vieworg));
             dir.Normalize();
             float d = dir.oMultiply(renderView.viewaxis.oGet(0));
 
@@ -633,7 +633,7 @@ public class Item {
             eventCallbacks.put(EV_CamShot, (eventCallback_t0<idObjective>) idObjective::Event_CamShot);
         }
 
-        private idVec3 playerPos;
+        private final idVec3 playerPos;
         //
         //
 
@@ -701,7 +701,7 @@ public class Item {
         private void Event_HideObjective(idEventArg<idEntity> e) {
             idPlayer player = gameLocal.GetLocalPlayer();
             if (player != null) {
-                idVec3 v = player.GetPhysics().GetOrigin().oMinus(playerPos);
+                final idVec3 v = new idVec3(player.GetPhysics().GetOrigin().oMinus(playerPos));
                 if (v.Length() > 64.0f) {
                     player.HideObjective();
                     PostEventMS(EV_Remove, 0);
@@ -714,7 +714,7 @@ public class Item {
         private void Event_GetPlayerPos() {
             idPlayer player = gameLocal.GetLocalPlayer();
             if (player != null) {
-                playerPos = player.GetPhysics().GetOrigin();
+                playerPos.oSet(player.GetPhysics().GetOrigin());
                 PostEventMS(EV_HideObjective, 100, player);
             }
         }
@@ -844,7 +844,7 @@ public class Item {
             idKeyValue kv;
             String skinName, c, jointName;
             String key, key2;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idAngles angles = new idAngles();
             idDeclSkin skin;
@@ -868,7 +868,7 @@ public class Item {
                     joint = ent.GetAnimator().GetJointHandle(jointName);
                     if (!ent.GetJointWorldTransform(joint, gameLocal.time, origin, axis)) {
                         gameLocal.Warning("%s refers to invalid joint '%s' on entity '%s'\n", key, jointName, ent.name);
-                        origin = ent.GetPhysics().GetOrigin();
+                        origin.oSet(ent.GetPhysics().GetOrigin());
                         axis = ent.GetPhysics().GetAxis();
                     }
                     if (isNotNullOrEmpty(g_dropItemRotation.GetString())) {
@@ -1252,7 +1252,7 @@ public class Item {
         private void Event_GetPlayerPos() {
             idPlayer player = gameLocal.GetLocalPlayer();
             if (player != null) {
-                idVec3 v = player.GetPhysics().GetOrigin();
+                final idVec3 v = new idVec3(player.GetPhysics().GetOrigin());
                 v.oMinSet(playerPos);
                 if (v.Length() > 64.0f) {
                     player.hud.HandleNamedEvent("closeObjective");

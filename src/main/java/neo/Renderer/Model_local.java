@@ -59,22 +59,22 @@ public class Model_local {
      */
     static void AddCubeFace(srfTriangles_s tri, final idVec3 v1, final idVec3 v2, final idVec3 v3, final idVec3 v4) {
         tri.verts[tri.numVerts + 0].Clear();
-        tri.verts[tri.numVerts + 0].xyz = v1.oMultiply(8);
+        tri.verts[tri.numVerts + 0].xyz.oSet(v1.oMultiply(8));
         tri.verts[tri.numVerts + 0].st.oSet(0, 0);
         tri.verts[tri.numVerts + 0].st.oSet(1, 0);
 
         tri.verts[tri.numVerts + 1].Clear();
-        tri.verts[tri.numVerts + 1].xyz = v2.oMultiply(8);
+        tri.verts[tri.numVerts + 1].xyz.oSet(v2.oMultiply(8));
         tri.verts[tri.numVerts + 1].st.oSet(0, 1);
         tri.verts[tri.numVerts + 1].st.oSet(1, 0);
 
         tri.verts[tri.numVerts + 2].Clear();
-        tri.verts[tri.numVerts + 2].xyz = v3.oMultiply(8);
+        tri.verts[tri.numVerts + 2].xyz.oSet(v3.oMultiply(8));
         tri.verts[tri.numVerts + 2].st.oSet(0, 1);
         tri.verts[tri.numVerts + 2].st.oSet(1, 1);
 
         tri.verts[tri.numVerts + 3].Clear();
-        tri.verts[tri.numVerts + 3].xyz = v4.oMultiply(8);
+        tri.verts[tri.numVerts + 3].xyz.oSet(v4.oMultiply(8));
         tri.verts[tri.numVerts + 3].st.oSet(0, 0);
         tri.verts[tri.numVerts + 3].st.oSet(1, 1);
 
@@ -1031,7 +1031,7 @@ public class Model_local {
             matchVert_s[] mvHash;    // points inside mvTable for each xyz index
             matchVert_s lastmv;
             matchVert_s mv;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
             float uOffset, vOffset, textureSin, textureCos;
             float uTiling, vTiling;
             int[] mergeTo;
@@ -1211,7 +1211,7 @@ public class Model_local {
 
                         // we may or may not have normals to compare
                         if (normalsParsed) {
-                            normal = mesh.faces[j].vertexNormals[k];
+                            normal.oSet(mesh.faces[j].vertexNormals[k]);
                         }
 
                         // we may or may not have colors to compare
@@ -1643,9 +1643,9 @@ public class Model_local {
                 for (j = 0; j < tri.numVerts; j++) {
                     mv = mvTable[j];
                     tri.verts[j].Clear();
-                    tri.verts[j].xyz = vList[mv.v];
+                    tri.verts[j].xyz.oSet(vList[mv.v]);
                     tri.verts[j].st = tvList[mv.tv];
-                    tri.verts[j].normal = mv.normal;
+                    tri.verts[j].normal.oSet(mv.normal);
                     tri.verts[j].color = mv.color;
                 }
 //
@@ -1960,8 +1960,8 @@ public class Model_local {
                 for (j = 0; j < tri.numVerts; j++) {
                     mv = mvTable[j];
                     tri.verts[j].Clear();
-                    tri.verts[j].xyz = mesh.vertexes[mv.v];
-                    tri.verts[j].normal = mv.normal;
+                    tri.verts[j].xyz.oSet(mesh.vertexes[mv.v]);
+                    tri.verts[j].normal.oSet(mv.normal);
                     tri.verts[j].color = mv.color;
                     if (mesh.numTVertexes != 0) {
                         final idVec2 tv2 = mesh.tvertexes[mv.tv];

@@ -497,8 +497,8 @@ public class BrittleFracture {
         public void ProjectDecal(final idVec3 point, final idVec3 dir, final int time, final String damageDefName) {
             int i, j, bits, clipBits;
             float a, c, s;
-            idVec2[] st = new idVec2[MAX_POINTS_ON_WINDING];
-            idVec3 origin;
+            idVec2[] st = idVec2.generateArray(MAX_POINTS_ON_WINDING);
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3(), axisTemp = new idMat3();
             idPlane[] textureAxis = new idPlane[2];
 
@@ -553,13 +553,13 @@ public class BrittleFracture {
 
             for (i = 0; i < shards.Num(); i++) {
                 idFixedWinding winding = shards.oGet(i).winding;
-                origin = shards.oGet(i).clipModel.GetOrigin();
+                origin.oSet(shards.oGet(i).clipModel.GetOrigin());
                 axis = shards.oGet(i).clipModel.GetAxis();
                 float d0, d1;
 
                 clipBits = -1;
                 for (j = 0; j < winding.GetNumPoints(); j++) {
-                    idVec3 p = origin.oPlus(winding.oGet(j).ToVec3().oMultiply(axis));
+                    final idVec3 p = new idVec3(origin.oPlus(winding.oGet(j).ToVec3().oMultiply(axis)));
 
                     st[j].x = d0 = textureAxis[0].Distance(p);
                     st[j].y = d1 = textureAxis[1].Distance(p);
@@ -608,7 +608,7 @@ public class BrittleFracture {
 
         @Override
         public boolean ClientReceiveEvent(int event, int time, final idBitMsg msg) {
-            idVec3 point = new idVec3(), dir = new idVec3();
+            final idVec3 point = new idVec3(), dir = new idVec3();
 
             switch (event) {
                 case EVENT_PROJECT_DECAL: {
@@ -710,30 +710,30 @@ public class BrittleFracture {
 
                     v = tris.verts[tris.numVerts++];
                     v.Clear();
-                    v.xyz = origin.oPlus(winding.oGet(0).ToVec3().oMultiply(axis));
+                    v.xyz.oSet(origin.oPlus(winding.oGet(0).ToVec3().oMultiply(axis)));
                     v.st.oSet(0, winding.oGet(0).s);
                     v.st.oSet(1, winding.oGet(0).t);
-                    v.normal = tangents.oGet(0);
+                    v.normal.oSet(tangents.oGet(0));
                     v.tangents[0] = tangents.oGet(1);
                     v.tangents[1] = tangents.oGet(2);
                     v.SetColor(packedColor);
 
                     v = tris.verts[tris.numVerts++];
                     v.Clear();
-                    v.xyz = origin.oPlus(winding.oGet(j - 1).ToVec3().oMultiply(axis));
+                    v.xyz.oSet(origin.oPlus(winding.oGet(j - 1).ToVec3().oMultiply(axis)));
                     v.st.oSet(0, winding.oGet(j - 1).s);
                     v.st.oSet(1, winding.oGet(j - 1).t);
-                    v.normal = tangents.oGet(0);
+                    v.normal.oSet(tangents.oGet(0));
                     v.tangents[0] = tangents.oGet(1);
                     v.tangents[1] = tangents.oGet(2);
                     v.SetColor(packedColor);
 
                     v = tris.verts[tris.numVerts++];
                     v.Clear();
-                    v.xyz = origin.oPlus(winding.oGet(j).ToVec3().oMultiply(axis));
+                    v.xyz.oSet(origin.oPlus(winding.oGet(j).ToVec3().oMultiply(axis)));
                     v.st.oSet(0, winding.oGet(j).s);
                     v.st.oSet(1, winding.oGet(j).t);
-                    v.normal = tangents.oGet(0);
+                    v.normal.oSet(tangents.oGet(0));
                     v.tangents[0] = tangents.oGet(1);
                     v.tangents[1] = tangents.oGet(2);
                     v.SetColor(packedColor);
@@ -757,30 +757,30 @@ public class BrittleFracture {
 
                         v = decalTris.verts[decalTris.numVerts++];
                         v.Clear();
-                        v.xyz = origin.oPlus(decalWinding.oGet(0).ToVec3().oMultiply(axis));
+                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(0).ToVec3().oMultiply(axis)));
                         v.st.oSet(0, decalWinding.oGet(0).s);
                         v.st.oSet(1, decalWinding.oGet(0).t);
-                        v.normal = tangents.oGet(0);
+                        v.normal.oSet(tangents.oGet(0));
                         v.tangents[0] = tangents.oGet(1);
                         v.tangents[1] = tangents.oGet(2);
                         v.SetColor(packedColor);
 
                         v = decalTris.verts[decalTris.numVerts++];
                         v.Clear();
-                        v.xyz = origin.oPlus(decalWinding.oGet(j - 1).ToVec3().oMultiply(axis));
+                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(j - 1).ToVec3().oMultiply(axis)));
                         v.st.oSet(0, decalWinding.oGet(j - 1).s);
                         v.st.oSet(1, decalWinding.oGet(j - 1).t);
-                        v.normal = tangents.oGet(0);
+                        v.normal.oSet(tangents.oGet(0));
                         v.tangents[0] = tangents.oGet(1);
                         v.tangents[1] = tangents.oGet(2);
                         v.SetColor(packedColor);
 
                         v = decalTris.verts[decalTris.numVerts++];
                         v.Clear();
-                        v.xyz = origin.oPlus(decalWinding.oGet(j).ToVec3().oMultiply(axis));
+                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(j).ToVec3().oMultiply(axis)));
                         v.st.oSet(0, decalWinding.oGet(j).s);
                         v.st.oSet(1, decalWinding.oGet(j).t);
-                        v.normal = tangents.oGet(0);
+                        v.normal.oSet(tangents.oGet(0));
                         v.tangents[0] = tangents.oGet(1);
                         v.tangents[1] = tangents.oGet(2);
                         v.SetColor(packedColor);
@@ -850,7 +850,7 @@ public class BrittleFracture {
         private void DropShard(shard_s shard, final idVec3 point, final idVec3 dir, final float impulse, final int time) {
             int i, j, clipModelId;
             float dist, f;
-            idVec3 dir2, origin;
+            final idVec3 dir2 = new idVec3(), origin = new idVec3();
             idMat3 axis;
             shard_s neighbour;
 
@@ -875,13 +875,13 @@ public class BrittleFracture {
             clipModelId = shard.clipModel.GetId();
             physicsObj.SetClipModel(null, 1.0f, clipModelId, false);
 
-            origin = shard.clipModel.GetOrigin();
+            origin.oSet(shard.clipModel.GetOrigin());
             axis = shard.clipModel.GetAxis();
 
             // set the dropped time for fading
             shard.droppedTime = time;
 
-            dir2 = origin.oMinus(point);
+            dir2.oSet(origin.oMinus(point));
             dist = dir2.Normalize();
             f = dist > maxShatterRadius ? 1.0f : idMath.Sqrt(dist - minShatterRadius) * (1.0f / idMath.Sqrt(maxShatterRadius - minShatterRadius));
 
@@ -906,7 +906,7 @@ public class BrittleFracture {
 
         private void Shatter(final idVec3 point, final idVec3 impulse, final int time) {
             int i;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             shard_s shard;
             float m;
 
@@ -937,7 +937,7 @@ public class BrittleFracture {
                 idEntityFx.StartFx(fxFracture, point, GetPhysics().GetAxis(), this, true);
             }
 
-            dir = impulse;
+            dir.oSet(impulse);
             m = dir.Normalize();
 
             for (i = 0; i < shards.Num(); i++) {
@@ -963,9 +963,9 @@ public class BrittleFracture {
             shard_s curShard, nextShard;
             shard_s[] queue;
             boolean touchesEdge;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
 
-            dir = impulse;
+            dir.oSet(impulse);
             dir.Normalize();
 
             numIslands = 0;
@@ -1032,7 +1032,7 @@ public class BrittleFracture {
         private void Fracture_r(idFixedWinding w) {
             int i, j, bestPlane;
             float a, c, s, dist, bestDist;
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
             idPlane windingPlane = new idPlane();
             idPlane[] splitPlanes = new idPlane[2];
             idMat3 axis = new idMat3(), axistemp = new idMat3();
@@ -1041,7 +1041,7 @@ public class BrittleFracture {
             idClipModel clipModel;
 
             while (true) {
-                origin = w.GetCenter();
+                origin.oSet(w.GetCenter());
                 w.GetPlane(windingPlane);
 
                 if (w.GetArea() < maxShardArea) {
@@ -1082,7 +1082,7 @@ public class BrittleFracture {
             }
 
             // translate the winding to it's center
-            origin = w.GetCenter();
+            origin.oSet(w.GetCenter());
             for (j = 0; j < w.GetNumPoints(); j++) {
                 w.oGet(j).ToVec3().oMinSet(origin);
             }
@@ -1135,7 +1135,7 @@ public class BrittleFracture {
 
         private void FindNeighbours() {
             int i, j, k, l;
-            idVec3 p1, p2, dir;
+            final idVec3 p1 = new idVec3(), p2 = new idVec3(), dir = new idVec3();
             idMat3 axis;
             idPlane[] plane = new idPlane[4];
 
@@ -1143,14 +1143,14 @@ public class BrittleFracture {
 
                 shard_s shard1 = shards.oGet(i);
                 final idWinding w1 = shard1.winding;
-                final idVec3 origin1 = shard1.clipModel.GetOrigin();
+                final idVec3 origin1 = new idVec3(shard1.clipModel.GetOrigin());
                 final idMat3 axis1 = shard1.clipModel.GetAxis();
 
                 for (k = 0; k < w1.GetNumPoints(); k++) {
 
-                    p1 = origin1.oPlus(w1.oGet(k).ToVec3().oMultiply(axis1));
-                    p2 = origin1.oPlus(w1.oGet((k + 1) % w1.GetNumPoints()).ToVec3().oMultiply(axis1));
-                    dir = p2.oMinus(p1);
+                    p1.oSet(origin1.oPlus(w1.oGet(k).ToVec3().oMultiply(axis1)));
+                    p2.oSet(origin1.oPlus(w1.oGet((k + 1) % w1.GetNumPoints()).ToVec3().oMultiply(axis1)));
+                    dir.oSet(p2.oMinus(p1));
                     dir.Normalize();
                     axis = dir.ToMat3();
 
@@ -1181,12 +1181,12 @@ public class BrittleFracture {
                         }
 
                         final idWinding w2 = shard2.winding;
-                        final idVec3 origin2 = shard2.clipModel.GetOrigin();
+                        final idVec3 origin2 = new idVec3(shard2.clipModel.GetOrigin());
                         final idMat3 axis2 = shard2.clipModel.GetAxis();
 
                         for (l = w2.GetNumPoints() - 1; l >= 0; l--) {
-                            p1 = origin1.oPlus(w2.oGet(l).ToVec3().oMultiply(axis2));
-                            p2 = origin1.oPlus(w2.oGet((l - 1) % w2.GetNumPoints()).ToVec3().oMultiply(axis2));
+                            p1.oSet(origin1.oPlus(w2.oGet(l).ToVec3().oMultiply(axis2)));
+                            p2.oSet(origin1.oPlus(w2.oGet((l - 1) % w2.GetNumPoints()).ToVec3().oMultiply(axis2)));
                             if (plane[0].Side(p2, 0.1f) == SIDE_FRONT && plane[1].Side(p1, 0.1f) == SIDE_FRONT) {
                                 if (plane[2].Side(p1, 0.1f) == SIDE_ON && plane[3].Side(p1, 0.1f) == SIDE_ON) {
                                     if (plane[2].Side(p2, 0.1f) == SIDE_ON && plane[3].Side(p2, 0.1f) == SIDE_ON) {
@@ -1221,7 +1221,7 @@ public class BrittleFracture {
         private void Event_Touch(idEventArg<idEntity> _other, idEventArg<trace_s> _trace) {
             idEntity other = _other.value;
             trace_s trace = _trace.value;
-            idVec3 point, impulse;
+            final idVec3 point = new idVec3(), impulse = new idVec3();
 
             if (!IsBroken()) {
                 return;
@@ -1231,8 +1231,8 @@ public class BrittleFracture {
                 return;
             }
 
-            point = shards.oGet(trace.c.id).clipModel.GetOrigin();
-            impulse = other.GetPhysics().GetLinearVelocity().oMultiply(other.GetPhysics().GetMass());
+            point.oSet(shards.oGet(trace.c.id).clipModel.GetOrigin());
+            impulse.oSet(other.GetPhysics().GetLinearVelocity().oMultiply(other.GetPhysics().GetMass()));
 
             Shatter(point, impulse, gameLocal.time);
         }

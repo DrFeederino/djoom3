@@ -1,7 +1,6 @@
 package neo.Renderer;
 
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.drawSurf_s;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.framework.DeclParticle.idDeclParticle;
@@ -330,16 +329,16 @@ public class tr_deform {
             left = leftDir.oMultiply(radius);
             up = upDir.oMultiply(radius);
 
-            ac[i + 0].xyz = mid.oPlus(left.oPlus(up));
+            ac[i + 0].xyz.oSet(mid.oPlus(left.oPlus(up)));
             ac[i + 0].st.oSet(0, 0);
             ac[i + 0].st.oSet(1, 0);
-            ac[i + 1].xyz = mid.oMinus(left.oPlus(up));
+            ac[i + 1].xyz.oSet(mid.oMinus(left.oPlus(up)));
             ac[i + 1].st.oSet(0, 1);
             ac[i + 1].st.oSet(1, 0);
-            ac[i + 2].xyz = mid.oMinus(left.oMinus(up));
+            ac[i + 2].xyz.oSet(mid.oMinus(left.oMinus(up)));
             ac[i + 2].st.oSet(0, 1);
             ac[i + 2].st.oSet(1, 1);
-            ac[i + 3].xyz = mid.oPlus(left.oMinus(up));
+            ac[i + 3].xyz.oSet(mid.oPlus(left.oMinus(up)));
             ac[i + 3].st.oSet(0, 0);
             ac[i + 3].st.oSet(1, 1);
 
@@ -450,11 +449,11 @@ public class tr_deform {
                 minor.Normalize();
 
                 if (j != 0) {
-                    av1.xyz = mid[j].oMinus(minor.oMultiply(l));
-                    av2.xyz = mid[j].oPlus(minor.oMultiply(l));
+                    av1.xyz.oSet(mid[j].oMinus(minor.oMultiply(l)));
+                    av2.xyz.oSet(mid[j].oPlus(minor.oMultiply(l)));
                 } else {
-                    av1.xyz = mid[j].oPlus(minor.oMultiply(l));
-                    av2.xyz = mid[j].oMinus(minor.oMultiply(l));
+                    av1.xyz.oSet(mid[j].oPlus(minor.oMultiply(l)));
+                    av2.xyz.oSet(mid[j].oMinus(minor.oMultiply(l)));
                 }
             }
         }
@@ -612,7 +611,7 @@ public class tr_deform {
         int i;
         // calculate vector directions
         for (i = 0; i < 4; i++) {
-            ac[i].xyz = tri.verts[indexes[i]].xyz;
+            ac[i].xyz.oSet(tri.verts[indexes[i]].xyz);
             ac[i].st.oSet(0, ac[i].st.oSet(1, 0.5f));
 
             idVec3 toEye = tri.verts[indexes[i]].xyz.oMinus(localViewer);
@@ -637,51 +636,51 @@ public class tr_deform {
         }
 
         // build all the points
-        ac[4].xyz = tri.verts[indexes[0]].xyz.oPlus(edgeDir[0][0].oMultiply(spread));
+        ac[4].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0][0].oMultiply(spread)));
         ac[4].st.oSet(0, 0);
         ac[4].st.oSet(1, 0.5f);
 
-        ac[5].xyz = tri.verts[indexes[0]].xyz.oPlus(edgeDir[0][2].oMultiply(spread));
+        ac[5].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0][2].oMultiply(spread)));
         ac[5].st.oSet(0, 0);
         ac[5].st.oSet(1, 0);
 
-        ac[6].xyz = tri.verts[indexes[0]].xyz.oPlus(edgeDir[0][1].oMultiply(spread));
+        ac[6].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0][1].oMultiply(spread)));
         ac[6].st.oSet(0, 0.5f);
         ac[6].st.oSet(1, 0);
 
-        ac[7].xyz = tri.verts[indexes[1]].xyz.oPlus(edgeDir[1][0].oMultiply(spread));
+        ac[7].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1][0].oMultiply(spread)));
         ac[7].st.oSet(0, 0.5f);
         ac[7].st.oSet(1, 0);
 
-        ac[8].xyz = tri.verts[indexes[1]].xyz.oPlus(edgeDir[1][2].oMultiply(spread));
+        ac[8].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1][2].oMultiply(spread)));
         ac[8].st.oSet(0, 1);
         ac[8].st.oSet(1, 0);
 
-        ac[9].xyz = tri.verts[indexes[1]].xyz.oPlus(edgeDir[1][1].oMultiply(spread));
+        ac[9].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1][1].oMultiply(spread)));
         ac[9].st.oSet(0, 1);
         ac[9].st.oSet(1, 0.5f);
 
-        ac[10].xyz = tri.verts[indexes[2]].xyz.oPlus(edgeDir[2][0].oMultiply(spread));
+        ac[10].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2][0].oMultiply(spread)));
         ac[10].st.oSet(0, 1);
         ac[10].st.oSet(1, 0.5f);
 
-        ac[11].xyz = tri.verts[indexes[2]].xyz.oPlus(edgeDir[2][2].oMultiply(spread));
+        ac[11].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2][2].oMultiply(spread)));
         ac[11].st.oSet(0, 1);
         ac[11].st.oSet(1, 1);
 
-        ac[12].xyz = tri.verts[indexes[2]].xyz.oPlus(edgeDir[2][1].oMultiply(spread));
+        ac[12].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2][1].oMultiply(spread)));
         ac[12].st.oSet(0, 0.5f);
         ac[12].st.oSet(1, 1);
 
-        ac[13].xyz = tri.verts[indexes[3]].xyz.oPlus(edgeDir[3][0].oMultiply(spread));
+        ac[13].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3][0].oMultiply(spread)));
         ac[13].st.oSet(0, 0.5f);
         ac[13].st.oSet(1, 1);
 
-        ac[14].xyz = tri.verts[indexes[3]].xyz.oPlus(edgeDir[3][2].oMultiply(spread));
+        ac[14].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3][2].oMultiply(spread)));
         ac[14].st.oSet(0, 0);
         ac[14].st.oSet(1, 1);
 
-        ac[15].xyz = tri.verts[indexes[3]].xyz.oPlus(edgeDir[3][1].oMultiply(spread));
+        ac[15].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3][1].oMultiply(spread)));
         ac[15].st.oSet(0, 0);
         ac[15].st.oSet(1, 0.5f);
 
@@ -695,7 +694,7 @@ public class tr_deform {
             float newLen = -(distFromPlane / ang);
 
             if (newLen > 0 && newLen < len) {
-                ac[i].xyz = localViewer.oPlus(dir.oMultiply(newLen));
+                ac[i].xyz.oSet(localViewer.oPlus(dir.oMultiply(newLen)));
             }
 
             ac[i].st.oSet(0, 0);
@@ -748,7 +747,7 @@ public class tr_deform {
         float dist = surf.shaderRegisters[surf.material.GetDeformRegister(0)];
         for (i = 0; i < tri.numVerts; i++) {
             ac[i] = tri.verts[i];
-            ac[i].xyz = tri.verts[i].xyz.oPlus(tri.verts[i].normal.oMultiply(dist));
+            ac[i].xyz.oSet(tri.verts[i].xyz.oPlus(tri.verts[i].normal.oMultiply(dist)));
         }
 
         R_FinishDeform(surf, newTri, ac);

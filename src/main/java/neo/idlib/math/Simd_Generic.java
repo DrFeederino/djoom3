@@ -2538,7 +2538,7 @@ public class Simd_Generic {
                 j++;
 
                 verts[i] = (verts[i] == null ? new idDrawVert() : verts[i]);
-                verts[i].xyz = v;
+                verts[i].xyz.oSet(v);
             }
         }
 
@@ -2775,7 +2775,7 @@ public class Simd_Generic {
                     a.tangents[0].oPluSet(t0);
                     a.tangents[1].oPluSet(t1);
                 } else {
-                    a.normal = n;
+                    a.normal.oSet(n);
                     a.tangents[0] = t0;
                     a.tangents[1] = t1;
                     used[v0] = true;
@@ -2786,7 +2786,7 @@ public class Simd_Generic {
                     b.tangents[0].oPluSet(t0);
                     b.tangents[1].oPluSet(t1);
                 } else {
-                    b.normal = n;
+                    b.normal.oSet(n);
                     b.tangents[0] = t0;
                     b.tangents[1] = t1;
                     used[v1] = true;
@@ -2797,7 +2797,7 @@ public class Simd_Generic {
                     c.tangents[0].oPluSet(t0);
                     c.tangents[1].oPluSet(t1);
                 } else {
-                    c.normal = n;
+                    c.normal.oSet(n);
                     c.tangents[0] = t0;
                     c.tangents[1] = t1;
                     used[v2] = true;

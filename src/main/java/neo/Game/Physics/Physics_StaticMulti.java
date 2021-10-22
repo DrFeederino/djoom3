@@ -510,10 +510,10 @@ public class Physics_StaticMulti {
         @Override
         public idVec3 GetOrigin(int id /*= 0*/) {
             if (id >= 0 && id < clipModels.Num()) {
-                return new idVec3(current.oGet(id).origin); // why?
+                return current.oGet(id).origin;
             }
             if (clipModels.Num() != 0) {
-                return new idVec3(current.oGet(0).origin);
+                return current.oGet(0).origin;
             } else {
                 return getVec3_origin();
             }

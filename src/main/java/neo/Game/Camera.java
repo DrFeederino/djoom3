@@ -144,7 +144,7 @@ public class Camera {
                 return;
             }
 
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idEntity ent;
 
             if (attachedTo != null) {
@@ -153,9 +153,9 @@ public class Camera {
                 ent = this;
             }
 
-            view.vieworg = new idVec3(ent.GetPhysics().GetOrigin());
+            view.vieworg.oSet(ent.GetPhysics().GetOrigin());
             if (attachedView != null) {
-                dir = attachedView.GetPhysics().GetOrigin().oMinus(view.vieworg);
+                dir.oSet(attachedView.GetPhysics().GetOrigin().oMinus(view.vieworg));
                 dir.Normalize();
                 view.viewaxis = dir.ToMat3();
             } else {
@@ -235,7 +235,7 @@ public class Camera {
 
         float fov;
         idCQuat q;
-        idVec3 t;
+        final idVec3 t;
 
         public cameraFrame_t() {
             q = new idCQuat();
@@ -260,7 +260,7 @@ public class Camera {
         private final idList<Integer> cameraCuts;
         private int cycle;
         private int frameRate;
-        private idVec3 offset;
+        private final idVec3 offset;
         private int starttime;
         private int threadNum;
         //
@@ -311,7 +311,7 @@ public class Camera {
             super.Spawn();
 
             if (spawnArgs.GetVector("old_origin", "0 0 0", offset)) {
-                offset = GetPhysics().GetOrigin().oMinus(offset);
+                offset.oSet(GetPhysics().GetOrigin().oMinus(offset));
             } else {
                 offset.Zero();
             }
@@ -389,7 +389,7 @@ public class Camera {
             // but since they're mainly used for static cams anyway, just stay on it infinitely.
             if ((frame < 0) || (camera.Num() < 2)) {
                 view.viewaxis = camera.oGet(0).q.ToQuat().ToMat3();
-                view.vieworg = camera.oGet(0).t.oPlus(offset);
+                view.vieworg.oSet(camera.oGet(0).t.oPlus(offset));
                 view.fov_x = camera.oGet(0).fov;
             } else if (frame > camera.Num() - 2) {
                 if (cycle > 0) {
@@ -412,13 +412,13 @@ public class Camera {
                     // just use our last frame
                     camFrame = camera.oGet(camera.Num() - 1);
                     view.viewaxis = camFrame.q.ToQuat().ToMat3();
-                    view.vieworg = camFrame.t.oPlus(offset);
+                    view.vieworg.oSet(camFrame.t.oPlus(offset));
                     view.fov_x = camFrame.fov;
                 }
             } else if (lerp == 0.0f) {
                 camFrame = camera.oGet(frame);
                 view.viewaxis = camFrame/*[ 0 ]*/.q.ToMat3();
-                view.vieworg = camFrame/*[ 0 ]*/.t.oPlus(offset);
+                view.vieworg.oSet(camFrame/*[ 0 ]*/.t.oPlus(offset));
                 view.fov_x = camFrame/*[ 0 ]*/.fov;
             } else {
                 camFrame = camera.oGet(frame);
@@ -428,7 +428,7 @@ public class Camera {
                 q2 = nextFrame.q.ToQuat();
                 q3.Slerp(q1, q2, lerp);
                 view.viewaxis = q3.ToMat3();
-                view.vieworg = camFrame/*[ 0 ]*/.t.oMultiply(invlerp).oPlus(nextFrame.t.oMultiply(lerp).oPlus(offset));
+                view.vieworg.oSet(camFrame/*[ 0 ]*/.t.oMultiply(invlerp).oPlus(nextFrame.t.oMultiply(lerp).oPlus(offset)));
                 view.fov_x = camFrame/*[ 0 ]*/.fov * invlerp + nextFrame.fov * lerp;
             }
 

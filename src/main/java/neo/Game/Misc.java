@@ -494,7 +494,7 @@ public class Misc {
                     continue;
                 }
 
-                idVec3 org = ent.GetPhysics().GetOrigin();
+                final idVec3 org = new idVec3(ent.GetPhysics().GetOrigin());
                 gameRenderWorld.DebugBounds(colorRed, bnds, org, 0);
             }
         }
@@ -785,8 +785,8 @@ public class Misc {
         private final CInt id2 = new CInt();
         private idEntity ent1;
         private idEntity ent2;
-        private idVec3 p1;
-        private idVec3 p2;
+        private final idVec3 p1 = new idVec3();
+        private final idVec3 p2 = new idVec3();
         private idForce_Spring spring;
         //
         //
@@ -816,7 +816,7 @@ public class Misc {
 
         @Override
         public void Think() {
-            idVec3 start, end, origin;
+            final idVec3 start = new idVec3(), end = new idVec3(), origin = new idVec3();
             idMat3 axis;
 
             // run physics
@@ -826,18 +826,18 @@ public class Misc {
                 // evaluate force
                 spring.Evaluate(gameLocal.time);
 
-                start = p1;
+                start.oSet(p1);
                 if (ent1.GetPhysics() != null) {
                     axis = ent1.GetPhysics().GetAxis();
-                    origin = ent1.GetPhysics().GetOrigin();
-                    start = origin.oPlus(start.oMultiply(axis));
+                    origin.oSet(ent1.GetPhysics().GetOrigin());
+                    start.oSet(origin.oPlus(start.oMultiply(axis)));
                 }
 
-                end = p2;
+                end.oSet(p2);
                 if (ent2.GetPhysics() != null) {
                     axis = ent2.GetPhysics().GetAxis();
-                    origin = ent2.GetPhysics().GetOrigin();
-                    end = origin.oPlus(p2.oMultiply(axis));
+                    origin.oSet(ent2.GetPhysics().GetOrigin());
+                    end.oSet(origin.oPlus(p2.oMultiply(axis)));
                 }
 
                 gameRenderWorld.DebugLine(new idVec4(1, 1, 0, 1), start, end, 0, true);
@@ -919,7 +919,7 @@ public class Misc {
         public void Spawn() {
             super.Spawn();
 
-            idVec3 uniform = new idVec3();
+            final idVec3 uniform = new idVec3();
             CFloat explosion = new CFloat(), implosion = new CFloat(), randomTorque = new CFloat();
 
             if (spawnArgs.GetVector("uniform", "0 0 0", uniform)) {
@@ -1190,7 +1190,7 @@ public class Misc {
         }
 
         @Override
-        public boolean GetPhysicsToSoundTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToSoundTransform(final idVec3 origin, idMat3 axis) {
             animator.GetJointTransform(soundJoint, gameLocal.time, origin, axis);
             axis.oSet(renderEntity.axis);
             return true;
@@ -1362,10 +1362,10 @@ public class Misc {
         }
 
         private void Event_LaunchMissilesUpdate(idEventArg<Integer> launchjoint, idEventArg<Integer> targetjoint, idEventArg<Integer> numshots, idEventArg<Integer> framedelay) {
-            idVec3 launchPos = new idVec3();
-            idVec3 targetPos = new idVec3();
+            final idVec3 launchPos = new idVec3();
+            final idVec3 targetPos = new idVec3();
             idMat3 axis = new idMat3();
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idEntity[] ent = {null};
             idProjectile projectile;
             idDict projectileDef;
@@ -1381,12 +1381,12 @@ public class Misc {
             StartSound("snd_missile", SND_CHANNEL_WEAPON, 0, false, null);
 
             animator.GetJointTransform(launchjoint.value, gameLocal.time, launchPos, axis);
-            launchPos = renderEntity.origin.oPlus(launchPos.oMultiply(renderEntity.axis));
+            launchPos.oSet(renderEntity.origin.oPlus(launchPos.oMultiply(renderEntity.axis)));
 
             animator.GetJointTransform(targetjoint.value, gameLocal.time, targetPos, axis);
-            targetPos = renderEntity.origin.oPlus(targetPos.oMultiply(renderEntity.axis));
+            targetPos.oSet(renderEntity.origin.oPlus(targetPos.oMultiply(renderEntity.axis)));
 
-            dir = targetPos.oMinus(launchPos);
+            dir.oSet(targetPos.oMinus(launchPos));
             dir.Normalize();
 
             gameLocal.SpawnEntityDef(projectileDef, ent, false);
@@ -2139,7 +2139,7 @@ public class Misc {
                 return;
             }
 
-            idVec3 org = spawnArgs.GetVector("origin");
+            final idVec3 org = new idVec3(spawnArgs.GetVector("origin"));
 
             gameLocal.vacuumAreaNum = gameRenderWorld.PointInArea(org);
         }
@@ -2218,7 +2218,7 @@ public class Misc {
 
             masterEnt = master.GetEntity();
             if (masterEnt != null) {
-                final idVec3 origin = GetPhysics().GetOrigin();
+                final idVec3 origin = new idVec3(GetPhysics().GetOrigin());
                 masterEnt.SetBeamTarget(origin);
             }
             Present();
@@ -2245,7 +2245,7 @@ public class Misc {
 
             targetEnt = target.GetEntity();
             if (targetEnt != null) {
-                final idVec3 origin = targetEnt.GetPhysics().GetOrigin();
+                final idVec3 origin = new idVec3(targetEnt.GetPhysics().GetOrigin());
                 SetBeamTarget(origin);
             }
         }
@@ -2975,7 +2975,7 @@ public class Misc {
         private int end_time;
         private int max_wait;
         private int min_wait;
-        private idVec3 shake_ang;
+        private final idVec3 shake_ang;
         private float shake_time;
         private float speed;
         private float throw_time;
@@ -3014,7 +3014,7 @@ public class Misc {
             min_wait = (int) SEC2MS(spawnArgs.GetFloat("min_wait", "1"));
             max_wait = (int) SEC2MS(spawnArgs.GetFloat("max_wait", "3"));
 
-            shake_ang = spawnArgs.GetVector("shake_ang", "65 65 65");
+            shake_ang.oSet(spawnArgs.GetVector("shake_ang", "65 65 65"));
             Hide();
             GetPhysics().SetContents(0);
         }
@@ -3082,8 +3082,8 @@ public class Misc {
             int i;
             int num;
             float time;
-            idVec3 vel = new idVec3();
-            idVec3 ang = new idVec3();
+            final idVec3 vel = new idVec3();
+            final idVec3 ang = new idVec3();
             idEntity ent;
             idActor targetEnt;
             idPhysics entPhys;
@@ -3104,7 +3104,7 @@ public class Misc {
                 BecomeInactive(TH_THINK);
             }
 
-            final idVec3 toPos = targetEnt.GetEyePosition();
+            final idVec3 toPos = new idVec3(targetEnt.GetEyePosition());
 
             num = 0;
             for (i = 0; i < targets.Num(); i++) {
@@ -3131,7 +3131,7 @@ public class Misc {
                 }
 
                 entPhys = ent.GetPhysics();
-                final idVec3 entOrg = entPhys.GetOrigin();
+                final idVec3 entOrg = new idVec3(entPhys.GetOrigin());
 
                 gameLocal.clip.TracePoint(tr, entOrg, toPos, MASK_OPAQUE, ent);
                 if (tr.fraction >= 1.0f || gameLocal.GetTraceEntity(tr).equals(targetEnt)) {
@@ -3193,7 +3193,7 @@ public class Misc {
             targetTime.SetNum(targets.Num());
             lastTargetPos.SetNum(targets.Num());
 
-            final idVec3 toPos = target.GetEntity().GetEyePosition();
+            final idVec3 toPos = new idVec3(target.GetEntity().GetEyePosition());
 
             // calculate the relative times of all the objects
             time = 0.0f;

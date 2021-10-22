@@ -125,7 +125,7 @@ public class Clip {
 
     public static class trmCache_s {
 
-        idVec3 centerOfMass;
+        final idVec3 centerOfMass;
         idMat3 inertiaTensor;
         int refCount;
         idTraceModel trm;
@@ -287,7 +287,7 @@ public class Clip {
         }
 
         private static int GetTraceModelHashKey(final idTraceModel trm) {
-            final idVec3 v = trm.bounds.oGet(0);
+            final idVec3 v = new idVec3(trm.bounds.oGet(0));
             return (trm.type.ordinal() << 8) ^ (trm.numVerts << 4) ^ (trm.numEdges << 2) ^ (trm.numPolys << 0) ^ idMath.FloatHash(v.ToFloatPtr(), v.GetDimension());
         }
 
@@ -696,7 +696,7 @@ public class Clip {
 
         public void Init() {
             int/*cmHandle_t*/ h;
-            idVec3 size, maxSector = getVec3_origin();
+            final idVec3 size = new idVec3(), maxSector = getVec3_origin();
 
             // clear clip sectors
             clipSectors = new clipSector_s[MAX_SECTORS];
@@ -709,7 +709,7 @@ public class Clip {
             // create world sectors
             CreateClipSectors_r(0, worldBounds, maxSector);
 
-            size = worldBounds.oGet(1).oMinus(worldBounds.oGet(0));
+            size.oSet(worldBounds.oGet(1).oMinus(worldBounds.oGet(0)));
             gameLocal.Printf("map bounds are (%1.1f, %1.1f, %1.1f)\n", size.oGet(0), size.oGet(1), size.oGet(2));
             gameLocal.Printf("max clip sector is (%1.1f, %1.1f, %1.1f)\n", maxSector.oGet(0), maxSector.oGet(1), maxSector.oGet(2));
 
@@ -875,7 +875,7 @@ public class Clip {
             int i, num;
             idClipModel touch;
             idClipModel[] clipModelList = new idClipModel[MAX_GENTITIES];
-            idVec3 dir, endPosition;
+            final idVec3 dir = new idVec3(), endPosition = new idVec3();
             idBounds traceBounds = new idBounds();
             float radius;
             trace_s translationalTrace = new trace_s(), rotationalTrace = new trace_s();
@@ -926,7 +926,7 @@ public class Clip {
             if (translationalTrace.fraction != 0.0f) {
 
                 traceBounds.FromBoundsRotation(trm.bounds, start, trmAxis, rotation);
-                dir = translationalTrace.endpos.oMinus(start);
+                dir.oSet(translationalTrace.endpos.oMinus(start));
                 for (i = 0; i < 3; i++) {
                     if (dir.oGet(i) < 0.0f) {
                         traceBounds.oGet(0).oPluSet(i, dir.oGet(i));
@@ -965,7 +965,7 @@ public class Clip {
                 num = -1;
             }
 
-            endPosition = translationalTrace.endpos;
+            endPosition.oSet(translationalTrace.endpos);
             endRotation = new idRotation(rotation);
             endRotation.SetOrigin(endPosition);
 
@@ -1260,7 +1260,7 @@ public class Clip {
         public boolean GetModelContactFeature(final contactInfo_t contact, final idClipModel clipModel, idFixedWinding winding) {
             int i;
             int/*cmHandle_t*/ handle;
-            idVec3 start = new idVec3(), end = new idVec3();
+            final idVec3 start = new idVec3(), end = new idVec3();
 
             handle = -1;
             winding.Clear();
@@ -1437,10 +1437,10 @@ public class Clip {
          Builds a uniformly subdivided tree for the given world size
          ===============
          */
-        private clipSector_s CreateClipSectors_r(final int depth, final idBounds bounds, idVec3 maxSector) {
+        private clipSector_s CreateClipSectors_r(final int depth, final idBounds bounds, final idVec3 maxSector) {
             int i;
             clipSector_s anode;
-            idVec3 size;
+            final idVec3 size = new idVec3();
             idBounds front, back;
 
             anode = clipSectors[this.numClipSectors++] = new clipSector_s();
@@ -1457,7 +1457,7 @@ public class Clip {
                 return anode;
             }
 
-            size = bounds.oGet(1).oMinus(bounds.oGet(0));
+            size.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)));
             if (size.oGet(0) >= size.oGet(1) && size.oGet(0) >= size.oGet(2)) {
                 anode.axis = 0;
             } else if (size.oGet(1) >= size.oGet(0) && size.oGet(1) >= size.oGet(2)) {

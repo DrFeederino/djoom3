@@ -94,7 +94,7 @@ public class Game {
      */
     // default scripts
     public static final String SCRIPT_DEFAULTDEFS = "script/doom_defs.script";
-//
+    //
     public static final String SCRIPT_DEFAULTFUNC = "doom_main";
 
     //enum {
@@ -104,13 +104,14 @@ public class Game {
 
     public static final int TEST_PARTICLE_FLIGHT = 3 + TEST_PARTICLE_MODEL;
     public static final int TEST_PARTICLE_MUZZLE = 2 + TEST_PARTICLE_MODEL;
-//
+    //
     public static final int TEST_PARTICLE_SELECTED = 4 + TEST_PARTICLE_MODEL;
 
     //
     public static final int TIME_GROUP1 = 0;
 
     public static final int TIME_GROUP2 = 1;
+
     public enum allowReply_t {
 
         ALLOW_YES,//= 0,
@@ -118,6 +119,7 @@ public class Game {
         ALLOW_NOTYET,       // core will wait with transmitted message
         ALLOW_NO            // core will abort with transmitted message
     }
+
     public enum escReply_t {
 
         ESC_IGNORE,//= 0,	// do nothing
@@ -263,10 +265,10 @@ public class Game {
 
     public static class refSound_t {
 
+        // with idSoundWorld::AllocSoundEmitter() when needed
+        public final idVec3 origin;
         public float diversity;        // 0.0 to 1.0 value used to select which
         public int listenerId;       // SSF_PRIVATE_SOUND only plays if == listenerId from PlaceListener
-        // with idSoundWorld::AllocSoundEmitter() when needed
-        public idVec3 origin;
         public soundShaderParms_t parms;            // override volume, flags, etc
         public idSoundEmitter referenceSound;   // this is the interface to the sound system, created
         // no spatialization will be performed if == listenerID
@@ -307,7 +309,7 @@ public class Game {
         public void ParseSpawnArgsToRenderLight(final idDict args, renderLight_s renderLight) {
             boolean gotTarget, gotUp, gotRight;
             String texture;
-            idVec3 color = new idVec3();
+            final idVec3 color = new idVec3();
 
             renderLight.clear();//memset( renderLight, 0, sizeof( *renderLight ) );
 
@@ -320,7 +322,7 @@ public class Game {
             gotRight = args.GetVector("light_right", "", renderLight.right);
             args.GetVector("light_start", "0 0 0", renderLight.start);
             if (!args.GetVector("light_end", "", renderLight.end)) {
-                renderLight.end = new idVec3(renderLight.target);
+                renderLight.end.oSet(renderLight.target);
             }
 
             // we should have all of the target/right/up or none of them
@@ -400,7 +402,7 @@ public class Game {
         public void ParseSpawnArgsToRenderEntity(final idDict args, renderEntity_s renderEntity) {
             int i;
             String temp;
-            idVec3 color = new idVec3();
+            final idVec3 color = new idVec3();
             float angle;
             idDeclModelDef modelDef;
 
@@ -743,7 +745,7 @@ public class Game {
             idStr extension = new idStr();
             idAnim anim;
             int animNum;
-            idVec3 offset = new idVec3();
+            final idVec3 offset = new idVec3();
             idDeclModelDef modelDef;
 
             if (null == model || model.IsDefaultModel()) {
@@ -772,7 +774,7 @@ public class Game {
                 }
                 md5anim = anim.MD5Anim(0);
                 ent.customSkin = modelDef.GetDefaultSkin();
-                offset = modelDef.GetVisualOffset();
+                offset.oSet(modelDef.GetVisualOffset());
             } else {
                 filename = new idStr(animName[0]);
                 filename.ExtractFileExtension(extension);
@@ -811,7 +813,7 @@ public class Game {
             idPlayer player;
             idAFEntity_Generic ent;
             idDeclAF af;
-            idVec3 org;
+            final idVec3 org = new idVec3();
             float yaw;
 
             player = gameLocal.GetLocalPlayer();
@@ -826,7 +828,7 @@ public class Game {
 
             yaw = player.viewAngles.yaw;
             args.Set("angle", va("%f", yaw + 180));
-            org = player.GetPhysics().GetOrigin().oPlus(new idAngles(0, yaw, 0).ToForward().oMultiply(80).oPlus(new idVec3(0, 0, 1)));
+            org.oSet(player.GetPhysics().GetOrigin().oPlus(new idAngles(0, yaw, 0).ToForward().oMultiply(80).oPlus(new idVec3(0, 0, 1))));
             args.Set("origin", org.ToString());
             args.Set("spawnclass", "idAFEntity_Generic");
             if (isNotNullOrEmpty(af.model)) {
@@ -899,13 +901,12 @@ public class Game {
             }
         }
 
-        public idRenderModel AF_CreateMesh(final idDict args, idVec3 meshOrigin, idMat3 meshAxis, boolean[] poseIsSet) {
+        public idRenderModel AF_CreateMesh(final idDict args, final idVec3 meshOrigin, idMat3 meshAxis, boolean[] poseIsSet) {
             int i, jointNum;
             idDeclAF af;
             idDeclAF_Body fb = new idDeclAF_Body();
             renderEntity_s ent;
-            idVec3 origin = new idVec3();
-            idVec3[] bodyOrigin, newBodyOrigin, modifiedOrigin;
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idMat3[] bodyAxis, newBodyAxis, modifiedAxis;
             declAFJointMod_t[] jointMod;
@@ -980,9 +981,9 @@ public class Game {
             ANIM_CreateAnimFrame(md5, MD5anim, ent.numJoints, ent.joints, 1, modelDef.GetVisualOffset(), false);
 
             // buffers to store the initial origin and axis for each body
-            bodyOrigin = new idVec3[af.bodies.Num()];
+            final idVec3[] bodyOrigin = idVec3.generateArray(af.bodies.Num());
             bodyAxis = new idMat3[af.bodies.Num()];
-            newBodyOrigin = new idVec3[af.bodies.Num()];
+            final idVec3[] newBodyOrigin = idVec3.generateArray(af.bodies.Num());
             newBodyAxis = new idMat3[af.bodies.Num()];
 
             // finish the AF positions
@@ -1004,7 +1005,8 @@ public class Game {
                     axis = fb.angles.ToMat3();
                 }
 
-                newBodyOrigin[i] = bodyOrigin[i] = fb.origin.ToVec3();
+                bodyOrigin[i].oSet(fb.origin.ToVec3());
+                newBodyOrigin[i].oSet(bodyOrigin[i]);
                 newBodyAxis[i] = bodyAxis[i] = axis;
             }
 
@@ -1035,7 +1037,7 @@ public class Game {
                     meshOrigin.oSet(origin.oMinus(bodyOrigin[i].oMultiply(meshAxis)));
                     poseIsSet[0] = true;
                 } else {
-                    newBodyOrigin[i] = origin;
+                    newBodyOrigin[i].oSet(origin);
                     newBodyAxis[i] = angles.ToMat3();
                 }
             }
@@ -1048,10 +1050,7 @@ public class Game {
             }
             // buffer to store the joint mods
             jointMod = new declAFJointMod_t[numMD5joints];//memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
-            modifiedOrigin = new idVec3[numMD5joints];//memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
-            for (int m = 0; m < modifiedOrigin.length; m++) {
-                modifiedOrigin[m] = new idVec3();
-            }
+            final idVec3[] modifiedOrigin = idVec3.generateArray(numMD5joints);//memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
             modifiedAxis = new idMat3[numMD5joints];//memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
             for (int m = 0; m < modifiedAxis.length; m++) {
                 modifiedAxis[m] = new idMat3();
@@ -1075,7 +1074,7 @@ public class Game {
                     jointMod[jointNum] = fb.jointMod;
                     modifiedAxis[jointNum] = (bodyAxis[i].oMultiply(originalJoints[jointNum].ToMat3().Transpose())).Transpose().oMultiply((newBodyAxis[i].oMultiply(meshAxis.Transpose())));
                     // FIXME: calculate correct modifiedOrigin
-                    modifiedOrigin[jointNum] = originalJoints[jointNum].ToVec3();
+                    modifiedOrigin[jointNum].oSet(originalJoints[jointNum].ToVec3());
                 }
             }
 
@@ -1086,7 +1085,7 @@ public class Game {
                 parentNum = indexOf(MD5joint.parent, MD5joints);
                 idMat3 parentAxis = originalJoints[parentNum].ToMat3();
                 idMat3 localm = originalJoints[i].ToMat3().oMultiply(parentAxis.Transpose());
-                idVec3 localt = (originalJoints[i].ToVec3().oMinus(originalJoints[parentNum].ToVec3())).oMultiply(parentAxis.Transpose());
+                final idVec3 localt = new idVec3((originalJoints[i].ToVec3().oMinus(originalJoints[parentNum].ToVec3())).oMultiply(parentAxis.Transpose()));
 
                 switch (jointMod[i]) {
                     case DECLAF_JOINTMOD_ORIGIN: {
@@ -1187,7 +1186,7 @@ public class Game {
         }
 
         // Entity methods.
-        public void EntityGetOrigin(idEntity ent, idVec3 org) {
+        public void EntityGetOrigin(idEntity ent, final idVec3 org) {
             if (ent != null) {
                 org.oSet(ent.GetPhysics().GetOrigin());
             }
@@ -1277,7 +1276,7 @@ public class Game {
             return (gameLocal.GetLocalPlayer() != null);
         }
 
-        public void PlayerGetOrigin(idVec3 org) {
+        public void PlayerGetOrigin(final idVec3 org) {
             org.oSet(gameLocal.GetLocalPlayer().GetPhysics().GetOrigin());
         }
 
@@ -1289,7 +1288,7 @@ public class Game {
             angles.oSet(gameLocal.GetLocalPlayer().viewAngles);
         }
 
-        public void PlayerGetEyePosition(idVec3 org) {
+        public void PlayerGetEyePosition(final idVec3 org) {
             org.oSet(gameLocal.GetLocalPlayer().GetEyePosition());
         }
 
@@ -1403,7 +1402,7 @@ public class Game {
             if (mapFile != null && isNotNullOrEmpty(name)) {
                 idMapEntity mapent = mapFile.FindEntity(name);
                 if (mapent != null) {
-                    idVec3 origin = new idVec3();
+                    final idVec3 origin = new idVec3();
                     mapent.epairs.GetVector("origin", "", origin);
                     origin.oPluSet(v);
                     mapent.epairs.SetVector("origin", origin);

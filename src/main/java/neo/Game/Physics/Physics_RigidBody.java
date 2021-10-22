@@ -833,7 +833,7 @@ public class Physics_RigidBody {
 
         @Override
         public idVec3 GetOrigin(int id /*= 0*/) {
-            return new idVec3(current.i.position);
+            return current.i.position;
         }
 
         @Override

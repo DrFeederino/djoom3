@@ -164,7 +164,7 @@ public class DeclParticle {
         public idMat3 axis;
         public float frac;               // 0.0 to 1.0
         public int index;              // particle number in the system
-        public idVec3 origin;             // dynamic smoke particles can have individual origins and axis
+        public final idVec3 origin;             // dynamic smoke particles can have individual origins and axis
         public idRandom originalRandom;     // needed so aimed particles can reset the random for another origin calculation
         public idRandom random;
         public renderEntity_s renderEnt;          // for shaderParms, etc
@@ -224,7 +224,7 @@ public class DeclParticle {
         //
         //--------------------------------
         //
-        public idVec3 offset;           // offset from origin to spawn all particles, also applies to customPath
+        public final idVec3 offset;           // offset from origin to spawn all particles, also applies to customPath
         //
         public prtOrientation_t orientation;      // view, aimed, or axis fixed
         public float[] orientationParms = new float[4];
@@ -400,7 +400,7 @@ public class DeclParticle {
          */
         // returns the number of verts created, which will range from 0 to 4*NumQuadsPerParticle()
         public int CreateParticle(particleGen_t g, idDrawVert[] verts) throws idException {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
 
             for (int i = 0; i < verts.length; i++) {
                 verts[i] = new idDrawVert();
@@ -452,7 +452,7 @@ public class DeclParticle {
             return numVerts * 2;
         }
 
-        public void ParticleOrigin(particleGen_t g, idVec3 origin) throws idException {
+        public void ParticleOrigin(particleGen_t g, final idVec3 origin) throws idException {
             if (customPathType == PPATH_STANDARD) {
                 //
                 // find intial origin distribution
@@ -536,7 +536,7 @@ public class DeclParticle {
                 //
                 // add the velocity over time
                 //
-                idVec3 dir = new idVec3();
+                final idVec3 dir = new idVec3();
 
                 switch (directionType) {
                     case PDIR_CONE: {
@@ -635,7 +635,7 @@ public class DeclParticle {
 
             // add gravity after adjusting for axis
             if (worldGravity) {
-                idVec3 gra = new idVec3(0, 0, -gravity);
+                final idVec3 gra = new idVec3(0, 0, -gravity);
                 gra.oMulSet(g.renderEnt.axis.Transpose());
                 origin.oPluSet(gra.oMultiply(g.age * g.age));
             } else {
@@ -650,7 +650,7 @@ public class DeclParticle {
             float width = psize;
             float height = psize * paspect;
 
-            idVec3 left = new idVec3(), up = new idVec3();
+            final idVec3 left = new idVec3(), up = new idVec3();
 
             if (orientation == POR_AIMED) {
                 // reset the values to an earlier time to get a previous origin
@@ -659,8 +659,8 @@ public class DeclParticle {
                 float currentFrac = g.frac;
 //		idDrawVert []verts_p = verts[verts_p;
                 int verts_p = 0;
-                idVec3 stepOrigin = origin;
-                idVec3 stepLeft = new idVec3();
+                final idVec3 stepOrigin = new idVec3(origin);
+                final idVec3 stepLeft = new idVec3();
                 int numTrails = idMath.Ftoi(orientationParms[0]);
                 float trailTime = orientationParms[1];
 
@@ -676,19 +676,19 @@ public class DeclParticle {
                     g.age = currentAge - (i + 1) * trailTime / (numTrails + 1);    // time to back up
                     g.frac = g.age / particleLife;
 
-                    idVec3 oldOrigin = new idVec3();
+                    final idVec3 oldOrigin = new idVec3();
                     ParticleOrigin(g, oldOrigin);
 
-                    up = stepOrigin.oMinus(oldOrigin);    // along the direction of travel
+                    up.oSet(stepOrigin.oMinus(oldOrigin));    // along the direction of travel
 
-                    idVec3 forwardDir = new idVec3();
+                    final idVec3 forwardDir = new idVec3();
                     g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(0), forwardDir);
 
                     up.oMinSet(forwardDir.oMultiply(up.oMultiply(forwardDir)));
 
                     up.Normalize();
 
-                    left = up.Cross(forwardDir);
+                    left.oSet(up.Cross(forwardDir));
                     left.oMulSet(psize);
 
                     verts[verts_p + 0].oSet(verts[0]);
@@ -697,14 +697,14 @@ public class DeclParticle {
                     verts[verts_p + 3].oSet(verts[3]);
 
                     if (i == 0) {
-                        verts[verts_p + 0].xyz = stepOrigin.oMinus(left);
-                        verts[verts_p + 1].xyz = stepOrigin.oPlus(left);
+                        verts[verts_p + 0].xyz.oSet(stepOrigin.oMinus(left));
+                        verts[verts_p + 1].xyz.oSet(stepOrigin.oPlus(left));
                     } else {
-                        verts[verts_p + 0].xyz = stepOrigin.oMinus(stepLeft);
-                        verts[verts_p + 1].xyz = stepOrigin.oPlus(stepLeft);
+                        verts[verts_p + 0].xyz.oSet(stepOrigin.oMinus(stepLeft));
+                        verts[verts_p + 1].xyz.oSet(stepOrigin.oPlus(stepLeft));
                     }
-                    verts[verts_p + 2].xyz = oldOrigin.oMinus(left);
-                    verts[verts_p + 3].xyz = oldOrigin.oPlus(left);
+                    verts[verts_p + 2].xyz.oSet(oldOrigin.oMinus(left));
+                    verts[verts_p + 3].xyz.oSet(oldOrigin.oPlus(left));
 
                     // modify texcoords
                     verts[verts_p + 0].st.x = verts[0].st.x;
@@ -723,8 +723,8 @@ public class DeclParticle {
 
                     verts_p += 4;
 
-                    stepOrigin = oldOrigin;
-                    stepLeft = left;
+                    stepOrigin.oSet(oldOrigin);
+                    stepLeft.oSet(left);
                 }
 
                 g.random = new idRandom(currentRandom);
@@ -779,22 +779,22 @@ public class DeclParticle {
                 up.z = c;
             } else {
                 // oriented in viewer space
-                idVec3 entityLeft = new idVec3(), entityUp = new idVec3();
+                final idVec3 entityLeft = new idVec3(), entityUp = new idVec3();
 
                 g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(1), entityLeft);
                 g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(2), entityUp);
 
-                left = entityLeft.oMultiply(c).oPlus(entityUp.oMultiply(s));
-                up = entityUp.oMultiply(c).oMinus(entityLeft.oMultiply(s));
+                left.oSet(entityLeft.oMultiply(c).oPlus(entityUp.oMultiply(s)));
+                up.oSet(entityUp.oMultiply(c).oMinus(entityLeft.oMultiply(s)));
             }
 
             left.oMulSet(width);
             up.oMulSet(height);
 
-            verts[0].xyz = origin.oMinus(left).oPlus(up);
-            verts[1].xyz = origin.oPlus(left).oPlus(up);
-            verts[2].xyz = origin.oMinus(left).oMinus(up);
-            verts[3].xyz = origin.oPlus(left).oMinus(up);
+            verts[0].xyz.oSet(origin.oMinus(left).oPlus(up));
+            verts[1].xyz.oSet(origin.oPlus(left).oPlus(up));
+            verts[2].xyz.oSet(origin.oMinus(left).oMinus(up));
+            verts[3].xyz.oSet(origin.oPlus(left).oMinus(up));
 
             return 4;
         }
@@ -934,7 +934,7 @@ public class DeclParticle {
             customPathParms[5] = src.customPathParms[5];
             customPathParms[6] = src.customPathParms[6];
             customPathParms[7] = src.customPathParms[7];
-            offset = src.offset;
+            offset.oSet(src.offset);
             animationFrames = src.animationFrames;
             animationRate = src.animationRate;
             initialAngle = src.initialAngle;
@@ -1123,7 +1123,7 @@ public class DeclParticle {
 
                     // if the particle doesn't get drawn because it is faded out or beyond a kill region,
                     // don't increment the verts
-                    idVec3 origin = new idVec3();
+                    final idVec3 origin = new idVec3();
                     stage.ParticleOrigin(g, origin);
                     stage.bounds.AddPoint(origin);
                 }

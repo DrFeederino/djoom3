@@ -91,7 +91,7 @@ public class Moveable {
      ===============================================================================
      */
     public static final idEventDef EV_Respawn = new idEventDef("<respawn>");
-//
+    //
     public static final idEventDef EV_SetOwnerFromSpawnArgs = new idEventDef("<setOwnerFromSpawnArgs>");
 
     public static final idEventDef EV_TriggerTargets = new idEventDef("<triggertargets>");
@@ -109,6 +109,7 @@ public class Moveable {
             eventCallbacks.put(EV_EnableDamage, (eventCallback_t1<idMoveable>) idMoveable::Event_EnableDamage);
         }
 
+        protected final idVec3 initialSplineDir; // initial relative direction along the spline path
         protected boolean allowStep;        // allow monsters to step on the object
         protected idStr brokenModel;      // model set when health drops down to or below zero
         protected boolean canDamage;        // only apply damage when this is set
@@ -116,7 +117,6 @@ public class Moveable {
         protected boolean explode;          // entity explodes when health drops down to or below zero
         protected idStr fxCollide;        // fx system to start when collides with something
         protected idCurve_Spline<idVec3> initialSpline;    // initial spline path the moveable follows
-        protected idVec3 initialSplineDir; // initial relative direction along the spline path
         protected float maxDamageVelocity;// velocity at which the maximum damage is applied
         protected float minDamageVelocity;// minimum velocity before moveable applies damage
         protected int nextCollideFxTime;// next time it is ok to spawn collision fx
@@ -176,7 +176,7 @@ public class Moveable {
 
             // get rigid body properties
             spawnArgs.GetFloat("density", "0.5", density);
-            density.setVal( idMath.ClampFloat(0.001f, 1000.0f, density.getVal()));
+            density.setVal(idMath.ClampFloat(0.001f, 1000.0f, density.getVal()));
             spawnArgs.GetFloat("friction", "0.05", friction);
             friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction.getVal()));
             spawnArgs.GetFloat("bouncyness", "0.6", bouncyness);
@@ -328,7 +328,7 @@ public class Moveable {
         @Override
         public boolean Collide(final trace_s collision, final idVec3 velocity) {
             float v, f;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idEntity ent;
 
             v = -(velocity.oMultiply(collision.c.normal));
@@ -346,7 +346,7 @@ public class Moveable {
                 ent = gameLocal.entities[collision.c.entityNum];
                 if (ent != null && v > minDamageVelocity) {
                     f = v > maxDamageVelocity ? 1.0f : idMath.Sqrt(v - minDamageVelocity) * (1.0f / idMath.Sqrt(maxDamageVelocity - minDamageVelocity));
-                    dir = velocity;
+                    dir.oSet(velocity);
                     dir.NormalizeFast();
                     ent.Damage(this, GetPhysics().GetClipModel().GetOwner(), dir, damage.toString(), f, INVALID_JOINT);
                     nextDamageTime = gameLocal.time + 1000;
@@ -424,7 +424,7 @@ public class Moveable {
             if (initialSpline != null) {
                 initialSpline.MakeUniform(initialSplineTime);
                 initialSpline.ShiftTime(startTime - initialSpline.GetTime(0));
-                initialSplineDir = initialSpline.GetCurrentFirstDerivative(startTime);
+                initialSplineDir.oSet(initialSpline.GetCurrentFirstDerivative(startTime));
                 initialSplineDir.oMulSet(physicsObj.GetAxis().Transpose());
                 initialSplineDir.Normalize();
                 BecomeActive(TH_THINK);
@@ -434,13 +434,13 @@ public class Moveable {
         protected boolean FollowInitialSplinePath() {
             if (initialSpline != null) {
                 if (gameLocal.time < initialSpline.GetTime(initialSpline.GetNumValues() - 1)) {
-                    idVec3 splinePos = initialSpline.GetCurrentValue(gameLocal.time);
-                    idVec3 linearVelocity = (splinePos.oMinus(physicsObj.GetOrigin())).oMultiply(USERCMD_HZ);
+                    final idVec3 splinePos = new idVec3(initialSpline.GetCurrentValue(gameLocal.time));
+                    final idVec3 linearVelocity = new idVec3((splinePos.oMinus(physicsObj.GetOrigin())).oMultiply(USERCMD_HZ));
                     physicsObj.SetLinearVelocity(linearVelocity);
 
-                    idVec3 splineDir = initialSpline.GetCurrentFirstDerivative(gameLocal.time);
-                    idVec3 dir = initialSplineDir.oMultiply(physicsObj.GetAxis());
-                    idVec3 angularVelocity = dir.Cross(splineDir);
+                    final idVec3 splineDir = new idVec3(initialSpline.GetCurrentFirstDerivative(gameLocal.time));
+                    final idVec3 dir = new idVec3(initialSplineDir.oMultiply(physicsObj.GetAxis()));
+                    final idVec3 angularVelocity = new idVec3(dir.Cross(splineDir));
                     angularVelocity.Normalize();
                     angularVelocity.oMulSet(idMath.ACos16(dir.oMultiply(splineDir) / splineDir.Length()) * USERCMD_HZ);//TODO:back reference from ACos16
                     physicsObj.SetAngularVelocity(angularVelocity);
@@ -455,7 +455,7 @@ public class Moveable {
 
         protected void Event_Activate(idEventArg<idEntity> activator) {
             float delay;
-            idVec3 init_velocity = new idVec3(), init_avelocity = new idVec3();
+            final idVec3 init_velocity = new idVec3(), init_avelocity = new idVec3();
 
             Show();
 
@@ -542,11 +542,11 @@ public class Moveable {
     public static class idBarrel extends idMoveable {
         // CLASS_PROTOTYPE( idBarrel );
 
+        private final idVec3 lastOrigin;          // origin of the barrel the last think frame
         private idMat3 additionalAxis;      // additional rotation axis
         private float additionalRotation;  // additional rotation of the barrel about it's axis
         private int barrelAxis;          // one of the coordinate axes the barrel cylinder is parallel to
         private idMat3 lastAxis;            // axis of the barrel the last think frame
-        private idVec3 lastOrigin;          // origin of the barrel the last think frame
         private float radius;              // radius of barrel
         //
         //
@@ -573,7 +573,7 @@ public class Moveable {
             // always a vertical barrel with cylinder axis parallel to the z-axis
             barrelAxis = 2;
 
-            lastOrigin = GetPhysics().GetOrigin();
+            lastOrigin.oSet(GetPhysics().GetOrigin());
             lastAxis = GetPhysics().GetAxis();
 
             additionalRotation = 0.0f;
@@ -603,7 +603,7 @@ public class Moveable {
         public void BarrelThink() {
             boolean wasAtRest, onGround;
             float movedDistance, rotatedDistance, angle;
-            idVec3 curOrigin, gravityNormal, dir;
+            final idVec3 curOrigin = new idVec3(), gravityNormal = new idVec3(), dir = new idVec3();
             idMat3 curAxis;
 
             wasAtRest = IsAtRest();
@@ -616,14 +616,14 @@ public class Moveable {
 
                 // current physics state
                 onGround = GetPhysics().HasGroundContacts();
-                curOrigin = GetPhysics().GetOrigin();
+                curOrigin.oSet(GetPhysics().GetOrigin());
                 curAxis = GetPhysics().GetAxis();
 
                 // if the barrel is on the ground
                 if (onGround) {
-                    gravityNormal = GetPhysics().GetGravityNormal();
+                    gravityNormal.oSet(GetPhysics().GetGravityNormal());
 
-                    dir = curOrigin.oMinus(lastOrigin);
+                    dir.oSet(curOrigin.oMinus(lastOrigin));
                     dir.oMinSet(gravityNormal.oMultiply(dir.oMultiply(gravityNormal)));
                     movedDistance = dir.LengthSqr();
 
@@ -652,7 +652,7 @@ public class Moveable {
                             } else {
                                 additionalRotation -= angle;
                             }
-                            dir = getVec3_origin();
+                            dir.oSet(getVec3_origin());
                             dir.oSet(barrelAxis, 1.0f);
                             additionalAxis = new idRotation(getVec3_origin(), dir, additionalRotation).ToMat3();
                         }
@@ -660,7 +660,7 @@ public class Moveable {
                 }
 
                 // save state for next think
-                lastOrigin = curOrigin;
+                lastOrigin.oSet(curOrigin);
                 lastAxis = curAxis;
             }
 
@@ -679,7 +679,7 @@ public class Moveable {
         }
 
         @Override
-        public boolean GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToVisualTransform(final idVec3 origin, idMat3 axis) {
             origin.oSet(getVec3_origin());
             axis.oSet(additionalAxis);
             return true;
@@ -717,17 +717,17 @@ public class Moveable {
 //
 //
 
+        private final idVec3 spawnOrigin;
         private renderLight_s light;
-
         private int/*qhandle_t*/ lightDefHandle;
         private int lightTime;
         private int/*qhandle_t*/ particleModelDefHandle;
         private renderEntity_s particleRenderEntity;
         private int particleTime;
         private idMat3 spawnAxis;
-        private idVec3 spawnOrigin;
         private explode_state_t state;
         private float time;
+
         public idExplodingBarrel() {
             spawnOrigin = new idVec3();
             spawnAxis = new idMat3();
@@ -767,7 +767,7 @@ public class Moveable {
 
             health = spawnArgs.GetInt("health", "5");
             fl.takedamage = true;
-            spawnOrigin = GetPhysics().GetOrigin();
+            spawnOrigin.oSet(GetPhysics().GetOrigin());
             spawnAxis = GetPhysics().GetAxis();
             state = NORMAL;
             particleModelDefHandle = -1;
@@ -824,7 +824,7 @@ public class Moveable {
                     if (pct > 1.0f) {
                         pct = 1.0f;
                     }
-                    light.origin = physicsObj.GetAbsBounds().GetCenter();
+                    light.origin.oSet(physicsObj.GetAbsBounds().GetCenter());
                     light.axis = getMat3_identity();
                     light.shaderParms[SHADERPARM_RED] = pct;
                     light.shaderParms[SHADERPARM_GREEN] = pct;
@@ -911,10 +911,10 @@ public class Moveable {
                 final idDict debris_args = gameLocal.FindEntityDefDict(kv.GetValue().toString(), false);
                 if (debris_args != null) {
                     idEntity[] ent = {null};
-                    idVec3 dir2;
+                    final idVec3 dir2 = new idVec3();
                     idDebris debris;
                     //if ( first ) {
-                    dir2 = physicsObj.GetAxis().oGet(1);
+                    dir2.oSet(physicsObj.GetAxis().oGet(1));
                     //	first = false;
                     //} else {
                     dir2.x += gameLocal.random.CRandomFloat() * 4.0f;
@@ -1028,7 +1028,7 @@ public class Moveable {
             light.axis = getMat3_identity();
             light.lightRadius.x = spawnArgs.GetFloat("light_radius");
             light.lightRadius.y = light.lightRadius.z = light.lightRadius.x;
-            light.origin = physicsObj.GetOrigin();
+            light.origin.oSet(physicsObj.GetOrigin());
             light.origin.z += 128;
             light.pointLight = true;
             light.shader = declManager.FindMaterial(name);
@@ -1082,7 +1082,7 @@ public class Moveable {
                     if (NOT(gameLocal.entities[i]) || !(gameLocal.entities[i] instanceof idPlayer)) {
                         continue;
                     }
-                    idVec3 v = gameLocal.entities[i].GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());
+                    final idVec3 v = new idVec3(gameLocal.entities[i].GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
                     float dist = v.Length();
                     if (minDist < 0 || dist < minDist) {
                         minDist = dist;

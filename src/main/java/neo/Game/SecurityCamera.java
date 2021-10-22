@@ -285,7 +285,7 @@ public class SecurityCamera {
             rv.fov_x = scanFov;
             rv.fov_y = scanFov;
             rv.viewaxis = GetAxis().ToAngles().ToMat3();
-            rv.vieworg = GetPhysics().GetOrigin().oPlus(viewOffset);
+            rv.vieworg.oSet(GetPhysics().GetOrigin().oPlus(viewOffset));
             return rv;
         }
 

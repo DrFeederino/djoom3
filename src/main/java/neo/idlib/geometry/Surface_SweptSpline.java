@@ -25,7 +25,7 @@ public class Surface_SweptSpline {
 
         //
         protected idCurve_Spline<idVec4> spline;
-//	public						~idSurface_SweptSpline( void );
+        //	public						~idSurface_SweptSpline( void );
 //
         protected idCurve_Spline<idVec4> sweptSpline;
 
@@ -103,7 +103,7 @@ public class Surface_SweptSpline {
                 t = totalTime * i / sweptSplineDiv;
                 splinePos = sweptSpline.GetCurrentValue(t);
                 splineD1 = sweptSpline.GetCurrentFirstDerivative(t);
-                verts.oGet(baseOffset + i).xyz = splinePos.ToVec3();
+                verts.oGet(baseOffset + i).xyz.oSet(splinePos.ToVec3());
                 verts.oGet(baseOffset + i).st.oSet(0, splinePos.w);
                 verts.oGet(baseOffset + i).tangents[0] = splineD1.ToVec3();
             }
@@ -123,12 +123,12 @@ public class Surface_SweptSpline {
                 offset = i * sweptSplineSubdivisions;
                 for (j = 0; j < sweptSplineSubdivisions; j++) {
                     idDrawVert v = verts.oGet(offset + j);
-                    v.xyz = splinePos.ToVec3().oPlus(verts.oGet(baseOffset + j).xyz.oMultiply(splineMat));
+                    v.xyz.oSet(splinePos.ToVec3().oPlus(verts.oGet(baseOffset + j).xyz.oMultiply(splineMat)));
                     v.st.oSet(0, verts.oGet(baseOffset + j).st.oGet(0));
                     v.st.oSet(1, splinePos.w);
                     v.tangents[0] = verts.oGet(baseOffset + j).tangents[0].oMultiply(splineMat);
                     v.tangents[1] = splineD1.ToVec3();
-                    v.normal = v.tangents[1].Cross(v.tangents[0]);
+                    v.normal.oSet(v.tangents[1].Cross(v.tangents[0]));
                     v.normal.Normalize();
                     v.color[0] = v.color[1] = v.color[2] = v.color[3] = 0;
                 }

@@ -53,17 +53,17 @@ public class DrawVert {
         private static int DBG_counter = 0;
         private final int DBG_count = DBG_counter++;
         public byte[] color = new byte[4];
-        public idVec3 normal;
+        public final idVec3 normal;
         public idVec2 st;
-        public idVec3[] tangents;
-        public idVec3 xyz;
+        public final idVec3[] tangents;
+        public final idVec3 xyz;
         private transient int VBO_OFFSET;
 
         public idDrawVert() {
             this.xyz = new idVec3();
             this.st = new idVec2();
             this.normal = new idVec3();
-            this.tangents = new idVec3[]{new idVec3(), new idVec3()};
+            this.tangents = idVec3.generateArray(2);
         }
 
         /**
@@ -76,7 +76,7 @@ public class DrawVert {
                 this.xyz = new idVec3();
                 this.st = new idVec2();
                 this.normal = new idVec3();
-                this.tangents = new idVec3[]{new idVec3(), new idVec3()};
+                this.tangents = idVec3.generateArray(2);
                 return;
             }
 

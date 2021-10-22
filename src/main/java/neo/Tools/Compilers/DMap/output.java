@@ -210,8 +210,8 @@ public class output {
                 }
                 if (j == numVerts) {
                     numVerts++;
-                    uTri.verts[j].xyz = dv.xyz;
-                    uTri.verts[j].normal = dv.normal;
+                    uTri.verts[j].xyz.oSet(dv.xyz);
+                    uTri.verts[j].normal.oSet(dv.normal);
                     uTri.verts[j].st.oSet(0, dv.st.oGet(0));
                     uTri.verts[j].st.oSet(1, dv.st.oGet(1));
                 }

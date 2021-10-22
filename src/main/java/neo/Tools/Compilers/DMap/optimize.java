@@ -8,7 +8,6 @@ import neo.idlib.containers.List.cmp_t;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Random.idRandom;
-import neo.idlib.math.Vector.*;
 
 import java.util.Arrays;
 
@@ -358,8 +357,8 @@ public class optimize {
         v = new idDrawVert();// Mem_Alloc(sizeof(v));
 //	memset( v, 0, sizeof( *v ) );
 
-        v.xyz = p1.v.xyz.oMultiply(1.0f - f).oPlus(p2.v.xyz.oMultiply(f));
-        v.normal = p1.v.normal.oMultiply(1.0f - f).oPlus(p2.v.normal.oMultiply(f));
+        v.xyz.oSet(p1.v.xyz.oMultiply(1.0f - f).oPlus(p2.v.xyz.oMultiply(f)));
+        v.normal.oSet(p1.v.normal.oMultiply(1.0f - f).oPlus(p2.v.normal.oMultiply(f)));
         v.normal.Normalize();
         v.st.oSet(0, p1.v.st.oGet(0) * (1.0f - f) + p2.v.st.oGet(0) * f);
         v.st.oSet(1, p1.v.st.oGet(1) * (1.0f - f) + p2.v.st.oGet(1) * f);

@@ -42,9 +42,9 @@ public abstract class AbstractCollisionModel_local {
 
         Bounds.idBounds bounds = new Bounds.idBounds();                             // bounds of all windings in list
         int contents;                                            // winding surface contents
-        Vector.idVec3 normal = new Vector.idVec3();                                              // normal for all windings
+        final Vector.idVec3 normal = new Vector.idVec3();                                              // normal for all windings
         int numWindings;                                              // number of windings
-        Vector.idVec3 origin = new Vector.idVec3();                                              // origin for radius
+        final Vector.idVec3 origin = new Vector.idVec3();                                              // origin for radius
         int primitiveNum;                                        // number of primitive the windings came from
         float radius;                                              // radius relative to origin for all windings
         Winding.idFixedWinding[] w = new Winding.idFixedWinding[MAX_WINDING_LIST];    // windings
@@ -61,7 +61,7 @@ public abstract class AbstractCollisionModel_local {
         static final int SIZE = Vector.idVec3.SIZE + Integer.SIZE + Long.SIZE + Long.SIZE;
         static final int BYTES = SIZE / Byte.SIZE;
         int checkcount;                  // for multi-check avoidance
-        Vector.idVec3 p;                 // vertex point
+        final Vector.idVec3 p;                 // vertex point
         long side;                       // each bit tells at which side this vertex passes one of the trace model edges
         long sideSet;                    // each bit tells if sidedness for the trace model edge has been calculated yet
 
@@ -82,7 +82,7 @@ public abstract class AbstractCollisionModel_local {
 
         int checkcount;                   // for multi-check avoidance
         boolean internal;                   // a trace model can never collide with internal edges
-        Vector.idVec3 normal = new Vector.idVec3();       // edge normal
+        final Vector.idVec3 normal = new Vector.idVec3();       // edge normal
         short numUsers;                   // number of polygons using this edge
         long side;                        // each bit tells at which side of this edge one of the trace model vertices passes
         long sideSet;                      // each bit tells if sidedness for the trace model vertex has been calculated yet
@@ -288,12 +288,12 @@ public abstract class AbstractCollisionModel_local {
      */
     public static class cm_trmVertex_s {
 
-        Vector.idVec3 endp;                    // end point of vertex after movement
-        Vector.idVec3 p;                       // vertex position
+        final Vector.idVec3 endp;                    // end point of vertex after movement
+        final Vector.idVec3 p;                       // vertex position
         Pluecker.idPluecker pl;                      // pluecker coordinate for vertex movement
         int polygonSide;             // side of polygon this vertex is on (rotational collision)
         Bounds.idBounds rotationBounds;          // rotation bounds for this vertex
-        Vector.idVec3 rotationOrigin;          // rotation origin for this vertex
+        final Vector.idVec3 rotationOrigin;          // rotation origin for this vertex
         boolean used;                    // true if this vertex is used for collision detection
 
         public cm_trmVertex_s() {
@@ -308,12 +308,12 @@ public abstract class AbstractCollisionModel_local {
     public static class cm_trmEdge_s {
 
         short bitNum;                  // vertex bit number
-        Vector.idVec3 cross;                   // (z,-y,x) of cross product between edge dir and movement dir
-        Vector.idVec3 end;                         // end of edge
+        final Vector.idVec3 cross;                   // (z,-y,x) of cross product between edge dir and movement dir
+        final Vector.idVec3 end;                         // end of edge
         Pluecker.idPluecker pl;                      // pluecker coordinate for edge
         Pluecker.idPluecker plzaxis;                 // pluecker coordinate for rotation about the z-axis
         Bounds.idBounds rotationBounds;          // rotation bounds for this edge
-        Vector.idVec3 start;                       // start of edge
+        final Vector.idVec3 start;                       // start of edge
         boolean used;                       // true when vertex is used for collision detection
         int[] vertexNum = new int[2];       // indexes into cm_sraceWork_s->vertices
 
@@ -343,15 +343,15 @@ public abstract class AbstractCollisionModel_local {
 
     public static class cm_traceWork_s {
         float angle;              // angle for rotational collision
-        Vector.idVec3 axis;               // rotation axis in model space
+        final Vector.idVec3 axis;               // rotation axis in model space
         boolean axisIntersectsTrm;  // true if the rotation axis intersects the trace model
         Bounds.idBounds bounds;             // bounds of full trace
         CollisionModel.contactInfo_t[] contacts;           // array with contacts
         int contents;           // ignore polygons that do not have any of these contents flags
-        Vector.idVec3 dir;                // trace direction
+        final Vector.idVec3 dir;                // trace direction
         cm_trmEdge_s[] edges;              // trm edges
-        Vector.idVec3 end;                // end of trace
-        Vector.idVec3 extents;            // largest of abs(size[0]) and abs(size[1]) for BSP trace
+        final Vector.idVec3 end;                // end of trace
+        final Vector.idVec3 extents;            // largest of abs(size[0]) and abs(size[1]) for BSP trace
         boolean getContacts;        // true if retrieving contacts
         Plane.idPlane heartPlane1;        // polygons should be near anough the trace heart planes
         Plane.idPlane heartPlane2;
@@ -367,10 +367,10 @@ public abstract class AbstractCollisionModel_local {
         int numEdges;
         int numPolys;
         int numVerts;
-        Vector.idVec3 origin;             // origin of rotation in model space
+        final Vector.idVec3 origin;             // origin of rotation in model space
         boolean pointTrace;         // true if only tracing a point
         Pluecker.idPluecker[] polygonEdgePlueckerCache;
-        Vector.idVec3[] polygonRotationOriginCache;
+        final Vector.idVec3[] polygonRotationOriginCache;
         Pluecker.idPluecker[] polygonVertexPlueckerCache;
         cm_trmPolygon_s[] polys;              // trm polygons
         boolean positionTest;       // true if not tracing but doing a position test
@@ -378,7 +378,7 @@ public abstract class AbstractCollisionModel_local {
         float radius;             // rotation radius of trm start
         boolean rotation;           // true if calculating rotational collision
         Bounds.idBounds size;               // bounds of transformed trm relative to start
-        Vector.idVec3 start;              // start of trace
+        final Vector.idVec3 start;              // start of trace
         CollisionModel.trace_s trace;              // collision detection result
         cm_trmVertex_s[] vertices;           // trm vertices
 

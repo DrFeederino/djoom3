@@ -96,8 +96,8 @@ public class Surface_Patch {
         public void Subdivide(float maxHorizontalError, float maxVerticalError, float maxLength, boolean genNormals) throws idException {
             int i, j, k, l;
             idDrawVert prev = new idDrawVert(), next = new idDrawVert(), mid = new idDrawVert();
-            idVec3 prevxyz = new idVec3(), nextxyz = new idVec3(), midxyz = new idVec3();
-            idVec3 delta;
+            final idVec3 prevxyz = new idVec3(), nextxyz = new idVec3(), midxyz = new idVec3();
+            final idVec3 delta = new idVec3();
             float maxHorizontalErrorSqr, maxVerticalErrorSqr, maxLengthSqr;
 
             // generate normals for the control mesh
@@ -128,7 +128,7 @@ public class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta = verts.oGet(i * maxWidth + j + 1).xyz.oMinus(midxyz);
+                    delta.oPluSet(verts.oGet(i * maxWidth + j + 1).xyz.oMinus(midxyz));
                     if (delta.LengthSqr() > maxHorizontalErrorSqr) {
                         break;
                     }
@@ -180,7 +180,7 @@ public class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta = verts.oGet((j + 1) * maxWidth + i).xyz.oMinus(midxyz);
+                    delta.oSet(verts.oGet((j + 1) * maxWidth + i).xyz.oMinus(midxyz));
                     if (delta.LengthSqr() > maxVerticalErrorSqr) {
                         break;
                     }
@@ -329,7 +329,7 @@ public class Surface_Patch {
         private void RemoveLinearColumnsRows() {// remove columns and rows with all points on one line{
             int i, j, k;
             float len, maxLength;
-            idVec3 proj = new idVec3(), dir;
+            final idVec3 proj = new idVec3(), dir = new idVec3();
 
             assert (expanded == true);
             for (j = 1; j < width - 1; j++) {
@@ -337,7 +337,7 @@ public class Surface_Patch {
                 for (i = 0; i < height; i++) {
                     this.ProjectPointOntoVector(verts.oGet(i * maxWidth + j).xyz,
                             verts.oGet(i * maxWidth + j - 1).xyz, verts.oGet(i * maxWidth + j + 1).xyz, proj);
-                    dir = verts.oGet(i * maxWidth + j).xyz.oMinus(proj);
+                    dir.oSet(verts.oGet(i * maxWidth + j).xyz.oMinus(proj));
                     len = dir.LengthSqr();
                     if (len > maxLength) {
                         maxLength = len;
@@ -358,7 +358,7 @@ public class Surface_Patch {
                 for (i = 0; i < width; i++) {
                     this.ProjectPointOntoVector(verts.oGet(j * maxWidth + i).xyz,
                             verts.oGet((j - 1) * maxWidth + i).xyz, verts.oGet((j + 1) * maxWidth + i).xyz, proj);
-                    dir = verts.oGet(j * maxWidth + i).xyz.oMinus(proj);
+                    dir.oSet(verts.oGet(j * maxWidth + i).xyz.oMinus(proj));
                     len = dir.LengthSqr();
                     if (len > maxLength) {
                         maxLength = len;
@@ -435,10 +435,10 @@ public class Surface_Patch {
 
         // project a point onto a vector to calculate maximum curve error
         private void ProjectPointOntoVector(final idVec3 point, final idVec3 vStart, final idVec3 vEnd, idVec3 vProj) {
-            idVec3 pVec, vec;
+            final idVec3 pVec = new idVec3(), vec = new idVec3();
 
-            pVec = point.oMinus(vStart);
-            vec = vEnd.oMinus(vStart);
+            pVec.oSet(point.oMinus(vStart));
+            vec.oSet(vEnd.oMinus(vStart));
             vec.Normalize();
             // project onto the directional vector for this segment
             vProj.oSet(vStart.oPlus(vec.oMultiply(pVec.oMultiply(vec))));
@@ -454,14 +454,14 @@ public class Surface_Patch {
          */
         private void GenerateNormals() {// generate normals
             int i, j, k, dist;
-            idVec3 norm;
-            idVec3 sum = new idVec3();
+            final idVec3 norm = new idVec3();
+            final idVec3 sum = new idVec3();
             int count;
-            idVec3 base;
-            idVec3 delta;
+            final idVec3 base = new idVec3();
+            final idVec3 delta = new idVec3();
             int x, y;
-            idVec3[] around = new idVec3[8];
-            idVec3 temp;
+            idVec3[] around = idVec3.generateArray(8);
+            final idVec3 temp = new idVec3();
             boolean[] good = new boolean[8];
             boolean wrapWidth, wrapHeight;
             final int[][] neighbors = {
@@ -473,18 +473,18 @@ public class Surface_Patch {
             //
             // if all points are coplanar, set all normals to that plane
             //
-            idVec3[] extent = new idVec3[3];
+            idVec3[] extent = idVec3.generateArray(3);
             float offset;
 
-            extent[0] = verts.oGet(width - 1).xyz.oMinus(verts.oGet(0).xyz);
-            extent[1] = verts.oGet((height - 1) * width + width - 1).xyz.oMinus(verts.oGet(0).xyz);
-            extent[2] = verts.oGet((height - 1) * width).xyz.oMinus(verts.oGet(0).xyz);
+            extent[0].oSet(verts.oGet(width - 1).xyz.oMinus(verts.oGet(0).xyz));
+            extent[1].oSet(verts.oGet((height - 1) * width + width - 1).xyz.oMinus(verts.oGet(0).xyz));
+            extent[2].oSet(verts.oGet((height - 1) * width).xyz.oMinus(verts.oGet(0).xyz));
 
-            norm = extent[0].Cross(extent[1]);
+            norm.oSet(extent[0].Cross(extent[1]));
             if (norm.LengthSqr() == 0.0f) {
-                norm = extent[0].Cross(extent[2]);
+                norm.oSet(extent[0].Cross(extent[2]));
                 if (norm.LengthSqr() == 0.0f) {
-                    norm = extent[1].Cross(extent[2]);
+                    norm.oSet(extent[1].Cross(extent[2]));
                 }
             }
 
@@ -502,7 +502,7 @@ public class Surface_Patch {
                 if (i == width * height) {
                     // all are coplanar
                     for (i = 0; i < width * height; i++) {
-                        verts.oGet(i).normal = norm;
+                        verts.oGet(i).normal.oSet(norm);
                     }
                     return;
                 }
@@ -511,7 +511,7 @@ public class Surface_Patch {
             // check for wrapped edge cases, which should smooth across themselves
             wrapWidth = false;
             for (i = 0; i < height; i++) {
-                delta = verts.oGet(i * width).xyz.oMinus(verts.oGet(i * width + width - 1).xyz);
+                delta.oSet(verts.oGet(i * width).xyz.oMinus(verts.oGet(i * width + width - 1).xyz));
                 if (delta.LengthSqr() > Square(1.0f)) {
                     break;
                 }
@@ -522,7 +522,7 @@ public class Surface_Patch {
 
             wrapHeight = false;
             for (i = 0; i < width; i++) {
-                delta = verts.oGet(i).xyz.oMinus(verts.oGet((height - 1) * width + i).xyz);
+                delta.oSet(verts.oGet(i).xyz.oMinus(verts.oGet((height - 1) * width + i).xyz));
                 if (delta.LengthSqr() > Square(1.0f)) {
                     break;
                 }
@@ -534,7 +534,7 @@ public class Surface_Patch {
             for (i = 0; i < width; i++) {
                 for (j = 0; j < height; j++) {
                     count = 0;
-                    base = verts.oGet(j * width + i).xyz;
+                    base.oSet(verts.oGet(j * width + i).xyz);
                     for (k = 0; k < 8; k++) {
                         around[k].oSet(getVec3_origin());
                         good[k] = false;
@@ -560,12 +560,12 @@ public class Surface_Patch {
                             if (x < 0 || x >= width || y < 0 || y >= height) {
                                 break;                    // edge of patch
                             }
-                            temp = verts.oGet(y * width + x).xyz.oMinus(base);
+                            temp.oSet(verts.oGet(y * width + x).xyz.oMinus(base));
                             if (temp.Normalize() == 0.0f) {
                                 continue;                // degenerate edge, get more dist
                             } else {
                                 good[k] = true;
-                                around[k] = temp;
+                                around[k].oSet(temp);
                                 break;                    // good edge
                             }
                         }
@@ -576,7 +576,7 @@ public class Surface_Patch {
                         if (!good[k] || !good[(k + 1) & 7]) {
                             continue;    // didn't get two points
                         }
-                        norm = around[(k + 1) & 7].Cross(around[k]);
+                        norm.oSet(around[(k + 1) & 7].Cross(around[k]));
                         if (norm.Normalize() == 0.0f) {
                             continue;
                         }
@@ -587,7 +587,7 @@ public class Surface_Patch {
                         //idLib::common->Printf("bad normal\n");
                         count = 1;
                     }
-                    verts.oGet(j * width + i).normal = sum;
+                    verts.oGet(j * width + i).normal.oSet(sum);
                     verts.oGet(j * width + i).normal.Normalize();
                 }
             }

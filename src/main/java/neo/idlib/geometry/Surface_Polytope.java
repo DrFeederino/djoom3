@@ -65,7 +65,7 @@ public class Surface_Polytope {
                         }
                     }
                     if (k >= verts.Num()) {
-                        newVert.xyz = w.oGet(j).ToVec3();
+                        newVert.xyz.oSet(w.oGet(j).ToVec3());
                         k = verts.Append(newVert);
                     }
                     windingVerts[j] = k;
@@ -82,21 +82,21 @@ public class Surface_Polytope {
         }
 
         public void SetupTetrahedron(final idBounds bounds) {
-            idVec3 center, scale;
+            final idVec3 center = new idVec3(), scale = new idVec3();
             float c1, c2, c3;
 
             c1 = 0.4714045207f;
             c2 = 0.8164965809f;
             c3 = -0.3333333333f;
 
-            center = bounds.GetCenter();
-            scale = bounds.oGet(1).oMinus(center);
+            center.oSet(bounds.GetCenter());
+            scale.oSet(bounds.oGet(1).oMinus(center));
 
             verts.SetNum(4);
-            verts.oGet(0).xyz = center.oPlus(new idVec3(0.0f, 0.0f, scale.z));
-            verts.oGet(1).xyz = center.oPlus(new idVec3(2.0f * c1 * scale.x, 0.0f, c3 * scale.z));
-            verts.oGet(2).xyz = center.oPlus(new idVec3(-c1 * scale.x, c2 * scale.y, c3 * scale.z));
-            verts.oGet(3).xyz = center.oPlus(new idVec3(-c1 * scale.x, -c2 * scale.y, c3 * scale.z));
+            verts.oGet(0).xyz.oSet(center.oPlus(new idVec3(0.0f, 0.0f, scale.z)));
+            verts.oGet(1).xyz.oSet(center.oPlus(new idVec3(2.0f * c1 * scale.x, 0.0f, c3 * scale.z)));
+            verts.oGet(2).xyz.oSet(center.oPlus(new idVec3(-c1 * scale.x, c2 * scale.y, c3 * scale.z)));
+            verts.oGet(3).xyz.oSet(center.oPlus(new idVec3(-c1 * scale.x, -c2 * scale.y, c3 * scale.z)));
 
             indexes.SetNum(4 * 3);
             indexes.oSet(0 * 3 + 0, 0);
@@ -116,20 +116,20 @@ public class Surface_Polytope {
         }
 
         public void SetupHexahedron(final idBounds bounds) {
-            idVec3 center, scale;
+            final idVec3 center = new idVec3(), scale = new idVec3();
 
-            center = bounds.GetCenter();
-            scale = bounds.oGet(1).oMinus(center);
+            center.oSet(bounds.GetCenter());
+            scale.oSet(bounds.oGet(1).oMinus(center));
 
             verts.SetNum(8);
-            verts.oGet(0).xyz = center.oPlus(new idVec3(-scale.x, -scale.y, -scale.z));
-            verts.oGet(1).xyz = center.oPlus(new idVec3(scale.x, -scale.y, -scale.z));
-            verts.oGet(2).xyz = center.oPlus(new idVec3(scale.x, scale.y, -scale.z));
-            verts.oGet(3).xyz = center.oPlus(new idVec3(-scale.x, scale.y, -scale.z));
-            verts.oGet(4).xyz = center.oPlus(new idVec3(-scale.x, -scale.y, scale.z));
-            verts.oGet(5).xyz = center.oPlus(new idVec3(scale.x, -scale.y, scale.z));
-            verts.oGet(6).xyz = center.oPlus(new idVec3(scale.x, scale.y, scale.z));
-            verts.oGet(7).xyz = center.oPlus(new idVec3(-scale.x, scale.y, scale.z));
+            verts.oGet(0).xyz.oSet(center.oPlus(new idVec3(-scale.x, -scale.y, -scale.z)));
+            verts.oGet(1).xyz.oSet(center.oPlus(new idVec3(scale.x, -scale.y, -scale.z)));
+            verts.oGet(2).xyz.oSet(center.oPlus(new idVec3(scale.x, scale.y, -scale.z)));
+            verts.oGet(3).xyz.oSet(center.oPlus(new idVec3(-scale.x, scale.y, -scale.z)));
+            verts.oGet(4).xyz.oSet(center.oPlus(new idVec3(-scale.x, -scale.y, scale.z)));
+            verts.oGet(5).xyz.oSet(center.oPlus(new idVec3(scale.x, -scale.y, scale.z)));
+            verts.oGet(6).xyz.oSet(center.oPlus(new idVec3(scale.x, scale.y, scale.z)));
+            verts.oGet(7).xyz.oSet(center.oPlus(new idVec3(-scale.x, scale.y, scale.z)));
 
             indexes.SetNum(12 * 3);
             indexes.oSet(0 * 3 + 0, 0);
@@ -173,18 +173,18 @@ public class Surface_Polytope {
         }
 
         public void SetupOctahedron(final idBounds bounds) {
-            idVec3 center, scale;
+            final idVec3 center = new idVec3(), scale = new idVec3();
 
-            center = bounds.GetCenter();
-            scale = bounds.oGet(1).oMinus(center);
+            center.oSet(bounds.GetCenter());
+            scale.oSet(bounds.oGet(1).oMinus(center));
 
             verts.SetNum(6);
-            verts.oGet(0).xyz = center.oPlus(new idVec3(scale.x, 0.0f, 0.0f));
-            verts.oGet(1).xyz = center.oPlus(new idVec3(-scale.x, 0.0f, 0.0f));
-            verts.oGet(2).xyz = center.oPlus(new idVec3(0.0f, scale.y, 0.0f));
-            verts.oGet(3).xyz = center.oPlus(new idVec3(0.0f, -scale.y, 0.0f));
-            verts.oGet(4).xyz = center.oPlus(new idVec3(0.0f, 0.0f, scale.z));
-            verts.oGet(5).xyz = center.oPlus(new idVec3(0.0f, 0.0f, -scale.z));
+            verts.oGet(0).xyz.oSet(center.oPlus(new idVec3(scale.x, 0.0f, 0.0f)));
+            verts.oGet(1).xyz.oSet(center.oPlus(new idVec3(-scale.x, 0.0f, 0.0f)));
+            verts.oGet(2).xyz.oSet(center.oPlus(new idVec3(0.0f, scale.y, 0.0f)));
+            verts.oGet(3).xyz.oSet(center.oPlus(new idVec3(0.0f, -scale.y, 0.0f)));
+            verts.oGet(4).xyz.oSet(center.oPlus(new idVec3(0.0f, 0.0f, scale.z)));
+            verts.oGet(5).xyz.oSet(center.oPlus(new idVec3(0.0f, 0.0f, -scale.z)));
 
             indexes.SetNum(8 * 3);
             indexes.oSet(0 * 3 + 0, 4);

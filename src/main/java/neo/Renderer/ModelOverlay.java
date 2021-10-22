@@ -346,7 +346,7 @@ public class ModelOverlay {
                             staticModel.DeleteSurfaceWithId(newSurf.id);
                             return;
                         }
-                        newTri.verts[numVerts].xyz = baseSurf.geometry.verts[overlayVert.vertexNum].xyz;
+                        newTri.verts[numVerts].xyz.oSet(baseSurf.geometry.verts[overlayVert.vertexNum].xyz);
                         numVerts++;
                     }
                 }

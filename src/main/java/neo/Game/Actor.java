@@ -411,7 +411,7 @@ public class Actor {
         protected idList<Float> damageScale;          // damage scale per damage gruop
         //
         protected idAngles deltaViewAngles;      // delta angles relative to view input angles
-        protected idVec3 eyeOffset;            // offset of eye relative to physics origin
+        protected final idVec3 eyeOffset;            // offset of eye relative to physics origin
         protected boolean finalBoss;
         //
         // friend class			idAnimState;
@@ -425,7 +425,7 @@ public class Actor {
         // joint handles
         protected int/*jointHandle_t*/        leftEyeJoint;
         protected idAnimState legsAnim;
-        protected idVec3 modelOffset;          // offset of visual model relative to the physics origin
+        protected final idVec3 modelOffset;          // offset of visual model relative to the physics origin
         protected idStr painAnim;
         //
         protected int painTime;
@@ -981,14 +981,14 @@ public class Actor {
                     // if not in the def, then try to base it off the idle animation
                     int anim = headEnt.GetAnimator().GetAnim("idle");
                     if (anim != 0 && (leftEyeJoint != INVALID_JOINT)) {
-                        idVec3 pos = new idVec3();
-                        idMat3 axis = new idMat3();
+                        final idVec3 pos = new idVec3();
+                        final idMat3 axis = new idMat3();
                         headEnt.GetAnimator().PlayAnim(ANIMCHANNEL_ALL, anim, gameLocal.time, 0);
                         headEnt.GetAnimator().GetJointTransform(leftEyeJoint, gameLocal.time, pos, axis);
                         headEnt.GetAnimator().ClearAllAnims(gameLocal.time, 0);
                         headEnt.GetAnimator().ForceUpdate();
                         pos.oPluSet(headEnt.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
-                        eyeOffset = pos.oPlus(modelOffset);
+                        eyeOffset.oSet(pos.oPlus(modelOffset));
                     } else {
                         // just base it off the bounding box size
                         eyeOffset.z = GetPhysics().GetBounds().oGet(1).z - 6;
@@ -1013,7 +1013,7 @@ public class Actor {
                         animator.GetJointTransform(leftEyeJoint, gameLocal.time, pos, axis);
                         animator.ClearAllAnims(gameLocal.time, 0);
                         animator.ForceUpdate();
-                        eyeOffset = pos.oPlus(modelOffset);
+                        eyeOffset.oSet(pos.oPlus(modelOffset));
                     } else {
                         // just base it off the bounding box size
                         eyeOffset.z = GetPhysics().GetBounds().oGet(1).z - 6;
@@ -1046,7 +1046,7 @@ public class Actor {
         }
 
         @Override
-        public boolean GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToVisualTransform(final idVec3 origin, idMat3 axis) {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis);
                 return true;
@@ -1057,7 +1057,7 @@ public class Actor {
         }
 
         @Override
-        public boolean GetPhysicsToSoundTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToSoundTransform(final idVec3 origin, idMat3 axis) {
             if (soundJoint != INVALID_JOINT) {
                 animator.GetJointTransform(soundJoint, gameLocal.time, origin, axis);
                 origin.oPluSet(modelOffset);
@@ -1229,7 +1229,7 @@ public class Actor {
             return GetPhysics().GetOrigin().oPlus((GetPhysics().GetGravityNormal().oMultiply(-eyeOffset.z)));
         }
 
-        public void GetViewPos(idVec3 origin, idMat3 axis) {
+        public void GetViewPos(final idVec3 origin, idMat3 axis) {
             origin.oSet(GetEyePosition());
             axis.oSet(viewAxis);
         }
@@ -1244,9 +1244,9 @@ public class Actor {
             }
 
             float dot;
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
 
-            delta = pos.oMinus(GetEyePosition());
+            delta.oSet(pos.oMinus(GetEyePosition()));
 
             // get our gravity normal
             final idVec3 gravityDir = GetPhysics().GetGravityNormal();
@@ -1262,24 +1262,24 @@ public class Actor {
 
         public boolean CanSee(idEntity ent, boolean useFOV) {
             trace_s tr = new trace_s();
-            idVec3 eye;
-            idVec3 toPos;
+            final idVec3 eye = new idVec3();
+            final idVec3 toPos = new idVec3();
 
             if (ent.IsHidden()) {
                 return false;
             }
 
             if (ent instanceof idActor) {
-                toPos = ((idActor) ent).GetEyePosition();
+                toPos.oSet(((idActor) ent).GetEyePosition());
             } else {
-                toPos = ent.GetPhysics().GetOrigin();
+                toPos.oSet(ent.GetPhysics().GetOrigin());
             }
 
             if (useFOV && !CheckFOV(toPos)) {
                 return false;
             }
 
-            eye = GetEyePosition();
+            eye.oSet(GetEyePosition());
 
             gameLocal.clip.TracePoint(tr, eye, toPos, MASK_OPAQUE, this);
             return tr.fraction >= 1.0f || (gameLocal.GetTraceEntity(tr) == ent);
@@ -1287,10 +1287,10 @@ public class Actor {
 
         public boolean PointVisible(final idVec3 point) {
             trace_s results = new trace_s();
-            idVec3 start, end;
+            final idVec3 start = new idVec3(), end = new idVec3();
 
-            start = GetEyePosition();
-            end = point;
+            start.oSet(GetEyePosition());
+            end.oSet(point);
             end.oPluSet(2, 1.0f);
 
             gameLocal.clip.TracePoint(results, start, end, MASK_OPAQUE, this);
@@ -1304,7 +1304,7 @@ public class Actor {
          Returns positions for the AI to aim at.
          =====================
          */
-        public void GetAIAimTargets(final idVec3 lastSightPos, idVec3 headPos, idVec3 chestPos) {
+        public void GetAIAimTargets(final idVec3 lastSightPos, final idVec3 headPos, final idVec3 chestPos) {
             headPos.oSet(lastSightPos.oPlus(EyeOffset()));
             chestPos.oSet(headPos.oPlus(lastSightPos).oPlus(GetPhysics().GetBounds().GetCenter()).oMultiply(0.5f));
         }
@@ -1698,7 +1698,7 @@ public class Actor {
             idActor bestEnt;
             float bestDistSquared;
             float distSquared;
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
 
             bestDistSquared = idMath.INFINITY;
             bestEnt = null;
@@ -1706,7 +1706,7 @@ public class Actor {
                 if (ent.fl.hidden) {
                     continue;
                 }
-                delta = ent.GetPhysics().GetOrigin().oMinus(pos);
+                delta.oSet(ent.GetPhysics().GetOrigin().oMinus(pos));
                 distSquared = delta.LengthSqr();
                 if (distSquared < bestDistSquared) {
                     bestEnt = ent;
@@ -1736,8 +1736,8 @@ public class Actor {
             return false;
         }
 
-        public void GetAASLocation(idAAS aas, idVec3 pos, CInt areaNum) {
-            idVec3 size;
+        public void GetAASLocation(idAAS aas, final idVec3 pos, CInt areaNum) {
+            final idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
 
             GetFloorPos(64.0f, pos);
@@ -1746,7 +1746,7 @@ public class Actor {
                 return;
             }
 
-            size = aas.GetSettings().boundingBoxes[0].oGet(1);
+            size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1));
             bounds.oSet(0, size.oNegative());
             size.z = 32.0f;
             bounds.oSet(1, size);
@@ -1758,13 +1758,13 @@ public class Actor {
         }
 
         public void Attach(idEntity ent) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             int/*jointHandle_t*/ joint;
             String jointName;
             idAttachInfo attach = attachments.Alloc();
             idAngles angleOffset;
-            idVec3 originOffset;
+            final idVec3 originOffset = new idVec3();
 
             jointName = ent.spawnArgs.GetString("joint");
             joint = animator.GetJointHandle(jointName);
@@ -1773,7 +1773,7 @@ public class Actor {
             }
 
             angleOffset = ent.spawnArgs.GetAngles("angles");
-            originOffset = ent.spawnArgs.GetVector("origin");
+            originOffset.oSet(ent.spawnArgs.GetVector("origin"));
 
             attach.channel = animator.GetChannelForJoint(joint);
             GetJointWorldTransform(joint, gameLocal.time, origin, axis);
@@ -1806,7 +1806,7 @@ public class Actor {
         public renderView_s GetRenderView() {
             renderView_s rv = super.GetRenderView();//TODO:super.super....
             rv.viewaxis = new idMat3(viewAxis);
-            rv.vieworg = GetEyePosition();
+            rv.vieworg.oSet(GetEyePosition());
             return rv;
         }
 
@@ -1992,7 +1992,7 @@ public class Actor {
             int i;
             idMat3 mat;
             idMat3 axis = new idMat3();
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (null == headEnt) {
                 return;
@@ -2130,12 +2130,12 @@ public class Actor {
                 headEnt.SetBody(this, headModel, damageJoint);
                 head.oSet(headEnt);
 
-                idVec3 origin = new idVec3();
+                final idVec3 origin = new idVec3();
                 idMat3 axis = new idMat3();
                 idAttachInfo attach = attachments.Alloc();
                 attach.channel = animator.GetChannelForJoint(joint);
                 animator.GetJointTransform(joint, gameLocal.time, origin, axis);
-                origin = renderEntity.origin.oPlus((origin.oPlus(modelOffset)).oMultiply(renderEntity.axis));
+                origin.oSet(renderEntity.origin.oPlus((origin.oPlus(modelOffset)).oMultiply(renderEntity.axis)));
                 //attach.ent.oSet(new idEntityPtr<>());
                 attach.ent.oSet(headEnt);
                 headEnt.SetOrigin(origin);

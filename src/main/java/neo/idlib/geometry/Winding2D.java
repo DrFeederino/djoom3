@@ -73,7 +73,7 @@ public class Winding2D {
         }
 
         public static idVec3 Plane2DFromPoints(final idVec2 start, final idVec2 end, final boolean normalize) {
-            idVec3 plane = new idVec3();
+            final idVec3 plane = new idVec3();
             plane.x = start.y - end.y;
             plane.y = end.x - start.x;
             if (normalize) {
@@ -143,8 +143,8 @@ public class Winding2D {
         public void ExpandForAxialBox(final idVec2[] bounds) {
             int i, j, numPlanes;
             idVec2 v = new idVec2();
-            idVec3[] planes = new idVec3[MAX_POINTS_ON_WINDING_2D];
-            idVec3 plane, bevel = new idVec3();
+            idVec3[] planes = idVec3.generateArray(MAX_POINTS_ON_WINDING_2D);
+            final idVec3 plane = new idVec3(), bevel = new idVec3();
 
             // get planes for the edges and add bevels
             for (numPlanes = i = 0; i < numPoints; i++) {
@@ -152,17 +152,17 @@ public class Winding2D {
                 if ((p[j].oMinus(p[i])).LengthSqr() < 0.01f) {
                     continue;
                 }
-                plane = Plane2DFromPoints(p[i], p[j], true);
+                plane.oSet(Plane2DFromPoints(p[i], p[j], true));
                 if (i != 0) {
                     if (GetAxialBevel(planes[numPlanes - 1], plane, p[i], bevel)) {
-                        planes[numPlanes++] = bevel;
+                        planes[numPlanes++].oSet(bevel);
                     }
                 }
                 assert (numPlanes < MAX_POINTS_ON_WINDING_2D);
-                planes[numPlanes++] = plane;
+                planes[numPlanes++].oSet(plane);
             }
             if (GetAxialBevel(planes[numPlanes - 1], planes[0], p[0], bevel)) {
-                planes[numPlanes++] = bevel;
+                planes[numPlanes++].oSet(bevel);
             }
 
             // expand the planes
@@ -589,10 +589,10 @@ public class Winding2D {
         public boolean PointInside(final idVec2 point, final float epsilon) {
             int i;
             float d;
-            idVec3 plane;
+            final idVec3 plane = new idVec3();
 
             for (i = 0; i < numPoints; i++) {
-                plane = Plane2DFromPoints(p[i], p[(i + 1) % numPoints]);
+                plane.oSet(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]));
                 d = plane.x * point.x + plane.y * point.y + plane.z;
                 if (d > epsilon) {
                     return false;
@@ -605,12 +605,12 @@ public class Winding2D {
             int i, numEdges;
             int[] sides = new int[MAX_POINTS_ON_WINDING_2D + 1], counts = new int[3];
             float d1, d2, epsilon = 0.1f;
-            idVec3 plane;
-            idVec3[] edges = new idVec3[2];
+            final idVec3 plane = new idVec3();
+            idVec3[] edges = idVec3.generateArray(2);
 
             counts[SIDE_FRONT] = counts[SIDE_BACK] = counts[SIDE_ON] = 0;
 
-            plane = Plane2DFromPoints(start, end);
+            plane.oSet(Plane2DFromPoints(start, end));
             for (i = 0; i < numPoints; i++) {
                 d1 = plane.x * p[i].x + plane.y * p[i].y + plane.z;
                 if (d1 > epsilon) {
@@ -634,7 +634,7 @@ public class Winding2D {
             numEdges = 0;
             for (i = 0; i < numPoints; i++) {
                 if (sides[i] != sides[i + 1] && sides[i + 1] != SIDE_ON) {
-                    edges[numEdges++] = Plane2DFromPoints(p[i], p[(i + 1) % numPoints]);
+                    edges[numEdges++].oSet(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]));
                     if (numEdges >= 2) {
                         break;
                     }
@@ -660,14 +660,14 @@ public class Winding2D {
             int[] localEdgeNums = new int[2];
             int[] sides = new int[MAX_POINTS_ON_WINDING_2D + 1], counts = new int[3];
             float d1, d2, epsilon = 0.1f;
-            idVec3 plane;
-            idVec3[] edges = new idVec3[2];
+            final idVec3 plane = new idVec3();
+            final idVec3[] edges = idVec3.generateArray(2);
 
             scale1.setVal(0.0f);
             scale2.setVal(0.0f);
             counts[SIDE_FRONT] = counts[SIDE_BACK] = counts[SIDE_ON] = 0;
 
-            plane = Plane2DFromVecs(start, dir);
+            plane.oSet(Plane2DFromVecs(start, dir));
             for (i = 0; i < numPoints; i++) {
                 d1 = plane.x * p[i].x + plane.y * p[i].y + plane.z;
                 if (d1 > epsilon) {
@@ -692,7 +692,7 @@ public class Winding2D {
             for (i = 0; i < numPoints; i++) {
                 if (sides[i] != sides[i + 1] && sides[i + 1] != SIDE_ON) {
                     localEdgeNums[numEdges] = i;
-                    edges[numEdges++] = Plane2DFromPoints(p[i], p[(i + 1) % numPoints]);
+                    edges[numEdges++].oSet(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]));
                     if (numEdges >= 2) {
                         break;
                     }
@@ -734,7 +734,7 @@ public class Winding2D {
         }
 
         public idVec3 Plane2DFromVecs(final idVec2 start, final idVec2 dir, final boolean normalize) {
-            idVec3 plane = new idVec3();
+            final idVec3 plane = new idVec3();
             plane.x = -dir.y;
             plane.y = dir.x;
             if (normalize) {

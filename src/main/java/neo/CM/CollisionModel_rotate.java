@@ -37,14 +37,14 @@ public class CollisionModel_rotate {
      rotates a point about an arbitrary axis using the tangent of half the rotation angle
      ================
      */
-    static void CM_RotatePoint(idVec3 point, final idVec3 origin, final idVec3 axis, final float tanHalfAngle) {
+    static void CM_RotatePoint(final idVec3 point, final idVec3 origin, final idVec3 axis, final float tanHalfAngle) {
         double d, t, s, c;
-        idVec3 proj, v1, v2;
+        final idVec3 proj = new idVec3(), v1 = new idVec3(), v2 = new idVec3();
 
         point.oMinSet(origin);
-        proj = axis.oMultiply(point.oMultiply(axis));
-        v1 = point.oMinus(proj);
-        v2 = axis.Cross(v1);
+        proj.oSet(axis.oMultiply(point.oMultiply(axis)));
+        v1.oSet(point.oMinus(proj));
+        v2.oSet(axis.Cross(v1));
 
         t = tanHalfAngle * tanHalfAngle;
         d = 1.0f / (1.0f + t);
@@ -61,9 +61,9 @@ public class CollisionModel_rotate {
      rotates an edge about an arbitrary axis using the tangent of half the rotation angle
      ================
      */
-    static void CM_RotateEdge(idVec3 start, idVec3 end, final idVec3 origin, final idVec3 axis, CFloat tanHalfAngle) {
+    static void CM_RotateEdge(final idVec3 start, final idVec3 end, final idVec3 origin, final idVec3 axis, CFloat tanHalfAngle) {
         double d, t, s, c;
-        idVec3 proj, v1, v2;
+        final idVec3 proj = new idVec3(), v1 = new idVec3(), v2 = new idVec3();
 
         t = tanHalfAngle.getVal() * tanHalfAngle.getVal();
         d = 1.0f / (1.0f + t);
@@ -71,15 +71,15 @@ public class CollisionModel_rotate {
         c = (1.0f - t) * d;
 
         start.oMinSet(origin);
-        proj = axis.oMultiply(start.oMultiply(axis));
-        v1 = start.oMinus(proj);
-        v2 = axis.Cross(v1);
+        proj.oSet(axis.oMultiply(start.oMultiply(axis)));
+        v1.oSet(start.oMinus(proj));
+        v2.oSet(axis.Cross(v1));
         start.oSet(v1.oMultiply((float) c).oMinus(v2.oMultiply((float) s)).oPlus(proj.oPlus(origin)));
 
         end.oMinSet(origin);
-        proj = axis.oMultiply(end.oMultiply(axis));
-        v1 = end.oMinus(proj);
-        v2 = axis.Cross(v1);
+        proj.oSet(axis.oMultiply(end.oMultiply(axis)));
+        v1.oSet(end.oMinus(proj));
+        v2.oSet(axis.Cross(v1));
         end.oSet(v1.oMultiply((float) c).oMinus(v2.oMultiply((float) s)).oPlus(proj.oPlus(origin)));
     }
 

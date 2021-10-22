@@ -268,7 +268,7 @@ public class tr_light {
         float c = (float) (Math.cos(a) * Math.sin(wobbleDegrees));
         float z = (float) Math.cos(wobbleDegrees);
 
-        idVec3[] axis = new idVec3[3];
+        idVec3[] axis = idVec3.generateArray(3);
 
         axis[2].oSet(0, c);
         axis[2].oSet(1, s);

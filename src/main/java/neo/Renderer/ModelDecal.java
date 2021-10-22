@@ -472,7 +472,7 @@ public class ModelDecal {
                     }
                     fade = 1.0f - fade;
                     vertDepthFade[tri.numVerts + i] = fade;
-                    tri.verts[tri.numVerts + i].xyz = w.oGet(i).ToVec3();
+                    tri.verts[tri.numVerts + i].xyz.oSet(w.oGet(i).ToVec3());
                     tri.verts[tri.numVerts + i].st.oSet(0, w.oGet(i).s);
                     tri.verts[tri.numVerts + i].st.oSet(1, w.oGet(i).t);
                     for (int k = 0; k < 4; k++) {

@@ -194,7 +194,7 @@ public class Entity {
     public static final int TH_PHYSICS = 2;        // run physics each frame
     public static final int TH_THINK = 1;        // run think function each frame
     public static final int TH_UPDATEPARTICLES = 16;
-//};
+    //};
     public static final int TH_UPDATEVISUALS = 8;        // update renderEntity
 
     /*
@@ -270,6 +270,8 @@ public class Entity {
         public static final int EVENT_STARTSOUNDSHADER = 0;
         public static final int EVENT_STOPSOUNDSHADER = 1;
         public static final int MAX_PVS_AREAS = 4;
+        //	ABSTRACT_PROTOTYPE( idEntity );
+        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
         public static String DBG_name = "";
         /* **********************************************************************
 
@@ -284,8 +286,6 @@ public class Entity {
         //
         //
         private static int DBG_counter = 0;
-        //	ABSTRACT_PROTOTYPE( idEntity );
-        private static final Map<idEventDef, eventCallback_t> eventCallbacks = new HashMap<>();
 
         static {
             eventCallbacks.putAll(Class.idClass.getEventCallBacks());
@@ -366,7 +366,7 @@ public class Entity {
         //
         public int entityNumber;      // index into the entity list
         public entityFlags_s fl;
-//
+        //
         //
         public int health;            // FIXME: do all objects really need health?
         //
@@ -612,7 +612,7 @@ public class Entity {
         }
 
         private static void Event_SetWorldOrigin(idEntity e, final idEventArg<idVec3> org) {
-            idVec3 neworg = e.GetLocalCoordinates(org.value);
+            final idVec3 neworg = new idVec3(e.GetLocalCoordinates(org.value));
             e.SetOrigin(neworg);
         }
 
@@ -717,7 +717,7 @@ public class Entity {
         }
 
         private static void Event_GetVectorKey(idEntity e, final idEventArg<String> key) {
-            idVec3 value = new idVec3();
+            final idVec3 value = new idVec3();
 
             e.spawnArgs.GetVector(key.value, "0 0 0", value);
             idThread.ReturnVector(value);
@@ -863,7 +863,7 @@ public class Entity {
         public void Spawn() {
             int i;
             String[] temp = {null};
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
             idMat3 axis;
             idKeyValue networkSync;
             String[] classname = {null};
@@ -887,7 +887,7 @@ public class Entity {
             // go dormant within 5 frames so that when the map starts most monsters are dormant
             dormantStart = gameLocal.time - DELAY_DORMANT_TIME + idGameLocal.msec * 5;
 
-            origin = new idVec3(renderEntity.origin);
+            origin.oSet(renderEntity.origin);
             axis = new idMat3(renderEntity.axis);
 
             // do the audio parsing the same way dmap and the editor do
@@ -1197,7 +1197,7 @@ public class Entity {
             }
             //	memset( renderView, 0, sizeof( *renderView ) );
 
-            renderView.vieworg = new idVec3(GetPhysics().GetOrigin());
+            renderView.vieworg.oSet(GetPhysics().GetOrigin());
             renderView.fov_x = 120;
             renderView.fov_y = 120;
             renderView.viewaxis = new idMat3(GetPhysics().GetAxis());
@@ -1515,7 +1515,7 @@ public class Entity {
         }
 
         public void UpdateModelTransform() {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (GetPhysicsToVisualTransform(origin, axis)) {
@@ -1530,8 +1530,8 @@ public class Entity {
         public void ProjectOverlay(final idVec3 origin, final idVec3 dir, float size, final String material) {
             CFloat s = new CFloat(), c = new CFloat();
             idMat3 axis = new idMat3(), axistemp = new idMat3();
-            idVec3 localOrigin = new idVec3();
-            idVec3[] localAxis = new idVec3[2];
+            final idVec3 localOrigin = new idVec3();
+            final idVec3[] localAxis = idVec3.generateArray(2);
             idPlane[] localPlane = new idPlane[2];
 
             // make sure the entity has a valid model handle
@@ -1783,13 +1783,13 @@ public class Entity {
 
         public void UpdateSound() {
             if (refSound.referenceSound != null) {
-                idVec3 origin = new idVec3();
+                final idVec3 origin = new idVec3();
                 idMat3 axis = new idMat3();
 
                 if (GetPhysicsToSoundTransform(origin, axis)) {
-                    refSound.origin = GetPhysics().GetOrigin().oPlus(origin.oMultiply(axis));
+                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.oMultiply(axis)));
                 } else {
-                    refSound.origin = GetPhysics().GetOrigin();
+                    refSound.origin.oSet(GetPhysics().GetOrigin());
                 }
 
                 refSound.referenceSound.UpdateEmitter(refSound.origin, refSound.listenerId, refSound.parms);
@@ -2136,7 +2136,7 @@ public class Entity {
             return teamChain;
         }
 
-        public void ConvertLocalToWorldTransform(idVec3 offset, idMat3 axis) {
+        public void ConvertLocalToWorldTransform(final idVec3 offset, idMat3 axis) {
             UpdateModelTransform();
 
             offset.oSet(renderEntity.origin.oPlus(offset.oMultiply(renderEntity.axis)));
@@ -2155,13 +2155,13 @@ public class Entity {
          ================
          */
         public idVec3 GetLocalVector(final idVec3 vec) {
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (null == bindMaster) {
                 return vec;
             }
 
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             GetMasterPosition(masterOrigin, masterAxis);
@@ -2179,13 +2179,13 @@ public class Entity {
          ================
          */
         public idVec3 GetLocalCoordinates(final idVec3 vec) {
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (null == bindMaster) {
                 return vec;
             }
 
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             GetMasterPosition(masterOrigin, masterAxis);
@@ -2206,13 +2206,13 @@ public class Entity {
          ================
          */
         public idVec3 GetWorldVector(final idVec3 vec) {
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (null == bindMaster) {
                 return vec;
             }
 
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             GetMasterPosition(masterOrigin, masterAxis);
@@ -2230,13 +2230,13 @@ public class Entity {
          ================
          */
         public idVec3 GetWorldCoordinates(final idVec3 vec) {
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (null == bindMaster) {
                 return vec;
             }
 
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             GetMasterPosition(masterOrigin, masterAxis);
@@ -2246,8 +2246,8 @@ public class Entity {
             return pos;
         }
 
-        public boolean GetMasterPosition(idVec3 masterOrigin, idMat3 masterAxis) {
-            idVec3 localOrigin = new idVec3();
+        public boolean GetMasterPosition(final idVec3 masterOrigin, idMat3 masterAxis) {
+            final idVec3 localOrigin = new idVec3();
             idMat3 localAxis = new idMat3();
             idAnimator masterAnimator;
 
@@ -2279,13 +2279,13 @@ public class Entity {
             }
         }
 
-        public void GetWorldVelocities(idVec3 linearVelocity, idVec3 angularVelocity) {
+        public void GetWorldVelocities(final idVec3 linearVelocity, final idVec3 angularVelocity) {
 
             linearVelocity.oSet(physics.GetLinearVelocity());
             angularVelocity.oSet(physics.GetAngularVelocity());
 
             if (bindMaster != null) {
-                idVec3 masterOrigin = new idVec3(), masterLinearVelocity = new idVec3(), masterAngularVelocity = new idVec3();
+                final idVec3 masterOrigin = new idVec3(), masterLinearVelocity = new idVec3(), masterAngularVelocity = new idVec3();
                 idMat3 masterAxis = new idMat3();
 
                 // get position of master
@@ -2504,7 +2504,7 @@ public class Entity {
         }
 
         // get the floor position underneath the physics object
-        public boolean GetFloorPos(float max_dist, idVec3 floorpos) {
+        public boolean GetFloorPos(float max_dist, final idVec3 floorpos) {
             trace_s result = new trace_s();
 
             if (!GetPhysics().HasGroundContacts()) {
@@ -2523,7 +2523,7 @@ public class Entity {
         }
 
         // retrieves the transformation going from the physics origin/axis to the visual origin/axis
-        public boolean GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToVisualTransform(final idVec3 origin, idMat3 axis) {
             return false;
         }
         // };
@@ -2601,16 +2601,16 @@ public class Entity {
          ============
          */
         // returns true if this entity can be damaged from the given origin
-        public boolean CanDamage(final idVec3 origin, idVec3 damagePoint) {
-            idVec3 dest;
+        public boolean CanDamage(final idVec3 origin, final idVec3 damagePoint) {
+            final idVec3 dest = new idVec3();
             trace_s tr = new trace_s();
-            idVec3 midpoint;
+            final idVec3 midpoint = new idVec3();
 
             // use the midpoint of the bounds instead of the origin, because
             // bmodels may have their origin at 0,0,0
-            midpoint = GetPhysics().GetAbsBounds().oGet(0).oPlus(GetPhysics().GetAbsBounds().oGet(1)).oMultiply(0.5f);
+            midpoint.oSet(GetPhysics().GetAbsBounds().oGet(0).oPlus(GetPhysics().GetAbsBounds().oGet(1)).oMultiply(0.5f));
 
-            dest = midpoint;
+            dest.oSet(midpoint);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
             if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
                 damagePoint.oSet(tr.endpos);
@@ -2618,7 +2618,7 @@ public class Entity {
             }
 
             // this should probably check in the plane of projection, rather than in world coordinate
-            dest = midpoint;
+            dest.oSet(midpoint);
             dest.oPluSet(0, 15.0f);
             dest.oPluSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
@@ -2627,7 +2627,7 @@ public class Entity {
                 return true;
             }
 
-            dest = midpoint;
+            dest.oSet(midpoint);
             dest.oPluSet(0, 15.0f);
             dest.oMinSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
@@ -2636,7 +2636,7 @@ public class Entity {
                 return true;
             }
 
-            dest = midpoint;
+            dest.oSet(midpoint);
             dest.oMinSet(0, 15.0f);
             dest.oPluSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
@@ -2645,7 +2645,7 @@ public class Entity {
                 return true;
             }
 
-            dest = midpoint;
+            dest.oSet(midpoint);
             dest.oMinSet(0, 15.0f);
             dest.oMinSet(1, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
@@ -2654,7 +2654,7 @@ public class Entity {
                 return true;
             }
 
-            dest = midpoint;
+            dest.oSet(midpoint);
             dest.oPluSet(2, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
             if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
@@ -2662,7 +2662,7 @@ public class Entity {
                 return true;
             }
 
-            dest = midpoint;
+            dest.oSet(midpoint);
             dest.oMinSet(2, 15.0f);
             gameLocal.clip.TracePoint(tr, origin, dest, MASK_SOLID, null);
             if (tr.fraction == 1.0 || (gameLocal.GetTraceEntity(tr) == this)) {
@@ -2757,7 +2757,7 @@ public class Entity {
                     decal = def.dict.RandomPrefix(key, gameLocal.random);
                 }
                 if (!decal.isEmpty()) {// != '\0' ) {
-                    idVec3 dir = velocity;
+                    final idVec3 dir = new idVec3(velocity);
                     dir.Normalize();
                     ProjectOverlay(collision.c.point, dir, 20.0f, decal);
                 }
@@ -3331,7 +3331,7 @@ public class Entity {
             int i, numPoints, t;
             idKeyValue kv;
             idLexer lex = new idLexer();
-            idVec3 v = new idVec3();
+            final idVec3 v = new idVec3();
             idCurve_Spline<idVec3> spline;
             final String curveTag = "curve_";
 
@@ -3658,7 +3658,7 @@ public class Entity {
 
                 // check if mins/maxs or size key/value pairs are set
                 if (NOT(clipModel)) {
-                    idVec3 size = new idVec3();
+                    final idVec3 size = new idVec3();
                     idBounds bounds = new idBounds();
                     boolean setClipModel = false;
 
@@ -3952,7 +3952,7 @@ public class Entity {
         }
 
         private void Event_GetColor() {
-            idVec3 out = new idVec3();
+            final idVec3 out = new idVec3();
 
             GetColor(out);
             idThread.ReturnVector(out);
@@ -4007,7 +4007,7 @@ public class Entity {
         }
 
         private void Event_RestorePosition() {
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
             idAngles angles = new idAngles();
             idMat3 axis = new idMat3();
             idEntity part;
@@ -4042,7 +4042,7 @@ public class Entity {
         private void Event_UpdateCameraTarget() {
             final String target;
             idKeyValue kv;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
 
             target = spawnArgs.GetString("cameraTarget");
 
@@ -4053,7 +4053,7 @@ public class Entity {
                 while (kv != null) {
                     idEntity ent = gameLocal.FindEntity(kv.GetValue());
                     if (ent != null && idStr.Icmp(ent.GetEntityDefName(), "target_null") == 0) {
-                        dir = ent.GetPhysics().GetOrigin().oMinus(cameraTarget.GetPhysics().GetOrigin());
+                        dir.oSet(ent.GetPhysics().GetOrigin().oMinus(cameraTarget.GetPhysics().GetOrigin()));
                         dir.Normalize();
                         cameraTarget.SetAxis(dir.ToMat3());
                         SetAxis(dir.ToMat3());
@@ -4209,9 +4209,9 @@ public class Entity {
      */
     public static class damageEffect_s {
 
+        final idVec3 localNormal = new idVec3();
+        final idVec3 localOrigin = new idVec3();
         int/*jointHandle_t*/ jointNum;
-        idVec3 localNormal;
-        idVec3 localOrigin;
         damageEffect_s next;
         int time;
         idDeclParticle type;
@@ -4322,7 +4322,7 @@ public class Entity {
          ================
          */
         private static void Event_GetJointPos(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
-            idVec3 offset = new idVec3();
+            final idVec3 offset = new idVec3();
             idMat3 axis = new idMat3();
 
             if (!e.GetJointWorldTransform(jointnum.value, gameLocal.time, offset, axis)) {
@@ -4340,7 +4340,7 @@ public class Entity {
          ================
          */
         private static void Event_GetJointAngle(idAnimatedEntity e, idEventArg<Integer>/*jointHandle_t*/ jointnum) {
-            idVec3 offset = new idVec3();
+            final idVec3 offset = new idVec3();
             idMat3 axis = new idMat3();
 
             if (!e.GetJointWorldTransform(jointnum.value, gameLocal.time, offset, axis)) {
@@ -4348,7 +4348,7 @@ public class Entity {
             }
 
             idAngles ang = axis.ToAngles();
-            idVec3 vec = new idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2));
+            final idVec3 vec = new idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2));
             idThread.ReturnVector(vec);
         }
 
@@ -4480,7 +4480,7 @@ public class Entity {
             UpdateVisuals();
         }
 
-        public boolean GetJointWorldTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
+        public boolean GetJointWorldTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, idMat3 axis) {
             if (!animator.GetJointTransform(jointHandle, currentTime, offset, axis)) {
                 return false;
             }
@@ -4489,7 +4489,7 @@ public class Entity {
             return true;
         }
 
-        public boolean GetJointTransformForAnim(int/*jointHandle_t*/ jointHandle, int animNum, int frameTime, idVec3 offset, idMat3 axis) {
+        public boolean GetJointTransformForAnim(int/*jointHandle_t*/ jointHandle, int animNum, int frameTime, final idVec3 offset, idMat3 axis) {
             idAnim anim;
             int numJoints;
             idJointMat[] frame;
@@ -4548,7 +4548,7 @@ public class Entity {
                     decal = def.dict.RandomPrefix(key, gameLocal.random);
                 }
                 if (decal != null && !decal.isEmpty()) {// != '\0' ) {
-                    idVec3 dir = new idVec3(velocity);
+                    final idVec3 dir = new idVec3(velocity);
                     dir.Normalize();
                     ProjectOverlay(collision.c.point, dir, 20.0f, decal);
                 }
@@ -4558,14 +4558,14 @@ public class Entity {
         public void AddLocalDamageEffect(int/*jointHandle_t*/ jointNum, final idVec3 localOrigin, final idVec3 localNormal, final idVec3 localDir, final idDeclEntityDef def, final idMaterial collisionMaterial) {
             String sound, splat, decal, bleed, key;
             damageEffect_s de;
-            idVec3 origin, dir;
+            final idVec3 origin = new idVec3(), dir = new idVec3();
             idMat3 axis;
 
             axis = renderEntity.joints[jointNum].ToMat3().oMultiply(renderEntity.axis);
-            origin = renderEntity.origin.oPlus(renderEntity.joints[jointNum].ToVec3().oMultiply(renderEntity.axis));
+            origin.oSet(renderEntity.origin.oPlus(renderEntity.joints[jointNum].ToVec3().oMultiply(renderEntity.axis)));
 
-            origin = origin.oPlus(localOrigin.oMultiply(axis));
-            dir = localDir.oMultiply(axis);
+            origin.oSet(origin.oPlus(localOrigin.oMultiply(axis)));
+            dir.oSet(localDir.oMultiply(axis));
 
             int type = collisionMaterial.GetSurfaceType().ordinal();
             if (type == SURFTYPE_NONE.ordinal()) {
@@ -4619,8 +4619,8 @@ public class Entity {
                 this.damageEffects = de;
 
                 de.jointNum = jointNum;
-                de.localOrigin = new idVec3(localOrigin);
-                de.localNormal = new idVec3(localNormal);
+                de.localOrigin.oSet(localOrigin);
+                de.localNormal.oSet(localNormal);
                 de.type = (idDeclParticle) declManager.FindType(DECL_PARTICLE, bleed);
                 de.time = gameLocal.time;
             }
@@ -4649,13 +4649,13 @@ public class Entity {
 
             // emit a particle for each bleeding wound
             for (de = this.damageEffects; de != null; de = de.next) {
-                idVec3 origin = new idVec3(), start;
+                final idVec3 origin = new idVec3(), start = new idVec3();
                 idMat3 axis = new idMat3();
 
                 animator.GetJointTransform(de.jointNum, gameLocal.time, origin, axis);
                 axis.oMulSet(renderEntity.axis);
-                origin = renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis));
-                start = origin.oPlus(de.localOrigin.oMultiply(axis));
+                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)));
+                start.oSet(origin.oPlus(de.localOrigin.oMultiply(axis)));
                 if (!gameLocal.smokeParticles.EmitSmoke(de.type, de.time, gameLocal.random.CRandomFloat(), start, axis)) {
                     de.time = 0;
                 }
@@ -4667,7 +4667,7 @@ public class Entity {
             int damageDefIndex;
             int materialIndex;
             int/*jointHandle_s*/ jointNum;
-            idVec3 localOrigin = new idVec3(), localNormal, localDir;
+            final idVec3 localOrigin = new idVec3(), localNormal = new idVec3(), localDir = new idVec3();
 
             switch (event) {
                 case EVENT_ADD_DAMAGE_EFFECT: {
@@ -4675,8 +4675,8 @@ public class Entity {
                     localOrigin.oSet(0, msg.ReadFloat());
                     localOrigin.oSet(1, msg.ReadFloat());
                     localOrigin.oSet(2, msg.ReadFloat());
-                    localNormal = msg.ReadDir(24);
-                    localDir = msg.ReadDir(24);
+                    localNormal.oSet(msg.ReadDir(24));
+                    localDir.oSet(msg.ReadDir(24));
                     damageDefIndex = gameLocal.ClientRemapDecl(DECL_ENTITYDEF, msg.ReadLong());
                     materialIndex = gameLocal.ClientRemapDecl(DECL_MATERIAL, msg.ReadLong());
                     final idDeclEntityDef damageDef = (idDeclEntityDef) declManager.DeclByIndex(DECL_ENTITYDEF, damageDefIndex);
@@ -4725,7 +4725,7 @@ public class Entity {
             super.AddForce(ent, id, point, force);
         }
 
-        public final boolean idEntity_GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public final boolean idEntity_GetPhysicsToVisualTransform(final idVec3 origin, idMat3 axis) {
             return super.GetPhysicsToVisualTransform(origin, axis);
         }
 

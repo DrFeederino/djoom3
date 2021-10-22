@@ -544,6 +544,7 @@ public class Game_local {
          Now that everything has been spawned, associate areas with location entities
          ======================
          */private static int DBG_SpreadLocations = 0;
+        public final idEntityPtr<idEntity> lastGUIEnt;        // last entity with a GUI, used by Cmd_NextGUI_f
         //
         private final idList<idAAS> aasList = new idList<>(); // area system
         private final idStrList aasNames = new idStrList();
@@ -556,6 +557,8 @@ public class Game_local {
         //
         private final idVec3 gravity = new idVec3();          // global gravity vector
         private final idStaticList<idEntity> initialSpots = new idStaticList<>(MAX_GENTITIES);
+        //
+        private final idEntityPtr<idActor> lastAIAlertEntity;
         //
         private final idStr mapFileName = new idStr();    // name of the map, empty string if no map loaded
         private final idEventQueue savedEventQueue = new idEventQueue();
@@ -591,7 +594,6 @@ public class Game_local {
         public boolean isNewFrame;         // true if this is a new game frame, not a rerun due to prediction
         public boolean isServer;           // set if the game is run for a dedicated or listen server
         public int lastGUI;           // last GUI on the lastGUIEnt
-        public final idEntityPtr<idEntity> lastGUIEnt;        // last entity with a GUI, used by Cmd_NextGUI_f
         // discriminates between the RunFrame path and the ClientPrediction path
         // NOTE: on a listen server, isClient is false
         public int localClientNum;     // number of the local client. MP: -1 on a dedicated
@@ -644,8 +646,6 @@ public class Game_local {
         private boolean influenceActive;        // true when a phantasm is happening
         //
         private byte[][][] lagometer = new byte[LAGO_IMG_HEIGHT][LAGO_IMG_WIDTH][4];
-        //
-        private final idEntityPtr<idActor> lastAIAlertEntity;
         private int lastAIAlertTime;
         //
         private idLocationEntity[] locationEntities;   // for location names, etc
@@ -3964,7 +3964,7 @@ public class Game_local {
          the line start,end
          =============
          */
-        public idEntity FindTraceEntity(idVec3 start, idVec3 end, final Class/*idTypeInfo*/ c, final idEntity skip) {
+        public idEntity FindTraceEntity(final idVec3 start, final idVec3 end, final Class/*idTypeInfo*/ c, final idEntity skip) {
             idEntity ent;
             idEntity bestEnt;
             CFloat scale = new CFloat();
@@ -4116,12 +4116,12 @@ public class Game_local {
 
         public void RadiusDamage(final idVec3 origin, idEntity inflictor, idEntity attacker, idEntity ignoreDamage, idEntity ignorePush, final String damageDefName, float dmgPower /*= 1.0f*/) {
             float dist, damageScale;
-            CFloat attackerDamageScale = new CFloat(), attackerPushScale =  new CFloat();
+            CFloat attackerDamageScale = new CFloat(), attackerPushScale = new CFloat();
             idEntity ent;
             idEntity[] entityList = new idEntity[MAX_GENTITIES];
             int numListedEntities;
             idBounds bounds;
-            idVec3 v = new idVec3(), damagePoint = new idVec3(), dir;
+            final idVec3 v = new idVec3(), damagePoint = new idVec3(), dir = new idVec3();
             int i, e;
             CInt damage = new CInt(), radius = new CInt(), push = new CInt();
 
@@ -4197,7 +4197,7 @@ public class Game_local {
                 if (ent.CanDamage(origin, damagePoint)) {
                     // push the center of mass higher than the origin so players
                     // get knocked into the air more
-                    dir = ent.GetPhysics().GetOrigin().oMinus(origin);
+                    dir.oSet(ent.GetPhysics().GetOrigin().oMinus(origin));
                     dir.oPluSet(2, 24);
 
                     // get the damage scale
@@ -4224,7 +4224,7 @@ public class Game_local {
             int i, numListedClipModels;
             idClipModel clipModel;
             idClipModel[] clipModelList = new idClipModel[MAX_GENTITIES];
-            idVec3 dir = new idVec3();
+            final idVec3 dir = new idVec3();
             idBounds bounds;
             modelTrace_s result = new modelTrace_s();
             idEntity ent;
@@ -4296,31 +4296,31 @@ public class Game_local {
             idTraceModel trm;
             traceModelPoly_t poly;
             idFixedWinding w = new idFixedWinding();
-            idVec3 v, localOrigin, center = new idVec3(), impulse;
+            final idVec3 v = new idVec3(), localOrigin = new idVec3(), center = new idVec3(), impulse = new idVec3();
 
             trm = clipModel.GetTraceModel();
             if (null == trm) {//|| 1 ) {//TODO:wtf?
-                impulse = clipModel.GetAbsBounds().GetCenter().oMinus(origin);
+                impulse.oSet(clipModel.GetAbsBounds().GetCenter().oMinus(origin));
                 impulse.Normalize();
                 impulse.z += 1.0f;
                 clipModel.GetEntity().ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), impulse.oMultiply(push));
                 return;
             }
 
-            localOrigin = (origin.oMinus(clipModel.GetOrigin())).oMultiply(clipModel.GetAxis().Transpose());
+            localOrigin.oSet((origin.oMinus(clipModel.GetOrigin())).oMultiply(clipModel.GetAxis().Transpose()));
             for (i = 0; i < trm.numPolys; i++) {
                 poly = trm.polys[i];
 
                 center.Zero();
                 for (j = 0; j < poly.numEdges; j++) {
-                    v = trm.verts[trm.edges[abs(poly.edges[j])].v[INTSIGNBITSET(poly.edges[j])]];
+                    v.oSet(trm.verts[trm.edges[abs(poly.edges[j])].v[INTSIGNBITSET(poly.edges[j])]]);
                     center.oPluSet(v);
                     v.oMinSet(localOrigin);
                     v.NormalizeFast();    // project point on a unit sphere
                     w.AddPoint(v);
                 }
                 center.oDivSet(poly.numEdges);
-                v = center.oMinus(localOrigin);
+                v.oSet(center.oMinus(localOrigin));
                 dist = v.NormalizeFast();
                 dot = v.oMultiply(poly.normal);
                 if (dot > 0.0f) {
@@ -4328,7 +4328,7 @@ public class Game_local {
                 }
                 area = w.GetArea();
                 // impulse in polygon normal direction
-                impulse = poly.normal.oMultiply(clipModel.GetAxis());
+                impulse.oSet(poly.normal.oMultiply(clipModel.GetAxis()));
                 // always push up for nicer effect
                 impulse.z -= 1.0f;
                 // scale impulse based on visible surface area and polygon angle
@@ -4336,7 +4336,7 @@ public class Game_local {
                 // scale away distance for nicer effect
                 impulse.oMulSet(dist * 2.0f);
                 // impulse is applied to the center of the polygon
-                center = clipModel.GetOrigin().oPlus(center.oMultiply(clipModel.GetAxis()));
+                center.oSet(clipModel.GetOrigin().oPlus(center.oMultiply(clipModel.GetAxis())));
 
                 clipModel.GetEntity().ApplyImpulse(world, clipModel.GetId(), center, impulse);
             }
@@ -4346,7 +4346,7 @@ public class Game_local {
             CFloat s = new CFloat(), c = new CFloat();
             idMat3 axis = new idMat3(), axistemp = new idMat3();
             idFixedWinding winding = new idFixedWinding();
-            idVec3 windingOrigin, projectionOrigin;
+            final idVec3 windingOrigin = new idVec3(), projectionOrigin = new idVec3();
 
             if (!g_decals.GetBool()) {
                 return;
@@ -4362,11 +4362,11 @@ public class Game_local {
             axis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())));
             axis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())));
 
-            windingOrigin = origin.oPlus(axis.oGet(2).oMultiply(depth));
+            windingOrigin.oSet(origin.oPlus(axis.oGet(2).oMultiply(depth)));
             if (parallel) {
-                projectionOrigin = origin.oMinus(axis.oGet(2).oMultiply(depth));
+                projectionOrigin.oSet(origin.oMinus(axis.oGet(2).oMultiply(depth)));
             } else {
-                projectionOrigin = origin;
+                projectionOrigin.oSet(origin);
             }
 
             size *= 0.5f;
@@ -4598,7 +4598,7 @@ public class Game_local {
         public idEntity SelectInitialSpawnPoint(idPlayer player) {
             int i, j, which;
             spawnSpot_t spot = new spawnSpot_t();
-            idVec3 pos;
+            final idVec3 pos = new idVec3();
             float dist;
             boolean alone;
 
@@ -4630,7 +4630,7 @@ public class Game_local {
 
                 // find the distance to the closest active player for each spawn spot
                 for (i = 0; i < spawnSpots.Num(); i++) {
-                    pos = spawnSpots.oGet(i).ent.GetPhysics().GetOrigin();
+                    pos.oSet(spawnSpots.oGet(i).ent.GetPhysics().GetOrigin());
                     spawnSpots.oGet(i).dist = 0x7fffffff;
                     for (j = 0; j < MAX_CLIENTS; j++) {
                         if (null == entities[j] || !(entities[j] instanceof idPlayer)
@@ -5191,7 +5191,7 @@ public class Game_local {
 
         private void ShowTargets() {
             idMat3 axis = GetLocalPlayer().viewAngles.ToMat3();
-            idVec3 up = axis.oGet(2).oMultiply(5.0f);
+            final idVec3 up = new idVec3(axis.oGet(2).oMultiply(5.0f));
             final idVec3 viewPos = GetLocalPlayer().GetPhysics().GetOrigin();
             idBounds viewTextBounds = new idBounds(viewPos);
             idBounds viewBounds = new idBounds(viewPos);
@@ -5217,7 +5217,7 @@ public class Game_local {
                 }
 
                 CFloat dist = new CFloat();
-                idVec3 dir = totalBounds.GetCenter().oMinus(viewPos);
+                final idVec3 dir = new idVec3(totalBounds.GetCenter().oMinus(viewPos));
                 dir.NormalizeFast();
                 totalBounds.RayIntersection(viewPos, dir, dist);
                 float frac = (512.0f - dist.getVal()) / 512.0f;
@@ -5227,7 +5227,7 @@ public class Game_local {
 
                 gameRenderWorld.DebugBounds((ent.IsHidden() ? colorLtGrey : colorOrange).oMultiply(frac), ent.GetPhysics().GetAbsBounds());
                 if (viewTextBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())) {
-                    idVec3 center = ent.GetPhysics().GetAbsBounds().GetCenter();
+                    final idVec3 center = new idVec3(ent.GetPhysics().GetAbsBounds().GetCenter());
                     gameRenderWorld.DrawText(ent.name.toString(), center.oMinus(up), 0.1f, (colorWhite).oMultiply(frac), axis, 1);
                     gameRenderWorld.DrawText(ent.GetEntityDefName(), center, 0.1f, (colorWhite).oMultiply(frac), axis, 1);
                     gameRenderWorld.DrawText(va("#%d", ent.entityNumber), center.oPlus(up), 0.1f, (colorWhite).oMultiply(frac), axis, 1);
@@ -5256,7 +5256,7 @@ public class Game_local {
 
             if (g_showEntityInfo.GetBool()) {
                 idMat3 axis = player.viewAngles.ToMat3();
-                idVec3 up = axis.oGet(2).oMultiply(5.0f);
+                final idVec3 up = new idVec3(axis.oGet(2).oMultiply(5.0f));
                 idBounds viewTextBounds = new idBounds(origin);
                 idBounds viewBounds = new idBounds(origin);
 
@@ -5352,7 +5352,7 @@ public class Game_local {
                 if (aas != null) {
                     aas.Test(origin);
                     if (ai_testPredictPath.GetBool()) {
-                        idVec3 velocity = new idVec3();
+                        final idVec3 velocity = new idVec3();
                         predictedPath_s path = new predictedPath_s();
 
                         velocity.x = (float) (cos(DEG2RAD(player.viewAngles.yaw)) * 100.0f);
@@ -5366,10 +5366,10 @@ public class Game_local {
             if (ai_showObstacleAvoidance.GetInteger() == 2) {
                 idAAS aas = GetAAS(0);
                 if (aas != null) {
-                    idVec3 seekPos;
+                    final idVec3 seekPos = new idVec3();
                     obstaclePath_s path = new obstaclePath_s();
 
-                    seekPos = player.GetPhysics().GetOrigin().oPlus(player.viewAxis.oGet(0).oMultiply(200.0f));
+                    seekPos.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAxis.oGet(0).oMultiply(200.0f)));
                     idAI.FindPathAroundObstacles(player.GetPhysics(), aas, null, player.GetPhysics().GetOrigin(), seekPos, path);
                 }
             }

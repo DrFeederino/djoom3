@@ -80,7 +80,7 @@ public class CollisionModel_debug {
     static int min_translation = 999999;
     static int num_rotation = 0;
     static int num_translation = 0;
-    static Vector.idVec3 start;
+    static final Vector.idVec3 start = new Vector.idVec3();
     static Vector.idVec3[] testend;
     static int total_rotation;
     static int total_translation;

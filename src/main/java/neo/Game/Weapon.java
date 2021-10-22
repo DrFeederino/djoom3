@@ -2276,7 +2276,7 @@ public class Weapon {
             trace_s tr = new trace_s();
             gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL, owner);
             // be at least 8 units away from a solid
-            muzzleFlash.origin = tr.endpos.oMinus(playerViewAxis.oGet(0).oMultiply(8));
+            muzzleFlash.origin.oSet(tr.endpos.oMinus(playerViewAxis.oGet(0).oMultiply(8)));
 
             // put the world muzzle flash on the end of the joint, no matter what
             GetGlobalJointTransform(false, flashJointWorld, worldMuzzleFlash.origin, worldMuzzleFlash.axis);

@@ -5033,11 +5033,11 @@ public class AI {
                     gameRenderWorld.FreeLightDef(worldMuzzleFlashHandle);
                     worldMuzzleFlashHandle = -1;
                 } else {
-                    idVec3 muzzle = new idVec3();
+                    final idVec3 muzzle = new idVec3();
                     animator.GetJointTransform(flashJointWorld, gameLocal.time, muzzle, worldMuzzleFlash.axis);
                     animator.GetJointTransform(flashJointWorld, gameLocal.time, muzzle, worldMuzzleFlash.axis);
-                    muzzle = physicsObj.GetOrigin().oPlus((muzzle.oPlus(modelOffset)).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis())));
-                    worldMuzzleFlash.origin = muzzle;
+                    muzzle.oSet(physicsObj.GetOrigin().oPlus((muzzle.oPlus(modelOffset)).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis()))));
+                    worldMuzzleFlash.origin.oSet(muzzle);
                     gameRenderWorld.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash);
                 }
             }
@@ -5805,12 +5805,12 @@ public class AI {
             MoveOutOfRange(entity.value, range.value);
         }
 
-        protected void Event_MoveToAttackPosition(idEventArg<idEntity> entity, final idEventArg<char[]> attack_anim) {
+        protected void Event_MoveToAttackPosition(idEventArg<idEntity> entity, final idEventArg<String> attack_anim) {
             int anim;
 
             StopMove(MOVE_STATUS_DEST_NOT_FOUND);
 
-            anim = GetAnim(ANIMCHANNEL_LEGS, String.valueOf(attack_anim.value));
+            anim = GetAnim(ANIMCHANNEL_LEGS, attack_anim.value);
             if (0 == anim) {
                 idGameLocal.Error("Unknown anim '%s'", attack_anim.value);
             }
@@ -6329,7 +6329,7 @@ public class AI {
             }
         }
 
-        protected void Event_TestAnimMoveTowardEnemy(final idEventArg<char[]> animname) {
+        protected void Event_TestAnimMoveTowardEnemy(final idEventArg<String> animname) {
             int anim;
             predictedPath_s path = new predictedPath_s();
             idVec3 moveVec;
@@ -6343,7 +6343,7 @@ public class AI {
                 return;
             }
 
-            anim = GetAnim(ANIMCHANNEL_LEGS, String.valueOf(animname.value));
+            anim = GetAnim(ANIMCHANNEL_LEGS, animname.value);
             if (0 == anim) {
                 gameLocal.DWarning("missing '%s' animation on '%s' (%s)", animname.value, name, GetEntityDefName());
                 idThread.ReturnInt(false);

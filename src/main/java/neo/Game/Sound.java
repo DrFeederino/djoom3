@@ -163,9 +163,9 @@ public class Sound {
                 idMat3 axis = new idMat3();
 
                 if (GetPhysicsToSoundTransform(origin, axis)) {
-                    refSound.origin = GetPhysics().GetOrigin().oPlus(origin.oMultiply(axis));
+                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.oMultiply(axis)));
                 } else {
-                    refSound.origin = GetPhysics().GetOrigin();
+                    refSound.origin.oSet(GetPhysics().GetOrigin());
                 }
 
                 random = spawnArgs.GetFloat("random", "0");

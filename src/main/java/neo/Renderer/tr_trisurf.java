@@ -950,7 +950,7 @@ public class tr_trisurf {
 
         // normalize and replicate from silIndexes to all indexes
         for (i = 0; i < tri.numIndexes; i++) {
-            tri.verts[tri.indexes[i]].normal = tri.verts[tri.silIndexes[i]].normal;
+            tri.verts[tri.indexes[i]].normal.oSet(tri.verts[tri.silIndexes[i]].normal);
             tri.verts[tri.indexes[i]].normal.Normalize();
         }
     }
@@ -1700,7 +1700,7 @@ public class tr_trisurf {
 
             // copy vertex normals to duplicated vertices
             for (i = 0; i < tri.numDupVerts; i++) {
-                verts[dupVerts[i * 2 + 1]].normal = verts[dupVerts[i * 2 + 0]].normal;
+                verts[dupVerts[i * 2 + 1]].normal.oSet(verts[dupVerts[i * 2 + 0]].normal);
             }
 
         }
@@ -2007,7 +2007,7 @@ public class tr_trisurf {
         // If the surface is going to have generated normals, this won't matter,
         // but if it has explicit normals, this will keep it on the correct side
         for (i = 0; i < tri.numVerts; i++) {
-            tri.verts[i].normal = getVec3_origin().oMinus(tri.verts[i].normal);
+            tri.verts[i].normal.oSet(getVec3_origin().oMinus(tri.verts[i].normal));
         }
 
         // flip the index order to make them back sided

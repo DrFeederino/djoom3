@@ -61,9 +61,9 @@ public class DeclAF {
 
     public static abstract class getJointTransform_t {
 
-        public abstract boolean run(Object model, final idJointMat[] frame, final String jointName, idVec3 origin, idMat3 axis);
+        public abstract boolean run(Object model, final idJointMat[] frame, final String jointName, final idVec3 origin, idMat3 axis);
 
-        public abstract boolean run(Object model, final idJointMat[] frame, final idStr jointName, idVec3 origin, idMat3 axis);//TODO:phase out overload
+        public abstract boolean run(Object model, final idJointMat[] frame, final idStr jointName, final idVec3 origin, idMat3 axis);//TODO:phase out overload
     }
 
     public static class idAFVector {

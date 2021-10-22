@@ -1,7 +1,6 @@
 package neo.ui;
 
 import neo.Game.Animation.Anim.idMD5Anim;
-import neo.Renderer.RenderWorld.*;
 import neo.idlib.Dict_h.idDict;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
@@ -85,7 +84,7 @@ public class RenderWindow {
 
 //            memset(refdef, 0, sizeof(refdef));
             refdef = new renderView_s();
-            refdef.vieworg = viewOffset.ToVec3();
+            refdef.vieworg.oSet(viewOffset.ToVec3());
             //refdef.vieworg.Set(-128, 0, 0);
 
             refdef.viewaxis.Identity();
@@ -170,7 +169,7 @@ public class RenderWindow {
          * @param time
          */
         private void Render(int time) {
-            rLight.origin = lightOrigin.ToVec3();//TODO:ref?
+            rLight.origin.oSet(lightOrigin.ToVec3());//TODO:ref?
             rLight.shaderParms[SHADERPARM_RED] = lightColor.x();
             rLight.shaderParms[SHADERPARM_GREEN] = lightColor.y();
             rLight.shaderParms[SHADERPARM_BLUE] = lightColor.z();

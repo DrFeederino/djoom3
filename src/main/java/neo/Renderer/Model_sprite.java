@@ -5,7 +5,6 @@ import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.math.Math_h.idMath;
@@ -133,25 +132,25 @@ public class Model_sprite {
             idVec3 right = new idVec3(0.0f, renderEntity.shaderParms[SHADERPARM_SPRITE_WIDTH] * 0.5f, 0.0f);
             idVec3 up = new idVec3(0.0f, 0.0f, renderEntity.shaderParms[SHADERPARM_SPRITE_HEIGHT] * 0.5f);
 
-            tri.verts[0].xyz = up.oPlus(right);
+            tri.verts[0].xyz.oSet(up.oPlus(right));
             tri.verts[0].color[0] = red;
             tri.verts[0].color[1] = green;
             tri.verts[0].color[2] = blue;
             tri.verts[0].color[3] = alpha;
 
-            tri.verts[1].xyz = up.oMinus(right);
+            tri.verts[1].xyz.oSet(up.oMinus(right));
             tri.verts[1].color[0] = red;
             tri.verts[1].color[1] = green;
             tri.verts[1].color[2] = blue;
             tri.verts[1].color[3] = alpha;
 
-            tri.verts[2].xyz = right.oMinus(up).oNegative();
+            tri.verts[2].xyz.oSet(right.oMinus(up).oNegative());
             tri.verts[2].color[0] = red;
             tri.verts[2].color[1] = green;
             tri.verts[2].color[2] = blue;
             tri.verts[2].color[3] = alpha;
 
-            tri.verts[3].xyz = right.oMinus(up);
+            tri.verts[3].xyz.oSet(right.oMinus(up));
             tri.verts[3].color[0] = red;
             tri.verts[3].color[1] = green;
             tri.verts[3].color[2] = blue;

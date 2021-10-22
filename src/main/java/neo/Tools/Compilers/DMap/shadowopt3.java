@@ -382,9 +382,9 @@ public class shadowopt3 {
 
             // create a mapTri for the optGroup
             mapTri_s mtri = new mapTri_s();// Mem_ClearedAlloc(sizeof(mtri));
-            mtri.v[0].xyz = tri.v[0];
-            mtri.v[1].xyz = tri.v[1];
-            mtri.v[2].xyz = tri.v[2];
+            mtri.v[0].xyz.oSet(tri.v[0]);
+            mtri.v[1].xyz.oSet(tri.v[1]);
+            mtri.v[2].xyz.oSet(tri.v[2]);
             mtri.next = checkGroup.triList;
             checkGroup.triList = mtri;
         }
@@ -767,9 +767,9 @@ public class shadowopt3 {
                     idVec3 v1, v2, normal = new idVec3();
 
                     mtri = new mapTri_s();// Mem_ClearedAlloc(sizeof(mtri));
-                    mtri.v[0].xyz = uniqued[f1.nearV[0]];
-                    mtri.v[1].xyz = uniqued[f1.nearV[1]];
-                    mtri.v[2].xyz = uniqued[f1.farV[1]];
+                    mtri.v[0].xyz.oSet(uniqued[f1.nearV[0]]);
+                    mtri.v[1].xyz.oSet(uniqued[f1.nearV[1]]);
+                    mtri.v[2].xyz.oSet(uniqued[f1.farV[1]]);
 
                     v1 = mtri.v[1].xyz.oMinus(mtri.v[0].xyz);
                     v2 = mtri.v[2].xyz.oMinus(mtri.v[0].xyz);
@@ -785,9 +785,9 @@ public class shadowopt3 {
                     gr.triList = mtri;
 
                     mtri = new mapTri_s();// Mem_ClearedAlloc(sizeof(mtri));
-                    mtri.v[0].xyz = uniqued[f1.farV[0]];
-                    mtri.v[1].xyz = uniqued[f1.nearV[0]];
-                    mtri.v[2].xyz = uniqued[f1.farV[1]];
+                    mtri.v[0].xyz.oSet(uniqued[f1.farV[0]]);
+                    mtri.v[1].xyz.oSet(uniqued[f1.nearV[0]]);
+                    mtri.v[2].xyz.oSet(uniqued[f1.farV[1]]);
 
                     mtri.next = gr.triList;
                     gr.triList = mtri;

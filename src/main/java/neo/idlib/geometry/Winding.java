@@ -111,12 +111,12 @@ public class Winding {
         }
 
         public static float TriangleArea(final idVec3 a, final idVec3 b, final idVec3 c) {
-            idVec3 v1, v2;
-            idVec3 cross;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3();
+            final idVec3 cross = new idVec3();
 
-            v1 = b.oMinus(a);
-            v2 = c.oMinus(a);
-            cross = v1.Cross(v2);
+            v1.oSet(b.oMinus(a));
+            v2.oSet(c.oMinus(a));
+            cross.oSet(v1.Cross(v2));
             return 0.5f * cross.Length();
         }
 
@@ -205,9 +205,9 @@ public class Winding {
 
         // huge winding for plane, the points go counter clockwise when facing the front of the plane
         public void BaseForPlane(final idVec3 normal, final float dist) {
-            idVec3 org, vRight = new idVec3(), vUp = new idVec3();
+            final idVec3 org = new idVec3(), vRight = new idVec3(), vUp = new idVec3();
 
-            org = normal.oMultiply(dist);
+            org.oSet(normal.oMultiply(dist));
 
             normal.NormalVectors(vUp, vRight);
             vUp.oMulSet(MAX_WORLD_SIZE);
@@ -668,7 +668,7 @@ public class Winding {
 
         public void RemoveColinearPoints(final idVec3 normal, final float epsilon) {
             int i, j;
-            idVec3 edgeNormal;
+            final idVec3 edgeNormal = new idVec3();
             float dist;
 
             if (numPoints <= 3) {
@@ -678,7 +678,7 @@ public class Winding {
             for (i = 0; i < numPoints; i++) {
 
                 // create plane through edge orthogonal to winding plane
-                edgeNormal = (p[i].ToVec3().oMinus(p[(i + numPoints - 1) % numPoints].ToVec3()).Cross(normal));
+                edgeNormal.oSet((p[i].ToVec3().oMinus(p[(i + numPoints - 1) % numPoints].ToVec3()).Cross(normal)));
                 edgeNormal.Normalize();
                 dist = edgeNormal.oMultiply(p[i].ToVec3());
 
@@ -731,7 +731,7 @@ public class Winding {
         public boolean InsertPointIfOnEdge(final idVec3 point, final idPlane plane, final float epsilon) {
             int i;
             float dist, dot;
-            idVec3 normal;
+            final idVec3 normal = new idVec3();
 
             // point may not be too far from the winding plane
             if (Math.abs(plane.Distance(point)) > epsilon) {
@@ -741,7 +741,7 @@ public class Winding {
             for (i = 0; i < numPoints; i++) {
 
                 // create plane through edge orthogonal to winding plane
-                normal = (p[(i + 1) % numPoints].ToVec3().oMinus(p[i].ToVec3())).Cross(plane.Normal());
+                normal.oSet((p[(i + 1) % numPoints].ToVec3().oMinus(p[i].ToVec3())).Cross(plane.Normal()));
                 normal.Normalize();
                 dist = normal.oMultiply(p[i].ToVec3());
 
@@ -749,7 +749,7 @@ public class Winding {
                     continue;
                 }
 
-                normal = plane.Normal().Cross(normal);
+                normal.oSet(plane.Normal().Cross(normal));
                 dot = normal.oMultiply(point);
 
                 dist = dot - normal.oMultiply(p[i].ToVec3());
@@ -793,10 +793,10 @@ public class Winding {
          */
         public void AddToConvexHull(final idWinding winding, final idVec3 normal, final float epsilon) {// add a winding to the convex hull
             int i, j, k;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             float d;
             int maxPts;
-            idVec3[] hullDirs;
+            final idVec3[] hullDirs;
             boolean[] hullSide;
             boolean outside;
             int numNewHullPoints;
@@ -813,7 +813,7 @@ public class Winding {
             }
 
             newHullPoints = new idVec5[maxPts];
-            hullDirs = new idVec3[maxPts];
+            hullDirs = idVec3.generateArray(maxPts);
             hullSide = new boolean[maxPts];
 
             for (i = 0; i < winding.numPoints; i++) {
@@ -821,15 +821,15 @@ public class Winding {
 
                 // calculate hull edge vectors
                 for (j = 0; j < this.numPoints; j++) {
-                    dir = this.p[(j + 1) % this.numPoints].ToVec3().oMinus(this.p[j].ToVec3());
+                    dir.oSet(this.p[(j + 1) % this.numPoints].ToVec3().oMinus(this.p[j].ToVec3()));
                     dir.Normalize();
-                    hullDirs[j] = normal.Cross(dir);
+                    hullDirs[j].oSet(normal.Cross(dir));
                 }
 
                 // calculate side for each hull edge
                 outside = false;
                 for (j = 0; j < this.numPoints; j++) {
-                    dir = p1.ToVec3().oMinus(this.p[j].ToVec3());
+                    dir.oSet(p1.ToVec3().oMinus(this.p[j].ToVec3()));
                     d = dir.oMultiply(hullDirs[j]);
                     if (d >= epsilon) {
                         outside = true;
@@ -888,9 +888,8 @@ public class Winding {
          */
         public void AddToConvexHull(final idVec3 point, final idVec3 normal, final float epsilon) {// add a point to the convex hull
             int j, k, numHullPoints;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             float d;
-            idVec3[] hullDirs;
             boolean[] hullSide;
             idVec5[] hullPoints;
             boolean outside;
@@ -916,8 +915,8 @@ public class Winding {
                         return;
                     }
                     // if only two points make sure we have the right ordering according to the normal
-                    dir = point.oMinus(p[0].ToVec3());
-                    dir = dir.Cross(p[1].ToVec3().oMinus(p[0].ToVec3()));
+                    dir.oSet(point.oMinus(p[0].ToVec3()));
+                    dir.oSet(dir.Cross(p[1].ToVec3().oMinus(p[0].ToVec3())));
                     if (dir.oGet(0) == 0.0f && dir.oGet(1) == 0.0f && dir.oGet(2) == 0.0f) {
                         // points don't make a plane
                         return;
@@ -932,20 +931,19 @@ public class Winding {
                     return;
                 }
             }
-
-            hullDirs = new idVec3[numPoints];
+            final idVec3[] hullDirs = idVec3.generateArray(numPoints);
             hullSide = new boolean[numPoints];
 
             // calculate hull edge vectors
             for (j = 0; j < numPoints; j++) {
-                dir = p[(j + 1) % numPoints].ToVec3().oMinus(p[j].ToVec3());
-                hullDirs[j] = normal.Cross(dir);
+                dir.oSet(p[(j + 1) % numPoints].ToVec3().oMinus(p[j].ToVec3()));
+                hullDirs[j].oSet(normal.Cross(dir));
             }
 
             // calculate side for each hull edge
             outside = false;
             for (j = 0; j < numPoints; j++) {
-                dir = point.oMinus(p[j].ToVec3());
+                dir.oSet(point.oMinus(p[j].ToVec3()));
                 d = dir.oMultiply(hullDirs[j]);
                 if (d >= epsilon) {
                     outside = true;
@@ -1001,11 +999,12 @@ public class Winding {
         // tries to merge 'this' with the given winding, returns NULL if merge fails, both 'this' and 'w' stay intact
         // 'keep' tells if the contacting points should stay even if they create colinear edges
         public idWinding TryMerge(final idWinding w, final idVec3 planenormal, int keep) {
-            idVec3 p1, p2, p3, p4, back;
+            final idVec3 p1 = new idVec3(), p2 = new idVec3(), p3 = new idVec3(), p4 = new idVec3(), back = new idVec3();
             idWinding newf;
             final idWinding f1, f2;
             int i, j, k, l;
-            idVec3 normal, delta;
+            final idVec3 normal = new idVec3(), delta = new idVec3();
+            ;
             float dot;
             boolean keep1, keep2;
 
@@ -1014,15 +1013,14 @@ public class Winding {
             //
             // find a idLib::common edge
             //
-            p1 = p2 = null;    // stop compiler warning
             j = 0;
 
             for (i = 0; i < f1.numPoints; i++) {
-                p1 = f1.p[i].ToVec3();
-                p2 = f1.p[(i + 1) % f1.numPoints].ToVec3();
+                p1.oSet(f1.p[i].ToVec3());
+                p2.oSet(f1.p[(i + 1) % f1.numPoints].ToVec3());
                 for (j = 0; j < f2.numPoints; j++) {
-                    p3 = f2.p[j].ToVec3();
-                    p4 = f2.p[(j + 1) % f2.numPoints].ToVec3();
+                    p3.oSet(f2.p[j].ToVec3());
+                    p4.oSet(f2.p[(j + 1) % f2.numPoints].ToVec3());
                     for (k = 0; k < 3; k++) {
                         if (Math.abs(p1.oGet(k) - p4.oGet(k)) > 0.1f) {
                             break;
@@ -1048,13 +1046,13 @@ public class Winding {
             // check slope of connected lines
             // if the slopes are colinear, the point can be removed
             //
-            back = f1.p[(i + f1.numPoints - 1) % f1.numPoints].ToVec3();
-            delta = p1.oMinus(back);
-            normal = planenormal.Cross(delta);
+            back.oSet(f1.p[(i + f1.numPoints - 1) % f1.numPoints].ToVec3());
+            delta.oSet(p1.oMinus(back));
+            normal.oSet(planenormal.Cross(delta));
             normal.Normalize();
 
-            back = f2.p[(j + 2) % f2.numPoints].ToVec3();
-            delta = back.oMinus(p1);
+            back.oSet(f2.p[(j + 2) % f2.numPoints].ToVec3());
+            delta.oSet(back.oMinus(p1));
             dot = delta.oMultiply(normal);
             if (dot > CONTINUOUS_EPSILON) {
                 return null;            // not a convex polygon
@@ -1062,13 +1060,13 @@ public class Winding {
 
             keep1 = (dot < -CONTINUOUS_EPSILON);
 
-            back = f1.p[(i + 2) % f1.numPoints].ToVec3();
-            delta = back.oMinus(p2);
-            normal = planenormal.Cross(delta);
+            back.oSet(f1.p[(i + 2) % f1.numPoints].ToVec3());
+            delta.oSet(back.oMinus(p2));
+            normal.oSet(planenormal.Cross(delta));
             normal.Normalize();
 
-            back = f2.p[(j + f2.numPoints - 1) % f2.numPoints].ToVec3();
-            delta = back.oMinus(p2);
+            back.oSet(f2.p[(j + f2.numPoints - 1) % f2.numPoints].ToVec3());
+            delta.oSet(back.oMinus(p2));
             dot = delta.oMultiply(normal);
             if (dot > CONTINUOUS_EPSILON) {
                 return null;            // not a convex polygon
@@ -1111,7 +1109,7 @@ public class Winding {
         public boolean Check(boolean print) {
             int i, j;
             float d, edgedist;
-            idVec3 dir, edgenormal;
+            final idVec3 dir = new idVec3(), edgenormal = new idVec3();
             float area;
             idPlane plane = new idPlane();
 
@@ -1133,7 +1131,7 @@ public class Winding {
             GetPlane(plane);
 
             for (i = 0; i < numPoints; i++) {
-                final idVec3 p1 = p[i].ToVec3();
+                final idVec3 p1 = new idVec3(p[i].ToVec3());
 
                 // check if the winding is huge
                 for (j = 0; j < 3; j++) {
@@ -1157,8 +1155,8 @@ public class Winding {
                 }
 
                 // check if the edge isn't degenerate
-                final idVec3 p2 = p[j].ToVec3();
-                dir = p2.oMinus(p1);
+                final idVec3 p2 = new idVec3(p[j].ToVec3());
+                dir.oSet(p2.oMinus(p1));
 
                 if (dir.Length() < ON_EPSILON) {
                     if (print) {
@@ -1168,7 +1166,7 @@ public class Winding {
                 }
 
                 // check if the winding is convex
-                edgenormal = plane.Normal().Cross(dir);
+                edgenormal.oSet(plane.Normal().Cross(dir));
                 edgenormal.Normalize();
                 edgedist = p1.oMultiply(edgenormal);
                 edgedist += ON_EPSILON;
@@ -1192,14 +1190,14 @@ public class Winding {
 
         public float GetArea() {
             int i;
-            idVec3 d1, d2, cross;
+            final idVec3 d1 = new idVec3(), d2 = new idVec3(), cross = new idVec3();
             float total;
 
             total = 0.0f;
             for (i = 2; i < numPoints; i++) {
-                d1 = p[i - 1].ToVec3().oMinus(p[0].ToVec3());
-                d2 = p[i].ToVec3().oMinus(p[0].ToVec3());
-                cross = d1.Cross(d2);
+                d1.oSet(p[i - 1].ToVec3().oMinus(p[0].ToVec3()));
+                d2.oSet(p[i].ToVec3().oMinus(p[0].ToVec3()));
+                cross.oSet(d1.Cross(d2));
                 total += cross.Length();
             }
             return total * 0.5f;
@@ -1207,7 +1205,7 @@ public class Winding {
 
         public idVec3 GetCenter() {
             int i;
-            idVec3 center = new idVec3();
+            final idVec3 center = new idVec3();
 
             center.Zero();
             for (i = 0; i < numPoints; i++) {
@@ -1220,11 +1218,11 @@ public class Winding {
         public float GetRadius(final idVec3 center) {
             int i;
             float radius, r;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
 
             radius = 0.0f;
             for (i = 0; i < numPoints; i++) {
-                dir = p[i].ToVec3().oMinus(center);
+                dir.oSet(p[i].ToVec3().oMinus(center));
                 r = dir.oMultiply(dir);
                 if (r > radius) {
                     radius = r;
@@ -1233,8 +1231,8 @@ public class Winding {
             return idMath.Sqrt(radius);
         }
 
-        public void GetPlane(idVec3 normal, CFloat dist) {
-            idVec3 v1, v2, center;
+        public void GetPlane(final idVec3 normal, CFloat dist) {
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), center = new idVec3();
 
             if (numPoints < 3) {
                 normal.Zero();
@@ -1242,26 +1240,26 @@ public class Winding {
                 return;
             }
 
-            center = GetCenter();
-            v1 = p[0].ToVec3().oMinus(center);
-            v2 = p[1].ToVec3().oMinus(center);
-            normal = v2.Cross(v1);
+            center.oSet(GetCenter());
+            v1.oSet(p[0].ToVec3().oMinus(center));
+            v2.oSet(p[1].ToVec3().oMinus(center));
+            normal.oSet(v2.Cross(v1));
             normal.Normalize();
             dist.setVal(p[0].ToVec3().oMultiply(normal));
         }
 
         public void GetPlane(idPlane plane) {
-            idVec3 v1, v2;
-            idVec3 center;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3();
+            final idVec3 center = new idVec3();
 
             if (numPoints < 3) {
                 plane.Zero();
                 return;
             }
 
-            center = GetCenter();
-            v1 = p[0].ToVec3().oMinus(center);
-            v2 = p[1].ToVec3().oMinus(center);
+            center.oSet(GetCenter());
+            v1.oSet(p[0].ToVec3().oMinus(center));
+            v2.oSet(p[1].ToVec3().oMinus(center));
             plane.SetNormal(v2.Cross(v1));
             plane.Normalize();
             plane.FitThroughPoint(p[0].ToVec3());
@@ -1298,12 +1296,12 @@ public class Winding {
         public boolean IsTiny() {
             int i;
             float len;
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
             int edges;
 
             edges = 0;
             for (i = 0; i < numPoints; i++) {
-                delta = p[(i + 1) % numPoints].ToVec3().oMinus(p[i].ToVec3());
+                delta.oSet(p[(i + 1) % numPoints].ToVec3().oMinus(p[i].ToVec3()));
                 len = delta.Length();
                 if (len > EDGE_LENGTH) {
                     if (++edges == 3) {
@@ -1423,13 +1421,13 @@ public class Winding {
 
         public boolean PointInside(final idVec3 normal, final idVec3 point, final float epsilon) {
             int i;
-            idVec3 dir, n, pointvec;
+            final idVec3 dir = new idVec3(), n = new idVec3(), pointvec = new idVec3();
 
             for (i = 0; i < numPoints; i++) {
-                dir = p[(i + 1) % numPoints].ToVec3().oMinus(p[i].ToVec3());
-                pointvec = point.oMinus(p[i].ToVec3());
+                dir.oSet(p[(i + 1) % numPoints].ToVec3().oMinus(p[i].ToVec3()));
+                pointvec.oSet(point.oMinus(p[i].ToVec3()));
 
-                n = dir.Cross(normal);
+                n.oSet(dir.Cross(normal));
 
                 if (pointvec.oMultiply(n) < -epsilon) {
                     return false;
@@ -1445,7 +1443,7 @@ public class Winding {
         // returns true if the line or ray intersects the winding
         public boolean LineIntersection(final idPlane windingPlane, final idVec3 start, final idVec3 end, boolean backFaceCull) {
             float front, back, frac;
-            idVec3 mid = new idVec3();
+            final idVec3 mid = new idVec3();
 
             front = windingPlane.Distance(start);
             back = windingPlane.Distance(end);
@@ -1466,7 +1464,7 @@ public class Winding {
 
             // get point of intersection with winding plane
             if (Math.abs(front - back) < 0.0001f) {
-                mid = end;
+                mid.oSet(end);
             } else {
                 frac = front / (front - back);
                 mid.oSet(0, start.oGet(0) + (end.oGet(0) - start.oGet(0)) * frac);

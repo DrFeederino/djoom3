@@ -91,7 +91,7 @@ public class Light {
             eventCallbacks.put(EV_Light_FadeIn, (eventCallback_t1<idLight>) idLight::Event_FadeIn);
         }
 
-        private idVec3 baseColor;
+        private final idVec3 baseColor;
         private boolean breakOnTrigger;//TODO:give all variables default init values like c++, opposite of lazy init?
         private final idStr brokenModel;
         private int count;
@@ -104,7 +104,7 @@ public class Light {
         private int/*qhandle_t*/ lightDefHandle;    // handle to renderer light def
         private idEntity lightParent;
         private idMat3 localLightAxis;              // light axis relative to physics axis
-        private idVec3 localLightOrigin;            // light origin relative to the physics origin
+        private final idVec3 localLightOrigin;            // light origin relative to the physics origin
         private final renderLight_s renderLight;          // light presented to the renderer
         //
         //
@@ -149,7 +149,7 @@ public class Light {
             GameEdit.gameEdit.ParseSpawnArgsToRenderLight(spawnArgs, renderLight);
 
             // we need the origin and axis relative to the physics origin/axis
-            localLightOrigin = renderLight.origin.oMinus(GetPhysics().GetOrigin()).oMultiply(GetPhysics().GetAxis().Transpose());
+            localLightOrigin.oSet(renderLight.origin.oMinus(GetPhysics().GetOrigin()).oMultiply(GetPhysics().GetAxis().Transpose()));
             localLightAxis = renderLight.axis.oMultiply(GetPhysics().GetAxis().Transpose());
 
             // set the base color from the shader parms
@@ -383,9 +383,9 @@ public class Light {
         }
 
         @Override
-        public boolean GetPhysicsToSoundTransform(idVec3 origin, idMat3 axis) {
-            origin = localLightOrigin.oPlus(renderLight.lightCenter);
-            axis = localLightAxis.oMultiply(GetPhysics().GetAxis());
+        public boolean GetPhysicsToSoundTransform(final idVec3 origin, idMat3 axis) {
+            origin.oSet(localLightOrigin.oPlus(renderLight.lightCenter));
+            axis.oSet(localLightAxis.oMultiply(GetPhysics().GetAxis()));
             return true;
         }
 
@@ -436,14 +436,14 @@ public class Light {
 
         @Override
         public void SetColor(final idVec4 color) {
-            baseColor = color.ToVec3();
+            baseColor.oSet(color.ToVec3());
             renderLight.shaderParms[SHADERPARM_ALPHA] = color.oGet(3);
             renderEntity.shaderParms[SHADERPARM_ALPHA] = color.oGet(3);
             SetLightLevel();
         }
 
         @Override
-        public void GetColor(idVec3 out) {
+        public void GetColor(final idVec3 out) {
             out.oSet(0, renderLight.shaderParms[SHADERPARM_RED]);
             out.oSet(1, renderLight.shaderParms[SHADERPARM_GREEN]);
             out.oSet(2, renderLight.shaderParms[SHADERPARM_BLUE]);
@@ -537,8 +537,8 @@ public class Light {
         }
 
         public void FadeIn(float time) {
-            idVec3 color = new idVec3();
-            idVec4 color4 = new idVec4();
+            final idVec3 color = new idVec3();
+            final idVec4 color4 = new idVec4();
 
             currentLevel = levels.getVal();
             spawnArgs.GetVector("_color", "1 1 1", color);
@@ -573,7 +573,7 @@ public class Light {
                 ServerSendEvent(EVENT_BECOMEBROKEN, null, true, -1);
 
                 if (spawnArgs.GetString("def_damage", "", damageDefName)) {
-                    idVec3 origin = renderEntity.origin.oPlus(renderEntity.bounds.GetCenter().oMultiply(renderEntity.axis));
+                    final idVec3 origin = new idVec3(renderEntity.origin.oPlus(renderEntity.bounds.GetCenter().oMultiply(renderEntity.axis)));
                     gameLocal.RadiusDamage(origin, activator, activator, this, this, damageDefName[0]);
                 }
 
@@ -617,11 +617,11 @@ public class Light {
         }
 
         public void SetLightLevel() {
-            idVec3 color;
+            final idVec3 color = new idVec3();
             float intensity;
 
             intensity = (float) currentLevel / (float) levels.getVal();
-            color = baseColor.oMultiply(intensity);
+            color.oSet(baseColor.oMultiply(intensity));
             renderLight.shaderParms[SHADERPARM_RED] = color.oGet(0);
             renderLight.shaderParms[SHADERPARM_GREEN] = color.oGet(1);
             renderLight.shaderParms[SHADERPARM_BLUE] = color.oGet(2);
@@ -686,7 +686,7 @@ public class Light {
         public void ReadFromSnapshot(final idBitMsgDelta msg) {
             idVec4 shaderColor = new idVec4();
             int oldCurrentLevel = currentLevel;
-            idVec3 oldBaseColor = baseColor;
+            final idVec3 oldBaseColor = new idVec3(baseColor);
 
             GetPhysics().ReadFromSnapshot(msg);
             ReadBindFromSnapshot(msg);

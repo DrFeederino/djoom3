@@ -804,10 +804,9 @@ public class UsercmdGen {
          ================
          */
         private void MakeCurrent() {
-            idVec3 oldAngles;
+            final idVec3 oldAngles = new idVec3(viewangles);
+            ;
             int i;
-
-            oldAngles = new idVec3(viewangles);
 
             if (!Inhibited()) {
                 // update toggled key states

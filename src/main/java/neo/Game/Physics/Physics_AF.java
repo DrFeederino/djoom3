@@ -343,7 +343,7 @@ public class Physics_AF {
         //
 //
         protected final idVec3 offset = new idVec3();                        // offset of body1 relative to body2 in body2 space
-        protected idMat3 relAxis;                    // rotation of body1 relative to body2
+        protected idMat3 relAxis = new idMat3();                    // rotation of body1 relative to body2
 
         public idAFConstraint_Fixed(final idStr name, idAFBody body1, idAFBody body2) {
             assert (body1 != null);
@@ -5726,7 +5726,7 @@ public class Physics_AF {
             if (id < 0 || id >= bodies.Num()) {
                 return getVec3_origin();
             } else {
-                return new idVec3(bodies.oGet(id).current.worldOrigin);
+                return bodies.oGet(id).current.worldOrigin;
             }
         }
 

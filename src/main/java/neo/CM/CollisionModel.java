@@ -59,8 +59,8 @@ public class CollisionModel {
         public int id;          // id of clip model the contact surface is part of
         public idMaterial material;    // surface material
         public int modelFeature;// contact feature on model
-        public idVec3 normal;      // contact plane normal
-        public idVec3 point;       // point of contact
+        public final idVec3 normal;      // contact plane normal
+        public final idVec3 point;       // point of contact
         public int trmFeature;  // contact feature on trace model
         public contactType_t type;        // contact type
 

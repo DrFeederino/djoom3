@@ -204,7 +204,7 @@ public class usurface {
                 dv.st.oSet(1, DotProduct(dv.xyz, s.texVec.v[1]) + s.texVec.v[1].oGet(3));
 
                 // copy normal
-                dv.normal = dmapGlobals.mapPlanes.oGet(s.planenum).Normal();
+                dv.normal.oSet(dmapGlobals.mapPlanes.oGet(s.planenum).Normal());
                 if (dv.normal.Length() < 0.9 || dv.normal.Length() > 1.1) {
                     common.Error("Bad normal in TriListForSide");
                 }
@@ -664,9 +664,9 @@ public class usurface {
                         for (int k = 0; k < 3; k++) {
                             idVec3 v = tri2.verts[tri2.indexes[j + k]].xyz;
 
-                            mapTri.v[k].xyz = v.oMultiply(axis).oPlus(origin);
+                            mapTri.v[k].xyz.oSet(v.oMultiply(axis).oPlus(origin));
 
-                            mapTri.v[k].normal = tri2.verts[tri2.indexes[j + k]].normal.oMultiply(axis);
+                            mapTri.v[k].normal.oSet(tri2.verts[tri2.indexes[j + k]].normal.oMultiply(axis));
                             mapTri.v[k].st = tri2.verts[tri2.indexes[j + k]].st;
                         }
                         AddMapTriToAreas(mapTri, e);

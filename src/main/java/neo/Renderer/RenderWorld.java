@@ -488,25 +488,34 @@ public class RenderWorld {
 
     public static class renderLight_s {
 
+        public final idVec3 end = new idVec3();
+        public final idVec3 lightCenter = new idVec3();       // offset the lighting direction for shading and
+        public final idVec3 lightRadius = new idVec3();       // xyz radius for point lights
+        public final idVec3 origin = new idVec3();
+        public final idVec3 right = new idVec3();
         public final float[] shaderParms = new float[MAX_ENTITY_SHADER_PARMS];        // can be used in any way by shader
+        public final idVec3 start = new idVec3();
+        // shadows, relative to origin
+        //
+        // frustum definition for projected lights, all reletive to origin
+        // FIXME: we should probably have real plane equations here, and offer
+        // a helper function for conversion from this format
+        public final idVec3 target = new idVec3();
+        public final idVec3 up = new idVec3();
         //
         // if non-zero, the light will only show up in the specific view
         // which can allow player gun gui lights and such to not effect everyone
         public int allowLightInViewID;
         public idMat3 axis = new idMat3();                // rotation vectors, must be unit length
-        public idVec3 end = new idVec3();
-        public idVec3 lightCenter = new idVec3();       // offset the lighting direction for shading and
         //
         // muzzle flash lights will not cast shadows from player and weapon world models
         public int lightId;
-        public idVec3 lightRadius = new idVec3();       // xyz radius for point lights
         //
         // I am sticking the four bools together so there are no unused gaps in
         // the padded structure, which could confuse the memcmp that checks for redundant
         // updates
         public boolean noShadows;            // (should we replace this with material parameters on the shader?)
         public boolean noSpecular;            // (should we replace this with material parameters on the shader?)
-        public idVec3 origin = new idVec3();
         public boolean parallel;            // lightCenter gives the direction to the light at infinity
         //
         public boolean pointLight;            // otherwise a projection light (should probably invert the sense of this, because points are way more common)
@@ -516,23 +525,14 @@ public class RenderWorld {
         // ignore this value if the light has been moved after initial creation
         public idRenderModel prelightModel;
         public idSoundEmitter referenceSound;        // for shader sound tables, allowing effects to vary with sounds
-        public idVec3 right = new idVec3();
         //
         //
         public idMaterial shader;            // NULL = either lights/defaultPointLight or lights/defaultProjectedLight
-        public idVec3 start = new idVec3();
         //
         // if non-zero, the light will not show up in the specific view,
         // which may be used if we want to have slightly different muzzle
         // flash lights for the player and other views
         public int suppressLightInViewID;
-        // shadows, relative to origin
-        //
-        // frustum definition for projected lights, all reletive to origin
-        // FIXME: we should probably have real plane equations here, and offer
-        // a helper function for conversion from this format
-        public idVec3 target = new idVec3();
-        public idVec3 up = new idVec3();
 
         public renderLight_s() {
         }
@@ -540,7 +540,7 @@ public class RenderWorld {
         //copy constructor
         public renderLight_s(final renderLight_s other) {
             this.axis = new idMat3(other.axis);
-            this.origin = new idVec3(other.origin);
+            this.origin.oSet(other.origin);
 
             this.suppressLightInViewID = other.suppressLightInViewID;
 
@@ -551,14 +551,14 @@ public class RenderWorld {
 
             this.pointLight = other.pointLight;
             this.parallel = other.parallel;
-            this.lightRadius = new idVec3(other.lightRadius);
-            this.lightCenter = new idVec3(other.lightCenter);
+            this.lightRadius.oSet(other.lightRadius);
+            this.lightCenter.oSet(other.lightCenter);
 
-            this.target = new idVec3(other.target);
-            this.right = new idVec3(other.right);
-            this.up = new idVec3(other.up);
-            this.start = new idVec3(other.start);
-            this.end = new idVec3(other.end);
+            this.target.oSet(other.target);
+            this.right.oSet(other.right);
+            this.up.oSet(other.up);
+            this.start.oSet(other.start);
+            this.end.oSet(other.end);
 
             this.prelightModel = other.prelightModel;
 
@@ -572,20 +572,20 @@ public class RenderWorld {
         public void clear() {//TODO:hardcoded values
             final renderLight_s temp = new renderLight_s();
             this.axis = temp.axis;
-            this.origin = temp.origin;
+            this.origin.oSet(temp.origin);
             this.suppressLightInViewID = temp.suppressLightInViewID;
             this.allowLightInViewID = temp.allowLightInViewID;
             this.noShadows = temp.noShadows;
             this.noSpecular = temp.noSpecular;
             this.pointLight = temp.pointLight;
             this.parallel = temp.parallel;
-            this.lightRadius = temp.lightRadius;
-            this.lightCenter = temp.lightCenter;
-            this.target = temp.target;
-            this.right = temp.right;
-            this.up = temp.up;
-            this.start = temp.start;
-            this.end = temp.end;
+            this.lightRadius.oSet(temp.lightRadius);
+            this.lightCenter.oSet(temp.lightCenter);
+            this.target.oSet(temp.target);
+            this.right.oSet(temp.right);
+            this.up.oSet(temp.up);
+            this.start.oSet(temp.start);
+            this.end.oSet(temp.end);
             this.prelightModel = temp.prelightModel;
             this.lightId = temp.lightId;
             this.shader = temp.shader;
@@ -594,7 +594,7 @@ public class RenderWorld {
 
         void atomicSet(Atomics.renderLightShadow shadow) {
             this.axis = shadow.axis;
-            this.origin = shadow.origin;
+            this.origin.oSet(shadow.origin);
 
             this.suppressLightInViewID = shadow.suppressLightInViewID.getVal();
 
@@ -605,15 +605,15 @@ public class RenderWorld {
 
             this.pointLight = shadow.pointLight.isVal();
             this.parallel = shadow.parallel.isVal();
-            this.lightRadius = shadow.lightRadius;
-            this.lightCenter = shadow.lightCenter;
+            this.lightRadius.oSet(shadow.lightRadius);
+            this.lightCenter.oSet(shadow.lightCenter);
 
-            this.target = shadow.target;
-            this.right = shadow.right;
-            this.up = shadow.up;
-            this.start = shadow.start;
+            this.target.oSet(shadow.target);
+            this.right.oSet(shadow.right);
+            this.up.oSet(shadow.up);
+            this.start.oSet(shadow.start);
 
-            this.end = shadow.end;
+            this.end.oSet(shadow.end);
 
             this.prelightModel = shadow.prelightModel;
 
@@ -628,6 +628,7 @@ public class RenderWorld {
         // subviews (mirrors, cameras, etc) will always clear it to zero
 
         private static int DBG_counter = 0;
+        public final idVec3 vieworg = new idVec3();
         private final int DBG_count = DBG_counter++;
         //
         public boolean cramZNear;        // for cinematics, we want to set ZNear much lower
@@ -641,7 +642,6 @@ public class RenderWorld {
         public int time;
         public int viewID;
         public idMat3 viewaxis = new idMat3();        // transformation matrix, view looks down the positive X axis
-        public idVec3 vieworg = new idVec3();
         //
         // sized from 0 to SCREEN_WIDTH / SCREEN_HEIGHT (640/480), not actual resolution
         public int x, y, width, height;
@@ -657,7 +657,7 @@ public class RenderWorld {
             this.height = renderView.height;
             this.fov_x = renderView.fov_x;
             this.fov_y = renderView.fov_y;
-            this.vieworg = new idVec3(renderView.vieworg);
+            this.vieworg.oSet((renderView.vieworg));
             this.viewaxis = new idMat3(renderView.viewaxis);
             this.cramZNear = renderView.cramZNear;
             this.forceUpdate = renderView.forceUpdate;
@@ -675,7 +675,7 @@ public class RenderWorld {
 
             this.fov_x = shadow.fov_x.getVal();
             this.fov_y = shadow.fov_y.getVal();
-            this.vieworg = new idVec3(shadow.vieworg);
+            this.vieworg.oSet((shadow.vieworg));
             this.viewaxis = new idMat3(shadow.viewaxis);
 
             this.cramZNear = shadow.cramZNear.isVal();

@@ -99,7 +99,7 @@ public class GameEdit {
 //
         public idForce_Drag drag;
         //~idCursor3D( void );
-        public idVec3 draggedPosition;
+        public final idVec3 draggedPosition = new idVec3();
 
         //    public 	CLASS_PROTOTYPE( idCursor3D );
         public idCursor3D() {
@@ -118,7 +118,7 @@ public class GameEdit {
             }
             BecomeInactive(TH_UPDATEVISUALS);
 
-            final idVec3 origin = GetPhysics().GetOrigin();
+            final idVec3 origin = new idVec3(GetPhysics().GetOrigin());
             final idMat3 axis = GetPhysics().GetAxis();
             gameRenderWorld.DebugArrow(colorYellow, origin.oPlus(axis.oGet(1).oMultiply(-5.0f).oPlus(axis.oGet(2).oMultiply(5.0f))), origin, 2);
             gameRenderWorld.DebugArrow(colorRed, origin, draggedPosition, 2);
@@ -168,7 +168,7 @@ public class GameEdit {
         }
 
         public void Update(idPlayer player) {
-            idVec3 viewPoint = new idVec3(), origin;
+            final idVec3 viewPoint = new idVec3(), origin = new idVec3();
             idMat3 viewAxis = new idMat3(), axis = new idMat3();
             trace_s trace = new trace_s();
             idEntity newEnt;
@@ -236,7 +236,7 @@ public class GameEdit {
 
                             idPhysics phys = dragEnt.GetEntity().GetPhysics();
                             localPlayerPoint.oSet((trace.c.point.oMinus(viewPoint)).oMultiply(viewAxis.Transpose()));
-                            origin = phys.GetOrigin(id);
+                            origin.oSet(phys.GetOrigin(id));
                             axis = phys.GetAxis(id);
                             localEntityPoint.oSet((trace.c.point.oMinus(origin)).oMultiply(axis.Transpose()));
 
@@ -273,10 +273,10 @@ public class GameEdit {
 
                 if (joint != INVALID_JOINT && renderEntity != null && dragAnimator != null) {
                     dragAnimator.GetJointTransform(joint, gameLocal.time, cursor.draggedPosition, axis);
-                    cursor.draggedPosition = renderEntity.origin.oPlus(cursor.draggedPosition.oMultiply(renderEntity.axis));
+                    cursor.draggedPosition.oSet(renderEntity.origin.oPlus(cursor.draggedPosition.oMultiply(renderEntity.axis)));
                     gameRenderWorld.DrawText(va("%s\n%s\n%s, %s", drag.GetName(), drag.GetType().getName(), dragAnimator.GetJointName(joint), bodyName), cursor.GetPhysics().GetOrigin(), 0.1f, colorWhite, viewAxis, 1);
                 } else {
-                    cursor.draggedPosition = cursor.GetPhysics().GetOrigin();
+                    cursor.draggedPosition.oSet(cursor.GetPhysics().GetOrigin());
                     gameRenderWorld.DrawText(va("%s\n%s\n%s", drag.GetName(), drag.GetType().getName(), bodyName), cursor.GetPhysics().GetOrigin(), 0.1f, colorWhite, viewAxis, 1);
                 }
             }
@@ -421,7 +421,7 @@ public class GameEdit {
         }
 
         public boolean SelectEntity(final idVec3 origin, final idVec3 dir, final idEntity skip) {
-            idVec3 end;
+            final idVec3 end = new idVec3();
             idEntity ent;
 
             if (0 == g_editEntityMode.GetInteger() || selectableEntityClasses.Num() == 0) {
@@ -433,7 +433,7 @@ public class GameEdit {
             }
             nextSelectTime = gameLocal.time + 300;
 
-            end = origin.oPlus(dir.oMultiply(4096.0f));
+            end.oSet(origin.oPlus(dir.oMultiply(4096.0f)));
 
             ent = null;
             for (int i = 0; i < selectableEntityClasses.Num(); i++) {
@@ -571,23 +571,23 @@ public class GameEdit {
 
                 gameRenderWorld.DebugBounds(color, new idBounds(ent.GetPhysics().GetOrigin()).Expand(8));
                 if (drawArrows) {
-                    idVec3 start = ent.GetPhysics().GetOrigin();
-                    idVec3 end = start.oPlus(new idVec3(1, 0, 0).oMultiply(20.0f));
+                    final idVec3 start = new idVec3(ent.GetPhysics().GetOrigin());
+                    final idVec3 end = new idVec3(start.oPlus(new idVec3(1, 0, 0).oMultiply(20.0f)));
                     gameRenderWorld.DebugArrow(colorWhite, start, end, 2);
                     gameRenderWorld.DrawText("x+", end.oPlus(new idVec3(4, 0, 0)), 0.15f, colorWhite, axis);
-                    end = start.oPlus(new idVec3(1, 0, 0).oMultiply(-20.0f));
+                    end.oSet(start.oPlus(new idVec3(1, 0, 0).oMultiply(-20.0f)));
                     gameRenderWorld.DebugArrow(colorWhite, start, end, 2);
                     gameRenderWorld.DrawText("x-", end.oPlus(new idVec3(-4, 0, 0)), 0.15f, colorWhite, axis);
-                    end = start.oPlus(new idVec3(0, 1, 0).oMultiply(20.0f));
+                    end.oSet(start.oPlus(new idVec3(0, 1, 0).oMultiply(20.0f)));
                     gameRenderWorld.DebugArrow(colorGreen, start, end, 2);
                     gameRenderWorld.DrawText("y+", end.oPlus(new idVec3(0, 4, 0)), 0.15f, colorWhite, axis);
-                    end = start.oPlus(new idVec3(0, 1, 0).oMultiply(-20.0f));
+                    end.oSet(start.oPlus(new idVec3(0, 1, 0).oMultiply(-20.0f)));
                     gameRenderWorld.DebugArrow(colorGreen, start, end, 2);
                     gameRenderWorld.DrawText("y-", end.oPlus(new idVec3(0, -4, 0)), 0.15f, colorWhite, axis);
-                    end = start.oPlus(new idVec3(0, 0, 1).oMultiply(20.0f));
+                    end.oSet(start.oPlus(new idVec3(0, 0, 1).oMultiply(20.0f)));
                     gameRenderWorld.DebugArrow(colorBlue, start, end, 2);
                     gameRenderWorld.DrawText("z+", end.oPlus(new idVec3(0, 0, 4)), 0.15f, colorWhite, axis);
-                    end = start.oPlus(new idVec3(0, 0, 1).oMultiply(-20.0f));
+                    end.oSet(start.oPlus(new idVec3(0, 0, 1).oMultiply(-20.0f)));
                     gameRenderWorld.DebugArrow(colorBlue, start, end, 2);
                     gameRenderWorld.DrawText("z-", end.oPlus(new idVec3(0, 0, -4)), 0.15f, colorWhite, axis);
                 }

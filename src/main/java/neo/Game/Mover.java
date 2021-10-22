@@ -239,11 +239,11 @@ public class Mover {
         private float damage;
         private int deceltime;
         private idAngles dest_angles;
-        private idVec3 dest_position;
+        private final idVec3 dest_position;
 
         private moverCommand_t lastCommand;
 
-        private idVec3 move_delta;
+        private final idVec3 move_delta;
         private float move_speed;
         //
         private int move_thread;
@@ -309,7 +309,7 @@ public class Mover {
             spawnArgs.GetFloat("damage", "0", damage);
             this.damage = damage.getVal();
 
-            dest_position = GetPhysics().GetOrigin();
+            dest_position.oSet(GetPhysics().GetOrigin());
             dest_angles = GetPhysics().GetAxis().ToAngles();
 
             physicsObj.SetSelf(this);
@@ -577,7 +577,7 @@ public class Mover {
         }
 
         protected void MoveToPos(final idVec3 pos) {
-            dest_position = GetLocalCoordinates(pos);
+            dest_position.oSet(GetLocalCoordinates(pos));
             BeginMove(null);
         }
 
@@ -691,7 +691,7 @@ public class Mover {
 
         protected void BeginMove(idThread thread) {
             moveStage_t stage;
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
             float dist;
             float acceldist;
             int totalacceltime;
@@ -703,7 +703,7 @@ public class Mover {
 
             physicsObj.GetLocalOrigin(org);
 
-            move_delta = dest_position.oMinus(org);
+            move_delta.oSet(dest_position.oMinus(org));
             if (move_delta.Compare(getVec3_zero())) {
                 DoneMoving();
                 return;
@@ -755,13 +755,13 @@ public class Mover {
                 dt = move_time - at;
             }
 
-            move_delta = move_delta.oMultiply(1000.0f / ((float) move_time - (at + dt) * 0.5f));
+            move_delta.oSet(move_delta.oMultiply(1000.0f / ((float) move_time - (at + dt) * 0.5f)));
 
             move.stage = stage;
             move.acceleration = at;
             move.movetime = move_time - at - dt;
             move.deceleration = dt;
-            move.dir = new idVec3(move_delta);
+            move.dir.oSet(move_delta);
 
             ProcessEvent(EV_ReachedPos);
         }
@@ -833,7 +833,7 @@ public class Mover {
             ProcessEvent(EV_ReachedAng);
         }
 
-        private void VectorForDir(float dir, idVec3 vec) {
+        private void VectorForDir(float dir, final idVec3 vec) {
             idAngles ang = new idAngles();
 
             switch ((int) dir) {
@@ -945,7 +945,7 @@ public class Mover {
         }
 
         private void Event_UpdateMove() {
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
 
             physicsObj.GetLocalOrigin(org);
 
@@ -1086,36 +1086,36 @@ public class Mover {
                 gameLocal.Warning("Entity not found");
             }
 
-            dest_position = GetLocalCoordinates(ent.value.GetPhysics().GetOrigin());
+            dest_position.oSet(GetLocalCoordinates(ent.value.GetPhysics().GetOrigin()));
             BeginMove(idThread.CurrentThread());
         }
 
         private void Event_MoveToPos(idEventArg<idVec3> pos) {
-            dest_position = GetLocalCoordinates(pos.value);
+            dest_position.oSet(GetLocalCoordinates(pos.value));
             BeginMove(null);
         }
 
         private void Event_MoveDir(idEventArg<Float> angle, idEventArg<Float> distance) {
-            idVec3 dir = new idVec3();
-            idVec3 org = new idVec3();
+            final idVec3 dir = new idVec3();
+            final idVec3 org = new idVec3();
 
             physicsObj.GetLocalOrigin(org);
             VectorForDir(angle.value, dir);
-            dest_position = org.oPlus(dir.oMultiply(distance.value));
+            dest_position.oSet(org.oPlus(dir.oMultiply(distance.value)));
 
             BeginMove(idThread.CurrentThread());
         }
 
         private void Event_MoveAccelerateTo(idEventArg<Float> speed, idEventArg<Float> time) {
             float v;
-            idVec3 org = new idVec3(), dir;
+            final idVec3 org = new idVec3(), dir = new idVec3();
             int at;
 
             if (time.value < 0) {
                 idGameLocal.Error("idMover::Event_MoveAccelerateTo: cannot set acceleration time less than 0.");
             }
 
-            dir = physicsObj.GetLinearVelocity();
+            dir.oSet(physicsObj.GetLinearVelocity());
             v = dir.Normalize();
 
             // if not moving already
@@ -1146,14 +1146,14 @@ public class Mover {
 
         private void Event_MoveDecelerateTo(idEventArg<Float> speed, idEventArg<Float> time) {
             float v;
-            idVec3 org = new idVec3(), dir;
+            final idVec3 org = new idVec3(), dir = new idVec3();
             int dt;
 
             if (time.value < 0) {
                 idGameLocal.Error("idMover::Event_MoveDecelerateTo: cannot set deceleration time less than 0.");
             }
 
-            dir = physicsObj.GetLinearVelocity();
+            dir.oSet(physicsObj.GetLinearVelocity());
             v = dir.Normalize();
 
             // if not moving already
@@ -1250,7 +1250,7 @@ public class Mover {
         }
 
         private void Event_Bob(idEventArg<Float> speed, idEventArg<Float> phase, idEventArg<idVec3> depth) {
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
 
             physicsObj.GetLocalOrigin(org);
             physicsObj.SetLinearExtrapolation((EXTRAPOLATION_DECELSINE | EXTRAPOLATION_NOSTOP), (int) (speed.value * 1000 * phase.value),
@@ -1409,7 +1409,7 @@ public class Mover {
 
             int acceleration;
             int deceleration;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             int movetime;
             moveStage_t stage;
         }
@@ -1449,7 +1449,7 @@ public class Mover {
 
         idStr door;
         int floor;
-        idVec3 pos;
+        final idVec3 pos = new idVec3();
     }
 
     /*
@@ -1524,7 +1524,7 @@ public class Mover {
                 floorInfo_s fi = new floorInfo_s();
                 fi.floor = Integer.parseInt(str.toString());
                 fi.door = new idStr(spawnArgs.GetString(va("floorDoor_%d", fi.floor)));
-                fi.pos = spawnArgs.GetVector(kv.GetKey().toString());
+                fi.pos.oSet(spawnArgs.GetVector(kv.GetKey().toString()));
                 floorInfo.Append(fi);
                 kv = spawnArgs.MatchPrefix("floorPos_", kv);
             }
@@ -1750,7 +1750,7 @@ public class Mover {
 
         @Override
         public void Think() {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
             idDoor doorEnt = GetDoor(spawnArgs.GetString("innerdoor"));
             if (state == INIT) {
@@ -1939,8 +1939,8 @@ public class Mover {
         protected int move_thread;
         protected moverState_t moverState;
         protected idPhysics_Parametric physicsObj;
-        protected idVec3 pos1;
-        protected idVec3 pos2;
+        protected final idVec3 pos1;
+        protected final idVec3 pos2;
         protected int sound1to2;
         protected int sound2to1;
         protected int soundLoop;
@@ -1993,7 +1993,7 @@ public class Mover {
          instead of an orientation.
          ===============
          */
-        protected static void GetMovedir(float dir, idVec3 movedir) {
+        protected static void GetMovedir(float dir, final idVec3 movedir) {
             if (dir == -1) {
                 movedir.Set(0, 0, 1);
             } else if (dir == -2) {
@@ -2090,7 +2090,7 @@ public class Mover {
             for (slave = moveMaster; slave != null; slave = slave.activateChain) {
                 soundOrigin.oPluSet(slave.GetPhysics().GetAbsBounds());
             }
-            moveMaster.refSound.origin = soundOrigin.GetCenter();
+            moveMaster.refSound.origin.oSet(soundOrigin.GetCenter());
 
             if (spawnArgs.MatchPrefix("guiTarget") != null) {
                 if (gameLocal.GameState() == GAMESTATE_STARTUP) {
@@ -2216,14 +2216,14 @@ public class Mover {
 
         @Override
         public void PreBind() {
-            pos1 = GetWorldCoordinates(pos1);
-            pos2 = GetWorldCoordinates(pos2);
+            pos1.oSet(GetWorldCoordinates(pos1));
+            pos2.oSet(GetWorldCoordinates(pos2));
         }
 
         @Override
         public void PostBind() {
-            pos1 = GetLocalCoordinates(pos1);
-            pos2 = GetLocalCoordinates(pos2);
+            pos1.oSet(GetLocalCoordinates(pos1));
+            pos2.oSet(GetLocalCoordinates(pos2));
         }
 
         public void Enable(boolean b) {
@@ -2237,13 +2237,13 @@ public class Mover {
          pos1, pos2, and speed are passed in so the movement delta can be calculated
          ================
          */
-        public void InitSpeed(idVec3 mpos1, idVec3 mpos2, float mspeed, float maccelTime, float mdecelTime) {
-            idVec3 move;
+        public void InitSpeed(final idVec3 mpos1, final idVec3 mpos2, float mspeed, float maccelTime, float mdecelTime) {
+            final idVec3 move = new idVec3();
             float distance;
             float speed;
 
-            pos1 = mpos1;
-            pos2 = mpos2;
+            pos1.oSet(mpos1);
+            pos2.oSet(mpos2);
 
             accelTime = idPhysics.SnapTimeToPhysicsFrame((int) SEC2MS(maccelTime));
             decelTime = idPhysics.SnapTimeToPhysicsFrame((int) SEC2MS(mdecelTime));
@@ -2251,7 +2251,7 @@ public class Mover {
             speed = mspeed != 0 ? mspeed : 100;
 
             // calculate time to reach second position from speed
-            move = pos2.oMinus(pos1);
+            move.oSet(pos2.oMinus(pos1));
             distance = move.Length();
             duration = idPhysics.SnapTimeToPhysicsFrame((int) (distance * 1000 / speed));
             if (duration <= 0) {
@@ -2274,10 +2274,10 @@ public class Mover {
          pos1, pos2, and time are passed in so the movement delta can be calculated
          ================
          */
-        public void InitTime(idVec3 mpos1, idVec3 mpos2, float mtime, float maccelTime, float mdecelTime) {
+        public void InitTime(final idVec3 mpos1, final idVec3 mpos2, float mtime, float maccelTime, float mdecelTime) {
 
-            pos1 = mpos1;
-            pos2 = mpos2;
+            pos1.oSet(mpos1);
+            pos2.oSet(mpos2);
 
             accelTime = idPhysics.SnapTimeToPhysicsFrame((int) SEC2MS(maccelTime));
             decelTime = idPhysics.SnapTimeToPhysicsFrame((int) SEC2MS(mdecelTime));
@@ -2583,7 +2583,7 @@ public class Mover {
         }
 
         protected void SetMoverState(moverState_t newstate, int time) {
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
 
             moverState = newstate;
             move_thread = 0;
@@ -2857,7 +2857,7 @@ public class Mover {
         private idDoor companionDoor;
         private boolean crusher;
         private idMat3 localTriggerAxis;
-        private idVec3 localTriggerOrigin;
+        private final idVec3 localTriggerOrigin;
         private int nextSndTriggerTime;
         private boolean noTouch;
         private int normalAxisIndex;        // door faces X or Y for spectator teleports
@@ -2899,10 +2899,10 @@ public class Mover {
         public void Spawn() {
             super.Spawn();
 
-            idVec3 abs_movedir = new idVec3();
+            final idVec3 abs_movedir = new idVec3();
             float distance;
-            idVec3 size;
-            idVec3 moveDir = new idVec3();
+            final idVec3 size = new idVec3();
+            final idVec3 moveDir = new idVec3();
             CFloat dir = new CFloat();
             CFloat lip = new CFloat();
             CFloat time = new CFloat();
@@ -2949,15 +2949,15 @@ public class Mover {
             fl.solidForTeam = true;
 
             // first position at start
-            pos1 = GetPhysics().GetOrigin();
+            pos1.oSet(GetPhysics().GetOrigin());
 
             // calculate second position
             abs_movedir.oSet(0, Math.abs(moveDir.oGet(0)));
             abs_movedir.oSet(1, Math.abs(moveDir.oGet(1)));
             abs_movedir.oSet(2, Math.abs(moveDir.oGet(2)));
-            size = GetPhysics().GetAbsBounds().oGet(1).oMinus(GetPhysics().GetAbsBounds().oGet(0));
+            size.oSet(GetPhysics().GetAbsBounds().oGet(1).oMinus(GetPhysics().GetAbsBounds().oGet(0)));
             distance = (abs_movedir.oMultiply(size)) - lip.getVal();
-            pos2 = pos1.oPlus(moveDir.oMultiply(distance));
+            pos2.oSet(pos1.oPlus(moveDir.oMultiply(distance)));
 
             // if "start_open", reverse position 1 and 2
             if (start_open.isVal()) {
@@ -3066,7 +3066,7 @@ public class Mover {
 
         @Override
         public void Think() {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             super.Think();
@@ -3241,7 +3241,7 @@ public class Mover {
         }
 
         private void GetLocalTriggerPosition(final idClipModel trigger) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (NOT(trigger)) {
@@ -3249,7 +3249,7 @@ public class Mover {
             }
 
             GetMasterPosition(origin, axis);
-            localTriggerOrigin = (trigger.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose());
+            localTriggerOrigin.oSet((trigger.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose()));
             localTriggerAxis = trigger.GetAxis().oMultiply(axis.Transpose());
         }
 
@@ -3412,8 +3412,8 @@ public class Mover {
             CFloat speed = new CFloat();
 
             // if "start_open", reverse position 1 and 2
-            pos1 = pos2;
-            pos2 = GetPhysics().GetOrigin();
+            pos1.oSet(pos2);
+            pos2.oSet(GetPhysics().GetOrigin());
 
             spawnArgs.GetFloat("speed", "400", speed);
 
@@ -3528,7 +3528,7 @@ public class Mover {
 
         private void Event_SpectatorTouch(idEventArg<idEntity> _other, idEventArg<trace_s> trace) {
             idEntity other = _other.value;
-            idVec3 contact, translate, normal = new idVec3();
+            final idVec3 contact = new idVec3(), translate = new idVec3(), normal = new idVec3();
             idBounds bounds;
             idPlayer p;
 
@@ -3542,8 +3542,8 @@ public class Mover {
             if (trigger != null && !IsOpen()) {
                 // teleport to the other side, center to the middle of the trigger brush
                 bounds = trigger.GetAbsBounds();
-                contact = trace.value.endpos.oMinus(bounds.GetCenter());
-                translate = bounds.GetCenter();
+                contact.oSet(trace.value.endpos.oMinus(bounds.GetCenter()));
+                translate.oSet(bounds.GetCenter());
                 normal.Zero();
                 normal.oSet(normalAxisIndex, 1.0f);
                 if (normal.oMultiply(contact) > 0) {
@@ -3630,7 +3630,7 @@ public class Mover {
         }
 
         private idMat3 localTriggerAxis;
-        private idVec3 localTriggerOrigin;
+        private final idVec3 localTriggerOrigin;
         private idClipModel trigger;
         //
         //
@@ -3667,14 +3667,14 @@ public class Mover {
 
             // create second position
             if (!spawnArgs.GetFloat("height", "0", height)) {
-                height.setVal( (GetPhysics().GetBounds().oGet(1, 2) - GetPhysics().GetBounds().oGet(0, 2)) - lip.getVal());
+                height.setVal((GetPhysics().GetBounds().oGet(1, 2) - GetPhysics().GetBounds().oGet(0, 2)) - lip.getVal());
             }
 
             spawnArgs.GetBool("no_touch", "0", noTouch);
 
             // pos1 is the rest (bottom) position, pos2 is the top
-            pos2 = GetPhysics().GetOrigin();
-            pos1 = pos2;
+            pos2.oSet(GetPhysics().GetOrigin());
+            pos1.oSet(pos2);
             pos1.oMinSet(2, height.getVal());
 
             if (spawnArgs.GetFloat("time", "1", time)) {
@@ -3709,7 +3709,7 @@ public class Mover {
 
         @Override
         public void Think() {
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
 
             super.Think();
@@ -3736,7 +3736,7 @@ public class Mover {
         }
 
         private void GetLocalTriggerPosition(final idClipModel trigger) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (NOT(trigger)) {
@@ -3744,14 +3744,14 @@ public class Mover {
             }
 
             GetMasterPosition(origin, axis);
-            localTriggerOrigin = (trigger.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose());
+            localTriggerOrigin.oSet((trigger.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose()));
             localTriggerAxis = trigger.GetAxis().oMultiply(axis.Transpose());
         }
 
-        private void SpawnPlatTrigger(idVec3 pos) {
+        private void SpawnPlatTrigger(final idVec3 pos) {
             idBounds bounds;
-            idVec3 tmin = new idVec3();
-            idVec3 tmax = new idVec3();
+            final idVec3 tmin = new idVec3();
+            final idVec3 tmax = new idVec3();
 
             // the middle trigger will be a thin trigger just
             // above the starting position
@@ -4036,7 +4036,7 @@ public class Mover {
             CFloat phase = new CFloat();
             CBool x_axis = new CBool(false);
             CBool y_axis = new CBool(false);
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
 
             spawnArgs.GetFloat("speed", "4", speed);
             spawnArgs.GetFloat("height", "32", height);
@@ -4045,7 +4045,7 @@ public class Mover {
             spawnArgs.GetBool("y_axis", "0", y_axis);
 
             // set the axis of bobbing
-            delta = getVec3_origin();
+            delta.oSet(getVec3_origin());
             if (x_axis.isVal()) {
                 delta.oSet(0, height.getVal());
             } else if (y_axis.isVal()) {
@@ -4167,12 +4167,12 @@ public class Mover {
                 Show();
                 CFloat time = new CFloat();
                 CFloat height = new CFloat();
-                idVec3 delta;
+                final idVec3 delta = new idVec3();
 
                 spawnArgs.GetFloat("time", "4", time);
                 spawnArgs.GetFloat("height", "32", height);
 
-                delta = getVec3_origin();
+                delta.oSet(getVec3_origin());
                 delta.oSet(2, height.getVal());
 
                 physicsObj.SetLinearExtrapolation(EXTRAPOLATION_LINEAR, gameLocal.time, (int) (time.getVal() * 1000), physicsObj.GetOrigin(), delta, getVec3_origin());

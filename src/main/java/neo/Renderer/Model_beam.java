@@ -5,7 +5,6 @@ import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.math.Math_h.idMath;
@@ -142,25 +141,25 @@ public class Model_beam {
             byte blue = (byte) idMath.FtoiFast(renderEntity.shaderParms[SHADERPARM_BLUE] * 255.0f);
             byte alpha = (byte) idMath.FtoiFast(renderEntity.shaderParms[SHADERPARM_ALPHA] * 255.0f);
 
-            tri.verts[0].xyz = minor;
+            tri.verts[0].xyz.oSet(minor);
             tri.verts[0].color[0] = red;
             tri.verts[0].color[1] = green;
             tri.verts[0].color[2] = blue;
             tri.verts[0].color[3] = alpha;
 
-            tri.verts[1].xyz = minor.oNegative();
+            tri.verts[1].xyz.oSet(minor.oNegative());
             tri.verts[1].color[0] = red;
             tri.verts[1].color[1] = green;
             tri.verts[1].color[2] = blue;
             tri.verts[1].color[3] = alpha;
 
-            tri.verts[2].xyz = localTarget.oPlus(minor);
+            tri.verts[2].xyz.oSet(localTarget.oPlus(minor));
             tri.verts[2].color[0] = red;
             tri.verts[2].color[1] = green;
             tri.verts[2].color[2] = blue;
             tri.verts[2].color[3] = alpha;
 
-            tri.verts[3].xyz = localTarget.oMinus(minor);
+            tri.verts[3].xyz.oSet(localTarget.oMinus(minor));
             tri.verts[3].color[0] = red;
             tri.verts[3].color[1] = green;
             tri.verts[3].color[2] = blue;

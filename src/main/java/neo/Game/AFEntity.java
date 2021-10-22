@@ -199,7 +199,7 @@ public class AFEntity {
             CFloat length = new CFloat(), linkWidth = new CFloat(), density = new CFloat();
             float linkLength;
             CBool drop = new CBool(false);
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
 
             spawnArgs.GetBool("drop", "0", drop);
             spawnArgs.GetInt("links", "3", numLinks);
@@ -207,7 +207,7 @@ public class AFEntity {
             spawnArgs.GetFloat("width", "8", linkWidth);
             spawnArgs.GetFloat("density", "0.2", density);
             linkLength = length.getVal() / numLinks.getVal();
-            origin = GetPhysics().GetOrigin();
+            origin.oSet(GetPhysics().GetOrigin());
 
             // initialize physics
             physicsObj.SetSelf(this);
@@ -235,13 +235,13 @@ public class AFEntity {
             idAFBody body, lastBody;
             idAFConstraint_BallAndSocketJoint bsj;
             idAFConstraint_UniversalJoint uj;
-            idVec3 org;
+            final idVec3 org = new idVec3();
 
             // create a trace model
             trm = new idTraceModel(linkLength, linkWidth);
             trm.Translate(trm.offset.oNegative());
 
-            org = origin.oMinus(new idVec3(0, 0, halfLinkLength));
+            org.oSet(origin.oMinus(new idVec3(0, 0, halfLinkLength)));
 
             lastBody = null;
             for (i = 0; i < numLinks; i++) {
@@ -497,12 +497,12 @@ public class AFEntity {
             eventCallbacks.put(EV_SetConstraintPosition, (eventCallback_t2<idAFEntity_Base>) idAFEntity_Base::Event_SetConstraintPosition);
         }
 
+        protected final idVec3 spawnOrigin;          // spawn origin
         protected idAF af;                   // articulated figure
         protected idClipModel combatModel;          // render model for hit detection
         protected int combatModelContents;
         protected int nextSoundTime;        // next time this can make a sound
         protected idMat3 spawnAxis;            // rotation axis used when spawned
-        protected idVec3 spawnOrigin;          // spawn origin
         //
         //
 
@@ -647,7 +647,7 @@ public class AFEntity {
         }
 
         @Override
-        public boolean GetPhysicsToVisualTransform(idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToVisualTransform(final idVec3 origin, idMat3 axis) {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis);
                 return true;
@@ -906,10 +906,10 @@ public class AFEntity {
             }
         }
 
-        public void SpawnGibs(idVec3 dir, final String damageDefName) {
+        public void SpawnGibs(final idVec3 dir, final String damageDefName) {
             int i;
             boolean gibNonSolid;
-            idVec3 entityCenter, velocity;
+            final idVec3 entityCenter = new idVec3(), velocity = new idVec3();
             idList<idEntity> list = new idList<>();
 
             assert (!gameLocal.isClient);
@@ -926,7 +926,7 @@ public class AFEntity {
             idMoveableItem.DropItems(this, "gib", list);
 
             // blow out the gibs in the given direction away from the center of the entity
-            entityCenter = GetPhysics().GetAbsBounds().GetCenter();
+            entityCenter.oSet(GetPhysics().GetAbsBounds().GetCenter());
             gibNonSolid = damageDef.GetBool("gibNonSolid");
             for (i = 0; i < list.Num(); i++) {
                 if (gibNonSolid) {
@@ -937,7 +937,7 @@ public class AFEntity {
                 } else {
                     list.oGet(i).GetPhysics().SetContents(CONTENTS_CORPSE);
                     list.oGet(i).GetPhysics().SetClipMask(CONTENTS_SOLID);
-                    velocity = list.oGet(i).GetPhysics().GetAbsBounds().GetCenter().oMinus(entityCenter);
+                    velocity.oSet(list.oGet(i).GetPhysics().GetAbsBounds().GetCenter().oMinus(entityCenter));
                     velocity.NormalizeFast();
                     velocity.oPluSet((i & 1) == 1 ? dir : dir.oNegative());
                     list.oGet(i).GetPhysics().SetLinearVelocity(velocity.oMultiply(75f));
@@ -1125,7 +1125,7 @@ public class AFEntity {
 
         private void Event_Activate(idEventArg<idEntity> activator) {
             float delay;
-            idVec3 init_velocity = new idVec3(), init_avelocity = new idVec3();
+            final idVec3 init_velocity = new idVec3(), init_avelocity = new idVec3();
 
             Show();
 
@@ -1239,7 +1239,7 @@ public class AFEntity {
             String jointName;
             final String headModel;
             int/*jointHandle_t*/ joint;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             headModel = spawnArgs.GetString("def_head", "");
@@ -1257,7 +1257,7 @@ public class AFEntity {
                 head.oSet(headEnt);
 
                 animator.GetJointTransform(joint, gameLocal.time, origin, axis);
-                origin = renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis));
+                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)));
                 headEnt.SetOrigin(origin);
                 headEnt.SetAxis(renderEntity.axis);
                 headEnt.BindToJoint(this, joint, true);
@@ -1346,7 +1346,7 @@ public class AFEntity {
 
         private void Event_Activate(idEventArg<idEntity> activator) {
             float delay;
-            idVec3 init_velocity = new idVec3(), init_avelocity = new idVec3();
+            final idVec3 init_velocity = new idVec3(), init_avelocity = new idVec3();
 
             Show();
 
@@ -1448,7 +1448,7 @@ public class AFEntity {
         }
 
         public void Use(idPlayer other) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (player != null) {
@@ -1461,7 +1461,7 @@ public class AFEntity {
             } else {
                 player = other;
                 animator.GetJointTransform(eyesJoint, gameLocal.time, origin, axis);
-                origin = renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis));
+                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)));
                 player.GetPhysics().SetOrigin(origin);
                 player.BindToBody(this, 0, true);
 
@@ -1514,6 +1514,7 @@ public class AFEntity {
         //
         protected final int/*jointHandle_t*/[] wheelJoints = new int[4];
         protected idClipModel wheelModel;
+
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleSimple );
         public idAFEntity_VehicleSimple() {
@@ -1527,7 +1528,7 @@ public class AFEntity {
         public void Spawn() {
 
             int i;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idTraceModel trm = new idTraceModel();
 
@@ -1547,7 +1548,7 @@ public class AFEntity {
                 }
 
                 GetAnimator().GetJointTransform(wheelJoints[i], 0, origin, axis);
-                origin = renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis));
+                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)));
 
                 suspension[i] = new idAFConstraint_Suspension();
                 suspension[i].Setup(va("suspension%d", i), af.GetPhysics().GetBody(0), origin, af.GetPhysics().GetAxis(0), wheelModel);
@@ -1570,7 +1571,7 @@ public class AFEntity {
         public void Think() {
             int i;
             float force = 0, velocity = 0, steerAngle = 0;
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idRotation wheelRotation = new idRotation(), steerRotation = new idRotation();
 
@@ -1622,7 +1623,7 @@ public class AFEntity {
                 for (i = 0; i < 4; i++) {
                     idAFBody body = af.GetPhysics().GetBody(0);
 
-                    origin = suspension[i].GetWheelOrigin();
+                    origin.oSet(suspension[i].GetWheelOrigin());
                     velocity = body.GetPointVelocity(origin).oMultiply(body.GetWorldAxis().oGet(0));
                     wheelAngles[i] += velocity * MS2SEC(idGameLocal.msec) / wheelRadius;
 
@@ -1642,7 +1643,7 @@ public class AFEntity {
                     }
 
                     // set wheel position for suspension
-                    origin = (origin.oMinus(renderEntity.origin)).oMultiply(renderEntity.axis.Transpose());
+                    origin.oSet((origin.oMinus(renderEntity.origin)).oMultiply(renderEntity.axis.Transpose()));
                     GetAnimator().SetJointPos(wheelJoints[i], JOINTMOD_WORLD_OVERRIDE, origin);
                 }
                 /*
@@ -1698,6 +1699,7 @@ public class AFEntity {
         protected final float[] wheelAngles = new float[4];
         protected final int/*jointHandle_t*/[] wheelJoints = new int[4];
         protected final idAFBody[] wheels = new idAFBody[4];
+
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleFourWheels );
         public idAFEntity_VehicleFourWheels() {
@@ -1759,7 +1761,7 @@ public class AFEntity {
         public void Think() {
             int i;
             float force = 0, velocity = 0, steerAngle = 0;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idRotation rotation = new idRotation();
 
@@ -1873,6 +1875,7 @@ public class AFEntity {
         private final float[] wheelAngles = new float[6];
         private final int/*jointHandle_t*/[] wheelJoints = new int[6];
         private final idAFBody[] wheels = new idAFBody[6];
+
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleSixWheels );
         public idAFEntity_VehicleSixWheels() {
@@ -1937,7 +1940,7 @@ public class AFEntity {
         public void Think() {
             int i;
             float force = 0, velocity = 0, steerAngle = 0;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idRotation rotation = new idRotation();
 
@@ -2051,7 +2054,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
-            idVec3 steamDir;
+            final idVec3 steamDir = new idVec3();
             final String steamBodyName;
 
             LoadAF();
@@ -2065,7 +2068,7 @@ public class AFEntity {
             steamBodyName = spawnArgs.GetString("steamBody", "");
             steamForce = spawnArgs.GetFloat("steamForce", "2000");
             steamUpForce = spawnArgs.GetFloat("steamUpForce", "10");
-            steamDir = af.GetPhysics().GetAxis(steamBody).oGet(2);//[2];
+            steamDir.oSet(af.GetPhysics().GetAxis(steamBody).oGet(2));//[2];
             steamBody = af.GetPhysics().GetBodyId(steamBodyName);
             force.SetPosition(af.GetPhysics(), steamBody, af.GetPhysics().GetOrigin(steamBody));
             force.SetForce(steamDir.oMultiply(-steamForce));
@@ -2086,7 +2089,7 @@ public class AFEntity {
 
         @Override
         public void Think() {
-            idVec3 steamDir = new idVec3();
+            final idVec3 steamDir = new idVec3();
 
             if ((thinkFlags & TH_THINK) != 0) {
                 steamDir.x = gameLocal.random.CRandomFloat() * steamForce;
@@ -2271,12 +2274,12 @@ public class AFEntity {
         }
 
         @Override
-        public boolean run(Object model, idJointMat[] frame, String jointName, idVec3 origin, idMat3 axis) {
+        public boolean run(Object model, idJointMat[] frame, String jointName, final idVec3 origin, idMat3 axis) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
         @Override
-        public boolean run(Object model, idJointMat[] frame, idStr jointName, idVec3 origin, idMat3 axis) {
+        public boolean run(Object model, idJointMat[] frame, idStr jointName, final idVec3 origin, idMat3 axis) {
 
             int i;
 //        jointTransformData_t *data = reinterpret_cast<jointTransformData_t *>(model);

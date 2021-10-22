@@ -354,7 +354,7 @@ public class Physics_Static {
 
         @Override
         public idVec3 GetOrigin(int id /*= 0*/) {
-            return new idVec3(current.origin);
+            return current.origin;
         }
 
         @Override
