@@ -118,7 +118,7 @@ public class GameEdit {
             }
             BecomeInactive(TH_UPDATEVISUALS);
 
-            final idVec3 origin = new idVec3(GetPhysics().GetOrigin());
+            final idVec3 origin = GetPhysics().GetOrigin();
             final idMat3 axis = GetPhysics().GetAxis();
             gameRenderWorld.DebugArrow(colorYellow, origin.oPlus(axis.oGet(1).oMultiply(-5.0f).oPlus(axis.oGet(2).oMultiply(5.0f))), origin, 2);
             gameRenderWorld.DebugArrow(colorRed, origin, draggedPosition, 2);

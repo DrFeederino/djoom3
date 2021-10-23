@@ -1005,8 +1005,8 @@ public class Projectile {
                 physicsObj.WriteToSnapshot(msg);
             } else {
                 msg.WriteBits(0, 1);
-                final idVec3 origin = new idVec3(physicsObj.GetOrigin());
-                final idVec3 velocity = new idVec3(physicsObj.GetLinearVelocity());
+                final idVec3 origin = physicsObj.GetOrigin();
+                final idVec3 velocity = physicsObj.GetLinearVelocity();
 
                 msg.WriteFloat(origin.x);
                 msg.WriteFloat(origin.y);
@@ -1417,7 +1417,7 @@ public class Projectile {
                     }
                 }
             }
-            final idVec3 vel = new idVec3(physicsObj.GetLinearVelocity());
+            final idVec3 vel = physicsObj.GetLinearVelocity();
             angles = vel.ToAngles();
             speed = vel.Length();
             rndScale = spawnArgs.GetAngles("random", "15 15 0");

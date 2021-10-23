@@ -1031,7 +1031,7 @@ public class AI_pathing {
         p[0] = (-b + sqrtd) * inva;
         p[1] = (-b - sqrtd) * inva;
         n = 0;
-        for (i = 0; i < bal.length; i++) {
+        for (i = 0; i < 2; i++) {
             if (p[i] <= 0.0f) {
                 continue;
             }

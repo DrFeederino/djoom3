@@ -18,6 +18,7 @@ import neo.idlib.containers.CBool;
 import neo.idlib.containers.CFloat;
 import neo.idlib.containers.CInt;
 import neo.idlib.containers.List.idList;
+import neo.idlib.geometry.TraceModel;
 import neo.idlib.math.Lcp.idLCP;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Matrix.idMatX;
@@ -41,6 +42,7 @@ import static neo.framework.UsercmdGen.USERCMD_MSEC;
 import static neo.idlib.Lib.*;
 import static neo.idlib.Lib.idLib.cvarSystem;
 import static neo.idlib.Text.Str.va;
+import static neo.idlib.geometry.TraceModel.MAX_TRACEMODEL_EDGES;
 import static neo.idlib.math.Math_h.*;
 import static neo.idlib.math.Matrix.idMat3.*;
 import static neo.idlib.math.Matrix.idMatX.MATX_ALLOCA;
@@ -3076,10 +3078,10 @@ public class Physics_AF {
     public static class idAFConstraint_PyramidLimit extends idAFConstraint {
 
         protected final idVec3 body1Axis;                     // axis in body1 space that should stay within the cone
+        protected final idVec3 pyramidAnchor;                 // top of the pyramid in body2 space
         protected float[] cosAngle = new float[2];  // cos( pyramidAngle / 2 )
         protected float[] cosHalfAngle = new float[2];  // cos( pyramidAngle / 4 )
         protected float epsilon;                        // lcp epsilon
-        protected final idVec3 pyramidAnchor;                 // top of the pyramid in body2 space
         protected idMat3 pyramidBasis;                  // pyramid basis in body2 space with base[2] being the pyramid axis
         protected float[] sinHalfAngle = new float[2];  // sin( pyramidAngle / 4 )
         //
@@ -3345,10 +3347,11 @@ public class Physics_AF {
     // vehicle suspension
     public static class idAFConstraint_Suspension extends idAFConstraint {
 
+        protected final idVec3 localOrigin;         // position of suspension relative to body1
+        protected final idVec3 wheelOffset;         // wheel position relative to body1
         protected float epsilon;             // lcp epsilon
         protected float friction;            // friction
         protected idMat3 localAxis;           // orientation of suspension relative to body1
-        protected final idVec3 localOrigin;         // position of suspension relative to body1
         protected boolean motorEnabled;        // whether the motor is enabled or not
         protected float motorForce;          // motor force
         protected float motorVelocity;       // desired velocity
@@ -3359,7 +3362,6 @@ public class Physics_AF {
         protected float suspensionUp;        // suspension up movement
         protected trace_s trace;               // contact point with the ground
         protected idClipModel wheelModel;          // wheel model
-        protected final idVec3 wheelOffset;         // wheel position relative to body1
         //
         //
 
@@ -3601,11 +3603,11 @@ public class Physics_AF {
     public static class AFBodyPState_s {
 
         private static int DBG_counter = 0;
+        final idVec3 worldOrigin;              // position in world space
         private final int DBG_count = DBG_counter++;
         idVec6 externalForce;            // external force and torque applied to body
         idVec6 spatialVelocity;          // linear and rotational velocity of body
         idMat3 worldAxis;                // axis at worldOrigin
-        final idVec3 worldOrigin;              // position in world space
 
         public AFBodyPState_s() {
             this.worldOrigin = new idVec3();
@@ -3634,29 +3636,29 @@ public class Physics_AF {
         private static int DBG_counter = 0;
         private final int DBG_count = DBG_counter++;
         private final idVec3 atRestOrigin = new idVec3();                // origin at rest
+        private final idVec3 centerOfMass = new idVec3();        // center of mass of body
+        private final idVec3 contactMotorDir = new idVec3();     // contact motor direction
+        private final idVec3 frictionDir = new idVec3();         // specifies a single direction of friction in body space
+        //
+        // physics state
+        private final AFBodyPState_s[] state = new AFBodyPState_s[2];
         private idMatX I, invI;                     // transformed inertia
         private idMatX J;                                  // transformed constraint matrix
         private idVecX acceleration;                       // acceleration
         private float angularFriction;     // rotational friction
         private idMat3 atRestAxis;                  // axis at rest
-        private final idVec3 centerOfMass = new idVec3();        // center of mass of body
         private idVecX auxForce;                           // force from auxiliary constraints
         private float bouncyness;          // bounce
-        private final idVec3 contactMotorDir = new idVec3();     // contact motor direction
         private idList<idAFBody> children;            // children of this body
         private int clipMask;            // contents this body collides with
         private idClipModel clipModel;           // model used for collision detection
         private idList<idAFConstraint> constraints;         // all constraints attached to this body
         private float contactFriction;     // friction with contact surfaces
-        private final idVec3 frictionDir = new idVec3();         // specifies a single direction of friction in body space
         private float contactMotorForce;   // maximum force applied to reach the motor velocity
         private float contactMotorVelocity;// contact motor velocity
         private AFBodyPState_s current;                     // current physics state
         //
         private bodyFlags_s fl;
-        //
-        // physics state
-        private final AFBodyPState_s[] state = new AFBodyPState_s[2];
         private idMat3 inertiaTensor;       // inertia tensor
         private float invMass;             // inverse mass
         private idMat3 inverseInertiaTensor;// inverse inertia tensor
@@ -7169,7 +7171,7 @@ public class Physics_AF {
                     }
                     CollisionModel_local.collisionModelManager.DrawModel(body.clipModel.Handle(), body.clipModel.GetOrigin(),
                             body.clipModel.GetAxis(), getVec3_origin(), 0.0f);
-                    //DrawTraceModelSilhouette( gameLocal.GetLocalPlayer().GetEyePosition(), body.clipModel );
+                    DrawTraceModelSilhouette(gameLocal.GetLocalPlayer().GetEyePosition(), body.clipModel);
                 }
             }
 
@@ -7242,6 +7244,22 @@ public class Physics_AF {
                 for (i = 0; i < trees.Num(); i++) {
                     trees.oGet(i).DebugDraw(idStr.ColorForIndex(i + 3));
                 }
+            }
+        }
+
+        private void DrawTraceModelSilhouette(final idVec3 projectionOrigin, final idClipModel clipModel) {
+            int i, numSilEdges;
+            int[] silEdges = new int[MAX_TRACEMODEL_EDGES];
+            final idVec3 v1 = new idVec3(), v2 = new idVec3();
+            final TraceModel.idTraceModel trm = clipModel.GetTraceModel();
+            final idVec3 origin = clipModel.GetOrigin();
+            final idMat3 axis = clipModel.GetAxis();
+
+            numSilEdges = trm.GetProjectionSilhouetteEdges((projectionOrigin.oMinus(origin)).oMultiply(axis.Transpose()), silEdges);
+            for (i = 0; i < numSilEdges; i++) {
+                v1.oSet(trm.verts[trm.edges[Math.abs(silEdges[i])].v[INTSIGNBITSET(silEdges[i])]]);
+                v2.oSet(trm.verts[trm.edges[Math.abs(silEdges[i])].v[INTSIGNBITNOTSET(silEdges[i])]]);
+                gameRenderWorld.DebugArrow(colorRed, origin.oPlus(v1.oMultiply(axis)), origin.oPlus(v2.oMultiply(axis)), 1);
             }
         }
 

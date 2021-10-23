@@ -5192,7 +5192,7 @@ public class Game_local {
         private void ShowTargets() {
             idMat3 axis = GetLocalPlayer().viewAngles.ToMat3();
             final idVec3 up = new idVec3(axis.oGet(2).oMultiply(5.0f));
-            final idVec3 viewPos = new idVec3(GetLocalPlayer().GetPhysics().GetOrigin());
+            final idVec3 viewPos = GetLocalPlayer().GetPhysics().GetOrigin();
             idBounds viewTextBounds = new idBounds(viewPos);
             idBounds viewBounds = new idBounds(viewPos);
             idBounds box = new idBounds(new idVec3(-4.0f, -4.0f, -4.0f), new idVec3(4.0f, 4.0f, 4.0f));

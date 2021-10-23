@@ -3922,7 +3922,7 @@ public class Player {
             int delta;
 
             // CalculateRenderView must have been called first
-            final idVec3 viewOrigin = new idVec3(firstPersonViewOrigin);
+            final idVec3 viewOrigin = firstPersonViewOrigin;
             final idMat3 viewAxis = firstPersonViewAxis;
 
             // these cvars are just for hand tweaking before moving a value to the weapon def

@@ -1066,9 +1066,9 @@ public class tr_stencilshadow {
                 light.numShadowFrustums = 0;
                 for (int side = 0; side < 6; side++) {
                     shadowFrustum_t frust = light.shadowFrustums[light.numShadowFrustums];
-                    final idVec3 p1 = new idVec3(corners[faceCorners[side][0]]);
-                    final idVec3 p2 = new idVec3(corners[faceCorners[side][1]]);
-                    final idVec3 p3 = new idVec3(corners[faceCorners[side][2]]);
+                    final idVec3 p1 = corners[faceCorners[side][0]];
+                    final idVec3 p2 = corners[faceCorners[side][1]];
+                    final idVec3 p3 = corners[faceCorners[side][2]];
                     idPlane backPlane = new idPlane();
 
                     // plane will have positive side inward
@@ -1086,15 +1086,15 @@ public class tr_stencilshadow {
 
                     // make planes with positive side facing inwards in light local coordinates
                     for (int edge = 0; edge < 4; edge++) {
-                        final idVec3 p4 = new idVec3(corners[faceCorners[side][edge]]);
-                        final idVec3 p5 = new idVec3(corners[faceCorners[side][(edge + 1) & 3]]);
+                        final idVec3 p4 = corners[faceCorners[side][edge]];
+                        final idVec3 p5 = corners[faceCorners[side][(edge + 1) & 3]];
 
                         // create a plane that goes through the center of projection
                         frust.planes[edge].FromPoints(p5, p4, light.globalLightOrigin);
 
                         // see if we should use an adjacent plane instead
                         if (centerOutside) {
-                            final idVec3 p6 = new idVec3(corners[faceEdgeAdjacent[side][edge]]);
+                            final idVec3 p6 = corners[faceEdgeAdjacent[side][edge]];
                             idPlane sidePlane = new idPlane();
 
                             sidePlane.FromPoints(p5, p4, p6);

@@ -89,7 +89,7 @@ public class AI_Vagary {
                 }
 
                 idPhysics entPhys = ent.GetPhysics();
-                final idVec3 entOrg = new idVec3(entPhys.GetOrigin());
+                final idVec3 entOrg = entPhys.GetOrigin();
                 dist = (entOrg.oMinus(enemyEyePos)).LengthFast();
                 if (dist < minDist.value) {
                     continue;

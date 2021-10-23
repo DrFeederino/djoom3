@@ -1131,7 +1131,7 @@ public class Winding {
             GetPlane(plane);
 
             for (i = 0; i < numPoints; i++) {
-                final idVec3 p1 = new idVec3(p[i].ToVec3());
+                final idVec3 p1 = p[i].ToVec3();
 
                 // check if the winding is huge
                 for (j = 0; j < 3; j++) {
@@ -1155,7 +1155,7 @@ public class Winding {
                 }
 
                 // check if the edge isn't degenerate
-                final idVec3 p2 = new idVec3(p[j].ToVec3());
+                final idVec3 p2 = p[j].ToVec3();
                 dir.oSet(p2.oMinus(p1));
 
                 if (dir.Length() < ON_EPSILON) {

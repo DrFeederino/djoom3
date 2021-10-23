@@ -143,8 +143,8 @@ public class shadowopt3 {
      */
     static void CreateEdgesForTri(shadowTri_t tri) {
         for (int j = 0; j < 3; j++) {
-            final idVec3 v1 = new idVec3(tri.v[j]);
-            final idVec3 v2 = new idVec3(tri.v[(j + 1) % 3]);
+            final idVec3 v1 = tri.v[j];
+            final idVec3 v2 = tri.v[(j + 1) % 3];
 
             tri.edge[j].Cross(v2, v1);
             tri.edge[j].Normalize();
@@ -496,8 +496,8 @@ public class shadowopt3 {
                 continue;    // degenerate
             }
 
-            final idVec3 v1 = new idVec3(uniqued[silEdges[i].index[0]]);
-            final idVec3 v2 = new idVec3(uniqued[silEdges[i].index[1]]);
+            final idVec3 v1 = uniqued[silEdges[i].index[0]];
+            final idVec3 v2 = uniqued[silEdges[i].index[1]];
 
             // search for an existing plane
             int j;
@@ -870,7 +870,7 @@ public class shadowopt3 {
         int k;
 
         for (k = 0; k < numUniqued; k++) {
-            final idVec3 check = new idVec3(uniqued[k]);
+            final idVec3 check = uniqued[k];
             if (Math.abs(v.oGet(0) - check.oGet(0)) < UNIQUE_EPSILON
                     && Math.abs(v.oGet(1) - check.oGet(1)) < UNIQUE_EPSILON
                     && Math.abs(v.oGet(2) - check.oGet(2)) < UNIQUE_EPSILON) {

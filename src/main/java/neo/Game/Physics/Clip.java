@@ -287,7 +287,7 @@ public class Clip {
         }
 
         private static int GetTraceModelHashKey(final idTraceModel trm) {
-            final idVec3 v = new idVec3(trm.bounds.oGet(0));
+            final idVec3 v = trm.bounds.oGet(0);
             return (trm.type.ordinal() << 8) ^ (trm.numVerts << 4) ^ (trm.numEdges << 2) ^ (trm.numPolys << 0) ^ idMath.FloatHash(v.ToFloatPtr(), v.GetDimension());
         }
 

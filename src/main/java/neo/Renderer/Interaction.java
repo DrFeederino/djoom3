@@ -238,7 +238,7 @@ public class Interaction {
 
         out.numVerts = 0;
         for (i = 0; i < in.numVerts; i++) {
-            final idVec3 p1 = new idVec3(in.verts[i]);
+            final idVec3 p1 = in.verts[i];
 
             if (sides[i] == SIDE_FRONT) {
                 out.verts[out.numVerts].oSet(p1);
@@ -250,7 +250,7 @@ public class Interaction {
             }
 
             // generate a split point
-            final idVec3 p2 = new idVec3(in.verts[i + 1]);
+            final idVec3 p2 = in.verts[i + 1];
 
             dot = dists[i] / (dists[i] - dists[i + 1]);
             for (j = 0; j < 3; j++) {

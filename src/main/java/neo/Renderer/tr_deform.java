@@ -971,9 +971,9 @@ public class tr_deform {
             final idVec3 dir = new idVec3(focus.oMinus(origin));
             dir.Normalize();
 
-            final idVec3 p1 = new idVec3(tri.verts[tri.indexes[islands[originIsland].tris[0] + 0]].xyz);
-            final idVec3 p2 = new idVec3(tri.verts[tri.indexes[islands[originIsland].tris[0] + 1]].xyz);
-            final idVec3 p3 = new idVec3(tri.verts[tri.indexes[islands[originIsland].tris[0] + 2]].xyz);
+            final idVec3 p1 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 0]].xyz;
+            final idVec3 p2 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 1]].xyz;
+            final idVec3 p3 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 2]].xyz;
 
             final idVec3 v1 = new idVec3(p2.oMinus(p1));
             v1.Normalize();

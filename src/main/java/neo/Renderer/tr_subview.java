@@ -149,9 +149,9 @@ public class tr_subview {
             float dot;
             final idVec3 d1 = new idVec3(), d2 = new idVec3();
 
-            final idVec3 v1 = new idVec3(tri.verts[tri.indexes[i]].xyz);
-            final idVec3 v2 = new idVec3(tri.verts[tri.indexes[i + 1]].xyz);
-            final idVec3 v3 = new idVec3(tri.verts[tri.indexes[i + 2]].xyz);
+            final idVec3 v1 = tri.verts[tri.indexes[i]].xyz;
+            final idVec3 v2 = tri.verts[tri.indexes[i + 1]].xyz;
+            final idVec3 v3 = tri.verts[tri.indexes[i + 2]].xyz;
 
             // this is a hack, because R_GlobalPointToLocal doesn't work with the non-normalized
             // axis that we get from the gui view transform.  It doesn't hurt anything, because

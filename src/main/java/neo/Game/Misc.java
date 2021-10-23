@@ -2218,7 +2218,7 @@ public class Misc {
 
             masterEnt = master.GetEntity();
             if (masterEnt != null) {
-                final idVec3 origin = new idVec3(GetPhysics().GetOrigin());
+                final idVec3 origin = GetPhysics().GetOrigin();
                 masterEnt.SetBeamTarget(origin);
             }
             Present();
@@ -2245,7 +2245,7 @@ public class Misc {
 
             targetEnt = target.GetEntity();
             if (targetEnt != null) {
-                final idVec3 origin = new idVec3(targetEnt.GetPhysics().GetOrigin());
+                final idVec3 origin = targetEnt.GetPhysics().GetOrigin();
                 SetBeamTarget(origin);
             }
         }
@@ -3104,7 +3104,7 @@ public class Misc {
                 BecomeInactive(TH_THINK);
             }
 
-            final idVec3 toPos = new idVec3(targetEnt.GetEyePosition());
+            final idVec3 toPos = targetEnt.GetEyePosition();
 
             num = 0;
             for (i = 0; i < targets.Num(); i++) {
@@ -3131,7 +3131,7 @@ public class Misc {
                 }
 
                 entPhys = ent.GetPhysics();
-                final idVec3 entOrg = new idVec3(entPhys.GetOrigin());
+                final idVec3 entOrg = entPhys.GetOrigin();
 
                 gameLocal.clip.TracePoint(tr, entOrg, toPos, MASK_OPAQUE, ent);
                 if (tr.fraction >= 1.0f || gameLocal.GetTraceEntity(tr).equals(targetEnt)) {
@@ -3193,7 +3193,7 @@ public class Misc {
             targetTime.SetNum(targets.Num());
             lastTargetPos.SetNum(targets.Num());
 
-            final idVec3 toPos = new idVec3(target.GetEntity().GetEyePosition());
+            final idVec3 toPos = target.GetEntity().GetEyePosition();
 
             // calculate the relative times of all the objects
             time = 0.0f;

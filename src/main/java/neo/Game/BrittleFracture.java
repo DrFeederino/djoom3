@@ -1143,7 +1143,7 @@ public class BrittleFracture {
 
                 shard_s shard1 = shards.oGet(i);
                 final idWinding w1 = shard1.winding;
-                final idVec3 origin1 = new idVec3(shard1.clipModel.GetOrigin());
+                final idVec3 origin1 = shard1.clipModel.GetOrigin();
                 final idMat3 axis1 = shard1.clipModel.GetAxis();
 
                 for (k = 0; k < w1.GetNumPoints(); k++) {
@@ -1181,12 +1181,12 @@ public class BrittleFracture {
                         }
 
                         final idWinding w2 = shard2.winding;
-                        final idVec3 origin2 = new idVec3(shard2.clipModel.GetOrigin());
+                        final idVec3 origin2 = shard2.clipModel.GetOrigin();
                         final idMat3 axis2 = shard2.clipModel.GetAxis();
 
                         for (l = w2.GetNumPoints() - 1; l >= 0; l--) {
-                            p1.oSet(origin1.oPlus(w2.oGet(l).ToVec3().oMultiply(axis2)));
-                            p2.oSet(origin1.oPlus(w2.oGet((l - 1) % w2.GetNumPoints()).ToVec3().oMultiply(axis2)));
+                            p1.oSet(origin2.oPlus(w2.oGet(l).ToVec3().oMultiply(axis2)));
+                            p2.oSet(origin2.oPlus(w2.oGet((l - 1) % w2.GetNumPoints()).ToVec3().oMultiply(axis2)));
                             if (plane[0].Side(p2, 0.1f) == SIDE_FRONT && plane[1].Side(p1, 0.1f) == SIDE_FRONT) {
                                 if (plane[2].Side(p1, 0.1f) == SIDE_ON && plane[3].Side(p1, 0.1f) == SIDE_ON) {
                                     if (plane[2].Side(p2, 0.1f) == SIDE_ON && plane[3].Side(p2, 0.1f) == SIDE_ON) {
