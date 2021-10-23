@@ -26,7 +26,7 @@ public class idMat3 {
     private static final idMat3 mat3_default = mat3_identity;
     private static final idMat3 mat3_zero = new idMat3(new idVec3(0, 0, 0), new idVec3(0, 0, 0), new idVec3(0, 0, 0));
     private static int DBG_counter = 0;
-    final idVec3[] mat = {new idVec3(), new idVec3(), new idVec3()};
+    final idVec3[] mat = idVec3.generateArray(3);
     private final int DBG_count = DBG_counter++;
 
     public idMat3() {
@@ -75,9 +75,9 @@ public class idMat3 {
 
     public idMat3(final float[][] src) {
 //	memcpy( mat, src, 3 * 3 * sizeof( float ) );
-        mat[0] = new idVec3(src[0][0], src[0][1], src[0][2]);
-        mat[1] = new idVec3(src[1][0], src[1][1], src[1][2]);
-        mat[2] = new idVec3(src[2][0], src[2][1], src[2][2]);
+        mat[0].oSet(new idVec3(src[0][0], src[0][1], src[0][2]));
+        mat[1].oSet(new idVec3(src[1][0], src[1][1], src[1][2]));
+        mat[2].oSet(new idVec3(src[2][0], src[2][1], src[2][2]));
     }
 
     public static idMat3 getMat3_zero() {
@@ -103,7 +103,7 @@ public class idMat3 {
         return mat.oMultiply(vec);
     }
 
-    public static idVec3 oMulSet(idVec3 vec, final idMat3 mat) {
+    public static idVec3 oMulSet(final idVec3 vec, final idMat3 mat) {
         float x = mat.mat[0].x * vec.x + mat.mat[1].x * vec.y + mat.mat[2].x * vec.z;
         float y = mat.getRow(0).y * vec.x + mat.mat[1].y * vec.y + mat.mat[2].y * vec.z;
         vec.z = mat.mat[0].z * vec.x + mat.mat[1].z * vec.y + mat.mat[2].z * vec.z;
@@ -361,13 +361,13 @@ public class idMat3 {
         return !Compare(mat3_identity);
     }
 
-    public void ProjectVector(final idVec3 src, idVec3 dst) {
+    public void ProjectVector(final idVec3 src, final idVec3 dst) {
         dst.x = mat[0].oMultiply(src);
         dst.y = mat[1].oMultiply(src);
         dst.z = mat[2].oMultiply(src);
     }
 
-    public void UnprojectVector(final idVec3 src, idVec3 dst) {
+    public void UnprojectVector(final idVec3 src, final idVec3 dst) {
         dst.oSet(mat[0].oMultiply(src.x).oPlus(
                 mat[1].oMultiply(src.y).oPlus(
                         mat[2].oMultiply(src.z))));
@@ -523,9 +523,9 @@ public class idMat3 {
 
     public idMat3 InertiaTranslate(final float mass, final idVec3 centerOfMass, final idVec3 translation) {
         idMat3 m = new idMat3();
-        idVec3 newCenter;
+        final idVec3 newCenter = new idVec3();
 
-        newCenter = centerOfMass.oPlus(translation);
+        newCenter.oSet(centerOfMass.oPlus(translation));
 
         m.mat[0].x = mass * ((centerOfMass.y * centerOfMass.y + centerOfMass.z * centerOfMass.z)
                 - (newCenter.y * newCenter.y + newCenter.z * newCenter.z));
@@ -543,9 +543,9 @@ public class idMat3 {
 
     public idMat3 InertiaTranslateSelf(final float mass, final idVec3 centerOfMass, final idVec3 translation) {
         idMat3 m = new idMat3();
-        idVec3 newCenter;
+        final idVec3 newCenter = new idVec3();
 
-        newCenter = centerOfMass.oPlus(translation);
+        newCenter.oSet(centerOfMass.oPlus(translation));
 
         m.mat[0].x = mass * ((centerOfMass.y * centerOfMass.y + centerOfMass.z * centerOfMass.z)
                 - (newCenter.y * newCenter.y + newCenter.z * newCenter.z));

@@ -357,7 +357,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void Dot(float[] dst, idVec3 constant, idVec3[] src, int count) {
+        public void Dot(float[] dst, final idVec3 constant, final idVec3[] src, int count) {
             int _IX;
             for (_IX = 0; _IX < count; _IX++) {
                 dst[_IX] = src[_IX].oMultiply(constant);
@@ -372,7 +372,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void Dot(float[] dst, idVec3 constant, idPlane[] src, int count) {
+        public void Dot(float[] dst, final idVec3 constant, idPlane[] src, int count) {
             int _IX;
             for (_IX = 0; _IX < count; _IX++) {
                 dst[_IX] = constant.oMultiply(src[_IX].Normal()) + src[_IX].oGet(3);//NB I'm not saying operator overloading would have prevented this bug, but....!@#$%$@#^&#$^%^#%^&#$*^&
@@ -387,7 +387,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void Dot(float[] dst, idVec3 constant, idDrawVert[] src, int count) {
+        public void Dot(float[] dst, final idVec3 constant, idDrawVert[] src, int count) {
             int _IX;
             for (_IX = 0; _IX < count; _IX++) {
                 dst[_IX + 0] = src[_IX].xyz.oMultiply(constant);
@@ -402,7 +402,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void Dot(float[] dst, idPlane constant, idVec3[] src, int count) {
+        public void Dot(float[] dst, idPlane constant, final idVec3[] src, int count) {
             int _IX;
             for (_IX = 0; _IX < count; _IX++) {
                 dst[_IX] = constant.Normal().oMultiply(src[_IX]) + constant.oGet(3);
@@ -447,7 +447,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void Dot(float[] dst, idVec3[] src0, idVec3[] src1, int count) {
+        public void Dot(float[] dst, final idVec3[] src0, final idVec3[] src1, int count) {
             int _IX;
             for (_IX = 0; _IX < count; _IX++) {
                 dst[_IX] = src0[_IX].oMultiply(src1[_IX]);
@@ -716,7 +716,7 @@ public class Simd_Generic {
         }
 
         @Override
-        public void MinMax(idVec3 min, idVec3 max, idVec3[] src, int count) {
+        public void MinMax(final idVec3 min, final idVec3 max, final idVec3[] src, int count) {
             min.x = min.y = min.z = idMath.INFINITY;
             max.x = max.y = max.z = -idMath.INFINITY;
             for (int _IX = 0; _IX < count; _IX++) {
@@ -731,7 +731,7 @@ public class Simd_Generic {
         }
 
         @Override
-        public void MinMax(idVec3 min, idVec3 max, idDrawVert[] src, int count) {
+        public void MinMax(final idVec3 min, final idVec3 max, idDrawVert[] src, int count) {
             min.x = min.y = min.z = idMath.INFINITY;
             max.x = max.y = max.z = -idMath.INFINITY;
             for (int _IX = 0; _IX < count; _IX++) {
@@ -746,7 +746,7 @@ public class Simd_Generic {
         }
 
         @Override
-        public void MinMax(idVec3 min, idVec3 max, idDrawVert[] src, int[] indexes, int count) {
+        public void MinMax(final idVec3 min, final idVec3 max, idDrawVert[] src, int[] indexes, int count) {
             min.x = min.y = min.z = idMath.INFINITY;
             max.x = max.y = max.z = -idMath.INFINITY;
             for (int _IX = 0; _IX < count; _IX++) {
@@ -2528,9 +2528,9 @@ public class Simd_Generic {
             ByteBuffer jointsPtr = jmtobb(joints);
 
             for (j = i = 0; i < numVerts; i++) {
-                idVec3 v;
+                final idVec3 v = new idVec3();
 
-                v = toIdJointMat(jointsPtr, index[j * 2 + 0]).oMultiply(weights[j]);//TODO:check if this equals to the byte pointer
+                v.oSet(toIdJointMat(jointsPtr, index[j * 2 + 0]).oMultiply(weights[j]));
                 while (index[j * 2 + 1] == 0) {
                     j++;
                     v.oPluSet(toIdJointMat(jointsPtr, index[j * 2 + 0]).oMultiply(weights[j]));
@@ -2651,7 +2651,7 @@ public class Simd_Generic {
                 final idDrawVert a, b, c;
                 float[] d0 = new float[3], d1 = new float[3];
                 float f;
-                idVec3 n;
+                final idVec3 n = new idVec3();
 
                 a = verts[indexes[i + 0]];
                 b = verts[indexes[i + 1]];
@@ -2665,10 +2665,10 @@ public class Simd_Generic {
                 d1[1] = c.xyz.oGet(1) - a.xyz.oGet(1);
                 d1[2] = c.xyz.oGet(2) - a.xyz.oGet(2);
 
-                n = new idVec3(
+                n.oSet(new idVec3(
                         d1[1] * d0[2] - d1[2] * d0[1],
                         d1[2] * d0[0] - d1[0] * d0[2],
-                        d1[0] * d0[1] - d1[1] * d0[0]);
+                        d1[0] * d0[1] - d1[1] * d0[0]));
 
                 f = idMath.RSqrt(n.x * n.x + n.y * n.y + n.z * n.z);
 
@@ -2704,7 +2704,7 @@ public class Simd_Generic {
                 int signBit;
                 float[] d0 = new float[5], d1 = new float[5];
                 float f, area;
-                idVec3 n, t0 = new idVec3(), t1 = new idVec3();
+                final idVec3 n = new idVec3(), t0 = new idVec3(), t1 = new idVec3();
 
                 int v0 = indexes[i + 0];
                 int v1 = indexes[i + 1];
@@ -2727,10 +2727,10 @@ public class Simd_Generic {
                 d1[4] = c.st.oGet(1) - a.st.oGet(1);
 
                 // normal
-                n = new idVec3(
+                n.oSet(new idVec3(
                         d1[1] * d0[2] - d1[2] * d0[1],
                         d1[2] * d0[0] - d1[0] * d0[2],
-                        d1[0] * d0[1] - d1[1] * d0[0]);
+                        d1[0] * d0[1] - d1[1] * d0[0]));
 
                 f = idMath.RSqrt(n.x * n.x + n.y * n.y + n.z * n.z);
 
@@ -2890,7 +2890,7 @@ public class Simd_Generic {
         public void NormalizeTangents(idDrawVert[] verts, int numVerts) {
 
             for (int i = 0; i < numVerts; i++) {
-                idVec3 v = verts[i].normal;
+                final idVec3 v = verts[i].normal;
                 float f;
 
                 f = idMath.RSqrt(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -2899,7 +2899,7 @@ public class Simd_Generic {
                 v.z *= f;
 
                 for (int j = 0; j < 2; j++) {
-                    idVec3 t = verts[i].tangents[j];
+                    final idVec3 t = verts[i].tangents[j];
 
                     t.oMinSet(v.oMultiply(t.oMultiply(v)));
                     f = idMath.RSqrt(t.x * t.x + t.y * t.y + t.z * t.z);
@@ -2920,7 +2920,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void CreateTextureSpaceLightVectors(idVec3[] lightVectors, idVec3 lightOrigin, idDrawVert[] verts, int numVerts, int[] indexes, int numIndexes) {
+        public void CreateTextureSpaceLightVectors(final idVec3[] lightVectors, final idVec3 lightOrigin, idDrawVert[] verts, int numVerts, int[] indexes, int numIndexes) {
 
             boolean[] used = new boolean[numVerts];
 //	memset( used, 0, numVerts * sizeof( used[0] ) );
@@ -2936,7 +2936,7 @@ public class Simd_Generic {
 
                 final idDrawVert v = verts[i];
 
-                idVec3 lightDir = lightOrigin.oMinus(v.xyz);
+                final idVec3 lightDir = new idVec3(lightOrigin.oMinus(v.xyz));
 
                 lightVectors[i].oSet(0, lightDir.oMultiply(v.tangents[0]));
                 lightVectors[i].oSet(1, lightDir.oMultiply(v.tangents[1]));
@@ -2955,7 +2955,7 @@ public class Simd_Generic {
          ============
          */
         @Override
-        public void CreateSpecularTextureCoords(idVec4[] texCoords, idVec3 lightOrigin, idVec3 viewOrigin, idDrawVert[] verts, int numVerts, int[] indexes, int numIndexes) {
+        public void CreateSpecularTextureCoords(final idVec4[] texCoords, final idVec3 lightOrigin, final idVec3 viewOrigin, idDrawVert[] verts, int numVerts, int[] indexes, int numIndexes) {
 
             boolean[] used = new boolean[numVerts];
 //	memset( used, 0, numVerts * sizeof( used[0] ) );
@@ -2971,8 +2971,8 @@ public class Simd_Generic {
 
                 final idDrawVert v = verts[i];
 
-                idVec3 lightDir = lightOrigin.oMinus(v.xyz);
-                idVec3 viewDir = viewOrigin.oMinus(v.xyz);
+                final idVec3 lightDir = new idVec3(lightOrigin.oMinus(v.xyz));
+                final idVec3 viewDir = new idVec3(viewOrigin.oMinus(v.xyz));
 
                 float ilength;
 
@@ -2992,7 +2992,7 @@ public class Simd_Generic {
         }
 
         @Override
-        public int CreateShadowCache(idVec4[] vertexCache, int[] vertRemap, idVec3 lightOrigin, idDrawVert[] verts, int numVerts) {
+        public int CreateShadowCache(idVec4[] vertexCache, int[] vertRemap, final idVec3 lightOrigin, idDrawVert[] verts, int numVerts) {
             int outVerts = 0;
 
             for (int i = 0; i < numVerts; i++) {

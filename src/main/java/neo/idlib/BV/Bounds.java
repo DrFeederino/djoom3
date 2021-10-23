@@ -31,16 +31,16 @@ public class Bounds {
     static idBounds BoundsForPointRotation(final idVec3 start, final idRotation rotation) {
         int i;
         float radiusSqr;
-        idVec3 v1, v2;
-        idVec3 origin, axis, end;
-        idBounds bounds = new idBounds();
+        final idVec3 v1 = new idVec3(), v2 = new idVec3();
+        final idVec3 origin = new idVec3(), axis = new idVec3(), end = new idVec3();
+        final idBounds bounds = new idBounds();
 
-        end = rotation.oMultiply(start);
-        axis = rotation.GetVec();
-        origin = rotation.GetOrigin().oPlus(axis.oMultiply(axis.oMultiply((start.oMinus(rotation.GetOrigin())))));
+        end.oSet(rotation.oMultiply(start));
+        axis.oSet(rotation.GetVec());
+        origin.oSet(rotation.GetOrigin().oPlus(axis.oMultiply(axis.oMultiply((start.oMinus(rotation.GetOrigin()))))));
         radiusSqr = start.oMinus(origin).LengthSqr();
-        v1 = (start.oMinus(origin)).Cross(axis);
-        v2 = (end.oMinus(origin)).Cross(axis);
+        v1.oSet((start.oMinus(origin)).Cross(axis));
+        v2.oSet((end.oMinus(origin)).Cross(axis));
 
         for (i = 0; i < 3; i++) {
             // if the derivative changes sign along this axis during the rotation from start to end
@@ -433,10 +433,10 @@ public class Bounds {
         }
 
         public float PlaneDistance(final idPlane plane) {
-            idVec3 center;
+            final idVec3 center = new idVec3();
             float d1, d2;
 
-            center = (b[0].oPlus(b[1])).oMultiply(0.5f);
+            center.oSet((b[0].oPlus(b[1])).oMultiply(0.5f));
 
             d1 = plane.Distance(center);
             d2 = Math.abs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
@@ -457,10 +457,10 @@ public class Bounds {
         }
 
         public int PlaneSide(final idPlane plane, final float epsilon) {
-            idVec3 center;
+            final idVec3 center = new idVec3();
             float d1, d2;
 
-            center = (b[0].oPlus(b[1])).oMultiply(0.5f);
+            center.oSet((b[0].oPlus(b[1])).oMultiply(0.5f));
 
             d1 = plane.Distance(center);
             d2 = Math.abs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
@@ -497,11 +497,11 @@ public class Bounds {
          */
         public boolean LineIntersection(final idVec3 start, final idVec3 end) {
             float[] ld = new float[3];
-            idVec3 center = (b[0].oPlus(b[1])).oMultiply(0.5f);
-            idVec3 extents = b[1].oMinus(center);
-            idVec3 lineDir = (end.oMinus(start)).oMultiply(0.5f);
-            idVec3 lineCenter = start.oPlus(lineDir);
-            idVec3 dir = lineCenter.oMinus(center);
+            final idVec3 center = new idVec3((b[0].oPlus(b[1])).oMultiply(0.5f));
+            final idVec3 extents = new idVec3(b[1].oMinus(center));
+            final idVec3 lineDir = new idVec3((end.oMinus(start)).oMultiply(0.5f));
+            final idVec3 lineCenter = new idVec3(start.oPlus(lineDir));
+            final idVec3 dir = new idVec3(lineCenter.oMinus(center));
 
             ld[0] = Math.abs(lineDir.oGet(0));
             if (Math.abs(dir.oGet(0)) > extents.oGet(0) + ld[0]) {
@@ -518,7 +518,7 @@ public class Bounds {
                 return false;
             }
 
-            idVec3 cross = lineDir.Cross(dir);
+            final idVec3 cross = new idVec3(lineDir.Cross(dir));
 
             if (Math.abs(cross.oGet(0)) > extents.oGet(1) * ld[2] + extents.oGet(2) * ld[1]) {
                 return false;
@@ -543,7 +543,7 @@ public class Bounds {
         public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale) {// intersection point is start + dir * scale
             int i, ax0, ax1, ax2, side, inside;
             float f;
-            idVec3 hit = new idVec3();
+            final idVec3 hit = new idVec3();
 
             ax0 = -1;
             inside = 0;
@@ -584,10 +584,10 @@ public class Bounds {
         // most tight bounds for the given transformed bounds
         public void FromTransformedBounds(final idBounds bounds, final idVec3 origin, final idMat3 axis) {
             int i;
-            idVec3 center, extents, rotatedExtents = new idVec3();
+            final idVec3 center = new idVec3(), extents = new idVec3(), rotatedExtents = new idVec3();
 
-            center = bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f);
-            extents = bounds.oGet(1).oMinus(center);
+            center.oSet(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f));
+            extents.oSet(bounds.oGet(1).oMinus(center));
 
             for (i = 0; i < 3; i++) {
                 rotatedExtents.oSet(i, Math.abs(extents.oGet(0) * axis.oGet(0).oGet(i))
@@ -595,7 +595,7 @@ public class Bounds {
                         + Math.abs(extents.oGet(2) * axis.oGet(2).oGet(i)));
             }
 
-            center = origin.oPlus(axis.oMultiply(center));
+            center.oSet(origin.oPlus(axis.oMultiply(center)));
             b[0].oSet(center.oMinus(rotatedExtents));
             b[1].oSet(center.oPlus(rotatedExtents));
         }
@@ -689,11 +689,10 @@ public class Bounds {
         public void FromBoundsRotation(final idBounds bounds, final idVec3 origin, final idMat3 axis, final idRotation rotation) {
             int i;
             float radius;
-            idVec3 point = new idVec3();
-            idBounds rBounds;
+            final idVec3 point = new idVec3();
 
             if (Math.abs(rotation.GetAngle()) < 180.0f) {
-                final idVec3[] rotationPointBounds = BoundsForPointRotation(axis.oMultiply(bounds.oGet(0)).oPlus(origin), rotation).b;
+                final idVec3[] rotationPointBounds = idVec3.copyVec(BoundsForPointRotation(axis.oMultiply(bounds.oGet(0)).oPlus(origin), rotation).b);
                 this.b[0].oSet(rotationPointBounds[0]);
                 this.b[1].oSet(rotationPointBounds[1]);
                 for (i = 1; i < 8; i++) {
@@ -704,7 +703,7 @@ public class Bounds {
                 }
             } else {
 
-                point = (bounds.oGet(1).oMinus(bounds.oGet(0))).oMultiply(0.5f);
+                point.oSet((bounds.oGet(1).oMinus(bounds.oGet(0))).oMultiply(0.5f));
                 radius = (bounds.oGet(1).oMinus(point)).Length() + (point.oMinus(rotation.GetOrigin())).Length();
 
                 // FIXME: these bounds are usually way larger
@@ -713,7 +712,7 @@ public class Bounds {
             }
         }
 
-        public void ToPoints(idVec3[] points) {
+        public void ToPoints(final idVec3[] points) {
             for (int i = 0; i < 8; i++) {
                 points[i].oSet(0, b[(i ^ (i >> 1)) & 1].oGet(0));
                 points[i].oSet(1, b[(i >> 1) & 1].oGet(1));
@@ -730,10 +729,10 @@ public class Bounds {
 
         public void AxisProjection(final idVec3 dir, CFloat min, CFloat max) {
             float d1, d2;
-            idVec3 center, extents;
+            final idVec3 center = new idVec3(), extents = new idVec3();
 
-            center = (b[0].oPlus(b[1])).oMultiply(0.5f);
-            extents = b[1].oMinus(center);
+            center.oSet((b[0].oPlus(b[1])).oMultiply(0.5f));
+            extents.oSet(b[1].oMinus(center));
 
             d1 = dir.oMultiply(center);
             d2 = Math.abs(extents.oGet(0) * dir.oGet(0))
@@ -746,11 +745,11 @@ public class Bounds {
 
         public void AxisProjection(final idVec3 origin, final idMat3 axis, final idVec3 dir, CFloat min, CFloat max) {
             float d1, d2;
-            idVec3 center, extents;
+            final idVec3 center = new idVec3(), extents = new idVec3();
 
-            center = (b[0].oPlus(b[1])).oMultiply(0.5f);
-            extents = b[1].oMinus(center);
-            center = origin.oPlus(axis.oMultiply(center));
+            center.oSet((b[0].oPlus(b[1])).oMultiply(0.5f));
+            extents.oSet(b[1].oMinus(center));
+            center.oSet(origin.oPlus(axis.oMultiply(center)));
 
             d1 = dir.oMultiply(center);
             d2 = Math.abs(extents.oGet(0) * (dir.oMultiply(axis.oGet(0))))

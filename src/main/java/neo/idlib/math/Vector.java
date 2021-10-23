@@ -95,17 +95,17 @@ public class Vector {
         return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
     }
 
-    public static float DotProduct(idVec3 a, idVec3 b) {
+    public static float DotProduct(final idVec3 a, final idVec3 b) {
         return (a.oGet(0) * b.oGet(0)
                 + a.oGet(1) * b.oGet(1)
                 + a.oGet(2) * b.oGet(2));
     }
 
-    public static float DotProduct(idVec3 a, idVec4 b) {
+    public static float DotProduct(final idVec3 a, final idVec4 b) {
         return DotProduct(a, b.ToVec3());
     }
 
-    public static float DotProduct(idVec3 a, idVec5 b) {
+    public static float DotProduct(final idVec3 a, final idVec5 b) {
         return DotProduct(a, b.ToVec3());
     }
 
@@ -136,7 +136,7 @@ public class Vector {
         return c;
     }
 
-    public static idVec3 VectorSubtract(final idVec3 a, final idVec3 b, idVec3 c) {
+    public static idVec3 VectorSubtract(final idVec3 a, final idVec3 b, final idVec3 c) {
         c.oSet(0, a.oGet(0) - b.oGet(0));
         c.oSet(1, a.oGet(1) - b.oGet(1));
         c.oSet(2, a.oGet(2) - b.oGet(2));
@@ -161,7 +161,7 @@ public class Vector {
         o[2] = v[2] + b[2] * s;
     }
 
-    public static void VectorMA(final idVec3 v, final float s, final idVec3 b, idVec3 o) {
+    public static void VectorMA(final idVec3 v, final float s, final idVec3 b, final idVec3 o) {
         o.oSet(0, v.oGet(0) + b.oGet(0) * s);
         o.oSet(1, v.oGet(1) + b.oGet(1) * s);
         o.oSet(2, v.oGet(2) + b.oGet(2) * s);
@@ -173,15 +173,15 @@ public class Vector {
         b[2] = a[2];
     }
 
-    public static void VectorCopy(idVec3 a, idVec3 b) {
+    public static void VectorCopy(final idVec3 a, final idVec3 b) {
         b.oSet(a);
     }
 
-    public static void VectorCopy(idVec3 a, idVec5 b) {
+    public static void VectorCopy(final idVec3 a, final idVec5 b) {
         b.oSet(a);
     }
 
-    public static void VectorCopy(idVec5 a, idVec3 b) {
+    public static void VectorCopy(final idVec5 a, final idVec3 b) {
         b.oSet(a.ToVec3());
     }
 
@@ -547,7 +547,7 @@ public class Vector {
             this.z = z;
         }
 
-        public idVec3(idVec3 v) {
+        public idVec3(final idVec3 v) {
             this.x = v.x;
             this.y = v.y;
             this.z = v.z;
@@ -584,7 +584,7 @@ public class Vector {
         }
 
         public static idVec3[] copyVec(final idVec3[] in) {
-            idVec3[] out = idVec3.generateArray(in.length);
+            final idVec3[] out = idVec3.generateArray(in.length);
             for (int i = 0; i < out.length; i++) {
                 out[i].oSet(in[i]);
             }
@@ -592,7 +592,7 @@ public class Vector {
         }
 
 
-        public static ByteBuffer toByteBuffer(idVec3[] vecs) {
+        public static ByteBuffer toByteBuffer(final idVec3[] vecs) {
             ByteBuffer data = BufferUtils.createByteBuffer(idVec3.BYTES * vecs.length);
 
             for (idVec3 vec : vecs) {
@@ -1085,7 +1085,7 @@ public class Vector {
         }
 
         // vector should be normalized
-        public void NormalVectors(idVec3 left, idVec3 down) {
+        public void NormalVectors(final idVec3 left, final idVec3 down) {
             float d;
 
             d = x * x + y * y;
@@ -1102,7 +1102,7 @@ public class Vector {
             down.oSet(left.Cross(this));
         }
 
-        public void OrthogonalBasis(idVec3 left, idVec3 up) {
+        public void OrthogonalBasis(final idVec3 left, final idVec3 up) {
             float l, s;
 
             if (Math.abs(z) > 0.7f) {
@@ -1158,10 +1158,10 @@ public class Vector {
         }
 
         public boolean ProjectAlongPlane(final idVec3 normal, final float epsilon, final float overBounce) {
-            idVec3 cross;
+            final idVec3 cross = new idVec3();
             float len;
 
-            cross = this.Cross(normal).Cross(this);
+            cross.oSet(this.Cross(normal).Cross(this));
             // normalize so a fixed epsilon can be used
             cross.Normalize();
             len = normal.oMultiply(cross);
@@ -1306,7 +1306,7 @@ public class Vector {
             if (this == o) return true;
             if (!(o instanceof idVec3)) return false;
 
-            idVec3 idVec3 = (idVec3) o;
+            final idVec3 idVec3 = (idVec3) o;
 
             if (Float.compare(idVec3.x, x) != 0) return false;
             if (Float.compare(idVec3.y, y) != 0) return false;
@@ -2153,7 +2153,7 @@ public class Vector {
         }
 
         public float SubVec3_Normalize(final int i) {
-            idVec3 v = this.SubVec3(i);
+            final idVec3 v = this.SubVec3(i);
             final float normalize = v.Normalize();
 
             this.SubVec3_oSet(i, v);
@@ -2622,12 +2622,12 @@ public class Vector {
         }
 
         public void SubVec3_Normalize(int i) {
-            idVec3 vec3 = new idVec3(p, i * 3);
+            final idVec3 vec3 = new idVec3(p, i * 3);
             vec3.Normalize();
             this.SubVec3_oSet(i, vec3);
         }
 
-        public void SubVec3_oSet(int i, idVec3 v) {
+        public void SubVec3_oSet(int i, final idVec3 v) {
             p[i * 3 + 0] = v.oGet(0);
             p[i * 3 + 1] = v.oGet(1);
             p[i * 3 + 2] = v.oGet(2);

@@ -434,7 +434,7 @@ public class Surface_Patch {
         }
 
         // project a point onto a vector to calculate maximum curve error
-        private void ProjectPointOntoVector(final idVec3 point, final idVec3 vStart, final idVec3 vEnd, idVec3 vProj) {
+        private void ProjectPointOntoVector(final idVec3 point, final idVec3 vStart, final idVec3 vEnd, final idVec3 vProj) {
             final idVec3 pVec = new idVec3(), vec = new idVec3();
 
             pVec.oSet(point.oMinus(vStart));
@@ -460,7 +460,7 @@ public class Surface_Patch {
             final idVec3 base = new idVec3();
             final idVec3 delta = new idVec3();
             int x, y;
-            idVec3[] around = idVec3.generateArray(8);
+            final idVec3[] around = idVec3.generateArray(8);
             final idVec3 temp = new idVec3();
             boolean[] good = new boolean[8];
             boolean wrapWidth, wrapHeight;
@@ -473,7 +473,7 @@ public class Surface_Patch {
             //
             // if all points are coplanar, set all normals to that plane
             //
-            idVec3[] extent = idVec3.generateArray(3);
+            final idVec3[] extent = idVec3.generateArray(3);
             float offset;
 
             extent[0].oSet(verts.oGet(width - 1).xyz.oMinus(verts.oGet(0).xyz));

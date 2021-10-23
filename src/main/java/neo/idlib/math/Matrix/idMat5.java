@@ -5,7 +5,8 @@ import neo.idlib.math.Vector.idVec5;
 
 import java.util.Arrays;
 
-import static neo.idlib.math.Matrix.idMat0.*;
+import static neo.idlib.math.Matrix.idMat0.MATRIX_EPSILON;
+import static neo.idlib.math.Matrix.idMat0.MATRIX_INVERSE_EPSILON;
 
 //===============================================================
 //
@@ -573,7 +574,7 @@ public class idMat5 {
 //    #else
         // 86+30+6 = 122 multiplications
         //	  2*1  =   2 divisions
-        idVec3[] r0 = genVec3Array(3), r1 = genVec3Array(3), r2 = genVec3Array(3), r3 = genVec3Array(3);
+        final idVec3[] r0 = idVec3.generateArray(3), r1 = idVec3.generateArray(3), r2 = idVec3.generateArray(3), r3 = idVec3.generateArray(3);
         float c0, c1, c2, det, invDet;
         float[] matt = reinterpret_cast();
 

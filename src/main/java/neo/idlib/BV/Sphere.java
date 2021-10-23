@@ -24,12 +24,13 @@ public class Sphere {
 
     public static class idSphere {
 
-        private idVec3 origin;
+        private final idVec3 origin;
         private float radius;
         //
         //
 
         public idSphere() {
+            origin = new idVec3();
         }
 
         public idSphere(final idVec3 point) {
@@ -107,7 +108,7 @@ public class Sphere {
         }
 
         public void SetOrigin(final idVec3 o) {                    // set origin of sphere
-            origin = o;
+            origin.oSet(o);
         }
 
         public void SetRadius(final float r) {                        // set square radius
@@ -128,7 +129,7 @@ public class Sphere {
 
         public boolean AddPoint(final idVec3 p) {                    // add the point, returns true if the sphere expanded
             if (radius < 0.0f) {
-                origin = p;
+                origin.oSet(p);
                 radius = 0.0f;
                 return true;
             } else {
@@ -145,7 +146,7 @@ public class Sphere {
 
         public boolean AddSphere(final idSphere s) {                    // add the sphere, returns true if the sphere expanded
             if (radius < 0.0f) {
-                origin = s.origin;
+                origin.oSet(s.origin);
                 radius = s.radius;
                 return true;
             } else {
@@ -225,19 +226,19 @@ public class Sphere {
          ============
          */
         public boolean LineIntersection(final idVec3 start, final idVec3 end) {
-            idVec3 r, s, e;
+            final idVec3 r = new idVec3(), s = new idVec3(), e = new idVec3();
             float a;
 
-            s = start.oMinus(origin);
-            e = end.oMinus(origin);
-            r = e.oMinus(s);
+            s.oSet(start.oMinus(origin));
+            e.oSet(end.oMinus(origin));
+            r.oSet(e.oMinus(s));
             a = s.oNegative().oMultiply(r);
             if (a <= 0) {
                 return (s.oMultiply(s) < radius * radius);
             } else if (a >= r.oMultiply(r)) {
                 return (e.oMultiply(e) < radius * radius);
             } else {
-                r = s.oPlus(r.oMultiply(a / (r.oMultiply(r))));
+                r.oSet(s.oPlus(r.oMultiply(a / (r.oMultiply(r)))));
                 return (r.oMultiply(r) < radius * radius);
             }
         }
@@ -254,9 +255,9 @@ public class Sphere {
         // intersection points are (start + dir * scale1) and (start + dir * scale2)
         public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
             float a, b, c, d, sqrtd;
-            idVec3 p;
+            final idVec3 p = new idVec3();
 
-            p = start.oMinus(origin);
+            p.oSet(start.oMinus(origin));
             a = dir.oMultiply(dir);
             b = dir.oMultiply(p);
             c = p.oMultiply(p) - radius * radius;
@@ -286,11 +287,11 @@ public class Sphere {
         public void FromPoints(final idVec3[] points, final int numPoints) {
             int i;
             float radiusSqr, dist;
-            idVec3 mins = new idVec3(), maxs = new idVec3();
+            final idVec3 mins = new idVec3(), maxs = new idVec3();
 
             SIMDProcessor.MinMax(mins, maxs, points, numPoints);
 
-            origin = (mins.oPlus(maxs)).oMultiply(0.5f);
+            origin.oSet((mins.oPlus(maxs)).oMultiply(0.5f));
 
             radiusSqr = 0.0f;
             for (i = 0; i < numPoints; i++) {
@@ -304,25 +305,25 @@ public class Sphere {
 
         // Most tight sphere for a translation.
         public void FromPointTranslation(final idVec3 point, final idVec3 translation) {
-            origin = point.oPlus(translation.oMultiply(0.5f));
+            origin.oSet(point.oPlus(translation.oMultiply(0.5f)));
             radius = idMath.Sqrt(0.5f * translation.LengthSqr());
         }
 
         public void FromSphereTranslation(final idSphere sphere, final idVec3 start, final idVec3 translation) {
-            origin = start.oPlus(sphere.origin).oPlus(translation.oMultiply(0.5f));
+            origin.oSet(start.oPlus(sphere.origin).oPlus(translation.oMultiply(0.5f)));
             radius = idMath.Sqrt(0.5f * translation.LengthSqr()) + sphere.radius;
         }
 
         // Most tight sphere for a rotation.
         public void FromPointRotation(final idVec3 point, final idRotation rotation) {
-            idVec3 end = rotation.oMultiply(point);
-            origin = (point.oPlus(end)).oMultiply(0.5f);
+            final idVec3 end = new idVec3(rotation.oMultiply(point));
+            origin.oSet((point.oPlus(end)).oMultiply(0.5f));
             radius = idMath.Sqrt(0.5f * (end.oMinus(point)).LengthSqr());
         }
 
         public void FromSphereRotation(final idSphere sphere, final idVec3 start, final idRotation rotation) {
-            idVec3 end = rotation.oMultiply(sphere.origin);
-            origin = start.oPlus(sphere.origin.oPlus(end)).oMultiply(0.5f);
+            final idVec3 end = new idVec3(rotation.oMultiply(sphere.origin));
+            origin.oSet(start.oPlus(sphere.origin.oPlus(end)).oMultiply(0.5f));
             radius = idMath.Sqrt(0.5f * (end.oMinus(sphere.origin)).LengthSqr()) + sphere.radius;
         }
 

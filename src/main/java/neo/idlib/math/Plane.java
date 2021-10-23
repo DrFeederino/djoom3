@@ -313,7 +313,7 @@ public class Plane {
 
         // only normalizes the plane normal, does not adjust d
         public float Normalize(boolean fixDegenerate) {
-            idVec3 vec3 = new idVec3(abc.x, abc.y, abc.z);
+            final idVec3 vec3 = new idVec3(abc.x, abc.y, abc.z);
             float length = vec3.Normalize();
 
             {
@@ -330,7 +330,7 @@ public class Plane {
 
         // fix degenerate normal
         public boolean FixDegenerateNormal() {
-            idVec3 vec3 = new idVec3(abc.x, abc.y, abc.z);
+            final idVec3 vec3 = new idVec3(abc.x, abc.y, abc.z);
             boolean fixedNormal = vec3.FixDegenerateNormal();
             {
                 final float oldD = d;//save old d
@@ -404,7 +404,7 @@ public class Plane {
         }
 
         public boolean FromVecs(final idVec3 dir1, final idVec3 dir2, final idVec3 p, boolean fixDegenerate) {
-            idVec3 vec3 = Normal().oSet(dir1.Cross(dir2));
+            final idVec3 vec3 = new idVec3(Normal().oSet(dir1.Cross(dir2)));
 
             {
                 final float oldD = d;//save old d
@@ -428,7 +428,7 @@ public class Plane {
             int i;
             float sumXX = 0.0f, sumXY = 0.0f, sumXZ = 0.0f;
             float sumYY = 0.0f, sumYZ = 0.0f;
-            idVec3 sum = new idVec3(), average = new idVec3(), dir;
+            final idVec3 sum = new idVec3(), average = new idVec3(), dir = new idVec3();
 
             if (numPoints == 1) {
                 abc.x = 0.0f;
@@ -438,7 +438,7 @@ public class Plane {
                 return true;
             }
             if (numPoints == 2) {
-                dir = points[1].oMinus(points[0]);
+                dir.oSet(points[1].oMinus(points[0]));
 //		Normal() = dir.Cross( idVec3( 0, 0, 1 ) ).Cross( dir );
                 {
                     final float oldD = d;//save old d
@@ -457,7 +457,7 @@ public class Plane {
             average.oSet(sum.oDivide(numPoints));
 
             for (i = 0; i < numPoints; i++) {
-                dir = points[i].oMinus(average);
+                dir.oSet(points[i].oMinus(average));
                 sumXX += dir.x * dir.x;
                 sumXY += dir.x * dir.y;
                 sumXZ += dir.x * dir.z;
@@ -557,7 +557,7 @@ public class Plane {
             return true;
         }
 
-        public boolean PlaneIntersection(final idPlane plane, idVec3 start, idVec3 dir) {
+        public boolean PlaneIntersection(final idPlane plane, final idVec3 start, final idVec3 dir) {
             float n00, n01, n11, det, invDet, f0, f1;
 
             n00 = Normal().LengthSqr();

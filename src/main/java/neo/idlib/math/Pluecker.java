@@ -230,8 +230,8 @@ public class Pluecker {
         }
 
         // pluecker to line
-        public boolean ToLine(idVec3 start, idVec3 end) {
-            idVec3 dir1 = new idVec3(), dir2 = new idVec3();
+        public boolean ToLine(final idVec3 start, final idVec3 end) {
+            final idVec3 dir1 = new idVec3(), dir2 = new idVec3();
             float d;
 
             dir1.oSet(0, p[3]);
@@ -253,8 +253,8 @@ public class Pluecker {
         }
 
         // pluecker to ray
-        public boolean ToRay(idVec3 start, idVec3 dir) {
-            idVec3 dir1 = new idVec3();
+        public boolean ToRay(final idVec3 start, final idVec3 dir) {
+            final idVec3 dir1 = new idVec3();
             float d;
 
             dir1.oSet(0, p[3]);
@@ -274,7 +274,7 @@ public class Pluecker {
             return true;
         }
 
-        public void ToDir(idVec3 dir) {// pluecker to direction{
+        public void ToDir(final idVec3 dir) {// pluecker to direction{
             dir.oSet(0, -p[2]);
             dir.oSet(1, p[5]);
             dir.oSet(2, -p[4]);
@@ -294,7 +294,7 @@ public class Pluecker {
          */
         public float Distance3DSqr(final idPluecker a) {// pluecker line distance{
             float d, s;
-            idVec3 dir = new idVec3();
+            final idVec3 dir = new idVec3();
 
             dir.oSet(0, -a.p[5] * p[4] - a.p[4] * -p[5]);
             dir.oSet(1, a.p[4] * p[2] - a.p[2] * p[4]);

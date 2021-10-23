@@ -321,15 +321,15 @@ public class Angles {
         }
 //
 
-        public void ToVectors(idVec3 forward) {
+        public void ToVectors(final idVec3 forward) {
             ToVectors(forward, null);
         }
 
-        public void ToVectors(idVec3 forward, idVec3 right) {
+        public void ToVectors(final idVec3 forward, final idVec3 right) {
             ToVectors(forward, right, null);
         }
 
-        public void ToVectors(idVec3 forward, idVec3 right, idVec3 up) {
+        public void ToVectors(final idVec3 forward, final idVec3 right, final idVec3 up) {
             CFloat sr = new CFloat(), sp = new CFloat(), sy = new CFloat(), cr = new CFloat(), cp = new CFloat(), cy = new CFloat();
 
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy);
@@ -375,7 +375,7 @@ public class Angles {
         }
 
         public idRotation ToRotation() {
-            idVec3 vec = new idVec3();
+            final idVec3 vec = new idVec3();
             float angle, w;
             CFloat sx = new CFloat(), cx = new CFloat(), sy = new CFloat(), cy = new CFloat(), sz = new CFloat(), cz = new CFloat();
             float sxcy, cxcy, sxsy, cxsy;

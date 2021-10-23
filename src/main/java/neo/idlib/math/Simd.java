@@ -356,11 +356,11 @@ public class Simd {
 
         public abstract void /*VPCALL*/ MinMax(idVec2 min, idVec2 max, final idVec2[] src, final int count);
 
-        public abstract void /*VPCALL*/ MinMax(idVec3 min, idVec3 max, final idVec3[] src, final int count);
+        public abstract void /*VPCALL*/ MinMax(final idVec3 min, final idVec3 max, final idVec3[] src, final int count);
 
-        public abstract void /*VPCALL*/ MinMax(idVec3 min, idVec3 max, final idDrawVert[] src, final int count);
+        public abstract void /*VPCALL*/ MinMax(final idVec3 min, final idVec3 max, final idDrawVert[] src, final int count);
 
-        public abstract void /*VPCALL*/ MinMax(idVec3 min, idVec3 max, final idDrawVert[] src, final int[] indexes, final int count);
+        public abstract void /*VPCALL*/ MinMax(final idVec3 min, final idVec3 max, final idDrawVert[] src, final int[] indexes, final int count);
 //
 
         public abstract void /*VPCALL*/ Clamp(float[] dst, final float[] src, final float min, final float max, final int count);
@@ -487,9 +487,9 @@ public class Simd {
 
         public abstract void /*VPCALL*/ NormalizeTangents(idDrawVert[] verts, final int numVerts);
 
-        public abstract void /*VPCALL*/ CreateTextureSpaceLightVectors(idVec3[] lightVectors, final idVec3 lightOrigin, final idDrawVert[] verts, final int numVerts, final int[] indexes, final int numIndexes);
+        public abstract void /*VPCALL*/ CreateTextureSpaceLightVectors(final idVec3[] lightVectors, final idVec3 lightOrigin, final idDrawVert[] verts, final int numVerts, final int[] indexes, final int numIndexes);
 
-        public void CreateTextureSpaceLightVectors(idVec3 localLightVector, idVec3 localLightOrigin, idDrawVert[] verts, int numVerts, int[] indexes, int numIndexes) {
+        public void CreateTextureSpaceLightVectors(final idVec3 localLightVector, final idVec3 localLightOrigin, idDrawVert[] verts, int numVerts, int[] indexes, int numIndexes) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 

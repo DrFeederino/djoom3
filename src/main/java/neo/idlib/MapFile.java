@@ -54,9 +54,9 @@ public class MapFile {
      rotation by (0,RotY,RotZ) assigns X to normal
      =================
      */
-    static void ComputeAxisBase(final idVec3 normal, idVec3 texS, idVec3 texT) {
+    static void ComputeAxisBase(final idVec3 normal, final idVec3 texS, final idVec3 texT) {
         double RotY, RotZ;
-        idVec3 n = new idVec3();
+        final idVec3 n = new idVec3();
 
         // do some cleaning
         n.oSet(0, (Math.abs(normal.oGet(0)) < 1e-6f) ? 0.0f : normal.oGet(0));
@@ -111,17 +111,15 @@ public class MapFile {
     public static class idMapBrushSide {
 //	friend class idMapBrush;
 
+        protected final idVec3 origin;
+        protected final idVec3[] texMat = idVec3.generateArray(2);
         protected idStr material;
-        protected idVec3 origin;
         protected idPlane plane;
-        protected idVec3[] texMat = new idVec3[2];
         //
         //
 
         public idMapBrushSide() {
             plane = new idPlane();
-            texMat[0] = new idVec3();
-            texMat[1] = new idVec3();
             origin = new idVec3();
         }
 //public							~idMapBrushSide( void ) { }
@@ -143,18 +141,18 @@ public class MapFile {
         }
 
         public void SetTextureMatrix(final idVec3[] mat) {
-            texMat[0] = mat[0];
-            texMat[1] = mat[1];
+            texMat[0].oSet(mat[0]);
+            texMat[1].oSet(mat[1]);
         }
 
-        public void GetTextureMatrix(idVec3[] mat1, idVec3[] mat2) {
-            mat1[0] = texMat[0];
-            mat2[0] = texMat[1];
+        public void GetTextureMatrix(final idVec3[] mat1, final idVec3[] mat2) {
+            mat1[0].oSet(texMat[0]);
+            mat2[0].oSet(texMat[1]);
         }
 
-        public void GetTextureVectors(idVec4[] v) {
+        public void GetTextureVectors(final idVec4[] v) {
             int i;
-            idVec3 texX = new idVec3(), texY = new idVec3();
+            final idVec3 texX = new idVec3(), texY = new idVec3();
 
             ComputeAxisBase(plane.Normal(), texX, texY);
             for (i = 0; i < 2; i++) {
@@ -180,9 +178,9 @@ public class MapFile {
 //public							~idMapBrush( void ) { sides.DeleteContents( true ); }
 
         //public	static idMapBrush *		Parse( idLexer &src, const idVec3 &origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
-        public static idMapBrush Parse(idLexer src, final idVec3 origin, boolean newFormat, float version) throws idException {
+        public static idMapBrush Parse(final idLexer src, final idVec3 origin, boolean newFormat, float version) throws idException {
             int i;
-            idVec3[] planepts = new idVec3[3];
+            final idVec3[] planepts = idVec3.generateArray(3);
             idToken token = new idToken();
             idList<idMapBrushSide> sides = new idList<>();
             idMapBrushSide side;
@@ -268,7 +266,7 @@ public class MapFile {
                     sides.DeleteContents(true);
                     return null;
                 }
-                side.origin = origin;
+                side.origin.oSet(origin);
 
                 // read the material
                 if (!src.ReadTokenOnLine(token)) {
@@ -308,11 +306,11 @@ public class MapFile {
             return brush;
         }
 
-        public static idMapBrush ParseQ3(idLexer src, final idVec3 origin) throws idException {
+        public static idMapBrush ParseQ3(final idLexer src, final idVec3 origin) throws idException {
             int i, rotate;
             int[] shift = new int[2];
             float[] scale = new float[2];
-            idVec3[] planepts = new idVec3[3];
+            final idVec3[] planepts = new idVec3[3];
             idToken token = new idToken();
             idList<idMapBrushSide> sides = new idList<>();
             idMapBrushSide side;
@@ -357,9 +355,9 @@ public class MapFile {
                 rotate = src.ParseInt();
                 scale[0] = src.ParseFloat();
                 scale[1] = src.ParseFloat();
-                side.texMat[0] = new idVec3(0.03125f, 0.0f, 0.0f);
-                side.texMat[1] = new idVec3(0.0f, 0.03125f, 0.0f);
-                side.origin = origin;
+                side.texMat[0].oSet(new idVec3(0.03125f, 0.0f, 0.0f));
+                side.texMat[1].oSet(new idVec3(0.0f, 0.03125f, 0.0f));
+                side.origin.oSet(origin);
 
                 // Q2 allowed override of default flags and values, but we don't any more
                 if (src.ReadTokenOnLine(token)) {
@@ -482,7 +480,7 @@ public class MapFile {
 
         //public							~idMapPatch( void ) { }
 //public	static idMapPatch *		Parse( idLexer &src, const idVec3 &origin, bool patchDef3 = true, float version = CURRENT_MAP_VERSION );
-        public static idMapPatch Parse(idLexer src, final idVec3 origin, boolean patchDef3, float version) throws idException {
+        public static idMapPatch Parse(final idLexer src, final idVec3 origin, boolean patchDef3, float version) throws idException {
             float[] info = new float[7];
             idDrawVert vert;
             idToken token = new idToken();
@@ -709,7 +707,7 @@ public class MapFile {
             idMapPatch mapPatch;
             idMapBrush mapBrush;
             boolean worldent;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             float v1, v2, v3;
 
             if (!src.ReadToken(token)) {
@@ -807,7 +805,7 @@ public class MapFile {
         public boolean Write(idFile fp, int entityNum) throws idException {
             int i;
             idMapPrimitive mapPrim;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
 
             fp.WriteFloatString("// entity %d\n{\n", entityNum);
 

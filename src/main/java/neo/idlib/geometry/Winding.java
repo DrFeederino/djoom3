@@ -796,7 +796,7 @@ public class Winding {
             final idVec3 dir = new idVec3();
             float d;
             int maxPts;
-            final idVec3[] hullDirs;
+
             boolean[] hullSide;
             boolean outside;
             int numNewHullPoints;
@@ -813,7 +813,7 @@ public class Winding {
             }
 
             newHullPoints = new idVec5[maxPts];
-            hullDirs = idVec3.generateArray(maxPts);
+            final idVec3[] hullDirs = idVec3.generateArray(maxPts);
             hullSide = new boolean[maxPts];
 
             for (i = 0; i < winding.numPoints; i++) {

@@ -209,26 +209,12 @@ public class Extrapolate {
 
         public final type GetBaseSpeed() {
             final type b = this.baseSpeed;
-//            if (b instanceof idVec3) {
-//                return (type) (new idVec3((idVec3) b));
-//            } else if (b instanceof idVec4) {
-//                return (type) (new idVec4((idVec4) b));
-//            } else if (b instanceof idAngles) {
-//                return (type) (new idAngles((idAngles) b));
-//            }
 
             return b;
         }
 
         public final type GetSpeed() {
             final type s = this.speed;
-//            if (s instanceof idVec3) {
-//                return (type) (new idVec3((idVec3) s));
-//            } else if (s instanceof idVec4) {
-//                return (type) (new idVec4((idVec4) s));
-//            } else if (s instanceof idAngles) {
-//                return (type) (new idAngles((idAngles) s));
-//            }
 
             return s;
         }

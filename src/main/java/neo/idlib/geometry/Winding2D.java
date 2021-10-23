@@ -28,7 +28,7 @@ public class Winding2D {
      */
     static final int MAX_POINTS_ON_WINDING_2D = 16;
 
-    static boolean GetAxialBevel(final idVec3 plane1, final idVec3 plane2, final idVec2 point, idVec3 bevel) {
+    static boolean GetAxialBevel(final idVec3 plane1, final idVec3 plane2, final idVec2 point, final idVec3 bevel) {
         if ((FLOATSIGNBITSET(plane1.x) ^ FLOATSIGNBITSET(plane2.x)) != 0) {
             if (Math.abs(plane1.x) > 0.1f && Math.abs(plane2.x) > 0.1f) {
                 bevel.x = 0.0f;
@@ -143,7 +143,7 @@ public class Winding2D {
         public void ExpandForAxialBox(final idVec2[] bounds) {
             int i, j, numPlanes;
             idVec2 v = new idVec2();
-            idVec3[] planes = idVec3.generateArray(MAX_POINTS_ON_WINDING_2D);
+            final idVec3[] planes = idVec3.generateArray(MAX_POINTS_ON_WINDING_2D);
             final idVec3 plane = new idVec3(), bevel = new idVec3();
 
             // get planes for the edges and add bevels
@@ -606,7 +606,7 @@ public class Winding2D {
             int[] sides = new int[MAX_POINTS_ON_WINDING_2D + 1], counts = new int[3];
             float d1, d2, epsilon = 0.1f;
             final idVec3 plane = new idVec3();
-            idVec3[] edges = idVec3.generateArray(2);
+            final idVec3[] edges = idVec3.generateArray(2);
 
             counts[SIDE_FRONT] = counts[SIDE_BACK] = counts[SIDE_ON] = 0;
 

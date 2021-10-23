@@ -48,25 +48,25 @@ public class Frustum {
      BoxToPoints
      ============
      */
-    private static void BoxToPoints(final idVec3 center, final idVec3 extents, final idMat3 axis, idVec3[] points) {
+    private static void BoxToPoints(final idVec3 center, final idVec3 extents, final idMat3 axis, final idVec3[] points) {
         idMat3 ax = new idMat3();
-        idVec3[] temp = new idVec3[4];
+        final idVec3[] temp = idVec3.generateArray(4);
 
         ax.oSet(0, axis.oGet(0).oMultiply(extents.oGet(0)));
         ax.oSet(1, axis.oGet(1).oMultiply(extents.oGet(1)));
         ax.oSet(2, axis.oGet(2).oMultiply(extents.oGet(2)));
-        temp[0] = center.oMinus(ax.oGet(0));
-        temp[1] = center.oPlus(ax.oGet(0));
-        temp[2] = ax.oGet(1).oMinus(ax.oGet(2));
-        temp[3] = ax.oGet(1).oPlus(ax.oGet(2));
-        points[0] = temp[0].oMinus(temp[3]);
-        points[1] = temp[1].oMinus(temp[3]);
-        points[2] = temp[1].oPlus(temp[2]);
-        points[3] = temp[0].oPlus(temp[2]);
-        points[4] = temp[0].oMinus(temp[2]);
-        points[5] = temp[1].oMinus(temp[2]);
-        points[6] = temp[1].oPlus(temp[3]);
-        points[7] = temp[0].oPlus(temp[3]);
+        temp[0].oSet(center.oMinus(ax.oGet(0)));
+        temp[1].oSet(center.oPlus(ax.oGet(0)));
+        temp[2].oSet(ax.oGet(1).oMinus(ax.oGet(2)));
+        temp[3].oSet(ax.oGet(1).oPlus(ax.oGet(2)));
+        points[0].oSet(temp[0].oMinus(temp[3]));
+        points[1].oSet(temp[1].oMinus(temp[3]));
+        points[2].oSet(temp[1].oPlus(temp[2]));
+        points[3].oSet(temp[0].oPlus(temp[2]));
+        points[4].oSet(temp[0].oMinus(temp[2]));
+        points[5].oSet(temp[1].oMinus(temp[2]));
+        points[6].oSet(temp[1].oPlus(temp[3]));
+        points[7].oSet(temp[0].oPlus(temp[3]));
     }
 
     /*
@@ -92,6 +92,7 @@ public class Frustum {
                 VORONOI_INDEX_2_2_0 = (2 + 2 * 3 + 0 * 9), VORONOI_INDEX_1_0_1 = (1 + 0 * 3 + 1 * 9), VORONOI_INDEX_2_0_1 = (2 + 0 * 3 + 1 * 9),
                 VORONOI_INDEX_0_1_1 = (0 + 1 * 3 + 1 * 9), VORONOI_INDEX_0_2_1 = (0 + 2 * 3 + 1 * 9), VORONOI_INDEX_1_0_2 = (1 + 0 * 3 + 2 * 9),
                 VORONOI_INDEX_2_0_2 = (2 + 0 * 3 + 2 * 9), VORONOI_INDEX_0_1_2 = (0 + 1 * 3 + 2 * 9), VORONOI_INDEX_0_2_2 = (0 + 2 * 3 + 2 * 9);
+        private final idVec3 origin;      // frustum origin
         private idMat3 axis;        // frustum orientation
         private float dFar;        // distance of far plane, dFar > dNear
         private float dLeft;       // half the width at the far plane
@@ -100,7 +101,6 @@ public class Frustum {
         //
         //
         private float invFar;      // 1.0f / dFar
-        private idVec3 origin;      // frustum origin
 
         public idFrustum() {
             origin = new idVec3();
@@ -108,7 +108,7 @@ public class Frustum {
             dNear = dFar = 0.0f;
         }
 
-        public idFrustum(idFrustum f) {
+        public idFrustum(final idFrustum f) {
             this.origin = new idVec3(f.origin);
             this.axis = new idMat3(f.axis);
             this.dNear = f.dNear;
@@ -119,7 +119,7 @@ public class Frustum {
         }
 
         public void SetOrigin(final idVec3 origin) {
-            this.origin = new idVec3(origin);
+            this.origin.oSet(origin);
         }
 
         public void SetAxis(final idMat3 axis) {
@@ -160,7 +160,7 @@ public class Frustum {
 
         // returns frustum origin
         public final idVec3 GetOrigin() {
-            return new idVec3(origin);
+            return origin;
         }
 
         // returns frustum orientation
@@ -194,7 +194,7 @@ public class Frustum {
         }
 
         public idFrustum Expand(final float d) {                    // returns frustum expanded in all directions with the given value
-            idFrustum f = new idFrustum(this);//TODO:oSET
+            idFrustum f = new idFrustum(this);
             f.origin.oMinSet(f.axis.oGet(0).oMultiply(d));
             f.dFar += 2.0f * d;
             f.dLeft = f.dFar * dLeft * invFar;
@@ -268,11 +268,11 @@ public class Frustum {
 
         // fast culling but might not cull everything outside the frustum
         public boolean CullPoint(final idVec3 point) {
-            idVec3 p;
+            final idVec3 p = new idVec3();
             float scale;
 
             // transform point to frustum space
-            p = (point.oMinus(origin)).oMultiply(axis.Transpose());
+            p.oSet((point.oMinus(origin)).oMultiply(axis.Transpose()));
             // test whether or not the point is within the frustum
             if (p.x < dNear || p.x > dFar) {
                 return true;
@@ -295,14 +295,14 @@ public class Frustum {
          ============
          */
         public boolean CullBounds(final idBounds bounds) {
-            idVec3 localOrigin, center, extents;
+            final idVec3 localOrigin = new idVec3(), center = new idVec3(), extents = new idVec3();
             idMat3 localAxis;
 
-            center = (bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f);
-            extents = bounds.oGet(1).oMinus(center);
+            center.oSet((bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f));
+            extents.oSet(bounds.oGet(1).oMinus(center));
 
             // transform the bounds into the space of this frustum
-            localOrigin = (center.oMinus(origin)).oMultiply(axis.Transpose());
+            localOrigin.oSet((center.oMinus(origin)).oMultiply(axis.Transpose()));
             localAxis = axis.Transpose();
 
             return CullLocalBox(localOrigin, extents, localAxis);
@@ -319,11 +319,11 @@ public class Frustum {
          ============
          */
         public boolean CullBox(final idBox box) {
-            idVec3 localOrigin;
+            final idVec3 localOrigin = new idVec3();
             idMat3 localAxis;
 
             // transform the box into the space of this frustum
-            localOrigin = (box.GetCenter().oMinus(origin)).oMultiply(axis.Transpose());
+            localOrigin.oSet((box.GetCenter().oMinus(origin)).oMultiply(axis.Transpose()));
             localAxis = box.GetAxis().oMultiply(axis.Transpose());
 
             return CullLocalBox(localOrigin, box.GetExtents(), localAxis);
@@ -341,9 +341,9 @@ public class Frustum {
          */
         public boolean CullSphere(final idSphere sphere) {
             float d, r, rs, sFar;
-            idVec3 center;
+            final idVec3 center = new idVec3();
 
-            center = (sphere.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose());
+            center.oSet((sphere.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose()));
             r = sphere.GetRadius();
 
             // test near plane
@@ -383,11 +383,11 @@ public class Frustum {
          */
         public boolean CullFrustum(final idFrustum frustum) {
             idFrustum localFrustum;
-            idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
+            final idVec3[] indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
 
             // transform the given frustum into the space of this frustum
             localFrustum = new idFrustum(frustum);
-            localFrustum.origin = (frustum.origin.oMinus(origin)).oMultiply(axis.Transpose());
+            localFrustum.origin.oSet((frustum.origin.oMinus(origin)).oMultiply(axis.Transpose()));
             localFrustum.axis = frustum.axis.oMultiply(axis.Transpose());
 
             localFrustum.ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
@@ -398,15 +398,14 @@ public class Frustum {
         public boolean CullWinding(final idWinding winding) {
             int i;
             int[] pointCull;
-            idVec3[] localPoints;
+            final idVec3[] localPoints = idVec3.generateArray(winding.GetNumPoints());
             idMat3 transpose;
 
-            localPoints = new idVec3[winding.GetNumPoints()];
             pointCull = new int[winding.GetNumPoints()];
 
             transpose = axis.Transpose();
             for (i = 0; i < winding.GetNumPoints(); i++) {
-                localPoints[i] = (winding.oGet(i).ToVec3().oMinus(origin)).oMultiply(transpose);
+                localPoints[i].oSet((winding.oGet(i).ToVec3().oMinus(origin)).oMultiply(transpose));
             }
 
             return CullLocalWinding(localPoints, winding.GetNumPoints(), pointCull);
@@ -418,20 +417,20 @@ public class Frustum {
         }
 
         public boolean IntersectsBounds(final idBounds bounds) {
-            idVec3 localOrigin, center, extents;
+            final idVec3 localOrigin = new idVec3(), center = new idVec3(), extents = new idVec3();
             idMat3 localAxis;
 
-            center = (bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f);
-            extents = bounds.oGet(1).oMinus(center);
+            center.oSet((bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f));
+            extents.oSet(bounds.oGet(1).oMinus(center));
 
-            localOrigin = (center.oMinus(origin)).oMultiply(axis.Transpose());
+            localOrigin.oSet((center.oMinus(origin)).oMultiply(axis.Transpose()));
             localAxis = axis.Transpose();
 
             if (CullLocalBox(localOrigin, extents, localAxis)) {
                 return false;
             }
 
-            idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
+            final idVec3[] indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
 
             ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
 
@@ -452,21 +451,21 @@ public class Frustum {
         }
 
         public boolean IntersectsBox(final idBox box) {
-            idVec3 localOrigin;
+            final idVec3 localOrigin = new idVec3();
             idMat3 localAxis;
 
-            localOrigin = (box.GetCenter().oMinus(origin)).oMultiply(axis.Transpose());
+            localOrigin.oSet((box.GetCenter().oMinus(origin)).oMultiply(axis.Transpose()));
             localAxis = box.GetAxis().oMultiply(axis.Transpose());
 
             if (CullLocalBox(localOrigin, box.GetExtents(), localAxis)) {
                 return false;
             }
 
-            idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
-            idFrustum localFrustum;
+            final idVec3[] indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
+            final idFrustum localFrustum = new idFrustum();
 
-            localFrustum = this;//TODO:SET
-            localFrustum.origin = (origin.oMinus(box.GetCenter())).oMultiply(box.GetAxis().Transpose());
+            localFrustum.oSet(this);
+            localFrustum.origin.oSet((origin.oMinus(box.GetCenter())).oMultiply(box.GetAxis().Transpose()));
             localFrustum.axis = axis.oMultiply(box.GetAxis().Transpose());
 
             localFrustum.ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
@@ -494,8 +493,8 @@ public class Frustum {
         public boolean IntersectsSphere(final idSphere sphere) {
             int index, x, y, z;
             float scale, r, d;
-            idVec3 p, dir = new idVec3();
-            idVec3[] points = new idVec3[8];
+            final idVec3 p = new idVec3(), dir = new idVec3();
+            final idVec3[] points = idVec3.generateArray(8);
 
             if (CullSphere(sphere)) {
                 return false;
@@ -504,7 +503,7 @@ public class Frustum {
             x = y = z = 0;
             dir.Zero();
 
-            p = (sphere.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose());
+            p.oSet((sphere.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose()));
 
             if (p.x <= dNear) {
                 scale = dNear * invFar;
@@ -614,11 +613,11 @@ public class Frustum {
         }
 
         public boolean IntersectsFrustum(final idFrustum frustum) {
-            idVec3[] indexPoints2 = new idVec3[8], cornerVecs2 = new idVec3[4];
+            final idVec3[] indexPoints2 = idVec3.generateArray(8), cornerVecs2 = idVec3.generateArray(4);
             idFrustum localFrustum2;
 
             localFrustum2 = new idFrustum(frustum);
-            localFrustum2.origin = (frustum.origin.oMinus(origin)).oMultiply(axis.Transpose());
+            localFrustum2.origin.oSet((frustum.origin.oMinus(origin)).oMultiply(axis.Transpose()));
             localFrustum2.axis = frustum.axis.oMultiply(axis.Transpose());
             localFrustum2.ToIndexPointsAndCornerVecs(indexPoints2, cornerVecs2);
 
@@ -626,11 +625,9 @@ public class Frustum {
                 return false;
             }
 
-            idVec3[] indexPoints1 = new idVec3[8], cornerVecs1 = new idVec3[4];
-            idFrustum localFrustum1;
-
-            localFrustum1 = new idFrustum(this);//TODO:SET
-            localFrustum1.origin = (origin.oMinus(frustum.origin)).oMultiply(frustum.axis.Transpose());
+            final idVec3[] indexPoints1 = idVec3.generateArray(8), cornerVecs1 = idVec3.generateArray(4);
+            final idFrustum localFrustum1 = new idFrustum(this);
+            localFrustum1.origin.oSet((origin.oMinus(frustum.origin)).oMultiply(frustum.axis.Transpose()));
             localFrustum1.axis = axis.oMultiply(frustum.axis.Transpose());
             localFrustum1.ToIndexPointsAndCornerVecs(indexPoints1, cornerVecs1);
 
@@ -655,16 +652,15 @@ public class Frustum {
             int i, j;
             int[] pointCull;
             CFloat min = new CFloat(), max = new CFloat();
-            idVec3[] localPoints, indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
+            final idVec3[] localPoints = idVec3.generateArray(winding.GetNumPoints()), indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
             idMat3 transpose;
             idPlane plane = new idPlane();
 
-            localPoints = new idVec3[winding.GetNumPoints()];
             pointCull = new int[winding.GetNumPoints()];
 
             transpose = axis.Transpose();
             for (i = 0; i < winding.GetNumPoints(); i++) {
-                localPoints[i] = (winding.oGet(i).ToVec3().oMinus(origin)).oMultiply(transpose);
+                localPoints[i].oSet((winding.oGet(i).ToVec3().oMinus(origin)).oMultiply(transpose));
             }
 
             // if the winding is culled
@@ -738,7 +734,7 @@ public class Frustum {
          ============
          */
         public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
-            if (LocalRayIntersection((start.oMinus(origin)).oMultiply(axis.Transpose()), dir.oMultiply(axis.Transpose()), scale1, scale2)) {//TODO:scale back ref??
+            if (LocalRayIntersection((start.oMinus(origin)).oMultiply(axis.Transpose()), dir.oMultiply(axis.Transpose()), scale1, scale2)) {
                 return true;
             }
             return scale1.getVal() <= scale2.getVal();
@@ -766,13 +762,13 @@ public class Frustum {
         public boolean FromProjection(final idBox box, final idVec3 projectionOrigin, final float dFar) {
             int i, bestAxis;
             float value, bestValue;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
 
             assert (dFar > 0.0f);
 
             this.dNear = this.dFar = this.invFar = 0.0f;
 
-            dir = box.GetCenter().oMinus(projectionOrigin);
+            dir.oSet(box.GetCenter().oMinus(projectionOrigin));
             if (dir.Normalize() == 0.0f) {
                 return false;
             }
@@ -789,7 +785,7 @@ public class Frustum {
 
 //#if 1
             int j, minX, minY, maxY, minZ, maxZ;
-            idVec3[] points = new idVec3[8];
+            final idVec3[] points = idVec3.generateArray(8);
 
             minX = minY = maxY = minZ = maxZ = 0;
 
@@ -837,85 +833,12 @@ public class Frustum {
                 }
             }
 
-            this.origin = new idVec3(projectionOrigin);
+            this.origin.oSet(projectionOrigin);
             this.dNear = points[minX].x;
             this.dFar = dFar;
             this.dLeft = Lib.Max(Math.abs(points[minY].y / points[minY].x), Math.abs(points[maxY].y / points[maxY].x)) * dFar;
             this.dUp = Lib.Max(Math.abs(points[minZ].z / points[minZ].x), Math.abs(points[maxZ].z / points[maxZ].x)) * dFar;
             this.invFar = 1.0f / dFar;
-
-//#elif 1
-//
-//	int j;
-//	float f, x;
-//	idBounds b;
-//	idVec3 points[8];
-//
-//	for ( j = 0; j < 2; j++ ) {
-//
-//		axis[0] = dir;
-//		axis[1] = box.GetAxis()[bestAxis] - ( box.GetAxis()[bestAxis] * axis[0] ) * axis[0];
-//		axis[1].Normalize();
-//		axis[2].Cross( axis[0], axis[1] );
-//
-//		BoxToPoints( ( box.GetCenter() - projectionOrigin ) * axis.Transpose(), box.GetExtents(), box.GetAxis() * axis.Transpose(), points );
-//
-//		b.Clear();
-//		for ( i = 0; i < 8; i++ ) {
-//			x = points[i].x;
-//			if ( x <= 1.0f ) {
-//				return false;
-//			}
-//			f = 1.0f / x;
-//			points[i].y *= f;
-//			points[i].z *= f;
-//			b.AddPoint( points[i] );
-//		}
-//
-//		if ( j == 0 ) {
-//			dir += idMath::Tan16( 0.5f * ( idMath::ATan16( b[1][1] ) + idMath::ATan16( b[0][1] ) ) ) * axis[1];
-//			dir += idMath::Tan16( 0.5f * ( idMath::ATan16( b[1][2] ) + idMath::ATan16( b[0][2] ) ) ) * axis[2];
-//			dir.Normalize();
-//		}
-//	}
-//
-//	this->origin = projectionOrigin;
-//	this->dNear = b[0][0];
-//	this->dFar = dFar;
-//	this->dLeft = Max( idMath::Fabs( b[0][1] ), idMath::Fabs( b[1][1] ) ) * dFar;
-//	this->dUp = Max( idMath::Fabs( b[0][2] ), idMath::Fabs( b[1][2] ) ) * dFar;
-//	this->invFar = 1.0f / dFar;
-//
-//#else
-//
-//	float dist;
-//	idVec3 org;
-//
-//	axis[0] = dir;
-//	axis[1] = box.GetAxis()[bestAxis] - ( box.GetAxis()[bestAxis] * axis[0] ) * axis[0];
-//	axis[1].Normalize();
-//	axis[2].Cross( axis[0], axis[1] );
-//
-//	for ( i = 0; i < 3; i++ ) {
-//		dist[i] = idMath::Fabs( box.GetExtents()[0] * ( axis[i] * box.GetAxis()[0] ) ) +
-//					idMath::Fabs( box.GetExtents()[1] * ( axis[i] * box.GetAxis()[1] ) ) +
-//						idMath::Fabs( box.GetExtents()[2] * ( axis[i] * box.GetAxis()[2] ) );
-//	}
-//
-//	dist[0] = axis[0] * ( box.GetCenter() - projectionOrigin ) - dist[0];
-//	if ( dist[0] <= 1.0f ) {
-//		return false;
-//	}
-//	float invDist = 1.0f / dist[0];
-//
-//	this->origin = projectionOrigin;
-//	this->dNear = dist[0];
-//	this->dFar = dFar;
-//	this->dLeft = dist[1] * invDist * dFar;
-//	this->dUp = dist[2] * invDist * dFar;
-//	this->invFar = 1.0f / dFar;
-//
-//#endif
             return true;
         }
         //
@@ -928,12 +851,12 @@ public class Frustum {
          ============
          */
         public boolean FromProjection(final idSphere sphere, final idVec3 projectionOrigin, final float dFar) {
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             float d, r, s, x, y;
 
             assert (dFar > 0.0f);
 
-            dir = sphere.GetOrigin().oMinus(projectionOrigin);
+            dir.oSet(sphere.GetOrigin().oMinus(projectionOrigin));
             d = dir.Normalize();
             r = sphere.GetRadius();
 
@@ -942,7 +865,7 @@ public class Frustum {
                 return false;
             }
 
-            origin = new idVec3(projectionOrigin);
+            origin.oSet(projectionOrigin);
             axis = dir.ToMat3();
 
             s = idMath.Sqrt(d * d - r * r);
@@ -1053,20 +976,20 @@ public class Frustum {
          */
         public void ToPlanes(idPlane[] planes) {            // planes point outwards
             int i;
-            idVec3[] scaled = new idVec3[2];
-            idVec3[] points = new idVec3[4];
+            final idVec3[] scaled = idVec3.generateArray(2);
+            final idVec3[] points = idVec3.generateArray(4);
 
             planes[0].oNorSet(axis.oGet(0).oNegative());
             planes[0].SetDist(-dNear);
             planes[1].oNorSet(axis.oGet(0));
             planes[1].SetDist(dFar);
 
-            scaled[0] = axis.oGet(1).oMultiply(dLeft);
-            scaled[1] = axis.oGet(2).oMultiply(dUp);
-            points[0] = scaled[0].oPlus(scaled[1]);
-            points[1] = scaled[0].oPlus(scaled[1]).oNegative();
-            points[2] = scaled[0].oMinus(scaled[1]).oNegative();
-            points[3] = scaled[0].oMinus(scaled[1]);
+            scaled[0].oSet(axis.oGet(1).oMultiply(dLeft));
+            scaled[1].oSet(axis.oGet(2).oMultiply(dUp));
+            points[0].oSet(scaled[0].oPlus(scaled[1]));
+            points[1].oSet(scaled[0].oPlus(scaled[1]).oNegative());
+            points[2].oSet(scaled[0].oMinus(scaled[1]).oNegative());
+            points[3].oSet(scaled[0].oMinus(scaled[1]));
 
             for (i = 0; i < 4; i++) {
                 planes[i + 2].oNorSet(points[i].Cross(points[(i + 1) & 3].oMinus(points[i])));
@@ -1076,17 +999,17 @@ public class Frustum {
         }
 //
 
-        public void ToPoints(idVec3[] points) {                // 8 corners of the frustum
+        public void ToPoints(final idVec3[] points) {                // 8 corners of the frustum
             idMat3 scaled = new idMat3();
 
             scaled.oSet(0, origin.oPlus(axis.oGet(0).oMultiply(dNear)));
             scaled.oSet(1, axis.oGet(1).oMultiply(dLeft * dNear * invFar));
             scaled.oSet(2, axis.oGet(2).oMultiply(dUp * dNear * invFar));
 
-            points[0] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            points[1] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            points[2] = points[1].oMinus(scaled.oGet(2));
-            points[3] = points[0].oMinus(scaled.oGet(2));
+            points[0].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            points[1].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            points[2].oSet(points[1].oMinus(scaled.oGet(2)));
+            points[3].oSet(points[0].oMinus(scaled.oGet(2)));
             points[0].oPluSet(scaled.oGet(2));
             points[1].oPluSet(scaled.oGet(2));
 
@@ -1094,10 +1017,10 @@ public class Frustum {
             scaled.oSet(1, axis.oGet(1).oMultiply(dLeft));
             scaled.oSet(2, axis.oGet(2).oMultiply(dUp));
 
-            points[4] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            points[5] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            points[6] = points[5].oMinus(scaled.oGet(2));
-            points[7] = points[4].oMinus(scaled.oGet(2));
+            points[4].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            points[5].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            points[6].oSet(points[5].oMinus(scaled.oGet(2)));
+            points[7].oSet(points[4].oMinus(scaled.oGet(2)));
             points[4].oPluSet(scaled.oGet(2));
             points[5].oPluSet(scaled.oGet(2));
         }
@@ -1111,7 +1034,7 @@ public class Frustum {
          */
         // calculates the projection of this frustum onto the given axis
         public void AxisProjection(final idVec3 dir, CFloat min, CFloat max) {
-            idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
+            final idVec3[] indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
 
             ToIndexPointsAndCornerVecs(indexPoints, cornerVecs);
             AxisProjection(indexPoints, cornerVecs, dir, min, max);
@@ -1125,8 +1048,8 @@ public class Frustum {
          76 muls
          ============
          */
-        public void AxisProjection(final idMat3 ax, idBounds bounds) {
-            idVec3[] indexPoints = new idVec3[8], cornerVecs = new idVec3[4];
+        public void AxisProjection(final idMat3 ax, final idBounds bounds) {
+            final idVec3[] indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
             final CFloat b00 = new CFloat(bounds.oGet(0).oGet(0)),
                     b01 = new CFloat(bounds.oGet(0).oGet(1)),
                     b02 = new CFloat(bounds.oGet(0).oGet(2)),
@@ -1158,8 +1081,8 @@ public class Frustum {
             CInt[] pointCull = Stream.generate(CInt::new).limit(8).toArray(CInt[]::new);
             CFloat scale1 = new CFloat(), scale2 = new CFloat();
             idFrustum localFrustum;
-            idVec3[] points = new idVec3[8];
-            idVec3 localOrigin;
+            final idVec3[] points = idVec3.generateArray(8);
+            final idVec3 localOrigin = new idVec3();
             idMat3 localAxis, localScaled;
             idBounds bounds = new idBounds(box.GetExtents().oNegative(), box.GetExtents());
 
@@ -1185,7 +1108,7 @@ public class Frustum {
             projectionBounds.Clear();
 
             // transform the bounds into the space of this frustum
-            localOrigin = (box.GetCenter().oMinus(origin)).oMultiply(axis.Transpose());
+            localOrigin.oSet((box.GetCenter().oMinus(origin)).oMultiply(axis.Transpose()));
             localAxis = box.GetAxis().oMultiply(axis.Transpose());
             BoxToPoints(localOrigin, box.GetExtents(), localAxis, points);
 
@@ -1226,7 +1149,7 @@ public class Frustum {
             // if the bounds extend beyond two or more boundaries of this frustum
             if (outside != 1 && outside != 2 && outside != 4 && outside != 8) {
 
-                localOrigin = (origin.oMinus(box.GetCenter())).oMultiply(box.GetAxis().Transpose());
+                localOrigin.oSet((origin.oMinus(box.GetCenter())).oMultiply(box.GetAxis().Transpose()));
                 localScaled = axis.oMultiply(box.GetAxis().Transpose());
                 localScaled.oGet(0).oMulSet(dFar);
                 localScaled.oGet(1).oMulSet(dLeft);
@@ -1268,11 +1191,11 @@ public class Frustum {
 
         public boolean ProjectionBounds(final idSphere sphere, idBounds projectionBounds) {
             float d, r, rs, sFar;
-            idVec3 center;
+            final idVec3 center = new idVec3();
 
             projectionBounds.Clear();
 
-            center = (sphere.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose());
+            center.oSet((sphere.GetOrigin().oMinus(origin)).oMultiply(axis.Transpose()));
             r = sphere.GetRadius();
             rs = r * r;
             sFar = dFar * dFar;
@@ -1302,8 +1225,8 @@ public class Frustum {
             CInt[] pointCull = Stream.generate(CInt::new).limit(8).toArray(CInt[]::new);
             CFloat scale1 = new CFloat(), scale2 = new CFloat();
             idFrustum localFrustum;
-            idVec3[] points = new idVec3[8];
-            idVec3 localOrigin;
+            final idVec3[] points = idVec3.generateArray(8);
+            final idVec3 localOrigin = new idVec3();
             idMat3 localScaled;
 
             // if the frustum origin is inside the other frustum
@@ -1326,7 +1249,7 @@ public class Frustum {
 
             // transform the given frustum into the space of this frustum
             localFrustum = new idFrustum(frustum);
-            localFrustum.origin = (frustum.origin.oMinus(origin)).oMultiply(axis.Transpose());
+            localFrustum.origin.oSet((frustum.origin.oMinus(origin)).oMultiply(axis.Transpose()));
             localFrustum.axis = frustum.axis.oMultiply(axis.Transpose());
             localFrustum.ToPoints(points);
 
@@ -1369,7 +1292,7 @@ public class Frustum {
             // if the other frustum extends beyond two or more boundaries of this frustum
             if (outside != 1 && outside != 2 && outside != 4 && outside != 8) {
 
-                localOrigin = (origin.oMinus(frustum.origin)).oMultiply(frustum.axis.Transpose());
+                localOrigin.oSet((origin.oMinus(frustum.origin)).oMultiply(frustum.axis.Transpose()));
                 localScaled = axis.oMultiply(frustum.axis.Transpose());
                 localScaled.oGet(0).oMulSet(dFar);
                 localScaled.oGet(1).oMulSet(dLeft);
@@ -1412,17 +1335,16 @@ public class Frustum {
         public boolean ProjectionBounds(final idWinding winding, idBounds projectionBounds) {
             int i, p1, p2, culled, outside;
             CFloat scale = new CFloat();
-            idVec3[] localPoints;
+            final idVec3[] localPoints = idVec3.generateArray(winding.GetNumPoints());
             idMat3 transpose, scaled = new idMat3();
             idPlane plane = new idPlane();
 
             projectionBounds.Clear();
 
             // transform the winding points into the space of this frustum
-            localPoints = new idVec3[winding.GetNumPoints()];
             transpose = axis.Transpose();
             for (i = 0; i < winding.GetNumPoints(); i++) {
-                localPoints[i] = (winding.oGet(0).ToVec3().oMinus(origin)).oMultiply(transpose);
+                localPoints[i].oSet((winding.oGet(0).ToVec3().oMinus(origin)).oMultiply(transpose));
             }
 
             // test the winding edges
@@ -1499,8 +1421,8 @@ public class Frustum {
             CFloat s1 = new CFloat(), s2 = new CFloat(), t1 = new CFloat(), t2 = new CFloat();
             CFloat[] clipFractions = Stream.generate(CFloat::new).limit(4).toArray(CFloat[]::new);
             idFrustum localFrustum;
-            idVec3 localOrigin1, localOrigin2, start = new idVec3(), end = new idVec3();
-            idVec3[] clipPoints = new idVec3[8], localPoints1 = new idVec3[8], localPoints2 = new idVec3[8];
+            final idVec3 localOrigin1 = new idVec3(), localOrigin2 = new idVec3(), start = new idVec3(), end = new idVec3();
+            final idVec3[] clipPoints = idVec3.generateArray(8), localPoints1 = idVec3.generateArray(8), localPoints2 = idVec3.generateArray(8);
             idMat3 localAxis1, localAxis2, transpose;
             idBounds clipBounds = new idBounds();
 
@@ -1530,7 +1452,7 @@ public class Frustum {
             transpose = new idMat3(axis);
             transpose.TransposeSelf();
             localFrustum = new idFrustum(frustum);
-            localFrustum.origin = (frustum.origin.oMinus(origin)).oMultiply(transpose);
+            localFrustum.origin.oSet((frustum.origin.oMinus(origin)).oMultiply(transpose));
             localFrustum.axis = frustum.axis.oMultiply(transpose);
             localFrustum.ToClippedPoints(clipFractions, clipPoints);
 
@@ -1579,7 +1501,7 @@ public class Frustum {
                 // transform the clip box into the space of the other frustum
                 transpose = new idMat3(frustum.axis);
                 transpose.TransposeSelf();
-                localOrigin1 = (clipBox.GetCenter().oMinus(frustum.origin)).oMultiply(transpose);
+                localOrigin1.oSet((clipBox.GetCenter().oMinus(frustum.origin)).oMultiply(transpose));
                 localAxis1 = clipBox.GetAxis().oMultiply(transpose);
                 BoxToPoints(localOrigin1, clipBox.GetExtents(), localAxis1, localPoints1);
 
@@ -1587,7 +1509,7 @@ public class Frustum {
                 leftScale = frustum.dLeft * frustum.invFar;
                 upScale = frustum.dUp * frustum.invFar;
                 for (i = 0; i < 8; i++) {
-                    idVec3 p = localPoints1[i];
+                    final idVec3 p = localPoints1[i];
                     if (0 == (boxVertPlanes[i] & usedClipPlanes) || p.x <= 0.0f) {
                         boxPointCull[i].setVal(1 | 2 | 4 | 8);
                     } else {
@@ -1604,7 +1526,7 @@ public class Frustum {
                 // transform the clip box into the space of this frustum
                 transpose = new idMat3(axis);
                 transpose.TransposeSelf();
-                localOrigin2 = (clipBox.GetCenter().oMinus(origin)).oMultiply(transpose);
+                localOrigin2.oSet((clipBox.GetCenter().oMinus(origin)).oMultiply(transpose));
                 localAxis2 = clipBox.GetAxis().oMultiply(transpose);
                 BoxToPoints(localOrigin2, clipBox.GetExtents(), localAxis2, localPoints2);
 
@@ -1655,7 +1577,7 @@ public class Frustum {
                 // transform this frustum into the space of the other frustum
                 transpose = new idMat3(frustum.axis);
                 transpose.TransposeSelf();
-                localOrigin1 = (origin.oMinus(frustum.origin)).oMultiply(transpose);
+                localOrigin1.oSet((origin.oMinus(frustum.origin)).oMultiply(transpose));
                 localAxis1 = axis.oMultiply(transpose);
                 localAxis1.oGet(0).oMulSet(dFar);
                 localAxis1.oGet(1).oMulSet(dLeft);
@@ -1664,7 +1586,7 @@ public class Frustum {
                 // transform this frustum into the space of the clip bounds
                 transpose = new idMat3(clipBox.GetAxis());
                 transpose.TransposeSelf();
-                localOrigin2 = (origin.oMinus(clipBox.GetCenter())).oMultiply(transpose);
+                localOrigin2.oSet((origin.oMinus(clipBox.GetCenter())).oMultiply(transpose));
                 localAxis2 = axis.oMultiply(transpose);
                 localAxis2.oGet(0).oMulSet(dFar);
                 localAxis2.oGet(1).oMulSet(dLeft);
@@ -1731,7 +1653,7 @@ public class Frustum {
          */
         private boolean CullLocalBox(final idVec3 localOrigin, final idVec3 extents, final idMat3 localAxis) {
             float d1, d2;
-            idVec3 testOrigin;
+            final idVec3 testOrigin = new idVec3();
             idMat3 testAxis;
 
             // near plane
@@ -1749,7 +1671,7 @@ public class Frustum {
                 return true;
             }
 
-            testOrigin = new idVec3(localOrigin);
+            testOrigin.oSet(localOrigin);
             testAxis = new idMat3(localAxis);
 
             if (testOrigin.y < 0.0f) {
@@ -1974,14 +1896,14 @@ public class Frustum {
          ============
          */
         private boolean LocalLineIntersection(final idVec3 start, final idVec3 end) {
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             float d1, d2, fstart, fend, lstart, lend, f, x;
             float leftScale, upScale;
             int startInside = 1;
 
             leftScale = dLeft * invFar;
             upScale = dUp * invFar;
-            dir = end.oMinus(start);
+            dir.oSet(end.oMinus(start));
 
             // test near plane
             if (dNear > 0.0f) {
@@ -2101,14 +2023,14 @@ public class Frustum {
          ============
          */
         private boolean LocalRayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
-            idVec3 end;
+            final idVec3 end = new idVec3();
             float d1, d2, fstart, fend, lstart, lend, f, x;
             float leftScale, upScale;
             int startInside = 1;
 
             leftScale = dLeft * invFar;
             upScale = dUp * invFar;
-            end = start.oPlus(dir);
+            end.oSet(start.oPlus(dir));
 
             scale1.setVal(idMath.INFINITY);
             scale2.setVal(-idMath.INFINITY);
@@ -2290,17 +2212,17 @@ public class Frustum {
             return false;
         }
 
-        private void ToClippedPoints(final CFloat[] fractions, idVec3[] points) {
+        private void ToClippedPoints(final CFloat[] fractions, final idVec3[] points) {
             idMat3 scaled = new idMat3();
 
             scaled.oSet(0, origin.oPlus(axis.oGet(0).oMultiply(dNear)));
             scaled.oSet(1, axis.oGet(1).oMultiply((dLeft * dNear * invFar)));
             scaled.oSet(2, axis.oGet(2).oMultiply((dUp * dNear * invFar)));
 
-            points[0] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            points[1] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            points[2] = points[1].oMinus(scaled.oGet(2));
-            points[3] = points[0].oMinus(scaled.oGet(2));
+            points[0].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            points[1].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            points[2].oSet(points[1].oMinus(scaled.oGet(2)));
+            points[3].oSet(points[0].oMinus(scaled.oGet(2)));
             points[0].oPluSet(scaled.oGet(2));
             points[1].oPluSet(scaled.oGet(2));
 
@@ -2308,30 +2230,30 @@ public class Frustum {
             scaled.oSet(1, axis.oGet(1).oMultiply(dLeft));
             scaled.oSet(2, axis.oGet(2).oMulSet(dUp));
 
-            points[4] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            points[5] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            points[6] = points[5].oMinus(scaled.oGet(2));
-            points[7] = points[4].oMinus(scaled.oGet(2));
+            points[4].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            points[5].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            points[6].oSet(points[5].oMinus(scaled.oGet(2)));
+            points[7].oSet(points[4].oMinus(scaled.oGet(2)));
             points[4].oPluSet(scaled.oGet(2));
             points[5].oPluSet(scaled.oGet(2));
 
-            points[4] = origin.oPlus(points[4].oMultiply(fractions[0].getVal()));
-            points[5] = origin.oPlus(points[5].oMultiply(fractions[1].getVal()));
-            points[6] = origin.oPlus(points[6].oMultiply(fractions[2].getVal()));
-            points[7] = origin.oPlus(points[7].oMultiply(fractions[3].getVal()));
+            points[4].oSet(origin.oPlus(points[4].oMultiply(fractions[0].getVal())));
+            points[5].oSet(origin.oPlus(points[5].oMultiply(fractions[1].getVal())));
+            points[6].oSet(origin.oPlus(points[6].oMultiply(fractions[2].getVal())));
+            points[7].oSet(origin.oPlus(points[7].oMultiply(fractions[3].getVal())));
         }
 
-        private void ToIndexPoints(idVec3[] indexPoints) {
+        private void ToIndexPoints(final idVec3[] indexPoints) {
             idMat3 scaled = new idMat3();
 
             scaled.oSet(0, origin.oPlus(axis.oGet(0).oMultiply(dNear)));
             scaled.oSet(1, axis.oGet(1).oMultiply((dLeft * dNear * invFar)));
             scaled.oSet(2, axis.oGet(2).oMultiply((dUp * dNear * invFar)));
 
-            indexPoints[0] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            indexPoints[2] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            indexPoints[1] = indexPoints[0].oPlus(scaled.oGet(2));
-            indexPoints[3] = indexPoints[2].oPlus(scaled.oGet(2));
+            indexPoints[0].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            indexPoints[2].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            indexPoints[1].oSet(indexPoints[0].oPlus(scaled.oGet(2)));
+            indexPoints[3].oSet(indexPoints[2].oPlus(scaled.oGet(2)));
             indexPoints[0].oMinSet(scaled.oGet(2));
             indexPoints[2].oMinSet(scaled.oGet(2));
 
@@ -2339,10 +2261,10 @@ public class Frustum {
             scaled.oSet(1, axis.oGet(1).oMultiply(dLeft));
             scaled.oSet(2, axis.oGet(2).oMulSet(dUp));
 
-            indexPoints[4] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            indexPoints[6] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            indexPoints[5] = indexPoints[4].oPlus(scaled.oGet(2));
-            indexPoints[7] = indexPoints[6].oPlus(scaled.oGet(2));
+            indexPoints[4].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            indexPoints[6].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            indexPoints[5].oSet(indexPoints[4].oPlus(scaled.oGet(2)));
+            indexPoints[7].oSet(indexPoints[6].oPlus(scaled.oGet(2)));
             indexPoints[4].oMinSet(scaled.oGet(2));
             indexPoints[6].oMinSet(scaled.oGet(2));
         }
@@ -2354,17 +2276,17 @@ public class Frustum {
          22 muls
          ============
          */
-        private void ToIndexPointsAndCornerVecs(idVec3[] indexPoints, idVec3[] cornerVecs) {
+        private void ToIndexPointsAndCornerVecs(final idVec3[] indexPoints, final idVec3[] cornerVecs) {
             idMat3 scaled = new idMat3();
 
             scaled.oSet(0, origin.oPlus(axis.oGet(0).oMultiply(dNear)));
             scaled.oSet(1, axis.oGet(1).oMultiply((dLeft * dNear * invFar)));
             scaled.oSet(2, axis.oGet(2).oMultiply((dUp * dNear * invFar)));
 
-            indexPoints[0] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            indexPoints[2] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            indexPoints[1] = indexPoints[0].oPlus(scaled.oGet(2));
-            indexPoints[3] = indexPoints[2].oPlus(scaled.oGet(2));
+            indexPoints[0].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            indexPoints[2].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            indexPoints[1].oSet(indexPoints[0].oPlus(scaled.oGet(2)));
+            indexPoints[3].oSet(indexPoints[2].oPlus(scaled.oGet(2)));
             indexPoints[0].oMinSet(scaled.oGet(2));
             indexPoints[2].oMinSet(scaled.oGet(2));
 
@@ -2372,17 +2294,17 @@ public class Frustum {
             scaled.oSet(1, axis.oGet(1).oMultiply(dLeft));
             scaled.oSet(2, axis.oGet(2).oMultiply(dUp));
 
-            cornerVecs[0] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            cornerVecs[2] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            cornerVecs[1] = cornerVecs[0].oPlus(scaled.oGet(2));
-            cornerVecs[3] = cornerVecs[2].oPlus(scaled.oGet(2));
+            cornerVecs[0].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            cornerVecs[2].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            cornerVecs[1].oSet(cornerVecs[0].oPlus(scaled.oGet(2)));
+            cornerVecs[3].oSet(cornerVecs[2].oPlus(scaled.oGet(2)));
             cornerVecs[0].oMinSet(scaled.oGet(2));
             cornerVecs[2].oMinSet(scaled.oGet(2));
 
-            indexPoints[4] = cornerVecs[0].oPlus(origin);
-            indexPoints[5] = cornerVecs[1].oPlus(origin);
-            indexPoints[6] = cornerVecs[2].oPlus(origin);
-            indexPoints[7] = cornerVecs[3].oPlus(origin);
+            indexPoints[4].oSet(cornerVecs[0].oPlus(origin));
+            indexPoints[5].oSet(cornerVecs[1].oPlus(origin));
+            indexPoints[6].oSet(cornerVecs[2].oPlus(origin));
+            indexPoints[7].oSet(cornerVecs[3].oPlus(origin));
         }
 
         /*
@@ -2415,7 +2337,7 @@ public class Frustum {
         }
 
         private void AddLocalLineToProjectionBoundsSetCull(final idVec3 start, final idVec3 end, CInt startCull, CInt endCull, idBounds bounds) {
-            idVec3 dir, p = new idVec3();
+            final idVec3 dir = new idVec3(), p = new idVec3();
             float d1, d2, fstart, fend, lstart, lend, f;
             float leftScale, upScale;
             int cull1, cull2;
@@ -2428,7 +2350,7 @@ public class Frustum {
 //#endif
             leftScale = dLeft * invFar;
             upScale = dUp * invFar;
-            dir = end.oMinus(start);
+            dir.oSet(end.oMinus(start));
 
             fstart = dFar * start.y;
             fend = dFar * end.y;
@@ -2548,7 +2470,7 @@ public class Frustum {
         }
 
         private void AddLocalLineToProjectionBoundsUseCull(final idVec3 start, final idVec3 end, int startCull, int endCull, idBounds bounds) {
-            idVec3 dir, p = new idVec3();
+            final idVec3 dir = new idVec3(), p = new idVec3();
             float d1, d2, fstart, fend, lstart, lend, f;
             float leftScale, upScale;
             int clip;
@@ -2566,7 +2488,7 @@ public class Frustum {
 //#endif
             leftScale = dLeft * invFar;
             upScale = dUp * invFar;
-            dir = end.oMinus(start);
+            dir.oSet(end.oMinus(start));
 
             if ((clip & (1 | 2)) != 0) {
 
@@ -2690,14 +2612,14 @@ public class Frustum {
          ============
          */
         private boolean BoundsRayIntersection(final idBounds bounds, final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
-            idVec3 end, p = new idVec3();
+            final idVec3 end = new idVec3(), p = new idVec3();
             float d1, d2, f;
             int i, startInside = 1;
 
             scale1.setVal(idMath.INFINITY);
             scale2.setVal(-idMath.INFINITY);
 
-            end = start.oPlus(dir);
+            end.oSet(start.oPlus(dir));
 
             for (i = 0; i < 2; i++) {
                 d1 = start.x - bounds.oGet(i).x;
@@ -2772,22 +2694,22 @@ public class Frustum {
             int i, index;
             float f, minf;
             idMat3 scaled = new idMat3(), localAxis, transpose;
-            idVec3 localOrigin;
-            idVec3[] cornerVecs = new idVec3[4];
+            final idVec3 localOrigin = new idVec3();
+            final idVec3[] cornerVecs = idVec3.generateArray(4);
             idBounds bounds = new idBounds();
 
             transpose = box.GetAxis();
             transpose.TransposeSelf();
-            localOrigin = (origin.oMinus(box.GetCenter())).oMultiply(transpose);
+            localOrigin.oSet((origin.oMinus(box.GetCenter())).oMultiply(transpose));
             localAxis = axis.oMultiply(transpose);
 
             scaled.oSet(0, localAxis.oGet(0).oMultiply(dFar));
             scaled.oSet(1, localAxis.oGet(1).oMultiply(dLeft));
             scaled.oSet(2, localAxis.oGet(2).oMultiply(dUp));
-            cornerVecs[0] = scaled.oGet(0).oPlus(scaled.oGet(1));
-            cornerVecs[1] = scaled.oGet(0).oMinus(scaled.oGet(1));
-            cornerVecs[2] = cornerVecs[1].oMinus(scaled.oGet(2));
-            cornerVecs[3] = cornerVecs[0].oMinus(scaled.oGet(2));
+            cornerVecs[0].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)));
+            cornerVecs[1].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)));
+            cornerVecs[2].oSet(cornerVecs[1].oMinus(scaled.oGet(2)));
+            cornerVecs[3].oSet(cornerVecs[0].oMinus(scaled.oGet(2)));
             cornerVecs[0].oPluSet(scaled.oGet(2));
             cornerVecs[1].oPluSet(scaled.oGet(2));
 
@@ -2832,19 +2754,19 @@ public class Frustum {
          Does not clip to the near and far plane.
          ============
          */
-        private boolean ClipLine(final idVec3[] localPoints, final idVec3[] points, int startIndex, int endIndex, idVec3 start, idVec3 end, CInt startClip, CInt endClip) {
+        private boolean ClipLine(final idVec3[] localPoints, final idVec3[] points, int startIndex, int endIndex, final idVec3 start, final idVec3 end, CInt startClip, CInt endClip) {
             float d1, d2, fstart, fend, lstart, lend, f, x;
             float leftScale, upScale;
             float scale1, scale2;
             int startCull, endCull;
-            idVec3 localStart, localEnd, localDir;
+            final idVec3 localStart = new idVec3(), localEnd = new idVec3(), localDir = new idVec3();
 
             leftScale = dLeft * invFar;
             upScale = dUp * invFar;
 
-            localStart = localPoints[startIndex];
-            localEnd = localPoints[endIndex];
-            localDir = localEnd.oMinus(localStart);
+            localStart.oSet(localPoints[startIndex]);
+            localEnd.oSet(localPoints[endIndex]);
+            localDir.oSet(localEnd.oMinus(localStart));
 
             startClip.setVal(endClip.getVal() - 1);
             scale1 = idMath.INFINITY;
@@ -2980,7 +2902,7 @@ public class Frustum {
         }
 
         private void oSet(idFrustum f) {
-            this.origin = new idVec3(f.origin);
+            this.origin.oSet(f.origin);
             this.axis = new idMat3(f.axis);
             this.dNear = f.dNear;
             this.dFar = f.dFar;

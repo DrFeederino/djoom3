@@ -207,8 +207,8 @@ public class Box {
     public static class idBox {
 
         private idMat3 axis = new idMat3();
-        private idVec3 center = new idVec3();
-        private idVec3 extents = new idVec3();
+        private final idVec3 center = new idVec3();
+        private final idVec3 extents = new idVec3();
         //
         //
 
@@ -217,34 +217,34 @@ public class Box {
 
         public idBox(final idVec3 center, final idVec3 extents, final idMat3 axis) {
             {
-                this.center = new idVec3(center);
-                this.extents = new idVec3(extents);
+                this.center.oSet(center);
+                this.extents.oSet(extents);
                 this.axis = new idMat3(axis);
             }
         }
 
         public idBox(final idVec3 point) {
-            this.center = new idVec3(point);
+            this.center.oSet(point);
             this.extents.Zero();
             this.axis.Identity();
         }
 
         public idBox(final idBounds bounds) {
-            this.center = (bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f);
-            this.extents = bounds.oGet(1).oMinus(this.center);
+            this.center.oSet((bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f));
+            this.extents.oSet(bounds.oGet(1).oMinus(this.center));
             this.axis.Identity();
         }
 
         public idBox(final idBounds bounds, final idVec3 origin, final idMat3 axis) {
-            this.center = (bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f);
-            this.extents = bounds.oGet(1).oMinus(this.center);
-            this.center = origin.oPlus(this.center.oMultiply(axis));
+            this.center.oSet((bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f));
+            this.extents.oSet(bounds.oGet(1).oMinus(this.center));
+            this.center.oSet(origin.oPlus(this.center.oMultiply(axis)));
             this.axis = new idMat3(axis);
         }
 
         public idBox(final idBox box) {
-            this.center = new idVec3(box.center);
-            this.extents = new idVec3(box.extents);
+            this.center.oSet(box.center);
+            this.extents.oSet(box.extents);
             this.axis = new idMat3(box.axis);
         }
 //
@@ -343,12 +343,12 @@ public class Box {
 
         // returns center of the box
         public idVec3 GetCenter() {
-            return new idVec3(center);
+            return center;
         }
 
         // returns extents of the box
         public idVec3 GetExtents() {
-            return new idVec3(extents);
+            return extents;
         }
 
         // returns the axis of the box
@@ -371,7 +371,7 @@ public class Box {
 
             if (extents.oGet(0) < 0.0f) {
                 extents.Zero();
-                center = v;
+                center.oSet(v);
                 axis.Identity();
                 return true;
             }
@@ -398,12 +398,12 @@ public class Box {
 
             // create new box based on the smallest bounds
             if (bounds1.GetVolume() < bounds2.GetVolume()) {
-                this.center = (bounds1.oGet(0).oPlus(bounds1.oGet(1))).oMultiply(0.5f);
-                this.extents = bounds1.oGet(1).oMinus(this.center);
+                this.center.oSet((bounds1.oGet(0).oPlus(bounds1.oGet(1))).oMultiply(0.5f));
+                this.extents.oSet(bounds1.oGet(1).oMinus(this.center));
                 center.oMulSet(axis);
             } else {
-                this.center = (bounds2.oGet(0).oPlus(bounds2.oGet(1))).oMultiply(0.5f);
-                this.extents = bounds2.oGet(1).oMinus(this.center);
+                this.center.oSet((bounds2.oGet(0).oPlus(bounds2.oGet(1))).oMultiply(0.5f));
+                this.extents.oSet(bounds2.oGet(1).oMinus(this.center));
                 center.oMulSet(axis2);
                 axis = axis2;//TODO: new axis 2?
             }
@@ -414,7 +414,7 @@ public class Box {
         public boolean AddBox(final idBox a) {
             int i, besti;
             float v, bestv;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idMat3[] ax = new idMat3[4];
             idBounds[] bounds = new idBounds[4];
             idBounds b = new idBounds();
@@ -424,8 +424,8 @@ public class Box {
             }
 
             if (extents.oGet(0) < 0.0f) {
-                center = new idVec3(a.center);
-                extents = new idVec3(a.extents);
+                center.oSet(a.center);
+                extents.oSet(a.extents);
                 axis = new idMat3(a.axis);
                 return true;
             }
@@ -453,14 +453,14 @@ public class Box {
             AxisProjection(ax[1], b);
             if (!bounds[1].AddBounds(b)) {
                 // this box is contained in the other box
-                center = new idVec3(a.center);
-                extents = new idVec3(a.extents);
+                center.oSet(a.center);
+                extents.oSet(a.extents);
                 axis = new idMat3(a.axis);
                 return true;
             }
 
             // test axes aligned with the vector between the box centers and one of the box axis
-            dir = a.center.oMinus(center);
+            dir.oSet(a.center.oMinus(center));
             dir.Normalize();
             for (i = 2; i < 4; i++) {
                 ax[i].oSet(0, dir);
@@ -486,8 +486,8 @@ public class Box {
             }
 
             // create a box from the smallest bounds axis pair
-            center = (bounds[besti].oGet(0).oPlus(bounds[besti].oGet(1))).oMultiply(0.5f);
-            extents = bounds[besti].oGet(1).oMinus(center);
+            center.oSet((bounds[besti].oGet(0).oPlus(bounds[besti].oGet(1))).oMultiply(0.5f));
+            extents.oSet(bounds[besti].oGet(1).oMinus(center));
             center.oMulSet(ax[besti]);
             axis = ax[besti];
 
@@ -565,20 +565,20 @@ public class Box {
 //
 
         public boolean ContainsPoint(final idVec3 p) {            // includes touching
-            idVec3 lp = p.oMinus(center);
+            final idVec3 lp = new idVec3(p.oMinus(center));
             return !(Math.abs(lp.oMultiply(axis.oGet(0))) > extents.oGet(0))
                     && !(Math.abs(lp.oMultiply(axis.oGet(1))) > extents.oGet(1))
                     && !(Math.abs(lp.oMultiply(axis.oGet(2))) > extents.oGet(2));
         }
 
         public boolean IntersectsBox(final idBox a) {            // includes touching
-            idVec3 dir;            // vector between centers
+            final idVec3 dir = new idVec3();            // vector between centers
             final float[][] c = new float[3][3];        // matrix c = axis.Transpose() * a.axis
             final float[][] ac = new float[3][3];        // absolute values of c
             final float[] axisdir = new float[3];    // axis[i] * dir
             float d, e0, e1;    // distance between centers and projected extents
 
-            dir = a.center.oMinus(center);
+            dir.oSet(a.center.oMinus(center));
 
             // axis C0 + t * A0
             c[0][0] = axis.oGet(0).oMultiply(a.axis.oGet(0));
@@ -732,9 +732,9 @@ public class Box {
          */
         public boolean LineIntersection(final idVec3 start, final idVec3 end) {
             float[] ld = new float[3];
-            idVec3 lineDir = (end.oMinus(start)).oMultiply(0.5f);
-            idVec3 lineCenter = start.oPlus(lineDir);
-            idVec3 dir = lineCenter.oMinus(center);
+            final idVec3 lineDir = new idVec3((end.oMinus(start)).oMultiply(0.5f));
+            final idVec3 lineCenter = new idVec3(start.oPlus(lineDir));
+            final idVec3 dir = new idVec3(lineCenter.oMinus(center));
 
             ld[0] = Math.abs(lineDir.oMultiply(axis.oGet(0)));
             if (Math.abs(dir.oMultiply(axis.oGet(0))) > extents.oGet(0) + ld[0]) {
@@ -751,7 +751,7 @@ public class Box {
                 return false;
             }
 
-            idVec3 cross = lineDir.Cross(dir);
+            final idVec3 cross = new idVec3(lineDir.Cross(dir));
 
             if (Math.abs(cross.oMultiply(axis.oGet(0))) > extents.oGet(1) * ld[2] + extents.oGet(2) * ld[1]) {
                 return false;
@@ -775,10 +775,10 @@ public class Box {
          */
         // intersection points are (start + dir * scale1) and (start + dir * scale2)
         public boolean RayIntersection(final idVec3 start, final idVec3 dir, CFloat scale1, CFloat scale2) {
-            idVec3 localStart, localDir;
+            final idVec3 localStart = new idVec3(), localDir = new idVec3();
 
-            localStart = (start.oMinus(center)).oMultiply(axis.Transpose());
-            localDir = dir.oMultiply(axis.Transpose());
+            localStart.oSet((start.oMinus(center)).oMultiply(axis.Transpose()));
+            localDir.oSet(dir.oMultiply(axis.Transpose()));
 
             scale1.setVal(-idMath.INFINITY);
             scale2.setVal(idMath.INFINITY);
@@ -803,13 +803,13 @@ public class Box {
         public void FromPoints(final idVec3[] points, final int numPoints) {
             int i;
             float invNumPoints, sumXX, sumXY, sumXZ, sumYY, sumYZ, sumZZ;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idBounds bounds = new idBounds();
             idMatX eigenVectors = new idMatX();
             idVecX eigenValues = new idVecX();
 
             // compute mean of points
-            center = points[0];
+            center.oSet(points[0]);
             for (i = 1; i < numPoints; i++) {
                 center.oPluSet(points[i]);
             }
@@ -824,7 +824,7 @@ public class Box {
             sumYZ = 0.0f;
             sumZZ = 0.0f;
             for (i = 0; i < numPoints; i++) {
-                dir = points[i].oMinus(center);
+                dir.oSet(points[i].oMinus(center));
                 sumXX += dir.x * dir.x;
                 sumXY += dir.x * dir.y;
                 sumXZ += dir.x * dir.z;
@@ -877,8 +877,8 @@ public class Box {
                         points[i].oMultiply(axis.oGet(1)),
                         points[i].oMultiply(axis.oGet(2))));
             }
-            center = (bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f);
-            extents = bounds.oGet(1).oMinus(center);
+            center.oSet((bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f));
+            extents.oSet(bounds.oGet(1).oMinus(center));
             center.oMulSet(axis);
         }
 //					// most tight box for a translation
@@ -940,17 +940,17 @@ public class Box {
 //
 
         // calculates the silhouette of the box
-        public int GetProjectionSilhouetteVerts(final idVec3 projectionOrigin, idVec3[] silVerts) {
+        public int GetProjectionSilhouetteVerts(final idVec3 projectionOrigin, final idVec3[] silVerts) {
             float f;
             int i, planeBits;
             int[] index;
-            idVec3[] points = new idVec3[8];
-            idVec3 dir1, dir2;
+            final idVec3[] points = idVec3.generateArray(8);
+            final idVec3 dir1 = new idVec3(), dir2 = new idVec3();
 
             ToPoints(points);
 
-            dir1 = points[0].oMinus(projectionOrigin);
-            dir2 = points[6].oMinus(projectionOrigin);
+            dir1.oSet(points[0].oMinus(projectionOrigin));
+            dir2.oSet(points[6].oMinus(projectionOrigin));
             f = dir1.oMultiply(axis.oGet(0));
             planeBits = FLOATSIGNBITNOTSET(f);
             f = dir2.oMultiply(axis.oGet(0));
@@ -966,7 +966,7 @@ public class Box {
 
             index = boxPlaneBitsSilVerts[planeBits];
             for (i = 0; i < index[0]; i++) {
-                silVerts[i] = points[index[i + 1]];
+                silVerts[i].oSet(points[index[i + 1]]);
             }
 
             return index[0];

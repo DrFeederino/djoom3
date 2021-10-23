@@ -131,7 +131,7 @@ public class idMat4 {
     }
 //public	idVec4			operator*( const idVec4 &vec ) const;
 
-    public static idVec3 oMulSet(idVec3 vec, final idMat4 mat) {
+    public static idVec3 oMulSet(final idVec3 vec, final idMat4 mat) {
         vec.oSet(mat.oMultiply(vec));
         return vec;
     }
