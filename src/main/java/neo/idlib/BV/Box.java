@@ -889,25 +889,25 @@ public class Box {
 //public	void			FromBoxRotation( final idBox &box, final idRotation &rotation );
 //
 
-        public void ToPoints(idVec3[] points) {
+        public void ToPoints(final idVec3[] points) {
             idMat3 ax = new idMat3();
-            idVec3[] temp = new idVec3[4];
+            final idVec3[] temp = idVec3.generateArray(4);
 
             ax.oSet(0, axis.oGet(0).oMultiply(extents.oGet(0)));
             ax.oSet(1, axis.oGet(1).oMultiply(extents.oGet(1)));
             ax.oSet(2, axis.oGet(2).oMultiply(extents.oGet(2)));
-            temp[0] = center.oMinus(ax.oGet(0));
-            temp[1] = center.oPlus(ax.oGet(0));
-            temp[2] = ax.oGet(1).oMinus(ax.oGet(2));
-            temp[3] = ax.oGet(1).oPlus(ax.oGet(2));
-            points[0] = temp[0].oMinus(temp[3]);
-            points[1] = temp[1].oMinus(temp[3]);
-            points[2] = temp[1].oPlus(temp[2]);
-            points[3] = temp[0].oPlus(temp[2]);
-            points[4] = temp[0].oMinus(temp[2]);
-            points[5] = temp[1].oMinus(temp[2]);
-            points[6] = temp[1].oPlus(temp[3]);
-            points[7] = temp[0].oPlus(temp[3]);
+            temp[0].oSet(center.oMinus(ax.oGet(0)));
+            temp[1].oSet(center.oPlus(ax.oGet(0)));
+            temp[2].oSet(ax.oGet(1).oMinus(ax.oGet(2)));
+            temp[3].oSet(ax.oGet(1).oPlus(ax.oGet(2)));
+            points[0].oSet(temp[0].oMinus(temp[3]));
+            points[1].oSet(temp[1].oMinus(temp[3]));
+            points[2].oSet(temp[1].oPlus(temp[2]));
+            points[3].oSet(temp[0].oPlus(temp[2]));
+            points[4].oSet(temp[0].oMinus(temp[2]));
+            points[5].oSet(temp[1].oMinus(temp[2]));
+            points[6].oSet(temp[1].oPlus(temp[3]));
+            points[7].oSet(temp[0].oPlus(temp[3]));
         }
 
         public idSphere ToSphere() {
@@ -972,11 +972,11 @@ public class Box {
             return index[0];
         }
 
-        public int GetParallelProjectionSilhouetteVerts(final idVec3 projectionDir, idVec3[] silVerts) {
+        public int GetParallelProjectionSilhouetteVerts(final idVec3 projectionDir, final idVec3[] silVerts) {
             float f;
             int i, planeBits;
             int[] index;
-            idVec3[] points = new idVec3[8];
+            final idVec3[] points = idVec3.generateArray(8);
 
             ToPoints(points);
 
@@ -996,7 +996,7 @@ public class Box {
 
             index = boxPlaneBitsSilVerts[planeBits];
             for (i = 0; i < index[0]; i++) {
-                silVerts[i] = points[index[i + 1]];
+                silVerts[i].oSet(points[index[i + 1]]);
             }
 
             return index[0];

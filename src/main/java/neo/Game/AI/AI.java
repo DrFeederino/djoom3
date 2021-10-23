@@ -164,18 +164,19 @@ public class AI {
      Seek
      =====================
      */
-    static idVec3 Seek(idVec3 vel, final idVec3 org, final idVec3 goal, float prediction) {
-        idVec3 predictedPos;
-        idVec3 goalDelta;
-        idVec3 seekVel;
+    static idVec3 Seek(final idVec3 vel, final idVec3 org, final idVec3 goal, float prediction) {
+        final idVec3 predictedPos = new idVec3();
+        final idVec3 goalDelta = new idVec3();
+        final idVec3 seekVel = new idVec3();
 
         // predict our position
-        predictedPos = org.oPlus(vel.oMultiply(prediction));
-        goalDelta = goal.oMinus(predictedPos);
-        seekVel = goalDelta.oMultiply(MS2SEC(idGameLocal.msec));
+        predictedPos.oSet(org.oPlus(vel.oMultiply(prediction)));
+        goalDelta.oSet(goal.oMinus(predictedPos));
+        seekVel.oSet(goalDelta.oMultiply(MS2SEC(idGameLocal.msec)));
 
         return seekVel;
     }
+
     public enum moveCommand_t {
 
         MOVE_NONE,
@@ -197,6 +198,7 @@ public class AI {
         MOVE_WANDER,
         NUM_MOVE_COMMANDS
     }
+
     //
     // status results from move commands
     // make sure to change script/doom_defs.script if you add any, or change their order
@@ -240,12 +242,12 @@ public class AI {
     // obstacle avoidance
     public static class obstaclePath_s {
 
+        final idVec3 seekPos;                   // seek position avoiding obstacles
+        final idVec3 seekPosOutsideObstacles;   // seek position outside obstacles
+        final idVec3 startPosOutsideObstacles;  // start position outside obstacles
         idEntity firstObstacle;             // if != NULL the first obstacle along the path
-        idVec3 seekPos;                   // seek position avoiding obstacles
         idEntity seekPosObstacle;           // if != NULL the obstacle containing the seek position
-        idVec3 seekPosOutsideObstacles;   // seek position outside obstacles
         idEntity startPosObstacle;          // if != NULL the obstacle containing the start position
-        idVec3 startPosOutsideObstacles;  // start position outside obstacles
 
         public obstaclePath_s() {
             seekPos = new idVec3();
@@ -256,12 +258,12 @@ public class AI {
 
     public static class predictedPath_s {
 
+        final idVec3 endNormal = new idVec3();  // normal of blocking surface
+        final idVec3 endPos = new idVec3();  // final position
+        final idVec3 endVelocity = new idVec3();  // velocity at end position
         idEntity blockingEntity;              // entity that blocks the movement
         int endEvent;                    // event that stopped the prediction
-        idVec3 endNormal = new idVec3();  // normal of blocking surface
-        idVec3 endPos = new idVec3();  // final position
         int endTime;                     // time predicted
-        idVec3 endVelocity = new idVec3();  // velocity at end position
     }
 
     static class particleEmitter_s {
@@ -269,6 +271,7 @@ public class AI {
         int/*jointHandle_t*/ joint;
         idDeclParticle particle;
         int time;
+
         particleEmitter_s() {
             particle = null;
             time = 0;
@@ -278,20 +281,20 @@ public class AI {
 
     public static class idMoveState {
 
+        public final idEntityPtr<idEntity> goalEntity;
+        public final idVec3 goalEntityOrigin;  // move to entity uses this to avoid checking the floor position every frame
+        public final idVec3 lastMoveOrigin;
+        public final idVec3 moveDest;
+        public final idVec3 moveDir;           // used for wandering and slide moves
+        public final idEntityPtr<idEntity> obstacle;
         public int anim;
         public int blockTime;
         public int duration;
-        public final idEntityPtr<idEntity> goalEntity;
-        public idVec3 goalEntityOrigin;  // move to entity uses this to avoid checking the floor position every frame
-        public idVec3 lastMoveOrigin;
         public int lastMoveTime;
         public moveCommand_t moveCommand;
-        public idVec3 moveDest;
-        public idVec3 moveDir;           // used for wandering and slide moves
         public moveStatus_t moveStatus;
         public moveType_t moveType;
         public int nextWanderTime;
-        public final idEntityPtr<idEntity> obstacle;
         public float range;
         public float speed;             // only used by flying creatures
         public int startTime;
@@ -386,11 +389,11 @@ public class AI {
         // ~idAASFindCover();
         @Override
         public boolean TestArea(final idAAS aas, int areaNum) {
-            idVec3 areaCenter;
+            final idVec3 areaCenter = new idVec3();
             int numPVSAreas;
             int[] PVSAreas = new int[idEntity.MAX_PVS_AREAS];
 
-            areaCenter = aas.AreaCenter(areaNum);
+            areaCenter.oSet(aas.AreaCenter(areaNum));
             areaCenter.oPluSet(2, 1.0f);
 
             numPVSAreas = gameLocal.pvs.GetPVSAreas(new idBounds(areaCenter).Expand(16.0f), PVSAreas, idEntity.MAX_PVS_AREAS);
@@ -401,18 +404,18 @@ public class AI {
     public static class idAASFindAreaOutOfRange extends idAASCallback {
 
         private final float maxDistSqr;
-        private final idVec3 targetPos;
+        private final idVec3 targetPos = new idVec3();
         //
         //
 
         public idAASFindAreaOutOfRange(final idVec3 targetPos, float maxDist) {
-            this.targetPos = targetPos;
+            this.targetPos.oSet(targetPos);
             this.maxDistSqr = maxDist * maxDist;
         }
 
         @Override
         public boolean TestArea(final idAAS aas, int areaNum) {
-            final idVec3 areaCenter = aas.AreaCenter(areaNum);
+            final idVec3 areaCenter = new idVec3(aas.AreaCenter(areaNum));
             trace_s trace = new trace_s();
             float dist;
 
@@ -431,12 +434,12 @@ public class AI {
 
         private final int[] PVSAreas = new int[idEntity.MAX_PVS_AREAS];
         private final idBounds excludeBounds;
-        private final idVec3 fireOffset;
+        private final idVec3 fireOffset = new idVec3();
         private final idMat3 gravityAxis;
         private final idAI self;
         private final idEntity target;
         private final pvsHandle_t targetPVS;
-        private final idVec3 targetPos;
+        private final idVec3 targetPos = new idVec3();
         //
         //
 
@@ -444,8 +447,8 @@ public class AI {
             int numPVSAreas;
 
             this.target = target;
-            this.targetPos = targetPos;
-            this.fireOffset = fireOffset;
+            this.targetPos.oSet(targetPos);
+            this.fireOffset.oSet(fireOffset);
             this.self = self;
             this.gravityAxis = gravityAxis;
 
@@ -461,15 +464,15 @@ public class AI {
 
         @Override
         public boolean TestArea(final idAAS aas, int areaNum) {
-            idVec3 dir;
-            idVec3 local_dir = new idVec3();
-            idVec3 fromPos;
+            final idVec3 dir = new idVec3();
+            final idVec3 local_dir = new idVec3();
+            final idVec3 fromPos = new idVec3();
             idMat3 axis;
-            idVec3 areaCenter;
+            final idVec3 areaCenter = new idVec3();
             int numPVSAreas;
             int[] PVSAreas = new int[idEntity.MAX_PVS_AREAS];
 
-            areaCenter = aas.AreaCenter(areaNum);
+            areaCenter.oSet(aas.AreaCenter(areaNum));
             areaCenter.oPluSet(2, 1.0f);
 
             if (excludeBounds.ContainsPoint(areaCenter)) {
@@ -483,12 +486,12 @@ public class AI {
             }
 
             // calculate the world transform of the launch position
-            dir = targetPos.oMinus(areaCenter);
+            dir.oSet(targetPos.oMinus(areaCenter));
             gravityAxis.ProjectVector(dir, local_dir);
             local_dir.z = 0.0f;
             local_dir.ToVec2_Normalize();
             axis = local_dir.ToMat3();
-            fromPos = areaCenter.oPlus(fireOffset.oMultiply(axis));
+            fromPos.oSet(areaCenter.oPlus(fireOffset.oMultiply(axis)));
 
             return self.GetAimDir(fromPos, target, self, dir);
         }
@@ -651,6 +654,20 @@ public class AI {
         //
         // script variables
         protected final idScriptBool AI_TALK;
+        protected final idVec3 currentFocusPos;
+        //
+        // enemy variables
+        protected final idEntityPtr<idActor> enemy;
+        protected final idEntityPtr<idEntity> focusEntity;
+        protected final idVec3 lastReachableEnemyPos;
+        protected final idVec3 lastVisibleEnemyEyeOffset;
+        protected final idVec3 lastVisibleEnemyPos;
+        protected final idVec3 lastVisibleReachableEnemyPos;
+        protected final idList<idVec3> missileLaunchOffset;
+        protected final idEntityPtr<idProjectile> projectile;
+        protected final idVec3 projectileGravity;
+        protected final idVec3 projectileVelocity;
+        protected final idEntityPtr<idActor> talkTarget;
         // navigation
         protected idAAS aas;
         protected boolean af_push_moveables;        // allow the articulated figure to push moveable objects
@@ -673,14 +690,10 @@ public class AI {
         // chatter/talking
         protected idSoundShader chat_snd;
         protected int chat_time;
-        protected idVec3 currentFocusPos;
         protected int current_cinematic;
         protected float current_yaw;
         protected idAngles destLookAng;
         protected boolean disableGravity;           // disables gravity and allows vertical movement by the animation
-        //
-        // enemy variables
-        protected final idEntityPtr<idActor> enemy;
         protected idAngles eyeAng;
         protected float eyeFocusRate;
         protected float eyeHorizontalOffset;
@@ -707,7 +720,6 @@ public class AI {
         protected float fly_seek_scale;
         protected float fly_speed;
         protected int focusAlignTime;
-        protected final idEntityPtr<idEntity> focusEntity;
         protected int/*jointHandle_t*/             focusJoint;
         protected int focusTime;
         protected int forceAlignHeadTime;
@@ -723,17 +735,12 @@ public class AI {
         // weapon/attack vars
         protected boolean lastHitCheckResult;
         protected int lastHitCheckTime;
-        protected idVec3 lastReachableEnemyPos;
-        protected idVec3 lastVisibleEnemyEyeOffset;
-        protected idVec3 lastVisibleEnemyPos;
-        protected idVec3 lastVisibleReachableEnemyPos;
         protected idAngles lookAng;
         protected idList<idAngles> lookJointAngles;
         protected idList<Integer/*jointHandle_t*/> lookJoints;
         protected idAngles lookMax;
         protected idAngles lookMin;
         protected float melee_range;
-        protected idList<idVec3> missileLaunchOffset;
         //
         protected idMoveState move;
         protected int muzzleFlashEnd;
@@ -745,14 +752,11 @@ public class AI {
         //
         // physics
         protected idPhysics_Monster physicsObj;
-        protected final idEntityPtr<idProjectile> projectile;
         protected idClipModel projectileClipModel;
         //
         protected idDict projectileDef;
-        protected idVec3 projectileGravity;
         protected float projectileRadius;
         protected float projectileSpeed;
-        protected idVec3 projectileVelocity;
         protected float projectile_height_to_distance_ratio;    // calculates the maximum height a projectile can be thrown
         //
         protected boolean restartParticles;         // should smoke emissions restart
@@ -761,7 +765,6 @@ public class AI {
         // special fx
         protected float shrivel_rate;
         protected int shrivel_start;
-        protected final idEntityPtr<idActor> talkTarget;
         protected talkState_t talk_state;
         protected int travelFlags;
         protected float turnRate;
@@ -994,21 +997,21 @@ public class AI {
          */
         public static boolean PredictPath(final idEntity ent, final idAAS aas, final idVec3 start, final idVec3 velocity, int totalTime, int frameTime, int stopEvent, predictedPath_s path) {
             int i, j, step, numFrames, curFrameTime;
-            idVec3 delta, curStart, curEnd, curVelocity, lastEnd = new idVec3(), stepUp = new idVec3(), tmpStart;
-            idVec3 gravity, gravityDir, invGravityDir;
+            final idVec3 delta = new idVec3(), curStart = new idVec3(), curEnd = new idVec3(), curVelocity = new idVec3(), lastEnd = new idVec3(), stepUp = new idVec3(), tmpStart = new idVec3();
+            final idVec3 gravity = new idVec3(), gravityDir = new idVec3(), invGravityDir = new idVec3();
             float maxStepHeight, minFloorCos;
             pathTrace_s trace = new pathTrace_s();
 
             if (aas != null && aas.GetSettings() != null) {
-                gravity = aas.GetSettings().gravity;
-                gravityDir = aas.GetSettings().gravityDir;
-                invGravityDir = aas.GetSettings().invGravityDir;
+                gravity.oSet(aas.GetSettings().gravity);
+                gravityDir.oSet(aas.GetSettings().gravityDir);
+                invGravityDir.oSet(aas.GetSettings().invGravityDir);
                 maxStepHeight = aas.GetSettings().maxStepHeight.getVal();
                 minFloorCos = aas.GetSettings().minFloorCos.getVal();
             } else {
-                gravity = DEFAULT_GRAVITY_VEC3;
-                gravityDir = new idVec3(0, 0, -1);
-                invGravityDir = new idVec3(0, 0, 1);
+                gravity.oSet(DEFAULT_GRAVITY_VEC3);
+                gravityDir.oSet(new idVec3(0, 0, -1));
+                invGravityDir.oSet(new idVec3(0, 0, 1));
                 maxStepHeight = 14.0f;
                 minFloorCos = 0.7f;
             }
@@ -1020,8 +1023,8 @@ public class AI {
             path.endTime = 0;
             path.blockingEntity = null;
 
-            curStart = start;
-            curVelocity = velocity;
+            curStart.oSet(start);
+            curVelocity.oSet(velocity);
 
             numFrames = (totalTime + frameTime - 1) / frameTime;
             curFrameTime = frameTime;
@@ -1031,7 +1034,7 @@ public class AI {
                     curFrameTime = totalTime - i * curFrameTime;
                 }
 
-                delta = curVelocity.oMultiply(curFrameTime).oMultiply(0.001f);
+                delta.oSet(curVelocity.oMultiply(curFrameTime).oMultiply(0.001f));
 
                 path.endVelocity.oSet(curVelocity);
                 path.endTime = i * frameTime;
@@ -1039,12 +1042,12 @@ public class AI {
                 // allow sliding along a few surfaces per frame
                 for (j = 0; j < MAX_FRAME_SLIDE; j++) {
 
-                    idVec3 lineStart = curStart;
+                    final idVec3 lineStart = new idVec3(curStart);
 
                     // allow stepping up three times per frame
                     for (step = 0; step < 3; step++) {
 
-                        curEnd = curStart.oPlus(delta);
+                        curEnd.oSet(curStart.oPlus(delta));
                         if (PathTrace(ent, aas, curStart, curEnd, stopEvent, trace, path)) {
                             return true;
                         }
@@ -1052,8 +1055,8 @@ public class AI {
                         if (step != 0) {
 
                             // step down at end point
-                            tmpStart = trace.endPos;
-                            curEnd = tmpStart.oMinus(stepUp);
+                            tmpStart.oSet(trace.endPos);
+                            curEnd.oSet(tmpStart.oMinus(stepUp));
                             if (PathTrace(ent, aas, tmpStart, curEnd, stopEvent, trace, path)) {
                                 return true;
                             }
@@ -1072,7 +1075,7 @@ public class AI {
                                     return true;
                                 }
 
-                                curStart = lastEnd;
+                                curStart.oSet(lastEnd);
                                 break;
                             }
                         }
@@ -1082,20 +1085,20 @@ public class AI {
 
                         // if the trace is not blocked or blocked by a floor surface
                         if (trace.fraction >= 1.0f || (trace.normal.oMultiply(invGravityDir)) > minFloorCos) {
-                            curStart = trace.endPos;
+                            curStart.oSet(trace.endPos);
                             break;
                         }
 
                         // save last result
-                        lastEnd = trace.endPos;
+                        lastEnd.oSet(trace.endPos);
 
                         // step up
-                        stepUp = invGravityDir.oMultiply(maxStepHeight);
+                        stepUp.oSet(invGravityDir.oMultiply(maxStepHeight));
                         if (PathTrace(ent, aas, curStart, curStart.oPlus(stepUp), stopEvent, trace, path)) {
                             return true;
                         }
                         stepUp.oMulSet(trace.fraction);
-                        curStart = trace.endPos;
+                        curStart.oSet(trace.endPos);
                     }
 
                     if (ai_debugMove.GetBool()) {
@@ -1158,7 +1161,7 @@ public class AI {
         public static boolean TestTrajectory(final idVec3 start, final idVec3 end, float zVel, float gravity, float time, float max_height, final idClipModel clip, int clipmask, final idEntity ignore, final idEntity targetEntity, int drawtime) {
             int i, numSegments;
             float maxHeight, t, t2;
-            idVec3[] points = idVec3.generateArray(5);
+            final idVec3[] points = idVec3.generateArray(5);
             trace_s trace = new trace_s();
             boolean result;
 
@@ -1169,7 +1172,7 @@ public class AI {
             t = idMath.Sqrt((maxHeight - end.z) / (0.5f * -gravity));
 
             // start of parabolic
-            points[0] = start;
+            points[0].oSet(start);
 
             if (t < time) {
                 numSegments = 4;
@@ -1194,7 +1197,7 @@ public class AI {
             }
 
             // end of parabolic
-            points[numSegments] = end;
+            points[numSegments].oSet(end);
 
             if (drawtime != 0) {
                 for (i = 0; i < numSegments; i++) {
@@ -1241,15 +1244,15 @@ public class AI {
          // Finds the best collision free trajectory for a clip model.
          =====================
          */
-        public static boolean PredictTrajectory(final idVec3 firePos, final idVec3 target, float projectileSpeed, final idVec3 projGravity, final idClipModel clip, int clipmask, float max_height, final idEntity ignore, final idEntity targetEntity, int drawtime, idVec3 aimDir) {
+        public static boolean PredictTrajectory(final idVec3 firePos, final idVec3 target, float projectileSpeed, final idVec3 projGravity, final idClipModel clip, int clipmask, float max_height, final idEntity ignore, final idEntity targetEntity, int drawtime, final idVec3 aimDir) {
             int n, i, j;
             float zVel, a, t, pitch;
             CFloat s = new CFloat(), c = new CFloat();
             trace_s trace = new trace_s();
             ballistics_s[] ballistics = Stream.generate(ballistics_s::new).limit(2).toArray(ballistics_s[]::new);
-            idVec3[] dir = idVec3.generateArray(2);
-            idVec3 velocity = new idVec3();
-            idVec3 lastPos = new idVec3(), pos = new idVec3();
+            final idVec3[] dir = idVec3.generateArray(2);
+            final idVec3 velocity = new idVec3();
+            final idVec3 lastPos = new idVec3(), pos = new idVec3();
 
             assert (targetEntity != null);
 
@@ -1302,7 +1305,7 @@ public class AI {
             for (i = 0; i < n; i++) {
                 pitch = DEG2RAD(ballistics[i].angle);
                 idMath.SinCos(pitch, s, c);
-                dir[i] = target.oMinus(firePos);
+                dir[i].oSet(target.oMinus(firePos));
                 dir[i].z = 0.0f;
                 dir[i].oMulSet(c.getVal() * idMath.InvSqrt(dir[i].LengthSqr()));
                 dir[i].z = s.getVal();
@@ -1610,7 +1613,7 @@ public class AI {
             savefile.ReadBool(restorePhysics);
 
             // Set the AAS if the character has the correct gravity vector
-            idVec3 gravity = spawnArgs.GetVector("gravityDir", "0 0 -1");
+            final idVec3 gravity = new idVec3(spawnArgs.GetVector("gravityDir", "0 0 -1"));
             gravity.oMulSet(g_gravity.GetFloat());
             if (gravity == gameLocal.GetGravity()) {
                 SetAAS();
@@ -1637,7 +1640,7 @@ public class AI {
             idStr jointName = new idStr();
             idAngles jointScale;
             int/*jointHandle_t*/ joint;
-            idVec3 local_dir = new idVec3();
+            final idVec3 local_dir = new idVec3();
             CBool talks = new CBool(false);
 
             if (!g_monsters.GetBool()) {
@@ -1796,7 +1799,7 @@ public class AI {
             if (num_cinematics != 0) {
                 physicsObj.SetGravity(getVec3_origin());
             } else {
-                idVec3 gravity = spawnArgs.GetVector("gravityDir", "0 0 -1");
+                final idVec3 gravity = new idVec3(spawnArgs.GetVector("gravityDir", "0 0 -1"));
                 gravity.oMulSet(g_gravity.GetFloat());
                 physicsObj.SetGravity(gravity);
             }
@@ -1819,8 +1822,8 @@ public class AI {
                 projectileDef = gameLocal.FindEntityDefDict(projectileName);
                 CreateProjectile(getVec3_origin(), viewAxis.oGet(0));
                 projectileRadius = projectile.GetEntity().GetPhysics().GetClipModel().GetBounds().GetRadius();
-                projectileVelocity = idProjectile.GetVelocity(projectileDef);
-                projectileGravity = idProjectile.GetGravity(projectileDef);
+                projectileVelocity.oSet(idProjectile.GetVelocity(projectileDef));
+                projectileGravity.oSet(idProjectile.GetGravity(projectileDef));
                 projectileSpeed = projectileVelocity.Length();
                 idEntity.delete(projectile.GetEntity());
                 projectile.oSet(null);
@@ -1883,10 +1886,10 @@ public class AI {
             return talk_state;
         }
 
-        public boolean GetAimDir(final idVec3 firePos, idEntity aimAtEnt, final idEntity ignore, idVec3 aimDir) {
-            idVec3 targetPos1 = new idVec3();
-            idVec3 targetPos2 = new idVec3();
-            idVec3 delta;
+        public boolean GetAimDir(final idVec3 firePos, idEntity aimAtEnt, final idEntity ignore, final idVec3 aimDir) {
+            final idVec3 targetPos1 = new idVec3();
+            final idVec3 targetPos2 = new idVec3();
+            final idVec3 delta = new idVec3();
             float max_height;
             boolean result;
 
@@ -1905,12 +1908,12 @@ public class AI {
             } else if (aimAtEnt instanceof idActor) {
                 ((idActor) aimAtEnt).GetAIAimTargets(aimAtEnt.GetPhysics().GetOrigin(), targetPos1, targetPos2);
             } else {
-                targetPos1 = aimAtEnt.GetPhysics().GetAbsBounds().GetCenter();
-                targetPos2 = targetPos1;
+                targetPos1.oSet(aimAtEnt.GetPhysics().GetAbsBounds().GetCenter());
+                targetPos2.oSet(targetPos1);
             }
 
             // try aiming for chest
-            delta = firePos.oMinus(targetPos1);
+            delta.oSet(firePos.oMinus(targetPos1));
             max_height = delta.LengthFast() * projectile_height_to_distance_ratio;
             result = PredictTrajectory(firePos, targetPos1, projectileSpeed, projectileGravity, projectileClipModel, MASK_SHOT_RENDERMODEL, max_height, ignore, aimAtEnt, ai_debugTrajectory.GetBool() ? 1000 : 0, aimDir);
             if (result || !(aimAtEnt instanceof idActor)) {
@@ -1918,7 +1921,7 @@ public class AI {
             }
 
             // try aiming for head
-            delta = firePos.oMinus(targetPos2);
+            delta.oSet(firePos.oMinus(targetPos2));
             max_height = delta.LengthFast() * projectile_height_to_distance_ratio;
             result = PredictTrajectory(firePos, targetPos2, projectileSpeed, projectileGravity, projectileClipModel, MASK_SHOT_RENDERMODEL, max_height, ignore, aimAtEnt, ai_debugTrajectory.GetBool() ? 1000 : 0, aimDir);
 
@@ -2309,7 +2312,7 @@ public class AI {
         protected idVec3 FirstVisiblePointOnPath(final idVec3 origin, final idVec3 target, int travelFlags) {
             int i, areaNum, targetAreaNum, curAreaNum;
             CInt travelTime = new CInt();
-            idVec3 curOrigin;
+            final idVec3 curOrigin = new idVec3();
             idReachability[] reach = {null};
 
             if (NOT(aas)) {
@@ -2328,7 +2331,7 @@ public class AI {
             }
 
             curAreaNum = areaNum;
-            curOrigin = origin;
+            curOrigin.oSet(origin);
 
             for (i = 0; i < 10; i++) {
 
@@ -2341,7 +2344,7 @@ public class AI {
                 }
 
                 curAreaNum = reach[0].toAreaNum;
-                curOrigin = reach[0].end;
+                curOrigin.oSet(reach[0].end);
 
                 if (PointVisible(curOrigin)) {
                     return curOrigin;
@@ -2480,9 +2483,9 @@ public class AI {
             }
         }
 
-        protected void GetMoveDelta(final idMat3 oldaxis, final idMat3 axis, idVec3 delta) {
-            idVec3 oldModelOrigin;
-            idVec3 modelOrigin;
+        protected void GetMoveDelta(final idMat3 oldaxis, final idMat3 axis, final idVec3 delta) {
+            final idVec3 oldModelOrigin = new idVec3();
+            final idVec3 modelOrigin = new idVec3();
 
             animator.GetDelta(gameLocal.time - idGameLocal.msec, gameLocal.time, delta);
             delta.oSet(axis.oMultiply(delta));
@@ -2491,18 +2494,18 @@ public class AI {
                 // the pivot of the monster's model is around its origin, and not around the bounding
                 // box's origin, so we have to compensate for this when the model is offset so that
                 // the monster still appears to rotate around it's origin.
-                oldModelOrigin = modelOffset.oMultiply(oldaxis);
-                modelOrigin = modelOffset.oMultiply(axis);
+                oldModelOrigin.oSet(modelOffset.oMultiply(oldaxis));
+                modelOrigin.oSet(modelOffset.oMultiply(axis));
                 delta.oPluSet(oldModelOrigin.oMinus(modelOrigin));
             }
 
             delta.oMulSet(physicsObj.GetGravityAxis());
         }
 
-        protected void CheckObstacleAvoidance(final idVec3 goalPos, idVec3 newPos) {
+        protected void CheckObstacleAvoidance(final idVec3 goalPos, final idVec3 newPos) {
             idEntity obstacle;
             obstaclePath_s path = new obstaclePath_s();
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             float dist;
             boolean foundPath;
 
@@ -2512,7 +2515,7 @@ public class AI {
                 return;
             }
 
-            final idVec3 origin = physicsObj.GetOrigin();
+            final idVec3 origin = new idVec3(physicsObj.GetOrigin());
 
             obstacle = null;
             AI_OBSTACLE_IN_PATH.underscore(false);
@@ -2555,7 +2558,7 @@ public class AI {
                 AI_OBSTACLE_IN_PATH.underscore(true);
 
                 // check if we're past where the goalPos was pushed out of the obstacle
-                dir = goalPos.oMinus(origin);
+                dir.oSet(goalPos.oMinus(origin));
                 dir.Normalize();
                 dist = (path.seekPos.oMinus(origin)).oMultiply(dir);
                 if (dist < 1.0f) {
@@ -2586,10 +2589,10 @@ public class AI {
         }
 
         protected void DeadMove() {
-            idVec3 delta = new idVec3();
+            final idVec3 delta = new idVec3();
             monsterMoveResult_t moveResult;
 
-            idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
 
             GetMoveDelta(viewAxis, viewAxis, delta);
             physicsObj.SetDelta(delta);
@@ -2601,14 +2604,14 @@ public class AI {
         }
 
         protected void AnimMove() {
-            idVec3 goalPos = new idVec3();
-            idVec3 delta = new idVec3();
-            idVec3 goalDelta;
+            final idVec3 goalPos = new idVec3();
+            final idVec3 delta = new idVec3();
+            final idVec3 goalDelta = new idVec3();
             float goalDist;
             monsterMoveResult_t moveResult;
-            idVec3 newDest = new idVec3();
+            final idVec3 newDest = new idVec3();
 
-            idVec3 oldOrigin = physicsObj.GetOrigin();
+            final idVec3 oldOrigin = new idVec3(physicsObj.GetOrigin());
             idMat3 oldAxis = viewAxis;
 
             AI_BLOCKED.underscore(false);
@@ -2621,10 +2624,10 @@ public class AI {
             move.obstacle.oSet(null);
             if ((move.moveCommand == MOVE_FACE_ENEMY) && enemy.GetEntity() != null) {
                 TurnToward(lastVisibleEnemyPos);
-                goalPos = oldOrigin;
+                goalPos.oSet(oldOrigin);
             } else if ((move.moveCommand == MOVE_FACE_ENTITY) && move.goalEntity.GetEntity() != null) {
                 TurnToward(move.goalEntity.GetEntity().GetPhysics().GetOrigin());
-                goalPos = oldOrigin;
+                goalPos.oSet(oldOrigin);
             } else if (GetMovePos(goalPos)) {
                 if (move.moveCommand != MOVE_WANDER) {
                     CheckObstacleAvoidance(goalPos, newDest);
@@ -2638,11 +2641,11 @@ public class AI {
 
             if (move.moveCommand == MOVE_SLIDE_TO_POSITION) {
                 if (gameLocal.time < move.startTime + move.duration) {
-                    goalPos = move.moveDest.oMinus(move.moveDir.oMultiply(MS2SEC(move.startTime + move.duration - gameLocal.time)));
-                    delta = goalPos.oMinus(oldOrigin);
+                    goalPos.oSet(move.moveDest.oMinus(move.moveDir.oMultiply(MS2SEC(move.startTime + move.duration - gameLocal.time))));
+                    delta.oSet(goalPos.oMinus(oldOrigin));
                     delta.z = 0.0f;
                 } else {
-                    delta = move.moveDest.oMinus(oldOrigin);
+                    delta.oSet(move.moveDest.oMinus(oldOrigin));
                     delta.z = 0.0f;
                     StopMove(MOVE_STATUS_DONE);
                 }
@@ -2653,10 +2656,10 @@ public class AI {
             }
 
             if (move.moveCommand == MOVE_TO_POSITION) {
-                goalDelta = move.moveDest.oMinus(oldOrigin);
+                goalDelta.oSet(move.moveDest.oMinus(oldOrigin));
                 goalDist = goalDelta.LengthFast();
                 if (goalDist < delta.LengthFast()) {
-                    delta = goalDelta;
+                    delta.oSet(goalDelta);
                 }
             }
 
@@ -2683,7 +2686,7 @@ public class AI {
 
             AI_ONGROUND.underscore(physicsObj.OnGround());
 
-            idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             if (!oldOrigin.equals(org)) {//FIXME: so this checks value instead of refs which COULD go wrong!
                 TouchTriggers();
             }
@@ -2697,14 +2700,14 @@ public class AI {
         }
 
         protected void SlideMove() {
-            idVec3 goalPos = new idVec3();
-            idVec3 delta = new idVec3();
-            idVec3 goalDelta;
+            final idVec3 goalPos = new idVec3();
+            final idVec3 delta = new idVec3();
+            final idVec3 goalDelta = new idVec3();
             float goalDist;
             monsterMoveResult_t moveResult;
-            idVec3 newDest = new idVec3();
+            final idVec3 newDest = new idVec3();
 
-            idVec3 oldOrigin = physicsObj.GetOrigin();
+            final idVec3 oldOrigin = new idVec3(physicsObj.GetOrigin());
             idMat3 oldAxis = viewAxis;
 
             AI_BLOCKED.underscore(false);
@@ -2717,39 +2720,39 @@ public class AI {
             move.obstacle.oSet(null);
             if ((move.moveCommand == MOVE_FACE_ENEMY) && enemy.GetEntity() != null) {
                 TurnToward(lastVisibleEnemyPos);
-                goalPos = move.moveDest;
+                goalPos.oSet(move.moveDest);
             } else if ((move.moveCommand == MOVE_FACE_ENTITY) && move.goalEntity.GetEntity() != null) {
                 TurnToward(move.goalEntity.GetEntity().GetPhysics().GetOrigin());
-                goalPos = move.moveDest;
+                goalPos.oSet(move.moveDest);
             } else if (GetMovePos(goalPos)) {
                 CheckObstacleAvoidance(goalPos, newDest);
                 TurnToward(newDest);
-                goalPos = newDest;
+                goalPos.oSet(newDest);
             }
 
             if (move.moveCommand == MOVE_SLIDE_TO_POSITION) {
                 if (gameLocal.time < move.startTime + move.duration) {
-                    goalPos = move.moveDest.oMinus(move.moveDir.oMultiply(MS2SEC(move.startTime + move.duration - gameLocal.time)));
+                    goalPos.oSet(move.moveDest.oMinus(move.moveDir.oMultiply(MS2SEC(move.startTime + move.duration - gameLocal.time))));
                 } else {
-                    goalPos = move.moveDest;
+                    goalPos.oSet(move.moveDest);
                     StopMove(MOVE_STATUS_DONE);
                 }
             }
 
             if (move.moveCommand == MOVE_TO_POSITION) {
-                goalDelta = move.moveDest.oMinus(oldOrigin);
+                goalDelta.oSet(move.moveDest.oMinus(oldOrigin));
                 goalDist = goalDelta.LengthFast();
                 if (goalDist < delta.LengthFast()) {
                     delta.oSet(goalDelta);
                 }
             }
 
-            idVec3 vel = physicsObj.GetLinearVelocity();
+            final idVec3 vel = new idVec3(physicsObj.GetLinearVelocity());
             float z = vel.z;
-            idVec3 predictedPos = oldOrigin.oPlus(vel.oMultiply(AI_SEEK_PREDICTION));
+            final idVec3 predictedPos = new idVec3(oldOrigin.oPlus(vel.oMultiply(AI_SEEK_PREDICTION)));
 
             // seek the goal position
-            goalDelta = goalPos.oMinus(predictedPos);
+            goalDelta.oSet(goalPos.oMinus(predictedPos));
             vel.oMinSet(vel.oMultiply(AI_FLY_DAMPENING * MS2SEC(idGameLocal.msec)));
             vel.oPluSet(goalDelta.oMultiply(MS2SEC(idGameLocal.msec)));
 
@@ -2789,7 +2792,7 @@ public class AI {
 
             AI_ONGROUND.underscore(physicsObj.OnGround());
 
-            idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             if (oldOrigin != org) {
                 TouchTriggers();
             }
@@ -2803,12 +2806,12 @@ public class AI {
         }
 
         protected void AdjustFlyingAngles() {
-            idVec3 vel;
+            final idVec3 vel = new idVec3();
             float speed;
             float roll;
             float pitch;
 
-            vel = physicsObj.GetLinearVelocity();
+            vel.oSet(physicsObj.GetLinearVelocity());
 
             speed = vel.Length();
             if (speed < 5.0f) {
@@ -2840,26 +2843,26 @@ public class AI {
             }
         }
 
-        protected void AddFlyBob(idVec3 vel) {
-            idVec3 fly_bob_add;
+        protected void AddFlyBob(final idVec3 vel) {
+            final idVec3 fly_bob_add = new idVec3();
             float t;
 
             if (fly_bob_strength != 0) {
                 t = MS2SEC(gameLocal.time + entityNumber * 497);
-                fly_bob_add = (viewAxis.oGet(1).oMultiply(idMath.Sin16(t * fly_bob_horz)).oPlus(viewAxis.oGet(2).oMultiply(idMath.Sin16(t * fly_bob_vert)))).oMultiply(fly_bob_strength);
+                fly_bob_add.oSet((viewAxis.oGet(1).oMultiply(idMath.Sin16(t * fly_bob_horz)).oPlus(viewAxis.oGet(2).oMultiply(idMath.Sin16(t * fly_bob_vert)))).oMultiply(fly_bob_strength));
                 vel.oPluSet(fly_bob_add.oMultiply(MS2SEC(idGameLocal.msec)));
                 if (ai_debugMove.GetBool()) {
-                    final idVec3 origin = physicsObj.GetOrigin();
+                    final idVec3 origin = new idVec3(physicsObj.GetOrigin());
                     gameRenderWorld.DebugArrow(colorOrange, origin, origin.oPlus(fly_bob_add), 0);
                 }
             }
         }
 
-        protected void AdjustFlyHeight(idVec3 vel, final idVec3 goalPos) {
-            final idVec3 origin = physicsObj.GetOrigin();
+        protected void AdjustFlyHeight(final idVec3 vel, final idVec3 goalPos) {
+            final idVec3 origin = new idVec3(physicsObj.GetOrigin());
             predictedPath_s path = new predictedPath_s();
-            idVec3 end;
-            idVec3 dest;
+            final idVec3 end = new idVec3();
+            final idVec3 dest = new idVec3();
             trace_s trace = new trace_s();
             idActor enemyEnt;
             boolean goLower;
@@ -2867,11 +2870,11 @@ public class AI {
             // make sure we're not flying too high to get through doors
             goLower = false;
             if (origin.z > goalPos.z) {
-                dest = goalPos;
+                dest.oSet(goalPos);
                 dest.z = origin.z + 128.0f;
                 idAI.PredictPath(this, aas, goalPos, dest.oMinus(origin), 1000, 1000, SE_BLOCKED, path);
                 if (path.endPos.z < origin.z) {
-                    idVec3 addVel = Seek(vel, origin, path.endPos, AI_SEEK_PREDICTION);
+                    final idVec3 addVel = new idVec3(Seek(vel, origin, path.endPos, AI_SEEK_PREDICTION));
                     vel.z += addVel.z;
                     goLower = true;
                 }
@@ -2883,7 +2886,7 @@ public class AI {
 
             if (!goLower) {
                 // make sure we don't fly too low
-                end = origin;
+                end.oSet(origin);
 
                 enemyEnt = enemy.GetEntity();
                 if (enemyEnt != null) {
@@ -2898,16 +2901,16 @@ public class AI {
             }
         }
 
-        protected void FlySeekGoal(idVec3 vel, idVec3 goalPos) {
-            idVec3 seekVel;
+        protected void FlySeekGoal(final idVec3 vel, final idVec3 goalPos) {
+            final idVec3 seekVel = new idVec3();
 
             // seek the goal position
-            seekVel = Seek(vel, physicsObj.GetOrigin(), goalPos, AI_SEEK_PREDICTION);
+            seekVel.oSet(Seek(vel, physicsObj.GetOrigin(), goalPos, AI_SEEK_PREDICTION));
             seekVel.oMulSet(fly_seek_scale);
             vel.oPluSet(seekVel);
         }
 
-        protected void AdjustFlySpeed(idVec3 vel) {
+        protected void AdjustFlySpeed(final idVec3 vel) {
             float speed;
 
             // apply dampening
@@ -2931,7 +2934,7 @@ public class AI {
             } else if ((move.moveCommand == MOVE_FACE_ENTITY) && move.goalEntity.GetEntity() != null) {
                 TurnToward(move.goalEntity.GetEntity().GetPhysics().GetOrigin());
             } else if (move.speed > 0.0f) {
-                final idVec3 vel = physicsObj.GetLinearVelocity();
+                final idVec3 vel = new idVec3(physicsObj.GetLinearVelocity());
                 if (vel.ToVec2().LengthSqr() > 0.1f) {
                     TurnToward(vel.ToYaw());
                 }
@@ -2940,9 +2943,9 @@ public class AI {
         }
 
         protected void FlyMove() {
-            idVec3 goalPos = new idVec3();
-            idVec3 oldorigin;
-            idVec3 newDest = new idVec3();
+            final idVec3 goalPos = new idVec3();
+            final idVec3 oldorigin = new idVec3();
+            final idVec3 newDest = new idVec3();
 
             AI_BLOCKED.underscore(false);
             if ((move.moveCommand != MOVE_NONE) && ReachedPos(move.moveDest, move.moveCommand)) {
@@ -2954,11 +2957,11 @@ public class AI {
             }
 
             if (move.moveCommand != MOVE_TO_POSITION_DIRECT) {
-                idVec3 vel = physicsObj.GetLinearVelocity();
+                final idVec3 vel = new idVec3(physicsObj.GetLinearVelocity());
 
                 if (GetMovePos(goalPos)) {
                     CheckObstacleAvoidance(goalPos, newDest);
-                    goalPos = newDest;
+                    goalPos.oSet(newDest);
                 }
 
                 if (move.speed != 0) {
@@ -2981,7 +2984,7 @@ public class AI {
             FlyTurn();
 
             // run the physics for this frame
-            oldorigin = physicsObj.GetOrigin();
+            oldorigin.oSet(physicsObj.GetOrigin());
             physicsObj.UseFlyMove(true);
             physicsObj.UseVelocityMove(false);
             physicsObj.SetDelta(getVec3_zero());
@@ -3001,7 +3004,7 @@ public class AI {
                 }
             }
 
-            idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             if (oldorigin != org) {
                 TouchTriggers();
             }
@@ -3043,7 +3046,7 @@ public class AI {
             }
 
             if (ai_debugMove.GetBool()) {
-                final idVec3 org = physicsObj.GetOrigin();
+                final idVec3 org = new idVec3(physicsObj.GetOrigin());
                 gameRenderWorld.DebugBounds(colorMagenta, physicsObj.GetBounds(), org, idGameLocal.msec);
                 gameRenderWorld.DebugLine(colorBlue, org, move.moveDest, idGameLocal.msec, true);
                 gameRenderWorld.DebugLine(colorYellow, org.oPlus(EyeOffset()), org.oPlus(EyeOffset().oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(16.0f)))), idGameLocal.msec, true);
@@ -3186,12 +3189,12 @@ public class AI {
             idClipModel clipModel;
             idClipModel[] clipModelList = new idClipModel[MAX_GENTITIES];
             int clipmask;
-            idVec3 org;
-            idVec3 forceVec;
-            idVec3 delta;
+            final idVec3 org = new idVec3();
+            final idVec3 forceVec = new idVec3();
+            final idVec3 delta = new idVec3();
             idVec2 perpendicular = new idVec2();
 
-            org = physicsObj.GetOrigin();
+            org.oSet(physicsObj.GetOrigin());
 
             // find all possible obstacles
             clipBounds = physicsObj.GetAbsBounds();
@@ -3213,25 +3216,25 @@ public class AI {
                 }
 
                 if (obEnt instanceof idMoveable && obEnt.GetPhysics().IsPushable()) {
-                    delta = obEnt.GetPhysics().GetOrigin().oMinus(org);
+                    delta.oSet(obEnt.GetPhysics().GetOrigin().oMinus(org));
                     delta.NormalizeFast();
                     perpendicular.x = -delta.y;
                     perpendicular.y = delta.x;
                     delta.z += 0.5f;
                     delta.ToVec2_oPluSet(perpendicular.oMultiply(gameLocal.random.CRandomFloat() * 0.5f));
-                    forceVec = delta.oMultiply(force * obEnt.GetPhysics().GetMass());
+                    forceVec.oSet(delta.oMultiply(force * obEnt.GetPhysics().GetMass()));
                     obEnt.ApplyImpulse(this, 0, obEnt.GetPhysics().GetOrigin(), forceVec);
                 }
             }
 
             if (alwaysKick != null) {
-                delta = alwaysKick.GetPhysics().GetOrigin().oMinus(org);
+                delta.oSet(alwaysKick.GetPhysics().GetOrigin().oMinus(org));
                 delta.NormalizeFast();
                 perpendicular.x = -delta.y;
                 perpendicular.y = delta.x;
                 delta.z += 0.5f;
                 delta.ToVec2_oPluSet(perpendicular.oMultiply(gameLocal.random.CRandomFloat() * 0.5f));
-                forceVec = delta.oMultiply(force * alwaysKick.GetPhysics().GetMass());
+                forceVec.oSet(delta.oMultiply(force * alwaysKick.GetPhysics().GetMass()));
                 alwaysKick.ApplyImpulse(this, 0, alwaysKick.GetPhysics().GetOrigin(), forceVec);
             }
         }
@@ -3322,14 +3325,14 @@ public class AI {
 
         protected int PointReachableAreaNum(final idVec3 pos, final float boundsScale /*= 2.0f*/) {
             int areaNum;
-            idVec3 size;
+            final idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
 
             if (NOT(aas)) {
                 return 0;
             }
 
-            size = aas.GetSettings().boundingBoxes[0].oGet(1).oMultiply(boundsScale);
+            size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1).oMultiply(boundsScale));
             bounds.oSet(0, size.oNegative());
             size.z = 32.0f;
             bounds.oSet(1, size);
@@ -3348,20 +3351,20 @@ public class AI {
         }
 
         protected boolean PathToGoal(aasPath_s path, int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin) {
-            idVec3 org;
-            idVec3 goal;
+            final idVec3 org = new idVec3();
+            final idVec3 goal = new idVec3();
 
             if (NOT(aas)) {
                 return false;
             }
 
-            org = origin;
+            org.oSet(origin);
             aas.PushPointIntoAreaNum(areaNum, org);
             if (0 == areaNum) {
                 return false;
             }
 
-            goal = goalOrigin;
+            goal.oSet(goalOrigin);
             aas.PushPointIntoAreaNum(goalAreaNum, goal);
             if (0 == goalAreaNum) {
                 return false;
@@ -3385,13 +3388,13 @@ public class AI {
             }
         }
 
-        protected boolean GetMovePos(idVec3 seekPos) {
+        protected boolean GetMovePos(final idVec3 seekPos) {
             int areaNum;
             aasPath_s path = new aasPath_s();
             boolean result;
-            idVec3 org;
+            final idVec3 org = new idVec3();
 
-            org = physicsObj.GetOrigin();
+            org.oSet(physicsObj.GetOrigin());
             seekPos.oSet(org);
 
             switch (move.moveCommand) {
@@ -3424,7 +3427,7 @@ public class AI {
             result = false;
             if (gameLocal.time > move.blockTime) {
                 if (move.moveCommand == MOVE_WANDER) {
-                    move.moveDest = org.oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(256.0f)));
+                    move.moveDest.oSet(org.oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(256.0f))));
                 } else {
                     if (ReachedPos(move.moveDest, move.moveCommand)) {
                         StopMove(MOVE_STATUS_DONE);
@@ -3479,7 +3482,7 @@ public class AI {
         }
 
         protected boolean EntityCanSeePos(idActor actor, final idVec3 actorOrigin, final idVec3 pos) {
-            idVec3 eye, point;
+            final idVec3 eye = new idVec3(), point = new idVec3();
             trace_s results = new trace_s();
             pvsHandle_t handle;
 
@@ -3492,9 +3495,9 @@ public class AI {
 
             gameLocal.pvs.FreeCurrentPVS(handle);
 
-            eye = actorOrigin.oPlus(actor.EyeOffset());
+            eye.oSet(actorOrigin.oPlus(actor.EyeOffset()));
 
-            point = pos;
+            point.oSet(pos);
             point.oPluSet(2, 1.0f);
 
             physicsObj.DisableClip();
@@ -3520,7 +3523,7 @@ public class AI {
             }
             if (!physicsObj.OnGround() || enemy.GetEntity() == null
                     || (physicsObj.GetOrigin().oMinus(move.lastMoveOrigin)).LengthSqr() > Square(blockedRadius)) {
-                move.lastMoveOrigin = physicsObj.GetOrigin();
+                move.lastMoveOrigin.oSet(physicsObj.GetOrigin());
                 move.lastMoveTime = gameLocal.time;
             }
             if (move.lastMoveTime < gameLocal.time - blockedMoveTime) {
@@ -3539,7 +3542,7 @@ public class AI {
             move.moveStatus = status;
             move.toAreaNum = 0;
             move.goalEntity.oSet(null);
-            move.moveDest = physicsObj.GetOrigin();
+            move.moveDest.oSet(physicsObj.GetOrigin());
             AI_DEST_UNREACHABLE.underscore(false);
             AI_OBSTACLE_IN_PATH.underscore(false);
             AI_BLOCKED.underscore(false);
@@ -3569,7 +3572,7 @@ public class AI {
 
             TurnToward(lastVisibleEnemyPos);
             move.goalEntity.oSet(enemyEnt);
-            move.moveDest = physicsObj.GetOrigin();
+            move.moveDest.oSet(physicsObj.GetOrigin());
             move.moveCommand = MOVE_FACE_ENEMY;
             move.moveStatus = MOVE_STATUS_WAITING;
             move.startTime = gameLocal.time;
@@ -3594,10 +3597,10 @@ public class AI {
                 return false;
             }
 
-            idVec3 entityOrg = ent.GetPhysics().GetOrigin();
+            final idVec3 entityOrg = new idVec3(ent.GetPhysics().GetOrigin());
             TurnToward(entityOrg);
             move.goalEntity.oSet(ent);
-            move.moveDest = physicsObj.GetOrigin();
+            move.moveDest.oSet(physicsObj.GetOrigin());
             move.moveCommand = MOVE_FACE_ENTITY;
             move.moveStatus = MOVE_STATUS_WAITING;
             move.startTime = gameLocal.time;
@@ -3626,7 +3629,7 @@ public class AI {
             AI_FORWARD.underscore(true);
 
             if (move.moveType == MOVETYPE_FLY) {
-                idVec3 dir = pos.oMinus(physicsObj.GetOrigin());
+                final idVec3 dir = new idVec3(pos.oMinus(physicsObj.GetOrigin()));
                 dir.Normalize();
                 dir.oMulSet(fly_speed);
                 physicsObj.SetLinearVelocity(dir);
@@ -3661,7 +3664,7 @@ public class AI {
             aasObstacle_s[] obstacle = {new aasObstacle_s()};
             aasGoal_s goal = new aasGoal_s();
 //            idBounds bounds;
-            idVec3 pos;
+            final idVec3 pos = new idVec3();
 
             if (null == aas || null == ent) {
                 StopMove(MOVE_STATUS_DEST_UNREACHABLE);
@@ -3669,16 +3672,16 @@ public class AI {
                 return false;
             }
 
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             areaNum = PointReachableAreaNum(org);
 
             // consider the entity the monster is getting close to as an obstacle
-            obstacle[0].absBounds = ent.GetPhysics().GetAbsBounds();
+            obstacle[0].absBounds.oSet(ent.GetPhysics().GetAbsBounds());
 
             if (ent == enemy.GetEntity()) {
-                pos = lastVisibleEnemyPos;
+                pos.oSet(lastVisibleEnemyPos);
             } else {
-                pos = ent.GetPhysics().GetOrigin();
+                pos.oSet(ent.GetPhysics().GetOrigin());
             }
 
             idAASFindAreaOutOfRange findGoal = new idAASFindAreaOutOfRange(pos, range);
@@ -3712,7 +3715,7 @@ public class AI {
             int areaNum;
             aasObstacle_s[] obstacle = {new aasObstacle_s()};
             aasGoal_s goal = new aasGoal_s();
-            idVec3 pos;
+            final idVec3 pos = new idVec3();
 
             if (null == aas || null == ent) {
                 StopMove(MOVE_STATUS_DEST_UNREACHABLE);
@@ -3720,16 +3723,16 @@ public class AI {
                 return false;
             }
 
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             areaNum = PointReachableAreaNum(org);
 
             // consider the entity the monster is getting close to as an obstacle
-            obstacle[0].absBounds = ent.GetPhysics().GetAbsBounds();
+            obstacle[0].absBounds.oSet(ent.GetPhysics().GetAbsBounds());
 
             if (ent == enemy.GetEntity()) {
-                pos = lastVisibleEnemyPos;
+                pos.oSet(lastVisibleEnemyPos);
             } else {
-                pos = ent.GetPhysics().GetOrigin();
+                pos.oSet(ent.GetPhysics().GetOrigin());
             }
 
             idAASFindAttackPosition findGoal = new idAASFindAttackPosition(this, physicsObj.GetGravityAxis(), ent, pos, missileLaunchOffset.oGet(attack_anim));
@@ -3774,7 +3777,7 @@ public class AI {
                 return true;
             }
 
-            idVec3 pos = lastVisibleReachableEnemyPos;
+            final idVec3 pos = new idVec3(lastVisibleReachableEnemyPos);
 
             move.toAreaNum = 0;
             if (aas != null) {
@@ -3824,14 +3827,14 @@ public class AI {
         protected boolean MoveToEntity(idEntity ent) {
             int areaNum;
             aasPath_s path = new aasPath_s();
-            idVec3 pos;
+            final idVec3 pos = new idVec3();
 
             if (null == ent) {
                 StopMove(MOVE_STATUS_DEST_NOT_FOUND);
                 return false;
             }
 
-            pos = ent.GetPhysics().GetOrigin();
+            pos.oSet(ent.GetPhysics().GetOrigin());
             if ((move.moveType != MOVETYPE_FLY) && ((move.moveCommand != MOVE_TO_ENTITY) || (move.goalEntityOrigin != pos))) {
                 ent.GetFloorPos(64.0f, pos);
             }
@@ -3877,7 +3880,7 @@ public class AI {
             }
 
             move.moveDest.oSet(pos);
-            move.goalEntityOrigin = ent.GetPhysics().GetOrigin();
+            move.goalEntityOrigin.oSet(ent.GetPhysics().GetOrigin());
             move.moveStatus = MOVE_STATUS_MOVING;
             move.speed = fly_speed;
             AI_MOVE_DONE.underscore(false);
@@ -3888,7 +3891,7 @@ public class AI {
         }
 
         protected boolean MoveToPosition(final idVec3 pos) {
-            idVec3 org;
+            final idVec3 org = new idVec3();
             int areaNum;
             aasPath_s path = new aasPath_s();
 
@@ -3897,7 +3900,7 @@ public class AI {
                 return true;
             }
 
-            org = pos;
+            org.oSet(pos);
             move.toAreaNum = 0;
             if (aas != null) {
                 move.toAreaNum = PointReachableAreaNum(org);
@@ -3942,11 +3945,11 @@ public class AI {
                 return false;
             }
 
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             areaNum = PointReachableAreaNum(org);
 
             // consider the entity the monster tries to hide from as an obstacle
-            obstacle[0].absBounds = entity.GetPhysics().GetAbsBounds();
+            obstacle[0].absBounds.oSet(entity.GetPhysics().GetAbsBounds());
 
             idAASFindCover findCover = new idAASFindCover(hideFromPos);
             if (!aas.FindNearestGoal(hideGoal, areaNum, org, hideFromPos, travelFlags, obstacle, 1, findCover)) {
@@ -3988,7 +3991,7 @@ public class AI {
             AI_FORWARD.underscore(false);
 
             if (move.duration > 0) {
-                move.moveDir = (pos.oMinus(physicsObj.GetOrigin())).oDivide(MS2SEC(move.duration));
+                move.moveDir.oSet((pos.oMinus(physicsObj.GetOrigin())).oDivide(MS2SEC(move.duration)));
                 if (move.moveType != MOVETYPE_FLY) {
                     move.moveDir.z = 0.0f;
                 }
@@ -4001,7 +4004,7 @@ public class AI {
         protected boolean WanderAround() {
             StopMove(MOVE_STATUS_DONE);
 
-            move.moveDest = physicsObj.GetOrigin().oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(256.0f)));
+            move.moveDest.oSet(physicsObj.GetOrigin().oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(256.0f))));
             if (!NewWanderDir(move.moveDest)) {
                 StopMove(MOVE_STATUS_DEST_UNREACHABLE);
                 AI_DEST_UNREACHABLE.underscore(true);
@@ -4020,12 +4023,12 @@ public class AI {
 
         protected boolean StepDirection(float dir) {
             predictedPath_s path = new predictedPath_s();
-            idVec3 org;
+            final idVec3 org = new idVec3();
 
             move.wanderYaw = dir;
-            move.moveDir = new idAngles(0, move.wanderYaw, 0).ToForward();
+            move.moveDir.oSet(new idAngles(0, move.wanderYaw, 0).ToForward());
 
-            org = physicsObj.GetOrigin();
+            org.oSet(physicsObj.GetOrigin());
 
             idAI.PredictPath(this, aas, org, move.moveDir.oMultiply(48.0f), 1000, 1000, (move.moveType == MOVETYPE_FLY) ? SE_BLOCKED : (SE_ENTER_OBSTACLE | SE_BLOCKED | SE_ENTER_LEDGE_AREA), path);
 
@@ -4037,12 +4040,12 @@ public class AI {
             if ((move.moveType == MOVETYPE_FLY) && (path.endEvent == SE_BLOCKED)) {
                 float z;
 
-                move.moveDir = path.endVelocity.oMultiply(1.0f / 48.0f);
+                move.moveDir.oSet(path.endVelocity.oMultiply(1.0f / 48.0f));
 
                 // trace down to the floor and see if we can go forward
                 idAI.PredictPath(this, aas, org, new idVec3(0.0f, 0.0f, -1024.0f), 1000, 1000, SE_BLOCKED, path);
 
-                idVec3 floorPos = path.endPos;
+                final idVec3 floorPos = new idVec3(path.endPos);
                 idAI.PredictPath(this, aas, floorPos, move.moveDir.oMultiply(48.0f), 1000, 1000, SE_BLOCKED, path);
                 if (0 == path.endEvent) {
                     move.moveDir.z = -1.0f;
@@ -4052,16 +4055,16 @@ public class AI {
                 // trace up to see if we can go over something and go forward
                 idAI.PredictPath(this, aas, org, new idVec3(0.0f, 0.0f, 256.0f), 1000, 1000, SE_BLOCKED, path);
 
-                idVec3 ceilingPos = path.endPos;
+                final idVec3 ceilingPos = new idVec3(path.endPos);
 
                 for (z = org.z; z <= ceilingPos.z + 64.0f; z += 64.0f) {
-                    idVec3 start = new idVec3();
+                    final idVec3 start = new idVec3();
                     if (z <= ceilingPos.z) {
                         start.x = org.x;
                         start.y = org.y;
                         start.z = z;
                     } else {
-                        start = ceilingPos;
+                        start.oSet(ceilingPos);
                     }
                     idAI.PredictPath(this, aas, start, move.moveDir.oMultiply(48.0f), 1000, 1000, SE_BLOCKED, path);
                     if (0 == path.endEvent) {
@@ -4085,7 +4088,7 @@ public class AI {
             olddir = idMath.AngleNormalize360((int) (current_yaw / 45) * 45);
             turnaround = idMath.AngleNormalize360(olddir - 180);
 
-            idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             deltax = dest.x - org.x;
             deltay = dest.y - org.y;
             if (deltax > 10) {
@@ -4163,7 +4166,7 @@ public class AI {
 
         // effects
         protected idDeclParticle SpawnParticlesOnJoint(particleEmitter_s pe, final idStr particleName, final String jointName) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (!isNotNullOrEmpty(particleName)) {
@@ -4178,7 +4181,7 @@ public class AI {
                 pe.particle = null;
             } else {
                 animator.GetJointTransform(pe.joint, gameLocal.time, origin, axis);
-                origin = renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis));
+                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)));
 
                 BecomeActive(TH_UPDATEPARTICLES);
                 if (0 == gameLocal.time) {
@@ -4299,7 +4302,7 @@ public class AI {
             viewAxis = new idAngles(0, current_yaw, 0).ToMat3();
 
             if (ai_debugMove.GetBool()) {
-                final idVec3 org = physicsObj.GetOrigin();
+                final idVec3 org = new idVec3(physicsObj.GetOrigin());
                 gameRenderWorld.DebugLine(colorRed, org, org.oPlus(new idAngles(0, ideal_yaw, 0).ToForward().oMultiply(64)), idGameLocal.msec);
                 gameRenderWorld.DebugLine(colorGreen, org, org.oPlus(new idAngles(0, current_yaw, 0).ToForward().oMultiply(48)), idGameLocal.msec);
                 gameRenderWorld.DebugLine(colorYellow, org, org.oPlus(new idAngles(0, current_yaw + turnVel, 0).ToForward().oMultiply(32)), idGameLocal.msec);
@@ -4312,11 +4315,11 @@ public class AI {
         }
 
         protected boolean TurnToward(final idVec3 pos) {
-            idVec3 dir;
-            idVec3 local_dir = new idVec3();
+            final idVec3 dir = new idVec3();
+            final idVec3 local_dir = new idVec3();
             float lengthSqr;
 
-            dir = pos.oMinus(physicsObj.GetOrigin());
+            dir.oSet(pos.oMinus(physicsObj.GetOrigin()));
             physicsObj.GetGravityAxis().ProjectVector(dir, local_dir);
             local_dir.z = 0.0f;
             lengthSqr = local_dir.LengthSqr();
@@ -4344,7 +4347,7 @@ public class AI {
 
         protected boolean EnemyPositionValid() {
             trace_s tr = new trace_s();
-            idVec3 muzzle;
+            final idVec3 muzzle = new idVec3();
             idMat3 axis;
 
             if (null == enemy.GetEntity()) {
@@ -4366,18 +4369,18 @@ public class AI {
             int areaNum;
             int lastVisibleReachableEnemyAreaNum = 0;
             aasPath_s path = new aasPath_s();
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
             boolean onGround;
 
             if (null == enemyEnt) {
                 return;
             }
 
-            lastVisibleReachableEnemyPos = lastReachableEnemyPos;
-            lastVisibleEnemyEyeOffset = enemyEnt.EyeOffset();
-            lastVisibleEnemyPos = enemyEnt.GetPhysics().GetOrigin();
+            lastVisibleReachableEnemyPos.oSet(lastReachableEnemyPos);
+            lastVisibleEnemyEyeOffset.oSet(enemyEnt.EyeOffset());
+            lastVisibleEnemyPos.oSet(enemyEnt.GetPhysics().GetOrigin());
             if (move.moveType == MOVETYPE_FLY) {
-                pos = lastVisibleEnemyPos;
+                pos.oSet(lastVisibleEnemyPos);
                 onGround = true;
             } else {
                 onGround = enemyEnt.GetFloorPos(64.0f, pos);
@@ -4396,7 +4399,7 @@ public class AI {
             // when we don't have an AAS, we can't tell if an enemy is reachable or not,
             // so just assume that he is.
             if (NOT(aas)) {
-                lastVisibleReachableEnemyPos = lastVisibleEnemyPos;
+                lastVisibleReachableEnemyPos.oSet(lastVisibleEnemyPos);
                 if (move.moveCommand == MOVE_TO_ENEMY) {
                     AI_DEST_UNREACHABLE.underscore(false);
                 }
@@ -4407,7 +4410,7 @@ public class AI {
                 enemyAreaNum = PointReachableAreaNum(lastVisibleEnemyPos, 1.0f);
                 if (0 == enemyAreaNum) {
                     enemyAreaNum = PointReachableAreaNum(lastReachableEnemyPos, 1.0f);
-                    pos = lastReachableEnemyPos;
+                    pos.oSet(lastReachableEnemyPos);
                 }
                 if (0 == enemyAreaNum) {
                     if (move.moveCommand == MOVE_TO_ENEMY) {
@@ -4415,10 +4418,10 @@ public class AI {
                     }
 //                    areaNum = 0;
                 } else {
-                    final idVec3 org = physicsObj.GetOrigin();
+                    final idVec3 org = new idVec3(physicsObj.GetOrigin());
                     areaNum = PointReachableAreaNum(org);
                     if (PathToGoal(path, areaNum, org, enemyAreaNum, pos)) {
-                        lastVisibleReachableEnemyPos = pos;
+                        lastVisibleReachableEnemyPos.oSet(pos);
                         lastVisibleReachableEnemyAreaNum = enemyAreaNum;
                         if (move.moveCommand == MOVE_TO_ENEMY) {
                             AI_DEST_UNREACHABLE.underscore(false);
@@ -4440,7 +4443,7 @@ public class AI {
 
                 if (move.moveType == MOVETYPE_FLY) {
                     predictedPath_s path2 = new predictedPath_s();
-                    idVec3 end = move.moveDest;
+                    final idVec3 end = new idVec3(move.moveDest);
                     end.z += enemyEnt.EyeOffset().z + fly_offset;
                     idAI.PredictPath(this, aas, move.moveDest, end.oMinus(move.moveDest), 1000, 1000, SE_BLOCKED, path2);
                     move.moveDest.oSet(path2.endPos);
@@ -4455,17 +4458,17 @@ public class AI {
             int areaNum;
             aasPath_s path = new aasPath_s();
             predictedPath_s predictedPath;
-            idVec3 enemyPos = new idVec3();
+            final idVec3 enemyPos = new idVec3();
             boolean onGround;
 
             if (null == enemyEnt) {
                 return;
             }
 
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
 
             if (move.moveType == MOVETYPE_FLY) {
-                enemyPos = enemyEnt.GetPhysics().GetOrigin();
+                enemyPos.oSet(enemyEnt.GetPhysics().GetOrigin());
                 onGround = true;
             } else {
                 onGround = enemyEnt.GetFloorPos(64.0f, enemyPos);
@@ -4479,13 +4482,13 @@ public class AI {
                 // so just assume that he is.
                 if (NOT(aas)) {
 //                    enemyAreaNum = 0;
-                    lastReachableEnemyPos = enemyPos;
+                    lastReachableEnemyPos.oSet(enemyPos);
                 } else {
                     enemyAreaNum = PointReachableAreaNum(enemyPos, 1.0f);
                     if (enemyAreaNum != 0) {
                         areaNum = PointReachableAreaNum(org);
                         if (PathToGoal(path, areaNum, org, enemyAreaNum, enemyPos)) {
-                            lastReachableEnemyPos = enemyPos;
+                            lastReachableEnemyPos.oSet(enemyPos);
                         }
                     }
                 }
@@ -4540,12 +4543,12 @@ public class AI {
                 SetEnemyPosition();
                 SetChatSound();
 
-                lastReachableEnemyPos = lastVisibleEnemyPos;
-                lastVisibleReachableEnemyPos = lastReachableEnemyPos;
+                lastReachableEnemyPos.oSet(lastVisibleEnemyPos);
+                lastVisibleReachableEnemyPos.oSet(lastReachableEnemyPos);
                 enemyAreaNum.setVal(PointReachableAreaNum(lastReachableEnemyPos, 1.0f));
                 if (aas != null && enemyAreaNum.getVal() != 0) {
                     aas.PushPointIntoAreaNum(enemyAreaNum.getVal(), lastReachableEnemyPos);
-                    lastVisibleReachableEnemyPos = lastReachableEnemyPos;
+                    lastVisibleReachableEnemyPos.oSet(lastReachableEnemyPos);
                 }
             }
         }
@@ -4590,9 +4593,9 @@ public class AI {
         }
 
         protected idProjectile LaunchProjectile(final String jointname, idEntity target, boolean clampToAttackCone) {
-            idVec3 muzzle = new idVec3();
-            idVec3 dir = new idVec3();
-            idVec3 start;
+            final idVec3 muzzle = new idVec3();
+            final idVec3 dir = new idVec3();
+            final idVec3 start = new idVec3();
             trace_s tr = new trace_s();
             idBounds projBounds;
             CFloat distance = new CFloat();
@@ -4607,7 +4610,7 @@ public class AI {
             int num_projectiles;
             int i;
             idMat3 axis = new idMat3();
-            idVec3 tmp;
+            final idVec3 tmp = new idVec3();
             idProjectile lastProjectile;
 
             if (null == projectileDef) {
@@ -4629,7 +4632,7 @@ public class AI {
             lastProjectile = projectile.GetEntity();
 
             if (target != null) {
-                tmp = target.GetPhysics().GetAbsBounds().GetCenter().oMinus(muzzle);
+                tmp.oSet(target.GetPhysics().GetAbsBounds().GetCenter().oMinus(muzzle));
                 tmp.Normalize();
                 axis = tmp.ToMat3();
             } else {
@@ -4637,7 +4640,7 @@ public class AI {
             }
 
             // rotate it because the cone points up by default
-            tmp = axis.oGet(2);
+            tmp.oSet(axis.oGet(2));
             axis.oSet(2, axis.oGet(0));
             axis.oSet(0, tmp.oNegative());
 
@@ -4651,17 +4654,17 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle, viewAxis.oGet(0), distance)) {
-                    start = muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
+                    start.oSet(muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())));
                 } else {
-                    start = ownerBounds.GetCenter();
+                    start.oSet(ownerBounds.GetCenter());
                 }
             } else {
                 // projectile bounds bigger than the owner bounds, so just start it from the center
-                start = ownerBounds.GetCenter();
+                start.oSet(ownerBounds.GetCenter());
             }
 
             gameLocal.clip.Translation(tr, start, muzzle, projClip, axis, MASK_SHOT_RENDERMODEL, this);
-            muzzle = tr.endpos;
+            muzzle.oSet(tr.endpos);
 
             // set aiming direction
             GetAimDir(muzzle, target, this, dir);
@@ -4690,7 +4693,7 @@ public class AI {
                 // spread the projectiles out
                 angle = idMath.Sin(spreadRad * gameLocal.random.RandomFloat());
                 spin = DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
-                dir = axis.oGet(0).oPlus(axis.oGet(2).oMultiply(angle * idMath.Sin(spin)).oMinus(axis.oGet(1).oMultiply(angle * idMath.Cos(spin))));
+                dir.oSet(axis.oGet(0).oPlus(axis.oGet(2).oMultiply(angle * idMath.Sin(spin)).oMinus(axis.oGet(1).oMultiply(angle * idMath.Cos(spin)))));
                 dir.Normalize();
 
                 // launch the projectile
@@ -4765,11 +4768,11 @@ public class AI {
                 StartSoundShader(shader, SND_CHANNEL_DAMAGE, 0, false, null);
             }
 
-            idVec3 kickDir = new idVec3();
+            final idVec3 kickDir = new idVec3();
             meleeDef.GetVector("kickDir", "0 0 0", kickDir);
 
-            idVec3 globalKickDir;
-            globalKickDir = (viewAxis.oMultiply(physicsObj.GetGravityAxis())).oMultiply(kickDir);
+            final idVec3 globalKickDir = new idVec3();
+            globalKickDir.oSet((viewAxis.oMultiply(physicsObj.GetGravityAxis())).oMultiply(kickDir));
 
             ent.Damage(this, this, globalKickDir, meleeDefName, 1.0f, INVALID_JOINT);
 
@@ -4790,7 +4793,7 @@ public class AI {
             }
 
             //FIXME: make work with gravity vector
-            idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             final idBounds myBounds = physicsObj.GetBounds();
             idBounds bounds = new idBounds();
 
@@ -4803,7 +4806,7 @@ public class AI {
             bounds.oSet(1, 2, myBounds.oGet(1, 2) - 4.0f);
             bounds.TranslateSelf(org);
 
-            idVec3 enemyOrg = enemyEnt.GetPhysics().GetOrigin();
+            final idVec3 enemyOrg = new idVec3(enemyEnt.GetPhysics().GetOrigin());
             idBounds enemyBounds = enemyEnt.GetPhysics().GetBounds();
             enemyBounds.TranslateSelf(enemyOrg);
 
@@ -4815,8 +4818,8 @@ public class AI {
                 return false;
             }
 
-            idVec3 start = GetEyePosition();
-            idVec3 end = enemyEnt.GetEyePosition();
+            final idVec3 start = new idVec3(GetEyePosition());
+            final idVec3 end = new idVec3(enemyEnt.GetEyePosition());
 
             gameLocal.clip.TracePoint(trace, start, end, MASK_SHOT_BOUNDINGBOX, this);
 
@@ -4896,11 +4899,11 @@ public class AI {
                 StartSoundShader(shader, SND_CHANNEL_DAMAGE, 0, false, null);
             }
 
-            idVec3 kickDir = new idVec3();
+            final idVec3 kickDir = new idVec3();
             meleeDef.GetVector("kickDir", "0 0 0", kickDir);
 
-            idVec3 globalKickDir;
-            globalKickDir = (viewAxis.oMultiply(physicsObj.GetGravityAxis())).oMultiply(kickDir);
+            final idVec3 globalKickDir = new idVec3();
+            globalKickDir.oSet((viewAxis.oMultiply(physicsObj.GetGravityAxis())).oMultiply(kickDir));
 
             enemyEnt.Damage(this, this, globalKickDir, meleeDefName, 1.0f, INVALID_JOINT);
 
@@ -4923,7 +4926,7 @@ public class AI {
             afTouch_s[] touchList = new afTouch_s[MAX_GENTITIES];
             idEntity[] pushed_ents = new idEntity[MAX_GENTITIES];
             idEntity ent;
-            idVec3 vel;
+            final idVec3 vel = new idVec3();
             int num_pushed;
 
             num_pushed = 0;
@@ -4944,7 +4947,7 @@ public class AI {
                 if (j >= num_pushed) {
                     ent = touchList[i].touchedEnt;
                     pushed_ents[num_pushed++] = ent;
-                    vel = ent.GetPhysics().GetAbsBounds().GetCenter().oMinus(touchList[i].touchedByBody.GetWorldOrigin());
+                    vel.oSet(ent.GetPhysics().GetAbsBounds().GetCenter().oMinus(touchList[i].touchedByBody.GetWorldOrigin()));
                     vel.Normalize();
                     if (attack.Length() != 0 && ent instanceof idActor) {
                         ent.Damage(this, this, vel, attack.toString(), 1.0f, INVALID_JOINT);
@@ -4956,7 +4959,7 @@ public class AI {
         }
 
         // special effects
-        protected void GetMuzzle(final String jointname, idVec3 muzzle, idMat3 axis) {
+        protected void GetMuzzle(final String jointname, final idVec3 muzzle, idMat3 axis) {
             int /*jointHandle_t*/ joint;
 
             if (!isNotNullOrEmpty(jointname)) {
@@ -4973,7 +4976,7 @@ public class AI {
 
         protected void InitMuzzleFlash() {
             idStr shader = new idStr();
-            idVec3 flashColor = new idVec3();
+            final idVec3 flashColor = new idVec3();
 
             spawnArgs.GetString("mtr_flashShader", "muzzleflash", shader);
             spawnArgs.GetVector("flashColor", "0 0 0", flashColor);
@@ -4998,7 +5001,7 @@ public class AI {
         }
 
         protected void TriggerWeaponEffects(final idVec3 muzzle) {
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
             idMat3 axis = new idMat3();
 
             if (!g_muzzleFlash.GetBool()) {
@@ -5045,21 +5048,21 @@ public class AI {
 
         @Override
         public boolean UpdateAnimationControllers() {
-            idVec3 local;
-            idVec3 focusPos;
+            final idVec3 local = new idVec3();
+            final idVec3 focusPos = new idVec3();
             idQuat jawQuat;
-            idVec3 left;
-            idVec3 dir;
-            idVec3 orientationJointPos = new idVec3();
-            idVec3 localDir = new idVec3();
+            final idVec3 left = new idVec3();
+            final idVec3 dir = new idVec3();
+            final idVec3 orientationJointPos = new idVec3();
+            final idVec3 localDir = new idVec3();
             idAngles newLookAng = new idAngles();
             idAngles diff;
             idMat3 mat;
             idMat3 axis = new idMat3();
             idMat3 orientationJointAxis = new idMat3();
             idAFAttachment headEnt = head.GetEntity();
-            idVec3 eyepos = new idVec3();
-            idVec3 pos;
+            final idVec3 eyepos = new idVec3();
+            final idVec3 pos = new idVec3();
             int i;
             idAngles jointAng = new idAngles();
             float orientationJointYaw;
@@ -5070,7 +5073,7 @@ public class AI {
 
             if (orientationJoint == INVALID_JOINT) {
                 orientationJointAxis = viewAxis;
-                orientationJointPos = physicsObj.GetOrigin();
+                orientationJointPos.oSet(physicsObj.GetOrigin());
                 orientationJointYaw = current_yaw;
             } else {
                 GetJointWorldTransform(orientationJoint, gameLocal.time, orientationJointPos, orientationJointAxis);
@@ -5089,7 +5092,7 @@ public class AI {
                     gameRenderWorld.DebugLine(colorRed, eyepos, eyepos.oPlus(orientationJointAxis.oGet(0).oMultiply(32.0f)), idGameLocal.msec);
                 }
             } else {
-                eyepos = GetEyePosition();
+                eyepos.oSet(GetEyePosition());
             }
 
             if (headEnt != null) {
@@ -5107,20 +5110,20 @@ public class AI {
 
             idEntity focusEnt = focusEntity.GetEntity();
             if (!allowJointMod || !allowEyeFocus || (gameLocal.time >= focusTime)) {
-                focusPos = GetEyePosition().oPlus(orientationJointAxis.oGet(0).oMultiply(512.0f));
+                focusPos.oSet(GetEyePosition().oPlus(orientationJointAxis.oGet(0).oMultiply(512.0f)));
             } else if (focusEnt == null) {
                 // keep looking at last position until focusTime is up
-                focusPos = currentFocusPos;
+                focusPos.oSet(currentFocusPos);
             } else if (focusEnt.equals(enemy.GetEntity())) {
-                focusPos = lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset).oMinus(enemy.GetEntity().GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset));
+                focusPos.oSet(lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset).oMinus(enemy.GetEntity().GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset)));
             } else if (focusEnt instanceof idActor) {
-                focusPos = ((idActor) focusEnt).GetEyePosition().oMinus(focusEnt.GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset));
+                focusPos.oSet(((idActor) focusEnt).GetEyePosition().oMinus(focusEnt.GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset)));
             } else {
-                focusPos = focusEnt.GetPhysics().GetOrigin();
+                focusPos.oSet(focusEnt.GetPhysics().GetOrigin());
             }
-            currentFocusPos = currentFocusPos.oPlus(focusPos.oMinus(currentFocusPos)).oMultiply(eyeFocusRate);
+            currentFocusPos.oSet(currentFocusPos.oPlus(focusPos.oMinus(currentFocusPos)).oMultiply(eyeFocusRate));
             // determine yaw from origin instead of from focus joint since joint may be offset, which can cause us to bounce between two angles
-            dir = focusPos.oMinus(orientationJointPos);
+            dir.oSet(focusPos.oMinus(orientationJointPos));
             newLookAng.yaw = idMath.AngleNormalize180(dir.ToYaw() - orientationJointYaw);
             newLookAng.roll = 0.0f;
             newLookAng.pitch = 0.0f;
@@ -5130,7 +5133,7 @@ public class AI {
             // gameRenderWorld.DebugLine( colorGreen, orientationJointPos, orientationJointPos + newLookAng.ToForward() * 48.0f, gameLocal.msec );
 // #endif
             // determine pitch from joint position
-            dir = focusPos.oMinus(eyepos);
+            dir.oSet(focusPos.oMinus(eyepos));
 
             dir.NormalizeFast();
 
@@ -5189,7 +5192,7 @@ public class AI {
                     idMat3 eyeAxis = (lookAng.oPlus(eyeAng)).ToMat3();
                     idMat3 headTranspose = headEnt.GetPhysics().GetAxis().Transpose();
                     axis = eyeAxis.oMultiply(orientationJointAxis);
-                    left = axis.oGet(1).oMultiply(eyeHorizontalOffset);
+                    left.oSet(axis.oGet(1).oMultiply(eyeHorizontalOffset));
                     eyepos.oMinSet(headEnt.GetPhysics().GetOrigin());
                     headAnimator.SetJointPos(leftEyeJoint, JOINTMOD_WORLD_OVERRIDE, eyepos.oPlus((axis.oGet(0).oMultiply(64.0f).oPlus(left)).oMultiply(headTranspose)));
                     headAnimator.SetJointPos(rightEyeJoint, JOINTMOD_WORLD_OVERRIDE, eyepos.oPlus((axis.oGet(0).oMultiply(64.0f).oMinus(left)).oMultiply(headTranspose)));
@@ -5201,7 +5204,7 @@ public class AI {
                 if (allowEyeFocus) {
                     idMat3 eyeAxis = (lookAng.oPlus(eyeAng)).ToMat3();
                     axis = eyeAxis.oMultiply(orientationJointAxis);
-                    left = axis.oGet(1).oMultiply(eyeHorizontalOffset);
+                    left.oSet(axis.oGet(1).oMultiply(eyeHorizontalOffset));
                     eyepos.oPluSet(axis.oGet(0).oMultiply(64.0f).oMinus(physicsObj.GetOrigin()));
                     animator.SetJointPos(leftEyeJoint, JOINTMOD_WORLD_OVERRIDE, eyepos.oPlus(left));
                     animator.SetJointPos(rightEyeJoint, JOINTMOD_WORLD_OVERRIDE, eyepos.oMinus(left));
@@ -5216,7 +5219,7 @@ public class AI {
 
         protected void UpdateParticles() {
             if ((thinkFlags & TH_UPDATEPARTICLES) != 0 && !IsHidden()) {
-                idVec3 realVector = new idVec3();
+                final idVec3 realVector = new idVec3();
                 idMat3 realAxis = new idMat3();
 
                 int particlesAlive = 0;
@@ -5225,11 +5228,11 @@ public class AI {
                         particlesAlive++;
                         if (af.IsActive()) {
                             realAxis = getMat3_identity();
-                            realVector = GetPhysics().GetOrigin();
+                            realVector.oSet(GetPhysics().GetOrigin());
                         } else {
                             animator.GetJointTransform(particles.oGet(i).joint, gameLocal.time, realVector, realAxis);
                             realAxis.oMulSet(renderEntity.axis);
-                            realVector = physicsObj.GetOrigin().oPlus((realVector.oPlus(modelOffset)).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis())));
+                            realVector.oSet(physicsObj.GetOrigin().oPlus((realVector.oPlus(modelOffset)).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis()))));
                         }
 
                         if (!gameLocal.smokeParticles.EmitSmoke(particles.oGet(i).particle, particles.oGet(i).time, gameLocal.random.CRandomFloat(), realVector, realAxis)) {
@@ -5343,7 +5346,7 @@ public class AI {
             idActor bestEnemy;
             float bestDist;
             float dist;
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
             pvsHandle_t pvs;
 
             pvs = gameLocal.pvs.SetupCurrentPVS(GetPVSAreas(), GetNumPVSAreas());
@@ -5364,7 +5367,7 @@ public class AI {
                     continue;
                 }
 
-                delta = physicsObj.GetOrigin().oMinus(actor.GetPhysics().GetOrigin());
+                delta.oSet(physicsObj.GetOrigin().oMinus(actor.GetPhysics().GetOrigin()));
                 dist = delta.LengthSqr();
                 if ((dist < bestDist) && CanSee(actor, useFOV.value != 0)) {
                     bestDist = dist;
@@ -5425,7 +5428,7 @@ public class AI {
             idActor bestEnt;
             float bestDistSquared;
             float distSquared;
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
             int areaNum;
             int enemyAreaNum;
             aasPath_s path = new aasPath_s();
@@ -5436,7 +5439,7 @@ public class AI {
 
             actor = (idActor) team_mate;
 
-            final idVec3 origin = physicsObj.GetOrigin();
+            final idVec3 origin = new idVec3(physicsObj.GetOrigin());
             areaNum = PointReachableAreaNum(origin);
 
             bestDistSquared = idMath.INFINITY;
@@ -5445,10 +5448,10 @@ public class AI {
                 if (ent.fl.hidden) {
                     continue;
                 }
-                delta = ent.GetPhysics().GetOrigin().oMinus(origin);
+                delta.oSet(ent.GetPhysics().GetOrigin().oMinus(origin));
                 distSquared = delta.LengthSqr();
                 if (distSquared < bestDistSquared) {
-                    final idVec3 enemyPos = ent.GetPhysics().GetOrigin();
+                    final idVec3 enemyPos = new idVec3(ent.GetPhysics().GetOrigin());
                     enemyAreaNum = PointReachableAreaNum(enemyPos);
                     if ((areaNum != 0) && PathToGoal(path, areaNum, origin, enemyAreaNum, enemyPos)) {
                         bestEnt = ent;
@@ -5464,8 +5467,8 @@ public class AI {
             // check if we heard any sounds in the last frame
             idActor actor = gameLocal.GetAlertEntity();
             if (actor != null && (0 == ignore_team.value || (ReactionTo(actor) & ATTACK_ON_SIGHT) != 0) && gameLocal.InPlayerPVS(this)) {
-                idVec3 pos = actor.GetPhysics().GetOrigin();
-                idVec3 org = physicsObj.GetOrigin();
+                final idVec3 pos = new idVec3(actor.GetPhysics().GetOrigin());
+                final idVec3 org = new idVec3(physicsObj.GetOrigin());
                 float dist = (pos.oMinus(org)).LengthSqr();
                 if (dist < Square(AI_HEARING_RANGE)) {
                     idThread.ReturnEntity(actor);
@@ -5492,7 +5495,7 @@ public class AI {
         }
 
         protected void Event_MuzzleFlash(final idEventArg<String> jointname) {
-            idVec3 muzzle = new idVec3();
+            final idVec3 muzzle = new idVec3();
             idMat3 axis = new idMat3();
 
             GetMuzzle(jointname.value, muzzle, axis);
@@ -5501,7 +5504,7 @@ public class AI {
 
         protected void Event_CreateMissile(final idEventArg<char[]> _jointname) {
             String jointname = String.valueOf(_jointname.value);
-            idVec3 muzzle = new idVec3();
+            final idVec3 muzzle = new idVec3();
             idMat3 axis = new idMat3();
 
             if (null == projectileDef) {
@@ -5523,8 +5526,7 @@ public class AI {
 
         protected void Event_AttackMissile(final idEventArg<char[]> jointname) {
             idProjectile proj;
-
-            proj = LaunchProjectile(String.valueOf(jointname.value), enemy.GetEntity(), true);
+            proj = LaunchProjectile(new String(jointname.value), enemy.GetEntity(), true);
             idThread.ReturnEntity(proj);
         }
 
@@ -5542,9 +5544,9 @@ public class AI {
         }
 
         protected void Event_LaunchMissile(final idEventArg<idVec3> _muzzle, final idEventArg<idAngles> _ang) {
-            final idVec3 muzzle = _muzzle.value;
+            final idVec3 muzzle = new idVec3(_muzzle.value);
             final idAngles ang = _ang.value;
-            idVec3 start;
+            final idVec3 start = new idVec3();
             trace_s tr = new trace_s();
             idBounds projBounds;
             idClipModel projClip;
@@ -5572,13 +5574,13 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle, viewAxis.oGet(0), distance)) {
-                    start = muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
+                    start.oSet(muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())));
                 } else {
-                    start = ownerBounds.GetCenter();
+                    start.oSet(ownerBounds.GetCenter());
                 }
             } else {
                 // projectile bounds bigger than the owner bounds, so just start it from the center
-                start = ownerBounds.GetCenter();
+                start.oSet(ownerBounds.GetCenter());
             }
 
             gameLocal.clip.Translation(tr, start, muzzle, projClip, projClip.GetAxis(), MASK_SHOT_RENDERMODEL, this);
@@ -5604,11 +5606,11 @@ public class AI {
 
         protected void Event_RadiusDamageFromJoint(final idEventArg<String> jointname, final idEventArg<String> damageDefName) {
             int/*jointHandle_t*/ joint;
-            idVec3 org = new idVec3();
+            final idVec3 org = new idVec3();
             idMat3 axis = new idMat3();
 
             if (!isNotNullOrEmpty(jointname.value)) {
-                org = physicsObj.GetOrigin();
+                org.oSet(physicsObj.GetOrigin());
             } else {
                 joint = animator.GetJointHandle(jointname.value);
                 if (joint == INVALID_JOINT) {
@@ -5630,8 +5632,8 @@ public class AI {
 
         protected void Event_MeleeAttackToJoint(final idEventArg<String> jointname, final idEventArg<char[]> meleeDefName) {
             int/*jointHandle_t*/ joint;
-            idVec3 start;
-            idVec3 end = new idVec3();
+            final idVec3 start = new idVec3();
+            final idVec3 end = new idVec3();
             idMat3 axis = new idMat3();
             trace_s trace = new trace_s();
             idEntity hitEnt;
@@ -5641,8 +5643,8 @@ public class AI {
                 idGameLocal.Error("Unknown joint '%s' on %s", jointname.value, GetEntityDefName());
             }
             animator.GetJointTransform(joint, gameLocal.time, end, axis);
-            end = physicsObj.GetOrigin().oPlus((end.oPlus(modelOffset)).oMultiply(viewAxis).oMultiply(physicsObj.GetGravityAxis()));
-            start = GetEyePosition();
+            end.oSet(physicsObj.GetOrigin().oPlus((end.oPlus(modelOffset)).oMultiply(viewAxis).oMultiply(physicsObj.GetGravityAxis())));
+            start.oSet(GetEyePosition());
 
             if (ai_debugMove.GetBool()) {
                 gameRenderWorld.DebugLine(colorYellow, start, end, idGameLocal.msec);
@@ -5885,7 +5887,7 @@ public class AI {
 
             // find the closest attack node that can see our enemy and is closer than our enemy
             bestNode = null;
-            final idVec3 myPos = physicsObj.GetOrigin();
+            final idVec3 myPos = new idVec3(physicsObj.GetOrigin());
             bestDist = (myPos.oMinus(lastVisibleEnemyPos)).LengthSqr();
             for (i = 0; i < targets.Num(); i++) {
                 targetEnt = targets.oGet(i).GetEntity();
@@ -5895,7 +5897,7 @@ public class AI {
 
                 node = (idCombatNode) targetEnt;
                 if (!node.IsDisabled() && node.EntityInView(enemyEnt, lastVisibleEnemyPos)) {
-                    idVec3 org = node.GetPhysics().GetOrigin();
+                    final idVec3 org = new idVec3(node.GetPhysics().GetOrigin());
                     dist = (myPos.oMinus(org)).LengthSqr();
                     if (dist < bestDist) {
                         bestNode = node;
@@ -5933,7 +5935,7 @@ public class AI {
 
             node = (idCombatNode) ent;
             if (use_current_enemy_location.value != 0) {
-                final idVec3 pos = enemyEnt.GetPhysics().GetOrigin();
+                final idVec3 pos = new idVec3(enemyEnt.GetPhysics().GetOrigin());
                 result = node.EntityInView(enemyEnt, pos);
             } else {
                 result = node.EntityInView(enemyEnt, lastVisibleEnemyPos);
@@ -5951,12 +5953,12 @@ public class AI {
         }
 
         protected void Event_GetJumpVelocity(final idEventArg<idVec3> _pos, idEventArg<Float> _speed, idEventArg<Float> _max_height) {
-            idVec3 pos = _pos.value;
+            final idVec3 pos = new idVec3(_pos.value);
             float speed = _speed.value;
             float max_height = _max_height.value;
-            idVec3 start;
-            idVec3 end;
-            idVec3 dir;
+            final idVec3 start = new idVec3();
+            final idVec3 end = new idVec3();
+            final idVec3 dir = new idVec3();
             float dist;
             boolean result;
             idEntity enemyEnt = enemy.GetEntity();
@@ -5970,9 +5972,9 @@ public class AI {
                 idGameLocal.Error("Invalid speed.  speed must be > 0.");
             }
 
-            start = physicsObj.GetOrigin();
-            end = pos;
-            dir = end.oMinus(start);
+            start.oSet(physicsObj.GetOrigin());
+            end.oSet(pos);
+            dir.oSet(end.oMinus(start));
             dist = dir.Normalize();
             if (dist > 16.0f) {
                 dist -= 16.0f;
@@ -5989,7 +5991,7 @@ public class AI {
 
         protected void Event_EntityInAttackCone(idEventArg<idEntity> ent) {
             float attack_cone;
-            idVec3 delta;
+            final idVec3 delta = new idVec3();
             float yaw;
             float relYaw;
 
@@ -5998,10 +6000,10 @@ public class AI {
                 return;
             }
 
-            delta = ent.value.GetPhysics().GetOrigin().oMinus(GetEyePosition());
+            delta.oSet(ent.value.GetPhysics().GetOrigin().oMinus(GetEyePosition()));
 
             // get our gravity normal
-            final idVec3 gravityDir = GetPhysics().GetGravityNormal();
+            final idVec3 gravityDir = new idVec3(GetPhysics().GetGravityNormal());
 
             // infinite vertical vision, so project it onto our orientation plane
             delta.oMinSet(gravityDir.oMultiply(gravityDir.oMultiply(delta)));
@@ -6126,14 +6128,14 @@ public class AI {
 
             lastHitCheckTime = gameLocal.time;
 
-            idVec3 toPos = enemyEnt.GetEyePosition();
-            idVec3 eye = GetEyePosition();
-            idVec3 dir;
+            final idVec3 toPos = new idVec3(enemyEnt.GetEyePosition());
+            final idVec3 eye = new idVec3(GetEyePosition());
+            final idVec3 dir = new idVec3();
 
             // expand the ray out as far as possible so we can detect anything behind the enemy
-            dir = toPos.oMinus(eye);
+            dir.oSet(toPos.oMinus(eye));
             dir.Normalize();
-            toPos = eye.oPlus(dir.oMultiply(MAX_WORLD_SIZE));
+            toPos.oSet(eye.oPlus(dir.oMultiply(MAX_WORLD_SIZE)));
             gameLocal.clip.TracePoint(tr, eye, toPos, MASK_SHOT_BOUNDINGBOX, this);
             hit = gameLocal.GetTraceEntity(tr);
             if (tr.fraction >= 1.0f || (hit.equals(enemyEnt))) {
@@ -6146,11 +6148,11 @@ public class AI {
 
         protected void Event_CanHitEnemyFromAnim(final idEventArg<String> animname) {
             int anim;
-            idVec3 dir;
-            idVec3 local_dir = new idVec3();
-            idVec3 fromPos;
+            final idVec3 local_dir = new idVec3();
+            final idVec3 dir = new idVec3();
+            final idVec3 fromPos = new idVec3();
+            final idVec3 start = new idVec3();
             idMat3 axis;
-            idVec3 start;
             trace_s tr = new trace_s();
             CFloat distance = new CFloat();
 
@@ -6173,13 +6175,13 @@ public class AI {
             }
 
             // calculate the world transform of the launch position
-            final idVec3 org = physicsObj.GetOrigin();
-            dir = lastVisibleEnemyPos.oMinus(org);
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
+            dir.oSet(lastVisibleEnemyPos.oMinus(org));
             physicsObj.GetGravityAxis().ProjectVector(dir, local_dir);
             local_dir.z = 0.0f;
             local_dir.ToVec2_Normalize();
             axis = local_dir.ToMat3();
-            fromPos = physicsObj.GetOrigin().oPlus(missileLaunchOffset.oGet(anim).oMultiply(axis));
+            fromPos.oSet(physicsObj.GetOrigin().oPlus(missileLaunchOffset.oGet(anim).oMultiply(axis)));
 
             if (projectileClipModel == null) {
                 CreateProjectileClipModel();
@@ -6192,26 +6194,26 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(org, viewAxis.oGet(0), distance)) {
-                    start = org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
+                    start.oSet(org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())));
                 } else {
-                    start = ownerBounds.GetCenter();
+                    start.oSet(ownerBounds.GetCenter());
                 }
             } else {
                 // projectile bounds bigger than the owner bounds, so just start it from the center
-                start = ownerBounds.GetCenter();
+                start.oSet(ownerBounds.GetCenter());
             }
 
             gameLocal.clip.Translation(tr, start, fromPos, projectileClipModel, getMat3_identity(), MASK_SHOT_RENDERMODEL, this);
-            fromPos = tr.endpos;
+            fromPos.oSet(tr.endpos);
 
             idThread.ReturnInt(GetAimDir(fromPos, enemy.GetEntity(), this, dir));
         }
 
         protected void Event_CanHitEnemyFromJoint(final idEventArg<char[]> jointname) {
             trace_s tr = new trace_s();
-            idVec3 muzzle = new idVec3();
+            final idVec3 muzzle = new idVec3();
+            final idVec3 start = new idVec3();
             idMat3 axis = new idMat3();
-            idVec3 start;
             CFloat distance = new CFloat();
 
             idActor enemyEnt = enemy.GetEntity();
@@ -6228,14 +6230,14 @@ public class AI {
 
             lastHitCheckTime = gameLocal.time;
 
-            final idVec3 org = physicsObj.GetOrigin();
-            idVec3 toPos = enemyEnt.GetEyePosition();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
+            final idVec3 toPos = new idVec3(enemyEnt.GetEyePosition());
             int/*jointHandle_t*/ joint = animator.GetJointHandle(String.valueOf(jointname.value));
             if (joint == INVALID_JOINT) {
                 idGameLocal.Error("Unknown joint '%s' on %s", jointname.value, GetEntityDefName());
             }
             animator.GetJointTransform(joint, gameLocal.time, muzzle, axis);
-            muzzle = org.oPlus((muzzle.oPlus(modelOffset)).oMultiply(viewAxis).oMultiply(physicsObj.GetGravityAxis()));
+            muzzle.oSet(org.oPlus((muzzle.oPlus(modelOffset)).oMultiply(viewAxis).oMultiply(physicsObj.GetGravityAxis())));
 
             if (projectileClipModel == null) {
                 CreateProjectileClipModel();
@@ -6248,17 +6250,17 @@ public class AI {
                     && ((ownerBounds.oGet(1, 1) - ownerBounds.oGet(0, 1)) > (projBounds.oGet(1, 1) - projBounds.oGet(0, 1)))
                     && ((ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2)) > (projBounds.oGet(1, 2) - projBounds.oGet(0, 2)))) {
                 if ((ownerBounds.oMinus(projBounds)).RayIntersection(org, viewAxis.oGet(0), distance)) {
-                    start = org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal()));
+                    start.oSet(org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())));
                 } else {
-                    start = ownerBounds.GetCenter();
+                    start.oSet(ownerBounds.GetCenter());
                 }
             } else {
                 // projectile bounds bigger than the owner bounds, so just start it from the center
-                start = ownerBounds.GetCenter();
+                start.oSet(ownerBounds.GetCenter());
             }
 
             gameLocal.clip.Translation(tr, start, muzzle, projectileClipModel, getMat3_identity(), MASK_SHOT_BOUNDINGBOX, this);
-            muzzle = tr.endpos;
+            muzzle.oSet(tr.endpos);
 
             gameLocal.clip.Translation(tr, muzzle, toPos, projectileClipModel, getMat3_identity(), MASK_SHOT_BOUNDINGBOX, this);
             lastHitCheckResult = tr.fraction >= 1.0f || (gameLocal.GetTraceEntity(tr).equals(enemyEnt));
@@ -6278,14 +6280,14 @@ public class AI {
 
             StopMove(MOVE_STATUS_DEST_NOT_FOUND);
             if (enemyEnt != null) {
-                idVec3 enemyOrg;
+                final idVec3 enemyOrg = new idVec3();
 
                 if (move.moveType == MOVETYPE_FLY) {
                     // position destination so that we're in the enemy's view
-                    enemyOrg = enemyEnt.GetEyePosition();
+                    enemyOrg.oSet(enemyEnt.GetEyePosition());
                     enemyOrg.oMinSet(enemyEnt.GetPhysics().GetGravityNormal().oMultiply(fly_offset));
                 } else {
-                    enemyOrg = enemyEnt.GetPhysics().GetOrigin();
+                    enemyOrg.oSet(enemyEnt.GetPhysics().GetOrigin());
                 }
 
                 BeginAttack(String.valueOf(damageDef.value));
@@ -6298,7 +6300,7 @@ public class AI {
             trace_s trace = new trace_s();
             idActor enemyEnt = enemy.GetEntity();
             predictedPath_s path = new predictedPath_s();
-            idVec3 end;
+            final idVec3 end = new idVec3();
 
             if (null == enemyEnt) {
                 idThread.ReturnFloat(0.0f);
@@ -6307,10 +6309,10 @@ public class AI {
 
             if (move.moveType == MOVETYPE_FLY) {
                 // position destination so that we're in the enemy's view
-                end = enemyEnt.GetEyePosition();
+                end.oSet(enemyEnt.GetEyePosition());
                 end.oMinSet(enemyEnt.GetPhysics().GetGravityNormal().oMultiply(fly_offset));
             } else {
-                end = enemyEnt.GetPhysics().GetOrigin();
+                end.oSet(enemyEnt.GetPhysics().GetOrigin());
             }
 
             idAI.PredictPath(this, aas, physicsObj.GetOrigin(), end.oMinus(physicsObj.GetOrigin()), 1000, 1000, (move.moveType == MOVETYPE_FLY) ? SE_BLOCKED : (SE_ENTER_OBSTACLE | SE_BLOCKED | SE_ENTER_LEDGE_AREA), path);
@@ -6321,7 +6323,7 @@ public class AI {
             }
 
             if ((path.endEvent == 0) || (path.blockingEntity.equals(enemyEnt))) {
-                idVec3 delta = end.oMinus(physicsObj.GetOrigin());
+                final idVec3 delta = new idVec3(end.oMinus(physicsObj.GetOrigin()));
                 float time = delta.LengthFast();
                 idThread.ReturnFloat(time);
             } else {
@@ -6332,9 +6334,9 @@ public class AI {
         protected void Event_TestAnimMoveTowardEnemy(final idEventArg<String> animname) {
             int anim;
             predictedPath_s path = new predictedPath_s();
-            idVec3 moveVec;
+            final idVec3 moveVec = new idVec3();
+            final idVec3 delta = new idVec3();
             float yaw;
-            idVec3 delta;
             idActor enemyEnt;
 
             enemyEnt = enemy.GetEntity();
@@ -6350,10 +6352,10 @@ public class AI {
                 return;
             }
 
-            delta = enemyEnt.GetPhysics().GetOrigin().oMinus(physicsObj.GetOrigin());
+            delta.oSet(enemyEnt.GetPhysics().GetOrigin().oMinus(physicsObj.GetOrigin()));
             yaw = delta.ToYaw();
 
-            moveVec = animator.TotalMovementDelta(anim).oMultiply(new idAngles(0.0f, yaw, 0.0f).ToMat3().oMultiply(physicsObj.GetGravityAxis()));
+            moveVec.oSet(animator.TotalMovementDelta(anim).oMultiply(new idAngles(0.0f, yaw, 0.0f).ToMat3().oMultiply(physicsObj.GetGravityAxis())));
             idAI.PredictPath(this, aas, physicsObj.GetOrigin(), moveVec, 1000, 1000, (move.moveType == MOVETYPE_FLY) ? SE_BLOCKED : (SE_ENTER_OBSTACLE | SE_BLOCKED | SE_ENTER_LEDGE_AREA), path);
 
             if (ai_debugMove.GetBool()) {
@@ -6367,7 +6369,7 @@ public class AI {
         protected void Event_TestAnimMove(final idEventArg<String> animname) {
             int anim;
             predictedPath_s path = new predictedPath_s();
-            idVec3 moveVec;
+            final idVec3 moveVec = new idVec3();
 
             anim = GetAnim(ANIMCHANNEL_LEGS, animname.value);
             if (0 == anim) {
@@ -6376,7 +6378,7 @@ public class AI {
                 return;
             }
 
-            moveVec = animator.TotalMovementDelta(anim).oMultiply(new idAngles(0.0f, ideal_yaw, 0.0f).ToMat3().oMultiply(physicsObj.GetGravityAxis()));
+            moveVec.oSet(animator.TotalMovementDelta(anim).oMultiply(new idAngles(0.0f, ideal_yaw, 0.0f).ToMat3().oMultiply(physicsObj.GetGravityAxis())));
             idAI.PredictPath(this, aas, physicsObj.GetOrigin(), moveVec, 1000, 1000, (move.moveType == MOVETYPE_FLY) ? SE_BLOCKED : (SE_ENTER_OBSTACLE | SE_BLOCKED | SE_ENTER_LEDGE_AREA), path);
 
             if (ai_debugMove.GetBool()) {
@@ -6388,7 +6390,7 @@ public class AI {
         }
 
         protected void Event_TestMoveToPosition(final idEventArg<idVec3> _position) {
-            idVec3 position = _position.value;
+            final idVec3 position = new idVec3(_position.value);
             predictedPath_s path = new predictedPath_s();
 
             idAI.PredictPath(this, aas, physicsObj.GetOrigin(), position.oMinus(physicsObj.GetOrigin()), 1000, 1000, (move.moveType == MOVETYPE_FLY) ? SE_BLOCKED : (SE_ENTER_OBSTACLE | SE_BLOCKED | SE_ENTER_LEDGE_AREA), path);
@@ -6542,8 +6544,8 @@ public class AI {
         }
 
         protected void Event_RestoreMove() {
-            idVec3 goalPos = new idVec3();
-            idVec3 dest = new idVec3();
+            final idVec3 goalPos = new idVec3();
+            final idVec3 dest = new idVec3();
 
             switch (savedMove.moveCommand) {
                 case MOVE_NONE:
@@ -6659,7 +6661,7 @@ public class AI {
             idEntity bestEnt;
             float time;
             float bestTime;
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             idActor enemyEnt = enemy.GetEntity();
 
             if (null == enemyEnt) {
@@ -6685,7 +6687,7 @@ public class AI {
             for (i = 0; i < targets.Num(); i++) {
                 ent = targets.oGet(i).GetEntity();
                 if (ent != null && idStr.Cmp(ent.GetEntityDefName(), String.valueOf(type.value)) == 0) {
-                    final idVec3 destOrg = ent.GetPhysics().GetOrigin();
+                    final idVec3 destOrg = new idVec3(ent.GetPhysics().GetOrigin());
                     time = TravelDistance(org, destOrg);
                     if ((time >= 0.0f) && (time < bestTime)) {
                         if (!EntityCanSeePos(enemyEnt, lastVisibleEnemyPos, destOrg)) {
@@ -6865,7 +6867,7 @@ public class AI {
         }
 
         protected void Event_KickObstacles(idEventArg<idEntity> kickEnt, idEventArg<Float> force) {
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             idEntity obEnt;
 
             if (kickEnt.value != null) {
@@ -6875,10 +6877,10 @@ public class AI {
             }
 
             if (obEnt != null) {
-                dir = obEnt.GetPhysics().GetOrigin().oMinus(physicsObj.GetOrigin());
+                dir.oSet(obEnt.GetPhysics().GetOrigin().oMinus(physicsObj.GetOrigin()));
                 dir.Normalize();
             } else {
-                dir = viewAxis.oGet(0);
+                dir.oSet(viewAxis.oGet(0));
             }
             KickObstacles(dir, force.value, obEnt);
         }
@@ -6888,13 +6890,13 @@ public class AI {
         }
 
         protected void Event_PushPointIntoAAS(final idEventArg<idVec3> _pos) {
-            idVec3 pos = _pos.value;
+            final idVec3 pos = new idVec3(_pos.value);
+            final idVec3 newPos = new idVec3();
             int areaNum;
-            idVec3 newPos;
 
             areaNum = PointReachableAreaNum(pos);
             if (areaNum != 0) {
-                newPos = pos;
+                newPos.oSet(pos);
                 aas.PushPointIntoAreaNum(areaNum, newPos);
                 idThread.ReturnVector(newPos);
             } else {
@@ -6969,7 +6971,7 @@ public class AI {
             aasPath_s path = new aasPath_s();
             int toAreaNum;
             int areaNum;
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (null == ent) {
                 idThread.ReturnInt(false);
@@ -6986,7 +6988,7 @@ public class AI {
                     return;
                 }
             } else {
-                pos = ent.GetPhysics().GetOrigin();
+                pos.oSet(ent.GetPhysics().GetOrigin());
             }
 
             toAreaNum = PointReachableAreaNum(pos);
@@ -6995,7 +6997,7 @@ public class AI {
                 return;
             }
 
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             areaNum = PointReachableAreaNum(org);
             idThread.ReturnInt(0 != toAreaNum && PathToGoal(path, areaNum, org, toAreaNum, pos));
         }
@@ -7004,7 +7006,7 @@ public class AI {
             aasPath_s path = new aasPath_s();
             CInt toAreaNum = new CInt();
             int areaNum;
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
             idActor enemyEnt;
 
             enemyEnt = enemy.GetEntity();
@@ -7020,7 +7022,7 @@ public class AI {
                 }
                 enemyEnt.GetAASLocation(aas, pos, toAreaNum);
             } else {
-                pos = enemyEnt.GetPhysics().GetOrigin();
+                pos.oSet(enemyEnt.GetPhysics().GetOrigin());
                 toAreaNum.setVal(PointReachableAreaNum(pos));
             }
 
@@ -7029,7 +7031,7 @@ public class AI {
                 return;
             }
 
-            final idVec3 org = physicsObj.GetOrigin();
+            final idVec3 org = new idVec3(physicsObj.GetOrigin());
             areaNum = PointReachableAreaNum(org);
             idThread.ReturnInt(PathToGoal(path, areaNum, org, toAreaNum.getVal(), pos));
         }
@@ -7037,7 +7039,7 @@ public class AI {
         protected void Event_GetReachableEntityPosition(idEventArg<idEntity> _ent) {
             idEntity ent = _ent.value;
             int toAreaNum;
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
 
             if (move.moveType != MOVETYPE_FLY) {
                 if (!ent.GetFloorPos(64.0f, pos)) {
@@ -7052,7 +7054,7 @@ public class AI {
                     idThread.ReturnVector(getVec3_zero());
                 }
             } else {
-                pos = ent.GetPhysics().GetOrigin();
+                pos.oSet(ent.GetPhysics().GetOrigin());
             }
 
             if (aas != null) {
@@ -7141,15 +7143,15 @@ public class AI {
             eventCallbacks.put(EV_Activate, (eventCallback_t1<idCombatNode>) idCombatNode::Event_Activate);
         }
 
+        private final idVec3 cone_left;
+        private final idVec3 cone_right;
+        private final idVec3 offset;
         private float cone_dist;
-        private idVec3 cone_left;
-        private idVec3 cone_right;
         private boolean disabled;
         private float max_dist;
         private float max_height;
         private float min_dist;
         private float min_height;
-        private idVec3 offset;
         //
         //
 
@@ -7186,9 +7188,9 @@ public class AI {
                     color = colorRed;
                 }
 
-                idVec3 leftDir = new idVec3(-node.cone_left.y, node.cone_left.x, 0.0f);
-                idVec3 rightDir = new idVec3(node.cone_right.y, -node.cone_right.x, 0.0f);
-                idVec3 org = node.GetPhysics().GetOrigin().oPlus(node.offset);
+                final idVec3 leftDir = new idVec3(-node.cone_left.y, node.cone_left.x, 0.0f);
+                final idVec3 rightDir = new idVec3(node.cone_right.y, -node.cone_right.x, 0.0f);
+                final idVec3 org = new idVec3(node.GetPhysics().GetOrigin().oPlus(node.offset));
 
                 bounds.oGet(1).z = node.max_height;
 
@@ -7199,10 +7201,10 @@ public class AI {
                 float cone_dot = node.cone_right.oMultiply(axis.oGet(1));
                 if (Math.abs(cone_dot) > 0.1) {
                     float cone_dist = node.max_dist / cone_dot;
-                    idVec3 pos1 = org.oPlus(leftDir.oMultiply(node.min_dist));
-                    idVec3 pos2 = org.oPlus(leftDir.oMultiply(cone_dist));
-                    idVec3 pos3 = org.oPlus(rightDir.oMultiply(node.min_dist));
-                    idVec3 pos4 = org.oPlus(rightDir.oMultiply(cone_dist));
+                    final idVec3 pos1 = new idVec3(org.oPlus(leftDir.oMultiply(node.min_dist)));
+                    final idVec3 pos2 = new idVec3(org.oPlus(leftDir.oMultiply(cone_dist)));
+                    final idVec3 pos3 = new idVec3(org.oPlus(rightDir.oMultiply(node.min_dist)));
+                    final idVec3 pos4 = new idVec3(org.oPlus(rightDir.oMultiply(cone_dist)));
 
                     gameRenderWorld.DebugLine(color, node.GetPhysics().GetOrigin(), (pos1.oPlus(pos3)).oMultiply(0.5f), idGameLocal.msec);
                     gameRenderWorld.DebugLine(color, pos1, pos2, idGameLocal.msec);
@@ -7256,9 +7258,9 @@ public class AI {
             max_dist = spawnArgs.GetFloat("max");
             height = spawnArgs.GetFloat("height");
             fov = spawnArgs.GetFloat("fov", "60");
-            offset = spawnArgs.GetVector("offset");
+            offset.oSet(spawnArgs.GetVector("offset"));
 
-            final idVec3 org = GetPhysics().GetOrigin().oPlus(offset);
+            final idVec3 org = new idVec3(GetPhysics().GetOrigin().oPlus(offset));
             min_height = org.z - height * 0.5f;
             max_height = min_height + height;
 
@@ -7266,10 +7268,10 @@ public class AI {
             yaw = axis.oGet(0).ToYaw();
 
             idAngles leftang = new idAngles(0.0f, yaw + fov * 0.5f - 90.0f, 0.0f);
-            cone_left = leftang.ToForward();
+            cone_left.oSet(leftang.ToForward());
 
             idAngles rightang = new idAngles(0.0f, yaw - fov * 0.5f + 90.0f, 0.0f);
-            cone_right = rightang.ToForward();
+            cone_right.oSet(rightang.ToForward());
 
             disabled = spawnArgs.GetBool("start_off");
         }
@@ -7288,9 +7290,9 @@ public class AI {
                 return false;
             }
 
-            final idVec3 org = GetPhysics().GetOrigin().oPlus(offset);
+            final idVec3 org = new idVec3(GetPhysics().GetOrigin().oPlus(offset));
             final idMat3 axis = GetPhysics().GetAxis();
-            idVec3 dir = pos.oMinus(org);
+            final idVec3 dir = new idVec3(pos.oMinus(org));
             float dist = dir.oMultiply(axis.oGet(0));
 
             if ((dist < min_dist) || (dist > max_dist)) {

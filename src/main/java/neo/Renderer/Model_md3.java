@@ -6,7 +6,6 @@ import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.Model_local.idRenderModelStatic;
-import neo.Renderer.RenderWorld.*;
 import neo.Renderer.tr_local.viewDef_s;
 import neo.TempDump.SERiAL;
 import neo.idlib.BV.Bounds.idBounds;
@@ -63,8 +62,8 @@ public class Model_md3 {
 
     static class md3Frame_s {
 
-        idVec3[] bounds = new idVec3[2];
-        idVec3 localOrigin;
+        final idVec3[] bounds = idVec3.generateArray(2);
+        final idVec3 localOrigin = new idVec3();
         //	char		name[16];
         String name;
         float radius;
@@ -73,9 +72,9 @@ public class Model_md3 {
     static class md3Tag_s {
 //	char		name[MAX_MD3PATH];	// tag name
 
-        idVec3[] axis = new idVec3[3];
+        final idVec3[] axis = idVec3.generateArray(3);
         String name;    // tag name
-        idVec3 origin;
+        final idVec3 origin = new idVec3();
     }
 
     /*

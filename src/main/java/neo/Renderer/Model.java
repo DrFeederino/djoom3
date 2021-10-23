@@ -113,7 +113,7 @@ public class Model {
     static class lightingCache_s {
         static final int BYTES = idVec3.BYTES;
 
-        idVec3 localLightVector;        // this is the statically computed vector to the light
+        final idVec3 localLightVector = new idVec3();        // this is the statically computed vector to the light
         // in texture space for cards without vertex programs
 
         lightingCache_s(ByteBuffer Position) {
@@ -122,7 +122,7 @@ public class Model {
 
         public lightingCache_s(lightingCache_s val) {
             if (val != null) {
-                this.localLightVector = new idVec3(val.localLightVector);
+                this.localLightVector.oSet(val.localLightVector);
             }
         }
 

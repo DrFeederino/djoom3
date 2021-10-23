@@ -93,7 +93,7 @@ public class BitMsg {
             float[] sign = {1.0f, -1.0f};
             int max;
             float invMax;
-            idVec3 dir = new idVec3();
+            final idVec3 dir = new idVec3();
 
             assert (numBits >= 6 && numBits <= 32);
 

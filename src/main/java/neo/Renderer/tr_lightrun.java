@@ -133,8 +133,8 @@ public class tr_lightrun {
      */
     public static void R_CreateEntityRefs(idRenderEntityLocal def) {
         int i;
-        idVec3[] transformed = idVec3.generateArray(8);
-        idVec3 v = new idVec3();
+        final idVec3[] transformed = idVec3.generateArray(8);
+        final idVec3 v = new idVec3();
 
         if (null == def.parms.hModel) {
             def.parms.hModel = renderModelManager.DefaultModel();
@@ -165,7 +165,7 @@ public class tr_lightrun {
             v.oSet(1, def.referenceBounds.oGet((i >> 1) & 1, 1));
             v.oSet(2, def.referenceBounds.oGet((i >> 2) & 1, 2));
 
-            transformed[i] = R_LocalPointToGlobal(def.modelMatrix, v);
+            transformed[i].oSet(R_LocalPointToGlobal(def.modelMatrix, v));
         }
 
         // bump the view count so we can tell if an
@@ -200,24 +200,24 @@ public class tr_lightrun {
         float dist;
         float scale;
         float rLen, uLen;
-        idVec3 normal;
+        final idVec3 normal = new idVec3();
         float ofs;
-        idVec3 right, up;
-        idVec3 startGlobal;
+        final idVec3 right = new idVec3(), up = new idVec3();
+        final idVec3 startGlobal = new idVec3();
         idVec4 targetGlobal = new idVec4();
 
-        right = new idVec3(rightVector);
+        right.oSet(rightVector);
         rLen = right.Normalize();
-        up = new idVec3(upVector);
+        up.oSet(upVector);
         uLen = up.Normalize();
-        normal = up.Cross(right);
+        normal.oSet(up.Cross(right));
 //normal = right.Cross( up );
         normal.Normalize();
 
         dist = target.oMultiply(normal); //  - ( origin * normal );
         if (dist < 0) {
             dist = -dist;
-            normal = normal.oNegative();
+            normal.oSet(normal.oNegative());
         }
 
         scale = (0.5f * dist) / rLen;
@@ -243,13 +243,13 @@ public class tr_lightrun {
         lightProject[1].ToVec4_oPluSet(lightProject[2].ToVec4().oMultiply(ofs));
 
         // set the falloff vector
-        normal = stop.oMinus(start);
+        normal.oSet(stop.oMinus(start));
         dist = normal.Normalize();
         if (dist <= 0) {
             dist = 1;
         }
         lightProject[3].oSet(normal.oMultiply(1.0f / dist));
-        startGlobal = start.oPlus(origin);
+        startGlobal.oSet(start.oPlus(origin));
         lightProject[3].oSet(3, -(startGlobal.oMultiply(lightProject[3].Normal())));
     }
 
@@ -387,16 +387,16 @@ public class tr_lightrun {
         // adjust global light origin for off center projections and parallel projections
         // we are just faking parallel by making it a very far off center for now
         if (light.parms.parallel) {
-            idVec3 dir = new idVec3();
+            final idVec3 dir = new idVec3();
 
             dir.oSet(light.parms.lightCenter);
             if (0 == dir.Normalize()) {
                 // make point straight up if not specified
                 dir.oSet(2, 1);
             }
-            light.globalLightOrigin = light.parms.origin.oPlus(dir.oMultiply(100000));
+            light.globalLightOrigin.oSet(light.parms.origin.oPlus(dir.oMultiply(100000)));
         } else {
-            light.globalLightOrigin = light.parms.origin.oPlus(light.parms.axis.oMultiply(light.parms.lightCenter));
+            light.globalLightOrigin.oSet(light.parms.origin.oPlus(light.parms.axis.oMultiply(light.parms.lightCenter)));
         }
 
         R_FreeLightDefFrustum(light);
@@ -409,7 +409,7 @@ public class tr_lightrun {
     }
 
     public static void R_CreateLightRefs(idRenderLightLocal light) {
-        idVec3[] points = new idVec3[MAX_LIGHT_VERTS];
+        final idVec3[] points = idVec3.generateArray(MAX_LIGHT_VERTS);
         int i;
         srfTriangles_s tri;
 
@@ -421,7 +421,7 @@ public class tr_lightrun {
             common.Error("R_CreateLightRefs: %d points in frustumTris!", tri.numVerts);
         }
         for (i = 0; i < tri.numVerts; i++) {
-            points[i] = tri.verts[i].xyz;
+            points[i].oSet(tri.verts[i].xyz);
         }
 
         if (r_showUpdates.GetBool() && (tri.bounds.oGet(1, 0) - tri.bounds.oGet(0, 0) > 1024

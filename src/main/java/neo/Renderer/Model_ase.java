@@ -303,9 +303,9 @@ public class Model_ase {
 
         public int[] tVertexNum = new int[3];
         public byte[][] vertexColors = new byte[3][4];
-        public idVec3[] vertexNormals = new idVec3[3];
+        public final idVec3 faceNormal = new idVec3();
         public int[] vertexNum = new int[3];
-        public idVec3 faceNormal;
+        public final idVec3[] vertexNormals = idVec3.generateArray(3);
 
         public aseFace_t() {
         }
@@ -314,9 +314,11 @@ public class Model_ase {
             if (val != null) {
                 this.tVertexNum = val.tVertexNum;
                 this.vertexColors = val.vertexColors;
-                this.vertexNormals = val.vertexNormals;
+                for (int i = 0; i < vertexNormals.length; i++) {
+                    this.vertexNormals[i].oSet(val.vertexNormals[i]);
+                }
                 this.vertexNum = val.vertexNum;
-                this.faceNormal = val.faceNormal;
+                this.faceNormal.oSet(val.faceNormal);
             }
         }
     }
@@ -325,7 +327,7 @@ public class Model_ase {
 
         private static int DBG_counter = 1;
         //
-        final idVec3[] transform;            // applied to normals
+        final idVec3[] transform = idVec3.generateArray(4);            // applied to normals
         private final int DBG_count = DBG_counter++;
         //
         boolean colorsParsed;
@@ -343,10 +345,6 @@ public class Model_ase {
         idVec3[] vertexes;
 
         public aseMesh_t() {
-            transform = new idVec3[4];
-            for (int i = 0; i < transform.length; i++) {
-                transform[i] = new idVec3();
-            }
         }
     }
 
@@ -585,7 +583,7 @@ public class Model_ase {
 
                 if ("*MESH_VERTEX".equals(token)) {
                     ASE_GetToken(false);        // skip number
-                    pMesh.vertexes[ase.currentVertex] = new idVec3();
+                    //pMesh.vertexes[ase.currentVertex] = new idVec3();
 
                     ASE_GetToken(false);
                     pMesh.vertexes[ase.currentVertex].x = Float.parseFloat(ase.token);
@@ -816,9 +814,9 @@ public class Model_ase {
                 ASE_GetToken(false);
                 // atof can return 0.0 if it can't convert. Not really the case if java land
                 if (pMesh.cvertexes == null) {
-                    pMesh.cvertexes = new idVec3[pMesh.numCVertexes];
+                    pMesh.cvertexes = idVec3.generateArray(pMesh.numCVertexes);
                 }
-                pMesh.cvertexes[ase.currentVertex] = new idVec3();
+                //pMesh.cvertexes[ase.currentVertex] = new idVec3();
 
                 pMesh.cvertexes[ase.currentVertex].oSet(0, atof(token));
                 ASE_GetToken(false);
@@ -852,7 +850,7 @@ public class Model_ase {
         public void run(final String token) {
             aseMesh_t pMesh = ASE_GetCurrentMesh();
             aseFace_t f;
-            idVec3 n = new idVec3();
+            final idVec3 n = new idVec3();
 
             pMesh.normalsParsed = true;
 
@@ -879,7 +877,6 @@ public class Model_ase {
                 ASE_GetToken(false);
                 n.oSet(2, Float.parseFloat(ase.token));
 
-                f.faceNormal = new idVec3();
                 f.faceNormal.oSet(0, n.oGet(0) * pMesh.transform[0].oGet(0) + n.oGet(1) * pMesh.transform[1].oGet(0) + n.oGet(2) * pMesh.transform[2].oGet(0));
                 f.faceNormal.oSet(1, n.oGet(0) * pMesh.transform[0].oGet(1) + n.oGet(1) * pMesh.transform[1].oGet(1) + n.oGet(2) * pMesh.transform[2].oGet(1));
                 f.faceNormal.oSet(2, n.oGet(0) * pMesh.transform[0].oGet(2) + n.oGet(1) * pMesh.transform[1].oGet(2) + n.oGet(2) * pMesh.transform[2].oGet(2));
@@ -917,7 +914,6 @@ public class Model_ase {
                 ASE_GetToken(false);
                 n.oSet(2, Float.parseFloat(ase.token));
 
-                f.vertexNormals[v] = new idVec3();
                 f.vertexNormals[v].oSet(0, n.oGet(0) * pMesh.transform[0].oGet(0) + n.oGet(1) * pMesh.transform[1].oGet(0) + n.oGet(2) * pMesh.transform[2].oGet(0));
                 f.vertexNormals[v].oSet(0, n.oGet(0) * pMesh.transform[0].oGet(1) + n.oGet(1) * pMesh.transform[1].oGet(1) + n.oGet(2) * pMesh.transform[2].oGet(2));
                 f.vertexNormals[v].oSet(0, n.oGet(0) * pMesh.transform[0].oGet(2) + n.oGet(1) * pMesh.transform[1].oGet(2) + n.oGet(2) * pMesh.transform[2].oGet(1));
@@ -986,7 +982,7 @@ public class Model_ase {
                         }
                         break;
                     case "*MESH_VERTEX_LIST":
-                        pMesh.vertexes = new idVec3[pMesh.numVertexes];// Mem_Alloc(pMesh.numVertexes);
+                        pMesh.vertexes = idVec3.generateArray(pMesh.numVertexes);// Mem_Alloc(pMesh.numVertexes);
                         ase.currentVertex = 0;
                         VERBOSE((".....parsing MESH_VERTEX_LIST\n"));
                         ASE_ParseBracedBlock(ASE_KeyMESH_VERTEX_LIST.getInstance());
@@ -999,7 +995,7 @@ public class Model_ase {
                         break;
                     case "*MESH_CVERTLIST":
                         ase.currentVertex = 0;
-                        pMesh.cvertexes = new idVec3[pMesh.numCVertexes];// Mem_Alloc(pMesh.numCVertexes);
+                        pMesh.cvertexes = idVec3.generateArray(pMesh.numCVertexes);// Mem_Alloc(pMesh.numCVertexes);
                         VERBOSE((".....parsing MESH_CVERTLIST\n"));
                         ASE_ParseBracedBlock(ASE_KeyMESH_CVERTLIST.getInstance());
                         break;
@@ -1106,10 +1102,10 @@ public class Model_ase {
 
                 // ignore regular meshes that aren't part of animation
                 case "*MESH":
-                    idVec3[] transform = ase.currentObject.mesh.transform;//copied from the bfg sources
+                    final idVec3[] transform = idVec3.copyVec(ase.currentObject.mesh.transform);//copied from the bfg sources
                     ase.currentMesh = ase.currentObject.mesh = new aseMesh_t();
                     for (int i = 0; i < transform.length; i++) {
-                        ase.currentMesh.transform[i] = transform[i];
+                        ase.currentMesh.transform[i].oSet(transform[i]);
                     }
                     ASE_ParseBracedBlock(ASE_KeyMESH.getInstance());
                     break;

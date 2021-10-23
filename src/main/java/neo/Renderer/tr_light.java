@@ -117,7 +117,7 @@ public class tr_light {
      ==================
      */
     public static boolean R_CreateLightingCache(final idRenderEntityLocal ent, final idRenderLightLocal light, srfTriangles_s tri) {
-        idVec3 localLightOrigin = new idVec3();
+        final idVec3 localLightOrigin = new idVec3();
 
         // fogs and blends don't need light vectors
         if (light.lightShader.IsFogLight() || light.lightShader.IsBlendLight()) {
@@ -225,17 +225,17 @@ public class tr_light {
      */
     public static void R_SkyboxTexGen(drawSurf_s surf, final idVec3 viewOrg) {
         int i;
-        idVec3 localViewOrigin = new idVec3();
+        final idVec3 localViewOrigin = new idVec3();
 
         R_GlobalPointToLocal(surf.space.modelMatrix, viewOrg, localViewOrigin);
 
         int numVerts = surf.geo.numVerts;
         int size = numVerts;//* sizeof( idVec3 );
-        idVec3[] texCoords = new idVec3[size];
+        final idVec3[] texCoords = idVec3.generateArray(size);
 
         final idDrawVert[] verts = surf.geo.verts;
         for (i = 0; i < numVerts; i++) {
-            texCoords[i] = verts[i].xyz.oMinus(localViewOrigin);
+            texCoords[i].oSet(verts[i].xyz.oMinus(localViewOrigin));
         }
 
         surf.dynamicTexCoords = vertexCache.AllocFrameTemp(texCoords, size);
@@ -249,7 +249,7 @@ public class tr_light {
      */
     public static void R_WobbleskyTexGen(drawSurf_s surf, final idVec3 viewOrg) {
         int i;
-        idVec3 localViewOrigin = new idVec3();
+        final idVec3 localViewOrigin = new idVec3();
 
         final int[] parms = surf.material.GetTexGenRegisters();
 
@@ -268,7 +268,7 @@ public class tr_light {
         float c = (float) (Math.cos(a) * Math.sin(wobbleDegrees));
         float z = (float) Math.cos(wobbleDegrees);
 
-        idVec3[] axis = idVec3.generateArray(3);
+        final idVec3[] axis = idVec3.generateArray(3);
 
         axis[2].oSet(0, c);
         axis[2].oSet(1, s);
@@ -308,17 +308,17 @@ public class tr_light {
 
         int numVerts = surf.geo.numVerts;
         int size = numVerts;// sizeof(idVec3);
-        idVec3[] texCoords = new idVec3[size];
+        final idVec3[] texCoords = idVec3.generateArray(size);
 
         final idDrawVert[] verts = surf.geo.verts;
         for (i = 0; i < numVerts; i++) {
-            idVec3 v = new idVec3();
+            final idVec3 v = new idVec3();
 
             v.oSet(0, verts[i].xyz.oGet(0) - localViewOrigin.oGet(0));
             v.oSet(1, verts[i].xyz.oGet(1) - localViewOrigin.oGet(1));
             v.oSet(2, verts[i].xyz.oGet(2) - localViewOrigin.oGet(2));
 
-            texCoords[i] = R_LocalPointToGlobal(transform, v);
+            texCoords[i].oSet(R_LocalPointToGlobal(transform, v));
         }
 
         surf.dynamicTexCoords = vertexCache.AllocFrameTemp(texCoords, size);
@@ -333,8 +333,8 @@ public class tr_light {
      */
     public static void R_SpecularTexGen(drawSurf_s surf, final idVec3 globalLightOrigin, final idVec3 viewOrg) {
         srfTriangles_s tri;
-        idVec3 localLightOrigin = new idVec3();
-        idVec3 localViewOrigin = new idVec3();
+        final idVec3 localLightOrigin = new idVec3();
+        final idVec3 localViewOrigin = new idVec3();
 
         R_GlobalPointToLocal(surf.space.modelMatrix, globalLightOrigin, localLightOrigin);
         R_GlobalPointToLocal(surf.space.modelMatrix, viewOrg, localViewOrigin);
@@ -452,7 +452,7 @@ public class tr_light {
      Assumes positive sides face outward
      ===================
      */
-    public static boolean R_PointInFrustum(idVec3 p, idPlane[] planes, int numPlanes) {
+    public static boolean R_PointInFrustum(final idVec3 p, idPlane[] planes, int numPlanes) {
         for (int i = 0; i < numPlanes; i++) {
             float d = planes[i].Distance(p);
             if (d > 0) {
@@ -505,7 +505,7 @@ public class tr_light {
         vLight.viewSeesGlobalLightOrigin = R_PointInFrustum(light.globalLightOrigin, tr.viewDef.frustum, 4);
 
         // copy data used by backend
-        vLight.globalLightOrigin = new idVec3(light.globalLightOrigin);
+        vLight.globalLightOrigin.oSet(light.globalLightOrigin);
         vLight.lightProject[0] = new idPlane(light.lightProject[0]);
         vLight.lightProject[1] = new idPlane(light.lightProject[1]);
         vLight.lightProject[2] = new idPlane(light.lightProject[2]);
@@ -622,7 +622,7 @@ public class tr_light {
             // project these points to the screen and add to bounds
             for (j = 0; j < w.GetNumPoints(); j++) {
                 idPlane eye = new idPlane(), clip = new idPlane();
-                idVec3 ndc = new idVec3();
+                final idVec3 ndc = new idVec3();
 
                 R_TransformModelToClip(w.oGet(j).ToVec3(), tr.viewDef.worldSpace.modelViewMatrix, tr.viewDef.projectionMatrix, eye, clip);
 
@@ -661,7 +661,7 @@ public class tr_light {
         idScreenRect r = new idScreenRect();
         srfTriangles_s tri;
         idPlane eye = new idPlane(), clip = new idPlane();
-        idVec3 ndc = new idVec3();
+        final idVec3 ndc = new idVec3();
 
         if (vLight.lightDef.parms.pointLight) {
             idBounds bounds = new idBounds();
@@ -1034,7 +1034,7 @@ public class tr_light {
         // set model depth hack value
         if (def.dynamicModel != null && model.DepthHack() != 0.0f && tr.viewDef != null) {
             idPlane eye = new idPlane(), clip = new idPlane();
-            idVec3 ndc = new idVec3();
+            final idVec3 ndc = new idVec3();
             R_TransformModelToClip(def.parms.origin, tr.viewDef.worldSpace.modelViewMatrix, tr.viewDef.projectionMatrix, eye, clip);
             R_TransformClipToDevice(clip, tr.viewDef, ndc);
             def.parms.modelDepthHack = model.DepthHack() * (1.0f - ndc.z);

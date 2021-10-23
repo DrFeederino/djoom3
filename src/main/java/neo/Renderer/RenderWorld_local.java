@@ -651,7 +651,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void ProjectDecalOntoWorld(idFixedWinding winding, idVec3 projectionOrigin, boolean parallel, float fadeDepth, idMaterial material, int startTime) {
+        public void ProjectDecalOntoWorld(idFixedWinding winding, final idVec3 projectionOrigin, boolean parallel, float fadeDepth, idMaterial material, int startTime) {
             int i, numAreas;
             int[] areas = new int[10];
             areaReference_s ref;
@@ -707,7 +707,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void ProjectDecal(int entityHandle, idFixedWinding winding, idVec3 projectionOrigin, boolean parallel, float fadeDepth, idMaterial material, int startTime) {
+        public void ProjectDecal(int entityHandle, idFixedWinding winding, final idVec3 projectionOrigin, boolean parallel, float fadeDepth, idMaterial material, int startTime) {
             decalProjectionInfo_s info = new decalProjectionInfo_s(), localInfo = new decalProjectionInfo_s();
 
             if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
@@ -862,7 +862,7 @@ public class RenderWorld_local {
                 parms.scissor.y2 = parms.viewport.y2 - parms.viewport.y1;
 
                 parms.isSubview = false;
-                parms.initialViewAreaOrigin = new idVec3(renderView.vieworg);
+                parms.initialViewAreaOrigin.oSet(renderView.vieworg);
                 parms.floatTime = parms.renderView.time * 0.001f;
                 parms.renderWorld = this;
 
@@ -872,8 +872,8 @@ public class RenderWorld_local {
 
                 // see if the view needs to reverse the culling sense in mirrors
                 // or environment cube sides
-                idVec3 cross;
-                cross = parms.renderView.viewaxis.oGet(1).Cross(parms.renderView.viewaxis.oGet(2));
+                final idVec3 cross = new idVec3();
+                cross.oSet(parms.renderView.viewaxis.oGet(1).Cross(parms.renderView.viewaxis.oGet(2)));
                 parms.isMirror = !(cross.oMultiply(parms.renderView.viewaxis.oGet(0)) > 0);
 
                 if (r_lockSurfaces.GetBool()) {
@@ -1049,9 +1049,9 @@ public class RenderWorld_local {
          ================
          */
         @Override
-        public guiPoint_t GuiTrace(int entityHandle, idVec3 start, idVec3 end) {
+        public guiPoint_t GuiTrace(int entityHandle, final idVec3 start, final idVec3 end) {
             localTrace_t local;
-            idVec3 localStart = new idVec3(), localEnd = new idVec3(), bestPoint;
+            final idVec3 localStart = new idVec3(), localEnd = new idVec3(), bestPoint = new idVec3();
             int j;
             idRenderModel model;
             srfTriangles_s tri;
@@ -1103,13 +1103,13 @@ public class RenderWorld_local {
 
                 local = R_LocalTrace(localStart, localEnd, 0.0f, tri);
                 if (local.fraction < 1.0) {
-                    idVec3 origin = new idVec3();
-                    idVec3[] axis = idVec3.generateArray(3);
-                    idVec3 cursor;
+                    final idVec3 origin = new idVec3();
+                    final idVec3[] axis = idVec3.generateArray(3);
+                    final idVec3 cursor = new idVec3();
                     float[] axisLen = new float[2];
 
                     R_SurfaceToTextureAxis(tri, origin, axis);
-                    cursor = local.point.oMinus(origin);
+                    cursor.oSet(local.point.oMinus(origin));
 
                     axisLen[0] = axis[0].Length();
                     axisLen[1] = axis[1].Length();
@@ -1126,14 +1126,14 @@ public class RenderWorld_local {
         }
 
         @Override
-        public boolean ModelTrace(modelTrace_s trace, int entityHandle, idVec3 start, idVec3 end, float radius) {
+        public boolean ModelTrace(modelTrace_s trace, int entityHandle, final idVec3 start, final idVec3 end, float radius) {
             int i;
             boolean collisionSurface;
             modelSurface_s surf;
             localTrace_t localTrace;
             idRenderModel model;
             float[] modelMatrix = new float[16];
-            idVec3 localStart = new idVec3(), localEnd = new idVec3();
+            final idVec3 localStart = new idVec3(), localEnd = new idVec3();
             idMaterial shader;
 
             trace.fraction = 1.0f;
@@ -1200,8 +1200,8 @@ public class RenderWorld_local {
 
                 if (localTrace.fraction < trace.fraction) {
                     trace.fraction = localTrace.fraction;
-                    trace.point = R_LocalPointToGlobal(modelMatrix, localTrace.point);
-                    trace.normal = localTrace.normal.oMultiply(refEnt.axis);
+                    trace.point.oSet(R_LocalPointToGlobal(modelMatrix, localTrace.point));
+                    trace.normal.oSet(localTrace.normal.oMultiply(refEnt.axis));
                     trace.material = shader;
                     trace.entity = def.parms;
                     trace.jointNumber = refEnt.hModel.NearestJoint(i, localTrace.indexes[0], localTrace.indexes[1], localTrace.indexes[2]);
@@ -1212,7 +1212,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public boolean Trace(modelTrace_s trace, idVec3 start, idVec3 end, float radius, boolean skipDynamic, boolean skipPlayer /*_D3XP*/) {
+        public boolean Trace(modelTrace_s trace, final idVec3 start, final idVec3 end, float radius, boolean skipDynamic, boolean skipPlayer /*_D3XP*/) {
             areaReference_s ref;
             idRenderEntityLocal def;
             portalArea_s area;
@@ -1223,11 +1223,11 @@ public class RenderWorld_local {
             int numAreas, i, j, numSurfaces;
             idBounds traceBounds = new idBounds(), bounds = new idBounds();
             float[] modelMatrix = new float[16];
-            idVec3 localStart = new idVec3(), localEnd = new idVec3();
+            final idVec3 localStart = new idVec3(), localEnd = new idVec3();
             idMaterial shader;
 
             trace.fraction = 1.0f;
-            trace.point = end;
+            trace.point.oSet(end);
 
             // bounds for the whole trace
             traceBounds.Clear();
@@ -1342,8 +1342,8 @@ public class RenderWorld_local {
 
                         if (localTrace.fraction < trace.fraction) {
                             trace.fraction = localTrace.fraction;
-                            trace.point = R_LocalPointToGlobal(modelMatrix, localTrace.point);
-                            trace.normal = localTrace.normal.oMultiply(def.parms.axis);
+                            trace.point.oSet(R_LocalPointToGlobal(modelMatrix, localTrace.point));
+                            trace.normal.oSet(localTrace.normal.oMultiply(def.parms.axis));
                             trace.material = shader;
                             trace.entity = def.parms;
                             trace.jointNumber = model.NearestJoint(j, localTrace.indexes[0], localTrace.indexes[1], localTrace.indexes[2]);
@@ -1359,7 +1359,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public boolean FastWorldTrace(modelTrace_s results, idVec3 start, idVec3 end) {
+        public boolean FastWorldTrace(modelTrace_s results, final idVec3 start, final idVec3 end) {
 //            memset(results, 0, sizeof(modelTrace_t));
             results.clear();
             results.fraction = 1.0f;
@@ -1377,13 +1377,13 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void DebugLine(idVec4 color, idVec3 start, idVec3 end, int lifetime, boolean depthTest) {
+        public void DebugLine(idVec4 color, final idVec3 start, final idVec3 end, int lifetime, boolean depthTest) {
             RB_AddDebugLine(color, start, end, lifetime, depthTest);
         }
 
         @Override
-        public void DebugArrow(idVec4 color, idVec3 start, idVec3 end, int size, int lifetime) {
-            idVec3 forward, right = new idVec3(), up = new idVec3(), v1, v2;
+        public void DebugArrow(idVec4 color, final idVec3 start, final idVec3 end, int size, int lifetime) {
+            final idVec3 forward = new idVec3(), right = new idVec3(), up = new idVec3(), v1 = new idVec3(), v2 = new idVec3();
             float a, s;
             int i;
 
@@ -1403,21 +1403,21 @@ public class RenderWorld_local {
                 arrowSin[i] = arrowSin[0];
             }
             // draw a nice arrow
-            forward = end.oMinus(start);
+            forward.oSet(end.oMinus(start));
             forward.Normalize();
             forward.NormalVectors(right, up);
             for (i = 0, a = 0; a < 360.0f; a += arrowStep, i++) {
                 s = 0.5f * size * arrowCos[i];
-                v1 = end.oMinus(forward.oMultiply(size));
-                v1 = v1.oPlus(right.oMultiply(s));
+                v1.oSet(end.oMinus(forward.oMultiply(size)));
+                v1.oSet(v1.oPlus(right.oMultiply(s)));
                 s = 0.5f * size * arrowSin[i];
-                v1 = v1.oPlus(up.oMultiply(s));
+                v1.oSet(v1.oPlus(up.oMultiply(s)));
 
                 s = 0.5f * size * arrowCos[i + 1];
-                v2 = end.oMinus(forward.oMultiply(size));
-                v2 = v2.oPlus(right.oMultiply(s));
+                v2.oSet(end.oMinus(forward.oMultiply(size)));
+                v2.oSet(v2.oPlus(right.oMultiply(s)));
                 s = 0.5f * size * arrowSin[i + 1];
-                v2 = v2.oPlus(up.oMultiply(s));
+                v2.oSet(v2.oPlus(up.oMultiply(s)));
 
                 DebugLine(color, v1, end, lifetime);
                 DebugLine(color, v1, v2, lifetime);
@@ -1425,37 +1425,37 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void DebugWinding(idVec4 color, idWinding w, idVec3 origin, idMat3 axis, int lifetime, boolean depthTest) {
+        public void DebugWinding(idVec4 color, idWinding w, final idVec3 origin, idMat3 axis, int lifetime, boolean depthTest) {
             int i;
-            idVec3 point, lastPoint;
+            final idVec3 point = new idVec3(), lastPoint = new idVec3();
 
             if (w.GetNumPoints() < 2) {
                 return;
             }
 
-            lastPoint = origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().oMultiply(axis));
+            lastPoint.oSet(origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().oMultiply(axis)));
             for (i = 0; i < w.GetNumPoints(); i++) {
-                point = origin.oPlus(w.oGet(i).ToVec3().oMultiply(axis));
+                point.oSet(origin.oPlus(w.oGet(i).ToVec3().oMultiply(axis)));
                 DebugLine(color, lastPoint, point, lifetime, depthTest);
-                lastPoint = point;
+                lastPoint.oSet(point);
             }
         }
 
         @Override
-        public void DebugCircle(idVec4 color, idVec3 origin, idVec3 dir, float radius, int numSteps, int lifetime, boolean depthTest) {
+        public void DebugCircle(idVec4 color, final idVec3 origin, final idVec3 dir, float radius, int numSteps, int lifetime, boolean depthTest) {
             int i;
             float a;
-            idVec3 left = new idVec3(), up = new idVec3(), point, lastPoint;
+            final idVec3 left = new idVec3(), up = new idVec3(), point = new idVec3(), lastPoint = new idVec3();
 
             dir.OrthogonalBasis(left, up);
             left.oMulSet(radius);
             up.oMulSet(radius);
-            lastPoint = origin.oPlus(up);
+            lastPoint.oSet(origin.oPlus(up));
             for (i = 1; i <= numSteps; i++) {
                 a = idMath.TWO_PI * i / numSteps;
-                point = origin.oPlus(left.oMultiply(idMath.Sin16(a)).oPlus(up.oMultiply(idMath.Cos16(a))));
+                point.oSet(origin.oPlus(left.oMultiply(idMath.Sin16(a)).oPlus(up.oMultiply(idMath.Cos16(a)))));
                 DebugLine(color, lastPoint, point, lifetime, depthTest);
-                lastPoint = point;
+                lastPoint.oSet(point);
             }
         }
 
@@ -1463,14 +1463,13 @@ public class RenderWorld_local {
         public void DebugSphere(idVec4 color, idSphere sphere, int lifetime, boolean depthTest) {
             int i, j, n, num;
             float s, c;
-            idVec3 p = new idVec3(), lastp = new idVec3();
-            idVec3[] lastArray;
+            final idVec3 p = new idVec3(), lastp = new idVec3();
 
             num = 360 / 15;
-            lastArray = new idVec3[num];
-            lastArray[0] = sphere.GetOrigin().oPlus(new idVec3(0, 0, sphere.GetRadius()));
+            final idVec3[] lastArray = idVec3.generateArray(num);
+            lastArray[0].oSet(sphere.GetOrigin().oPlus(new idVec3(0, 0, sphere.GetRadius())));
             for (n = 1; n < num; n++) {
-                lastArray[n] = lastArray[0];
+                lastArray[n].oSet(lastArray[0]);
             }
 
             for (i = 15; i <= 360; i += 15) {
@@ -1487,16 +1486,16 @@ public class RenderWorld_local {
                     DebugLine(color, lastp, p, lifetime, depthTest);
                     DebugLine(color, lastp, lastArray[n], lifetime, depthTest);
 
-                    lastArray[n] = lastp;
-                    lastp = p;
+                    lastArray[n].oSet(lastp);
+                    lastp.oSet(p);
                 }
             }
         }
 
         @Override
-        public void DebugBounds(idVec4 color, idBounds bounds, idVec3 org, int lifetime) {
+        public void DebugBounds(idVec4 color, idBounds bounds, final idVec3 org, int lifetime) {
             int i;
-            idVec3[] v = idVec3.generateArray(8);
+            final idVec3[] v = idVec3.generateArray(8);
 
             if (bounds.IsCleared()) {
                 return;
@@ -1517,7 +1516,7 @@ public class RenderWorld_local {
         @Override
         public void DebugBox(idVec4 color, idBox box, int lifetime) {
             int i;
-            idVec3[] v = new idVec3[8];
+            final idVec3[] v = idVec3.generateArray(8);
 
             box.ToPoints(v);
             for (i = 0; i < 4; i++) {
@@ -1530,7 +1529,7 @@ public class RenderWorld_local {
         @Override
         public void DebugFrustum(idVec4 color, idFrustum frustum, boolean showFromOrigin, int lifetime) {
             int i;
-            idVec3[] v = new idVec3[8];
+            final idVec3[] v = idVec3.generateArray(8);
 
             frustum.ToPoints(v);
 
@@ -1560,38 +1559,38 @@ public class RenderWorld_local {
          ============
          */
         @Override
-        public void DebugCone(idVec4 color, idVec3 apex, idVec3 dir, float radius1, float radius2, int lifetime) {
+        public void DebugCone(idVec4 color, final idVec3 apex, final idVec3 dir, float radius1, float radius2, int lifetime) {
             int i;
             idMat3 axis = new idMat3();
-            idVec3 top, p1, p2, lastp1, lastp2, d;
+            final idVec3 top = new idVec3(), p1 = new idVec3(), p2 = new idVec3(), lastp1 = new idVec3(), lastp2 = new idVec3(), d = new idVec3();
 
             axis.oSet(2, dir);
             axis.oGet(2).Normalize();
             axis.oGet(2).NormalVectors(axis.oGet(0), axis.oGet(1));
             axis.oSet(1, axis.oGet(1).oNegative());
 
-            top = apex.oPlus(dir);
-            lastp2 = top.oPlus(axis.oGet(1).oMultiply(radius2));
+            top.oSet(apex.oPlus(dir));
+            lastp2.oSet(top.oPlus(axis.oGet(1).oMultiply(radius2)));
 
             if (radius1 == 0.0f) {
                 for (i = 20; i <= 360; i += 20) {
-                    d = axis.oGet(0).oMultiply(idMath.Sin16(DEG2RAD(i))).oPlus(axis.oGet(1).oMultiply(idMath.Cos16(DEG2RAD(i))));
-                    p2 = top.oPlus(d.oMultiply(radius2));
+                    d.oSet(axis.oGet(0).oMultiply(idMath.Sin16(DEG2RAD(i))).oPlus(axis.oGet(1).oMultiply(idMath.Cos16(DEG2RAD(i)))));
+                    p2.oSet(top.oPlus(d.oMultiply(radius2)));
                     DebugLine(color, lastp2, p2, lifetime);
                     DebugLine(color, p2, apex, lifetime);
-                    lastp2 = p2;
+                    lastp2.oSet(p2);
                 }
             } else {
-                lastp1 = apex.oPlus(axis.oGet(1).oMultiply(radius1));
+                lastp1.oSet(apex.oPlus(axis.oGet(1).oMultiply(radius1)));
                 for (i = 20; i <= 360; i += 20) {
-                    d = axis.oGet(0).oMultiply(idMath.Sin16(DEG2RAD(i))).oPlus(axis.oGet(1).oMultiply(idMath.Cos16(DEG2RAD(i))));
-                    p1 = apex.oPlus(d.oMultiply(radius1));
-                    p2 = top.oPlus(d.oMultiply(radius2));
+                    d.oSet(axis.oGet(0).oMultiply(idMath.Sin16(DEG2RAD(i))).oPlus(axis.oGet(1).oMultiply(idMath.Cos16(DEG2RAD(i)))));
+                    p1.oSet(apex.oPlus(d.oMultiply(radius1)));
+                    p2.oSet(top.oPlus(d.oMultiply(radius2)));
                     DebugLine(color, lastp1, p1, lifetime);
                     DebugLine(color, lastp2, p2, lifetime);
                     DebugLine(color, p1, p2, lifetime);
-                    lastp1 = p1;
-                    lastp2 = p2;
+                    lastp1.oSet(p1);
+                    lastp2.oSet(p2);
                 }
             }
         }
@@ -1604,7 +1603,7 @@ public class RenderWorld_local {
             int i;
             float centerx, centery, dScale, hScale, vScale;
             idBounds bounds = new idBounds();
-            idVec3[] p = new idVec3[4];
+            final idVec3[] p = idVec3.generateArray(4);
 
             centerx = (viewDef.viewport.x2 - viewDef.viewport.x1) * 0.5f;
             centery = (viewDef.viewport.y2 - viewDef.viewport.y1) * 0.5f;
@@ -1621,10 +1620,10 @@ public class RenderWorld_local {
             bounds.oSet(1, 2, (rect.y2 - centery) / centery * vScale);
 
             for (i = 0; i < 4; i++) {
-                p[i] = new idVec3(bounds.oGet(0).oGet(0),
+                p[i].oSet(new idVec3(bounds.oGet(0).oGet(0),
                         bounds.oGet((i ^ (i >> 1)) & 1).y,
-                        bounds.oGet((i >> 1) & 1).z);
-                p[i] = viewDef.renderView.vieworg.oPlus(p[i].oMultiply(viewDef.renderView.viewaxis));
+                        bounds.oGet((i >> 1) & 1).z));
+                p[i].oSet(viewDef.renderView.vieworg.oPlus(p[i].oMultiply(viewDef.renderView.viewaxis)));
             }
             for (i = 0; i < 4; i++) {
                 DebugLine(color, p[i], p[(i + 1) & 3], 0);//false);
@@ -1632,19 +1631,19 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void DebugAxis(idVec3 origin, idMat3 axis) {
-            idVec3 start = origin;
-            idVec3 end = start.oPlus(axis.oGet(0).oMultiply(20.0f));
+        public void DebugAxis(final idVec3 origin, idMat3 axis) {
+            final idVec3 start = new idVec3(origin);
+            final idVec3 end = new idVec3(start.oPlus(axis.oGet(0).oMultiply(20.0f)));
             DebugArrow(colorWhite, start, end, 2);
-            end = start.oPlus(axis.oGet(0).oMultiply(-20.0f));
+            end.oSet(start.oPlus(axis.oGet(0).oMultiply(-20.0f)));
             DebugArrow(colorWhite, start, end, 2);
-            end = start.oPlus(axis.oGet(1).oMultiply(20.0f));
+            end.oSet(start.oPlus(axis.oGet(1).oMultiply(20.0f)));
             DebugArrow(colorGreen, start, end, 2);
-            end = start.oPlus(axis.oGet(1).oMultiply(-20.0f));
+            end.oSet(start.oPlus(axis.oGet(1).oMultiply(-20.0f)));
             DebugArrow(colorGreen, start, end, 2);
-            end = start.oPlus(axis.oGet(2).oMultiply(20.0f));
+            end.oSet(start.oPlus(axis.oGet(2).oMultiply(20.0f)));
             DebugArrow(colorBlue, start, end, 2);
-            end = start.oPlus(axis.oGet(2).oMultiply(-20.0f));
+            end.oSet(start.oPlus(axis.oGet(2).oMultiply(-20.0f)));
             DebugArrow(colorBlue, start, end, 2);
         }
 
@@ -1659,7 +1658,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void DrawText(String text, idVec3 origin, float scale, idVec4 color, idMat3 viewAxis, int align, int lifetime, boolean depthTest) {
+        public void DrawText(String text, final idVec3 origin, float scale, idVec4 color, idMat3 viewAxis, int align, int lifetime, boolean depthTest) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -2261,13 +2260,13 @@ public class RenderWorld_local {
         public idScreenRect ScreenRectFromWinding(final idWinding w, viewEntity_s space) {
             idScreenRect r = new idScreenRect();
             int i;
-            idVec3 v;
-            idVec3 ndc = new idVec3();
+            final idVec3 v = new idVec3();
+            final idVec3 ndc = new idVec3();
             float windowX, windowY;
 
             r.Clear();
             for (i = 0; i < w.GetNumPoints(); i++) {
-                v = R_LocalPointToGlobal(space.modelMatrix, w.oGet(i).ToVec3());
+                v.oSet(R_LocalPointToGlobal(space.modelMatrix, w.oGet(i).ToVec3()));
                 R_GlobalToNormalizedDeviceCoordinates(v, ndc);
 
                 windowX = 0.5f * (1.0f + ndc.oGet(0)) * (tr.viewDef.viewport.x2 - tr.viewDef.viewport.x1);
@@ -2338,7 +2337,7 @@ public class RenderWorld_local {
             portalStack_s check;
             portalStack_s newStack = new portalStack_s();
             int i, j;
-            idVec3 v1, v2;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3();
             int addPlanes;
             idFixedWinding w;        // we won't overflow because MAX_PORTAL_PLANES = 20
 
@@ -2430,8 +2429,8 @@ public class RenderWorld_local {
                         j = 0;
                     }
 
-                    v1 = origin.oMinus(w.oGet(i).ToVec3());
-                    v2 = origin.oMinus(w.oGet(j).ToVec3());
+                    v1.oSet(origin.oMinus(w.oGet(i).ToVec3()));
+                    v2.oSet(origin.oMinus(w.oGet(j).ToVec3()));
 
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1);
 
@@ -2504,7 +2503,7 @@ public class RenderWorld_local {
             portalStack_s check, firstPortalStack = new portalStack_s();
             portalStack_s newStack = new portalStack_s();
             int i, j;
-            idVec3 v1, v2;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3();
             int addPlanes;
             idFixedWinding w;        // we won't overflow because MAX_PORTAL_PLANES = 20
 
@@ -2583,8 +2582,8 @@ public class RenderWorld_local {
                         j = 0;
                     }
 
-                    v1 = light.globalLightOrigin.oMinus(w.oGet(i).ToVec3());
-                    v2 = light.globalLightOrigin.oMinus(w.oGet(j).ToVec3());
+                    v1.oSet(light.globalLightOrigin.oMinus(w.oGet(i).ToVec3()));
+                    v2.oSet(light.globalLightOrigin.oMinus(w.oGet(j).ToVec3()));
 
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1);
 
@@ -2613,7 +2612,7 @@ public class RenderWorld_local {
         public void FlowLightThroughPortals(idRenderLightLocal light) {
             portalStack_s ps;
             int i;
-            final idVec3 origin = light.globalLightOrigin;
+            final idVec3 origin = new idVec3(light.globalLightOrigin);
 
             // if the light origin areaNum is not in a valid area,
             // the light won't have any area refs
@@ -3947,7 +3946,7 @@ public class RenderWorld_local {
         public void RecurseProcBSP_r(modelTrace_s results, int parentNodeNum, int nodeNum, float p1f, float p2f, final idVec3 p1, final idVec3 p2) {
             float t1, t2;
             float frac;
-            idVec3 mid = new idVec3();
+            final idVec3 mid = new idVec3();
             int side;
             float midf;
             areaNode_t node;
@@ -3964,9 +3963,9 @@ public class RenderWorld_local {
                 if (parentNodeNum != -1) {
 
                     results.fraction = p1f;
-                    results.point = p1;
+                    results.point.oSet(p1);
                     node = areaNodes[parentNodeNum];
-                    results.normal = node.plane.Normal();//TODO:ref?
+                    results.normal.oSet(node.plane.Normal());
                     return;
                 }
             }
@@ -4211,7 +4210,7 @@ public class RenderWorld_local {
         public void PushVolumeIntoTree(idRenderEntityLocal def, idRenderLightLocal light, int numPoints, final idVec3[] points) {
             int i;
             float radSquared, lr;
-            idVec3 mid = new idVec3(), dir;
+            final idVec3 mid = new idVec3(), dir = new idVec3();
 
             if (areaNodes == null) {
                 return;
@@ -4227,7 +4226,7 @@ public class RenderWorld_local {
             radSquared = 0;
 
             for (i = 0; i < numPoints; i++) {
-                dir = points[i].oMinus(mid);
+                dir.oSet(points[i].oMinus(mid));
                 lr = dir.oMultiply(dir);
                 if (lr > radSquared) {
                     radSquared = lr;

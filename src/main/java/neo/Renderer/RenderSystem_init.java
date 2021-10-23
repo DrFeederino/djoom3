@@ -1613,12 +1613,12 @@ public class RenderSystem_init {
                 for (i = 0; i < 6; i++) {
                     for (int x = 0; x < outSize; x++) {
                         for (int y = 0; y < outSize; y++) {
-                            idVec3 dir;
+                            final idVec3 dir = new idVec3();
                             float[] total = new float[3];
 
-                            dir = cubeAxis[i].oGet(0).oPlus(
+                            dir.oSet(cubeAxis[i].oGet(0).oPlus(
                                     cubeAxis[i].oGet(1).oMultiply(-(-1 + 2.0f * x / (outSize - 1)))).oPlus(
-                                    cubeAxis[i].oGet(2).oMultiply(-(-1 + 2.0f * y / (outSize - 1))));
+                                    cubeAxis[i].oGet(2).oMultiply(-(-1 + 2.0f * y / (outSize - 1)))));
                             dir.Normalize();
                             total[0] = total[1] = total[2] = 0;
                             //samples = 1;
@@ -1627,7 +1627,7 @@ public class RenderSystem_init {
                             for (int s = 0; s < samples; s++) {
                                 // pick a random direction vector that is inside the unit sphere but not behind dir,
                                 // which is a robust way to evenly sample a hemisphere
-                                idVec3 test = new idVec3();
+                                final idVec3 test = new idVec3();
                                 while (true) {
                                     for (int j = 0; j < 3; j++) {
                                         test.oSet(j, -1 + 2 * (((int) random()) & 0x7fff) / (float) 0x7fff);
@@ -2242,11 +2242,11 @@ public class RenderSystem_init {
         @Override
         public void run(idCmdArgs args) {
             modelTrace_s mt = new modelTrace_s();
-            idVec3 start, end;
+            final idVec3 start = new idVec3(), end = new idVec3();
 
             // start far enough away that we don't hit the player model
-            start = tr.primaryView.renderView.vieworg.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(16));
-            end = start.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(1000.0f));
+            start.oSet(tr.primaryView.renderView.vieworg.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(16)));
+            end.oSet(start.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(1000.0f)));
             if (!tr.primaryWorld.Trace(mt, start, end, 0.0f, false)) {
                 return;
             }

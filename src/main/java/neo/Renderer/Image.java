@@ -3562,7 +3562,7 @@ public class Image {
          */
         public void SetNormalPalette() {
             int i, j;
-            idVec3 v = new idVec3();
+            final idVec3 v = new idVec3();
             float t;
             //byte temptable[768];
             byte[] temptable = compressedPalette;

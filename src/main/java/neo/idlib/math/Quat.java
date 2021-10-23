@@ -277,7 +277,7 @@ public class Quat {
         }
 
         public idRotation ToRotation() {
-            idVec3 vec = new idVec3();
+            final idVec3 vec = new idVec3();
             float angle;
 
             vec.x = x;
@@ -345,7 +345,7 @@ public class Quat {
         }
 
         public idVec3 ToAngularVelocity() {
-            idVec3 vec = new idVec3();
+            final idVec3 vec = new idVec3();
 
             vec.x = x;
             vec.y = y;

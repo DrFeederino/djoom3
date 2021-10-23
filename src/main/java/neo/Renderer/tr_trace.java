@@ -256,8 +256,8 @@ public class tr_trace {
             c_intersect++;
 
             hit.fraction = f;
-            hit.normal = plane.Normal();
-            hit.point = point;
+            hit.normal.oSet(plane.Normal());
+            hit.point.oSet(point);
             hit.indexes[0] = tri.indexes[i];
             hit.indexes[1] = tri.indexes[i + 1];
             hit.indexes[2] = tri.indexes[i + 2];

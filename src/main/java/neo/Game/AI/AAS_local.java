@@ -1105,14 +1105,14 @@ public class AAS_local {
 
             if (file == null || areaNum <= 0) {
                 goal.areaNum = areaNum;
-                goal.origin = origin;
+                goal.origin.oSet(origin);
                 return false;
             }
 
             // if the first area is valid goal, just return the origin
             if (callback.TestArea(this, areaNum)) {
                 goal.areaNum = areaNum;
-                goal.origin = origin;
+                goal.origin.oSet(origin);
                 return true;
             }
 
@@ -1268,7 +1268,7 @@ public class AAS_local {
 
             if (bestAreaNum != 0) {
                 goal.areaNum = bestAreaNum;
-                goal.origin = AreaCenter(bestAreaNum);
+                goal.origin.oSet(AreaCenter(bestAreaNum));
                 return true;
             }
 
@@ -2300,7 +2300,7 @@ public class AAS_local {
             target.oSet(AreaCenter(targetAreaNum));
 
             // consider the target an obstacle
-            obstacles[0].absBounds = new idBounds(target).Expand(16);
+            obstacles[0].absBounds.oSet(new idBounds(target).Expand(16));
             numObstacles = 1;
 
             DrawCone(target, new idVec3(0, 0, 1), 16.0f, colorYellow);

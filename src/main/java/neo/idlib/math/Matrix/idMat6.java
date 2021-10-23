@@ -817,7 +817,7 @@ public class idMat6 {
 //    #else
         // 6*27+2*30 = 222 multiplications
         //		2*1  =	 2 divisions
-        idVec3[] r0 = idMat0.genVec3Array(3), r1 = idMat0.genVec3Array(3), r2 = idMat0.genVec3Array(3), r3 = idMat0.genVec3Array(3);
+        final idVec3[] r0 = idVec3.generateArray(3), r1 = idVec3.generateArray(3), r2 = idVec3.generateArray(3), r3 = idVec3.generateArray(3);
         float c0, c1, c2, det, invDet;
         float[] mat = this.reinterpret_cast();
 

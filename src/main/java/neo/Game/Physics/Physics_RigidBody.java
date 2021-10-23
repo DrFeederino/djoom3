@@ -1156,7 +1156,7 @@ public class Physics_RigidBody {
          The current state should be set to the moment of impact.
          ================
          */
-        private boolean CollisionImpulse(final trace_s collision, idVec3 impulse) {
+        private boolean CollisionImpulse(final trace_s collision, final idVec3 impulse) {
             final idVec3 r = new idVec3(), linearVelocity = new idVec3(), angularVelocity = new idVec3(), velocity = new idVec3();
             idMat3 inverseWorldInertiaTensor;
             float impulseNumerator, impulseDenominator, vel;

@@ -107,7 +107,7 @@ public class Model_ma {
         return true;
     }
 
-    public static boolean MA_ReadVec3(idParser parser, idVec3 vec) throws idException {
+    public static boolean MA_ReadVec3(idParser parser, final idVec3 vec) throws idException {
         // idToken token;
         if (!parser.SkipUntilString("double3")) {
             throw new idException(va("Maya Loader '%s': Invalid Vec3", parser.GetFileName()));
@@ -192,7 +192,7 @@ public class Model_ma {
         //Allocate enough space for all the verts if this is the first attribute for verticies
         if (null == pMesh.vertexes) {
             pMesh.numVertexes = header.size;
-            pMesh.vertexes = new idVec3[pMesh.numVertexes];// Mem_Alloc(pMesh.numVertexes);
+            pMesh.vertexes = idVec3.generateArray(pMesh.numVertexes);// Mem_Alloc(pMesh.numVertexes);
         }
 
         //Get the start and end index for this attribute
@@ -272,7 +272,7 @@ public class Model_ma {
         //Allocate enough space for all the verts if this is the first attribute for verticies
         if (null == pMesh.edges) {
             pMesh.numEdges = header.size;
-            pMesh.edges = new idVec3[pMesh.numEdges];// Mem_Alloc(pMesh.numEdges);
+            pMesh.edges = idVec3.generateArray(pMesh.numEdges);// Mem_Alloc(pMesh.numEdges);
         }
 
         //Get the start and end index for this attribute
@@ -300,7 +300,7 @@ public class Model_ma {
         //Allocate enough space for all the verts if this is the first attribute for verticies
         if (null == pMesh.normals) {
             pMesh.numNormals = header.size;
-            pMesh.normals = new idVec3[pMesh.numNormals];// Mem_Alloc(pMesh.numNormals);
+            pMesh.normals = idVec3.generateArray(pMesh.numNormals);// Mem_Alloc(pMesh.numNormals);
         }
 
         //Get the start and end index for this attribute
@@ -641,7 +641,7 @@ public class Model_ma {
 
                     if (sharedFace[0] != -1) {
                         //Get the normal from the share
-                        pMesh.faces[i].vertexNormals[j] = pMesh.faces[sharedFace[0]].vertexNormals[sharedVert[0]];
+                        pMesh.faces[i].vertexNormals[j].oSet(pMesh.faces[sharedFace[0]].vertexNormals[sharedVert[0]]);
 
                     } else {
                         //The vertex is not shared so get the next normal
@@ -649,7 +649,7 @@ public class Model_ma {
                             //We are using more normals than exist
                             throw new idException(va("Maya Loader '%s': Invalid Normals Index.", parser.GetFileName()));
                         }
-                        pMesh.faces[i].vertexNormals[j] = pMesh.normals[pMesh.nextNormal];
+                        pMesh.faces[i].vertexNormals[j].oSet(pMesh.normals[pMesh.nextNormal]);
                         pMesh.nextNormal++;
                     }
                 }
@@ -662,9 +662,9 @@ public class Model_ma {
             pMesh.faces[i].vertexNum[1] = pMesh.faces[i].vertexNum[2];
             pMesh.faces[i].vertexNum[2] = tmp;
 
-            idVec3 tmpVec = pMesh.faces[i].vertexNormals[1];
-            pMesh.faces[i].vertexNormals[1] = pMesh.faces[i].vertexNormals[2];
-            pMesh.faces[i].vertexNormals[2] = tmpVec;
+            final idVec3 tmpVec = new idVec3(pMesh.faces[i].vertexNormals[1]);
+            pMesh.faces[i].vertexNormals[1].oSet(pMesh.faces[i].vertexNormals[2]);
+            pMesh.faces[i].vertexNormals[2].oSet(tmpVec);
 
             tmp = pMesh.faces[i].tVertexNum[1];
             pMesh.faces[i].tVertexNum[1] = pMesh.faces[i].tVertexNum[2];
@@ -916,13 +916,13 @@ public class Model_ma {
 
                 //Apply the transformation to each vert
                 for (int j = 0; j < mesh.numVertexes; j++) {
-                    mesh.vertexes[j] = scale.oMultiply(mesh.vertexes[j]);
+                    mesh.vertexes[j].oSet(scale.oMultiply(mesh.vertexes[j]));
 
-                    mesh.vertexes[j] = rotx.oMultiply(mesh.vertexes[j]);
-                    mesh.vertexes[j] = rotz.oMultiply(mesh.vertexes[j]);
-                    mesh.vertexes[j] = roty.oMultiply(mesh.vertexes[j]);
+                    mesh.vertexes[j].oSet(rotx.oMultiply(mesh.vertexes[j]));
+                    mesh.vertexes[j].oSet(rotz.oMultiply(mesh.vertexes[j]));
+                    mesh.vertexes[j].oSet(roty.oMultiply(mesh.vertexes[j]));
 
-                    mesh.vertexes[j] = mesh.vertexes[j].oPlus(transform.translate);
+                    mesh.vertexes[j].oSet(mesh.vertexes[j].oPlus(transform.translate));
                 }
 
                 transform = transform.parent;
@@ -1101,9 +1101,11 @@ public class Model_ma {
     static class maTransform_s {
 
         maTransform_s parent;
-        idVec3 rotate;
-        idVec3 scale;
-        idVec3 translate;
+        final idVec3 rotate = new idVec3();
+        final idVec3 scale = new idVec3();
+        ;
+        final idVec3 translate = new idVec3();
+        ;
     }
 
     static class maFace_t {
@@ -1111,7 +1113,7 @@ public class Model_ma {
         int[] edge = new int[3];
         int[] tVertexNum = new int[3];
         int[] vertexColors = new int[3];
-        idVec3[] vertexNormals = new idVec3[3];
+        final idVec3[] vertexNormals = idVec3.generateArray(3);
         int[] vertexNum = new int[3];
     }
 

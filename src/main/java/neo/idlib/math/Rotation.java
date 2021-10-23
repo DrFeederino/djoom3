@@ -20,8 +20,8 @@ public class Rotation {
         public idMat3 axis;        // rotation axis
         public boolean axisValid;   // true if rotation axis is valid
         //private:
-        public idVec3 origin;      // origin of rotation
-        public idVec3 vec;         // normalized vector to rotate around
+        public final idVec3 origin;      // origin of rotation
+        public final idVec3 vec;         // normalized vector to rotate around
         //
         //
 
@@ -183,7 +183,7 @@ public class Rotation {
             return vec.oMultiply(DEG2RAD(angle));
         }
 
-        public void RotatePoint(idVec3 point) {
+        public void RotatePoint(final idVec3 point) {
             if (!axisValid) {
                 ToMat3();
             }

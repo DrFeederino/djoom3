@@ -431,9 +431,9 @@ public class Script_Thread {
             ReturnFloat(result.getVal());
         }
 
-        private static void Event_SpawnVector(idThread t, final idEventArg<String> key, idEventArg<idVec3> d) {
-            idVec3 result = new idVec3();
-            idVec3 defaultvalue = d.value;
+        private static void Event_SpawnVector(idThread t, final idEventArg<String> key, final idEventArg<idVec3> d) {
+            final idVec3 result = new idVec3();
+            final idVec3 defaultvalue = new idVec3(d.value);
 
             t.spawnArgs.GetVector(key.value, va("%f %f %f", defaultvalue.x, defaultvalue.y, defaultvalue.z), result);
             ReturnVector(result);
@@ -458,18 +458,18 @@ public class Script_Thread {
         }
 
         private static void Event_GetPersistantVector(idThread t, final idEventArg<String> key) {
-            idVec3 result = new idVec3();
+            final idVec3 result = new idVec3();
 
             gameLocal.persistentLevelInfo.GetVector(key.value, "0 0 0", result);
             ReturnVector(result);
         }
 
-        private static void Event_AngToForward(idThread t, idEventArg<idVec3> ang) {
+        private static void Event_AngToForward(idThread t, final idEventArg<idVec3> ang) {
             ReturnVector(new idAngles(ang.value).ToForward());
         }
 
         private static void Event_AngToRight(idThread t, idEventArg<idAngles> ang) {
-            idVec3 vec = new idVec3();
+            final idVec3 vec = new idVec3();
 
             ang.value.ToVectors(null, vec);
             ReturnVector(vec);
@@ -480,7 +480,7 @@ public class Script_Thread {
 //        }
 
         private static void Event_AngToUp(idThread t, idEventArg<idAngles> ang) {
-            idVec3 vec = new idVec3();
+            final idVec3 vec = new idVec3();
 
             ang.value.ToVectors(null, null, vec);
             ReturnVector(vec);
@@ -498,27 +498,25 @@ public class Script_Thread {
             ReturnFloat(idMath.Sqrt(theSquare.value));
         }
 
-        private static void Event_VecNormalize(idThread t, idEventArg<idVec3> vec) {
-            idVec3 n;
-
-            n = vec.value;
+        private static void Event_VecNormalize(idThread t, final idEventArg<idVec3> vec) {
+            final idVec3 n = new idVec3(vec.value);
             n.Normalize();
             ReturnVector(n);
         }
 
-        private static void Event_VecLength(idThread t, idEventArg<idVec3> vec) {
+        private static void Event_VecLength(idThread t, final idEventArg<idVec3> vec) {
             ReturnFloat(vec.value.Length());
         }
 
-        private static void Event_VecDotProduct(idThread t, idEventArg<idVec3> vec1, idEventArg<idVec3> vec2) {
+        private static void Event_VecDotProduct(idThread t, final idEventArg<idVec3> vec1, idEventArg<idVec3> vec2) {
             ReturnFloat(vec1.value.oMultiply(vec2.value));
         }
 
-        private static void Event_VecCrossProduct(idThread t, idEventArg<idVec3> vec1, idEventArg<idVec3> vec2) {
+        private static void Event_VecCrossProduct(idThread t, final idEventArg<idVec3> vec1, final idEventArg<idVec3> vec2) {
             ReturnVector(vec1.value.Cross(vec2.value));
         }
 
-        private static void Event_VecToAngles(idThread t, idEventArg<idVec3> vec) {
+        private static void Event_VecToAngles(idThread t, final idEventArg<idVec3> vec) {
             idAngles ang = vec.value.ToAngles();
             ReturnVector(new idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2)));
         }
@@ -580,10 +578,10 @@ public class Script_Thread {
 
         private static void Event_Trace(idThread t, final idEventArg<idVec3> s, final idEventArg<idVec3> e, final idEventArg<idVec3> mi,
                                         final idEventArg<idVec3> ma, idEventArg<Integer> c, idEventArg<idEntity> p) {
-            idVec3 start = s.value;
-            idVec3 end = e.value;
-            idVec3 mins = mi.value;
-            idVec3 maxs = ma.value;
+            final idVec3 start = new idVec3(s.value);
+            final idVec3 end = new idVec3(e.value);
+            final idVec3 mins = new idVec3(mi.value);
+            final idVec3 maxs = new idVec3(ma.value);
             int contents_mask = c.value;
             idEntity passEntity = p.value;
 
@@ -600,8 +598,8 @@ public class Script_Thread {
         }
 
         private static void Event_TracePoint(idThread t, final idEventArg<idVec3> startA, final idEventArg<idVec3> endA, idEventArg<Integer> c, idEventArg<idEntity> p) {
-            idVec3 start = startA.value;
-            idVec3 end = endA.value;
+            final idVec3 start = new idVec3(startA.value);
+            final idVec3 end = new idVec3(endA.value);
             int contents_mask = c.value;
             idEntity passEntity = p.value;
             {
@@ -615,7 +613,7 @@ public class Script_Thread {
         private static void Event_FadeIn(idThread t, idEventArg<idVec3> colorA, idEventArg<Float> time) {
             idVec4 fadeColor = new idVec4();
             idPlayer player;
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
 
             player = gameLocal.GetLocalPlayer();
             if (player != null) {
@@ -624,10 +622,10 @@ public class Script_Thread {
             }
         }
 
-        private static void Event_FadeOut(idThread t, idEventArg<idVec3> colorA, idEventArg<Float> time) {
+        private static void Event_FadeOut(idThread t, final idEventArg<idVec3> colorA, idEventArg<Float> time) {
             idVec4 fadeColor = new idVec4();
             idPlayer player;
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
 
             player = gameLocal.GetLocalPlayer();
             if (player != null) {
@@ -639,7 +637,7 @@ public class Script_Thread {
         private static void Event_FadeTo(idThread t, idEventArg<idVec3> colorA, idEventArg<Float> alpha, idEventArg<Float> time) {
             idVec4 fadeColor = new idVec4();
             idPlayer player;
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
 
             player = gameLocal.GetLocalPlayer();
             if (player != null) {
@@ -779,27 +777,27 @@ public class Script_Thread {
         }
 
         private static void Event_DebugLine(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> start, final idEventArg<idVec3> end, final idEventArg<Float> lifetime) {
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
             gameRenderWorld.DebugLine(new idVec4(color.x, color.y, color.z, 0.0f), start.value, end.value, (int) SEC2MS(lifetime.value));
         }
 
         private static void Event_DebugArrow(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> start, final idEventArg<idVec3> end, final idEventArg<Integer> size, final idEventArg<Float> lifetime) {
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
             gameRenderWorld.DebugArrow(new idVec4(color.x, color.y, color.z, 0.0f), start.value, end.value, size.value, (int) SEC2MS(lifetime.value));
         }
 
         private static void Event_DebugCircle(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> origin, final idEventArg<idVec3> dir, final idEventArg<Float> radius, final idEventArg<Integer> numSteps, final idEventArg<Float> lifetime) {
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
             gameRenderWorld.DebugCircle(new idVec4(color.x, color.y, color.z, 0.0f), origin.value, dir.value, radius.value, numSteps.value, (int) SEC2MS(lifetime.value));
         }
 
         private static void Event_DebugBounds(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs, final idEventArg<Float> lifetime) {
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
             gameRenderWorld.DebugBounds(new idVec4(color.x, color.y, color.z, 0.0f), new idBounds(mins.value, maxs.value), getVec3_origin(), (int) SEC2MS(lifetime.value));
         }
 
         private static void Event_DrawText(idThread t, final idEventArg<String> text, final idEventArg<idVec3> origin, idEventArg<Float> scale, final idEventArg<idVec3> colorA, final idEventArg<Integer> align, final idEventArg<Float> lifetime) {
-            idVec3 color = colorA.value;
+            final idVec3 color = new idVec3(colorA.value);
             gameRenderWorld.DrawText(text.value, origin.value, scale.value, new idVec4(color.x, color.y, color.z, 0.0f), gameLocal.GetLocalPlayer().viewAngles.ToMat3(), align.value, (int) SEC2MS(lifetime.value));
         }
 

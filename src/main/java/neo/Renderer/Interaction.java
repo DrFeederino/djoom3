@@ -5,7 +5,6 @@ import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.RenderWorld_local.idRenderWorldLocal;
-import neo.Renderer.tr_local.*;
 import neo.Renderer.tr_stencilshadow.shadowGen_t;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.BV.Bounds.idBounds;
@@ -86,7 +85,7 @@ public class Interaction {
      ================
      */
     static void R_CalcInteractionFacing(final idRenderEntityLocal ent, final srfTriangles_s tri, final idRenderLightLocal light, srfCullInfo_t cullInfo) {
-        idVec3 localLightOrigin = new idVec3();
+        final idVec3 localLightOrigin = new idVec3();
 
         if (cullInfo.facing != null) {
             return;
@@ -200,7 +199,7 @@ public class Interaction {
         int[] counts = new int[3];
         float dot;
         int i, j;
-        idVec3 mid = new idVec3();
+        final idVec3 mid = new idVec3();
         boolean front;
 
         in = clipTris[inNum];
@@ -235,14 +234,14 @@ public class Interaction {
         // avoid wrapping checks by duplicating first value to end
         sides[i] = sides[0];
         dists[i] = dists[0];
-        in.verts[in.numVerts] = in.verts[0];
+        in.verts[in.numVerts].oSet(in.verts[0]);
 
         out.numVerts = 0;
         for (i = 0; i < in.numVerts; i++) {
-            idVec3 p1 = in.verts[i];
+            final idVec3 p1 = new idVec3(in.verts[i]);
 
             if (sides[i] == SIDE_FRONT) {
-                out.verts[out.numVerts] = p1;
+                out.verts[out.numVerts].oSet(p1);
                 out.numVerts++;
             }
 
@@ -251,7 +250,7 @@ public class Interaction {
             }
 
             // generate a split point
-            idVec3 p2 = in.verts[i + 1];
+            final idVec3 p2 = new idVec3(in.verts[i + 1]);
 
             dot = dists[i] / (dists[i] - dists[i + 1]);
             for (j = 0; j < 3; j++) {
@@ -279,9 +278,9 @@ public class Interaction {
         int p;
 
         pingPong[0].numVerts = 3;
-        pingPong[0].verts[0] = a;
-        pingPong[0].verts[1] = b;
-        pingPong[0].verts[2] = c;
+        pingPong[0].verts[0].oSet(a);
+        pingPong[0].verts[1].oSet(b);
+        pingPong[0].verts[2].oSet(c);
 
         p = 0;
         for (i = 0; i < 6; i++) {
@@ -490,12 +489,12 @@ public class Interaction {
 
         // if the ray from localLight to localView intersects a face of the
         // expanded bounds, we will be inside the projection
-        idVec3 ray = localView.oMinus(localLight);
+        final idVec3 ray = new idVec3(localView.oMinus(localLight));
 
         // intersect the ray from the view to the light with the near side of the bounds
         for (int axis = 0; axis < 3; axis++) {
             float d, frac;
-            idVec3 hit;
+            final idVec3 hit = new idVec3();
             final float eza = exp.oGet(0, axis);
             final float ezo = exp.oGet(1, axis);//eoa
             final float l_axis = localLight.oGet(axis);
@@ -506,7 +505,7 @@ public class Interaction {
                 }
                 d = eza - l_axis;
                 frac = d / ray.oGet(axis);
-                hit = localLight.oPlus(ray.oMultiply(frac));
+                hit.oSet(localLight.oPlus(ray.oMultiply(frac)));
                 hit.oSet(axis, eza);
             } else if (l_axis > ezo) {
                 if (localView.oGet(axis) > ezo) {
@@ -514,7 +513,7 @@ public class Interaction {
                 }
                 d = ezo - l_axis;
                 frac = d / ray.oGet(axis);
-                hit = localLight.oPlus(ray.oMultiply(frac));
+                hit.oSet(localLight.oPlus(ray.oMultiply(frac)));
                 hit.oSet(axis, ezo);
             } else {
                 continue;
@@ -858,8 +857,8 @@ public class Interaction {
             viewEntity_s vEntity;
             idScreenRect shadowScissor;
             idScreenRect lightScissor;
-            idVec3 localLightOrigin = new idVec3();
-            idVec3 localViewOrigin = new idVec3();
+            final idVec3 localLightOrigin = new idVec3();
+            final idVec3 localViewOrigin = new idVec3();
 
             vLight = lightDef.viewLight;
             vEntity = entityDef.viewEntity;
@@ -1365,7 +1364,7 @@ public class Interaction {
     static class clipTri_t {
 
         int numVerts;
-        idVec3[] verts = new idVec3[MAX_CLIPPED_POINTS];
+        final idVec3[] verts = idVec3.generateArray(MAX_CLIPPED_POINTS);
     }
 
     /*

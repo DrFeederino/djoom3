@@ -1007,7 +1007,7 @@ public class Script_Program {
         idScriptObject objectPtrPtr;
         String stringPtr;
         //        final         float[]        floatPtr;
-        idVec3 vectorPtr = new idVec3();
+        final idVec3 vectorPtr = new idVec3();
         private int offset;
         //        private int ptrOffset;
         private ByteBuffer primitive = ByteBuffer.allocate(Float.BYTES * 3).order(ByteOrder.LITTLE_ENDIAN);
@@ -1071,12 +1071,12 @@ public class Script_Program {
             return vectorPtr;
         }
 
-        void setVectorPtr(idVec3 vector) {
+        void setVectorPtr(final idVec3 vector) {
             setVectorPtr(vector.ToFloatPtr());
         }
 
         void setVectorPtr(float[] vector) {
-            vectorPtr = new idVec3(vector);
+            vectorPtr.oSet(new idVec3(vector));
             primitive.putFloat(0, vector[0]);
             primitive.putFloat(4, vector[1]);
             primitive.putFloat(8, vector[2]);

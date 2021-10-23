@@ -278,10 +278,10 @@ public class tr_deform {
     public static void R_AutospriteDeform(drawSurf_s surf) {
         int i;
         idDrawVert v;
-        idVec3 mid = new idVec3(), delta;
+        final idVec3 mid = new idVec3(), delta = new idVec3();
         float radius;
-        idVec3 left, up;
-        idVec3 leftDir = new idVec3(), upDir = new idVec3();
+        final idVec3 left = new idVec3(), up = new idVec3();
+        final idVec3 leftDir = new idVec3(), upDir = new idVec3();
         final srfTriangles_s tri;
         srfTriangles_s newTri;
 
@@ -300,7 +300,7 @@ public class tr_deform {
         R_GlobalVectorToLocal(surf.space.modelMatrix, tr.viewDef.renderView.viewaxis.oGet(2), upDir);
 
         if (tr.viewDef.isMirror) {
-            leftDir = getVec3_origin().oMinus(leftDir);
+            leftDir.oSet(getVec3_origin().oMinus(leftDir));
         }
 
         // this srfTriangles_t and all its indexes and caches are in frame
@@ -323,11 +323,11 @@ public class tr_deform {
             mid.oSet(1, 0.25f * (v.xyz.oGet(1) + v1.xyz.oGet(1) + v2.xyz.oGet(1) + v3.xyz.oGet(1)));
             mid.oSet(2, 0.25f * (v.xyz.oGet(2) + v1.xyz.oGet(2) + v2.xyz.oGet(2) + v3.xyz.oGet(2)));
 
-            delta = v.xyz.oMinus(mid);
+            delta.oSet(v.xyz.oMinus(mid));
             radius = delta.Length() * 0.707f;        // / sqrt(2)
 
-            left = leftDir.oMultiply(radius);
-            up = upDir.oMultiply(radius);
+            left.oSet(leftDir.oMultiply(radius));
+            up.oSet(upDir.oMultiply(radius));
 
             ac[i + 0].xyz.oSet(mid.oPlus(left.oPlus(up)));
             ac[i + 0].st.oSet(0, 0);
@@ -370,7 +370,7 @@ public class tr_deform {
 
         // we need the view direction to project the minor axis of the tube
         // as the view changes
-        idVec3 localView = new idVec3();
+        final idVec3 localView = new idVec3();
         R_GlobalPointToLocal(surf.space.modelMatrix, tr.viewDef.renderView.vieworg, localView);
 
         // this srfTriangles_t and all its indexes and caches are in frame
@@ -389,8 +389,8 @@ public class tr_deform {
         for (i = 0, indexes = 0; i < tri.numVerts; i += 4, indexes += 6) {
             float[] lengths = new float[2];
             int[] nums = new int[2];
-            idVec3[] mid = new idVec3[2];
-            idVec3 major, minor = new idVec3();
+            final idVec3[] mid = idVec3.generateArray(2);
+            final idVec3 major = new idVec3(), minor = new idVec3();
             idDrawVert v1, v2;
 
             // identify the two shortest edges out of the six defined by the indexes
@@ -421,14 +421,14 @@ public class tr_deform {
                 v1 = tri.verts[tri.indexes[i + edgeVerts[nums[j]][0]]];
                 v2 = tri.verts[tri.indexes[i + edgeVerts[nums[j]][1]]];
 
-                mid[j] = new idVec3(
+                mid[j].oSet(new idVec3(
                         0.5f * (v1.xyz.oGet(0) + v2.xyz.oGet(0)),
                         0.5f * (v1.xyz.oGet(1) + v2.xyz.oGet(1)),
-                        0.5f * (v1.xyz.oGet(2) + v2.xyz.oGet(2)));
+                        0.5f * (v1.xyz.oGet(2) + v2.xyz.oGet(2))));
             }
 
             // find the vector of the major axis
-            major = mid[1].oMinus(mid[0]);
+            major.oSet(mid[1].oMinus(mid[0]));
 
             // re-project the points
             for (j = 0; j < 2; j++) {
@@ -444,7 +444,7 @@ public class tr_deform {
                 l = 0.5f * lengths[j];
 
                 // cross this with the view direction to get minor axis
-                idVec3 dir = mid[j].oMinus(localView);
+                final idVec3 dir = new idVec3(mid[j].oMinus(localView));
                 minor.Cross(major, dir);
                 minor.Normalize();
 
@@ -544,7 +544,7 @@ public class tr_deform {
         srfTriangles_s newTri;
         idPlane plane = new idPlane();
         float dot;
-        idVec3 localViewer = new idVec3();
+        final idVec3 localViewer = new idVec3();
         int j;
 
         tri = surf.geo;
@@ -576,14 +576,14 @@ public class tr_deform {
             return;
         }
 
-        idVec3 center;
-        center = tri.verts[0].xyz;
+        final idVec3 center = new idVec3();
+        center.oSet(tri.verts[0].xyz);
         for (j = 1; j < tri.numVerts; j++) {
             center.oPluSet(tri.verts[j].xyz);
         }
         center.oMulSet(1.0f / tri.numVerts);
 
-        idVec3 dir = localViewer.oMinus(center);
+        final idVec3 dir = new idVec3(localViewer.oMinus(center));
         dir.Normalize();
 
         dot = dir.oMultiply(plane.Normal());
@@ -600,7 +600,7 @@ public class tr_deform {
         }
 
         float spread = surf.shaderRegisters[surf.material.GetDeformRegister(0)] * RenderSystem_init.r_flareSize.GetFloat();
-        idVec3[][] edgeDir = new idVec3[4][3];
+        final idVec3[][] edgeDir = idVec3.generateArray(4, 3);
         int[]/*glIndex_t*/ indexes = new int[MAX_TRI_WINDING_INDEXES];
         int numIndexes = R_WindingFromTriangles(tri, indexes);
 
@@ -614,24 +614,21 @@ public class tr_deform {
             ac[i].xyz.oSet(tri.verts[indexes[i]].xyz);
             ac[i].st.oSet(0, ac[i].st.oSet(1, 0.5f));
 
-            idVec3 toEye = tri.verts[indexes[i]].xyz.oMinus(localViewer);
+            final idVec3 toEye = new idVec3(tri.verts[indexes[i]].xyz.oMinus(localViewer));
             toEye.Normalize();
 
-            idVec3 d1 = tri.verts[indexes[(i + 1) % 4]].xyz.oMinus(localViewer);
+            final idVec3 d1 = new idVec3(tri.verts[indexes[(i + 1) % 4]].xyz.oMinus(localViewer));
             d1.Normalize();
-            edgeDir[i][1] = new idVec3();
             edgeDir[i][1].Cross(toEye, d1);
             edgeDir[i][1].Normalize();
-            edgeDir[i][1] = getVec3_origin().oMinus(edgeDir[i][1]);
+            edgeDir[i][1].oSet(getVec3_origin().oMinus(edgeDir[i][1]));
 
-            idVec3 d2 = tri.verts[indexes[(i + 3) % 4]].xyz.oMinus(localViewer);
+            final idVec3 d2 = new idVec3(tri.verts[indexes[(i + 3) % 4]].xyz.oMinus(localViewer));
             d2.Normalize();
-            edgeDir[i][0] = new idVec3();
             edgeDir[i][0].Cross(toEye, d2);
             edgeDir[i][0].Normalize();
 
-            edgeDir[i][2] = new idVec3();
-            edgeDir[i][2] = edgeDir[i][0].oPlus(edgeDir[i][1]);
+            edgeDir[i][2].oSet(edgeDir[i][0].oPlus(edgeDir[i][1]));
             edgeDir[i][2].Normalize();
         }
 
@@ -685,7 +682,7 @@ public class tr_deform {
         ac[15].st.oSet(1, 0.5f);
 
         for (i = 4; i < 16; i++) {
-            dir = ac[i].xyz.oMinus(localViewer);
+            dir.oSet(ac[i].xyz.oMinus(localViewer));
             float len = dir.Normalize();
 
             float ang = dir.oMultiply(plane.Normal());
@@ -944,13 +941,13 @@ public class tr_deform {
 
             // the closest single triangle point will be the eye origin
             // and the next-to-farthest will be the focal point
-            idVec3 origin, focus;
+            final idVec3 origin = new idVec3(), focus = new idVec3();
             int originIsland = 0;
             float[] dist = new float[MAX_EYEBALL_ISLANDS];
             int[] sortOrder = new int[MAX_EYEBALL_ISLANDS];
 
             for (j = 0; j < numIslands; j++) {
-                idVec3 dir = islands[j].mid.oMinus(island.mid);
+                final idVec3 dir = new idVec3(islands[j].mid.oMinus(island.mid));
                 dist[j] = dir.Length();
                 sortOrder[j] = j;
                 for (k = j - 1; k >= 0; k--) {
@@ -966,25 +963,25 @@ public class tr_deform {
             }
 
             originIsland = sortOrder[1];
-            origin = islands[originIsland].mid;
+            origin.oSet(islands[originIsland].mid);
 
-            focus = islands[sortOrder[2]].mid;
+            focus.oSet(islands[sortOrder[2]].mid);
 
             // determine the projection directions based on the origin island triangle
-            idVec3 dir = focus.oMinus(origin);
+            final idVec3 dir = new idVec3(focus.oMinus(origin));
             dir.Normalize();
 
-            final idVec3 p1 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 0]].xyz;
-            final idVec3 p2 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 1]].xyz;
-            final idVec3 p3 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 2]].xyz;
+            final idVec3 p1 = new idVec3(tri.verts[tri.indexes[islands[originIsland].tris[0] + 0]].xyz);
+            final idVec3 p2 = new idVec3(tri.verts[tri.indexes[islands[originIsland].tris[0] + 1]].xyz);
+            final idVec3 p3 = new idVec3(tri.verts[tri.indexes[islands[originIsland].tris[0] + 2]].xyz);
 
-            idVec3 v1 = p2.oMinus(p1);
+            final idVec3 v1 = new idVec3(p2.oMinus(p1));
             v1.Normalize();
-            idVec3 v2 = p3.oMinus(p1);
+            final idVec3 v2 = new idVec3(p3.oMinus(p1));
             v2.Normalize();
 
             // texVec[0] will be the normal to the origin triangle
-            idVec3[] texVec = {new idVec3(), new idVec3()};
+            final idVec3[] texVec = idVec3.generateArray(2);
 
             texVec[0].Cross(v1, v2);
 
@@ -1005,7 +1002,7 @@ public class tr_deform {
 
                     ac[index].xyz.oSet(tri.verts[index].xyz);
 
-                    idVec3 local = tri.verts[index].xyz.oMinus(origin);
+                    final idVec3 local = new idVec3(tri.verts[index].xyz.oMinus(origin));
 
                     ac[index].st.oSet(0, 0.5f + local.oMultiply(texVec[0]));
                     ac[index].st.oSet(1, 0.5f + local.oMultiply(texVec[1]));
@@ -1275,7 +1272,7 @@ public class tr_deform {
     static class eyeIsland_t {
 
         idBounds bounds;
-        idVec3 mid;
+        final idVec3 mid;
         int numTris;
         int[] tris = new int[MAX_EYEBALL_TRIS];
 

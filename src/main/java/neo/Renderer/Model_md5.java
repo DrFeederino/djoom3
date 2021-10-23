@@ -58,7 +58,7 @@ public class Model_md5 {
 
         int joint;
         float jointWeight;
-        idVec3 offset;
+        final idVec3 offset;
         int vert;
 
         public vertexWeight_s() {
@@ -812,7 +812,7 @@ public class Model_md5 {
         private void DrawJoints(final renderEntity_s ent, final viewDef_s view) {
             int i;
             int num;
-            idVec3 pos;
+            final idVec3 pos = new idVec3();
             idJointMat joint;
             idMD5Joint md5Joint;
             int parentNum;
@@ -821,7 +821,7 @@ public class Model_md5 {
             joint = ent.joints[0];
             md5Joint = joints.oGet(0);
             for (i = 0; i < num; joint = ent.joints[++i], md5Joint = joints.oGet(i)) {
-                pos = ent.origin.oPlus(joint.ToVec3().oMultiply(ent.axis));
+                pos.oSet(ent.origin.oPlus(joint.ToVec3().oMultiply(ent.axis)));
                 if (md5Joint.parent != null) {
 //                    parentNum = indexOf(md5Joint.parent, joints.Ptr());
                     parentNum = joints.IndexOf(md5Joint.parent);
@@ -839,14 +839,14 @@ public class Model_md5 {
             session.rw.DebugBounds(colorMagenta, bounds, ent.origin);
 
             if ((RenderSystem_init.r_jointNameScale.GetFloat() != 0.0f) && (bounds.Expand(128.0f).ContainsPoint(view.renderView.vieworg.oMinus(ent.origin)))) {
-                idVec3 offset = new idVec3(0, 0, RenderSystem_init.r_jointNameOffset.GetFloat());
+                final idVec3 offset = new idVec3(0, 0, RenderSystem_init.r_jointNameOffset.GetFloat());
                 float scale;
 
                 scale = RenderSystem_init.r_jointNameScale.GetFloat();
                 joint = ent.joints[0];
                 num = ent.numJoints;
                 for (i = 0; i < num; joint = ent.joints[++i]) {
-                    pos = ent.origin.oPlus(joint.ToVec3().oMultiply(ent.axis));
+                    pos.oSet(ent.origin.oPlus(joint.ToVec3().oMultiply(ent.axis)));
                     session.rw.DrawText(joints.oGet(i).name.toString(), pos.oPlus(offset), scale, colorWhite, view.renderView.viewaxis, 1);
                 }
             }

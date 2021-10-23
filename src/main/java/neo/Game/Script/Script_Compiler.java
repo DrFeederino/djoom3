@@ -509,18 +509,21 @@ public class Script_Compiler {
                 return null;
             }
 
-            idVec3 vec_c = null;//*reinterpret_cast<idVec3 *>( &c.vector[ 0 ] );
+            final idVec3 vec_c = new idVec3();//*reinterpret_cast<idVec3 *>( &c.vector[ 0 ] );
             float float_c = 0;
             int int_c = 0;
 
-            final idVec3 vectorPtr = var_a != null ? var_a.value.getVectorPtr() : null;
+            final idVec3 vectorPtr = new idVec3();
+            if (var_a != null) {
+                vectorPtr.oSet(var_a.value.getVectorPtr());
+            }
             switch (indexOf(op, opcodes)) {
                 case OP_ADD_F:
                     float_c = var_a.value.getFloatPtr() + var_b.value.getFloatPtr();
                     type = type_float;
                     break;
                 case OP_ADD_V:
-                    vec_c = vectorPtr.oPlus(var_b.value.getVectorPtr());
+                    vec_c.oSet(vectorPtr.oPlus(var_b.value.getVectorPtr()));
                     type = type_vector;
                     break;
                 case OP_SUB_F:
@@ -528,7 +531,7 @@ public class Script_Compiler {
                     type = type_float;
                     break;
                 case OP_SUB_V:
-                    vec_c = vectorPtr.oMinus(var_b.value.getVectorPtr());
+                    vec_c.oSet(vectorPtr.oMinus(var_b.value.getVectorPtr()));
                     type = type_vector;
                     break;
                 case OP_MUL_F:
@@ -540,11 +543,11 @@ public class Script_Compiler {
                     type = type_float;
                     break;
                 case OP_MUL_FV:
-                    vec_c = var_b.value.getVectorPtr().oMultiply(var_a.value.getFloatPtr());
+                    vec_c.oSet(var_b.value.getVectorPtr().oMultiply(var_a.value.getFloatPtr()));
                     type = type_vector;
                     break;
                 case OP_MUL_VF:
-                    vec_c = vectorPtr.oMultiply(var_b.value.getFloatPtr());
+                    vec_c.oSet(vectorPtr.oMultiply(var_b.value.getFloatPtr()));
                     type = type_vector;
                     break;
                 case OP_DIV_F:
@@ -606,7 +609,7 @@ public class Script_Compiler {
                     type = type_float;
                     break;
                 case OP_NEG_V:
-                    vec_c = vectorPtr.oNegative();
+                    vec_c.oSet(vectorPtr.oNegative());
                     type = type_vector;
                     break;
                 case OP_INT_F:
@@ -1115,7 +1118,7 @@ public class Script_Compiler {
                         break;
 
                     case ev_vector:
-                        final idVec3 vectorPtr = def.value.getVectorPtr();
+                        final idVec3 vectorPtr = new idVec3(def.value.getVectorPtr());
                         if ((vectorPtr.x == eval.vector[0])
                                 && (vectorPtr.y == eval.vector[1])
                                 && (vectorPtr.z == eval.vector[2])) {

@@ -405,7 +405,7 @@ public class Model_local {
                     // at run time...
                     if (surf.shader.Deform() != DFRM_NONE) {
                         srfTriangles_s tri = surf.geometry;
-                        idVec3 mid = (tri.bounds.oGet(1).oPlus(tri.bounds.oGet(0))).oMultiply(0.5f);
+                        final idVec3 mid = new idVec3((tri.bounds.oGet(1).oPlus(tri.bounds.oGet(0))).oMultiply(0.5f));
                         float radius = (tri.bounds.oGet(0).oMinus(mid)).Length();
                         radius += 20.0f;
 
@@ -1134,7 +1134,7 @@ public class Model_local {
                 } else {
                     float vertexEpsilon = r_slopVertex.GetFloat();
                     float expand = 2 * 32 * vertexEpsilon;
-                    idVec3 mins = new idVec3(), maxs = new idVec3();
+                    final idVec3 mins = new idVec3(), maxs = new idVec3();
 
                     SIMDProcessor.MinMax(mins, maxs, mesh.vertexes, mesh.numVertexes);
                     mins.oMinSet(new idVec3(expand, expand, expand));
@@ -1329,7 +1329,6 @@ public class Model_local {
             int numTVertexes;
             int i, j, k;
             int v, tv;
-            idVec3[] vList;
             int[] vRemap;
             idVec2[] tvList;
             int[] tvRemap;
@@ -1337,7 +1336,7 @@ public class Model_local {
             matchVert_s[] mvHash;        // points inside mvTable for each xyz index
             matchVert_s lastmv;
             matchVert_s mv;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
             int[] mergeTo;
             byte[] color = new byte[4];
             modelSurface_s surf, modelSurf;
@@ -1412,12 +1411,12 @@ public class Model_local {
                 return false;
             }
 
-            vList = new idVec3[layer.point.count];// R_StaticAlloc(layer.point.count /* sizeof( vList[0] ) */);
+            final idVec3[] vList = idVec3.generateArray(layer.point.count);// R_StaticAlloc(layer.point.count /* sizeof( vList[0] ) */);
             for (j = 0; j < layer.point.count; j++) {
-                vList[j] = new idVec3(
+                vList[j].oSet(new idVec3(
                         layer.point.pt[j].pos[0],
                         layer.point.pt[j].pos[2],
-                        layer.point.pt[j].pos[1]);
+                        layer.point.pt[j].pos[1]));
             }
 
             // vertex texture coords
@@ -1466,7 +1465,7 @@ public class Model_local {
             } else {
                 float vertexEpsilon = r_slopVertex.GetFloat();
                 float expand = 2 * 32 * vertexEpsilon;
-                idVec3 mins = new idVec3(), maxs = new idVec3();
+                final idVec3 mins = new idVec3(), maxs = new idVec3();
 
                 SIMDProcessor.MinMax(mins, maxs, vList, layer.point.count);
                 mins.oMinSet(new idVec3(expand, expand, expand));
@@ -1689,7 +1688,7 @@ public class Model_local {
             matchVert_s[] mvHash;        // points inside mvTable for each xyz index
             matchVert_s lastmv;
             matchVert_s mv;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
             float uOffset, vOffset, textureSin, textureCos;
             float uTiling, vTiling;
             int[] mergeTo;
@@ -1805,7 +1804,7 @@ public class Model_local {
                 } else {
                     float vertexEpsilon = r_slopVertex.GetFloat();
                     float expand = 2 * 32 * vertexEpsilon;
-                    idVec3 mins = new idVec3(), maxs = new idVec3();
+                    final idVec3 mins = new idVec3(), maxs = new idVec3();
 
                     SIMDProcessor.MinMax(mins, maxs, mesh.vertexes, mesh.numVertexes);
                     mins.oMinSet(new idVec3(expand, expand, expand));
@@ -1882,7 +1881,7 @@ public class Model_local {
 
                         // we may or may not have normals to compare
                         if (normalsParsed) {
-                            normal = mesh.faces[j].vertexNormals[k];
+                            normal.oSet(mesh.faces[j].vertexNormals[k]);
                         }
 
                         //BSM: Todo: Fix the vertex colors
@@ -2029,7 +2028,7 @@ public class Model_local {
                 mesh.faces = new aseFace_t[mesh.numFaces];// Mem_Alloc(mesh.numFaces /* sizeof( mesh.faces[0] )*/);
 
                 mesh.numVertexes = layer.point.count;
-                mesh.vertexes = new idVec3[mesh.numVertexes];// Mem_Alloc(mesh.numVertexes /* sizeof( mesh.vertexes[0] )*/);
+                mesh.vertexes = idVec3.generateArray(mesh.numVertexes);// Mem_Alloc(mesh.numVertexes /* sizeof( mesh.vertexes[0] )*/);
 
                 // vertex positions
                 if (layer.point.count <= 0) {
@@ -2215,7 +2214,7 @@ public class Model_local {
             final int index;
             byte[] color = new byte[4];
             matchVert_s next;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
             int v, tv;
 
             public matchVert_s(int numVerts) {

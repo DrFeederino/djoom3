@@ -237,7 +237,7 @@ public class tr_subview {
         final idVec3 viewOrigin = new idVec3((drawSurf.geo.bounds.oGet(0).oPlus(drawSurf.geo.bounds.oGet(1))).oMultiply(0.5f));
         viewOrigin.oPluSet(originalPlane.Normal().oMultiply(16));
 
-        parms.initialViewAreaOrigin = R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin);
+        parms.initialViewAreaOrigin.oSet(R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin));
 
         // set the mirror clip plane
         parms.numClipPlanes = 1;

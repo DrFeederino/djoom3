@@ -742,9 +742,6 @@ public class tr_rendertools {
      =====================
      */
     public static void RB_ShowTris(drawSurf_s[] drawSurfs, int numDrawSurfs) {
-//	modelTrace_s mt;
-//	idVec3 end;
-
         if (0 == r_showTris.GetInteger()) {
             return;
         }
@@ -794,15 +791,15 @@ public class tr_rendertools {
      */
     public static void RB_ShowSurfaceInfo(drawSurf_s[] drawSurfs, int numDrawSurfs) {
         modelTrace_s mt = new modelTrace_s();
-        idVec3 start, end;
+        final idVec3 start = new idVec3(), end = new idVec3();
 
         if (!r_showSurfaceInfo.GetBool()) {
             return;
         }
 
         // start far enough away that we don't hit the player model
-        start = tr.primaryView.renderView.vieworg.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(16));
-        end = start.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(1000f));
+        start.oSet(tr.primaryView.renderView.vieworg.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(16)));
+        end.oSet(start.oPlus(tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(1000f)));
 //	end = start + tr.primaryView.renderView.viewaxis[0] * 1000.0f;
         if (!tr.primaryWorld.Trace(mt, start, end, 0.0f, false)) {
             return;
@@ -820,7 +817,7 @@ public class tr_rendertools {
         qglPolygonOffset(-1, -2);
         qglEnable(GL_POLYGON_OFFSET_LINE);
 
-        idVec3[] trans = new idVec3[3];
+        final idVec3[] trans = idVec3.generateArray(3);
         float[] matrix = new float[16];
 
         // transform the object verts into global space
@@ -1146,11 +1143,11 @@ public class tr_rendertools {
     public static void RB_ShowNormals(drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
-        idVec3 end = new idVec3();
+        final idVec3 end = new idVec3();
         srfTriangles_s tri;
         float size;
         boolean showNumbers;
-        idVec3 pos;
+        final idVec3 pos = new idVec3();
 
         if (r_showNormals.GetFloat() == 0.0f) {
             return;
@@ -1214,13 +1211,13 @@ public class tr_rendertools {
                     continue;
                 }
                 for (j = 0; j < tri.numVerts; j++) {
-                    pos = R_LocalPointToGlobal(drawSurf.space.modelMatrix, tri.verts[j].xyz.oPlus(tri.verts[j].tangents[0].oPlus(tri.verts[j].normal.oMultiply(0.2f))));
+                    pos.oSet(R_LocalPointToGlobal(drawSurf.space.modelMatrix, tri.verts[j].xyz.oPlus(tri.verts[j].tangents[0].oPlus(tri.verts[j].normal.oMultiply(0.2f)))));
                     RB_DrawText(va("%d", j), pos, 0.01f, colorWhite, backEnd.viewDef.renderView.viewaxis, 1);
                 }
 
                 for (j = 0; j < tri.numIndexes; j += 3) {
-                    pos = R_LocalPointToGlobal(drawSurf.space.modelMatrix,
-                            (tri.verts[tri.indexes[j + 0]].xyz.oPlus(tri.verts[tri.indexes[j + 1]].xyz.oPlus(tri.verts[tri.indexes[j + 2]].xyz))).oMultiply(1.0f / 3.0f).oPlus(tri.verts[tri.indexes[j + 0]].normal.oMultiply(0.2f)));
+                    pos.oSet(R_LocalPointToGlobal(drawSurf.space.modelMatrix,
+                            (tri.verts[tri.indexes[j + 0]].xyz.oPlus(tri.verts[tri.indexes[j + 1]].xyz.oPlus(tri.verts[tri.indexes[j + 2]].xyz))).oMultiply(1.0f / 3.0f).oPlus(tri.verts[tri.indexes[j + 0]].normal.oMultiply(0.2f))));
                     RB_DrawText(va("%d", j / 3), pos, 0.01f, colorCyan, backEnd.viewDef.renderView.viewaxis, 1);
                 }
             }
@@ -1240,7 +1237,7 @@ public class tr_rendertools {
     public static void RB_AltShowNormals(drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j, k;
         drawSurf_s drawSurf;
-        idVec3 end = new idVec3();
+        final idVec3 end = new idVec3();
         srfTriangles_s tri;
 
         if (r_showNormals.GetFloat() == 0.0f) {
@@ -1263,20 +1260,20 @@ public class tr_rendertools {
             qglBegin(GL_LINES);
             for (j = 0; j < tri.numIndexes; j += 3) {
                 final idDrawVert[] v = new idDrawVert[3];
-                idVec3 mid;
+                final idVec3 mid = new idVec3();
 
                 v[0] = tri.verts[tri.indexes[j + 0]];
                 v[1] = tri.verts[tri.indexes[j + 1]];
                 v[2] = tri.verts[tri.indexes[j + 2]];
 
                 // make the midpoint slightly above the triangle
-                mid = (v[0].xyz.oPlus(v[1].xyz).oPlus(v[2].xyz)).oMultiply(1.0f / 3.0f);
+                mid.oSet((v[0].xyz.oPlus(v[1].xyz).oPlus(v[2].xyz)).oMultiply(1.0f / 3.0f));
                 mid.oPluSet(tri.facePlanes[j / 3].Normal().oMultiply(0.1f));
 
                 for (k = 0; k < 3; k++) {
-                    idVec3 pos;
+                    final idVec3 pos = new idVec3();
 
-                    pos = (mid.oPlus(v[k].xyz.oMultiply(3f))).oMultiply(0.25f);
+                    pos.oSet((mid.oPlus(v[k].xyz.oMultiply(3f))).oMultiply(0.25f));
 
                     qglColor3f(0, 0, 1);
                     qglVertex3fv(pos.ToFloatPtr());
@@ -1347,17 +1344,18 @@ public class tr_rendertools {
             for (j = 0; j < tri.numIndexes; j += 3) {
                 final idDrawVert a, b, c;
                 float area, inva;
-                idVec3 temp = new idVec3();
+                final idVec3 temp = new idVec3();
                 float[] d0 = new float[5], d1 = new float[5];
-                idVec3 mid;
-                idVec3[] tangents = {new idVec3(), new idVec3()};
+                final idVec3 mid = new idVec3();
+                final idVec3[] tangents = idVec3.generateArray(2);
+                ;
 
                 a = tri.verts[tri.indexes[j + 0]];
                 b = tri.verts[tri.indexes[j + 1]];
                 c = tri.verts[tri.indexes[j + 2]];
 
                 // make the midpoint slightly above the triangle
-                mid = (a.xyz.oPlus(b.xyz).oPlus(c.xyz)).oMultiply(1.0f / 3.0f);
+                mid.oSet((a.xyz.oPlus(b.xyz).oPlus(c.xyz)).oMultiply(1.0f / 3.0f));
                 mid.oPluSet(tri.facePlanes[j / 3].Normal().oMultiply(0.1f));
 
                 // calculate the texture vectors
@@ -1387,8 +1385,8 @@ public class tr_rendertools {
                 tangents[1].oSet(temp);
 
                 // draw the tangents
-                tangents[0] = mid.oPlus(tangents[0].oMultiply(r_showTextureVectors.GetFloat()));
-                tangents[1] = mid.oPlus(tangents[1].oMultiply(r_showTextureVectors.GetFloat()));
+                tangents[0].oSet(mid.oPlus(tangents[0].oMultiply(r_showTextureVectors.GetFloat())));
+                tangents[1].oSet(mid.oPlus(tangents[1].oMultiply(r_showTextureVectors.GetFloat())));
 
                 qglColor3f(1, 0, 0);
                 qglVertex3fv(mid.ToFloatPtr());
@@ -1445,14 +1443,14 @@ public class tr_rendertools {
 
             for (j = 0; j < tri.numVerts; j++) {
                 final idDrawVert a, b, c;
-                idVec3 mid;
+                final idVec3 mid = new idVec3();
 
                 // find the midpoint of the dominant tri
                 a = tri.verts[j];
                 b = tri.verts[tri.dominantTris[j].v2];
                 c = tri.verts[tri.dominantTris[j].v3];
 
-                mid = (a.xyz.oPlus(b.xyz.oPlus(c.xyz))).oMultiply(1.0f / 3.0f);
+                mid.oSet((a.xyz.oPlus(b.xyz.oPlus(c.xyz))).oMultiply(1.0f / 3.0f));
 
                 qglVertex3fv(mid.ToFloatPtr());
                 qglVertex3fv(a.xyz.ToFloatPtr());
@@ -1706,7 +1704,7 @@ public class tr_rendertools {
         if (rb_numDebugText < MAX_DEBUG_TEXT) {
             debugText = rb_debugText[rb_numDebugText++];
             debugText.text.oSet(text);//			= text;
-            debugText.origin = origin;
+            debugText.origin.oSet(origin);
             debugText.scale = scale;
             debugText.color = color;
             debugText.viewAxis = viewAxis;
@@ -1768,7 +1766,7 @@ public class tr_rendertools {
     public static void RB_DrawText(final String text, final idVec3 origin, float scale, final idVec4 color, final idMat3 viewAxis, final int align) {
         int i, j, len, num, index, charIndex, line;
         float textLen = 0, spacing;
-        idVec3 org = new idVec3(), p1, p2;
+        final idVec3 org = new idVec3(), p1 = new idVec3(), p2 = new idVec3();
 
         if (text != null && !text.isEmpty()) {
             qglBegin(GL_LINES);
@@ -1784,7 +1782,7 @@ public class tr_rendertools {
             for (i = 0; i < len; i++) {
 
                 if (i == 0 || text.charAt(i) == '\n') {
-                    org = origin.oMinus(viewAxis.oGet(2)).oMultiply(line * 36.0f * scale);
+                    org.oSet(origin.oMinus(viewAxis.oGet(2)).oMultiply(line * 36.0f * scale));
                     if (align != 0) {
                         for (j = 1; i + j <= len; j++) {
                             if (i + j == len || text.charAt(i + j) == '\n') {
@@ -1816,14 +1814,14 @@ public class tr_rendertools {
                         index++;
                         continue;
                     }
-                    p1 = org.oPlus(viewAxis.oGet(1).oNegative().oMultiply(scale * simplex[charIndex][index])).oPlus(viewAxis.oGet(2).oMultiply(scale * simplex[charIndex][index + 1]));
+                    p1.oSet(org.oPlus(viewAxis.oGet(1).oNegative().oMultiply(scale * simplex[charIndex][index])).oPlus(viewAxis.oGet(2).oMultiply(scale * simplex[charIndex][index + 1])));
                     index += 2;
                     if (simplex[charIndex][index] < 0) {
                         index++;
                         continue;
                     }
 //				p2 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index+1] * viewAxis[2];
-                    p2 = org.oPlus(viewAxis.oGet(1).oNegative().oMultiply(scale * simplex[charIndex][index])).oPlus(viewAxis.oGet(2).oMultiply(scale * simplex[charIndex][index + 1]));
+                    p2.oSet(org.oPlus(viewAxis.oGet(1).oNegative().oMultiply(scale * simplex[charIndex][index])).oPlus(viewAxis.oGet(2).oMultiply(scale * simplex[charIndex][index + 1])));
 
                     qglVertex3fv(p1.ToFloatPtr());
                     qglVertex3fv(p2.ToFloatPtr());
@@ -1935,8 +1933,8 @@ public class tr_rendertools {
         if (rb_numDebugLines < MAX_DEBUG_LINES) {
             line = rb_debugLines[rb_numDebugLines++] = new debugLine_s();
             line.rgb = new idVec4(color);
-            line.start = new idVec3(start);
-            line.end = new idVec3(end);
+            line.start.oSet(start);
+            line.end.oSet(end);
             line.depthTest = depthTest;
             line.lifeTime = rb_debugLineTime + lifeTime;
         }
@@ -1980,7 +1978,7 @@ public class tr_rendertools {
         qglBegin(GL_LINES);
 
         line = rb_debugLines[line_index = 0];
-        for (i = 0; i < rb_numDebugLines; i++, line = rb_debugLines[++line_index]) {
+        for (i = 0; i < rb_numDebugLines; i++, line = rb_debugLines[line_index++]) {
             if (!line.depthTest) {
                 qglColor3fv(line.rgb.ToFloatPtr());
                 qglVertex3fv(line.start.ToFloatPtr());
@@ -1996,7 +1994,7 @@ public class tr_rendertools {
         qglBegin(GL_LINES);
 
         line = rb_debugLines[line_index = 0];
-        for (i = 0; i < rb_numDebugLines; i++, line = rb_debugLines[++line_index]) {
+        for (i = 0; i < rb_numDebugLines; i++, line = rb_debugLines[line_index++]) {
             if (line.depthTest) {
                 qglColor4fv(line.rgb.ToFloatPtr());
                 qglVertex3fv(line.start.ToFloatPtr());
@@ -2386,10 +2384,10 @@ public class tr_rendertools {
     static class debugLine_s {
 
         boolean depthTest;
-        idVec3 end;
+        final idVec3 end = new idVec3();
         int lifeTime;
         idVec4 rgb;
-        idVec3 start;
+        final idVec3 start = new idVec3();
     }
 
     public static class debugText_s {
@@ -2398,7 +2396,7 @@ public class tr_rendertools {
         idVec4 color;
         boolean depthTest;
         int lifeTime;
-        idVec3 origin;
+        final idVec3 origin;
         float scale;
         idStr text;
         idMat3 viewAxis;

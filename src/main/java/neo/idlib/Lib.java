@@ -152,7 +152,7 @@ public class Lib {
      UnpackColor
      ================
      */
-    public static void UnpackColor(final long color, idVec3 unpackedColor) {
+    public static void UnpackColor(final long color, final idVec3 unpackedColor) {
         unpackedColor.Set(
                 ((color >> 0) & 255) * (1.0f / 255.0f),
                 ((color >> 8) & 255) * (1.0f / 255.0f),
@@ -246,8 +246,8 @@ public class Lib {
 
     public static void LittleRevBytes(idBounds bounds) {
         if (SWAP_TEST) {
-            final idVec3 a = bounds.oGet(0);
-            final idVec3 b = bounds.oGet(1);
+            final idVec3 a = new idVec3(bounds.oGet(0));
+            final idVec3 b = new idVec3(bounds.oGet(1));
             bounds.oSet(0, b);
             bounds.oSet(1, a);
         }

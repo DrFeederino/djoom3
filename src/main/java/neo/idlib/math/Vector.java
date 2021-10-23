@@ -569,11 +569,28 @@ public class Vector {
         }
 
         public static idVec3[] generateArray(final int length) {
-            return Stream.
-                    generate(idVec3::new).
-                    limit(length).
-                    toArray(idVec3[]::new);
+            return Stream
+                    .generate(idVec3::new)
+                    .limit(length)
+                    .toArray(idVec3[]::new);
         }
+
+        public static idVec3[][] generateArray(final int firstDimensionSize, final int secondDimensionSize) {
+            idVec3[][] out = new idVec3[firstDimensionSize][secondDimensionSize];
+            for (int i = 0; i < firstDimensionSize; i++) {
+                out[i] = idVec3.generateArray(secondDimensionSize);
+            }
+            return out;
+        }
+
+        public static idVec3[] copyVec(final idVec3[] in) {
+            idVec3[] out = idVec3.generateArray(in.length);
+            for (int i = 0; i < out.length; i++) {
+                out[i].oSet(in[i]);
+            }
+            return out;
+        }
+
 
         public static ByteBuffer toByteBuffer(idVec3[] vecs) {
             ByteBuffer data = BufferUtils.createByteBuffer(idVec3.BYTES * vecs.length);

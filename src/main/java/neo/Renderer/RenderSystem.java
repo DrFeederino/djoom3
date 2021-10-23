@@ -3,7 +3,6 @@ package neo.Renderer;
 import neo.Renderer.Material.idMaterial;
 import neo.Renderer.RenderWorld.idRenderWorld;
 import neo.Renderer.RenderWorld.renderView_s;
-import neo.Renderer.tr_local.*;
 import neo.TempDump.CPP_class.Char;
 import neo.TempDump.CPP_class.Pointer;
 import neo.framework.Common.MemInfo_t;
@@ -518,7 +517,7 @@ public class RenderSystem {
 
         public abstract void DrawStretchTri(idVec2 p1, idVec2 p2, idVec2 p3, idVec2 t1, idVec2 t2, idVec2 t3, final idMaterial material);
 
-        public abstract void GlobalToNormalizedDeviceCoordinates(final idVec3 global, idVec3 ndc);
+        public abstract void GlobalToNormalizedDeviceCoordinates(final idVec3 global, final idVec3 ndc);
 
         public abstract void GetGLSettings(int[] width, int[] height);
 

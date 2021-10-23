@@ -4,7 +4,6 @@ import neo.framework.File_h.idFile;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
 import neo.idlib.Text.Str.idStr;
-import neo.idlib.Text.Token.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Quat.idCQuat;
@@ -898,7 +897,7 @@ public class Lexer {
             return token.GetFloatValue();
         }
 
-        public boolean Parse1DMatrix(int x, idVec v) throws idException {
+        public boolean Parse1DMatrix(int x, final idVec v) throws idException {
             float[] m = new float[x];
             boolean result = Parse1DMatrix(x, m);
             for (int i = 0; i < x; i++) {
@@ -967,7 +966,7 @@ public class Lexer {
             return (this.ExpectTokenString(")"));
         }
 
-        public boolean Parse2DMatrix(int y, int x, idVec3[] m) throws idException {
+        public boolean Parse2DMatrix(int y, int x, final idVec3[] m) throws idException {
             if (!this.ExpectTokenString("(")) {
                 return false;
             }

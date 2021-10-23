@@ -129,8 +129,8 @@ public class Model_sprite {
             final byte blue = (byte) idMath.FtoiFast(renderEntity.shaderParms[SHADERPARM_BLUE] * 255.0f);
             final byte alpha = (byte) idMath.FtoiFast(renderEntity.shaderParms[SHADERPARM_ALPHA] * 255.0f);
 
-            idVec3 right = new idVec3(0.0f, renderEntity.shaderParms[SHADERPARM_SPRITE_WIDTH] * 0.5f, 0.0f);
-            idVec3 up = new idVec3(0.0f, 0.0f, renderEntity.shaderParms[SHADERPARM_SPRITE_HEIGHT] * 0.5f);
+            final idVec3 right = new idVec3(0.0f, renderEntity.shaderParms[SHADERPARM_SPRITE_WIDTH] * 0.5f, 0.0f);
+            final idVec3 up = new idVec3(0.0f, 0.0f, renderEntity.shaderParms[SHADERPARM_SPRITE_HEIGHT] * 0.5f);
 
             tri.verts[0].xyz.oSet(up.oPlus(right));
             tri.verts[0].color[0] = red;

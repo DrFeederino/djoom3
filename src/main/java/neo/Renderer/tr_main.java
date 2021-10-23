@@ -393,7 +393,7 @@ public class tr_main {
 
     // FIXME: these assume no skewing or scaling transforms
     public static idVec3 R_LocalPointToGlobal(final float[] modelMatrix/*[16]*/, final idVec3 in) {
-        idVec3 out;
+        final idVec3 out = new idVec3();
 
 // if (MACOS_X && __i386__){
         // __m128 m0, m1, m2, m3;
@@ -422,11 +422,11 @@ public class tr_main {
         // _mm_store_ss(&out[2], m2);
 // }else
         {
-            out = new idVec3(
+            out.oSet(new idVec3(
                     (in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[8] + modelMatrix[12]),
                     (in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[9] + modelMatrix[13]),
                     (in.oGet(0) * modelMatrix[2] + in.oGet(1) * modelMatrix[6] + in.oGet(2) * modelMatrix[10] + modelMatrix[14])
-            );
+            ));
         }
         return out;
     }
@@ -468,13 +468,13 @@ public class tr_main {
         out.put(2, DotProduct(temp, Arrays.copyOfRange(modelMatrix, 8, 12)));
     }
 
-    public static void R_LocalVectorToGlobal(final float[] modelMatrix/*[16]*/, final idVec3 in, idVec3 out) {
+    public static void R_LocalVectorToGlobal(final float[] modelMatrix/*[16]*/, final idVec3 in, final idVec3 out) {
         out.oSet(0, in.oGet(0) * modelMatrix[0] + in.oGet(1) * modelMatrix[4] + in.oGet(2) * modelMatrix[8]);
         out.oSet(1, in.oGet(0) * modelMatrix[1] + in.oGet(1) * modelMatrix[5] + in.oGet(2) * modelMatrix[9]);
         out.oSet(2, in.oGet(0) * modelMatrix[2] + in.oGet(1) * modelMatrix[6] + in.oGet(2) * modelMatrix[10]);
     }
 
-    public static void R_GlobalVectorToLocal(final float[] modelMatrix/*[16]*/, final idVec3 in, idVec3 out) {
+    public static void R_GlobalVectorToLocal(final float[] modelMatrix/*[16]*/, final idVec3 in, final idVec3 out) {
         out.oSet(0, DotProduct(in.ToFloatPtr(), modelMatrix));
         out.oSet(1, DotProduct(in.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)));
         out.oSet(2, DotProduct(in.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)));
@@ -523,7 +523,7 @@ public class tr_main {
     public static boolean R_RadiusCullLocalBox(final idBounds bounds, final float[] modelMatrix/*[16]*/, int numPlanes, final idPlane[] planes) {
         int i;
         float d;
-        idVec3 worldOrigin;
+        final idVec3 worldOrigin = new idVec3();
         float worldRadius;
         idPlane frust;
 
@@ -532,9 +532,9 @@ public class tr_main {
         }
 
         // transform the surface bounds into world space
-        idVec3 localOrigin = (bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f);
+        final idVec3 localOrigin = new idVec3((bounds.oGet(0).oPlus(bounds.oGet(1))).oMultiply(0.5f));
 
-        worldOrigin = R_LocalPointToGlobal(modelMatrix, localOrigin);
+        worldOrigin.oSet(R_LocalPointToGlobal(modelMatrix, localOrigin));
 
         worldRadius = (bounds.oGet(0).oMinus(localOrigin)).Length();    // FIXME: won't be correct for scaled objects
 
@@ -553,7 +553,7 @@ public class tr_main {
         int i, j;
         idVec3[] transformed = idVec3.generateArray(8);
         float[] dists = new float[8];
-        idVec3 v = new idVec3();
+        final idVec3 v = new idVec3();
         idPlane frust;
 
         DBG_R_CornerCullLocalBox++;
@@ -569,7 +569,7 @@ public class tr_main {
             v.oSet(1, bounds.oGet((i >> 1) & 1, 1));
             v.oSet(2, bounds.oGet((i >> 2) & 1, 2));
 
-            transformed[i] = R_LocalPointToGlobal(modelMatrix, v);
+            transformed[i].oSet(R_LocalPointToGlobal(modelMatrix, v));
         }
 
         // check against frustum planes
@@ -648,7 +648,7 @@ public class tr_main {
      -1 to 1 range in x, y, and z
      ==========================
      */
-    public static void R_GlobalToNormalizedDeviceCoordinates(final idVec3 global, idVec3 ndc) {
+    public static void R_GlobalToNormalizedDeviceCoordinates(final idVec3 global, final idVec3 ndc) {
         int i;
         idPlane view = new idPlane();
         idPlane clip = new idPlane();
@@ -704,7 +704,7 @@ public class tr_main {
      Clip to normalized device coordinates
      ==========================
      */
-    public static void R_TransformClipToDevice(final idPlane clip, final viewDef_s view, idVec3 normalized) {
+    public static void R_TransformClipToDevice(final idPlane clip, final viewDef_s view, final idVec3 normalized) {
         normalized.oSet(0, clip.oGet(0) / clip.oGet(3));
         normalized.oSet(1, clip.oGet(1) / clip.oGet(3));
         normalized.oSet(2, clip.oGet(2) / clip.oGet(3));
@@ -764,7 +764,7 @@ public class tr_main {
     }
 
     public static void R_SetViewMatrix(viewDef_s viewDef) {
-        idVec3 origin;
+        final idVec3 origin = new idVec3();
         viewEntity_s world;
         float[] viewerMatrix = new float[16];
 
@@ -776,7 +776,7 @@ public class tr_main {
         world.modelMatrix[2 * 4 + 2] = 1;
 
         // transform by the camera placement
-        origin = viewDef.renderView.vieworg;
+        origin.oSet(viewDef.renderView.vieworg);
 
         viewerMatrix[0] = viewDef.renderView.viewaxis.oGet(0, 0);
         viewerMatrix[4] = viewDef.renderView.viewaxis.oGet(0, 1);

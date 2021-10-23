@@ -179,10 +179,10 @@ public class Surface_SweptSpline {
             float xy, xz, zz;
             float x2, y2, z2;
             float a, c, s, x, y, z;
-            idVec3 d, v = new idVec3();
+            final idVec3 d = new idVec3(), v = new idVec3();
             idMat3 axis = new idMat3();
 
-            d = dir;
+            d.oSet(dir);
             d.Normalize();
             v.oSet(d.Cross(previousFrame.oGet(2)));
             v.Normalize();

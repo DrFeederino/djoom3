@@ -39,7 +39,7 @@ public class tr_guisurf {
      the axis will give a 0.0 to 1.0 range in S and T when inside the gui surface
      ================
      */
-    public static void R_SurfaceToTextureAxis(final srfTriangles_s tri, idVec3 origin, idVec3[] axis/*[3]*/) {
+    public static void R_SurfaceToTextureAxis(final srfTriangles_s tri, final idVec3 origin, final idVec3[] axis/*[3]*/) {
         float area, inva;
         float[] d0 = new float[5], d1 = new float[5];
         idDrawVert a, b, c;
@@ -118,8 +118,8 @@ public class tr_guisurf {
      =================
      */
     public static void R_RenderGuiSurf(idUserInterface gui, drawSurf_s drawSurf) {
-        idVec3 origin = new idVec3();
-        idVec3[] axis = {new idVec3(), new idVec3(), new idVec3()};
+        final idVec3 origin = new idVec3();
+        final idVec3[] axis = idVec3.generateArray(3);
 
         // for testing the performance hit
         if (r_skipGuiShaders.GetInteger() == 1) {

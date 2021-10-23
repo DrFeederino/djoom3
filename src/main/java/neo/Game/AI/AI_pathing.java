@@ -302,7 +302,7 @@ public class AI_pathing {
         int numWallEdges;
         CFloat stepHeight = new CFloat(), headHeight = new CFloat(), blockingScale = new CFloat(), min = new CFloat(), max = new CFloat();
         final idVec3 seekDelta = new idVec3(), start = new idVec3(), end = new idVec3(), nextStart = new idVec3(), nextEnd = new idVec3();
-        idVec3[] silVerts = idVec3.generateArray(32);
+        final idVec3[] silVerts = idVec3.generateArray(32);
         idVec2 edgeDir, edgeNormal = new idVec2(), nextEdgeDir,
                 nextEdgeNormal = new idVec2(), lastEdgeNormal = new idVec2();
         idVec2[] expBounds = idVec2.generateArray(2);

@@ -1,7 +1,6 @@
 package neo.Renderer;
 
 import neo.Renderer.Image.textureDepth_t;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Vector.idVec3;
@@ -352,7 +351,7 @@ public class Image_program {
             depth[i] = (byte) ((data.get(i * 4) + data.get(i * 4 + 1) + data.get(i * 4 + 2)) / 3);
         }
 
-        idVec3 dir = new idVec3(), dir2 = new idVec3();
+        final idVec3 dir = new idVec3(), dir2 = new idVec3();
         for (i = 0; i < height; i++) {
             for (j = 0; j < width; j++) {
                 int d1, d2, d3, d4;
@@ -403,7 +402,7 @@ public class Image_program {
     static void R_SmoothNormalMap(ByteBuffer data, int width, int height) {
         byte[] orig;
         int i, j, k, l;
-        idVec3 normal;
+        final idVec3 normal = new idVec3();
         int out;
 
         orig = new byte[width * height * 4];// R_StaticAlloc(width * height * 4);
@@ -412,7 +411,7 @@ public class Image_program {
 
         for (i = 0; i < width; i++) {
             for (j = 0; j < height; j++) {
-                normal = getVec3_origin();
+                normal.oSet(getVec3_origin());
                 for (k = -1; k < 2; k++) {
                     for (l = -1; l < 2; l++) {
                         int in;
@@ -555,7 +554,7 @@ public class Image_program {
         for (i = 0; i < height1; i++) {
             for (j = 0; j < width1; j++) {
                 int d1, d2;
-                idVec3 n = new idVec3();
+                final idVec3 n = new idVec3();
                 float len;
 
                 d1 =/* data1 + */ (i * width1 + j) * 4;

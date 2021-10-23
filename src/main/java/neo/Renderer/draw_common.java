@@ -515,7 +515,7 @@ public class draw_common {
         FloatBuffer parm = BufferUtils.createFloatBuffer(4);
 
         // set eye position in local space
-        R_GlobalPointToLocal(space.modelMatrix, backEnd.viewDef.renderView.vieworg, /*(idVec3 *)*/ parm);
+        R_GlobalPointToLocal(space.modelMatrix, backEnd.viewDef.renderView.vieworg, parm);
         parm.put(3, 1.0f);
         qglProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, 5, parm);
 
@@ -666,7 +666,7 @@ public class draw_common {
                 // megaTextures bind a lot of images and set a lot of parameters
                 if (newStage.megaTexture != null) {
                     newStage.megaTexture.SetMappingForSurface(tri);
-                    idVec3 localViewer = new idVec3();
+                    final idVec3 localViewer = new idVec3();
                     R_GlobalPointToLocal(surf.space.modelMatrix, backEnd.viewDef.renderView.vieworg, localViewer);
                     newStage.megaTexture.BindForViewOrigin(localViewer);
                 }

@@ -58,7 +58,7 @@ public class ModelDecal {
         idMaterial material;
         boolean parallel;
         idBounds projectionBounds;
-        idVec3 projectionOrigin;
+        final idVec3 projectionOrigin = new idVec3();
         int startTime;
         idPlane[] textureAxis = new idPlane[2];
     }
@@ -106,7 +106,7 @@ public class ModelDecal {
 
             assert (material != null);
 
-            info.projectionOrigin = projectionOrigin;
+            info.projectionOrigin.oSet(projectionOrigin);
             info.material = material;
             info.parallel = parallel;
             info.fadeDepth = fadeDepth;
@@ -129,7 +129,7 @@ public class ModelDecal {
             // calculate the world space projection volume bounding planes, positive sides face outside the decal
             if (parallel) {
                 for (int i = 0; i < winding.GetNumPoints(); i++) {
-                    idVec3 edge = winding.oGet((i + 1) % winding.GetNumPoints()).ToVec3().oMinus(winding.oGet(i).ToVec3());
+                    final idVec3 edge = winding.oGet((i + 1) % winding.GetNumPoints()).ToVec3().oMinus(winding.oGet(i).ToVec3());
                     info.boundingPlanes[i].Normal().Cross(windingPlane.Normal(), edge);
                     info.boundingPlanes[i].Normalize();
                     info.boundingPlanes[i].FitThroughPoint(winding.oGet(i).ToVec3());
@@ -151,7 +151,7 @@ public class ModelDecal {
 
             // calculate the texture vectors for the winding
             float len, texArea, inva;
-            idVec3 temp = new idVec3();
+            final idVec3 temp = new idVec3();
             idVec5 d0 = new idVec5(), d1 = new idVec5();
 
             final idVec5 a = winding.oGet(0);
@@ -339,13 +339,13 @@ public class ModelDecal {
                         }
                     } else {
                         for (int j = 0; j < 3; j++) {
-                            idVec3 dir;
+                            final idVec3 dir = new idVec3();
                             CFloat scale = new CFloat();
 
                             fw.oGet(j).oSet(stri.verts[stri.indexes[index + j]].xyz);
-                            dir = fw.oGet(j).ToVec3().oMinus(localInfo.projectionOrigin);
+                            dir.oSet(fw.oGet(j).ToVec3().oMinus(localInfo.projectionOrigin));
                             localInfo.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 1].RayIntersection(fw.oGet(j).ToVec3(), dir, scale);
-                            dir = fw.oGet(j).ToVec3().oPlus(dir.oMultiply(scale.getVal()));
+                            dir.oSet(fw.oGet(j).ToVec3().oPlus(dir.oMultiply(scale.getVal())));
                             fw.oGet(j).s = localInfo.textureAxis[0].Distance(dir);
                             fw.oGet(j).t = localInfo.textureAxis[1].Distance(dir);
                         }

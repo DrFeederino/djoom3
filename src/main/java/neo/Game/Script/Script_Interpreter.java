@@ -1819,7 +1819,7 @@ public class Script_Interpreter {
 
                 case ev_vector:
 //                    if (reg.vectorPtr != null) {
-                    final idVec3 vectorPtr = reg.getVectorPtr();
+                    final idVec3 vectorPtr = new idVec3(reg.getVectorPtr());
                     out.oSet(va("%g,%g,%g", vectorPtr.x, vectorPtr.y, vectorPtr.z));
 //                    } else {
 //                        out.oSet("0,0,0");

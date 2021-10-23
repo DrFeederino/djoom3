@@ -77,14 +77,14 @@ public class Bounds {
         //
         private static int DBG_counter = 0;
         private final int DBG_count = DBG_counter++;
-        private idVec3[] b = {new idVec3(), new idVec3()};
+        private final idVec3[] b = idVec3.generateArray(2);
 
         public idBounds() {
         }
 
         public idBounds(final idVec3 mins, final idVec3 maxs) {
-            b[0] = mins;
-            b[1] = maxs;
+            b[0].oSet(mins);
+            b[1].oSet(maxs);
         }
 
         public idBounds(final idBounds bounds) {
@@ -103,8 +103,8 @@ public class Bounds {
         }
 
         public void set(final float v0, final float v1, final float v2, final float v3, final float v4, final float v5) {
-            b[0] = new idVec3(v0, v1, v2);
-            b[1] = new idVec3(v3, v4, v5);
+            b[0].oSet(new idVec3(v0, v1, v2));
+            b[1].oSet(new idVec3(v3, v4, v5));
         }
 //
 //public	final idVec3 	operator[]( final int index ) ;
@@ -230,8 +230,8 @@ public class Bounds {
 
         // inside out bounds
         public void Clear() {
-            b[0] = new idVec3(idMath.INFINITY, idMath.INFINITY, idMath.INFINITY);
-            b[1] = new idVec3(-idMath.INFINITY, -idMath.INFINITY, -idMath.INFINITY);//TODO:set faster than new objects?
+            b[0].oSet(new idVec3(idMath.INFINITY, idMath.INFINITY, idMath.INFINITY));
+            b[1].oSet(new idVec3(-idMath.INFINITY, -idMath.INFINITY, -idMath.INFINITY));//TODO:set faster than new objects?
         }
 
         // single point at origin
@@ -596,8 +596,8 @@ public class Bounds {
             }
 
             center = origin.oPlus(axis.oMultiply(center));
-            b[0] = center.oMinus(rotatedExtents);
-            b[1] = center.oPlus(rotatedExtents);
+            b[0].oSet(center.oMinus(rotatedExtents));
+            b[1].oSet(center.oPlus(rotatedExtents));
         }
 
         /*
@@ -645,8 +645,8 @@ public class Bounds {
             if (axis.IsRotated()) {
                 FromTransformedBounds(bounds, origin, axis);
             } else {
-                b[0] = bounds.oGet(0).oPlus(origin);
-                b[1] = bounds.oGet(1).oPlus(origin);
+                b[0].oSet(bounds.oGet(0).oPlus(origin));
+                b[1].oSet(bounds.oGet(1).oPlus(origin));
             }
             for (i = 0; i < 3; i++) {
                 if (translation.oGet(i) < 0.0f) {
@@ -693,8 +693,9 @@ public class Bounds {
             idBounds rBounds;
 
             if (Math.abs(rotation.GetAngle()) < 180.0f) {
-
-                this.b = BoundsForPointRotation(axis.oMultiply(bounds.oGet(0)).oPlus(origin), rotation).b;//TODO:check if function output is gargbage collected
+                final idVec3[] rotationPointBounds = BoundsForPointRotation(axis.oMultiply(bounds.oGet(0)).oPlus(origin), rotation).b;
+                this.b[0].oSet(rotationPointBounds[0]);
+                this.b[1].oSet(rotationPointBounds[1]);
                 for (i = 1; i < 8; i++) {
                     point.oSet(0, bounds.oGet((i ^ (i >> 1)) & 1).oGet(0));
                     point.oSet(1, bounds.oGet((i >> 1) & 1).oGet(1));

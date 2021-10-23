@@ -513,16 +513,16 @@ public class Physics_Player {
 
         @Override
         public idVec3 GetLinearVelocity(int id /*= 0*/) {
-            return new idVec3(current.velocity);
+            return current.velocity;
         }
 
         @Override
         public void SetPushed(int deltaTime) {
-            final idVec3 velocity;
+            final idVec3 velocity = new idVec3();
             float d;
 
             // velocity with which the player is pushed
-            velocity = (current.origin.oMinus(saved.origin)).oDivide(deltaTime * idMath.M_MS2SEC);
+            velocity.oSet((current.origin.oMinus(saved.origin)).oDivide(deltaTime * idMath.M_MS2SEC));
 
             // remove any downward push velocity
             d = velocity.oMultiply(gravityNormal);
@@ -687,23 +687,6 @@ public class Physics_Player {
                 }
 
                 current.velocity.oPluSet(wishdir.oMultiply(accelspeed));
-//}else{
-//	// proper way (avoids strafe jump maxspeed bug), but feels bad
-//	idVec3		wishVelocity;
-//	idVec3		pushDir;
-//	float		pushLen;
-//	float		canPush;
-//
-//	wishVelocity = wishdir * wishspeed;
-//	pushDir = wishVelocity - current.velocity;
-//	pushLen = pushDir.Normalize();
-//
-//	canPush = accel * frametime * wishspeed;
-//	if (canPush > pushLen) {
-//		canPush = pushLen;
-//	}
-//
-//	current.velocity += canPush * pushDir;
             }
         }
 

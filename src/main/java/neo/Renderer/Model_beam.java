@@ -115,21 +115,21 @@ public class Model_beam {
                 staticModel.AddSurface(surf);
             }
 
-            idVec3 target = /*reinterpret_cast<const idVec3 *>*/ new idVec3(renderEntity.shaderParms, SHADERPARM_BEAM_END_X);
+            final idVec3 target = new idVec3(renderEntity.shaderParms, SHADERPARM_BEAM_END_X);
 
             // we need the view direction to project the minor axis of the tube
             // as the view changes
-            idVec3 localView = new idVec3(), localTarget = new idVec3();
+            final idVec3 localView = new idVec3(), localTarget = new idVec3();
             float[] modelMatrix = new float[16];
             R_AxisToModelMatrix(renderEntity.axis, renderEntity.origin, modelMatrix);
             R_GlobalPointToLocal(modelMatrix, viewDef.renderView.vieworg, localView);
             R_GlobalPointToLocal(modelMatrix, target, localTarget);
 
-            idVec3 major = localTarget;
-            idVec3 minor = new idVec3();
+            final idVec3 major = new idVec3(localTarget);
+            final idVec3 minor = new idVec3();
 
-            idVec3 mid = localTarget.oMultiply(0.5f);
-            idVec3 dir = mid.oMinus(localView);
+            final idVec3 mid = new idVec3(localTarget.oMultiply(0.5f));
+            final idVec3 dir = new idVec3(mid.oMinus(localView));
             minor.Cross(major, dir);
             minor.Normalize();
             if (renderEntity.shaderParms[SHADERPARM_BEAM_WIDTH] != 0.0f) {
@@ -180,8 +180,8 @@ public class Model_beam {
             if (null == renderEntity) {
                 b.ExpandSelf(8.0f);
             } else {
-                idVec3 target = /* * reinterpret_cast<const idVec3 *>*/ new idVec3(renderEntity.shaderParms, SHADERPARM_BEAM_END_X);
-                idVec3 localTarget = new idVec3();
+                final idVec3 target = new idVec3(renderEntity.shaderParms, SHADERPARM_BEAM_END_X);
+                final idVec3 localTarget = new idVec3();
                 float[] modelMatrix = new float[16];
                 R_AxisToModelMatrix(renderEntity.axis, renderEntity.origin, modelMatrix);
                 R_GlobalPointToLocal(modelMatrix, target, localTarget);

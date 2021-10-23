@@ -227,7 +227,7 @@ public class RenderWorld {
         // axis rotation vectors must be unit length for many
         // R_LocalToGlobal functions to work, so don't scale models!
         // axis vectors are [0] = forward, [1] = left, [2] = up
-        public idVec3 origin;
+        public final idVec3 origin;
         public idMaterial referenceShader;   // used so flares can reference the proper light shader
         public idSoundEmitter referenceSound;    // for shader sound tables, allowing effects to vary with sounds
         //
@@ -303,7 +303,7 @@ public class RenderWorld {
             this.suppressShadowInViewID = shadow.suppressShadowInViewID.getVal();
             this.suppressShadowInLightID = shadow.suppressShadowInLightID.getVal();
             this.allowSurfaceInViewID = shadow.allowSurfaceInViewID.getVal();
-            this.origin = shadow.origin;
+            this.origin.oSet(shadow.origin);
             this.axis = shadow.axis;
             this.customShader = shadow.customShader;
             this.referenceShader = shadow.referenceShader;
@@ -335,7 +335,7 @@ public class RenderWorld {
             this.suppressShadowInViewID = newEntity.suppressShadowInViewID;
             this.suppressShadowInLightID = newEntity.suppressShadowInLightID;
             this.allowSurfaceInViewID = newEntity.allowSurfaceInViewID;
-            this.origin = newEntity.origin;
+            this.origin.oSet(newEntity.origin);
             this.axis = newEntity.axis;
             this.customShader = newEntity.customShader;
             this.referenceShader = newEntity.referenceShader;
@@ -727,12 +727,12 @@ public class RenderWorld {
         public float fraction;      // fraction of trace completed
         public int jointNumber;   // md5 joint nearest to the hit triangle
         public idMaterial material;      // material of hit surface
-        public idVec3 normal;        // hit triangle normal vector in global space
-        public idVec3 point;         // end point of trace in global space
+        public final idVec3 normal = new idVec3();        // hit triangle normal vector in global space
+        public final idVec3 point = new idVec3();         // end point of trace in global space
 
         public void clear() {
-            this.point = new idVec3();
-            this.normal = new idVec3();
+            this.point.Zero();
+            this.normal.Zero();
             this.material = new idMaterial();
             this.entity = new renderEntity_s();
             this.fraction = this.jointNumber = 0;

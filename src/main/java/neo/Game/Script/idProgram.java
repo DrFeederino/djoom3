@@ -1037,7 +1037,7 @@ public final class idProgram {
         returnDef.value.setIntPtr(value);
     }
 
-    public void ReturnVector(idVec3 vec) {
+    public void ReturnVector(final idVec3 vec) {
         returnDef.value.setVectorPtr(vec);
     }
 

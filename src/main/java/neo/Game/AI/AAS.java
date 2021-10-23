@@ -41,13 +41,13 @@ public class AAS {
     static class aasGoal_s {
 
         int areaNum;                 // area the goal is in
-        idVec3 origin;                    // position of goal
+        final idVec3 origin = new idVec3();                    // position of goal
     }
 
     static class aasObstacle_s {
 
-        idBounds absBounds;                // absolute bounds of obstacle
-        idBounds expAbsBounds;          // expanded absolute bounds of obstacle
+        final idBounds absBounds = new idBounds();                // absolute bounds of obstacle
+        final idBounds expAbsBounds = new idBounds();          // expanded absolute bounds of obstacle
     }
 
     public static abstract class idAASCallback {

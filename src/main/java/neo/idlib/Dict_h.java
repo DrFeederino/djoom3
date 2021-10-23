@@ -492,7 +492,7 @@ public class Dict_h {
         }
 
         public idVec3 GetVector(final String key, final String defaultString) throws idException {
-            idVec3 out = new idVec3();
+            final idVec3 out = new idVec3();
             GetVector(key, defaultString, out);
             return out;
         }
@@ -584,7 +584,7 @@ public class Dict_h {
             return found;
         }
 
-        public boolean GetVector(final String key, String defaultString, idVec3 out) throws idException {
+        public boolean GetVector(final String key, String defaultString, final idVec3 out) throws idException {
             boolean found;
             String[] s = {null};
 

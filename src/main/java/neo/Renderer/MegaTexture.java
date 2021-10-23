@@ -4,7 +4,6 @@ import neo.Renderer.Image.GeneratorFunction;
 import neo.Renderer.Image.idImage;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.TempDump.CPP_class.Pointer;
-import neo.framework.CVarSystem.*;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.framework.File_h.idFile;
 import neo.idlib.CmdArgs.idCmdArgs;
@@ -326,7 +325,7 @@ public class MegaTexture {
         //
         private srfTriangles_s currentTriMapping;
         //
-        private idVec3 currentViewOrigin;
+        private final idVec3 currentViewOrigin = new idVec3();
         private idFile fileHandle;
         //
         //
@@ -598,7 +597,7 @@ public class MegaTexture {
             }
 
             for (int i = 0; i < 2; i++) {
-                idVec3 dir = axis[i].xyz.oMinus(origin.xyz);
+                final idVec3 dir = new idVec3(axis[i].xyz.oMinus(origin.xyz));
                 float texLen = axis[i].st.oGet(i) - origin.st.oGet(i);
                 float spaceLen = (axis[i].xyz.oMinus(origin.xyz)).Length();
 
@@ -694,7 +693,7 @@ public class MegaTexture {
                 return;
             }
 
-            currentViewOrigin = viewOrigin;
+            currentViewOrigin.oSet(viewOrigin);
 
             float[] texCenter = new float[2];
 

@@ -411,7 +411,7 @@ public class Push {
          Try to push other entities by moving the given entity.
          ============
          */
-        public float ClipPush(trace_s results, idEntity pusher, final int flags, final idVec3 oldOrigin, final idMat3 oldAxis, idVec3 newOrigin, idMat3 newAxis) {
+        public float ClipPush(trace_s results, idEntity pusher, final int flags, final idVec3 oldOrigin, final idMat3 oldAxis, final idVec3 newOrigin, idMat3 newAxis) {
             final idVec3 translation = new idVec3();
             idRotation rotation;
             float mass;

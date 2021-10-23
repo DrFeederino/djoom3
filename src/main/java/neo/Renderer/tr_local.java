@@ -603,7 +603,7 @@ public class tr_local {
         public srfTriangles_s frustumTris;        // triangulated frustumWindings[]
         public idWinding[] frustumWindings = new idWinding[6];// used for culling
         //
-        public idVec3 globalLightOrigin;        // accounting for lightCenter and parallel
+        public final idVec3 globalLightOrigin;        // accounting for lightCenter and parallel
         public int index;                // in world lightdefs
         public idInteraction lastInteraction;
         //                                                      // interactions if !viewDef->connectedAreas[areaNum]
@@ -817,7 +817,7 @@ public class tr_local {
         public idPlane fogPlane;                // fog plane for backend fog volume rendering
         public srfTriangles_s frustumTris;            // light frustum for backend fog volume rendering
         //
-        public idVec3 globalLightOrigin;            // global light origin used by backend
+        public final idVec3 globalLightOrigin = new idVec3();            // global light origin used by backend
         //
         // back end should NOT reference the lightDef, because it can change when running SMP
         public idRenderLightLocal lightDef;
@@ -915,7 +915,7 @@ public class tr_local {
         public float floatTime;
         public idPlane[] frustum;
         //
-        public idVec3 initialViewAreaOrigin;
+        public final idVec3 initialViewAreaOrigin = new idVec3();
         //
         public boolean isEditor;
         public boolean isMirror;              // the portal is a mirror, invert the face culling
@@ -976,7 +976,7 @@ public class tr_local {
             this.worldSpace = new viewEntity_s(v.worldSpace);
             this.renderWorld = v.renderWorld;
             this.floatTime = v.floatTime;
-            this.initialViewAreaOrigin = new idVec3(v.initialViewAreaOrigin);
+            this.initialViewAreaOrigin.oSet(v.initialViewAreaOrigin);
             this.isSubview = v.isSubview;
             this.isMirror = v.isMirror;
             this.isXraySubview = v.isXraySubview;
@@ -1991,7 +1991,7 @@ public class tr_local {
         }
 
         @Override
-        public void GlobalToNormalizedDeviceCoordinates(idVec3 global, idVec3 ndc) {
+        public void GlobalToNormalizedDeviceCoordinates(final idVec3 global, final idVec3 ndc) {
             R_GlobalToNormalizedDeviceCoordinates(global, ndc);
         }
 
@@ -2628,9 +2628,9 @@ public class tr_local {
 
         final int[] indexes = new int[3];
         float fraction;
-        idVec3 normal;
+        final idVec3 normal = new idVec3();
         // only valid if fraction < 1.0
-        idVec3 point;
+        final idVec3 point = new idVec3();
     }
 
 }
