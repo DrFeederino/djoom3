@@ -33,7 +33,7 @@ public class tr_shadowbounds {
 //int MyArrayVec4::max_size = 0;
 
     public static idVec3 homogeneous_difference(idVec4 a, idVec4 b) {
-        idVec3 v = new idVec3();
+        final idVec3 v = new idVec3();
         v.x = b.x * a.w - a.x * b.w;
         v.y = b.y * a.w - a.y * b.w;
         v.z = b.z * a.w - a.z * b.w;
@@ -62,10 +62,10 @@ public class tr_shadowbounds {
             return v;
         }
 
-        idVec3 vb = homogeneous_difference(a, b);
-        idVec3 vc = homogeneous_difference(a, c);
+        final idVec3 vb = new idVec3(homogeneous_difference(a, b));
+        final idVec3 vc = new idVec3(homogeneous_difference(a, c));
 
-        idVec3 n = vb.Cross(vc);
+        final idVec3 n = new idVec3(vb.Cross(vc));
         n.Normalize();
 
         v.x = n.x;
@@ -116,8 +116,8 @@ public class tr_shadowbounds {
 
         polyhedron p2 = new polyhedron(p);
 
-        final idVec3 min = b.oGet(0);
-        final idVec3 max = b.oGet(1);
+        final idVec3 min = new idVec3(b.oGet(0));
+        final idVec3 max = new idVec3(b.oGet(1));
 
         p2.v.empty();
         p2.v.push_back(new idVec4(min.x, min.y, max.z, 1));
@@ -147,7 +147,7 @@ public class tr_shadowbounds {
 
             int V = ph.v.size();
             for (int j = 0; j < V; j++) {
-                idVec3 proj = homogeneous_difference(light, ph.v.oGet(j));
+                final idVec3 proj = new idVec3(homogeneous_difference(light, ph.v.oGet(j)));
                 ph.v.push_back(new idVec4(proj.x, proj.y, proj.z, 0));
             }
 
@@ -198,7 +198,7 @@ public class tr_shadowbounds {
         ph2.v = oc.v;
         int V = ph2.v.size();
         for (int j = 0; j < V; j++) {
-            idVec3 proj = homogeneous_difference(light, ph2.v.oGet(j));
+            final idVec3 proj = new idVec3(homogeneous_difference(light, ph2.v.oGet(j)));
             ph2.v.push_back(new idVec4(proj.x, proj.y, proj.z, 0));
         }
 
@@ -393,7 +393,7 @@ public class tr_shadowbounds {
                 return lightDef.viewLight.scissorRect;
             }
 
-            idVec3 rv = new idVec3(v.x, v.y, v.z);
+            final idVec3 rv = new idVec3(v.x, v.y, v.z);
             rv.oDivSet(v.w);
 
             outbounds.AddPoint(rv);

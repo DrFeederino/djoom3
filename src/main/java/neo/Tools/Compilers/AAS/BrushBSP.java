@@ -324,11 +324,11 @@ public class BrushBSP {
             int s, n;
             float d;
             idBrushBSPPortal p;
-            idVec3 center;
+            final idVec3 center = new idVec3();
             idPlane plane;
 
             n = 0;
-            center = getVec3_origin();
+            center.oSet(getVec3_origin());
             for (p = portals; p != null; p = p.next[s]) {
                 s = (p.nodes[1] == this) ? 1 : 0;
                 center.oPluSet(p.winding.GetCenter());
@@ -508,7 +508,7 @@ public class BrushBSP {
         private idBrushMap brushMap;
         private int brushMapContents;
         private int insideLeafNodes;
-        private idVec3 leakOrigin;
+        private final idVec3 leakOrigin = new idVec3();
         private int numGridCellSplits;
         private int numGridCells;
         private int numInsertedPoints;
@@ -629,7 +629,7 @@ public class BrushBSP {
          */
         public void LeakFile(final idStr fileName) {
             int count, next, s;
-            idVec3 mid;
+            final idVec3 mid = new idVec3();
             idFile lineFile;
             idBrushBSPNode node, nextNode = new idBrushBSPNode();
             idBrushBSPPortal p, nextPortal = new idBrushBSPPortal();
@@ -665,7 +665,7 @@ public class BrushBSP {
                     }
                 }
                 node = nextNode;
-                mid = nextPortal.winding.GetCenter();
+                mid.oSet(nextPortal.winding.GetCenter());
                 lineFile.Printf("%f %f %f\n", mid.oGet(0), mid.oGet(1), mid.oGet(2));
                 count++;
             }
@@ -1151,7 +1151,7 @@ public class BrushBSP {
             int axis;
             float dist = 0;
             idBounds bounds;
-            idVec3 normal, halfSize;
+            final idVec3 normal = new idVec3(), halfSize = new idVec3();
 
             if (0 == node.brushList.Num()) {
 //		delete node.volume;
@@ -1161,7 +1161,7 @@ public class BrushBSP {
             }
 
             bounds = node.volume.GetBounds();
-            halfSize = (bounds.oGet(1).oMinus(bounds.oGet(0))).oMultiply(0.5f);
+            halfSize.oSet((bounds.oGet(1).oMinus(bounds.oGet(0))).oMultiply(0.5f));
             for (axis = 0; axis < 3; axis++) {
                 if (halfSize.oGet(axis) > BSP_GRID_SIZE) {
                     dist = (float) (BSP_GRID_SIZE * (floor((bounds.oGet(0, axis) + halfSize.oGet(axis)) / BSP_GRID_SIZE) + 1));
@@ -1179,7 +1179,7 @@ public class BrushBSP {
 
             numSplits++;
 
-            normal = getVec3_origin();
+            normal.oSet(getVec3_origin());
             normal.oSet(axis, 1.0f);
             node.plane.SetNormal(normal);
             node.plane.SetDist(dist);
@@ -1251,7 +1251,7 @@ public class BrushBSP {
             idBounds bounds;
             idBrushBSPPortal p;
             idBrushBSPPortal[] portals = new idBrushBSPPortal[6];
-            idVec3 normal;
+            final idVec3 normal = new idVec3();
 //            idPlane[] planes = new idPlane[6];
 
             // pad with some space so there will never be null volume leaves
@@ -1274,7 +1274,7 @@ public class BrushBSP {
                 for (j = 0; j < 2; j++) {
 
                     p = new idBrushBSPPortal();
-                    normal = getVec3_origin();
+                    normal.oSet(getVec3_origin());
                     normal.oSet(i, j != 0 ? -1 : 1);
                     p.plane.SetNormal(normal);
                     p.plane.SetDist(j != 0 ? -bounds.oGet(j, i) : bounds.oGet(j, i));
@@ -1561,7 +1561,7 @@ public class BrushBSP {
         private boolean FloodFromEntities(final idMapFile mapFile, int contents, final idStrList classNames) {
             int i, j;
             boolean inside;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMapEntity mapEnt;
             idStr classname = new idStr();
 
@@ -1599,7 +1599,7 @@ public class BrushBSP {
                 }
 
                 if (outside.occupied != 0) {
-                    leakOrigin = origin;
+                    leakOrigin.oSet(origin);
                     break;
                 }
             }

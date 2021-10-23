@@ -168,7 +168,7 @@ public class renderbump {
     static void OutlineNormalMap(ByteBuffer data, int width, int height, int emptyR, int emptyG, int emptyB) {
         byte[] orig;
         int i, j, k, l;
-        idVec3 normal;
+        final idVec3 normal = new idVec3();
         int out;
 
         orig = new byte[width * height * 4];// Mem_Alloc(width * height * 4);
@@ -185,7 +185,7 @@ public class renderbump {
                     continue;
                 }
 
-                normal = getVec3_origin();
+                normal.oSet(getVec3_origin());
                 for (k = -1; k < 2; k++) {
                     for (l = -1; l < 2; l++) {
                         int in;
@@ -228,7 +228,7 @@ public class renderbump {
     static void OutlineColorMap(ByteBuffer data, int width, int height, int emptyR, int emptyG, int emptyB) {
         byte[] orig;
         int i, j, k, l;
-        idVec3 normal;
+        final idVec3 normal = new idVec3();
         int out;
 
         orig = new byte[width * height * 4];// Mem_Alloc(width * height * 4);
@@ -244,7 +244,7 @@ public class renderbump {
                     continue;
                 }
 
-                normal = getVec3_origin();
+                normal.oSet(getVec3_origin());
                 int count = 0;
                 for (k = -1; k < 2; k++) {
                     for (l = -1; l < 2; l++) {
@@ -390,21 +390,21 @@ public class renderbump {
     }
 
     static float TraceToMeshFace(final srfTriangles_s highMesh, int faceNum, float minDist, float maxDist,
-                                 final idVec3 point, final idVec3 normal, idVec3 sampledNormal, byte[] sampledColor/*[4]*/) {
+                                 final idVec3 point, final idVec3 normal, final idVec3 sampledNormal, byte[] sampledColor/*[4]*/) {
         int j;
         float dist;
-        final idVec3[] v = new idVec3[3];
+        final idVec3[] v = idVec3.generateArray(3);
         idPlane plane;
-        idVec3 edge;
+        final idVec3 edge = new idVec3();
         float d;
-        idVec3[] dir = new idVec3[3];
+        idVec3[] dir = idVec3.generateArray(3);
         float baseArea;
         float[] bary = new float[3];
-        idVec3 testVert;
+        final idVec3 testVert = new idVec3();
 
-        v[0] = highMesh.verts[highMesh.indexes[faceNum * 3 + 0]].xyz;
-        v[1] = highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz;
-        v[2] = highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz;
+        v[0].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 0]].xyz);
+        v[1].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz);
+        v[2].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz);
 
         plane = highMesh.facePlanes[faceNum];
 
@@ -418,7 +418,7 @@ public class renderbump {
         dist = plane.Distance(point);
         dist /= -d;
 
-        testVert = point.oPlus(normal.oMultiply(dist));
+        testVert.oSet(point.oPlus(normal.oMultiply(dist)));
 
         // if this would be beyond our requested trace distance,
         // don't even check it
@@ -433,18 +433,18 @@ public class renderbump {
         // if normal is inside all edge planes, this face is hit
         VectorSubtract(v[0], point, dir[0]);
         VectorSubtract(v[1], point, dir[1]);
-        edge = dir[0].Cross(dir[1]);
+        edge.oSet(dir[0].Cross(dir[1]));
         d = DotProduct(normal, edge);
         if (d > 0.0f) {
             return DIST_NO_INTERSECTION;
         }
         VectorSubtract(v[2], point, dir[2]);
-        edge = dir[1].Cross(dir[2]);
+        edge.oSet(dir[1].Cross(dir[2]));
         d = DotProduct(normal, edge);
         if (d > 0.0f) {
             return DIST_NO_INTERSECTION;
         }
-        edge = dir[2].Cross(dir[0]);
+        edge.oSet(dir[2].Cross(dir[0]));
         d = DotProduct(normal, edge);
         if (d > 0.0f) {
             return DIST_NO_INTERSECTION;
@@ -494,8 +494,8 @@ public class renderbump {
      Returns false if the trace doesn't hit anything
      ================
      */
-    static boolean SampleHighMesh(final renderBump_t rb, final idVec3 point, final idVec3 direction, idVec3 sampledNormal, byte[] sampledColor/*[4]*/) {
-        idVec3 p;
+    static boolean SampleHighMesh(final renderBump_t rb, final idVec3 point, final idVec3 direction, final idVec3 sampledNormal, byte[] sampledColor/*[4]*/) {
+        final idVec3 p = new idVec3();
         binLink_t bl;
         int linkNum;
         int faceNum;
@@ -504,10 +504,10 @@ public class renderbump {
         float maxDist;
         int c_hits;
         int i;
-        idVec3 normal;
+        final idVec3 normal = new idVec3();
 
         // we allow non-normalized directions on input
-        normal = direction;
+        normal.oSet(direction);
         normal.Normalize();
 
         // increment our uniqueness counter (FIXME: make thread safe?)
@@ -524,7 +524,7 @@ public class renderbump {
         // this is a pretty damn lazy way to walk through a 3D grid, and has a (very slight)
         // chance of missing a triangle in a corner crossing case
         for (i = 0; i < RAY_STEPS; i++) {
-            p = point.oMinus(rb.hash.bounds.oGet(0).oPlus(normal.oMultiply(-1.0f + 2.0f * i / RAY_STEPS).oMultiply(rb.traceDist)));//TODO:check if downcasting from doubles to floats has any effect
+            p.oSet(point.oMinus(rb.hash.bounds.oGet(0).oPlus(normal.oMultiply(-1.0f + 2.0f * i / RAY_STEPS).oMultiply(rb.traceDist))));//TODO:check if downcasting from doubles to floats has any effect
 
             block[0] = (int) floor(p.oGet(0) / rb.hash.binSize[0]);
             block[1] = (int) floor(p.oGet(1) / rb.hash.binSize[1]);
@@ -575,8 +575,8 @@ public class renderbump {
      =============
      */
     static float TriTextureArea(final float[] a/*[2]*/, final float[] b/*[2]*/, final float[] c/*[2]*/) {
-        idVec3 d1 = new idVec3(), d2 = new idVec3();
-        idVec3 cross;
+        final idVec3 d1 = new idVec3(), d2 = new idVec3();
+        final idVec3 cross = new idVec3();
         float area;
 
         d1.oSet(0, b[0] - a[0]);
@@ -587,7 +587,7 @@ public class renderbump {
         d2.oSet(1, c[1] - a[1]);
         d2.oSet(2, 0);
 
-        cross = d1.Cross(d2);
+        cross.oSet(d1.Cross(d2));
         area = 0.5f * cross.Length();
 
         if (cross.oGet(2) < 0) {
@@ -614,13 +614,13 @@ public class renderbump {
         float[] bary = new float[3];
         ByteBuffer localDest, globalDest, colorDest;
         float[][] edge = new float[3][3];
-        idVec3 sampledNormal = new idVec3();
+        final idVec3 sampledNormal = new idVec3();
         byte[] sampledColor = new byte[4];
-        idVec3 point, normal, traceNormal;
-        idVec3[] tangents = new idVec3[2];
+        final idVec3 point = new idVec3(), normal = new idVec3(), traceNormal = new idVec3();
+        final idVec3[] tangents = idVec3.generateArray(2);
         float baseArea, totalArea;
         int r, g, b;
-        idVec3 localNormal;
+        final idVec3 localNormal = new idVec3();
 
         // this is a brain-dead rasterizer, but compared to the ray trace,
         // nothing we do here is going to matter performance-wise
@@ -736,11 +736,11 @@ public class renderbump {
                 }
 
                 // calculate the interpolated xyz, normal, and tangents of this sample
-                point = getVec3_origin();
-                traceNormal = getVec3_origin();
-                normal = getVec3_origin();
-                tangents[0] = getVec3_origin();
-                tangents[1] = getVec3_origin();
+                point.oSet(getVec3_origin());
+                traceNormal.oSet(getVec3_origin());
+                normal.oSet(getVec3_origin());
+                tangents[0].oSet(getVec3_origin());
+                tangents[1].oSet(getVec3_origin());
                 for (k = 0; k < 3; k++) {
                     int index;
 
@@ -799,7 +799,7 @@ public class renderbump {
                 // transform to local tangent space
                 idMat3 mat = new idMat3(tangents[0], tangents[1], normal);
                 mat.InverseSelf();
-                localNormal = mat.oMultiply(sampledNormal);
+                localNormal.oSet(mat.oMultiply(sampledNormal));
 
                 localNormal.Normalize();
 
@@ -1530,16 +1530,16 @@ public class renderbump {
                             for (j = 0; j < mesh.numIndexes; j += 3) {
                                 if (flat) {
                                     idPlane plane = new idPlane();
-                                    idVec3 a2, b2, c2;
+                                    final idVec3 a2 = new idVec3(), b2 = new idVec3(), c2 = new idVec3();
                                     int v1, v2, v3;
 
                                     v1 = mesh.indexes[j + 0];
                                     v2 = mesh.indexes[j + 1];
                                     v3 = mesh.indexes[j + 2];
 
-                                    a2 = mesh.verts[v1].xyz;
-                                    b2 = mesh.verts[v2].xyz;
-                                    c2 = mesh.verts[v3].xyz;
+                                    a2.oSet(mesh.verts[v1].xyz);
+                                    b2.oSet(mesh.verts[v2].xyz);
+                                    c2.oSet(mesh.verts[v3].xyz);
 
                                     plane.FromPoints(a2, b2, c2);
 
@@ -1600,7 +1600,7 @@ public class renderbump {
                         // normalize
                         c = width * height;
                         for (i = 0; i < c; i++) {
-                            idVec3 v = new idVec3();
+                            final idVec3 v = new idVec3();
 
                             v.oSet(0, (buffer.get(i * 4 + 0) - 128) / 127.0f);
                             v.oSet(1, (buffer.get(i * 4 + 1) - 128) / 127.0f);

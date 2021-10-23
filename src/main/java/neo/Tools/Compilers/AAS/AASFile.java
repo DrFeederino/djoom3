@@ -163,12 +163,12 @@ public class AASFile {
         public IntBuffer areaTravelTimes;                 // travel times within the fromAreaNum from reachabilities that lead towards this area
         public byte disableCount;                           // number of times this reachability has been disabled
         public int edgeNum;                                 // edge crossed by this reachability
-        public idVec3 end;                                  // end point of inter area movement
+        public final idVec3 end;                                  // end point of inter area movement
         public short fromAreaNum;                           // number of area the reachability starts
         public idReachability next;                         // next reachability in list
         public byte number;                                 // reachability number within the fromAreaNum (must be < 256)
         public idReachability rev_next;                     // next reachability in reversed list
-        public idVec3 start;                                // start point of inter area movement
+        public final idVec3 start;                                // start point of inter area movement
         public short toAreaNum;                             // number of the reachable area
         public /*unsigned short*/ int travelTime;           // travel time of the inter area movement
         public int travelType;                              // type of travel required to get to the area
@@ -183,8 +183,8 @@ public class AASFile {
         public void CopyBase(idReachability reach) {
             travelType = reach.travelType;
             toAreaNum = reach.toAreaNum;
-            start = reach.start;
-            end = reach.end;
+            start.oSet(reach.start);
+            end.oSet(reach.end);
             edgeNum = reach.edgeNum;
             travelTime = reach.travelTime;
         }
@@ -232,7 +232,7 @@ public class AASFile {
     public static class aasArea_s {
 
         public idBounds bounds;        // bounds of the area
-        public idVec3 center;        // center of the area an AI can move towards
+        public final idVec3 center = new idVec3();        // center of the area an AI can move towards
         public short cluster;       // cluster the area belongs to, if negative it's a portal
         public short clusterAreaNum;// number of the area in the cluster
         public int contents;      // contents of the area
@@ -276,7 +276,7 @@ public class AASFile {
 
         public int[] areas;           // array to store areas the trace went through
         public int blockingAreaNum; // area that could not be entered
-        public idVec3 endpos;          // end position of trace
+        public final idVec3 endpos;          // end position of trace
         public int flags;           // areas with these flags block the trace
         // output
         public float fraction;        // fraction of trace completed
@@ -289,6 +289,7 @@ public class AASFile {
         public int travelFlags;     // areas with these travel flags block the trace
 
         public aasTrace_s() {
+            endpos = new idVec3();
             areas = null;
             points = null;
             getOutOfSolid = //false;
@@ -310,10 +311,10 @@ public class AASFile {
         public idBounds[] boundingBoxes = new idBounds[MAX_AAS_BOUNDING_BOXES];
         public idStr fileExtension;
         // physics settings
-        public idVec3 gravity;
-        public idVec3 gravityDir;
+        public final idVec3 gravity;
+        public final idVec3 gravityDir;
         public float gravityValue;
-        public idVec3 invGravityDir;
+        public final idVec3 invGravityDir;
         public CFloat maxBarrierHeight = new CFloat();
         public CFloat maxFallHeight = new CFloat();
         public CFloat maxStepHeight = new CFloat();
@@ -433,9 +434,9 @@ public class AASFile {
                     fileExtension = token;
                 } else if (token.equals("gravity")) {
                     ParseVector(src, gravity);
-                    gravityDir = gravity;
+                    gravityDir.oSet(gravity);
                     gravityValue = gravityDir.Normalize();
-                    invGravityDir = gravityDir.oNegative();
+                    invGravityDir.oSet(gravityDir.oNegative());
                 } else if (token.equals("maxStepHeight")) {
                     if (!ParseFloat(src, maxStepHeight)) {
                         return false;
@@ -524,9 +525,9 @@ public class AASFile {
             if (!dict.GetVector("gravity", "0 0 -1066", gravity)) {
                 common.Error("Missing 'gravity' in entityDef '%s'", name);
             }
-            gravityDir = gravity;
+            gravityDir.oSet(gravity);
             gravityValue = gravityDir.Normalize();
-            invGravityDir = gravityDir.oNegative();
+            invGravityDir.oSet(gravityDir.oNegative());
 
             if (!dict.GetFloat("maxStepHeight", "0", maxStepHeight)) {
                 common.Error("Missing 'maxStepHeight' in entityDef '%s'", name);
@@ -614,7 +615,7 @@ public class AASFile {
 
         public boolean ValidEntity(final String classname) {
             idStr use_aas = new idStr();
-            idVec3 size = new idVec3();
+            final idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
 
             if (playerFlood.isVal()) {
@@ -666,7 +667,7 @@ public class AASFile {
             return true;
         }
 
-        private boolean ParseVector(idLexer src, idVec3 vec) {
+        private boolean ParseVector(idLexer src, final idVec3 vec) {
             if (!src.ExpectTokenString("=")) {
                 return false;
             }
@@ -891,7 +892,7 @@ public class AASFile {
 
         public abstract int BoundsReachableAreaNum(final idBounds bounds, final int areaFlags, final int excludeTravelFlags);
 
-        public abstract void PushPointIntoAreaNum(int areaNum, idVec3 point);
+        public abstract void PushPointIntoAreaNum(int areaNum, final idVec3 point);
 
         public abstract boolean Trace(aasTrace_s trace, final idVec3 start, final idVec3 end);
 

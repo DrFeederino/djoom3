@@ -31,8 +31,8 @@ public class Force_Spring {
         private float damping;
         private int id1;        // clip model id of first physics object
         private int id2;        // clip model id of second physics object
-        private idVec3 p1;        // position on clip model
-        private idVec3 p2;        // position on clip model
+        private final idVec3 p1;        // position on clip model
+        private final idVec3 p2;        // position on clip model
         //
         // positioning
         private idPhysics physics1;    // first physics object
@@ -67,10 +67,10 @@ public class Force_Spring {
         public void SetPosition(idPhysics physics1, int id1, final idVec3 p1, idPhysics physics2, int id2, final idVec3 p2) {
             this.physics1 = physics1;
             this.id1 = id1;
-            this.p1 = p1;
+            this.p1.oSet(p1);
             this.physics2 = physics2;
             this.id2 = id2;
-            this.p2 = p2;
+            this.p2.oSet(p2);
         }
 
         // common force interface
@@ -78,41 +78,42 @@ public class Force_Spring {
         public void Evaluate(int time) {
             float length;
             idMat3 axis;
-            idVec3 pos1, pos2, velocity1, velocity2, force, dampingForce;
+            final idVec3 pos1 = new idVec3(), pos2 = new idVec3(), velocity1 = new idVec3(), velocity2 = new idVec3(), force = new idVec3(), dampingForce = new idVec3();
             impactInfo_s info = new impactInfo_s();
 
-            pos1 = p1;
-            pos2 = p2;
-            velocity1 = velocity2 = getVec3_origin();
+            pos1.oSet(p1);
+            pos2.oSet(p2);
+            velocity2.oSet(getVec3_origin());
+            velocity1.oSet(getVec3_origin());
 
             if (physics1 != null) {
                 axis = physics1.GetAxis(id1);
-                pos1 = physics1.GetOrigin(id1);
+                pos1.oSet(physics1.GetOrigin(id1));
                 pos1.oPluSet(p1.oMultiply(axis));
                 if (damping > 0.0f) {
                     info = physics1.GetImpactInfo(id1, pos1);
-                    velocity1 = info.velocity;
+                    velocity1.oSet(info.velocity);
                 }
             }
 
             if (physics2 != null) {
                 axis = physics2.GetAxis(id2);
-                pos2 = physics2.GetOrigin(id2);
+                pos2.oSet(physics2.GetOrigin(id2));
                 pos2.oPluSet(p2.oMultiply(axis));
                 if (damping > 0.0f) {
                     info = physics2.GetImpactInfo(id2, pos2);
-                    velocity2 = info.velocity;
+                    velocity2.oSet(info.velocity);
                 }
             }
 
-            force = pos2.oMinus(pos1);
-            dampingForce = force.oMultiply(damping * (((velocity2.oMinus(velocity1)).oMultiply(force)) / (force.oMultiply(force))));
+            force.oSet(pos2.oMinus(pos1));
+            dampingForce.oSet(force.oMultiply(damping * (((velocity2.oMinus(velocity1)).oMultiply(force)) / (force.oMultiply(force)))));
             length = force.Normalize();
 
             // if the spring is stretched
             if (length > restLength) {
                 if (Kstretch > 0.0f) {
-                    force = force.oMultiply(Square(length - restLength) * Kstretch).oMinus(dampingForce);
+                    force.oSet(force.oMultiply(Square(length - restLength) * Kstretch).oMinus(dampingForce));
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force);
                     }
@@ -122,7 +123,7 @@ public class Force_Spring {
                 }
             } else {
                 if (Kcompress > 0.0f) {
-                    force = force.oMultiply(Square(length - restLength) * Kcompress).oMinSet(dampingForce);
+                    force.oSet(force.oMultiply(Square(length - restLength) * Kcompress).oMinSet(dampingForce));
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force.oNegative());
                     }

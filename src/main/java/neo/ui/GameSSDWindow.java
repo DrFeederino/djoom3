@@ -209,7 +209,7 @@ public class GameSSDWindow {
         public idStr materialName;
         public boolean noHit;
         public boolean noPlayerDamage;
-        public idVec3 position;
+        public final idVec3 position = new idVec3();
         public float radius;
         public float rotation;
         public idVec2 size;
@@ -322,7 +322,7 @@ public class GameSSDWindow {
         }
 
         public void SetPosition(final idVec3 _position) {
-            position = _position;//TODO:is this by value, or by reference?
+            position.oSet(_position);//TODO:is this by value, or by reference?
         }
 
         public void SetSize(final idVec2 _size) {
@@ -361,7 +361,7 @@ public class GameSSDWindow {
                 return false;
             }
 
-            idVec3 screenPos = WorldToScreen(position);
+            final idVec3 screenPos = new idVec3(WorldToScreen(position));
 
             //Scale the radius based on the distance from the player
             float scale = 1.0f - ((screenPos.z - Z_NEAR) / (Z_FAR - Z_NEAR));
@@ -416,8 +416,8 @@ public class GameSSDWindow {
 
         public idBounds WorldToScreen(final idBounds worldBounds) {
 
-            idVec3 screenMin = WorldToScreen(worldBounds.oGet(0));
-            idVec3 screenMax = WorldToScreen(worldBounds.oGet(1));
+            final idVec3 screenMin = new idVec3(WorldToScreen(worldBounds.oGet(0)));
+            final idVec3 screenMax = new idVec3(WorldToScreen(worldBounds.oGet(1)));
 
             idBounds screenBounds = new idBounds(screenMin, screenMax);
             return screenBounds;
@@ -428,12 +428,12 @@ public class GameSSDWindow {
             float d = 0.5f * V_WIDTH * idMath.Tan(DEG2RAD(90.0f) / 2.0f);
 
             //World To Camera Coordinates
-            idVec3 cameraTrans = new idVec3(0, 0, d);
-            idVec3 cameraPos;
-            cameraPos = worldPos.oPlus(cameraTrans);
+            final idVec3 cameraTrans = new idVec3(0, 0, d);
+            final idVec3 cameraPos = new idVec3();
+            cameraPos.oSet(worldPos.oPlus(cameraTrans));
 
             //Camera To Screen Coordinates
-            idVec3 screenPos = new idVec3();
+            final idVec3 screenPos = new idVec3();
             screenPos.x = d * cameraPos.x / cameraPos.z + (0.5f * V_WIDTH - 0.5f);
             screenPos.y = -d * cameraPos.y / cameraPos.z + (0.5f * V_HEIGHT - 0.5f);
             screenPos.z = cameraPos.z;
@@ -443,7 +443,7 @@ public class GameSSDWindow {
 
         public idVec3 ScreenToWorld(final idVec3 screenPos) {
 
-            idVec3 worldPos = new idVec3();
+            final idVec3 worldPos = new idVec3();
 
             worldPos.x = screenPos.x - 0.5f * V_WIDTH;
             worldPos.y = -(screenPos.y - 0.5f * V_HEIGHT);
@@ -461,7 +461,7 @@ public class GameSSDWindow {
     public static class SSDMover extends SSDEntity {
 
         public float rotationSpeed;
-        public idVec3 speed;
+        public final idVec3 speed = new idVec3();
 //
 
         public SSDMover() {
@@ -486,7 +486,7 @@ public class GameSSDWindow {
 
         public void MoverInit(final idVec3 _speed, float _rotationSpeed) {
 
-            speed = _speed;
+            speed.oSet(_speed);
             rotationSpeed = _rotationSpeed;
         }
 
@@ -496,7 +496,7 @@ public class GameSSDWindow {
             super.EntityUpdate();
 
             //Move forward based on speed (units per second)
-            idVec3 moved = speed.oMultiply((float) elapsed / 1000.0f);
+            final idVec3 moved = new idVec3(speed.oMultiply((float) elapsed / 1000.0f));
             position.oPluSet(moved);
 
             float rotated = ((float) elapsed / 1000.0f) * rotationSpeed * 360.0f;
@@ -593,7 +593,7 @@ public class GameSSDWindow {
             SetRadius(Max(size.x, size.y), 0.3f);
             SetRotation(idGameSSDWindow.random.RandomInt(360));
 
-            position = startPosition;
+            position.oSet(startPosition);
 
             health = _health;
         }
@@ -687,7 +687,7 @@ public class GameSSDWindow {
             SetRadius(Max(size.x, size.y), 0.3f);
             SetRotation(idGameSSDWindow.random.RandomInt(360));
 
-            position = startPosition;
+            position.oSet(startPosition);
             health = _health;
         }
     }
@@ -842,7 +842,7 @@ public class GameSSDWindow {
 
             //Always set my position to my buddies position except change z to be on top
             if (followBuddy) {
-                position = buddy.position;
+                position.oSet(buddy.position);
                 position.z -= 50;
             } else {
                 //Only mess with the z if we are not following
@@ -869,11 +869,11 @@ public class GameSSDWindow {
         //
         protected static final SSDPoints[] pointsPool = new SSDPoints[MAX_POINTS];
         idVec4 beginColor;
-        idVec3 beginPosition;
+        final idVec3 beginPosition = new idVec3();
         int beginTime;
         int distance;
         idVec4 endColor;
-        idVec3 endPosition;
+        final idVec3 endPosition = new idVec3();
         int endTime;
         int length;
         // ~SSDPoints();
@@ -980,15 +980,15 @@ public class GameSSDWindow {
             size.Set(0, 0);
 
             //Set the start position at the top of the passed in entity
-            position = WorldToScreen(_ent.position);
-            position = ScreenToWorld(position);
+            position.oSet(WorldToScreen(_ent.position));
+            position.oSet(ScreenToWorld(position));
 
             position.z = 0;
             position.x -= (width / 2.0f);
 
-            beginPosition = position;
+            beginPosition.oSet(position);
 
-            endPosition = beginPosition;
+            endPosition.oSet(beginPosition);
             endPosition.y += _distance;
 
             //beginColor.Set(0,1,0,1);
@@ -1023,10 +1023,10 @@ public class GameSSDWindow {
         //
         protected static final SSDProjectile[] projectilePool = new SSDProjectile[MAX_PROJECTILES];
         int beginTime;
-        idVec3 dir;
-        idVec3 endPosition;
+        final idVec3 dir = new idVec3();
+        final idVec3 endPosition = new idVec3();
         int endTime;
-        idVec3 speed;
+        final idVec3 speed = new idVec3();
         // ~SSDProjectile();
 
         public SSDProjectile() {
@@ -1109,10 +1109,10 @@ public class GameSSDWindow {
             SetMaterial(PROJECTILE_MATERIAL);
             size.Set(_size, _size);
 
-            position = _beginPosition;
-            endPosition = _endPosition;
+            position.oSet(_beginPosition);
+            endPosition.oSet(_endPosition);
 
-            dir = _endPosition.oMinus(position);
+            dir.oSet(_endPosition.oMinus(position));
             dir.Normalize();
 
             //speed.Zero();
@@ -1127,7 +1127,7 @@ public class GameSSDWindow {
             super.EntityUpdate();
 
             //Move forward based on speed (units per second)
-            idVec3 moved = dir.oMultiply(((float) elapsed / 1000.0f) * speed.z);
+            final idVec3 moved = new idVec3(dir.oMultiply(((float) elapsed / 1000.0f) * speed.z));
             position.oPluSet(moved);
 
             if (position.z > endPosition.z) {
@@ -1313,12 +1313,12 @@ public class GameSSDWindow {
 
             type = SSD_ENTITY_POWERUP;
 
-            idVec3 startPosition = new idVec3();
+            final idVec3 startPosition = new idVec3();
             startPosition.x = idGameSSDWindow.random.RandomInt(V_WIDTH) - (V_WIDTH / 2.0f);
             startPosition.y = idGameSSDWindow.random.RandomInt(V_HEIGHT) - (V_HEIGHT / 2.0f);
             startPosition.z = ENTITY_START_DIST;
 
-            position = startPosition;
+            position.oSet(startPosition);
             //SetPosition(startPosition);
 
             powerupState = POWERUP_STATE_CLOSED;
@@ -2294,7 +2294,7 @@ public class GameSSDWindow {
                     if (!ent.noPlayerDamage) {
 
                         //Is the object still in the screen
-                        idVec3 entPos = ent.position;
+                        final idVec3 entPos = new idVec3(ent.position);
                         entPos.z = 0;
 
                         idBounds entBounds = new idBounds(entPos);
@@ -2349,7 +2349,7 @@ public class GameSSDWindow {
             }
 
             //Lets spawn it
-            idVec3 startPosition = new idVec3();
+            final idVec3 startPosition = new idVec3();
 
             float spawnBuffer = levelData.oGet(gameStats.currentLevel).spawnBuffer * 2.0f;
             startPosition.x = random.RandomInt(V_WIDTH + spawnBuffer) - ((V_WIDTH / 2.0f) + spawnBuffer);
@@ -2402,7 +2402,7 @@ public class GameSSDWindow {
                     //SSDProjectile* newProj = SSDProjectile::GetNewProjectile(this, idVec3(0,-180,0), idVec3(cursorWorld.x, cursorWorld.y, (Z_FAR-Z_NEAR)/2.0f), weaponData[gameStats.currentWeapon].speed, weaponData[gameStats.currentWeapon].size);
 
                     //Aim the projectile so it crosses the cursor 1/4 of screen
-                    idVec3 vec = new idVec3(cursorWorld.x, cursorWorld.y, (Z_FAR - Z_NEAR) / 8.0f);
+                    final idVec3 vec = new idVec3(cursorWorld.x, cursorWorld.y, (Z_FAR - Z_NEAR) / 8.0f);
                     vec.oMulSet(8);
                     SSDProjectile newProj = SSDProjectile.GetNewProjectile(this, new idVec3(0, -180, 0), vec, weaponData.oGet(gameStats.currentWeapon).speed, weaponData.oGet(gameStats.currentWeapon).size);
                     entities.Append(newProj);
@@ -2538,7 +2538,7 @@ public class GameSSDWindow {
             }
 
             //Lets spawn it
-            idVec3 startPosition = new idVec3();
+            final idVec3 startPosition = new idVec3();
 
             startPosition.x = random.RandomInt(V_WIDTH) - (V_WIDTH / 2.0f);
             startPosition.y = random.RandomInt(V_HEIGHT) - (V_HEIGHT / 2.0f);

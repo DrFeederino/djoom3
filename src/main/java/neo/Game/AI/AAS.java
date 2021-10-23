@@ -32,9 +32,9 @@ public class AAS {
     static class aasPath_s {
 
         int moveAreaNum;     // number of the area the AI should move towards
-        idVec3 moveGoal;        // point the AI should move towards
+        final idVec3 moveGoal = new idVec3();        // point the AI should move towards
         idReachability reachability;    // reachability used for navigation
-        idVec3 secondaryGoal;   // secondary move goal for complex navigation
+        final idVec3 secondaryGoal = new idVec3();   // secondary move goal for complex navigation
         int type;            // path type
     }
 

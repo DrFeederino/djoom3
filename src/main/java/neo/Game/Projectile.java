@@ -106,10 +106,10 @@ public class Projectile {
         }
 
         protected float damagePower;
-        protected idVec3 lightColor;
+        protected final idVec3 lightColor;
         protected int/*qhandle_t*/    lightDefHandle;                // handle to renderer light def
         protected int lightEndTime;
-        protected idVec3 lightOffset;
+        protected final idVec3 lightOffset;
         protected int lightStartTime;
         protected final idEntityPtr<idEntity> owner;
         protected idPhysics_RigidBody physicsObj;
@@ -163,7 +163,7 @@ public class Projectile {
         }
 
         public static idVec3 GetVelocity(final idDict projectile) {
-            idVec3 velocity = new idVec3();
+            final idVec3 velocity = new idVec3();
 
             projectile.GetVector("velocity", "0 0 0", velocity);
             return velocity;
@@ -337,8 +337,7 @@ public class Projectile {
             thruster.SetPhysics(physicsObj);
 
             if (smokeFly != null) {
-                idVec3 dir;
-                dir = physicsObj.GetLinearVelocity();
+                final idVec3 dir = new idVec3(physicsObj.GetLinearVelocity());
                 dir.NormalizeFast();
                 gameLocal.smokeParticles.EmitSmoke(smokeFly, gameLocal.time, gameLocal.random.RandomFloat(), GetPhysics().GetOrigin(), GetPhysics().GetAxis());
             }
@@ -347,16 +346,16 @@ public class Projectile {
         public void Create(idEntity owner, final idVec3 start, final idVec3 dir) {
 //            idDict args;
             String shaderName;
-            idVec3 light_color = new idVec3();
+            final idVec3 light_color = new idVec3();
 //            idVec3 light_offset;
-            idVec3 tmp;
+            final idVec3 tmp = new idVec3();
             idMat3 axis;
 
             Unbind();
 
             // align z-axis of model with the direction
             axis = dir.ToMat3();
-            tmp = axis.oGet(2);
+            tmp.oSet(axis.oGet(2));
             axis.oSet(2, axis.oGet(0));
             axis.oSet(0, tmp.oNegative());
 
@@ -404,7 +403,7 @@ public class Projectile {
             float fuse;
             float startthrust;
             float endthrust;
-            idVec3 velocity = new idVec3();
+            final idVec3 velocity = new idVec3();
             idAngles angular_velocity = new idAngles();
             float linear_friction;
             float angular_friction;
@@ -413,8 +412,8 @@ public class Projectile {
             float mass;
             float speed;
             float gravity;
-            idVec3 gravVec;
-            idVec3 tmp;
+            final idVec3 gravVec = new idVec3();
+            final idVec3 tmp = new idVec3();
             idMat3 axis;
             int thrust_start;
             int contents;
@@ -466,14 +465,14 @@ public class Projectile {
                 fl.takedamage = true;
             }
 
-            gravVec = gameLocal.GetGravity();
+            gravVec.oSet(gameLocal.GetGravity());
             gravVec.NormalizeFast();
 
             Unbind();
 
             // align z-axis of model with the direction
             axis = dir.ToMat3();
-            tmp = axis.oGet(2);
+            tmp.oSet(axis.oGet(2));
             axis.oSet(2, axis.oGet(0));
             axis.oSet(0, tmp.oNegative());
 
@@ -596,7 +595,7 @@ public class Projectile {
 
             // add the particles
             if (smokeFly != null && smokeFlyTime != 0 && !IsHidden()) {
-                idVec3 dir = GetPhysics().GetLinearVelocity().oNegative();
+                final idVec3 dir = new idVec3(GetPhysics().GetLinearVelocity().oNegative());
                 dir.Normalize();
                 if (!gameLocal.smokeParticles.EmitSmoke(smokeFly, smokeFlyTime, gameLocal.random.RandomFloat(), GetPhysics().GetOrigin(), dir.ToMat3())) {
                     smokeFlyTime = gameLocal.time;
@@ -609,7 +608,7 @@ public class Projectile {
                 renderLight.axis.oSet(GetPhysics().GetAxis());
                 if ((lightDefHandle != -1)) {
                     if (lightEndTime > 0 && gameLocal.time <= lightEndTime + gameLocal.GetMSec()) {
-                        idVec3 color = new idVec3(0, 0, 0);//TODO:superfluous
+                        final idVec3 color = new idVec3(0, 0, 0);//TODO:superfluous
                         if (gameLocal.time < lightEndTime) {
                             float frac = (float) (gameLocal.time - lightStartTime) / (float) (lightEndTime - lightStartTime);
                             color.Lerp(lightColor, color, frac);
@@ -649,7 +648,7 @@ public class Projectile {
             idEntity ent;
             idEntity ignore;
             String damageDefName;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             CFloat push = new CFloat();
             float damageScale;
 
@@ -687,7 +686,7 @@ public class Projectile {
             }
 
             // direction of projectile
-            dir = velocity;
+            dir.oSet(velocity);
             dir.Normalize();
 
             // projectiles can apply an additional impulse next to the rigid body physics impulse
@@ -904,7 +903,7 @@ public class Projectile {
                     int amount = gameLocal.random.RandomInt(fxdebris);
                     for (int i = 0; i < amount; i++) {
                         idEntity[] ent = {null};
-                        idVec3 dir = new idVec3();
+                        final idVec3 dir = new idVec3();
                         dir.x = gameLocal.random.CRandomFloat() * 4.0f;
                         dir.y = gameLocal.random.CRandomFloat() * 4.0f;
                         dir.z = gameLocal.random.RandomFloat() * 8.0f;
@@ -926,7 +925,7 @@ public class Projectile {
                     int amount = gameLocal.random.RandomInt(fxdebris);
                     for (int i = 0; i < amount; i++) {
                         idEntity[] ent = {null};
-                        idVec3 dir = new idVec3();
+                        final idVec3 dir = new idVec3();
                         dir.x = gameLocal.random.CRandomFloat() * 8.0f;
                         dir.y = gameLocal.random.CRandomFloat() * 8.0f;
                         dir.z = gameLocal.random.RandomFloat() * 8.0f + 8.0f;
@@ -1006,8 +1005,8 @@ public class Projectile {
                 physicsObj.WriteToSnapshot(msg);
             } else {
                 msg.WriteBits(0, 1);
-                final idVec3 origin = physicsObj.GetOrigin();
-                final idVec3 velocity = physicsObj.GetLinearVelocity();
+                final idVec3 origin = new idVec3(physicsObj.GetOrigin());
+                final idVec3 velocity = new idVec3(physicsObj.GetLinearVelocity());
 
                 msg.WriteFloat(origin.x);
                 msg.WriteFloat(origin.y);
@@ -1070,9 +1069,9 @@ public class Projectile {
             if (msg.ReadBits(1) != 0) {
                 physicsObj.ReadFromSnapshot(msg);
             } else {
-                idVec3 origin = new idVec3();
-                idVec3 velocity = new idVec3();
-                idVec3 tmp;
+                final idVec3 origin = new idVec3();
+                final idVec3 velocity = new idVec3();
+                final idVec3 tmp = new idVec3();
                 idMat3 axis;
 
                 origin.x = msg.ReadFloat();
@@ -1089,7 +1088,7 @@ public class Projectile {
                 // align z-axis of model with the direction
                 velocity.NormalizeFast();
                 axis = velocity.ToMat3();
-                tmp = axis.oGet(2);
+                tmp.oSet(axis.oGet(2));
                 axis.oSet(2, axis.oGet(0));
                 axis.oSet(0, tmp.oNegative());
                 physicsObj.SetAxis(axis);
@@ -1103,7 +1102,7 @@ public class Projectile {
         @Override
         public boolean ClientReceiveEvent(int event, int time, final idBitMsg msg) {
             trace_s collision;
-            idVec3 velocity = new idVec3();
+            final idVec3 velocity = new idVec3();
 
             switch (event) {
                 case EVENT_DAMAGE_EFFECT: {
@@ -1326,11 +1325,11 @@ public class Projectile {
 
         @Override
         public void Think() {
-            idVec3 dir;
-            idVec3 seekPos = new idVec3();
-            idVec3 velocity;
-            idVec3 nose;
-            idVec3 tmp;
+            final idVec3 dir = new idVec3();
+            final idVec3 seekPos = new idVec3();
+            final idVec3 velocity = new idVec3();
+            final idVec3 nose = new idVec3();
+            final idVec3 tmp = new idVec3();
             idMat3 axis;
             idAngles dirAng;
             idAngles diff;
@@ -1349,9 +1348,9 @@ public class Projectile {
                     rndUpdateTime = gameLocal.time + 200;
                 }
 
-                nose = physicsObj.GetOrigin().oPlus(physicsObj.GetAxis().oGet(0).oMultiply(10.0f));
+                nose.oSet(physicsObj.GetOrigin().oPlus(physicsObj.GetAxis().oGet(0).oMultiply(10.0f)));
 
-                dir = seekPos.oMinus(nose);
+                dir.oSet(seekPos.oMinus(nose));
                 dist = dir.Normalize();
                 dirAng = dir.ToAngles();
 
@@ -1375,8 +1374,8 @@ public class Projectile {
                 angles.oPluSet(diff);
 
                 // make the visual model always points the dir we're traveling
-                dir = angles.ToForward();
-                velocity = dir.oMultiply(speed);
+                dir.oSet(angles.ToForward());
+                velocity.oSet(dir.oMultiply(speed));
 
                 if (burstMode && dist < burstDist) {
                     unGuided = true;
@@ -1387,7 +1386,7 @@ public class Projectile {
 
                 // align z-axis of model with the direction
                 axis = dir.ToMat3();
-                tmp = axis.oGet(2);
+                tmp.oSet(axis.oGet(2));
                 axis.oSet(2, axis.oGet(0));
                 axis.oSet(0, tmp.oNegative());
 
@@ -1406,8 +1405,8 @@ public class Projectile {
                 } else if (owner.GetEntity() instanceof idPlayer) {
                     trace_s tr = new trace_s();
                     idPlayer player = (idPlayer) owner.GetEntity();
-                    idVec3 start2 = player.GetEyePosition();
-                    idVec3 end2 = start2.oPlus(player.viewAxis.oGet(0).oMultiply(1000.0f));
+                    final idVec3 start2 = new idVec3(player.GetEyePosition());
+                    final idVec3 end2 = new idVec3(start2.oPlus(player.viewAxis.oGet(0).oMultiply(1000.0f)));
                     gameLocal.clip.TracePoint(tr, start2, end2, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, owner.GetEntity());
                     if (tr.fraction < 1.0f) {
                         enemy.oSet(gameLocal.GetTraceEntity(tr));
@@ -1418,7 +1417,7 @@ public class Projectile {
                     }
                 }
             }
-            final idVec3 vel = physicsObj.GetLinearVelocity();
+            final idVec3 vel = new idVec3(physicsObj.GetLinearVelocity());
             angles = vel.ToAngles();
             speed = vel.Length();
             rndScale = spawnArgs.GetAngles("random", "15 15 0");
@@ -1431,7 +1430,7 @@ public class Projectile {
             UpdateVisuals();
         }
 
-        protected void GetSeekPos(idVec3 out) {
+        protected void GetSeekPos(final idVec3 out) {
             idEntity enemyEnt = enemy.GetEntity();
             if (enemyEnt != null) {
                 if (enemyEnt instanceof idActor) {
@@ -1457,16 +1456,16 @@ public class Projectile {
         // CLASS_PROTOTYPE ( idSoulCubeMissile );
 
         private float accelTime;
-        private idVec3 destOrg;
-        private idVec3 endingVelocity;
+        private final idVec3 destOrg = new idVec3();
+        private final idVec3 endingVelocity = new idVec3();
         private boolean killPhase;
         private int launchTime;
-        private idVec3 orbitOrg;
+        private final idVec3 orbitOrg = new idVec3();
         private int orbitTime;
         private boolean returnPhase;
         private idDeclParticle smokeKill;
         private int smokeKillTime;
-        private idVec3 startingVelocity;
+        private final idVec3 startingVelocity = new idVec3();
         //
         //
 
@@ -1516,7 +1515,7 @@ public class Projectile {
         @Override
         public void Think() {
             float pct;
-            idVec3 seekPos = new idVec3();
+            final idVec3 seekPos = new idVec3();
             idEntity ownerEnt;
 
             if (state == LAUNCHED) {
@@ -1557,23 +1556,23 @@ public class Projectile {
 
         @Override
         public void Launch(final idVec3 start, final idVec3 dir, final idVec3 pushVelocity, final float timeSinceFire /*= 0.0f*/, final float launchPower /*= 1.0f*/, final float dmgPower /*= 1.0f*/) {
-            idVec3 newStart;
-            idVec3 offs;
+            final idVec3 newStart = new idVec3();
+            final idVec3 offs = new idVec3();
             idEntity ownerEnt;
 
             // push it out a little
-            newStart = start.oPlus(dir.oMultiply(spawnArgs.GetFloat("launchDist")));
-            offs = spawnArgs.GetVector("launchOffset", "0 0 -4");
+            newStart.oSet(start.oPlus(dir.oMultiply(spawnArgs.GetFloat("launchDist"))));
+            offs.oSet(spawnArgs.GetVector("launchOffset", "0 0 -4"));
             newStart.oPluSet(offs);
             super.Launch(newStart, dir, pushVelocity, timeSinceFire, launchPower, dmgPower);
             if (enemy.GetEntity() == null || !(enemy.GetEntity() instanceof idActor)) {
-                destOrg = start.oPlus(dir.oMultiply(256.0f));
+                destOrg.oSet(start.oPlus(dir.oMultiply(256.0f)));
             } else {
                 destOrg.Zero();
             }
             physicsObj.SetClipMask(0); // never collide.. think routine will decide when to detonate
-            startingVelocity = spawnArgs.GetVector("startingVelocity", "15 0 0");
-            endingVelocity = spawnArgs.GetVector("endingVelocity", "1500 0 0");
+            startingVelocity.oSet(spawnArgs.GetVector("startingVelocity", "15 0 0"));
+            endingVelocity.oSet(spawnArgs.GetVector("endingVelocity", "1500 0 0"));
             accelTime = spawnArgs.GetFloat("accelTime", "5");
             physicsObj.SetLinearVelocity(physicsObj.GetAxis().oGet(2).oMultiply(startingVelocity.Length()));
             launchTime = gameLocal.time;
@@ -1588,7 +1587,7 @@ public class Projectile {
         }
 
         @Override
-        protected void GetSeekPos(idVec3 out) {
+        protected void GetSeekPos(final idVec3 out) {
             if (returnPhase && owner.GetEntity() != null && owner.GetEntity() instanceof idActor) {
                 idActor act = (idActor) owner.GetEntity();
                 out.oSet(act.GetEyePosition());
@@ -1617,7 +1616,7 @@ public class Projectile {
             if (enemy.GetEntity() != null && enemy.GetEntity() instanceof idActor) {
                 act = (idActor) enemy.GetEntity();
                 killPhase = true;
-                orbitOrg = act.GetPhysics().GetAbsBounds().GetCenter();
+                orbitOrg.oSet(act.GetPhysics().GetAbsBounds().GetCenter());
                 orbitTime = gameLocal.time;
                 smokeKillTime = 0;
                 smokeName = spawnArgs.GetString("smoke_kill");
@@ -1767,7 +1766,7 @@ public class Projectile {
                         continue;
                     }
                     idPlayer player = (beamTargets.oGet(i).target.GetEntity() instanceof idPlayer) ? (idPlayer) beamTargets.oGet(i).target.GetEntity() : null;
-                    idVec3 org = beamTargets.oGet(i).target.GetEntity().GetPhysics().GetAbsBounds().GetCenter();
+                    final idVec3 org = new idVec3(beamTargets.oGet(i).target.GetEntity().GetPhysics().GetAbsBounds().GetCenter());
                     beamTargets.oGet(i).renderEntity.origin.oSet(GetPhysics().GetOrigin());
                     beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BEAM_END_X] = org.x;
                     beamTargets.oGet(i).renderEntity.shaderParms[SHADERPARM_BEAM_END_Y] = org.y;
@@ -1779,7 +1778,7 @@ public class Projectile {
                     if (gameLocal.time > nextDamageTime) {
                         boolean bfgVision = true;
                         if (damageFreq != null && /*(const char *)*/ !damageFreq.IsEmpty() && beamTargets.oGet(i).target.GetEntity() != null && beamTargets.oGet(i).target.GetEntity().CanDamage(GetPhysics().GetOrigin(), org)) {
-                            org = beamTargets.oGet(i).target.GetEntity().GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());
+                            org.oSet(beamTargets.oGet(i).target.GetEntity().GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
                             org.Normalize();
                             beamTargets.oGet(i).target.GetEntity().Damage(this, owner.GetEntity(), org, damageFreq.toString(), (damagePower != 0) ? damagePower : 1.0f, INVALID_JOINT);
                         } else {
@@ -1833,7 +1832,7 @@ public class Projectile {
             idEntity[] entityList = new idEntity[MAX_GENTITIES];
             int numListedEntities;
             idBounds bounds;
-            idVec3 damagePoint = new idVec3();
+            final idVec3 damagePoint = new idVec3();
 
             CFloat radius = new CFloat();
             spawnArgs.GetFloat("damageRadius", "512", radius);
@@ -1860,7 +1859,7 @@ public class Projectile {
                 secondModelDefHandle = gameRenderWorld.AddEntityDef(secondModel);
             }
 
-            idVec3 delta = new idVec3(15.0f, 15.0f, 15.0f);
+            final idVec3 delta = new idVec3(15.0f, 15.0f, 15.0f);
             //physicsObj.SetAngularExtrapolation( extrapolation_t(EXTRAPOLATION_LINEAR|EXTRAPOLATION_NOSTOP), gameLocal.time, 0, physicsObj.GetAxis().ToAngles(), delta, ang_zero );
 
             // get all entities touching the bounds
@@ -1913,8 +1912,8 @@ public class Projectile {
         @Override
         public void Explode(final trace_s collision, idEntity ignore) {
             int i;
-            idVec3 dmgPoint = new idVec3();
-            idVec3 dir;
+            final idVec3 dmgPoint = new idVec3();
+            final idVec3 dir = new idVec3();
             float beamWidth;
             float damageScale;
             String damage;
@@ -1960,7 +1959,7 @@ public class Projectile {
                 }
 
                 if (!damage.isEmpty() && (beamTargets.oGet(i).target.GetEntity().entityNumber > gameLocal.numClients - 1)) {
-                    dir = beamTargets.oGet(i).target.GetEntity().GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());
+                    dir.oSet(beamTargets.oGet(i).target.GetEntity().GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
                     dir.Normalize();
                     beamTargets.oGet(i).target.GetEntity().Damage(this, ownerEnt, dir, damage, damageScale, (collision.c.id < 0) ? CLIPMODEL_ID_TO_JOINT_HANDLE(collision.c.id) : INVALID_JOINT);
                 }
@@ -2098,7 +2097,7 @@ public class Projectile {
 
         public void Launch() {
             float fuse;
-            idVec3 velocity = new idVec3();
+            final idVec3 velocity = new idVec3();
             idAngles angular_velocity = new idAngles();
             float linear_friction;
             float angular_friction;
@@ -2106,7 +2105,7 @@ public class Projectile {
             float bounce;
             float mass;
             float gravity;
-            idVec3 gravVec;
+            final idVec3 gravVec = new idVec3();
             boolean randomVelocity;
             idMat3 axis;
 
@@ -2138,7 +2137,7 @@ public class Projectile {
                 fl.takedamage = true;
             }
 
-            gravVec = gameLocal.GetGravity();
+            gravVec.oSet(gameLocal.GetGravity());
             gravVec.NormalizeFast();
             axis = GetPhysics().GetAxis();
 

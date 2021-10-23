@@ -78,7 +78,7 @@ public class DeviceContext {
         private idMat3 mat;
         //
         private boolean mbcs;
-        private idVec3 origin;
+        private final idVec3 origin;
         //
         private boolean overStrikeMode;
         private fontInfo_t useFont;
@@ -150,13 +150,13 @@ public class DeviceContext {
             return initialized;
         }
 
-        public void GetTransformInfo(idVec3 origin, idMat3 mat) {
+        public void GetTransformInfo(final idVec3 origin, final idMat3 mat) {
             mat.oSet(this.mat);
             origin.oSet(this.origin);
         }
 
         public void SetTransformInfo(final idVec3 origin, final idMat3 mat) {
-            this.origin = origin;
+            this.origin.oSet(origin);
             this.mat = mat;
         }
 
@@ -646,7 +646,7 @@ public class DeviceContext {
             }
 
             //Generate a translation so we can translate to the center of the image rotate and draw
-            idVec3 origTrans = new idVec3();
+            final idVec3 origTrans = new idVec3();
             origTrans.x = x + (w / 2);
             origTrans.y = y + (h / 2);
             origTrans.z = 0;

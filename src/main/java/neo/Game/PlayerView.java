@@ -235,7 +235,7 @@ public class PlayerView {
          which will determine the head kick direction
          ==============
          */
-        public void DamageImpulse(idVec3 localKickDir, final idDict damageDef) {
+        public void DamageImpulse(final idVec3 localKickDir, final idDict damageDef) {
             //
             // double vision effect
             //

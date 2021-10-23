@@ -2,7 +2,6 @@ package neo.Game;
 
 import neo.Renderer.Model.modelSurface_s;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.RenderWorld.*;
 import neo.framework.DeclParticle.idDeclParticle;
 import neo.framework.DeclParticle.idParticleStage;
 import neo.framework.DeclParticle.particleGen_t;
@@ -55,7 +54,7 @@ public class SmokeParticles {
         idMat3 axis;
         int index;                // particle index in system, 0 <= index < stage->totalParticles
         singleSmoke_t next;
-        idVec3 origin;
+        final idVec3 origin = new idVec3();
         int privateStartTime;    // start time for this particular particle
         idRandom random;
     }
@@ -264,7 +263,7 @@ public class SmokeParticles {
 
                     newSmoke.index = prevCount;
                     newSmoke.axis = axis;
-                    newSmoke.origin = origin;
+                    newSmoke.origin.oSet(origin);
                     newSmoke.random = steppingRandom;
                     newSmoke.privateStartTime = systemStartTime + prevCount * finalParticleTime / stage.totalParticles;
                     newSmoke.next = active.smokes;

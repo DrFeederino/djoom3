@@ -2,8 +2,6 @@ package neo.Sound;
 
 import neo.Renderer.RenderWorld.idRenderWorld;
 import neo.Sound.snd_cache.idSoundSample;
-import neo.Sound.snd_local.*;
-import neo.Sound.snd_shader.*;
 import neo.Sound.snd_system.idSoundSystemLocal;
 import neo.Sound.snd_world.idSoundWorldLocal;
 import neo.Sound.sound.idSoundEmitter;
@@ -645,7 +643,7 @@ public class snd_emitter {
         // the following are calculated in UpdateEmitter, and don't need to be archived
         public float maxDistance;           // greatest of all playing channel distances
         //
-        public idVec3 origin;
+        public final idVec3 origin;
         public soundShaderParms_t parms;                 // default overrides for all channels
         public boolean playing;               // if false, no channel is active
         //						    // or a point through a portal chain
@@ -653,7 +651,7 @@ public class snd_emitter {
         public int/*removeStatus_t*/ removeStatus;
         public idSlowChannel[] slowChannels;
         public idSoundWorldLocal soundWorld;            // the world that holds this emitter
-        public idVec3 spatializedOrigin;     // the virtual sound origin, either the real sound origin,
+        public final idVec3 spatializedOrigin;     // the virtual sound origin, either the real sound origin,
         //
         //
 
@@ -730,7 +728,7 @@ public class snd_emitter {
                 soundWorld.writeDemo.WriteInt(parms.soundClass);
             }
 
-            this.origin = origin;
+            this.origin.oSet(origin);
             this.listenerId = listenerId;
             this.parms = parms;
 
@@ -1306,7 +1304,7 @@ public class snd_emitter {
          Called once each sound frame by the main thread from idSoundWorldLocal::PlaceOrigin
          ===================
          */
-        public void Spatialize(idVec3 listenerPos, int listenerArea, idRenderWorld rw) {
+        public void Spatialize(final idVec3 listenerPos, int listenerArea, idRenderWorld rw) {
             int i;
             boolean hasActive = false;
 
@@ -1329,8 +1327,8 @@ public class snd_emitter {
             //
             // work out where the sound comes from
             //
-            idVec3 realOrigin = origin.oMultiply(DOOM_TO_METERS);
-            idVec3 len = listenerPos.oMinus(realOrigin);
+            final idVec3 realOrigin = new idVec3(origin.oMultiply(DOOM_TO_METERS));
+            final idVec3 len = new idVec3(listenerPos.oMinus(realOrigin));
             realDistance = len.LengthFast();
 
             if (realDistance >= maxDistance) {
@@ -1352,7 +1350,7 @@ public class snd_emitter {
                 if (soundInArea == -1) {
                     if (lastValidPortalArea == -1) {        // sound is outside the world
                         distance = realDistance;
-                        spatializedOrigin = origin;            // sound is in our area
+                        spatializedOrigin.oSet(origin);            // sound is in our area
                         return;
                     }
                     soundInArea = lastValidPortalArea;
@@ -1360,7 +1358,7 @@ public class snd_emitter {
                 lastValidPortalArea = soundInArea;
                 if (soundInArea == listenerArea) {
                     distance = realDistance;
-                    spatializedOrigin = origin;            // sound is in our area
+                    spatializedOrigin.oSet(origin);            // sound is in our area
                     return;
                 }
 
@@ -1369,7 +1367,7 @@ public class snd_emitter {
             } else {
                 // no portals available
                 distance = realDistance;
-                spatializedOrigin = origin;            // sound is in our area
+                spatializedOrigin.oSet(origin);            // sound is in our area
             }
         }
 

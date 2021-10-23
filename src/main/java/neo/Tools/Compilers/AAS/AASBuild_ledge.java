@@ -23,13 +23,13 @@ public class AASBuild_ledge {
     //===============================================================
     static class idLedge {
 
-        public idVec3 end;
+        public final idVec3 end = new idVec3();
         public idBrushBSPNode node;
         public int numExpandedPlanes;
         public int numPlanes;
         public int numSplitPlanes;
         public idPlane[] planes = new idPlane[8];
-        public idVec3 start;
+        public final idVec3 start = new idVec3();
         //
         //
 
@@ -37,8 +37,8 @@ public class AASBuild_ledge {
         }
 
         public idLedge(final idVec3 v1, final idVec3 v2, final idVec3 gravityDir, idBrushBSPNode n) {
-            start = v1;
-            end = v2;
+            start.oSet(v1);
+            end.oSet(v2);
             node = n;
             numPlanes = 4;
             planes[0].SetNormal((v1.oMinus(v2)).Cross(gravityDir));
@@ -57,11 +57,11 @@ public class AASBuild_ledge {
 
         public void AddPoint(final idVec3 v) {
             if (planes[2].Distance(v) > 0.0f) {
-                start = v;
+                start.oSet(v);
                 planes[2].FitThroughPoint(start);
             }
             if (planes[3].Distance(v) > 0.0f) {
-                end = v;
+                end.oSet(v);
                 planes[3].FitThroughPoint(end);
             }
         }
@@ -76,12 +76,12 @@ public class AASBuild_ledge {
         public void CreateBevels(final idVec3 gravityDir) {
             int i, j;
             idBounds bounds = new idBounds();
-            idVec3 size, normal;
+            final idVec3 size = new idVec3(), normal = new idVec3();
 
             bounds.Clear();
             bounds.AddPoint(start);
             bounds.AddPoint(end);
-            size = bounds.oGet(1).oMinus(bounds.oGet(0));
+            size.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)));
 
             // plane through ledge
             planes[0].SetNormal((start.oMinus(end)).Cross(gravityDir));
@@ -89,7 +89,7 @@ public class AASBuild_ledge {
             planes[0].FitThroughPoint(start);
             // axial bevels at start and end point
             i = size.oGet(1) > size.oGet(0) ? 1 : 0;
-            normal = getVec3_origin();
+            normal.oSet(getVec3_origin());
             normal.oSet(i, 1.0f);
             j = end.oGet(i) > start.oGet(i) ? 1 : 0;
             planes[1 + j].SetNormal(normal);
@@ -99,7 +99,7 @@ public class AASBuild_ledge {
             numExpandedPlanes = 3;
             // if additional bevels are required
             if (Math.abs(size.oGet(/*!i*/1 ^ i)) > 0.01f) {
-                normal = getVec3_origin();
+                normal.oSet(getVec3_origin());
                 normal.oSet(/*!i]*/1 ^ i, 1.0f);
                 j = end.oGet(/*!i]*/1 ^ i) > start.oGet(/*!i]*/1 ^ i) ? 1 : 0;
                 planes[3 + j].SetNormal(normal);
@@ -124,7 +124,7 @@ public class AASBuild_ledge {
 
         public void Expand(final idBounds bounds, float maxStepHeight) {
             int i, j;
-            idVec3 v = new idVec3();
+            final idVec3 v = new idVec3();
 
             for (i = 0; i < numExpandedPlanes; i++) {
 

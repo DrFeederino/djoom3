@@ -417,7 +417,7 @@ public class Target {
             int i;
             idEntity ent;
             CFloat value = new CFloat();
-            idVec3 color = new idVec3();
+            final idVec3 color = new idVec3();
             int parmnum;
 
             // set the color on the targets
@@ -1040,7 +1040,7 @@ public class Target {
             String parm;
             String skin;
             boolean update;
-            idVec3 color;
+            final idVec3 color = new idVec3();
             idVec4 colorTo = new idVec4();
             idPlayer player;
 
@@ -1100,7 +1100,7 @@ public class Target {
                     continue;
                 }
                 generic = (idStaticEntity) ent;
-                color = generic.spawnArgs.GetVector("color_demonic");
+                color.oSet(generic.spawnArgs.GetVector("color_demonic"));
                 colorTo.Set(color.x, color.y, color.z, 1.0f);
                 generic.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"));
             }
@@ -1116,8 +1116,8 @@ public class Target {
                     light.SetShader(parm);
                 }
 
-                color = light.spawnArgs.GetVector("_color");
-                color = light.spawnArgs.GetVector("color_demonic", color.ToString());
+                color.oSet(light.spawnArgs.GetVector("_color"));
+                color.oSet(light.spawnArgs.GetVector("color_demonic", color.ToString()));
                 colorTo.Set(color.x, color.y, color.z, 1.0f);
                 light.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"));
             }
@@ -1191,7 +1191,7 @@ public class Target {
             idSound sound;
             idStaticEntity generic;
             boolean update;
-            idVec3 color;
+            final idVec3 color = new idVec3();
             idVec4 colorTo = new idVec4();
 
             if (flashOut != 0) {
@@ -1222,7 +1222,7 @@ public class Target {
                     final String texture = light.spawnArgs.GetString("texture", "lights/squarelight1");
                     light.SetShader(texture);
                 }
-                color = light.spawnArgs.GetVector("_color");
+                color.oSet(light.spawnArgs.GetVector("_color"));
                 colorTo.Set(color.x, color.y, color.z, 1.0f);
                 light.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"));
             }
@@ -1720,7 +1720,7 @@ public class Target {
         }
 
 
-        private idVec3 playerPos;
+        private final idVec3 playerPos;
         //
         //
 
@@ -1757,7 +1757,7 @@ public class Target {
         private void Event_TipOff() {
             idPlayer player = gameLocal.GetLocalPlayer();
             if (player != null) {
-                idVec3 v = player.GetPhysics().GetOrigin().oMinus(playerPos);
+                final idVec3 v = new idVec3(player.GetPhysics().GetOrigin().oMinus(playerPos));
                 if (v.Length() > 96.0f) {
                     player.HideTip();
                 } else {
@@ -1769,7 +1769,7 @@ public class Target {
         private void Event_GetPlayerPos() {
             idPlayer player = gameLocal.GetLocalPlayer();
             if (player != null) {
-                playerPos = player.GetPhysics().GetOrigin();
+                playerPos.oSet(player.GetPhysics().GetOrigin());
                 PostEventMS(EV_TipOff, 100);
             }
         }

@@ -212,7 +212,7 @@ public class SysCmds {
      */
     public static void D_DrawDebugLines() {
         int i;
-        idVec3 forward, right = new idVec3(), up = new idVec3(), p1, p2;
+        final idVec3 forward = new idVec3(), right = new idVec3(), up = new idVec3(), p1 = new idVec3(), p2 = new idVec3();
         idVec4 color;
         float l;
 
@@ -224,15 +224,15 @@ public class SysCmds {
                     //
                     if (debugLines[i].arrow) {
                         // draw a nice arrow
-                        forward = debugLines[i].end.oMinus(debugLines[i].start);
+                        forward.oSet(debugLines[i].end.oMinus(debugLines[i].start));
                         l = forward.Normalize() * 0.2f;
                         forward.NormalVectors(right, up);
 
                         if (l > 3.0f) {
                             l = 3.0f;
                         }
-                        p1 = debugLines[i].end.oMinus(forward.oMultiply(l).oPlus(right.oMultiply(l * 0.4f)));
-                        p2 = debugLines[i].end.oMinus(forward.oMultiply(l).oMinus(right.oMultiply(l * 0.4f)));
+                        p1.oSet(debugLines[i].end.oMinus(forward.oMultiply(l).oPlus(right.oMultiply(l * 0.4f))));
+                        p2.oSet(debugLines[i].end.oMinus(forward.oMultiply(l).oMinus(right.oMultiply(l * 0.4f))));
                         gameRenderWorld.DebugLine(color, debugLines[i].end, p1);
                         gameRenderWorld.DebugLine(color, debugLines[i].end, p2);
                         gameRenderWorld.DebugLine(color, p1, p2);
@@ -861,7 +861,7 @@ public class SysCmds {
         public void run(idCmdArgs args) {
             idPlayer player;
             String name;
-            idVec3 pos;
+            final idVec3 pos = new idVec3();
             idAngles ang;
 
             player = gameLocal.GetLocalPlayer();
@@ -877,7 +877,7 @@ public class SysCmds {
             name = args.Argv(1);
             player.spawnArgs.Set("model", name);
 
-            pos = player.GetPhysics().GetOrigin();
+            pos.oSet(player.GetPhysics().GetOrigin());
             ang = new idAngles(player.viewAngles);
             player.SpawnToPoint(pos, ang);
         }
@@ -1008,7 +1008,7 @@ public class SysCmds {
         @Override
         public void run(idCmdArgs args) {
             idPlayer player;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             player = gameLocal.GetLocalPlayer();
@@ -1044,7 +1044,7 @@ public class SysCmds {
 
         @Override
         public void run(idCmdArgs args) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idAngles angels = new idAngles();
             int i;
             idPlayer player;
@@ -1091,7 +1091,7 @@ public class SysCmds {
 
         @Override
         public void run(idCmdArgs args) {
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
             idAngles angles = new idAngles();
             idPlayer player;
             idEntity ent;
@@ -1114,7 +1114,7 @@ public class SysCmds {
 
             angles.Zero();
             angles.yaw = ent.GetPhysics().GetAxis().oGet(0).ToYaw();
-            origin = ent.GetPhysics().GetOrigin();
+            origin.oSet(ent.GetPhysics().GetOrigin());
 
             player.Teleport(origin, angles, ent);
         }
@@ -1138,7 +1138,7 @@ public class SysCmds {
 
         @Override
         public void run(idCmdArgs args) {
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
             idAngles angles;
             idPlayer player;
             idEntity ent;
@@ -1186,7 +1186,7 @@ public class SysCmds {
             String key, value;
             int i;
             float yaw;
-            idVec3 org;
+            final idVec3 org = new idVec3();
             idPlayer player;
             idDict dict = new idDict();
 
@@ -1206,7 +1206,7 @@ public class SysCmds {
             dict.Set("classname", value);
             dict.Set("angle", va("%f", yaw + 180));
 
-            org = player.GetPhysics().GetOrigin().oPlus(new idAngles(0, yaw, 0).ToForward().oMultiply(80).oPlus(new idVec3(0, 0, 1)));
+            org.oSet(player.GetPhysics().GetOrigin().oPlus(new idAngles(0, yaw, 0).ToForward().oMultiply(80).oPlus(new idVec3(0, 0, 1))));
             dict.Set("origin", org.ToString());
 
             for (i = 2; i < args.Argc() - 1; i += 2) {
@@ -1549,7 +1549,7 @@ public class SysCmds {
 
         @Override
         public void run(idCmdArgs args) {
-            idVec3 offset;
+            final idVec3 offset = new idVec3();
             String name;
             idPlayer player;
             idDict dict = new idDict();
@@ -1571,7 +1571,7 @@ public class SysCmds {
 
             name = args.Argv(1);
 
-            offset = player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f));
+            offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f)));
 
             dict.Set("origin", offset.ToString());
             dict.Set("test", "1");
@@ -1585,7 +1585,7 @@ public class SysCmds {
         boolean arrow;
         boolean blink;
         int color;
-        idVec3 start = new idVec3(), end = new idVec3();
+        final idVec3 start = new idVec3(), end = new idVec3();
         boolean used;
     }
 
@@ -2081,15 +2081,15 @@ public class SysCmds {
 
             damageDefName = args.Argv(1);
 
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             if (args.Argc() == 3) {
                 float angle = Float.parseFloat(args.Argv(2));
 
                 CFloat d1 = new CFloat(), d0 = new CFloat();
                 idMath.SinCos(DEG2RAD(angle), d1, d0);
-                dir = new idVec3(d0.getVal(), d1.getVal(), 0);
+                dir.oSet(new idVec3(d0.getVal(), d1.getVal(), 0));
             } else {
-                dir = new idVec3();
+                dir.oSet(new idVec3());
 //            dir.Zero();
             }
 
@@ -2164,10 +2164,10 @@ public class SysCmds {
                 return;
             }
 
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             CFloat d1 = new CFloat(), d0 = new CFloat();
             idMath.SinCos(DEG2RAD(45.0f), d1, d0);
-            dir = new idVec3(d0.getVal(), d1.getVal(), 0);
+            dir.oSet(new idVec3(d0.getVal(), d1.getVal(), 0));
 
             g_testDeath.SetBool(true);
             player.Damage(null, null, dir, "damage_triggerhurt_1000", 1.0f, INVALID_JOINT);
@@ -2785,7 +2785,7 @@ public class SysCmds {
         @Override
         public void run(idCmdArgs args) {
             idPlayer player;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (args.Argc() <= 3) {
@@ -2872,7 +2872,7 @@ public class SysCmds {
         public void run(idCmdArgs args) {
             idToken token = new idToken();
             idPlayer player;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             player = gameLocal.GetLocalPlayer();
@@ -2929,7 +2929,7 @@ public class SysCmds {
 
         @Override
         public void run(idCmdArgs args) {
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
             idAngles angles;
             idPlayer player;
             idEntity ent;
@@ -2939,8 +2939,8 @@ public class SysCmds {
             int surfIndex;
             srfTriangles_s geom;
             idMat4 modelMatrix;
-            idVec3 normal;
-            idVec3 center;
+            final idVec3 normal = new idVec3();
+            final idVec3 center = new idVec3();
             modelSurface_s[] surfaces = Stream.generate(modelSurface_s::new)
                     .limit(MAX_RENDERENTITY_GUI)
                     .toArray(modelSurface_s[]::new);
@@ -3028,10 +3028,10 @@ public class SysCmds {
             assert (geom.facePlanes != null);
 
             modelMatrix = new idMat4(renderEnt.axis, renderEnt.origin);
-            normal = geom.facePlanes[0].Normal().oMultiply(renderEnt.axis);
-            center = geom.bounds.GetCenter().oMultiply(modelMatrix);
+            normal.oSet(geom.facePlanes[0].Normal().oMultiply(renderEnt.axis));
+            center.oSet(geom.bounds.GetCenter().oMultiply(modelMatrix));
 
-            origin = center.oPlus(normal.oMultiply(32.0f));
+            origin.oSet(center.oPlus(normal.oMultiply(32.0f)));
             origin.z -= player.EyeHeight();
             normal.oMulSet(-1.0f);
             angles = normal.ToAngles();

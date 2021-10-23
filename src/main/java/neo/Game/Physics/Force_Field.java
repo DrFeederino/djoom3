@@ -68,7 +68,7 @@ public class Force_Field {
 
         private forceFieldApplyType applyType;
         private idClipModel clipModel;
-        private idVec3 dir;
+        private final idVec3 dir;
         private float magnitude;
         private boolean monsterOnly;
         private boolean playerOnly;
@@ -116,7 +116,7 @@ public class Force_Field {
         //	virtual				~idForce_Field( void );
         // uniform constant force
         public void Uniform(final idVec3 force) {
-            dir = force;
+            dir.oSet(force);
             magnitude = dir.Normalize();
             type = FORCEFIELD_UNIFORM;
         }
@@ -166,7 +166,7 @@ public class Force_Field {
         public void Evaluate(int time) {
             int numClipModels, i;
             idBounds bounds = new idBounds();
-            idVec3 force = new idVec3(), torque = new idVec3(), angularVelocity;
+            final idVec3 force = new idVec3(), torque = new idVec3(), angularVelocity = new idVec3();
             idClipModel cm;
             idClipModel[] clipModelList = new idClipModel[MAX_GENTITIES];
 
@@ -206,16 +206,16 @@ public class Force_Field {
 
                 switch (type) {
                     case FORCEFIELD_UNIFORM: {
-                        force = dir;
+                        force.oSet(dir);
                         break;
                     }
                     case FORCEFIELD_EXPLOSION: {
-                        force = cm.GetOrigin().oMinus(clipModel.GetOrigin());
+                        force.oSet(cm.GetOrigin().oMinus(clipModel.GetOrigin()));
                         force.Normalize();
                         break;
                     }
                     case FORCEFIELD_IMPLOSION: {
-                        force = clipModel.GetOrigin().oMinus(cm.GetOrigin());
+                        force.oSet(clipModel.GetOrigin().oMinus(cm.GetOrigin()));
                         force.Normalize();
                         break;
                     }
@@ -246,7 +246,7 @@ public class Force_Field {
                     case FORCEFIELD_APPLY_VELOCITY: {
                         physics.SetLinearVelocity(force.oMultiply(magnitude), cm.GetId());
                         if (randomTorque != 0.0f) {
-                            angularVelocity = physics.GetAngularVelocity(cm.GetId());
+                            angularVelocity.oSet(physics.GetAngularVelocity(cm.GetId()));
                             physics.SetAngularVelocity((angularVelocity.oPlus(torque.oMultiply(randomTorque))).oMultiply(0.5f), cm.GetId());
                         }
                         break;

@@ -172,7 +172,7 @@ public class Anim {
 
         int/*jointHandle_t*/ jointnum;
         idMat3 mat;
-        idVec3 pos;
+        final idVec3 pos;
         jointModTransform_t transform_axis;
         jointModTransform_t transform_pos;
 
@@ -836,7 +836,7 @@ public class Anim {
             frame.frontlerp = 1.0f - frame.backlerp;
         }
 
-        public void GetOrigin(idVec3 offset, int time, int cyclecount) {
+        public void GetOrigin(final idVec3 offset, int time, int cyclecount) {
             frameBlend_t frame = new frameBlend_t();
             int c1_ptr, c2_ptr;
 
@@ -989,7 +989,7 @@ public class Anim {
 
         public void GetBounds(idBounds bnds, int time, int cyclecount) {
             frameBlend_t frame = new frameBlend_t();
-            idVec3 offset;
+            final idVec3 offset = new idVec3();
             int c1_ptr, c2_ptr;
 
             ConvertTimeToFrame(time, cyclecount, frame);
@@ -998,7 +998,7 @@ public class Anim {
             bnds.AddBounds(bounds.oGet(frame.frame2));
 
             // origin position
-            offset = baseFrame.oGet(0).t;
+            offset.oSet(baseFrame.oGet(0).t);
             if ((jointInfo.oGet(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ)) != 0) {
                 Float[] componentPtr1 = componentFrames.getList(Float[].class);
                 c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
@@ -1029,7 +1029,7 @@ public class Anim {
     public static class idAFPoseJointMod {
         public idMat3 axis;
         public AFJointModType_t mod;
-        public idVec3 origin;
+        public final idVec3 origin;
         //
         //
 

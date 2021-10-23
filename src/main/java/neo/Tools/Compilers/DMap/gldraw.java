@@ -154,7 +154,7 @@ public class gldraw {
         glFlush();
     }
 
-    static void DrawLine(idVec3 v1, idVec3 v2, int color) {
+    static void DrawLine(final idVec3 v1, final idVec3 v2, int color) {
         if (!dmapGlobals.drawflag) {
             return;
         }

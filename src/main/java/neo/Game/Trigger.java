@@ -71,7 +71,7 @@ public class Trigger {
 
         public static void DrawDebugInfo() {
             idMat3 axis = gameLocal.GetLocalPlayer().viewAngles.ToMat3();
-            idVec3 up = axis.oGet(2).oMultiply(5.0f);
+            final idVec3 up = new idVec3(axis.oGet(2).oMultiply(5.0f));
             idBounds viewTextBounds = new idBounds(gameLocal.GetLocalPlayer().GetPhysics().GetOrigin());
             idBounds viewBounds = new idBounds(gameLocal.GetLocalPlayer().GetPhysics().GetOrigin());
             idBounds box = new idBounds(new idVec3(-4.0f, -4.0f, -4.0f), new idVec3(4.0f, 4.0f, 4.0f));

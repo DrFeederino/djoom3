@@ -41,7 +41,7 @@ public class leakfile {
      =============
      */
     static void LeakFile(tree_s tree) {
-        idVec3 mid = new idVec3();
+        final idVec3 mid = new idVec3();
 //        FILE linefile;
         String filename;
         String ospath;
@@ -86,7 +86,7 @@ public class leakfile {
                     }
                 }
                 node = nextnode;
-                mid = nextportal.winding.GetCenter();
+                mid.oSet(nextportal.winding.GetCenter());
                 fprintf = String.format("%f %f %f\n", mid.oGet(0), mid.oGet(1), mid.oGet(2)).getBytes();
                 linefile.write(ByteBuffer.wrap(fprintf));
                 count++;

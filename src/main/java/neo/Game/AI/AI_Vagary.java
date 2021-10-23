@@ -59,15 +59,15 @@ public class AI_Vagary {
             int numListedEntities;
             int i, index;
             float dist;
-            idVec3 vel = new idVec3();
-            idVec3 offsetVec = new idVec3(0, 0, offset.value);
+            final idVec3 vel = new idVec3();
+            final idVec3 offsetVec = new idVec3(0, 0, offset.value);
             idEntity enemyEnt = enemy.GetEntity();
 
             if (null == enemyEnt) {
                 idThread.ReturnEntity(null);
             }
 
-            idVec3 enemyEyePos = lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset);
+            final idVec3 enemyEyePos = new idVec3(lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset));
             final idBounds myBounds = physicsObj.GetAbsBounds();
             idBounds checkBounds = new idBounds(mins.value, maxs.value);
             checkBounds.TranslateSelf(physicsObj.GetOrigin());
@@ -89,7 +89,7 @@ public class AI_Vagary {
                 }
 
                 idPhysics entPhys = ent.GetPhysics();
-                final idVec3 entOrg = entPhys.GetOrigin();
+                final idVec3 entOrg = new idVec3(entPhys.GetOrigin());
                 dist = (entOrg.oMinus(enemyEyePos)).LengthFast();
                 if (dist < minDist.value) {
                     continue;
@@ -114,14 +114,14 @@ public class AI_Vagary {
         private void Event_ThrowObjectAtEnemy(idEventArg<idEntity> _ent, idEventArg<Float> _speed) {
             idEntity ent = _ent.value;
             float speed = _speed.value;
-            idVec3 vel = new idVec3();
+            final idVec3 vel = new idVec3();
             idEntity enemyEnt;
             idPhysics entPhys;
 
             entPhys = ent.GetPhysics();
             enemyEnt = enemy.GetEntity();
             if (NOT(enemyEnt)) {
-                vel = (viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis())).oMultiply(speed);
+                vel.oSet((viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis())).oMultiply(speed));
             } else {
                 PredictTrajectory(entPhys.GetOrigin(), lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset), speed, entPhys.GetGravity(),
                         entPhys.GetClipModel(), entPhys.GetClipMask(), MAX_WORLD_SIZE, null, enemyEnt, ai_debugTrajectory.GetBool() ? 4000 : 0, vel);

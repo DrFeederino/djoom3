@@ -1,6 +1,5 @@
 package neo.Renderer;
 
-import neo.Renderer.Interaction.*;
 import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.silEdge_t;
 import neo.Renderer.Model.srfTriangles_s;
@@ -188,7 +187,7 @@ public class tr_turboshadow {
      */
     public static srfTriangles_s R_CreateTurboShadowVolume(final idRenderEntityLocal ent, final srfTriangles_s tri, final idRenderLightLocal light, srfCullInfo_t cullInfo) {
         int i, j;
-        idVec3 localLightOrigin = new idVec3();
+        final idVec3 localLightOrigin = new idVec3();
         srfTriangles_s newTri;
         silEdge_t sil;
         int /*glIndex_t */[] indexes;

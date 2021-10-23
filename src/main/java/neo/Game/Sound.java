@@ -159,7 +159,7 @@ public class Sound {
                 GameEdit.gameEdit.ParseSpawnArgsToRefSound(spawnArgs, refSound);
                 refSound.referenceSound = saveRef;
 
-                idVec3 origin = new idVec3();
+                final idVec3 origin = new idVec3();
                 idMat3 axis = new idMat3();
 
                 if (GetPhysicsToSoundTransform(origin, axis)) {

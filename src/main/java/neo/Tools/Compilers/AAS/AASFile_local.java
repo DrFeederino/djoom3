@@ -75,9 +75,7 @@ public class AASFile_local {
             int i, edgeNum;
             final aasFace_s face;
             aasEdge_s edge;
-            idVec3 center;
-
-            center = getVec3_origin();
+            final idVec3 center = new idVec3(getVec3_origin());
 
             face = faces.oGet(faceNum);
             if (face.numEdges > 0) {
@@ -95,9 +93,8 @@ public class AASFile_local {
         public idVec3 AreaCenter(int areaNum) {
             int i, faceNum;
             final aasArea_s area;
-            idVec3 center;
 
-            center = getVec3_origin();
+            final idVec3 center = new idVec3(getVec3_origin());
 
             area = areas.oGet(areaNum);
             if (area.numFaces > 0) {
@@ -179,17 +176,15 @@ public class AASFile_local {
         @Override
         public int PointReachableAreaNum(final idVec3 origin, final idBounds searchBounds, final int areaFlags, final int excludeTravelFlags) {
             int areaNum, i;
-            idVec3 start, end;
+            final idVec3 start = new idVec3(origin), end = new idVec3();
             aasTrace_s trace = new aasTrace_s();
             idBounds bounds = new idBounds();
             float frak;
             final int[] areaList = new int[32];
-            final idVec3[] pointList = new idVec3[32];
-
-            start = origin;
+            final idVec3[] pointList = idVec3.generateArray(32);
 
             trace.areas = areaList;
-            trace.points = pointList;
+            trace.points = idVec3.generateArray(32);
             trace.maxAreas = areaList.length;
             trace.getOutOfSolid = 1;// true;
 
@@ -200,7 +195,7 @@ public class AASFile_local {
                 }
             } else {
                 // trace up
-                end = start;
+                end.oSet(start);
                 end.oPluSet(2, 32.0f);
                 Trace(trace, start, end);
                 if (trace.numAreas >= 1) {
@@ -213,7 +208,7 @@ public class AASFile_local {
             }
 
             // trace down
-            end = start;
+            end.oSet(start);
             end.oMinSet(2, 32.0f);
             Trace(trace, start, end);
             if (trace.lastAreaNum != 0) {
@@ -243,7 +238,7 @@ public class AASFile_local {
         }
 
         @Override
-        public void PushPointIntoAreaNum(int areaNum, idVec3 point) {
+        public void PushPointIntoAreaNum(int areaNum, final idVec3 point) {
             int i, faceNum;
             final aasArea_s area;
             aasFace_s face;
@@ -269,7 +264,7 @@ public class AASFile_local {
         public boolean Trace(aasTrace_s trace, final idVec3 start, final idVec3 end) {
             int side, nodeNum, tmpPlaneNum;
             double front, back, frac;
-            idVec3 cur_start, cur_end, cur_mid, v1, v2;
+            final idVec3 cur_start = new idVec3(), cur_end = new idVec3(), cur_mid = new idVec3(), v1 = new idVec3(), v2 = new idVec3();
             aasTraceStack_s[] tracestack = TempDump.allocArray(aasTraceStack_s.class, MAX_AAS_TREE_DEPTH);
             int tstack_p;
             aasNode_s node;
@@ -280,8 +275,8 @@ public class AASFile_local {
             trace.blockingAreaNum = 0;
 
             tstack_p = 0;//tracestack;
-            tracestack[tstack_p].start = start;
-            tracestack[tstack_p].end = end;
+            tracestack[tstack_p].start.oSet(start);
+            tracestack[tstack_p].end.oSet(end);
             tracestack[tstack_p].planeNum = 0;
             tracestack[tstack_p].nodeNum = 1;        //start with the root of the tree
             tstack_p++;
@@ -294,11 +289,11 @@ public class AASFile_local {
                     if (NOT(trace.lastAreaNum)) {
                         // completely in solid
                         trace.fraction = 0.0f;
-                        trace.endpos = start;
+                        trace.endpos.oSet(start);
                     } else {
                         // nothing was hit
                         trace.fraction = 1.0f;
-                        trace.endpos = end;
+                        trace.endpos.oSet(end);
                     }
                     trace.planeNum = 0;
                     return false;
@@ -313,13 +308,13 @@ public class AASFile_local {
                     if (((areas.oGet(-nodeNum).flags & trace.flags) != 0) || ((areas.oGet(-nodeNum).travelFlags & trace.travelFlags) != 0)) {
                         if (NOT(trace.lastAreaNum)) {
                             trace.fraction = 0.0f;
-                            v1 = getVec3_origin();
+                            v1.oSet(getVec3_origin());
                         } else {
-                            v1 = end.oMinus(start);
-                            v2 = tracestack[tstack_p].start.oMinus(start);
+                            v1.oSet(end.oMinus(start));
+                            v2.oSet(tracestack[tstack_p].start.oMinus(start));
                             trace.fraction = v2.Length() / v1.Length();
                         }
-                        trace.endpos = tracestack[tstack_p].start;
+                        trace.endpos.oSet(tracestack[tstack_p].start);
                         trace.blockingAreaNum = -nodeNum;
                         trace.planeNum = tracestack[tstack_p].planeNum;
                         // always take the plane with normal facing towards the trace start
@@ -335,7 +330,7 @@ public class AASFile_local {
                             trace.areas[trace.numAreas] = -nodeNum;
                         }
                         if (trace.points != null) {
-                            trace.points[trace.numAreas] = tracestack[tstack_p].start;
+                            trace.points[trace.numAreas].oSet(tracestack[tstack_p].start);
                         }
                         trace.numAreas++;
                     }
@@ -346,13 +341,13 @@ public class AASFile_local {
                 if (0 == nodeNum) {
                     if (0 == trace.lastAreaNum) {
                         trace.fraction = 0.0f;
-                        v1 = getVec3_origin();
+                        v1.oSet(getVec3_origin());
                     } else {
-                        v1 = end.oMinus(start);
-                        v2 = tracestack[tstack_p].start.oMinus(start);
+                        v1.oSet(end.oMinus(start));
+                        v2.oSet(tracestack[tstack_p].start.oMinus(start));
                         trace.fraction = v2.Length() / v1.Length();
                     }
-                    trace.endpos = tracestack[tstack_p].start;
+                    trace.endpos.oSet(tracestack[tstack_p].start);
                     trace.blockingAreaNum = 0;    // hit solid leaf
                     trace.planeNum = tracestack[tstack_p].planeNum;
                     // always take the plane with normal facing towards the trace start
@@ -370,9 +365,9 @@ public class AASFile_local {
                 // the node to test against
                 node = nodes.oGet(nodeNum);
                 // start point of current line to test against node
-                cur_start = tracestack[tstack_p].start;
+                cur_start.oSet(tracestack[tstack_p].start);
                 // end point of the current line to test against node
-                cur_end = tracestack[tstack_p].end;
+                cur_end.oSet(tracestack[tstack_p].end);
                 // the current node plane
                 plane = planeList.oGet(node.planeNum);
 
@@ -416,13 +411,13 @@ public class AASFile_local {
                         frac = 0.999f; //1
                     }
 
-                    cur_mid = cur_start.oPlus((cur_end.oMinus(cur_start)).oMultiply((float) frac));//TODO:downcast?
+                    cur_mid.oSet(cur_start.oPlus((cur_end.oMinus(cur_start)).oMultiply((float) frac)));//TODO:downcast?
 
                     // side the front part of the line is on
                     side = front < 0 ? 1 : 0;
 
                     // first put the end part of the line on the stack (back side)
-                    tracestack[tstack_p].start = cur_mid;
+                    tracestack[tstack_p].start.oSet(cur_mid);
                     tracestack[tstack_p].planeNum = node.planeNum;
                     tracestack[tstack_p].nodeNum = node.children[/*!side*/1 ^ side];
                     tstack_p++;
@@ -432,8 +427,8 @@ public class AASFile_local {
                     }
                     // now put the part near the start of the line on the stack so we will
                     // continue with that part first.
-                    tracestack[tstack_p].start = cur_start;
-                    tracestack[tstack_p].end = cur_mid;
+                    tracestack[tstack_p].start.oSet(cur_start);
+                    tracestack[tstack_p].end.oSet(cur_mid);
                     tracestack[tstack_p].planeNum = tmpPlaneNum;
                     tracestack[tstack_p].nodeNum = node.children[side];
                     tstack_p++;
@@ -858,7 +853,7 @@ public class AASFile_local {
             int i;
 
             for (i = 0; i < areas.Num(); i++) {
-                areas.oGet(i).center = AreaReachableGoal(i);
+                areas.oGet(i).center.oSet(AreaReachableGoal(i));
                 areas.oGet(i).bounds = AreaBounds(i);
             }
         }
@@ -956,7 +951,7 @@ public class AASFile_local {
                 return false;
             }
             for (int i = 0; i < numVertices; i++) {
-                idVec3 vec = new idVec3();
+                final idVec3 vec = new idVec3();
                 src.ParseInt();
                 if (!src.Parse1DMatrix(3, vec)) {
                     return false;
@@ -1197,8 +1192,8 @@ public class AASFile_local {
         private idVec3 AreaReachableGoal(int areaNum) {
             int i, faceNum, numFaces;
             final aasArea_s area;
-            idVec3 center;
-            idVec3 start, end;
+            final idVec3 center = new idVec3();
+            final idVec3 start = new idVec3(), end = new idVec3();
             aasTrace_s trace = new aasTrace_s();
 
             area = areas.oGet(areaNum);
@@ -1207,7 +1202,7 @@ public class AASFile_local {
                 return AreaCenter(areaNum);
             }
 
-            center = getVec3_origin();
+            center.oSet(getVec3_origin());
 
             numFaces = 0;
             for (i = 0; i < area.numFaces; i++) {
@@ -1222,7 +1217,7 @@ public class AASFile_local {
                 center.oDivSet(numFaces);
             }
             center.oPluSet(2, 1.0f);
-            end = center;
+            end.oSet(center);
             end.oMinSet(2, 1024);
             Trace(trace, center, end);
 
@@ -1245,10 +1240,10 @@ public class AASFile_local {
 
     public static class aasTraceStack_s {
 
-        idVec3 end;
+        final idVec3 end;
         int nodeNum;
         int planeNum;
-        idVec3 start;
+        final idVec3 start;
 
         public aasTraceStack_s() {
             start = new idVec3();

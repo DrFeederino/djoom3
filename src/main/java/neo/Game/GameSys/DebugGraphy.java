@@ -43,18 +43,18 @@ public class DebugGraphy {
             int i;
             float value1;
             float value2;
-            idVec3 vec1;
-            idVec3 vec2;
+            final idVec3 vec1 = new idVec3();
+            final idVec3 vec2 = new idVec3();
 
             idMat3 axis = gameLocal.GetLocalPlayer().viewAxis;
-            idVec3 pos = gameLocal.GetLocalPlayer().GetPhysics().GetOrigin().oPlus(axis.oGet(1).oMultiply(samples.Num() * 0.5f));
+            final idVec3 pos = new idVec3(gameLocal.GetLocalPlayer().GetPhysics().GetOrigin().oPlus(axis.oGet(1).oMultiply(samples.Num() * 0.5f)));
 
             value1 = samples.oGet(index) * scale;
             for (i = 1; i < samples.Num(); i++) {
                 value2 = samples.oGet((i + index) % samples.Num()) * scale;
 
-                vec1 = pos.oPlus(axis.oGet(2).oMultiply(value1).oMinus(axis.oGet(1).oMultiply(i - 1).oPlus(axis.oGet(0).oMultiply(samples.Num()))));
-                vec2 = pos.oPlus(axis.oGet(2).oMultiply(value2).oMinus(axis.oGet(1).oMultiply(i).oPlus(axis.oGet(0).oMultiply(samples.Num()))));
+                vec1.oSet(pos.oPlus(axis.oGet(2).oMultiply(value1).oMinus(axis.oGet(1).oMultiply(i - 1).oPlus(axis.oGet(0).oMultiply(samples.Num())))));
+                vec2.oSet(pos.oPlus(axis.oGet(2).oMultiply(value2).oMinus(axis.oGet(1).oMultiply(i).oPlus(axis.oGet(0).oMultiply(samples.Num())))));
 
                 gameRenderWorld.DebugLine(color, vec1, vec2, Game_local.idGameLocal.msec, false);
                 value1 = value2;

@@ -179,9 +179,9 @@ public class snd_world {
         //
         public idMat3 listenerAxis;
         public int listenerEnvironmentID;
-        public idVec3 listenerPos;                      // position in meters
+        public final idVec3 listenerPos;                      // position in meters
         public int listenerPrivateId;
-        public idVec3 listenerQU;            // position in "quake units"
+        public final idVec3 listenerQU;            // position in "quake units"
         //
         public idSoundEmitterLocal localSound;        // just for playShaderDirectly()
         public int pause44kHz;
@@ -360,7 +360,7 @@ public class snd_world {
             listenerPrivateId = listenerId;
 
             listenerQU.oSet(origin);                            // Doom units
-            listenerPos = origin.oMultiply(DOOM_TO_METERS);     // meters
+            listenerPos.oSet(origin.oMultiply(DOOM_TO_METERS));     // meters
             listenerAxis.oSet(axis);
             listenerAreaName.oSet(areaName);
             listenerAreaName.ToLower();
@@ -484,7 +484,7 @@ public class snd_world {
                     UnPause();
                     break;
                 case SCMD_PLACE_LISTENER: {
-                    idVec3 origin = new idVec3();
+                    final idVec3 origin = new idVec3();
                     idMat3 axis = new idMat3();
                     int listenerId;
                     int gameTime;
@@ -522,7 +522,7 @@ public class snd_world {
                 }
                 break;
                 case SCMD_UPDATE: {
-                    idVec3 origin = new idVec3();
+                    final idVec3 origin = new idVec3();
                     int listenerId;
                     soundShaderParms_t parms = new soundShaderParms_t();
 
@@ -860,7 +860,7 @@ public class snd_world {
             int i, num, handle, listenerId, gameTime, channel;
             int currentSoundTime, soundTimeOffset, savedSoundTime;
             idSoundEmitterLocal def;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
             idStr soundShader = new idStr();
 
@@ -1205,7 +1205,7 @@ public class snd_world {
                         }
 
                         // draw the index
-                        idVec3 textPos = def.origin;
+                        final idVec3 textPos = new idVec3(def.origin);
                         textPos.oMinSet(2, 8);
                         rw.DrawText(va("%d", def.index), textPos, 0.1f, new idVec4(1, 0, 0, 1), listenerAxis);
                         textPos.oPluSet(2, 8);
@@ -1316,9 +1316,9 @@ public class snd_world {
             return def;
         }
 
-        public void CalcEars(int numSpeakers, idVec3 spatializedOrigin, idVec3 listenerPos, idMat3 listenerAxis, float[] ears/*[6]*/, float spatialize) {
-            idVec3 svec = spatializedOrigin.oMinus(listenerPos);
-            idVec3 ovec = new idVec3(svec.oMultiply(listenerAxis.oGet(0)), svec.oMultiply(listenerAxis.oGet(1)), svec.oMultiply(listenerAxis.oGet(2)));
+        public void CalcEars(int numSpeakers, final idVec3 spatializedOrigin, final idVec3 listenerPos, idMat3 listenerAxis, float[] ears/*[6]*/, float spatialize) {
+            final idVec3 svec = new idVec3(spatializedOrigin.oMinus(listenerPos));
+            final idVec3 ovec = new idVec3(svec.oMultiply(listenerAxis.oGet(0)), svec.oMultiply(listenerAxis.oGet(1)), svec.oMultiply(listenerAxis.oGet(2)));
 
             ovec.Normalize();
 
@@ -1440,17 +1440,17 @@ public class snd_world {
             // it's not affected by distance or occlusion
             //
             float spatialize = 1;
-            idVec3 spatializedOriginInMeters = new idVec3();
+            final idVec3 spatializedOriginInMeters = new idVec3();
             if (!global) {
                 float dlen;
 
                 if (noOcclusion) {
                     // use the real origin and distance
-                    spatializedOriginInMeters = sound.origin.oMultiply(DOOM_TO_METERS);
+                    spatializedOriginInMeters.oSet(sound.origin.oMultiply(DOOM_TO_METERS));
                     dlen = sound.realDistance;
                 } else {
                     // use the possibly portal-occluded origin and distance
-                    spatializedOriginInMeters = sound.spatializedOrigin.oMultiply(DOOM_TO_METERS);
+                    spatializedOriginInMeters.oSet(sound.spatializedOrigin.oMultiply(DOOM_TO_METERS));
                     dlen = sound.distance;
                 }
 
@@ -1899,7 +1899,7 @@ public class snd_world {
                 float fullDist = dist + (soundOrigin.oMinus(listenerQU)).LengthFast();
                 if (fullDist < def.distance) {
                     def.distance = fullDist;
-                    def.spatializedOrigin = soundOrigin;
+                    def.spatializedOrigin.oSet(soundOrigin);
                 }
                 return;
             }
@@ -1945,27 +1945,27 @@ public class snd_world {
 
                 // pick a point on the portal to serve as our virtual sound origin
 // #if 1
-                idVec3 source;
+                final idVec3 source = new idVec3();
 
                 idPlane pl = new idPlane();
                 re.w.GetPlane(pl);
 
                 CFloat scale = new CFloat();
-                idVec3 dir = listenerQU.oMinus(soundOrigin);
+                final idVec3 dir = new idVec3(listenerQU.oMinus(soundOrigin));
                 if (!pl.RayIntersection(soundOrigin, dir, scale)) {
-                    source = re.w.GetCenter();
+                    source.oSet(re.w.GetCenter());
                 } else {
-                    source = soundOrigin.oPlus(dir.oMultiply(scale.getVal()));
+                    source.oSet(soundOrigin.oPlus(dir.oMultiply(scale.getVal())));
 
                     // if this point isn't inside the portal edges, slide it in
                     for (int i = 0; i < re.w.GetNumPoints(); i++) {
                         int j = (i + 1) % re.w.GetNumPoints();
-                        idVec3 edgeDir = re.w.oGet(j).ToVec3().oMinus(re.w.oGet(i).ToVec3());
-                        idVec3 edgeNormal = new idVec3();
+                        final idVec3 edgeDir = new idVec3(re.w.oGet(j).ToVec3().oMinus(re.w.oGet(i).ToVec3()));
+                        final idVec3 edgeNormal = new idVec3();
 
                         edgeNormal.Cross(pl.Normal(), edgeDir);
 
-                        idVec3 fromVert = source.oMinus(re.w.oGet(j).ToVec3());
+                        final idVec3 fromVert = new idVec3(source.oMinus(re.w.oGet(j).ToVec3()));
 
                         float d = edgeNormal.oMultiply(fromVert);
                         if (d > 0) {
@@ -1977,48 +1977,7 @@ public class snd_world {
                         }
                     }
                 }
-// #else
-                // // clip the ray from the listener to the center of the portal by
-                // // all the portal edge planes, then project that point (or the original if not clipped)
-                // // onto the portal plane to get the spatialized origin
-
-                // idVec3	start = listenerQU;
-                // idVec3	mid = re.w.GetCenter();
-                // bool	wasClipped = false;
-                // for ( int i = 0 ; i < re.w.GetNumPoints() ; i++ ) {
-                // int j = ( i + 1 ) % re.w.GetNumPoints();
-                // idVec3	v1 = (*(re.w))[j].ToVec3() - soundOrigin;
-                // idVec3	v2 = (*(re.w))[i].ToVec3() - soundOrigin;
-                // v1.Normalize();
-                // v2.Normalize();
-                // idVec3	edgeNormal;
-                // edgeNormal.Cross( v1, v2 );
-                // idVec3	fromVert = start - soundOrigin;
-                // float	d1 = edgeNormal * fromVert;
-                // if ( d1 > 0.0f ) {
-                // fromVert = mid - (*(re.w))[j].ToVec3();
-                // float d2 = edgeNormal * fromVert;
-                // // move it in
-                // float	f = d1 / ( d1 - d2 );
-                // idVec3	clipped = start * ( 1.0f - f ) + mid * f;
-                // start = clipped;
-                // wasClipped = true;
-                // }
-                // }
-                // idVec3	source;
-                // if ( wasClipped ) {
-                // // now project it onto the portal plane
-                // idPlane	pl;
-                // re.w.GetPlane( pl );
-                // float	f1 = pl.Distance( start );
-                // float	f2 = pl.Distance( soundOrigin );
-                // float	f = f1 / ( f1 - f2 );
-                // source = start * ( 1.0f - f ) + soundOrigin * f;
-                // } else {
-                // source = soundOrigin;
-                // }
-// #endif
-                idVec3 tlen = source.oMinus(soundOrigin);
+                final idVec3 tlen = new idVec3(source.oMinus(soundOrigin));
                 float tlenLength = tlen.LengthFast();
 
                 ResolveOrigin(stackDepth + 1, newStack, otherArea, dist + tlenLength + occlusionDistance, source, def);
@@ -2041,7 +2000,7 @@ public class snd_world {
 
             if (listenerPosition != null) {
                 // this doesn't do the portal spatialization
-                idVec3 dist = sound.origin.oMinus(listenerPosition);
+                final idVec3 dist = new idVec3(sound.origin.oMinus(listenerPosition));
                 dlen = dist.Length();
                 dlen *= DOOM_TO_METERS;
             } else {

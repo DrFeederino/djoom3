@@ -308,11 +308,11 @@ public class optimize {
      =================
      */
     static boolean VertexBetween(final optVertex_s p1, final optVertex_s v1, final optVertex_s v2) {
-        idVec3 d1, d2;
+        final idVec3 d1 = new idVec3(), d2 = new idVec3();
         float d;
 
-        d1 = p1.pv.oMinus(v1.pv);
-        d2 = p1.pv.oMinus(v2.pv);
+        d1.oSet(p1.pv.oMinus(v1.pv));
+        d2.oSet(p1.pv.oMinus(v2.pv));
         d = d1.oMultiply(d2);
         return d < 0;
     }
@@ -337,15 +337,15 @@ public class optimize {
                                         final optVertex_s l1, final optVertex_s l2, optimizeGroup_s opt) {
         float f;
         idDrawVert v;
-        idVec3 dir1, dir2, cross1, cross2;
+        final idVec3 dir1 = new idVec3(), dir2 = new idVec3(), cross1 = new idVec3(), cross2 = new idVec3();
 
-        dir1 = p1.pv.oMinus(l1.pv);
-        dir2 = p1.pv.oMinus(l2.pv);
-        cross1 = dir1.Cross(dir2);
+        dir1.oSet(p1.pv.oMinus(l1.pv));
+        dir2.oSet(p1.pv.oMinus(l2.pv));
+        cross1.oSet(dir1.Cross(dir2));
 
-        dir1 = p2.pv.oMinus(l1.pv);
-        dir2 = p2.pv.oMinus(l2.pv);
-        cross2 = dir1.Cross(dir2);
+        dir1.oSet(p2.pv.oMinus(l1.pv));
+        dir2.oSet(p2.pv.oMinus(l2.pv));
+        cross2.oSet(dir1.Cross(dir2));
 
         if (cross1.oGet(2) - cross2.oGet(2) == 0) {
             return null;
@@ -511,14 +511,14 @@ public class optimize {
                 continue;
             }
             for (vert2 = vert.islandLink; vert2 != null; vert2 = vert2.islandLink) {
-                idVec3 dir;
+                final idVec3 dir = new idVec3();
 
                 if (NOT(vert2.edges)) {
                     continue;
                 }
                 lengths[numLengths].v1 = vert;
                 lengths[numLengths].v2 = vert2;
-                dir = (vert.pv.oMinus(vert2.pv));
+                dir.oSet((vert.pv.oMinus(vert2.pv)));
                 lengths[numLengths].length = dir.Length();
                 numLengths++;
             }
@@ -553,10 +553,10 @@ public class optimize {
     static void RemoveIfColinear(optVertex_s ov, optIsland_t island) {
         optEdge_s e, e1, e2;
         optVertex_s v1 = new optVertex_s(), v2, v3 = new optVertex_s();
-        idVec3 dir1 = new idVec3(), dir2 = new idVec3();
+        final idVec3 dir1 = new idVec3(), dir2 = new idVec3();
         float len, dist;
-        idVec3 point = new idVec3();
-        idVec3 offset = new idVec3();
+        final idVec3 point = new idVec3();
+        final idVec3 offset = new idVec3();
         float off;
 
         v2 = ov;
@@ -747,25 +747,25 @@ public class optimize {
      =================
      */
     static boolean IsTriangleValid(final optVertex_s v1, final optVertex_s v2, final optVertex_s v3) {
-        idVec3 d1, d2, normal;
+        final idVec3 d1 = new idVec3(), d2 = new idVec3(), normal = new idVec3();
 
-        d1 = v2.pv.oMinus(v1.pv);
-        d2 = v3.pv.oMinus(v1.pv);
-        normal = d1.Cross(d2);
+        d1.oSet(v2.pv.oMinus(v1.pv));
+        d2.oSet(v3.pv.oMinus(v1.pv));
+        normal.oSet(d1.Cross(d2));
         if (normal.oGet(2) <= 0) {
             return false;
         }
 
-        d1 = v3.pv.oMinus(v2.pv);
-        d2 = v1.pv.oMinus(v2.pv);
-        normal = d1.Cross(d2);
+        d1.oSet(v3.pv.oMinus(v2.pv));
+        d2.oSet(v1.pv.oMinus(v2.pv));
+        normal.oSet(d1.Cross(d2));
         if (normal.oGet(2) <= 0) {
             return false;
         }
 
-        d1 = v1.pv.oMinus(v3.pv);
-        d2 = v2.pv.oMinus(v3.pv);
-        normal = d1.Cross(d2);
+        d1.oSet(v1.pv.oMinus(v3.pv));
+        d2.oSet(v2.pv.oMinus(v3.pv));
+        normal.oSet(d1.Cross(d2));
         return !(normal.oGet(2) <= 0);
     }
 
@@ -778,11 +778,11 @@ public class optimize {
      */
     static boolean IsTriangleDegenerate(final optVertex_s v1, final optVertex_s v2, final optVertex_s v3) {
 //#if 1
-        idVec3 d1, d2, normal;
+        final idVec3 d1 = new idVec3(), d2 = new idVec3(), normal = new idVec3();
 
-        d1 = v2.pv.oMinus(v1.pv);
-        d2 = v3.pv.oMinus(v1.pv);
-        normal = d1.Cross(d2);
+        d1.oSet(v2.pv.oMinus(v1.pv));
+        d2.oSet(v3.pv.oMinus(v1.pv));
+        normal.oSet(d1.Cross(d2));
         return normal.oGet(2) == 0;
 //#else
 //	return (bool)!IsTriangleValid( v1, v2, v3 );
@@ -797,27 +797,27 @@ public class optimize {
      ==================
      */
     static boolean PointInTri(final idVec3 p, final mapTri_s tri, optIsland_t island) {
-        idVec3 d1, d2, normal;
+        final idVec3 d1 = new idVec3(), d2 = new idVec3(), normal = new idVec3();
 
         // the normal[2] == 0 case is not uncommon when a square is triangulated in
         // the opposite manner to the original
-        d1 = tri.optVert[0].pv.oMinus(p);
-        d2 = tri.optVert[1].pv.oMinus(p);
-        normal = d1.Cross(d2);
+        d1.oSet(tri.optVert[0].pv.oMinus(p));
+        d2.oSet(tri.optVert[1].pv.oMinus(p));
+        normal.oSet(d1.Cross(d2));
         if (normal.oGet(2) < 0) {
             return false;
         }
 
-        d1 = tri.optVert[1].pv.oMinus(p);
-        d2 = tri.optVert[2].pv.oMinus(p);
-        normal = d1.Cross(d2);
+        d1.oSet(tri.optVert[1].pv.oMinus(p));
+        d2.oSet(tri.optVert[2].pv.oMinus(p));
+        normal.oSet(d1.Cross(d2));
         if (normal.oGet(2) < 0) {
             return false;
         }
 
-        d1 = tri.optVert[2].pv.oMinus(p);
-        d2 = tri.optVert[0].pv.oMinus(p);
-        normal = d1.Cross(d2);
+        d1.oSet(tri.optVert[2].pv.oMinus(p));
+        d2.oSet(tri.optVert[0].pv.oMinus(p));
+        normal.oSet(d1.Cross(d2));
         return !(normal.oGet(2) < 0);
     }
 
@@ -933,7 +933,7 @@ public class optimize {
         optTri.v[0] = first;
         optTri.v[1] = second;
         optTri.v[2] = third;
-        optTri.midpoint = (optTri.v[0].pv.oPlus(optTri.v[1].pv.oPlus(optTri.v[2].pv))).oMultiply(1.0f / 3.0f);
+        optTri.midpoint.oSet((optTri.v[0].pv.oPlus(optTri.v[1].pv.oPlus(optTri.v[2].pv))).oMultiply(1.0f / 3.0f));
         optTri.next = island.tris;
         island.tris = optTri;
 
@@ -986,7 +986,7 @@ public class optimize {
     static void ReportNearbyVertexes(final optVertex_s v, final optIsland_t island) {
         optVertex_s ov;
         float d;
-        idVec3 vec;
+        final idVec3 vec = new idVec3();
 
         common.Printf("verts near 0x%p (%f, %f)\n", v, v.pv.oGet(0), v.pv.oGet(1));
         for (ov = island.verts; ov != null; ov = ov.islandLink) {
@@ -994,7 +994,7 @@ public class optimize {
                 continue;
             }
 
-            vec = ov.pv.oMinus(v.pv);
+            vec.oSet(ov.pv.oMinus(v.pv));
 
             d = vec.Length();
             if (d < 1) {
@@ -1758,13 +1758,13 @@ public class optimize {
     static boolean PointInSourceTris(float x, float y, float z, optimizeGroup_s opt) {
         mapTri_s tri;
         idBounds b = new idBounds();
-        idVec3 p;
+        final idVec3 p = new idVec3();
 
         if (!opt.material.IsDrawn()) {
             return false;
         }
 
-        p = new idVec3(x, y, z);
+        p.oSet(new idVec3(x, y, z));
         for (tri = opt.triList; tri != null; tri = tri.next) {
             b.Clear();
             b.AddPoint(tri.v[0].xyz);
@@ -1893,7 +1893,7 @@ public class optimize {
         optEdge_s edges;
         boolean emited;            // when regenerating triangles
         optVertex_s islandLink;
-        idVec3 pv;            // projected against planar axis, third value is 0
+        final idVec3 pv = new idVec3();            // projected against planar axis, third value is 0
         idDrawVert v;
     }
 
@@ -1911,7 +1911,7 @@ public class optimize {
     static class optTri_s {
 
         boolean filled;
-        idVec3 midpoint;
+        final idVec3 midpoint = new idVec3();
         optTri_s next;
         optVertex_s[] v = new optVertex_s[3];
     }

@@ -529,7 +529,7 @@ public class VertexCache {
             return AllocFrameTemp(DrawVert.toByteBuffer(data), size);
         }
 
-        public vertCache_s AllocFrameTemp(idVec3[] data, int size) {
+        public vertCache_s AllocFrameTemp(final idVec3[] data, int size) {
             return AllocFrameTemp(idVec3.toByteBuffer(data), size);
         }
 

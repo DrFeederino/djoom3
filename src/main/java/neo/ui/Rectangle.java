@@ -19,7 +19,7 @@ public class Rectangle {
      RotateVector
      ================
      */
-    static void RotateVector(idVec3 v, idVec3 origin, float a, float c, float s) {
+    static void RotateVector(final idVec3 v, final idVec3 origin, float a, float c, float s) {
         float x = v.oGet(0);
         float y = v.oGet(1);
         if (a != 0) {
@@ -104,9 +104,9 @@ public class Rectangle {
         }
 
         public void Rotate(float a, idRectangle out) {
-            idVec3 p1 = new idVec3(), p2 = new idVec3(), p3, p4 = new idVec3(), p5;
+            final idVec3 p1 = new idVec3(), p2 = new idVec3(), p3 = new idVec3(), p4 = new idVec3(), p5 = new idVec3();
             float c, s;
-            idVec3 center = new idVec3((x + w) / 2.0f, (y + h) / 2.0f, 0);
+            final idVec3 center = new idVec3((x + w) / 2.0f, (y + h) / 2.0f, 0);
             p1.Set(x, y, 0);
             p2.Set(Right(), y, 0);
             p4.Set(x, Bottom(), 0);

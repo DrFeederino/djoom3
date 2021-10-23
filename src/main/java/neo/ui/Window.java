@@ -1779,7 +1779,7 @@ public class Window {
             actualX = drawRect.x;
             actualY = drawRect.y;
 
-            idVec3 oldOrg = new idVec3();
+            final idVec3 oldOrg = new idVec3();
             idMat3 oldTrans = new idMat3();
 
             dc.GetTransformInfo(oldOrg, oldTrans);

@@ -1913,7 +1913,7 @@ public class tr_rendertools {
         // copy any lines that still need to be drawn
         num = 0;
         line = rb_debugLines[line_index = 0];
-        for (i = 0; i < rb_numDebugLines; i++, line = rb_debugLines[++line_index]) {
+        for (i = 0; i < rb_numDebugLines; i++, line = rb_debugLines[line_index++]) {
             if (line.lifeTime > time) {
                 if (num != i) {
                     rb_debugLines[num] = line;

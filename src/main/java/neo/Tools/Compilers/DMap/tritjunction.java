@@ -12,7 +12,6 @@ import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Plane.idPlane;
-import neo.idlib.math.Vector.*;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
@@ -87,7 +86,7 @@ public class tritjunction {
 
     static final hashVert_s[][][] hashVerts = new hashVert_s[HASH_BINS][HASH_BINS][HASH_BINS];
     static idBounds hashBounds;
-    static idVec3 hashScale;
+    static final idVec3 hashScale = new idVec3();
     static int numHashVerts, numTotalVerts;
 
     /*
@@ -97,7 +96,7 @@ public class tritjunction {
      Also modifies the original vert to the snapped value
      ===============
      */
-    static hashVert_s GetHashVert(idVec3 v) {
+    static hashVert_s GetHashVert(final idVec3 v) {
         int[] iv = new int[3];
         int[] block = new int[3];
         int i;
@@ -290,16 +289,16 @@ public class tritjunction {
         int i;
         idDrawVert v1, v2, v3;
         idDrawVert split = new idDrawVert();
-        idVec3 dir = new idVec3();
+        final idVec3 dir = new idVec3();
         float len;
         float frac;
         mapTri_s new1, new2;
-        idVec3 temp = new idVec3();
+        final idVec3 temp = new idVec3();
         float d, off;
-        idVec3 v;
+        final idVec3 v = new idVec3();
         idPlane plane1 = new idPlane(), plane2 = new idPlane();
 
-        v = hv.v;
+        v.oSet(hv.v);
 
         // if the triangle already has this hashVert as a vert,
         // it can't be split by it
@@ -601,7 +600,7 @@ public class tritjunction {
                     }
                 }
 
-                idVec3 origin = entity.mapEntity.epairs.GetVector("origin");
+                final idVec3 origin = new idVec3(entity.mapEntity.epairs.GetVector("origin"));
 
                 for (i = 0; i < model.NumSurfaces(); i++) {
                     final modelSurface_s surface = model.Surface(i);
@@ -615,7 +614,7 @@ public class tritjunction {
                         mapTri.mergeGroup = surface;
                     }
                     for (int j = 0; j < tri.numVerts; j += 3) {
-                        idVec3 v = tri.verts[j].xyz.oMultiply(axis).oPlus(origin);
+                        final idVec3 v = new idVec3(tri.verts[j].xyz.oMultiply(axis).oPlus(origin));
                         GetHashVert(v);
                     }
                 }
@@ -648,7 +647,7 @@ public class tritjunction {
 
         int[] iv = new int[3];
         hashVert_s next;
-        idVec3 v;
+        final idVec3 v = new idVec3();
 
         public static void memset(final hashVert_s[][][] hashVerts) {
             for (int a = 0; a < HASH_BINS; a++) {

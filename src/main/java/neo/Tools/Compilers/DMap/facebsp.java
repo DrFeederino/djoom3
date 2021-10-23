@@ -28,7 +28,7 @@ public class facebsp {
     static int c_faceLeafs;
 
     //void RemovePortalFromNode( uPortal_s *portal, node_s *l );
-    static node_s NodeForPoint(node_s node, idVec3 origin) {
+    static node_s NodeForPoint(node_s node, final idVec3 origin) {
         float d;
 
         while (node.planenum != PLANENUM_LEAF) {
@@ -177,12 +177,12 @@ public class facebsp {
         int planenum;
         boolean havePortals;
         float dist;
-        idVec3 halfSize;
+        final idVec3 halfSize = new idVec3();
 
         // if it is crossing a 1k block boundary, force a split
         // this prevents epsilon problems from extending an
         // arbitrary distance across the map
-        halfSize = (node.bounds.oGet(1).oMinus(node.bounds.oGet(0))).oMultiply(0.5f);
+        halfSize.oSet((node.bounds.oGet(1).oMinus(node.bounds.oGet(0))).oMultiply(0.5f));
         for (int axis = 0; axis < 3; axis++) {
             if (halfSize.oGet(axis) > BLOCK_SIZE) {
                 dist = (float) (BLOCK_SIZE * (floor((node.bounds.oGet(0, axis) + halfSize.oGet(axis)) / BLOCK_SIZE) + 1.0f));

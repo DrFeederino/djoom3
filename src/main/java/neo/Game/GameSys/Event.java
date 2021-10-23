@@ -702,7 +702,7 @@ public class Event {
                                 size += Integer.BYTES;
                                 break;
                             case D_EVENT_VECTOR:
-                                idVec3 buffer = new idVec3();
+                                final idVec3 buffer = new idVec3();
                                 savefile.ReadVec3(buffer);
                                 buffer.Write();
                                 event.data[j] = new idEventArg(D_EVENT_VECTOR, buffer);

@@ -210,7 +210,7 @@ public class RenderWindow {
                 spawnArgs.Set("origin", modelOrigin.c_str());
                 gameEdit.ParseSpawnArgsToRenderEntity(spawnArgs, worldEntity);
                 if (worldEntity.hModel != null) {
-                    idVec3 v = modelRotate.ToVec3();
+                    final idVec3 v = new idVec3(modelRotate.ToVec3());
                     worldEntity.axis.oSet(v.ToMat3());
                     worldEntity.shaderParms[0] = 1;
                     worldEntity.shaderParms[1] = 1;

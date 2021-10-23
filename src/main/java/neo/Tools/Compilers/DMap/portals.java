@@ -1,7 +1,6 @@
 package neo.Tools.Compilers.DMap;
 
 import neo.Renderer.Material.idMaterial;
-import neo.Tools.Compilers.DMap.dmap.*;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.geometry.Winding.idWinding;
@@ -283,7 +282,6 @@ public class portals {
     static void MakeNodePortal(node_s node) {
         uPortal_s new_portal, p;
         idWinding w;
-//        idVec3 normal;
         int side;
 
         w = BaseWindingForNode(node);
@@ -554,7 +552,7 @@ public class portals {
      */
     static boolean FloodEntities(tree_s tree) {
         int i;
-        idVec3 origin = new idVec3();
+        final idVec3 origin = new idVec3();
         String[] cl = {null};
         boolean inside;
         node_s headnode;
@@ -615,7 +613,7 @@ public class portals {
                 common.Printf("Entity classname was: %s\n", p[0]);
                 mapEnt.epairs.GetString("name", "", p);
                 common.Printf("Entity name was: %s\n", p[0]);
-                idVec3 origin2 = new idVec3();
+                final idVec3 origin2 = new idVec3();
                 if (mapEnt.epairs.GetVector("origin", "", origin2)) {
                     common.Printf("Entity origin is: %f %f %f\n\n\n", origin2.x, origin2.y, origin2.z);
                 }

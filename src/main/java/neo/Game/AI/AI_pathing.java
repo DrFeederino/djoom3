@@ -79,14 +79,14 @@ public class AI_pathing {
      */
     static boolean LineIntersectsPath(final idVec2 start, final idVec2 end, final pathNode_s node) {
         float d0, d1, d2, d3;
-        idVec3 plane1, plane2;
+        final idVec3 plane1 = new idVec3(), plane2 = new idVec3();
 
-        plane1 = idWinding2D.Plane2DFromPoints(start, end);
+        plane1.oSet(idWinding2D.Plane2DFromPoints(start, end));
         d0 = plane1.x * node.pos.x + plane1.y * node.pos.y + plane1.z;
         while (node.parent != null) {
             d1 = plane1.x * node.parent.pos.x + plane1.y * node.parent.pos.y + plane1.z;
             if ((FLOATSIGNBITSET(d0) ^ FLOATSIGNBITSET(d1)) != 0) {
-                plane2 = idWinding2D.Plane2DFromPoints(node.pos, node.parent.pos);
+                plane2.oSet(idWinding2D.Plane2DFromPoints(node.pos, node.parent.pos));
                 d2 = plane2.x * start.x + plane2.y * start.y + plane2.z;
                 d3 = plane2.x * end.x + plane2.y * end.y + plane2.z;
                 if ((FLOATSIGNBITSET(d2) ^ FLOATSIGNBITSET(d3)) != 0) {
@@ -137,7 +137,7 @@ public class AI_pathing {
         CFloat[] scale = Stream.generate(CFloat::new)
                 .limit(2)
                 .toArray(CFloat[]::new);
-        idVec3 plane, bestPlane = new idVec3();
+        final idVec3 plane = new idVec3(), bestPlane = new idVec3();
         idVec2 newPoint, dir, bestPoint = new idVec2();
         int[] queue;
         boolean[] obstacleVisited;
@@ -159,11 +159,11 @@ public class AI_pathing {
         bestd = idMath.INFINITY;
         bestEdgeNum = 0;
         for (i = 0; i < w.GetNumPoints(); i++) {
-            plane = idWinding2D.Plane2DFromPoints(w.oGet((i + 1) % w.GetNumPoints()), w.oGet(i), true);
+            plane.oSet(idWinding2D.Plane2DFromPoints(w.oGet((i + 1) % w.GetNumPoints()), w.oGet(i), true));
             d = plane.x * point.x + plane.y * point.y + plane.z;
             if (d < bestd) {
                 bestd = d;
-                bestPlane = plane;
+                bestPlane.oSet(plane);
                 bestEdgeNum = i;
             }
             // if this is a wall always try to pop out at the first edge
@@ -301,7 +301,7 @@ public class AI_pathing {
         int[] wallEdges = new int[MAX_AAS_WALL_EDGES], verts = new int[2], lastVerts = new int[2], nextVerts = new int[2];
         int numWallEdges;
         CFloat stepHeight = new CFloat(), headHeight = new CFloat(), blockingScale = new CFloat(), min = new CFloat(), max = new CFloat();
-        idVec3 seekDelta, start = new idVec3(), end = new idVec3(), nextStart = new idVec3(), nextEnd = new idVec3();
+        final idVec3 seekDelta = new idVec3(), start = new idVec3(), end = new idVec3(), nextStart = new idVec3(), nextEnd = new idVec3();
         idVec3[] silVerts = idVec3.generateArray(32);
         idVec2 edgeDir, edgeNormal = new idVec2(), nextEdgeDir,
                 nextEdgeNormal = new idVec2(), lastEdgeNormal = new idVec2();
@@ -315,7 +315,7 @@ public class AI_pathing {
 
         numObstacles = 0;
 
-        seekDelta = seekPos.oMinus(startPos);
+        seekDelta.oSet(seekPos.oMinus(startPos));
         expBounds[0] = physics.GetBounds().oGet(0).ToVec2().oMinus(new idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON));
         expBounds[1] = physics.GetBounds().oGet(1).ToVec2().oPlus(new idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON));
 
@@ -346,9 +346,9 @@ public class AI_pathing {
                     continue;
                 }
                 // if the actor is moving
-                idVec3 v1 = obPhys.GetLinearVelocity();
+                final idVec3 v1 = new idVec3(obPhys.GetLinearVelocity());
                 if (v1.LengthSqr() > Square(10.0f)) {
-                    idVec3 v2 = physics.GetLinearVelocity();
+                    final idVec3 v2 = new idVec3(physics.GetLinearVelocity());
                     if (v2.LengthSqr() > Square(10.0f)) {
                         // if moving in about the same direction
                         if (v1.oMultiply(v2) > 0.0f) {
@@ -500,7 +500,7 @@ public class AI_pathing {
      */
     static void DrawPathTree(final pathNode_s root, final float height) {
         int i;
-        idVec3 start = new idVec3(), end = new idVec3();
+        final idVec3 start = new idVec3(), end = new idVec3();
         pathNode_s node;
 
         for (node = root; node != null; node = node.next) {
@@ -828,7 +828,7 @@ public class AI_pathing {
      Returns true if there is a path all the way to the goal.
      ============
      */
-    static boolean FindOptimalPath(final pathNode_s root, final obstacle_s[] obstacles, int numObstacles, final float height, final idVec3 curDir, idVec3 seekPos) {
+    static boolean FindOptimalPath(final pathNode_s root, final obstacle_s[] obstacles, int numObstacles, final float height, final idVec3 curDir, final idVec3 seekPos) {
         int i, numPathPoints, bestNumPathPoints;
         pathNode_s node, lastNode, bestNode;
         idVec2[] optimizedPath = idVec2.generateArray(MAX_OBSTACLE_PATH);
@@ -901,7 +901,7 @@ public class AI_pathing {
         }
 
         if (ai_showObstacleAvoidance.GetBool()) {
-            idVec3 start = new idVec3(), end = new idVec3();
+            final idVec3 start = new idVec3(), end = new idVec3();
             start.z = end.z = height + 4.0f;
             numPathPoints = OptimizePath(root, bestNode, obstacles, numObstacles, optimizedPath);
             for (i = 0; i < numPathPoints - 1; i++) {
@@ -943,8 +943,8 @@ public class AI_pathing {
 
             // NOTE: could do (expensive) ledge detection here for when there is no AAS file
             trace.fraction = clipTrace.fraction;
-            trace.endPos = clipTrace.endpos;
-            trace.normal = clipTrace.c.normal;
+            trace.endPos.oSet(clipTrace.endpos);
+            trace.normal.oSet(clipTrace.c.normal);
             trace.blockingEntity = gameLocal.entities[clipTrace.c.entityNum];
         } else {
             aasTrace.getOutOfSolid = 1;//true;
@@ -997,8 +997,8 @@ public class AI_pathing {
                 }
             } else {
                 trace.fraction = clipTrace.fraction;
-                trace.endPos = clipTrace.endpos;
-                trace.normal = clipTrace.c.normal;
+                trace.endPos.oSet(clipTrace.endpos);
+                trace.normal.oSet(clipTrace.c.normal);
                 trace.blockingEntity = gameLocal.entities[clipTrace.c.entityNum];
             }
         }
@@ -1075,9 +1075,9 @@ public class AI_pathing {
     static class pathTrace_s {
 
         idEntity blockingEntity;
-        idVec3 endPos = new idVec3();
+        final idVec3 endPos = new idVec3();
         float fraction;
-        idVec3 normal = new idVec3();
+        final idVec3 normal = new idVec3();
     }
 
     static class obstacle_s {

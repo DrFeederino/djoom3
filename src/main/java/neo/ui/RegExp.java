@@ -64,7 +64,7 @@ public class RegExp {
             int i;
             idVec4 v = new idVec4();
             idVec2 v2;
-            idVec3 v3;
+            final idVec3 v3 = new idVec3();
             idRectangle rect;
 
             if (!enabled || var == null || (var != null && (var.GetDict() != null || !var.GetEval()))) {
@@ -88,7 +88,7 @@ public class RegExp {
                     break;
                 }
                 case VEC3: {
-                    v3 = ((idWinVec3) var).data;
+                    v3.oSet(((idWinVec3) var).data);
                     v.oSet(0, v3.oGet(0));
                     v.oSet(1, v3.oGet(1));
                     v.oSet(2, v3.oGet(2));

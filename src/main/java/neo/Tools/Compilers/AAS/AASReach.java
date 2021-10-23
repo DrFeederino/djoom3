@@ -195,11 +195,11 @@ public class AASReach {
                 reach.fromAreaNum = (short) areaNum;
                 reach.edgeNum = 0;
                 reach.travelTime = 1;
-                reach.start = file.FaceCenter(abs(faceNum));
+                reach.start.oSet(file.FaceCenter(abs(faceNum)));
                 if (faceNum < 0) {
-                    reach.end = reach.start.oPlus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_FLYEND));
+                    reach.end.oSet(reach.start.oPlus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_FLYEND)));
                 } else {
-                    reach.end = reach.start.oMinus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_FLYEND));
+                    reach.end.oSet(reach.start.oMinus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_FLYEND)));
                 }
                 AddReachabilityToArea(reach, areaNum);
             }
@@ -242,11 +242,11 @@ public class AASReach {
                 reach.fromAreaNum = (short) areaNum;
                 reach.edgeNum = 0;
                 reach.travelTime = 1;
-                reach.start = file.FaceCenter(abs(faceNum));
+                reach.start.oSet(file.FaceCenter(abs(faceNum)));
                 if (faceNum < 0) {
-                    reach.end = reach.start.oPlus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_SWIMEND));
+                    reach.end.oSet(reach.start.oPlus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_SWIMEND)));
                 } else {
-                    reach.end = reach.start.oMinus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_SWIMEND));
+                    reach.end.oSet(reach.start.oMinus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_SWIMEND)));
                 }
                 AddReachabilityToArea(reach, areaNum);
             }
@@ -318,11 +318,11 @@ public class AASReach {
                     reach.fromAreaNum = (short) areaNum;
                     reach.edgeNum = abs(edge1Num);
                     reach.travelTime = 1;
-                    reach.start = file.EdgeCenter(edge1Num);
+                    reach.start.oSet(file.EdgeCenter(edge1Num));
                     if (faceNum < 0) {
-                        reach.end = reach.start.oPlus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_WALKEND));
+                        reach.end.oSet(reach.start.oPlus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_WALKEND)));
                     } else {
-                        reach.end = reach.start.oMinus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_SWIMEND));
+                        reach.end.oSet(reach.start.oMinus(file.planeList.oGet(face.planeNum).Normal().oMultiply(INSIDEUNITS_SWIMEND)));
                     }
                     AddReachabilityToArea(reach, areaNum);
                 }
@@ -339,11 +339,11 @@ public class AASReach {
             float dist, dist1, dist2, diff, invGravityDot, orthogonalDot;
             float x1, x2, x3, x4, y1, y2, y3, y4, tmp, y;
             float length, floor_bestLength, water_bestLength, floor_bestDist, water_bestDist;
-            idVec3 v1, v2, v3, v4, tmpv, p1area1, p1area2, p2area1, p2area2;
-            idVec3 normal, orthogonal, edgeVec, start, end;
-            idVec3 floor_bestStart = new idVec3(), floor_bestEnd = new idVec3(), floor_bestNormal = new idVec3();
-            idVec3 water_bestStart = new idVec3(), water_bestEnd = new idVec3(), water_bestNormal = new idVec3();
-            idVec3 testPoint;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), v3 = new idVec3(), v4 = new idVec3(), tmpv = new idVec3(), p1area1 = new idVec3(), p1area2 = new idVec3(), p2area1 = new idVec3(), p2area2 = new idVec3();
+            final idVec3 normal = new idVec3(), orthogonal = new idVec3(), edgeVec = new idVec3(), start = new idVec3(), end = new idVec3();
+            final idVec3 floor_bestStart = new idVec3(), floor_bestEnd = new idVec3(), floor_bestNormal = new idVec3();
+            final idVec3 water_bestStart = new idVec3(), water_bestEnd = new idVec3(), water_bestNormal = new idVec3();
+            final idVec3 testPoint = new idVec3();
             idPlane plane;
             aasArea_s area1, area2;
             aasFace_s floorFace1, floorFace2, floor_bestFace1, water_bestFace1;
@@ -419,12 +419,12 @@ public class AASReach {
                     edge1Num = abs(edge1Num);
                     edge1 = file.edges.oGet(edge1Num);
                     // vertices of the edge
-                    v1 = file.vertices.oGet(edge1.vertexNum[SNOT(side1)]);
-                    v2 = file.vertices.oGet(edge1.vertexNum[side1]);
+                    v1.oSet(file.vertices.oGet(edge1.vertexNum[SNOT(side1)]));
+                    v2.oSet(file.vertices.oGet(edge1.vertexNum[side1]));
                     // get a vertical plane through the edge
                     // NOTE: normal is pointing into area 2 because the face edges are stored counter clockwise
-                    edgeVec = v2.oMinus(v1);
-                    normal = edgeVec.Cross(file.settings.invGravityDir);
+                    edgeVec.oSet(v2.oMinus(v1));
+                    normal.oSet(edgeVec.Cross(file.settings.invGravityDir));
                     normal.Normalize();
                     dist = normal.oMultiply(v1);
 
@@ -440,8 +440,8 @@ public class AASReach {
                             edge2Num = abs(file.edgeIndex.oGet(floorFace2.firstEdge + l));
                             edge2 = file.edges.oGet(edge2Num);
                             // vertices of the edge
-                            v3 = file.vertices.oGet(edge2.vertexNum[0]);
-                            v4 = file.vertices.oGet(edge2.vertexNum[1]);
+                            v3.oSet(file.vertices.oGet(edge2.vertexNum[0]));
+                            v4.oSet(file.vertices.oGet(edge2.vertexNum[1]));
                             // check the distance between the two points and the vertical plane through the edge of area1
                             diff = normal.oMultiply(v3) - dist;
                             if (diff < -0.2f || diff > 0.2f) {
@@ -456,7 +456,7 @@ public class AASReach {
                             // and calculate the shortest distance between the two
                             // edges if they overlap in the direction orthogonal to
                             // the gravity direction
-                            orthogonal = file.settings.invGravityDir.Cross(normal);
+                            orthogonal.oSet(file.settings.invGravityDir.Cross(normal));
                             invGravityDot = file.settings.invGravityDir.oMultiply(file.settings.invGravityDir);
                             orthogonalDot = orthogonal.oMultiply(orthogonal);
                             // projection into the step plane
@@ -478,9 +478,9 @@ public class AASReach {
                                 tmp = y1;
                                 y1 = y2;
                                 y2 = tmp;
-                                tmpv = v1;
-                                v1 = v2;
-                                v2 = tmpv;
+                                tmpv.oSet(v1);
+                                v1.oSet(v2);
+                                v2.oSet(tmpv);
                             }
                             if (x3 > x4) {
                                 tmp = x3;
@@ -489,9 +489,9 @@ public class AASReach {
                                 tmp = y3;
                                 y3 = y4;
                                 y4 = tmp;
-                                tmpv = v3;
-                                v3 = v4;
-                                v4 = tmpv;
+                                tmpv.oSet(v3);
+                                v3.oSet(v4);
+                                v4.oSet(tmpv);
                             }
                             // if the two projected edge lines have no overlap
                             if (x2 <= x3 || x4 <= x1) {
@@ -501,62 +501,62 @@ public class AASReach {
                             if ((x1 - 0.5f < x3 && x4 < x2 + 0.5f) && (x3 - 0.5f < x1 && x2 < x4 + 0.5f)) {
                                 dist1 = y3 - y1;
                                 dist2 = y4 - y2;
-                                p1area1 = v1;
-                                p2area1 = v2;
-                                p1area2 = v3;
-                                p2area2 = v4;
+                                p1area1.oSet(v1);
+                                p2area1.oSet(v2);
+                                p1area2.oSet(v3);
+                                p2area2.oSet(v4);
                             } else {
                                 // if the points are equal
                                 if (x1 > x3 - 0.1f && x1 < x3 + 0.1f) {
                                     dist1 = y3 - y1;
-                                    p1area1 = v1;
-                                    p1area2 = v3;
+                                    p1area1.oSet(v1);
+                                    p1area2.oSet(v3);
                                 } else if (x1 < x3) {
                                     y = y1 + (x3 - x1) * (y2 - y1) / (x2 - x1);
                                     dist1 = y3 - y;
-                                    p1area1 = v3;
+                                    p1area1.oSet(v3);
                                     p1area1.oSet(2, y);
-                                    p1area2 = v3;
+                                    p1area2.oSet(v3);
                                 } else {
                                     y = y3 + (x1 - x3) * (y4 - y3) / (x4 - x3);
                                     dist1 = y - y1;
-                                    p1area1 = v1;
-                                    p1area2 = v1;
+                                    p1area1.oSet(v1);
+                                    p1area2.oSet(v1);
                                     p1area2.oSet(2, y);
                                 }
                                 // if the points are equal
                                 if (x2 > x4 - 0.1f && x2 < x4 + 0.1f) {
                                     dist2 = y4 - y2;
-                                    p2area1 = v2;
-                                    p2area2 = v4;
+                                    p2area1.oSet(v2);
+                                    p2area2.oSet(v4);
                                 } else if (x2 < x4) {
                                     y = y3 + (x2 - x3) * (y4 - y3) / (x4 - x3);
                                     dist2 = y - y2;
-                                    p2area1 = v2;
-                                    p2area2 = v2;
+                                    p2area1.oSet(v2);
+                                    p2area2.oSet(v2);
                                     p2area2.oSet(2, y);
                                 } else {
                                     y = y1 + (x4 - x1) * (y2 - y1) / (x2 - x1);
                                     dist2 = y4 - y;
-                                    p2area1 = v4;
+                                    p2area1.oSet(v4);
                                     p2area1.oSet(2, y);
-                                    p2area2 = v4;
+                                    p2area2.oSet(v4);
                                 }
                             }
 
                             // if both distances are pretty much equal then we take the middle of the points
                             if (dist1 > dist2 - 1.0f && dist1 < dist2 + 1.0f) {
                                 dist = dist1;
-                                start = (p1area1.oPlus(p2area1)).oMultiply(0.5f);
-                                end = (p1area2.oPlus(p2area2)).oMultiply(0.5f);
+                                start.oSet((p1area1.oPlus(p2area1)).oMultiply(0.5f));
+                                end.oSet((p1area2.oPlus(p2area2)).oMultiply(0.5f));
                             } else if (dist1 < dist2) {
                                 dist = dist1;
-                                start = p1area1;
-                                end = p1area2;
+                                start.oSet(p1area1);
+                                end.oSet(p1area2);
                             } else {
                                 dist = dist2;
-                                start = p2area1;
-                                end = p2area2;
+                                start.oSet(p2area1);
+                                end.oSet(p2area2);
                             }
 
                             // get the length of the overlapping part of the edges of the two areas
@@ -574,9 +574,9 @@ public class AASReach {
                                     floor_bestArea1FloorEdgeNum = edge1Num;
                                     floor_bestArea2FloorEdgeNum = edge2Num;
                                     floor_bestFace1 = floorFace1;
-                                    floor_bestStart = start;
-                                    floor_bestNormal = normal;
-                                    floor_bestEnd = end;
+                                    floor_bestStart.oSet(start);
+                                    floor_bestNormal.oSet(normal);
+                                    floor_bestEnd.oSet(end);
                                 }
                             } else {
                                 // if the vertical distance is smaller
@@ -590,9 +590,9 @@ public class AASReach {
                                     water_bestArea1FloorEdgeNum = edge1Num;
                                     water_bestArea2FloorEdgeNum = edge2Num;
                                     water_bestFace1 = floorFace1;
-                                    water_bestStart = start;    // best start point in area1
-                                    water_bestNormal = normal;    // normal is pointing into area2
-                                    water_bestEnd = end;        // best point towards area2
+                                    water_bestStart.oSet(start);    // best start point in area1
+                                    water_bestNormal.oSet(normal);    // normal is pointing into area2
+                                    water_bestEnd.oSet(end);        // best point towards area2
                                 }
                             }
                         }
@@ -627,8 +627,8 @@ public class AASReach {
                     walkReach.travelType = TFL_WALK;
                     walkReach.toAreaNum = (short) toAreaNum;
                     walkReach.fromAreaNum = (short) fromAreaNum;
-                    walkReach.start = floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART));
-                    walkReach.end = floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND));
+                    walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART)));
+                    walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND)));
                     walkReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
                     walkReach.travelTime = 0;
                     if ((area2.flags & AREA_CROUCH) != 0) {
@@ -659,7 +659,7 @@ public class AASReach {
             // check for a waterjump reachability
             if (water_foundReach != 0) {
                 // get a test point a little bit towards area1
-                testPoint = water_bestEnd.oMinus(water_bestNormal.oMultiply(INSIDEUNITS));
+                testPoint.oSet(water_bestEnd.oMinus(water_bestNormal.oMultiply(INSIDEUNITS)));
                 // go down the maximum waterjump height
                 testPoint.oMinSet(2, file.settings.maxWaterJumpHeight.getVal());
                 // if there IS water the sv_maxwaterjump height below the bestend point
@@ -673,8 +673,8 @@ public class AASReach {
                             waterJumpReach.travelType = TFL_WATERJUMP;
                             waterJumpReach.toAreaNum = (short) toAreaNum;
                             waterJumpReach.fromAreaNum = (short) fromAreaNum;
-                            waterJumpReach.start = water_bestStart;
-                            waterJumpReach.end = water_bestEnd.oPlus(water_bestNormal.oMultiply(INSIDEUNITS_WATERJUMP));
+                            waterJumpReach.start.oSet(water_bestStart);
+                            waterJumpReach.end.oSet(water_bestEnd.oPlus(water_bestNormal.oMultiply(INSIDEUNITS_WATERJUMP)));
                             waterJumpReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
                             waterJumpReach.travelTime = file.settings.tt_waterJump.getVal();
                             AddReachabilityToArea(waterJumpReach, fromAreaNum);
@@ -713,8 +713,8 @@ public class AASReach {
                             barrierJumpReach.travelType = TFL_BARRIERJUMP;
                             barrierJumpReach.toAreaNum = (short) toAreaNum;
                             barrierJumpReach.fromAreaNum = (short) fromAreaNum;
-                            barrierJumpReach.start = floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART));
-                            barrierJumpReach.end = floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND));
+                            barrierJumpReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART)));
+                            barrierJumpReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND)));
                             barrierJumpReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
                             barrierJumpReach.travelTime = file.settings.tt_barrierJump.getVal();
                             AddReachabilityToArea(barrierJumpReach, fromAreaNum);
@@ -753,8 +753,8 @@ public class AASReach {
                         walkReach.travelType = TFL_WALK;
                         walkReach.toAreaNum = (short) toAreaNum;
                         walkReach.fromAreaNum = (short) fromAreaNum;
-                        walkReach.start = floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART));
-                        walkReach.end = floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND));
+                        walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKSTART)));
+                        walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.oMultiply(INSIDEUNITS_WALKEND)));
                         walkReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
                         walkReach.travelTime = 1;
                         AddReachabilityToArea(walkReach, fromAreaNum);
@@ -764,9 +764,9 @@ public class AASReach {
                     if (0 == file.settings.maxFallHeight.getVal() || Math.abs(floor_bestDist) < file.settings.maxFallHeight.getVal()) {
                         // trace a bounding box vertically to check for solids
                         floor_bestEnd.oPluSet(floor_bestNormal.oMultiply(INSIDEUNITS));
-                        start = floor_bestEnd;
+                        start.oSet(floor_bestEnd);
                         start.oSet(2, floor_bestStart.oGet(2));
-                        end = floor_bestEnd;
+                        end.oSet(floor_bestEnd);
                         end.oPluSet(2, 4);
                         trace.areas = areas;
                         trace.maxAreas = areas.length;
@@ -787,8 +787,8 @@ public class AASReach {
                                     walkOffLedgeReach.travelType = TFL_WALKOFFLEDGE;
                                     walkOffLedgeReach.toAreaNum = (short) toAreaNum;
                                     walkOffLedgeReach.fromAreaNum = (short) fromAreaNum;
-                                    walkOffLedgeReach.start = floor_bestStart;
-                                    walkOffLedgeReach.end = floor_bestEnd;
+                                    walkOffLedgeReach.start.oSet(floor_bestStart);
+                                    walkOffLedgeReach.end.oSet(floor_bestEnd);
                                     walkOffLedgeReach.edgeNum = abs(floor_bestArea1FloorEdgeNum);
                                     walkOffLedgeReach.travelTime = (int) (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(floor_bestDist) * 50 / file.settings.gravityValue);
                                     AddReachabilityToArea(walkOffLedgeReach, fromAreaNum);
@@ -809,7 +809,7 @@ public class AASReach {
             aasFace_s face;
             aasEdge_s edge;
             idPlane plane;
-            idVec3 v1, v2, mid, dir, testEnd;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), mid = new idVec3(), dir = new idVec3(), testEnd = new idVec3();
             idReachability_WalkOffLedge reach;
             aasTrace_s trace = new aasTrace_s();
 
@@ -838,17 +838,17 @@ public class AASReach {
                     //}
                     side = btoi(edgeNum < 0);
 
-                    v1 = file.vertices.oGet(edge.vertexNum[side]);
-                    v2 = file.vertices.oGet(edge.vertexNum[SNOT(side)]);
+                    v1.oSet(file.vertices.oGet(edge.vertexNum[side]));
+                    v2.oSet(file.vertices.oGet(edge.vertexNum[SNOT(side)]));
 
                     plane = file.planeList.oGet(face.planeNum ^ INTSIGNBITSET(faceNum));
 
                     // get the direction into the other area
-                    dir = plane.Normal().Cross(v2.oMinus(v1));
+                    dir.oSet(plane.Normal().Cross(v2.oMinus(v1)));
                     dir.Normalize();
 
-                    mid = (v1.oPlus(v2)).oMultiply(0.5f);
-                    testEnd = mid.oPlus(dir.oMultiply(INSIDEUNITS_WALKEND));
+                    mid.oSet((v1.oPlus(v2)).oMultiply(0.5f));
+                    testEnd.oSet(mid.oPlus(dir.oMultiply(INSIDEUNITS_WALKEND)));
                     testEnd.oMinSet(2, file.settings.maxFallHeight.getVal() + 1.0f);
                     trace.areas = areas;
                     trace.maxAreas = areas.length;
@@ -881,8 +881,8 @@ public class AASReach {
                     reach.travelType = TFL_WALKOFFLEDGE;
                     reach.toAreaNum = (short) reachAreaNum;
                     reach.fromAreaNum = (short) areaNum;
-                    reach.start = mid;
-                    reach.end = trace.endpos;
+                    reach.start.oSet(mid);
+                    reach.end.oSet(trace.endpos);
                     reach.edgeNum = abs(edgeNum);
                     reach.travelTime = (int) (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) * 50 / file.settings.gravityValue);
                     AddReachabilityToArea(reach, areaNum);

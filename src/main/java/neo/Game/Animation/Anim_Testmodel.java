@@ -146,12 +146,12 @@ public class Anim_Testmodel {
 
         @Override
         public void Spawn() {
-            idVec3 size = new idVec3();
+            final idVec3 size = new idVec3();
             idBounds bounds = new idBounds();
             String headModel;
             int/*jointHandle_t*/ joint;
             idStr jointName = new idStr();
-            idVec3 origin = new idVec3(), modelOffset = new idVec3();
+            final idVec3 origin = new idVec3(), modelOffset = new idVec3();
             idMat3 axis = new idMat3();
             idKeyValue kv;
             copyJoints_t copyJoint = new copyJoints_t();
@@ -200,7 +200,7 @@ public class Anim_Testmodel {
 
                     head.oSet(gameLocal.SpawnEntityType(idAnimatedEntity.class, args));
                     animator.GetJointTransform(joint, gameLocal.time, origin, axis);
-                    origin = GetPhysics().GetOrigin().oPlus((origin.oPlus(modelOffset)).oMultiply(GetPhysics().GetAxis()));
+                    origin.oSet(GetPhysics().GetOrigin().oPlus((origin.oPlus(modelOffset)).oMultiply(GetPhysics().GetAxis())));
                     head.GetEntity().SetModel(headModel);
                     head.GetEntity().SetOrigin(origin);
                     head.GetEntity().SetAxis(GetPhysics().GetAxis());
@@ -462,7 +462,7 @@ public class Anim_Testmodel {
 
         @Override
         public void Think() {
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
             idMat3 axis = new idMat3();
             idAngles ang = new idAngles();
             int i;
@@ -583,13 +583,13 @@ public class Anim_Testmodel {
 
                 idClipModel clip = physicsObj.GetClipModel();
                 if (clip != null && animator.ModelDef() != null) {
-                    idVec3 neworigin = new idVec3();
+                    final idVec3 neworigin = new idVec3();
 //			idMat3 axis;
                     int/*jointHandle_t*/ joint;
 
                     joint = animator.GetJointHandle("origin");
                     animator.GetJointTransform(joint, gameLocal.time, neworigin, axis);
-                    neworigin = ((neworigin.oMinus(animator.ModelDef().GetVisualOffset())).oMultiply(physicsObj.GetAxis())).oPlus(GetPhysics().GetOrigin());
+                    neworigin.oSet(((neworigin.oMinus(animator.ModelDef().GetVisualOffset())).oMultiply(physicsObj.GetAxis())).oPlus(GetPhysics().GetOrigin()));
                     clip.Link(gameLocal.clip, this, 0, neworigin, clip.GetAxis());
                 }
             }
@@ -677,7 +677,7 @@ public class Anim_Testmodel {
 
             @Override
             public void run(idCmdArgs args) {
-                idVec3 offset;
+                final idVec3 offset = new idVec3();
                 idStr name = new idStr();
                 idPlayer player;
                 idDict dict;
@@ -724,7 +724,7 @@ public class Anim_Testmodel {
 
             @Override
             public void run(idCmdArgs args) {
-                idVec3 offset;
+                final idVec3 offset = new idVec3();
                 idStr name;
                 idPlayer player;
                 idDict dict;
@@ -783,7 +783,7 @@ public class Anim_Testmodel {
 
             @Override
             public void run(idCmdArgs args) {
-                idVec3 offset;
+                final idVec3 offset = new idVec3();
                 idStr name = new idStr();
                 idPlayer player;
                 idDict entityDef;
@@ -833,7 +833,7 @@ public class Anim_Testmodel {
                     }
                 }
 
-                offset = player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f));
+                offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f)));
 
                 dict.Set("origin", offset.ToString());
                 dict.Set("angle", va("%f", player.viewAngles.yaw + 180.0f));

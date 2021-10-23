@@ -4,7 +4,6 @@ import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
 import neo.Renderer.Material.textureStage_t;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.RenderWorld.renderView_s;
 import neo.Renderer.tr_local.drawSurf_s;
 import neo.Renderer.tr_local.idScreenRect;
 import neo.Renderer.tr_local.viewDef_s;
@@ -34,15 +33,15 @@ public class tr_subview {
      R_MirrorPoint
      =================
      */
-    public static void R_MirrorPoint(final idVec3 in, orientation_t surface, orientation_t camera, idVec3 out) {
+    public static void R_MirrorPoint(final idVec3 in, orientation_t surface, orientation_t camera, final idVec3 out) {
         int i;
-        idVec3 local;
-        idVec3 transformed;
+        final idVec3 local = new idVec3();
+        final idVec3 transformed = new idVec3();
         float d;
 
-        local = in.oMinus(surface.origin);
+        local.oSet(in.oMinus(surface.origin));
 
-        transformed = getVec3_origin();
+        transformed.oSet(getVec3_origin());
         for (i = 0; i < 3; i++) {
             d = local.oMultiply(surface.axis.oGet(i));
             transformed.oPluSet(camera.axis.oGet(i).oMultiply(d));
@@ -56,7 +55,7 @@ public class tr_subview {
      R_MirrorVector
      =================
      */
-    public static void R_MirrorVector(final idVec3 in, orientation_t surface, orientation_t camera, idVec3 out) {
+    public static void R_MirrorVector(final idVec3 in, orientation_t surface, orientation_t camera, final idVec3 out) {
         int i;
         float d;
 
@@ -104,7 +103,7 @@ public class tr_subview {
         int i, j;
         int pointOr;
         int pointAnd;
-        idVec3 localView = new idVec3();
+        final idVec3 localView = new idVec3();
         idFixedWinding w = new idFixedWinding();
 
         tri = drawSurf.geo;
@@ -146,13 +145,13 @@ public class tr_subview {
         R_GlobalPointToLocal(drawSurf.space.modelMatrix, tr.viewDef.renderView.vieworg, localView);
 
         for (i = 0; i < tri.numIndexes; i += 3) {
-            idVec3 dir, normal;
+            final idVec3 dir = new idVec3(), normal = new idVec3();
             float dot;
-            idVec3 d1, d2;
+            final idVec3 d1 = new idVec3(), d2 = new idVec3();
 
-            final idVec3 v1 = tri.verts[tri.indexes[i]].xyz;
-            final idVec3 v2 = tri.verts[tri.indexes[i + 1]].xyz;
-            final idVec3 v3 = tri.verts[tri.indexes[i + 2]].xyz;
+            final idVec3 v1 = new idVec3(tri.verts[tri.indexes[i]].xyz);
+            final idVec3 v2 = new idVec3(tri.verts[tri.indexes[i + 1]].xyz);
+            final idVec3 v3 = new idVec3(tri.verts[tri.indexes[i + 2]].xyz);
 
             // this is a hack, because R_GlobalPointToLocal doesn't work with the non-normalized
             // axis that we get from the gui view transform.  It doesn't hurt anything, because
@@ -160,11 +159,11 @@ public class tr_subview {
             if (tr.guiRecursionLevel == 0) {
                 // we don't care that it isn't normalized,
                 // all we want is the sign
-                d1 = v2.oMinus(v1);
-                d2 = v3.oMinus(v1);
-                normal = d2.Cross(d1);
+                d1.oSet(v2.oMinus(v1));
+                d2.oSet(v3.oMinus(v1));
+                normal.oSet(d2.Cross(d1));
 
-                dir = v1.oMinus(localView);
+                dir.oSet(v1.oMinus(localView));
 
                 dot = normal.oMultiply(dir);
                 if (dot >= 0.0f) {
@@ -185,7 +184,7 @@ public class tr_subview {
                 }
             }
             for (j = 0; j < w.GetNumPoints(); j++) {
-                idVec3 screen = new idVec3();
+                final idVec3 screen = new idVec3();
 
                 R_GlobalToNormalizedDeviceCoordinates(w.oGet(j).ToVec3(), screen);
                 ndcBounds.AddPoint(screen);
@@ -235,7 +234,7 @@ public class tr_subview {
         R_MirrorVector(tr.viewDef.renderView.viewaxis.oGet(2), surface, camera, parms.renderView.viewaxis.oGet(2));
 
         // make the view origin 16 units away from the center of the surface
-        idVec3 viewOrigin = (drawSurf.geo.bounds.oGet(0).oPlus(drawSurf.geo.bounds.oGet(1))).oMultiply(0.5f);
+        final idVec3 viewOrigin = new idVec3((drawSurf.geo.bounds.oGet(0).oPlus(drawSurf.geo.bounds.oGet(1))).oMultiply(0.5f));
         viewOrigin.oPluSet(originalPlane.Normal().oMultiply(16));
 
         parms.initialViewAreaOrigin = R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin);
@@ -567,6 +566,6 @@ public class tr_subview {
     static class orientation_t {
 
         idMat3 axis = new idMat3();
-        idVec3 origin = new idVec3();
+        final idVec3 origin = new idVec3();
     }
 }

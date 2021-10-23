@@ -243,7 +243,7 @@ public class Brush {
         public float GetVolume() {
             int i;
             idWinding w;
-            idVec3 corner;
+            final idVec3 corner = new idVec3();
             float d, area, volume;
 
             // grab the first valid point as a corner
@@ -257,7 +257,7 @@ public class Brush {
             if (NOT(w)) {
                 return 0.0f;
             }
-            corner = w.oGet(0).ToVec3();
+            corner.oSet(w.oGet(0).ToVec3());
 
             // create tetrahedrons to all other sides
             volume = 0.0f;
@@ -309,7 +309,7 @@ public class Brush {
         public boolean FromWinding(final idWinding w, final idPlane windingPlane) {
             int i, j, bestAxis;
             idPlane plane = new idPlane();
-            idVec3 normal, axialNormal;
+            final idVec3 normal = new idVec3(), axialNormal = new idVec3();
 
             sides.Append(new idBrushSide(windingPlane, -1));
             sides.Append(new idBrushSide(windingPlane.oNegative(), -1));
@@ -320,7 +320,7 @@ public class Brush {
                     bestAxis = i;
                 }
             }
-            axialNormal = getVec3_origin();
+            axialNormal.oSet(getVec3_origin());
             if (windingPlane.Normal().oGet(bestAxis) > 0.0f) {
                 axialNormal.oSet(bestAxis, 1.0f);
             } else {
@@ -329,7 +329,7 @@ public class Brush {
 
             for (i = 0; i < w.GetNumPoints(); i++) {
                 j = (i + 1) % w.GetNumPoints();
-                normal = (w.oGet(j).ToVec3().oMinus(w.oGet(i).ToVec3())).Cross(axialNormal);
+                normal.oSet((w.oGet(j).ToVec3().oMinus(w.oGet(i).ToVec3())).Cross(axialNormal));
                 if (normal.Normalize() < 0.5f) {
                     continue;
                 }
@@ -356,12 +356,12 @@ public class Brush {
 
         public boolean FromBounds(final idBounds bounds) {
             int axis, dir;
-            idVec3 normal;
+            final idVec3 normal = new idVec3();
             idPlane plane = new idPlane();
 
             for (axis = 0; axis < 3; axis++) {
                 for (dir = -1; dir <= 1; dir += 2) {
-                    normal = getVec3_origin();
+                    normal.oSet(getVec3_origin());
                     normal.oSet(axis, dir);
                     plane.SetNormal(normal);
                     plane.SetDist(dir * bounds.oGet(dir == 1 ? 1 : 0, axis));
@@ -737,7 +737,7 @@ public class Brush {
         public void ExpandForAxialBox(final idBounds bounds) {
             int i, j;
             idBrushSide side;
-            idVec3 v = new idVec3();
+            final idVec3 v = new idVec3();
 
             AddBevelsForAxialBox();
 
@@ -870,7 +870,7 @@ public class Brush {
             int axis, dir, i, j, k, l, order;
             idBrushSide side, newSide;
             idPlane plane = new idPlane();
-            idVec3 normal, vec;
+            final idVec3 normal = new idVec3(), vec = new idVec3();
             idWinding w, w2;
             float d, minBack;
 
@@ -896,7 +896,7 @@ public class Brush {
                     }
 
                     if (i >= sides.Num()) {
-                        normal = getVec3_origin();
+                        normal.oSet(getVec3_origin());
                         normal.oSet(axis, dir);
                         plane.SetNormal(normal);
                         plane.SetDist(dir * bounds.oGet(((dir == 1) ? 1 : 0), axis));
@@ -922,7 +922,7 @@ public class Brush {
 
                 for (j = 0; j < w.GetNumPoints(); j++) {
                     k = (j + 1) % w.GetNumPoints();
-                    vec = w.oGet(j).ToVec3().oMinus(w.oGet(k).ToVec3());
+                    vec.oSet(w.oGet(j).ToVec3().oMinus(w.oGet(k).ToVec3()));
                     if (vec.Normalize() < 0.5f) {
                         continue;
                     }
@@ -941,9 +941,9 @@ public class Brush {
                         for (dir = -1; dir <= 1; dir += 2) {
 
                             // construct a plane
-                            normal = getVec3_origin();
+                            normal.oSet(getVec3_origin());
                             normal.oSet(axis, dir);
-                            normal = vec.Cross(normal);
+                            normal.oSet(vec.Cross(normal));
                             if (normal.Normalize() < 0.5f) {
                                 continue;
                             }

@@ -291,7 +291,7 @@ public class Physics_AF {
             assert (false);
         }
 
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             center.Zero();
         }
 
@@ -416,7 +416,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             center.oSet(body1.GetWorldOrigin());
         }
 
@@ -438,7 +438,7 @@ public class Physics_AF {
 
         @Override
         protected void Evaluate(float invTimeStep) {
-            idVec3 ofs = new idVec3(), a2 = new idVec3();
+            final idVec3 ofs = new idVec3(), a2 = new idVec3();
             idMat3 ax;
             idRotation r;
             idAFBody master;
@@ -610,7 +610,7 @@ public class Physics_AF {
 
         @Override
         public void DebugDraw() {
-            idVec3 a1 = new idVec3(body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis())));
+            final idVec3 a1 = new idVec3(body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis())));
             gameRenderWorld.DebugLine(colorBlue, a1.oMinus(new idVec3(5, 0, 0)), a1.oPlus(new idVec3(5, 0, 0)));
             gameRenderWorld.DebugLine(colorBlue, a1.oMinus(new idVec3(0, 5, 0)), a1.oPlus(new idVec3(0, 5, 0)));
             gameRenderWorld.DebugLine(colorBlue, a1.oMinus(new idVec3(0, 0, 5)), a1.oPlus(new idVec3(0, 0, 5)));
@@ -656,7 +656,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             center.oSet(body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis())));
         }
 
@@ -695,7 +695,7 @@ public class Physics_AF {
 
         @Override
         protected void Evaluate(float invTimeStep) {
-            idVec3 a1 = new idVec3(), a2 = new idVec3();
+            final idVec3 a1 = new idVec3(), a2 = new idVec3();
             idAFBody master;
 
             master = body2 != null ? body2 : physics.GetMasterBody();
@@ -728,7 +728,7 @@ public class Physics_AF {
 
         @Override
         protected void ApplyFriction(float invTimeStep) {
-            idVec3 angular = new idVec3();
+            final idVec3 angular = new idVec3();
             float invMass, currentFriction;
 
             currentFriction = GetFriction();
@@ -907,7 +907,7 @@ public class Physics_AF {
         }
 
         public void SetShafts(final idVec3 cardanShaft1, final idVec3 cardanShaft2) {
-            idVec3 cardanAxis = new idVec3();
+            final idVec3 cardanAxis = new idVec3();
             float l;
 
             shaft1.oSet(cardanShaft1);
@@ -920,7 +920,7 @@ public class Physics_AF {
             // the cardan axis is a vector orthogonal to both cardan shafts
             cardanAxis.oSet(shaft1.Cross(shaft2));
             if (cardanAxis.Normalize() == 0.0f) {
-                idVec3 vecY = new idVec3();
+                final idVec3 vecY = new idVec3();
                 shaft1.OrthogonalBasis(cardanAxis, vecY);
                 cardanAxis.Normalize();
             }
@@ -942,7 +942,7 @@ public class Physics_AF {
             }
         }
 
-        public void GetShafts(idVec3 cardanShaft1, idVec3 cardanShaft2) {
+        public void GetShafts(final idVec3 cardanShaft1, final idVec3 cardanShaft2) {
             cardanShaft1.oSet(shaft1);
             cardanShaft2.oSet(shaft2);
         }
@@ -1008,7 +1008,7 @@ public class Physics_AF {
 
         @Override
         public void DebugDraw() {
-            idVec3 a1 = new idVec3(), a2 = new idVec3(), s1 = new idVec3(), s2 = new idVec3(), d1 = new idVec3(), d2 = new idVec3(), v = new idVec3();
+            final idVec3 a1 = new idVec3(), a2 = new idVec3(), s1 = new idVec3(), s2 = new idVec3(), d1 = new idVec3(), d2 = new idVec3(), v = new idVec3();
             idAFBody master;
 
             master = body2 != null ? body2 : physics.GetMasterBody();
@@ -1086,7 +1086,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             center.oSet(body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis())));
         }
 
@@ -1443,7 +1443,7 @@ public class Physics_AF {
             }
         }
 
-        public void GetAxis(idVec3 a1, idVec3 a2) {
+        public void GetAxis(final idVec3 a1, final idVec3 a2) {
             a1.oSet(axis1);
             a2.oSet(axis2);
         }
@@ -1569,7 +1569,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             center.oSet(body1.GetWorldOrigin().oPlus(anchor1.oMultiply(body1.GetWorldAxis())));
         }
 
@@ -2018,7 +2018,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             idAFBody master;
 
             master = body2 != null ? body2 : physics.GetMasterBody();
@@ -2047,7 +2047,7 @@ public class Physics_AF {
 
         @Override
         protected void Evaluate(float invTimeStep) {
-            final idVec3 vecX = new idVec3(), vecY = new idVec3(), ofs;
+            final idVec3 vecX = new idVec3(), vecY = new idVec3(), ofs = new idVec3();
             idRotation r;
             idAFBody master;
 
@@ -2055,11 +2055,11 @@ public class Physics_AF {
 
             if (master != null) {
                 (axis.oMultiply(master.GetWorldAxis())).OrthogonalBasis(vecX, vecY);
-                ofs = master.GetWorldOrigin().oPlus(master.GetWorldAxis().oMultiply(offset).oMinus(body1.GetWorldOrigin()));
+                ofs.oSet(master.GetWorldOrigin().oPlus(master.GetWorldAxis().oMultiply(offset).oMinus(body1.GetWorldOrigin())));
                 r = (body1.GetWorldAxis().Transpose().oMultiply((relAxis.oMultiply(master.GetWorldAxis()))).ToRotation());
             } else {
                 axis.OrthogonalBasis(vecX, vecY);
-                ofs = offset.oMinus(body1.GetWorldOrigin());
+                ofs.oSet(offset.oMinus(body1.GetWorldOrigin()));
                 r = (body1.GetWorldAxis().Transpose().oMultiply(relAxis)).ToRotation();
             }
 
@@ -2381,7 +2381,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             idAFBody master;
             final idVec3 a1 = new idVec3(), a2 = new idVec3();
 
@@ -2467,7 +2467,7 @@ public class Physics_AF {
 
             if (length > restLength) {
                 if (kstretch > 0.0f) {
-                    idVec3 springForce = new idVec3(force.oMultiply(Square(length - restLength) * kstretch - dampingForce));
+                    final idVec3 springForce = new idVec3(force.oMultiply(Square(length - restLength) * kstretch - dampingForce));
                     body1.AddForce(a1, springForce);
                     if (master != null) {
                         master.AddForce(a2, springForce.oNegative());
@@ -2475,7 +2475,7 @@ public class Physics_AF {
                 }
             } else {
                 if (kcompress > 0.0f) {
-                    idVec3 springForce = new idVec3(force.oMultiply(-(float) (Square(restLength - length) * kcompress - dampingForce)));
+                    final idVec3 springForce = new idVec3(force.oMultiply(-(float) (Square(restLength - length) * kcompress - dampingForce)));
                     body1.AddForce(a1, springForce);
                     if (master != null) {
                         master.AddForce(a2, springForce.oNegative());
@@ -2610,7 +2610,7 @@ public class Physics_AF {
         }
 
         @Override
-        public void GetCenter(idVec3 center) {
+        public void GetCenter(final idVec3 center) {
             center.oSet(contact.point);
         }
 //
@@ -3778,7 +3778,7 @@ public class Physics_AF {
         }
 
         public idVec3 GetWorldOrigin() {
-            return new idVec3(current.worldOrigin);
+            return current.worldOrigin;
         }
 
         public idMat3 GetWorldAxis() {
@@ -3935,7 +3935,7 @@ public class Physics_AF {
             fl.useFrictionDir = true;
         }
 
-        public boolean GetFrictionDirection(idVec3 dir) {
+        public boolean GetFrictionDirection(final idVec3 dir) {
             if (fl.useFrictionDir) {
                 dir.oSet(frictionDir.oMultiply(current.worldAxis));
                 return true;
@@ -3948,7 +3948,7 @@ public class Physics_AF {
             fl.useContactMotorDir = true;
         }
 
-        public boolean GetContactMotorDirection(idVec3 dir) {
+        public boolean GetContactMotorDirection(final idVec3 dir) {
             if (fl.useContactMotorDir) {
                 dir.oSet(contactMotorDir.oMultiply(current.worldAxis));
                 return true;
@@ -5307,7 +5307,7 @@ public class Physics_AF {
                 relBounds = bodies.oGet(0).GetClipModel().GetBounds();
                 for (i = 1; i < bodies.Num(); i++) {
                     idBounds bounds = new idBounds();
-                    idVec3 origin = new idVec3((bodies.oGet(i).GetWorldOrigin().oMinus(bodies.oGet(0).GetWorldOrigin())).oMultiply(bodies.oGet(0).GetWorldAxis().Transpose()));
+                    final idVec3 origin = new idVec3((bodies.oGet(i).GetWorldOrigin().oMinus(bodies.oGet(0).GetWorldOrigin())).oMultiply(bodies.oGet(0).GetWorldAxis().Transpose()));
                     idMat3 axis = new idMat3(bodies.oGet(i).GetWorldAxis().oMultiply(bodies.oGet(0).GetWorldAxis().Transpose()));
                     bounds.FromTransformedBounds(bodies.oGet(i).GetClipModel().GetBounds(), origin, axis);
                     relBounds.oPluSet(bounds);
@@ -5356,7 +5356,7 @@ public class Physics_AF {
 
             // get the new master position
             if (masterBody != null) {
-                idVec3 masterOrigin = new idVec3();
+                final idVec3 masterOrigin = new idVec3();
                 idMat3 masterAxis = new idMat3();
                 self.GetMasterPosition(masterOrigin, masterAxis);
                 if (current.atRest >= 0 && (masterBody.current.worldOrigin != masterOrigin || masterBody.current.worldAxis != masterAxis)) {
@@ -6008,7 +6008,7 @@ public class Physics_AF {
         @Override
         public void SetMaster(idEntity master, final boolean orientated /*= true*/) {
             int i;
-            idVec3 masterOrigin = new idVec3();
+            final idVec3 masterOrigin = new idVec3();
             idMat3 masterAxis = new idMat3();
             idRotation rotation;
 
@@ -6677,7 +6677,7 @@ public class Physics_AF {
 // }else{
             int i;
             idAFBody body;
-            idVec3 normal = new idVec3();
+            final idVec3 normal = new idVec3();
 
             for (i = 0; i < contactConstraints.Num(); i++) {
                 body = contactConstraints.oGet(i).body1;
@@ -6725,7 +6725,7 @@ public class Physics_AF {
         private void Evolve(float timeStep) {
             int i;
             float angle;
-            idVec3 vec = new idVec3();
+            final idVec3 vec = new idVec3();
             idAFBody body;
             idRotation rotation;
             float vSqr, maxLinearVelocity, maxAngularVelocity;
@@ -6861,7 +6861,7 @@ public class Physics_AF {
          ================
          */
         private boolean CollisionImpulse(float timeStep, idAFBody body, final trace_s collision) {
-            idVec3 r = new idVec3(), velocity = new idVec3(), impulse = new idVec3();
+            final idVec3 r = new idVec3(), velocity = new idVec3(), impulse = new idVec3();
             idMat3 inverseWorldInertiaTensor;
             float impulseNumerator, impulseDenominator;
             impactInfo_s info;
@@ -7120,7 +7120,7 @@ public class Physics_AF {
             int i;
             idAFBody body, highlightBody = null, constrainedBody1 = null, constrainedBody2 = null;
             idAFConstraint constraint;
-            idVec3 center = new idVec3();
+            final idVec3 center = new idVec3();
             idMat3 axis;
 
             if (isNotNullOrEmpty(af_highlightConstraint.GetString())) {

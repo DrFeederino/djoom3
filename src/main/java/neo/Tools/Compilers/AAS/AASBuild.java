@@ -491,7 +491,7 @@ public class AASBuild {
             idFixedWinding neww;
             idBounds bounds = new idBounds();
             float radius;
-            idVec3 origin;
+            final idVec3 origin = new idVec3();
 
             // if the .proc file has no BSP tree
             if (this.procNodes == null) {
@@ -509,9 +509,9 @@ public class AASBuild {
                     // make a local copy of the winding
                     neww = (idFixedWinding) brush.GetSide(i).GetWinding();
                     neww.GetBounds(bounds);
-                    origin = (bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f));
+                    origin.oSet((bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f)));
                     radius = origin.Length() + ON_EPSILON;
-                    origin = bounds.oGet(0).oPlus(origin);
+                    origin.oSet(bounds.oGet(0).oPlus(origin));
 
                     if (ChoppedAwayByProcBSP(0, neww, brush.GetSide(i).GetPlane().Normal(), origin, radius)) {
                         brush.GetSide(i).SetFlag(SFL_USED_SPLITTER);
@@ -593,7 +593,7 @@ public class AASBuild {
             int v1, v2, v3, v4;
             idFixedWinding w = new idFixedWinding();
             idPlane plane = new idPlane();
-            idVec3 d1, d2;
+            final idVec3 d1 = new idVec3(), d2 = new idVec3();
             idBrush brush;
             idSurface_Patch mesh;
             idMaterial mat;
@@ -624,8 +624,8 @@ public class AASBuild {
                     v3 = v1 + mesh.GetWidth() + 1;
                     v4 = v1 + mesh.GetWidth();
 
-                    d1 = mesh.oGet(v2).xyz.oMinus(mesh.oGet(v1).xyz);
-                    d2 = mesh.oGet(v3).xyz.oMinus(mesh.oGet(v1).xyz);
+                    d1.oSet(mesh.oGet(v2).xyz.oMinus(mesh.oGet(v1).xyz));
+                    d2.oSet(mesh.oGet(v3).xyz.oMinus(mesh.oGet(v1).xyz));
                     plane.SetNormal(d1.Cross(d2));
                     if (plane.Normalize() != 0.0f) {
                         plane.FitThroughPoint(mesh.oGet(v1).xyz);
@@ -675,8 +675,8 @@ public class AASBuild {
                         }
                     }
                     // create the other triangle
-                    d1 = mesh.oGet(v3).xyz.oMinus(mesh.oGet(v1).xyz);
-                    d2 = mesh.oGet(v4).xyz.oMinus(mesh.oGet(v1).xyz);
+                    d1.oSet(mesh.oGet(v3).xyz.oMinus(mesh.oGet(v1).xyz));
+                    d2.oSet(mesh.oGet(v4).xyz.oMinus(mesh.oGet(v1).xyz));
                     plane.SetNormal(d1.Cross(d2));
                     if (plane.Normalize() != 0.0f) {
                         plane.FitThroughPoint(mesh.oGet(v1).xyz);
@@ -712,7 +712,7 @@ public class AASBuild {
 
         private idBrushList AddBrushesForMapEntity(final idMapEntity mapEnt, int entityNum, idBrushList brushList) {
             int i;
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (mapEnt.GetNumPrimitives() < 1) {
@@ -803,7 +803,7 @@ public class AASBuild {
         private void SetPortalFlags_r(idBrushBSPNode node) {
             int s;
             idBrushBSPPortal p;
-            idVec3 normal;
+            final idVec3 normal = new idVec3();
 
             if (NOT(node)) {
                 return;
@@ -820,9 +820,9 @@ public class AASBuild {
                     // if solid at the other side of the portal
                     if ((p.GetNode(/*!s*/1 ^ s).GetContents() & AREACONTENTS_SOLID) != 0) {//TODO:check that the answer is always 1 or 0.
                         if (s != 0) {
-                            normal = p.GetPlane().Normal().oNegative();
+                            normal.oSet(p.GetPlane().Normal().oNegative());
                         } else {
-                            normal = p.GetPlane().Normal();
+                            normal.oSet(p.GetPlane().Normal());
                         }
                         if (normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal()) {
                             p.SetFlag(FACE_FLOOR);
@@ -839,7 +839,7 @@ public class AASBuild {
         }
 
         private boolean PortalIsGap(idBrushBSPPortal portal, int side) {
-            idVec3 normal;
+            final idVec3 normal = new idVec3();
 
             // if solid at the other side of the portal
             if ((portal.GetNode(/*!side*/1 ^ side).GetContents() & AREACONTENTS_SOLID) != 0) {
@@ -847,9 +847,9 @@ public class AASBuild {
             }
 
             if (side != 0) {
-                normal = portal.GetPlane().Normal().oNegative();
+                normal.oSet(portal.GetPlane().Normal().oNegative());
             } else {
-                normal = portal.GetPlane().Normal();
+                normal.oSet(portal.GetPlane().Normal());
             }
             return normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal();
         }
@@ -859,7 +859,7 @@ public class AASBuild {
             int numSplits, numSplitters;
             idBrushBSPPortal p1, p2;
             idWinding w1, w2;
-            idVec3 normal;
+            final idVec3 normal = new idVec3();
             idPlane plane = new idPlane();
             idPlaneSet planeList = new idPlaneSet();
             float d, min, max;
@@ -906,8 +906,8 @@ public class AASBuild {
                 for (i = 0; i < w1.GetNumPoints(); i++) {
 
                     // create a plane through the edge of the gap parallel to the direction of gravity
-                    normal = w1.oGet((i + 1) % w1.GetNumPoints()).ToVec3().oMinus(w1.oGet(i).ToVec3());
-                    normal = normal.Cross(aasSettings.invGravityDir);
+                    normal.oSet(w1.oGet((i + 1) % w1.GetNumPoints()).ToVec3().oMinus(w1.oGet(i).ToVec3()));
+                    normal.oSet(normal.Cross(aasSettings.invGravityDir));
                     if (normal.Normalize() < 0.2f) {
                         continue;
                     }
@@ -1317,7 +1317,7 @@ public class AASBuild {
             int s1, i;
             idBrushBSPPortal p1;
             idWinding w;
-            idVec3 v1, v2, normal, origin;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), normal = new idVec3(), origin = new idVec3();
             idFixedWinding winding = new idFixedWinding();
             idBounds bounds = new idBounds();
             idPlane plane;
@@ -1340,9 +1340,9 @@ public class AASBuild {
 
                 for (i = 0; i < w.GetNumPoints(); i++) {
 
-                    v1 = w.oGet(i).ToVec3();
-                    v2 = w.oGet((i + 1) % w.GetNumPoints()).ToVec3();
-                    normal = (v2.oMinus(v1)).Cross(aasSettings.gravityDir);
+                    v1.oSet(w.oGet(i).ToVec3());
+                    v2.oSet(w.oGet((i + 1) % w.GetNumPoints()).ToVec3());
+                    normal.oSet((v2.oMinus(v1)).Cross(aasSettings.gravityDir));
                     if (normal.Normalize() < 0.5f) {
                         continue;
                     }
@@ -1354,9 +1354,9 @@ public class AASBuild {
                     winding.oPluSet(winding.oGet(0).ToVec3().oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal() + 1.0f)));
 
                     winding.GetBounds(bounds);
-                    origin = (bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f));
+                    origin.oSet((bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f)));
                     radius = origin.Length() + LEDGE_EPSILON;
-                    origin = bounds.oGet(0).oPlus(origin);
+                    origin.oSet(bounds.oGet(0).oPlus(origin));
 
                     plane.FitThroughPoint(v1.oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal())));
 
@@ -1580,7 +1580,7 @@ public class AASBuild {
 
         private boolean GetVertex(final idVec3 v, int[] vertexNum) {
             int i, hashKey, vn;
-            idVec3 /*aasVertex_t*/ vert = new idVec3(), p;
+            final idVec3 /*aasVertex_t*/ vert = new idVec3(), p = new idVec3();
 
             for (i = 0; i < 3; i++) {
                 if (Math.abs(v.oGet(i) - idMath.Rint(v.oGet(i))) < INTEGRAL_EPSILON) {
@@ -1593,7 +1593,7 @@ public class AASBuild {
             hashKey = this.HashVec(vert);
 
             for (vn = aas_vertexHash.First(hashKey); vn >= 0; vn = aas_vertexHash.Next(vn)) {
-                p = file.vertices.oGet(vn);
+                p.oSet(file.vertices.oGet(vn));
                 // first compare z-axis because hash is based on x-y plane
                 if (Math.abs(vert.z - p.z) < VERTEX_EPSILON
                         && Math.abs(vert.x - p.x) < VERTEX_EPSILON

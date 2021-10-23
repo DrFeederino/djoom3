@@ -298,7 +298,7 @@ public class tritools {
         mapTri_s tri;
         mapTri_s triList;
         int i, j;
-        idVec3 vec;
+        final idVec3 vec = new idVec3();
 
         if (NOT(w)) {
             return null;
@@ -318,11 +318,11 @@ public class tritools {
 
             for (j = 0; j < 3; j++) {
                 if (j == 0) {
-                    vec = w.oGet(0).ToVec3();
+                    vec.oSet(w.oGet(0).ToVec3());
                 } else if (j == 1) {
-                    vec = w.oGet(i - 1).ToVec3();
+                    vec.oSet(w.oGet(i - 1).ToVec3());
                 } else {
-                    vec = w.oGet(i).ToVec3();
+                    vec.oSet(w.oGet(i).ToVec3());
                 }
 
                 VectorCopy(vec, tri.v[j].xyz);

@@ -73,6 +73,8 @@ public class SecurityCamera {
             eventCallbacks.put(EV_SecurityCam_AddLight, (eventCallback_t0<idSecurityCamera>) idSecurityCamera::Event_AddLight);
         }
 
+        //
+        private final idVec3 viewOffset;
         private int alertMode;
         // enum { SCANNING, LOSINGINTEREST, ALERT, ACTIVATED };
         private float angle;
@@ -92,8 +94,6 @@ public class SecurityCamera {
         private float sweepStart;
         private boolean sweeping;
         private idTraceModel trm;
-        //
-        private idVec3 viewOffset;
 
         public idSecurityCamera() {
             viewOffset = new idVec3();
@@ -370,7 +370,7 @@ public class SecurityCamera {
             float dist;
             idPlayer ent;
             trace_s tr = new trace_s();
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             pvsHandle_t handle;
 
             handle = gameLocal.pvs.SetupCurrentPVS(pvsArea);
@@ -387,7 +387,7 @@ public class SecurityCamera {
                     continue;
                 }
 
-                dir = ent.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin());
+                dir.oSet(ent.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()));
                 dist = dir.Normalize();
 
                 if (dist > scanDist) {
@@ -398,9 +398,9 @@ public class SecurityCamera {
                     continue;
                 }
 
-                idVec3 eye;
+                final idVec3 eye = new idVec3();
 
-                eye = ent.EyeOffset();
+                eye.oSet(ent.EyeOffset());
 
                 gameLocal.clip.TracePoint(tr, GetPhysics().GetOrigin(), ent.GetPhysics().GetOrigin().oPlus(eye), MASK_OPAQUE, this);
                 if (tr.fraction == 1.0f || (gameLocal.GetTraceEntity(tr).equals(ent))) {
@@ -426,38 +426,38 @@ public class SecurityCamera {
             int i;
             float radius, a, halfRadius;
             CFloat s = new CFloat(), c = new CFloat();
-            idVec3 right = new idVec3(), up = new idVec3();
+            final idVec3 right = new idVec3(), up = new idVec3();
             idVec4 color = new idVec4(1, 0, 0, 1), color2 = new idVec4(0, 0, 1, 1);
-            idVec3 lastPoint, point, lastHalfPoint, halfPoint, center;
+            final idVec3 lastPoint = new idVec3(), point = new idVec3(), lastHalfPoint = new idVec3(), halfPoint = new idVec3(), center = new idVec3();
 
-            idVec3 dir = GetAxis();
+            final idVec3 dir = new idVec3(GetAxis());
             dir.NormalVectors(right, up);
 
             radius = (float) Math.tan(scanFov * idMath.PI / 360.0f);
             halfRadius = radius * 0.5f;
-            lastPoint = dir.oPlus(up.oMultiply(radius));
+            lastPoint.oSet(dir.oPlus(up.oMultiply(radius)));
             lastPoint.Normalize();
-            lastPoint = GetPhysics().GetOrigin().oPlus(lastPoint.oMultiply(scanDist));
-            lastHalfPoint = dir.oPlus(up.oMultiply(halfRadius));
+            lastPoint.oSet(GetPhysics().GetOrigin().oPlus(lastPoint.oMultiply(scanDist)));
+            lastHalfPoint.oSet(dir.oPlus(up.oMultiply(halfRadius)));
             lastHalfPoint.Normalize();
-            lastHalfPoint = GetPhysics().GetOrigin().oPlus(lastHalfPoint.oMultiply(scanDist));
-            center = GetPhysics().GetOrigin().oPlus(dir.oMultiply(scanDist));
+            lastHalfPoint.oSet(GetPhysics().GetOrigin().oPlus(lastHalfPoint.oMultiply(scanDist)));
+            center.oSet(GetPhysics().GetOrigin().oPlus(dir.oMultiply(scanDist)));
             for (i = 1; i < 12; i++) {
                 a = idMath.TWO_PI * i / 12.0f;
                 idMath.SinCos(a, s, c);
-                point = dir.oPlus(right.oMultiply(s.getVal() * radius).oPlus(up.oMultiply(c.getVal() * radius)));
+                point.oSet(dir.oPlus(right.oMultiply(s.getVal() * radius).oPlus(up.oMultiply(c.getVal() * radius))));
                 point.Normalize();
-                point = GetPhysics().GetOrigin().oPlus(point.oMultiply(scanDist));
+                point.oSet(GetPhysics().GetOrigin().oPlus(point.oMultiply(scanDist)));
                 gameRenderWorld.DebugLine(color, lastPoint, point);
                 gameRenderWorld.DebugLine(color, GetPhysics().GetOrigin(), point);
-                lastPoint = point;
+                lastPoint.oSet(point);
 
-                halfPoint = dir.oPlus(right.oMultiply(s.getVal() * halfRadius).oPlus(up.oMultiply(c.getVal() * halfRadius)));
+                halfPoint.oSet(dir.oPlus(right.oMultiply(s.getVal() * halfRadius).oPlus(up.oMultiply(c.getVal() * halfRadius))));
                 halfPoint.Normalize();
-                halfPoint = GetPhysics().GetOrigin().oPlus(halfPoint.oMultiply(scanDist));
+                halfPoint.oSet(GetPhysics().GetOrigin().oPlus(halfPoint.oMultiply(scanDist)));
                 gameRenderWorld.DebugLine(color2, point, halfPoint);
                 gameRenderWorld.DebugLine(color2, lastHalfPoint, halfPoint);
-                lastHalfPoint = halfPoint;
+                lastHalfPoint.oSet(halfPoint);
 
                 gameRenderWorld.DebugLine(color2, halfPoint, center);
             }
@@ -516,25 +516,25 @@ public class SecurityCamera {
 
         private void Event_AddLight() {
             idDict args = new idDict();
-            idVec3 right = new idVec3(), up = new idVec3(), target, temp;
-            idVec3 dir;
+            final idVec3 right = new idVec3(), up = new idVec3(), target = new idVec3(), temp = new idVec3();
+            final idVec3 dir = new idVec3();
             float radius;
-            idVec3 lightOffset = new idVec3();
+            final idVec3 lightOffset = new idVec3();
             idLight spotLight;
 
-            dir = GetAxis();
+            dir.oSet(GetAxis());
             dir.NormalVectors(right, up);
-            target = GetPhysics().GetOrigin().oPlus(dir.oMultiply(scanDist));
+            target.oSet(GetPhysics().GetOrigin().oPlus(dir.oMultiply(scanDist)));
 
             radius = (float) Math.tan(scanFov * idMath.PI / 360.0f);
-            up = dir.oPlus(up.oMultiply(radius));
+            up.oSet(dir.oPlus(up.oMultiply(radius)));
             up.Normalize();
-            up = GetPhysics().GetOrigin().oPlus(up.oMultiply(scanDist));
+            up.oSet(GetPhysics().GetOrigin().oPlus(up.oMultiply(scanDist)));
             up.oMinSet(target);
 
-            right = dir.oPlus(right.oMultiply(radius));
+            right.oSet(dir.oPlus(right.oMultiply(radius)));
             right.Normalize();
-            right = GetPhysics().GetOrigin().oPlus(right.oMultiply(scanDist));
+            right.oSet(GetPhysics().GetOrigin().oPlus(right.oMultiply(scanDist)));
             right.oMinSet(target);
 
             spawnArgs.GetVector("lightOffset", "0 0 0", lightOffset);

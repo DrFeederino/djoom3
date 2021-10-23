@@ -374,7 +374,7 @@ public class Physics_Parametric {
             return current.useSplineAngles;
         }
 
-        public void GetLocalOrigin(idVec3 curOrigin) {
+        public void GetLocalOrigin(final idVec3 curOrigin) {
             curOrigin.oSet(current.localOrigin);
         }
 

@@ -1113,7 +1113,7 @@ public class Winvar {
 
     static class idWinVec3 extends idWinVar {
 
-        protected idVec3 data;
+        protected final idVec3 data = new idVec3();
         //
         //
 
@@ -1124,7 +1124,7 @@ public class Winvar {
         //copy constructor
         idWinVec3(idWinVec3 winVec3) {
             super.oSet(winVec3);
-            this.data = new idVec3(winVec3.data);
+            this.data.oSet(winVec3.data);
         }
 
         //	~idWinVec3() {};
@@ -1132,7 +1132,7 @@ public class Winvar {
         public void Init(final String _name, idWindow win) {
             super.Init(_name, win);
             if (guiDict != null) {
-                data = guiDict.GetVector(GetName());
+                data.oSet(guiDict.GetVector(GetName()));
             }
         }
 //	int	operator==(	const idVec3 other ) {
@@ -1161,12 +1161,12 @@ public class Winvar {
 
         public idWinVec3 oSet(final idWinVec3 other) {
             super.oSet(other);
-            data = other.data;
+            data.oSet(other.data);
             return this;
         }
 
         public idVec3 oSet(final idVec3 other) {
-            data = other;
+            data.oSet(other);
             if (guiDict != null) {
                 guiDict.SetVector(GetName(), data);
             }
@@ -1213,7 +1213,7 @@ public class Winvar {
         public void Update() {
             final String s = GetName();
             if (guiDict != null && s.charAt(0) != '\0') {
-                data = guiDict.GetVector(s);
+                data.oSet(guiDict.GetVector(s));
             }
         }
 

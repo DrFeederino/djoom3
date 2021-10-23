@@ -1,7 +1,6 @@
 package neo.Game;
 
 import neo.Game.Player.idPlayer;
-import neo.Renderer.RenderWorld.*;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 
@@ -46,7 +45,7 @@ public class PlayerIcon {
         // ~idPlayerIcon();
 
         public void Draw(idPlayer player, int/*jointHandle_t*/ joint) {
-            idVec3 origin = new idVec3();
+            final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
 
             if (joint == INVALID_JOINT) {

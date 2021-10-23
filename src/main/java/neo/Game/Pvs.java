@@ -466,7 +466,7 @@ public class Pvs {
             int i, j, k, numPoints, n, sourceArea;
             exitPortal_t portal;
             idPlane plane = new idPlane();
-            idVec3 offset;
+            final idVec3 offset = new idVec3();
             idVec4 color;
             pvsHandle_t handle;
 
@@ -499,7 +499,7 @@ public class Pvs {
                     numPoints = portal.w.GetNumPoints();
 
                     portal.w.GetPlane(plane);
-                    offset = plane.Normal().oMultiply(4.0f);
+                    offset.oSet(plane.Normal().oMultiply(4.0f));
                     for (k = 0; k < numPoints; k++) {
                         gameRenderWorld.DebugLine(color, portal.w.oGet(k).ToVec3().oPlus(offset), portal.w.oGet((k + 1) % numPoints).ToVec3().oPlus(offset));
                     }
@@ -514,7 +514,7 @@ public class Pvs {
             int[] areas = new int[MAX_BOUNDS_AREAS];
             exitPortal_t portal;
             idPlane plane = new idPlane();
-            idVec3 offset;
+            final idVec3 offset = new idVec3();
             idVec4 color;
             pvsHandle_t handle;
 
@@ -552,7 +552,7 @@ public class Pvs {
                     numPoints = portal.w.GetNumPoints();
 
                     portal.w.GetPlane(plane);
-                    offset = plane.Normal().oMultiply(4.0f);
+                    offset.oSet(plane.Normal().oMultiply(4.0f));
                     for (k = 0; k < numPoints; k++) {
                         gameRenderWorld.DebugLine(color, portal.w.oGet(k).ToVec3().oPlus(offset), portal.w.oGet((k + 1) % numPoints).ToVec3().oPlus(offset));
                     }
@@ -567,7 +567,7 @@ public class Pvs {
             int i, j, k, numPoints, n, sourceArea;
             exitPortal_t portal;
             idPlane plane = new idPlane();
-            idVec3 offset;
+            final idVec3 offset = new idVec3();
             idVec4 color;
 
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS
@@ -602,7 +602,7 @@ public class Pvs {
                     numPoints = portal.w.GetNumPoints();
 
                     portal.w.GetPlane(plane);
-                    offset = plane.Normal().oMultiply(4.0f);
+                    offset.oSet(plane.Normal().oMultiply(4.0f));
                     for (k = 0; k < numPoints; k++) {
                         gameRenderWorld.DebugLine(color, portal.w.oGet(k).ToVec3().oPlus(offset), portal.w.oGet((k + 1) % numPoints).ToVec3().oPlus(offset));
                     }
@@ -962,7 +962,7 @@ public class Pvs {
 
         private void AddPassageBoundaries(final idWinding source, final idWinding pass, boolean flipClip, idPlane[] bounds, CInt numBounds, int maxBounds) {
             int i, j, k, l;
-            idVec3 v1, v2, normal;
+            final idVec3 v1 = new idVec3(), v2 = new idVec3(), normal = new idVec3();
             float d, dist;
             boolean flipTest, front;
             idPlane plane = new idPlane();
@@ -971,16 +971,16 @@ public class Pvs {
             for (i = 0; i < source.GetNumPoints(); i++) {
 
                 l = (i + 1) % source.GetNumPoints();
-                v1 = source.oGet(l).ToVec3().oMinus(source.oGet(i).ToVec3());
+                v1.oSet(source.oGet(l).ToVec3().oMinus(source.oGet(i).ToVec3()));
 
                 // find a vertex of pass that makes a plane that puts all of the
                 // vertices of pass on the front side and all of the vertices of
                 // source on the back side
                 for (j = 0; j < pass.GetNumPoints(); j++) {
 
-                    v2 = pass.oGet(j).ToVec3().oMinus(source.oGet(i).ToVec3());
+                    v2.oSet(pass.oGet(j).ToVec3().oMinus(source.oGet(i).ToVec3()));
 
-                    normal = v1.Cross(v2);
+                    normal.oSet(v1.Cross(v2));
                     if (normal.Normalize() < 0.01f) {
                         continue;
                     }
@@ -1014,7 +1014,7 @@ public class Pvs {
 
                     // flip the normal if the source portal is backwards
                     if (flipTest) {
-                        normal = normal.oNegative();
+                        normal.oSet(normal.oNegative());
                         dist = -dist;
                     }
 

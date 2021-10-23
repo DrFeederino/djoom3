@@ -1,6 +1,5 @@
 package neo.Tools.Compilers.DMap;
 
-import neo.Tools.Compilers.DMap.dmap.*;
 import neo.framework.File_h.idFile;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.geometry.Winding.idWinding;
@@ -302,7 +301,7 @@ public class ubrush {
     static float BrushVolume(uBrush_t brush) {
         int i;
         idWinding w;
-        idVec3 corner = new idVec3();
+        final idVec3 corner = new idVec3();
         float d, area, volume;
         idPlane plane;
 

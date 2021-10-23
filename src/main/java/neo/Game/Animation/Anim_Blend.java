@@ -232,7 +232,7 @@ public class Anim_Blend {
             return anims[0].TotalMovementDelta();
         }
 
-        public boolean GetOrigin(idVec3 offset, int animNum, int currentTime, int cyclecount) {
+        public boolean GetOrigin(final idVec3 offset, int animNum, int currentTime, int cyclecount) {
             if (null == anims[animNum]) {
                 offset.Zero();
                 return false;
@@ -983,7 +983,7 @@ public class Anim_Blend {
         private final idList<Integer> jointParents;
         private final idList<jointInfo_t> joints;
         private idRenderModel modelHandle;
-        private idVec3 offset;
+        private final idVec3 offset;
         //
         //
         private idDeclSkin skin;
@@ -1553,7 +1553,7 @@ public class Anim_Blend {
 
             FreeData();
 
-            offset = decl.offset;
+            offset.oSet(decl.offset);
             modelHandle = decl.modelHandle;
             skin = decl.skin;
 
@@ -2098,10 +2098,10 @@ public class Anim_Blend {
             return true;
         }
 
-        private void BlendOrigin(int currentTime, idVec3 blendPos, CFloat blendWeight, boolean removeOriginOffset) {
+        private void BlendOrigin(int currentTime, final idVec3 blendPos, CFloat blendWeight, boolean removeOriginOffset) {
             float lerp;
-            idVec3 animpos = new idVec3();
-            idVec3 pos = new idVec3();
+            final idVec3 animpos = new idVec3();
+            final idVec3 pos = new idVec3();
             int time;
             int num;
             int i;
@@ -2143,11 +2143,11 @@ public class Anim_Blend {
             }
         }
 
-        private void BlendDelta(int fromtime, int totime, idVec3 blendDelta, CFloat blendWeight) {
-            idVec3 pos1 = new idVec3();
-            idVec3 pos2 = new idVec3();
-            idVec3 animpos = new idVec3();
-            idVec3 delta;
+        private void BlendDelta(int fromtime, int totime, final idVec3 blendDelta, CFloat blendWeight) {
+            final idVec3 pos1 = new idVec3();
+            final idVec3 pos2 = new idVec3();
+            final idVec3 animpos = new idVec3();
+            final idVec3 delta = new idVec3();
             int time1;
             int time2;
             float lerp;
@@ -2186,7 +2186,7 @@ public class Anim_Blend {
                 pos2.oPluSet(animpos.oMultiply(animWeights[i]));
             }
 
-            delta = pos2.oMinus(pos1);
+            delta.oSet(pos2.oMinus(pos1));
             if (0 == blendWeight.getVal()) {
                 blendDelta.oSet(delta);
                 blendWeight.setVal(weight);
@@ -2266,7 +2266,7 @@ public class Anim_Blend {
             int num;
             idBounds b = new idBounds();
             int time;
-            idVec3 pos = new idVec3();
+            final idVec3 pos = new idVec3();
             boolean addorigin;
 
             if ((endtime > 0) && (currentTime > endtime)) {
@@ -3382,7 +3382,7 @@ public class Anim_Blend {
             return forceUpdate && IsAnimating(currentTime);
         }
 
-        public void GetDelta(int fromtime, int totime, idVec3 delta) {
+        public void GetDelta(int fromtime, int totime, final idVec3 delta) {
             int i;
             idAnimBlend[] blend;
             CFloat blendWeight = new CFloat();
@@ -3445,7 +3445,7 @@ public class Anim_Blend {
             }
         }
 
-        public void GetOrigin(int currentTime, idVec3 pos) {
+        public void GetOrigin(int currentTime, final idVec3 pos) {
             int i;
             idAnimBlend[] blend;
             CFloat blendWeight = new CFloat();
@@ -3738,7 +3738,7 @@ public class Anim_Blend {
             AFPoseJointMods.oSet(jointNum, new idAFPoseJointMod());
             AFPoseJointMods.oGet(jointNum).mod = mod;
             AFPoseJointMods.oGet(jointNum).axis = axis;
-            AFPoseJointMods.oGet(jointNum).origin = origin;
+            AFPoseJointMods.oGet(jointNum).origin.oSet(origin);
 
             Object[] ptr = AFPoseJoints.getList();
 
@@ -3953,7 +3953,7 @@ public class Anim_Blend {
             return modelDef.GetJoint(joint).channel;
         }
 
-        public boolean GetJointTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
+        public boolean GetJointTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, idMat3 axis) {
             if (null == modelDef || (jointHandle < 0) || (jointHandle >= modelDef.NumJoints())) {
                 return false;
             }
@@ -3966,7 +3966,7 @@ public class Anim_Blend {
             return true;
         }
 
-        public boolean GetJointLocalTransform(int/*jointHandle_t*/ jointHandle, int currentTime, idVec3 offset, idMat3 axis) {
+        public boolean GetJointLocalTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, idMat3 axis) {
             if (null == modelDef) {
                 return false;
             }

@@ -24,10 +24,10 @@ public class Force_Constant {
         // CLASS_PROTOTYPE( idForce_Constant );
 
         // force properties
-        private idVec3 force;
+        private final idVec3 force;
         private int id;
         private idPhysics physics;
-        private idVec3 point;
+        private final idVec3 point;
         //
         //
 
@@ -56,14 +56,14 @@ public class Force_Constant {
 
         // constant force
         public void SetForce(final idVec3 force) {
-            this.force = force;
+            this.force.oSet(force);
         }
         // set force position
 
         public void SetPosition(idPhysics physics, int id, final idVec3 point) {
             this.physics = physics;
             this.id = id;
-            this.point = point;
+            this.point.oSet(point);
         }
 
         public void SetPhysics(idPhysics physics) {
@@ -73,13 +73,13 @@ public class Force_Constant {
         // common force interface
         @Override
         public void Evaluate(int time) {
-            idVec3 p;
+            final idVec3 p = new idVec3();
 
             if (null == physics) {
                 return;
             }
 
-            p = physics.GetOrigin(id).oPlus(point.oMultiply(physics.GetAxis(id)));
+            p.oSet(physics.GetOrigin(id).oPlus(point.oMultiply(physics.GetAxis(id))));
 
             physics.AddForce(id, p, force);
         }

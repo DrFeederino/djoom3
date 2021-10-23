@@ -872,47 +872,7 @@ public class tr_trisurf {
         planes = tri.facePlanes;
 
         if (true) {
-
             SIMDProcessor.DeriveTriPlanes(planes, tri.verts, tri.numVerts, tri.indexes, tri.numIndexes);
-
-//}else{
-//
-//	for ( int i = 0; i < tri.numIndexes; i+= 3, planes++ ) {
-//		int		i1, i2, i3;
-//		idVec3	d1, d2, normal;
-//		idVec3	v1, v2, v3;
-//
-//		i1 = tri.indexes[i + 0];
-//		i2 = tri.indexes[i + 1];
-//		i3 = tri.indexes[i + 2];
-//
-//		v1 = tri.verts[i1].xyz;
-//		v2 = tri.verts[i2].xyz;
-//		v3 = tri.verts[i3].xyz;
-//
-//		d1[0] = v2.x - v1.x;
-//		d1[1] = v2.y - v1.y;
-//		d1[2] = v2.z - v1.z;
-//
-//		d2[0] = v3.x - v1.x;
-//		d2[1] = v3.y - v1.y;
-//		d2[2] = v3.z - v1.z;
-//
-//		normal[0] = d2.y * d1.z - d2.z * d1.y;
-//		normal[1] = d2.z * d1.x - d2.x * d1.z;
-//		normal[2] = d2.x * d1.y - d2.y * d1.x;
-//
-//		float sqrLength, invLength;
-//
-//		sqrLength = normal.x * normal.x + normal.y * normal.y + normal.z * normal.z;
-//		invLength = idMath.RSqrt( sqrLength );
-//
-//		(*planes)[0] = normal[0] * invLength;
-//		(*planes)[1] = normal[1] * invLength;
-//		(*planes)[2] = normal[2] * invLength;
-//
-//		planes.FitThroughPoint( *v1 );
-//	}
         }
 
         tri.facePlanesCalculated = true;
@@ -1162,7 +1122,7 @@ public class tr_trisurf {
         c_textureDegenerateFaces = 0;
         for (i = 0; i < tri.numIndexes; i += 3) {
             float area;
-            idVec3 temp;
+            final idVec3 temp = new idVec3();
             float[] d0 = new float[5], d1 = new float[5];
 
             ft = faceTangents[i / 3];
@@ -1187,8 +1147,8 @@ public class tr_trisurf {
             if (Math.abs(area) < 1e-20f) {
                 ft.negativePolarity = false;
                 ft.degenerate = true;
-                ft.tangents[0] = new idVec3();
-                ft.tangents[1] = new idVec3();
+                ft.tangents[0].Zero();
+                ft.tangents[1].Zero();
                 c_textureDegenerateFaces++;
                 continue;
             }
@@ -1204,33 +1164,33 @@ public class tr_trisurf {
             if (USE_INVA) {
                 final float inva = area < .0f ? -1 : 1;// was = 1.0f / area;
 
-                temp = new idVec3(
+                temp.oSet(new idVec3(
                         (d0[0] * d1[4] - d0[4] * d1[0]) * inva,
                         (d0[1] * d1[4] - d0[4] * d1[1]) * inva,
-                        (d0[2] * d1[4] - d0[4] * d1[2]) * inva);
+                        (d0[2] * d1[4] - d0[4] * d1[2]) * inva));
                 temp.Normalize();
-                ft.tangents[0] = temp;
+                ft.tangents[0].oSet(temp);
 
-                temp = new idVec3(
+                temp.oSet(new idVec3(
                         (d0[3] * d1[0] - d0[0] * d1[3]) * inva,
                         (d0[3] * d1[1] - d0[1] * d1[3]) * inva,
-                        (d0[3] * d1[2] - d0[2] * d1[3]) * inva);
+                        (d0[3] * d1[2] - d0[2] * d1[3]) * inva));
                 temp.Normalize();
-                ft.tangents[1] = temp;
+                ft.tangents[1].oSet(temp);
             } else {
-                temp = new idVec3(
+                temp.oSet(new idVec3(
                         (d0[0] * d1[4] - d0[4] * d1[0]),
                         (d0[1] * d1[4] - d0[4] * d1[1]),
-                        (d0[2] * d1[4] - d0[4] * d1[2]));
+                        (d0[2] * d1[4] - d0[4] * d1[2])));
                 temp.Normalize();
-                ft.tangents[0] = temp;
+                ft.tangents[0].oSet(temp);
 
-                temp = new idVec3(
+                temp.oSet(new idVec3(
                         (d0[3] * d1[0] - d0[0] * d1[3]),
                         (d0[3] * d1[1] - d0[1] * d1[3]),
-                        (d0[3] * d1[2] - d0[2] * d1[3]));
+                        (d0[3] * d1[2] - d0[2] * d1[3])));
                 temp.Normalize();
-                ft.tangents[1] = temp;
+                ft.tangents[1].oSet(temp);
             }
         }
     }
@@ -1380,7 +1340,7 @@ public class tr_trisurf {
         tri.tangentsCalculated = true;
     }
 
-    public static /*ID_INLINE*/ void VectorNormalizeFast2(final idVec3 v, idVec3 out) {
+    public static /*ID_INLINE*/ void VectorNormalizeFast2(final idVec3 v, final idVec3 out) {
         float length;
 
         length = idMath.RSqrt(v.oGet(0) * v.oGet(0) + v.oGet(1) * v.oGet(1) + v.oGet(2) * v.oGet(2));
@@ -1411,7 +1371,7 @@ public class tr_trisurf {
             for (j = 0; i + j < tri.numIndexes && ind[i + j].vertexNum == vertNum; j++) {
                 float[] d0 = new float[5], d1 = new float[5];
                 idDrawVert a, b, c;
-                idVec3 normal = new idVec3(), tangent = new idVec3(), bitangent = new idVec3();
+                final idVec3 normal = new idVec3(), tangent = new idVec3(), bitangent = new idVec3();
 
                 int i1 = tri.indexes[ind[i + j].faceNum * 3 + 0];
                 int i2 = tri.indexes[ind[i + j].faceNum * 3 + 1];
@@ -1506,54 +1466,7 @@ public class tr_trisurf {
         }
 
         if (true) {
-
             SIMDProcessor.DeriveUnsmoothedTangents(tri.verts, tri.dominantTris, tri.numVerts);
-
-//}else{
-//
-//	for ( int i = 0 ; i < tri.numVerts ; i++ ) {
-//		idVec3		temp;
-//		float		[]d0 = new float[5], d1=new float[5];
-//		idDrawVert	a, b, c;
-//		dominantTri_s	dt = tri.dominantTris[i];
-//
-//		a = tri.verts + i;
-//		b = tri.verts + dt.v2;
-//		c = tri.verts + dt.v3;
-//
-//		d0[0] = b.xyz[0] - a.xyz[0];
-//		d0[1] = b.xyz[1] - a.xyz[1];
-//		d0[2] = b.xyz[2] - a.xyz[2];
-//		d0[3] = b.st[0] - a.st[0];
-//		d0[4] = b.st[1] - a.st[1];
-//
-//		d1[0] = c.xyz[0] - a.xyz[0];
-//		d1[1] = c.xyz[1] - a.xyz[1];
-//		d1[2] = c.xyz[2] - a.xyz[2];
-//		d1[3] = c.st[0] - a.st[0];
-//		d1[4] = c.st[1] - a.st[1];
-//
-//		a.normal[0] = dt.normalizationScale[2] * ( d1[1] * d0[2] - d1[2] * d0[1] );
-//		a.normal[1] = dt.normalizationScale[2] * ( d1[2] * d0[0] - d1[0] * d0[2] );
-//		a.normal[2] = dt.normalizationScale[2] * ( d1[0] * d0[1] - d1[1] * d0[0] );
-//
-//		a.tangents[0][0] = dt.normalizationScale[0] * ( d0[0] * d1[4] - d0[4] * d1[0] );
-//		a.tangents[0][1] = dt.normalizationScale[0] * ( d0[1] * d1[4] - d0[4] * d1[1] );
-//		a.tangents[0][2] = dt.normalizationScale[0] * ( d0[2] * d1[4] - d0[4] * d1[2] );
-//
-//if(DERIVE_UNSMOOTHED_BITANGENT){
-//		// derive the bitangent for a completely orthogonal axis,
-//		// instead of using the texture T vector
-//		a.tangents[1][0] = dt.normalizationScale[1] * ( a.normal[2] * a.tangents[0][1] - a.normal[1] * a.tangents[0][2] );
-//		a.tangents[1][1] = dt.normalizationScale[1] * ( a.normal[0] * a.tangents[0][2] - a.normal[2] * a.tangents[0][0] );
-//		a.tangents[1][2] = dt.normalizationScale[1] * ( a.normal[1] * a.tangents[0][0] - a.normal[0] * a.tangents[0][1] );
-//        }else{
-//		// calculate the bitangent from the texture T vector
-//		a.tangents[1][0] = dt.normalizationScale[1] * ( d0[3] * d1[0] - d0[0] * d1[3] );
-//		a.tangents[1][1] = dt.normalizationScale[1] * ( d0[3] * d1[1] - d0[1] * d1[3] );
-//		a.tangents[1][2] = dt.normalizationScale[1] * ( d0[3] * d1[2] - d0[2] * d1[3] );
-//}
-//	}
         }
 
         tri.tangentsCalculated = true;
@@ -2412,7 +2325,7 @@ public class tr_trisurf {
 
         boolean degenerate;
         boolean negativePolarity;
-        idVec3[] tangents = new idVec3[2];
+        final idVec3[] tangents = idVec3.generateArray(2);
 
         static faceTangents_t[] generateArray(final int length) {
             return Stream.

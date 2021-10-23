@@ -449,7 +449,7 @@ public class dmap {
         //
         int numAreas;
         //
-        idVec3 origin;
+        final idVec3 origin = new idVec3();
         primitive_s primitives;
         tree_s tree;
     }
@@ -667,7 +667,7 @@ public class dmap {
     static class optimizeGroup_s {
 
         int areaNum;
-        idVec3[] axis = new idVec3[2];        // orthogonal to the plane, so optimization can be 2D
+        final idVec3[] axis = idVec3.generateArray(2);        // orthogonal to the plane, so optimization can be 2D
         //
         idBounds bounds;            // set in CarveGroupsByLight
         mapLight_t[] groupLights = new mapLight_t[MAX_GROUP_LIGHTS];    // lights effecting this list

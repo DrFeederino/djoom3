@@ -783,7 +783,7 @@ public class SaveGame {
             file.ReadVec2(vec);
         }
 
-        public void ReadVec3(idVec3 vec) {
+        public void ReadVec3(final idVec3 vec) {
             file.ReadVec3(vec);
         }
 

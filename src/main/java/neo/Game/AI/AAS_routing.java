@@ -67,7 +67,7 @@ public class AAS_routing {
         boolean isInList;        // true if the update is in the list
         idRoutingUpdate next;            // next in list
         idRoutingUpdate prev;            // prev in list
-        idVec3 start;           // start point into area
+        final idVec3 start = new idVec3();           // start point into area
         int tmpTravelTime;   // temporary travel time
         //
         //

@@ -31,9 +31,9 @@ public class Force_Drag {
 
         // properties
         private float damping;
-        private idVec3 dragPosition;    // drag towards this position
+        private final idVec3 dragPosition;    // drag towards this position
         private int id;            // clip model id of physics object
-        private idVec3 p;        // position on clip model
+        private final idVec3 p;        // position on clip model
         //
         // positioning
         private idPhysics physics;    // physics object
@@ -60,12 +60,12 @@ public class Force_Drag {
         public void SetPhysics(idPhysics phys, int id, final idVec3 p) {
             this.physics = phys;
             this.id = id;
-            this.p = p;
+            this.p.oSet(p);
         }
 
         // set position to drag towards
         public void SetDragPosition(final idVec3 pos) {
-            this.dragPosition = pos;
+            this.dragPosition.oSet(pos);
         }
 
         // get the position dragged towards
@@ -83,7 +83,7 @@ public class Force_Drag {
         public void Evaluate(int time) {
             float l1, l2;
             CFloat mass = new CFloat();
-            idVec3 dragOrigin, dir1, dir2, velocity, centerOfMass = new idVec3();
+            final idVec3 dragOrigin = new idVec3(), dir1 = new idVec3(), dir2 = new idVec3(), velocity = new idVec3(), centerOfMass = new idVec3();
             idMat3 inertiaTensor = new idMat3();
             idRotation rotation = new idRotation();
             idClipModel clipModel;
@@ -99,18 +99,18 @@ public class Force_Drag {
                 centerOfMass.Zero();
             }
 
-            centerOfMass = physics.GetOrigin(id).oPlus(centerOfMass.oMultiply(physics.GetAxis(id)));
-            dragOrigin = physics.GetOrigin(id).oPlus(p.oMultiply(physics.GetAxis(id)));
+            centerOfMass.oSet(physics.GetOrigin(id).oPlus(centerOfMass.oMultiply(physics.GetAxis(id))));
+            dragOrigin.oSet(physics.GetOrigin(id).oPlus(p.oMultiply(physics.GetAxis(id))));
 
-            dir1 = dragPosition.oMinus(centerOfMass);
-            dir2 = dragOrigin.oMinus(centerOfMass);
+            dir1.oSet(dragPosition.oMinus(centerOfMass));
+            dir2.oSet(dragOrigin.oMinus(centerOfMass));
             l1 = dir1.Normalize();
             l2 = dir2.Normalize();
 
             rotation.Set(centerOfMass, dir2.Cross(dir1), RAD2DEG(idMath.ACos(dir1.oMultiply(dir2))));
             physics.SetAngularVelocity(rotation.ToAngularVelocity().oDivide(MS2SEC(USERCMD_MSEC)), id);
 
-            velocity = physics.GetLinearVelocity(id).oMultiply(damping).oPlus(dir1.oMultiply((l1 - l2) * (1.0f - damping) / MS2SEC(USERCMD_MSEC)));
+            velocity.oSet(physics.GetLinearVelocity(id).oMultiply(damping).oPlus(dir1.oMultiply((l1 - l2) * (1.0f - damping) / MS2SEC(USERCMD_MSEC))));
             physics.SetLinearVelocity(velocity, id);
         }
 

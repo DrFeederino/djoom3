@@ -1111,9 +1111,11 @@ public class Weapon {
 
             // set up muzzleflash render light
             idMaterial flashShader;
-            idVec3 flashTarget;
-            idVec3 flashUp;
-            idVec3 flashRight;
+            final idVec3 flashTarget = new idVec3();
+            final idVec3 flashUp = new idVec3();
+            ;
+            final idVec3 flashRight = new idVec3();
+            ;
             float flashRadius;
             boolean flashPointLight;
 
@@ -1123,9 +1125,9 @@ public class Weapon {
             weaponDef.dict.GetVector("flashColor", "0 0 0", flashColor);
             flashRadius = (float) weaponDef.dict.GetInt("flashRadius");    // if 0, no light will spawn
             flashTime = (int) SEC2MS(weaponDef.dict.GetFloat("flashTime", "0.25"));
-            flashTarget = weaponDef.dict.GetVector("flashTarget");
-            flashUp = weaponDef.dict.GetVector("flashUp");
-            flashRight = weaponDef.dict.GetVector("flashRight");
+            flashTarget.oSet(weaponDef.dict.GetVector("flashTarget"));
+            flashUp.oSet(weaponDef.dict.GetVector("flashUp"));
+            flashRight.oSet(weaponDef.dict.GetVector("flashRight"));
 
             muzzleFlash = new renderLight_s();//memset( & muzzleFlash, 0, sizeof(muzzleFlash));
             muzzleFlash.lightId = LIGHTID_VIEW_MUZZLE_FLASH + owner.entityNumber;
@@ -1351,7 +1353,7 @@ public class Weapon {
          This returns the offset and axis of a weapon bone in world space, suitable for attaching models or lights
          ================
          */
-        public boolean GetGlobalJointTransform(boolean viewModel, final int /*jointHandle_t*/ jointHandle, idVec3 offset, idMat3 axis) {
+        public boolean GetGlobalJointTransform(boolean viewModel, final int /*jointHandle_t*/ jointHandle, final idVec3 offset, idMat3 axis) {
             if (viewModel) {
                 // view model
                 if (animator.GetJointTransform(jointHandle, gameLocal.time, offset, axis)) {
@@ -1909,7 +1911,7 @@ public class Weapon {
         public boolean BloodSplat(float size) {
             CFloat s = new CFloat(), c = new CFloat();
             idMat3 localAxis = new idMat3(), axistemp = new idMat3();
-            idVec3 localOrigin = new idVec3(), normal;
+            final idVec3 localOrigin = new idVec3(), normal = new idVec3();
 
             if (hasBloodSplat) {
                 return true;
@@ -1929,7 +1931,7 @@ public class Weapon {
             localOrigin.oPluSet(1, gameLocal.random.RandomFloat() * 1.0f);
             localOrigin.oPluSet(2, gameLocal.random.RandomFloat() * -2.0f);
 
-            normal = new idVec3(gameLocal.random.CRandomFloat(), -gameLocal.random.RandomFloat(), -1);
+            normal.oSet(new idVec3(gameLocal.random.CRandomFloat(), -gameLocal.random.RandomFloat(), -1));
             normal.Normalize();
 
             idMath.SinCos16(gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c);
@@ -2070,7 +2072,7 @@ public class Weapon {
         private void AlertMonsters() {
             trace_s tr = new trace_s();
             idEntity ent;
-            idVec3 end = muzzleFlash.origin.oPlus(muzzleFlash.axis.oMultiply(muzzleFlash.target));
+            final idVec3 end = new idVec3(muzzleFlash.origin.oPlus(muzzleFlash.axis.oMultiply(muzzleFlash.target)));
 
             gameLocal.clip.TracePoint(tr, muzzleFlash.origin, end, CONTENTS_OPAQUE | MASK_SHOT_RENDERMODEL | CONTENTS_FLASHLIGHT_TRIGGER, owner);
             if (g_debugWeapon.GetBool()) {
@@ -2188,11 +2190,11 @@ public class Weapon {
          The machinegun and chaingun will incrementally back up as they are being fired
          ================
          */
-        private void MuzzleRise(idVec3 origin, idMat3 axis) {
+        private void MuzzleRise(final idVec3 origin, idMat3 axis) {
             int time;
             float amount;
             idAngles ang;
-            idVec3 offset;
+            final idVec3 offset = new idVec3();
 
             time = kick_endtime - gameLocal.time;
             if (time <= 0) {
@@ -2209,7 +2211,7 @@ public class Weapon {
 
             amount = (float) time / (float) muzzle_kick_maxtime;
             ang = muzzle_kick_angles.oMultiply(amount);
-            offset = muzzle_kick_offset.oMultiply(amount);
+            offset.oSet(muzzle_kick_offset.oMultiply(amount));
 
             origin.oSet(origin.oMinus(axis.oMultiply(offset)));
             axis.oSet(ang.ToMat3().oMultiply(axis));
@@ -2271,8 +2273,8 @@ public class Weapon {
             GetGlobalJointTransform(true, flashJointView, muzzleFlash.origin, muzzleFlash.axis);
 
             // if the desired point is inside or very close to a wall, back it up until it is clear
-            idVec3 start = muzzleFlash.origin.oMinus(playerViewAxis.oGet(0).oMultiply(16));
-            idVec3 end = muzzleFlash.origin.oPlus(playerViewAxis.oGet(0).oMultiply(8));
+            final idVec3 start = new idVec3(muzzleFlash.origin.oMinus(playerViewAxis.oGet(0).oMultiply(16)));
+            final idVec3 end = new idVec3(muzzleFlash.origin.oPlus(playerViewAxis.oGet(0).oMultiply(8)));
             trace_s tr = new trace_s();
             gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL, owner);
             // be at least 8 units away from a solid
@@ -2561,13 +2563,13 @@ public class Weapon {
             idProjectile proj;
             idEntity[] ent = {null};
             int i;
-            idVec3 dir;
+            final idVec3 dir = new idVec3();
             float ang;
             float spin;
             CFloat distance = new CFloat();
             trace_s tr = new trace_s();
-            idVec3 start;
-            idVec3 muzzle_pos = new idVec3();
+            final idVec3 start = new idVec3();
+            final idVec3 muzzle_pos = new idVec3();
             idBounds ownerBounds, projBounds;
 
             if (IsHidden()) {
@@ -2652,7 +2654,7 @@ public class Weapon {
                     for (i = 0; i < num_projectiles; i++) {
                         ang = idMath.Sin(spreadRad * gameLocal.random.RandomFloat());
                         spin = DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
-                        dir = playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin))));
+                        dir.oSet(playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin)))));
                         dir.Normalize();
                         gameLocal.clip.Translation(tr, muzzle_pos, muzzle_pos.oPlus(dir.oMultiply(4096.0f)), null, getMat3_identity(), MASK_SHOT_RENDERMODEL, owner);
                         if (tr.fraction < 1.0f) {
@@ -2671,7 +2673,7 @@ public class Weapon {
                 for (i = 0; i < num_projectiles; i++) {
                     ang = idMath.Sin(spreadRad * gameLocal.random.RandomFloat());
                     spin = DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
-                    dir = playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin))));
+                    dir.oSet(playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin)).oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin)))));
                     dir.Normalize();
 
                     if (projectileEnt != null) {
@@ -2702,13 +2704,13 @@ public class Weapon {
                     if (i == 0) {
                         muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f)));
                         if ((ownerBounds.oMinus(projBounds)).RayIntersection(muzzle_pos, playerViewAxis.oGet(0), distance)) {
-                            start = muzzle_pos.oPlus(playerViewAxis.oGet(0).oMultiply(distance.getVal()));
+                            start.oSet(muzzle_pos.oPlus(playerViewAxis.oGet(0).oMultiply(distance.getVal())));
                         } else {
-                            start = ownerBounds.GetCenter();
+                            start.oSet(ownerBounds.GetCenter());
                         }
                         gameLocal.clip.Translation(tr, start, muzzle_pos, proj.GetPhysics().GetClipModel(), proj.GetPhysics().GetClipModel().GetAxis(), MASK_SHOT_RENDERMODEL, owner
                         );
-                        muzzle_pos = tr.endpos;
+                        muzzle_pos.oSet(tr.endpos);
                     }
 
                     proj.Launch(muzzle_pos, dir, pushVelocity, fuseOffset.value, launchPower.value, dmgPower);
@@ -2766,7 +2768,7 @@ public class Weapon {
             }
 
             idMat3 axis = new idMat3();
-            idVec3 origin = new idVec3(), linear_velocity, angular_velocity = new idVec3();
+            final idVec3 origin = new idVec3(), linear_velocity = new idVec3(), angular_velocity = new idVec3();
             idEntity[] ent = {null};
 
             if (!GetGlobalJointTransform(true, ejectJointView, origin, axis)) {
@@ -2781,7 +2783,7 @@ public class Weapon {
             debris.Create(owner, origin, axis);
             debris.Launch();
 
-            linear_velocity = playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(1).oPlus(playerViewAxis.oGet(2))).oMultiply(40);
+            linear_velocity.oSet(playerViewAxis.oGet(0).oPlus(playerViewAxis.oGet(1).oPlus(playerViewAxis.oGet(2))).oMultiply(40));
             angular_velocity.Set(10 * gameLocal.random.CRandomFloat(), 10 * gameLocal.random.CRandomFloat(), 10 * gameLocal.random.CRandomFloat());
 
             debris.GetPhysics().SetLinearVelocity(linear_velocity);
@@ -2797,8 +2799,8 @@ public class Weapon {
             }
 
             if (!gameLocal.isClient) {
-                idVec3 start = playerViewOrigin;
-                idVec3 end = start.oPlus(playerViewAxis.oGet(0).oMultiply(meleeDistance * owner.PowerUpModifier(MELEE_DISTANCE)));
+                final idVec3 start = new idVec3(playerViewOrigin);
+                final idVec3 end = new idVec3(start.oPlus(playerViewAxis.oGet(0).oMultiply(meleeDistance * owner.PowerUpModifier(MELEE_DISTANCE))));
                 gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL, owner);
                 if (tr.fraction < 1.0f) {
                     ent = gameLocal.GetTraceEntity(tr);
@@ -2819,7 +2821,7 @@ public class Weapon {
                 if (ent != null) {
 
                     float push = meleeDef.dict.GetFloat("push");
-                    idVec3 impulse = tr.c.normal.oMultiply(-push * owner.PowerUpModifier(SPEED));
+                    final idVec3 impulse = new idVec3(tr.c.normal.oMultiply(-push * owner.PowerUpModifier(SPEED)));
 
                     if (gameLocal.world.spawnArgs.GetBool("no_Weapons") && (ent instanceof idActor || ent instanceof idAFAttachment)) {
                         idThread.ReturnInt(0);
@@ -2838,9 +2840,9 @@ public class Weapon {
                     }
 
                     if (ent.fl.takedamage) {
-                        idVec3 kickDir = new idVec3(), globalKickDir;
+                        final idVec3 kickDir = new idVec3(), globalKickDir = new idVec3();
                         meleeDef.dict.GetVector("kickDir", "0 0 0", kickDir);
-                        globalKickDir = muzzleAxis.oMultiply(kickDir);
+                        globalKickDir.oSet(muzzleAxis.oMultiply(kickDir));
                         ent.Damage(owner, owner, globalKickDir, meleeDefName.toString(), owner.PowerUpModifier(MELEE_DAMAGE), tr.c.id);
                         hit = true;
                     }

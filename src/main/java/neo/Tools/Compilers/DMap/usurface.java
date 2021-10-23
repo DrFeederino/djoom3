@@ -105,7 +105,7 @@ public class usurface {
      */
     static void TexVecForTri(textureVectors_t texVec, mapTri_s tri) {
         float area, inva;
-        idVec3 temp = new idVec3();
+        final idVec3 temp = new idVec3();
         idVec5 d0 = new idVec5(), d1 = new idVec5();
         idDrawVert a, b, c;
 
@@ -154,7 +154,7 @@ public class usurface {
         int i, j;
         idDrawVert dv;
         mapTri_s tri, triList;
-        idVec3 vec;
+        final idVec3 vec = new idVec3();
         idMaterial si;
 
         si = s.material;
@@ -182,11 +182,11 @@ public class usurface {
 
             for (j = 0; j < 3; j++) {
                 if (j == 0) {
-                    vec = w.oGet(0).ToVec3();
+                    vec.oSet(w.oGet(0).ToVec3());
                 } else if (j == 1) {
-                    vec = w.oGet(i - 1).ToVec3();
+                    vec.oSet(w.oGet(i - 1).ToVec3());
                 } else {
-                    vec = w.oGet(i).ToVec3();
+                    vec.oSet(w.oGet(i).ToVec3());
                 }
 
                 dv = tri.v[j];
@@ -647,7 +647,7 @@ public class usurface {
                     }
                 }
 
-                idVec3 origin = entity.mapEntity.epairs.GetVector("origin");
+                final idVec3 origin = new idVec3(entity.mapEntity.epairs.GetVector("origin"));
 
                 for (i = 0; i < model.NumSurfaces(); i++) {
                     final modelSurface_s surface = model.Surface(i);
@@ -662,7 +662,7 @@ public class usurface {
                     }
                     for (int j = 0; j < tri2.numIndexes; j += 3) {
                         for (int k = 0; k < 3; k++) {
-                            idVec3 v = tri2.verts[tri2.indexes[j + k]].xyz;
+                            final idVec3 v = new idVec3(tri2.verts[tri2.indexes[j + k]].xyz);
 
                             mapTri.v[k].xyz.oSet(v.oMultiply(axis).oPlus(origin));
 
@@ -790,7 +790,7 @@ public class usurface {
         mapTri_s tri;
         mapTri_s shadowers;
         optimizeGroup_s shadowerGroups;
-        idVec3 lightOrigin;
+        final idVec3 lightOrigin;
         boolean hasPerforatedSurface = false;
 
         //
