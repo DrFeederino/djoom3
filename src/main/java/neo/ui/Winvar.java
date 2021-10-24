@@ -631,7 +631,7 @@ public class Winvar {
         private static idVec4 ret;
         //
         //
-        protected idRectangle data;
+        protected final idRectangle data;
 
         public idWinRectangle() {
             super();
@@ -662,7 +662,7 @@ public class Winvar {
 //	}//TODO:overrid equals
         public idWinRectangle oSet(final idWinRectangle other) {
             super.oSet(other);
-            data = other.data;
+            data.oSet(other.data);
             return this;
         }
 
@@ -675,7 +675,7 @@ public class Winvar {
         }
 
         public idRectangle oSet(final idRectangle other) {
-            data = other;
+            data.oSet(other);
             if (guiDict != null) {
                 idVec4 v = data.ToVec4();
                 guiDict.SetVec4(GetName(), v);

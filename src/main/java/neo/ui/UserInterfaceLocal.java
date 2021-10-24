@@ -615,13 +615,13 @@ public class UserInterfaceLocal {
         private final idDeviceContext dc = new idDeviceContext();
         private final idList<idUserInterfaceLocal> demoGuis = new idList<>();
         private final idList<idUserInterfaceLocal> guis = new idList<>();
-        private idRectangle screenRect = new idRectangle();
+        private final idRectangle screenRect = new idRectangle();
         //
         //
 
         @Override
         public void Init() {
-            screenRect = new idRectangle(0, 0, 640, 480);
+            screenRect.oSet(new idRectangle(0, 0, 640, 480));
             dc.Init();
         }
 

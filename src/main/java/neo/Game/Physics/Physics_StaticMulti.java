@@ -522,10 +522,10 @@ public class Physics_StaticMulti {
         @Override
         public idMat3 GetAxis(int id /*= 0*/) {
             if (id >= 0 && id < clipModels.Num()) {
-                return new idMat3(current.oGet(id).axis);
+                return current.oGet(id).axis;
             }
             if (clipModels.Num() != 0) {
-                return new idMat3(current.oGet(0).axis);
+                return current.oGet(0).axis;
             } else {
                 return getMat3_identity();
             }

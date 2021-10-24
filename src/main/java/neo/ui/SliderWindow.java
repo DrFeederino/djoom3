@@ -10,7 +10,6 @@ import neo.ui.DeviceContext.idDeviceContext;
 import neo.ui.Rectangle.idRectangle;
 import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
-import neo.ui.Window.*;
 import neo.ui.Winvar.idWinBool;
 import neo.ui.Winvar.idWinFloat;
 import neo.ui.Winvar.idWinStr;
@@ -249,7 +248,7 @@ public class SliderWindow {
                 return;
             }
 
-            idRectangle r = _drawRect;
+            idRectangle r = new idRectangle(_drawRect);
             if (!scrollbar) {
                 if (vertical) {
                     r.y += thumbHeight / 2.f;
@@ -270,7 +269,7 @@ public class SliderWindow {
                 return "";
             }
 
-            idRectangle r = drawRect;
+            idRectangle r = new idRectangle(drawRect);
             r.x = actualX;
             r.y = actualY;
             r.x += thumbWidth / 2.0;

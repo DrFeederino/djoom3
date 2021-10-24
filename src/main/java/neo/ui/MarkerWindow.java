@@ -36,7 +36,7 @@ public class MarkerWindow {
     public static class markerData_t {
 
         idMaterial mat;
-        idRectangle rect;
+        final idRectangle rect = new idRectangle();
         int time;
     }
 
@@ -94,7 +94,6 @@ public class MarkerWindow {
             int key = event.evValue;
             if (event.evValue2 != 0 && key == K_MOUSE1) {
                 gui.GetDesktop().SetChildWinVarVal("markerText", "text", "");
-                idRectangle r;
                 int c = markerTimes.Num();
                 int i;
                 for (i = 0; i < c; i++) {
@@ -192,7 +191,7 @@ public class MarkerWindow {
         @Override
         public String RouteMouseCoords(float xd, float yd) {
             final String ret = super.RouteMouseCoords(xd, yd);
-            idRectangle r;
+            idRectangle r = new idRectangle();
             int i, c = markerTimes.Num();
             int len = gui.State().GetInt("loadLength");
             if (len == 0) {

@@ -974,10 +974,9 @@ public class Item {
         public void Spawn() {
             super.Spawn();
 
-            idTraceModel trm = new idTraceModel();
+            final idTraceModel trm = new idTraceModel();
             CFloat density = new CFloat(), friction = new CFloat(), bouncyness = new CFloat(), tsize = new CFloat();
-            idStr clipModelName = new idStr();
-//            idBounds bounds = new idBounds();
+            final idStr clipModelName = new idStr();
 
             // create a trigger for item pickup
             spawnArgs.GetFloat("triggersize", "16.0", tsize);

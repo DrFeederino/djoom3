@@ -152,10 +152,10 @@ public class Moveable {
         public void Spawn() {
             super.Spawn();
 
-            idTraceModel trm = new idTraceModel();
+            final idTraceModel trm = new idTraceModel();
             CFloat density = new CFloat(), friction = new CFloat(), bouncyness = new CFloat(), mass = new CFloat();
             int clipShrink;
-            idStr clipModelName = new idStr();
+            final idStr clipModelName = new idStr();
 
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", clipModelName);

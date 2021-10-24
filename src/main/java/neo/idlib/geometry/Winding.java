@@ -1542,7 +1542,7 @@ public class Winding {
 
     public static class idFixedWinding extends idWinding {
 
-        protected idVec5[] data = new idVec5[MAX_POINTS_ON_WINDING];    // point data
+        protected final idVec5[] data = idVec5.generateArray(MAX_POINTS_ON_WINDING);    // point data
 
         public idFixedWinding() {
             numPoints = 0;

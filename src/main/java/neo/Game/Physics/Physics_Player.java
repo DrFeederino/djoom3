@@ -1000,7 +1000,7 @@ public class Physics_Player {
                     }
                 }
             } // apply water friction even if just wading
-            else if (waterLevel.ordinal() != 0) {//TODO:how can an enum be false?//FIXED:like that you dumbass.
+            else if (waterLevel.ordinal() != 0) {
                 drop += speed * PM_WATERFRICTION * waterLevel.ordinal() * frametime;
             } // apply air friction
             else {

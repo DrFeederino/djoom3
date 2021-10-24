@@ -277,8 +277,8 @@ public class GuiScript {
                             // If its the rectangle they are referencing then adjust it 
                             if (ownerparent != null && destparent != null
                                     && (dest == (owner[0].simp != null ? owner[0].simp.GetWinVarByName("rect") : owner[0].win.GetWinVarByName("rect")))) {
-                                idRectangle rect;
-                                rect = ((idWinRectangle) dest).data;
+                                idRectangle rect = new idRectangle();
+                                rect.oSet(((idWinRectangle) dest).data);
                                 ownerparent.ClientToScreen(rect);
                                 destparent.ScreenToClient(rect);
                                 v4.oSet(rect.ToVec4());

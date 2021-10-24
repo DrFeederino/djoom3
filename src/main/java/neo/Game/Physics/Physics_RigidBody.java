@@ -838,7 +838,7 @@ public class Physics_RigidBody {
 
         @Override
         public idMat3 GetAxis(int id /*= 0*/) {
-            return new idMat3(current.i.orientation);
+            return current.i.orientation;
         }
 
         @Override

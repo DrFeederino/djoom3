@@ -3784,7 +3784,7 @@ public class Physics_AF {
         }
 
         public idMat3 GetWorldAxis() {
-            return new idMat3(current.worldAxis);
+            return current.worldAxis;
         }
 
         public idVec3 GetLinearVelocity() {
@@ -5737,7 +5737,7 @@ public class Physics_AF {
             if (id < 0 || id >= bodies.Num()) {
                 return getMat3_identity();
             } else {
-                return new idMat3(bodies.oGet(id).current.worldAxis);
+                return bodies.oGet(id).current.worldAxis;
             }
         }
 

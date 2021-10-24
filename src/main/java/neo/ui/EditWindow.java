@@ -2,7 +2,6 @@ package neo.ui;
 
 import neo.Renderer.Material.idMaterial;
 import neo.framework.CVarSystem.idCVar;
-import neo.framework.KeyInput.*;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.List.idList;
@@ -116,7 +115,7 @@ public class EditWindow {
                 cursorPos = len;
             }
 
-            idRectangle rect = textRect;
+            idRectangle rect = new idRectangle(textRect);
 
             rect.x -= paintOffset;
             rect.w += paintOffset;
@@ -608,7 +607,7 @@ public class EditWindow {
                 // Word wrap
 
                 breaks.Clear();
-                idRectangle rect = textRect;
+                idRectangle rect = new idRectangle(textRect);
                 rect.w -= sizeBias;
                 dc.DrawText(text.data, textScale.data, textAlign, colorWhite, rect, true, (itob(flags & WIN_FOCUS)) ? cursorPos : -1, true, breaks);
 

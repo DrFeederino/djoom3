@@ -359,7 +359,7 @@ public class Physics_Static {
 
         @Override
         public idMat3 GetAxis(int id /*= 0*/) {
-            return new idMat3(current.axis);
+            return current.axis;
         }
 
         @Override

@@ -59,9 +59,9 @@ public class SimpleWindow {
         protected idMaterial background;
         protected idWinVec4 borderColor = new idWinVec4();
         protected float borderSize;
-        protected idRectangle clientRect;        // client area
+        protected final idRectangle clientRect = new idRectangle();        // client area
         protected idDeviceContext dc;
-        protected idRectangle drawRect;          // overall rect
+        protected final idRectangle drawRect = new idRectangle();          // overall rect
         protected int flags;
         protected int fontNum;
         protected idWinVec4 foreColor = new idWinVec4();
@@ -82,7 +82,7 @@ public class SimpleWindow {
         protected int textAlign;
         protected float textAlignx;
         protected float textAligny;
-        protected idRectangle textRect;
+        protected final idRectangle textRect = new idRectangle();
         protected idWinFloat textScale = new idWinFloat();
         protected int textShadow;
         protected idWinBool visible = new idWinBool();
@@ -90,9 +90,9 @@ public class SimpleWindow {
         public idSimpleWindow(idWindow win) {
             gui = win.GetGui();
             dc = win.dc;
-            drawRect = new idRectangle(win.drawRect);
-            clientRect = new idRectangle(win.clientRect);
-            textRect = new idRectangle(win.textRect);
+            drawRect.oSet(win.drawRect);
+            clientRect.oSet(win.clientRect);
+            textRect.oSet(win.textRect);
             origin = new idVec2(win.origin);
             fontNum = win.fontNum;
             name = new idStr(win.name);

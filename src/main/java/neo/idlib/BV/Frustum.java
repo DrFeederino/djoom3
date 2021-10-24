@@ -165,7 +165,7 @@ public class Frustum {
 
         // returns frustum orientation
         public final idMat3 GetAxis() {
-            return new idMat3(axis);
+            return axis;
         }
 
         public idVec3 GetCenter() {                        // returns center of frustum

@@ -48,7 +48,7 @@ public class FieldWindow {
             if (len != lastTextLength || cursorPos != lastCursorPos) {
                 CalcPaintOffset(len);
             }
-            idRectangle rect = textRect;
+            idRectangle rect = new idRectangle(textRect);
             if (paintOffset >= len) {
                 paintOffset = 0;
             }

@@ -46,6 +46,7 @@ public class AAS_local {
 
         private static idPlane dummy;
         private static int lastAreaNum;
+        private final idList<idRoutingObstacle> obstacleList;          // list with obstacles
         //
         // routing data
         private idRoutingCache[][] areaCacheIndex;        // for each area in each cluster the travel times to all other areas in the cluster
@@ -58,7 +59,6 @@ public class AAS_local {
         private int[] goalAreaTravelTimes;   // travel times to goal areas
         private idStr name;
         private int numAreaTravelTimes;    // number of area travel times
-        private final idList<idRoutingObstacle> obstacleList;          // list with obstacles
         private idRoutingCache[] portalCacheIndex;      // for each area in the world the travel times from each portal
         private int portalCacheIndexSize;  // number of portal cache entries
         //
@@ -1394,7 +1394,10 @@ public class AAS_local {
             portalCacheIndexSize = file.GetNumAreas();
             portalCacheIndex = new idRoutingCache[portalCacheIndexSize];// Mem_ClearedAlloc(portalCacheIndexSize /* sizeof( idRoutingCache * )*/);
 
-            areaUpdate = new idRoutingUpdate[file.GetNumAreas()];// Mem_ClearedAlloc(file.GetNumAreas() /* sizeof( idRoutingUpdate )*/);
+            areaUpdate = Stream
+                    .generate(idRoutingUpdate::new)
+                    .limit(file.GetNumAreas())
+                    .toArray(idRoutingUpdate[]::new);// Mem_ClearedAlloc(file.GetNumAreas() /* sizeof( idRoutingUpdate )*/);
             portalUpdate = new idRoutingUpdate[file.GetNumPortals() + 1];// Mem_ClearedAlloc((file.GetNumPortals() + 1) /* sizeof( idRoutingUpdate )*/);
 
             goalAreaTravelTimes = new int[file.GetNumAreas()];// Mem_ClearedAlloc(file.GetNumAreas() /* sizeof( unsigned short )*/);

@@ -76,7 +76,7 @@ public class CollisionModel {
             this.normal.oSet(c.normal);
             this.dist = c.dist;
             this.contents = c.contents;
-            this.material = new idMaterial(c.material);
+            this.material = c.material;
             this.modelFeature = c.modelFeature;
             this.trmFeature = c.trmFeature;
             this.entityNum = c.entityNum;

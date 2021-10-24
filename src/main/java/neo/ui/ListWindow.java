@@ -369,7 +369,7 @@ public class ListWindow {
             idVec4 color;
             idStr work = new idStr();
             int count = listItems.size();
-            idRectangle rect = textRect;
+            idRectangle rect = new idRectangle(textRect);
             float scale = textScale.data;
             float lineHeight = GetMaxCharHeight();
 

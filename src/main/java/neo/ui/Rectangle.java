@@ -116,7 +116,7 @@ public class Rectangle {
             } else {
                 s = c = 0;
             }
-            RotateVector(p1, center, a, c, s);//TODO:where is these functions!!
+            RotateVector(p1, center, a, c, s);
             RotateVector(p2, center, a, c, s);
             RotateVector(p4, center, a, c, s);
             out.x = p1.x;

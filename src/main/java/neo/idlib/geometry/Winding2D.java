@@ -153,7 +153,7 @@ public class Winding2D {
                     continue;
                 }
                 plane.oSet(Plane2DFromPoints(p[i], p[j], true));
-                if (i != 0) {
+                if (numPlanes > 0) {
                     if (GetAxialBevel(planes[numPlanes - 1], plane, p[i], bevel)) {
                         planes[numPlanes++].oSet(bevel);
                     }

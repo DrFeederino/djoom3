@@ -353,7 +353,7 @@ public class Box {
 
         // returns the axis of the box
         public idMat3 GetAxis() {
-            return new idMat3(axis);
+            return axis;
         }
 
         public float GetVolume() {                        // returns the volume of the box

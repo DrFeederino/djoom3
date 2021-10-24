@@ -326,14 +326,14 @@ public class Window {
         protected idWindow captureChild;        // if a child window has mouse capture
         protected int childID;            // this childs id
         protected idList<idWindow> children = new idList<>();    // child windows
-        protected idRectangle clientRect = new idRectangle();// client area
+        protected final idRectangle clientRect = new idRectangle();// client area
         protected idStr comment = new idStr();
         protected /*unsigned*/ char cursor;
         //
         protected idDeviceContext dc;
         //
         protected idList<idWinVar> definedVars = new idList<>();
-        protected idRectangle drawRect = new idRectangle();// overall rect
+        protected final idRectangle drawRect = new idRectangle();// overall rect
         protected idList<drawWin_t> drawWindows = new idList<>();
         protected idList<Float> expressionRegisters = new idList<>();
         protected /*unsigned*/ int flags;              // visible, focus, mouseover, cursor, border, etc..
@@ -381,7 +381,7 @@ public class Window {
         protected float textAlignx;
         protected float textAligny;
         //
-        protected idRectangle textRect = new idRectangle();// text extented rect
+        protected final idRectangle textRect = new idRectangle();// text extented rect
         protected idWinFloat textScale = new idWinFloat();
         //
         protected /*signed*/ char textShadow;
@@ -499,14 +499,14 @@ public class Window {
         }
 
         public void Move(float x, float y) {
-            idRectangle rct = rect.data;
+            idRectangle rct = new idRectangle(rect.data);
             rct.x = x;
             rct.y = y;
             idRegister reg = RegList().FindReg("rect");
             if (reg != null) {
                 reg.Enable(false);
             }
-            rect.data = rct;
+            rect.data.oSet(rct);
         }
 
         public void BringToTop(idWindow w) {
@@ -535,12 +535,12 @@ public class Window {
         }
 
         public void Size(float x, float y, float w, float h) {
-            idRectangle rct = rect.data;
+            idRectangle rct = new idRectangle(rect.data);
             rct.x = x;
             rct.y = y;
             rct.w = w;
             rct.h = h;
-            rect.data = rct;
+            rect.data.oSet(rct);
             CalcClientRect(0, 0);
         }
 
@@ -1097,7 +1097,7 @@ public class Window {
                 if (token.equals("windowDef") || token.equals("animationDef")) {
                     if (token.equals("animationDef")) {
                         visible.data = false;
-                        rect.data = new idRectangle(0, 0, 0, 0);
+                        rect.data.oSet(new idRectangle(0, 0, 0, 0));
                     }
                     src.ExpectTokenType(TT_NAME, 0, token);
                     token2 = token;
@@ -1922,7 +1922,7 @@ public class Window {
             }
             if (textShadow != 0) {
                 idStr shadowText = new idStr(text.data);
-                idRectangle shadowRect = textRect;
+                idRectangle shadowRect = new idRectangle(textRect);
 
                 shadowText.RemoveColors();
                 shadowRect.x += textShadow;

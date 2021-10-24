@@ -185,7 +185,7 @@ public class ChoiceWindow {
 
             if (textShadow != 0) {
                 idStr shadowText = choices.get(currentChoice);
-                idRectangle shadowRect = textRect;
+                idRectangle shadowRect = new idRectangle(textRect);
 
                 shadowText.RemoveColors();
                 shadowRect.x += textShadow;

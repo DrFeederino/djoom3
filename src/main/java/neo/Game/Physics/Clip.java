@@ -550,7 +550,7 @@ public class Clip {
         }
 
         public idMat3 GetAxis() {
-            return new idMat3(axis);
+            return axis;
         }
 
         public boolean IsTraceModel() {            // returns true if this is a trace model
