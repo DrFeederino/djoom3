@@ -256,8 +256,8 @@ public class ListWindow {
 
             InitScroller(horizontal);
 
-            idList<Integer> tabStops = new idList<>();
-            idList<Integer> tabAligns = new idList<>();
+            final idList<Integer> tabStops = new idList<>();
+            final idList<Integer> tabAligns = new idList<>();
             if (tabStopStr.Length() != 0) {
                 idParser src = new idParser(tabStopStr.toString(), tabStopStr.Length(), "tabstops", LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS);
                 idToken tok = new idToken();
@@ -278,7 +278,7 @@ public class ListWindow {
                     tabAligns.Append(Integer.parseInt(tok.toString()));
                 }
             }
-            idList<Integer> tabVAligns = new idList<>();
+            final idList<Integer> tabVAligns = new idList<>();
             if (tabVAlignStr.Length() != 0) {
                 idParser src = new idParser(tabVAlignStr.toString(), tabVAlignStr.Length(), "tabvaligns", LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS);
                 idToken tok = new idToken();
@@ -290,7 +290,7 @@ public class ListWindow {
                 }
             }
 
-            idList<Integer> tabTypes = new idList<>();
+            final idList<Integer> tabTypes = new idList<>();
             if (tabTypeStr.Length() != 0) {
                 idParser src = new idParser(tabTypeStr.toString(), tabTypeStr.Length(), "tabtypes", LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS);
                 idToken tok = new idToken();
@@ -301,7 +301,7 @@ public class ListWindow {
                     tabTypes.Append(Integer.parseInt(tok.toString()));
                 }
             }
-            idList<idVec2> tabSizes = new idList<>();
+            final idList<idVec2> tabSizes = new idList<>();
             if (tabIconSizeStr.Length() != 0) {
                 idParser src = new idParser(tabIconSizeStr.toString(), tabIconSizeStr.Length(), "tabiconsizes", LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS);
                 idToken tok = new idToken();
@@ -320,7 +320,7 @@ public class ListWindow {
                 }
             }
 
-            idList<Float> tabIconVOffsets = new idList<>();
+            final idList<Float> tabIconVOffsets = new idList<>();
             if (tabIconVOffsetStr.Length() != 0) {
                 idParser src = new idParser(tabIconVOffsetStr.toString(), tabIconVOffsetStr.Length(), "tabiconvoffsets", LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS);
                 idToken tok = new idToken();

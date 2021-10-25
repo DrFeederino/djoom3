@@ -468,7 +468,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             float dist;
             boolean model_rotated, trm_rotated;
             final idVec3 dir = new idVec3();
-            idMat3 invModelAxis = new idMat3(), tmpAxis;
+            idMat3 invModelAxis = new idMat3();
             cm_trmPolygon_s poly;
             cm_trmEdge_s edge;
             cm_trmVertex_s vert;
@@ -643,7 +643,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             // rotate trm polygon planes
             if (trm_rotated & model_rotated) {
-                tmpAxis = trmAxis.oMultiply(invModelAxis);
+                idMat3 tmpAxis = trmAxis.oMultiply(invModelAxis);
                 for (i = 0; i < tw.numPolys; i++) {
                     tw.polys[i].plane.oMulSet(tmpAxis);
                 }
@@ -2432,10 +2432,9 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             CFloat dir = new CFloat();
             CFloat startTan = new CFloat();
             final idVec3 vec = new idVec3(), startDir = new idVec3();
-            idPlane epsPlane;
+            final idPlane epsPlane = new idPlane(plane);
 
             // epsilon expanded plane
-            epsPlane = new idPlane(plane);
             epsPlane.SetDist(epsPlane.Dist() + CM_CLIP_EPSILON);
 
             // if the rotation sphere at the rotation origin is too far away from the polygon plane
@@ -2828,7 +2827,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             float d, maxErr, initialTan;
             boolean model_rotated, trm_rotated;
             final idVec3 vr = new idVec3(), vup = new idVec3();
-            idMat3 invModelAxis = new idMat3(), endAxis, tmpAxis;
+            idMat3 invModelAxis = new idMat3(), tmpAxis;
             idRotation startRotation = new idRotation(), endRotation = new idRotation();
             idPluecker plaxis = new idPluecker();
             cm_trmPolygon_s poly;
@@ -4716,7 +4715,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
         private void ChopWindingListWithBrush(cm_windingList_s list, cm_brush_s b) {
             int i, k, res, startPlane, planeNum, bestNumWindings;
             idFixedWinding back = new idFixedWinding(), front;
-            idPlane plane;
+            final idPlane plane = new idPlane();
             boolean chopped;
             int[] sidedness = new int[MAX_POINTS_ON_WINDING];
             float dist;
@@ -4727,7 +4726,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             // get sidedness for the list of windings
             for (i = 0; i < b.numPlanes; i++) {
-                plane = b.planes[i].oNegative();
+                plane.oSet(b.planes[i].oNegative());
 
                 dist = plane.Distance(list.origin);
                 if (dist > list.radius) {
@@ -4764,7 +4763,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                         res = sidedness[planeNum];
 
                         if (res == SIDE_CROSS) {
-                            plane = b.planes[planeNum].oNegative();
+                            plane.oSet(b.planes[planeNum].oNegative());
                             res = front.Split(back, plane, CHOP_EPSILON);
                         }
 
@@ -4906,7 +4905,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
          without creating multiple winding fragments then the chopped winding is returned.
          ============
          */
-        private idFixedWinding WindingOutsideBrushes(idFixedWinding w, final idPlane plane, int contents, int patch, cm_node_s headNode) {
+        private idFixedWinding WindingOutsideBrushes(final idFixedWinding w, final idPlane plane, int contents, int patch, cm_node_s headNode) {
             int i, windingLeft;
 
             cm_windingList.bounds.Clear();
@@ -5084,7 +5083,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             model.numBrushes++;
             model.brushMemory += size;
             brush = new cm_brush_s();// Mem_Alloc(size);
-            brush.planes = new idPlane[numPlanes];
+            brush.planes = idPlane.generateArray(numPlanes);
+            ;
             return brush;
         }
 
@@ -5504,7 +5504,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             return false;
         }
 
-        private void CreatePolygon(cm_model_s model, idFixedWinding w, final idPlane plane, final idMaterial material, int primitiveNum) {
+        private void CreatePolygon(final cm_model_s model, idFixedWinding w, final idPlane plane, final idMaterial material, int primitiveNum) {
             int i, j, edgeNum;
             CInt v1num = new CInt();
             int numPolyEdges;
@@ -5663,8 +5663,8 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, j;
             float dot;
             int v1, v2, v3, v4;
-            idFixedWinding w = new idFixedWinding();
-            idPlane plane = new idPlane();
+            final idFixedWinding w = new idFixedWinding();
+            final idPlane plane = new idPlane();
             final idVec3 d1 = new idVec3(), d2 = new idVec3();
 
             for (i = 0; i < mesh.GetWidth() - 1; i++) {
@@ -5748,12 +5748,11 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, j;
             idMapBrushSide mapSide;
             idFixedWinding w = new idFixedWinding();
-            idPlane[] planes;
+            final idPlane[] planes = Stream.generate(idPlane::new).limit(mapBrush.GetNumSides()).toArray(idPlane[]::new);
             idMaterial material;
 
-            planes = new idPlane[mapBrush.GetNumSides()];
             for (i = 0; i < mapBrush.GetNumSides(); i++) {
-                planes[i] = mapBrush.GetSide(i).GetPlane();
+                planes[i].oSet(mapBrush.GetSide(i).GetPlane());
                 planes[i].FixDegeneracies(DEGENERATE_DIST_EPSILON);
             }
 
@@ -6162,7 +6161,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idFixedWinding w = new idFixedWinding();
             cm_node_s node;
             cm_model_s model;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             idBounds bounds;
             boolean collisionSurface;
             idStr extension = new StrPool.idPoolStr();
@@ -6243,7 +6242,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     w.oPluSet(surf.geometry.verts[surf.geometry.indexes[j + 1]].xyz);
                     w.oPluSet(surf.geometry.verts[surf.geometry.indexes[j]].xyz);
                     w.GetPlane(plane);
-                    plane = plane.oNegative();
+                    plane.oSet(plane.oNegative());
                     PolygonFromWinding(model, w, plane, surf.shader, 1);
                 }
             }

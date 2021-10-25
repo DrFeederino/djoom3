@@ -118,9 +118,9 @@ public class AFEntity {
 //        public CLASS_PROTOTYPE(idMultiModelAF );//TODO:include this?
 
         protected idPhysics_AF physicsObj;
-        private idList<Integer> modelDefHandles;
+        private final idList<Integer> modelDefHandles = new idList();
         //
-        private idList<idRenderModel> modelHandles;
+        private final idList<idRenderModel> modelHandles = new idList();
         //
         //
 
@@ -516,7 +516,7 @@ public class AFEntity {
         }
         // virtual					~idAFEntity_Base( void );
 
-        public static void DropAFs(idEntity ent, final String type, idList<idEntity> list) {
+        public static void DropAFs(idEntity ent, final String type, final idList<idEntity> list) {
             idKeyValue kv;
             String skinName;
             idEntity[] newEnt = {null};
@@ -910,7 +910,7 @@ public class AFEntity {
             int i;
             boolean gibNonSolid;
             final idVec3 entityCenter = new idVec3(), velocity = new idVec3();
-            idList<idEntity> list = new idList<>();
+            final idList<idEntity> list = new idList<>();
 
             assert (!gameLocal.isClient);
 

@@ -355,7 +355,7 @@ public class GuiScript {
 
     static class idGuiScriptList {
 
-        idList<idGuiScript> list;
+        final idList<idGuiScript> list;
 
         public idGuiScriptList() {
             this.list = new idList<>();

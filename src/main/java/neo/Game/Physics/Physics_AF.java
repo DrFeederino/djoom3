@@ -171,25 +171,25 @@ public class Physics_AF {
     // base class for all constraints
     public static class idAFConstraint {
 
-        protected final int[] boxIndex = new int[6];// indexes for special box constrained variables
-        protected idMatX J;                         // transformed constraint matrix
+        protected final idMatX J = new idMatX();                         // transformed constraint matrix
         //
         // simulation variables set by Evaluate
-        protected idMatX J1, J2;              // matrix with left hand side of constraint equations
+        protected final idMatX J1 = new idMatX(), J2 = new idMatX();              // matrix with left hand side of constraint equations
+        protected final int[] boxIndex = new int[6];// indexes for special box constrained variables
+        protected final idVecX c1 = new idVecX(), c2 = new idVecX();                    // right hand side of constraint equations
+        //
+        // simulation variables used during calculations
+        protected final idMatX invI = new idMatX();                      // transformed inertia
+        protected final idVecX lm = new idVecX();                        // lagrange multipliers
+        protected final idVecX lo, hi, e;                 // low and high bounds and lcp epsilon
+        protected final idVecX s = new idVecX();                         // temp solution
         protected idAFBody body1;               // first constrained body
         protected idAFBody body2;               // second constrained body, NULL for world
         protected idAFConstraint boxConstraint;     // constraint the boxIndex refers to
-        protected idVecX c1, c2;                    // right hand side of constraint equations
         protected int firstIndex;                // index of the first constraint row in the lcp matrix
         protected constraintFlags_s fl;
-        //
-        // simulation variables used during calculations
-        protected idMatX invI;                      // transformed inertia
-        protected idVecX lm;                        // lagrange multipliers
-        protected idVecX lo, hi, e;                 // low and high bounds and lcp epsilon
         protected idStr name;         // name of constraint
         protected idPhysics_AF physics;             // for adding additional constraints like limits
-        protected idVecX s;                         // temp solution
         //
         protected constraintType_t type;            // constraint type
 
@@ -315,12 +315,12 @@ public class Physics_AF {
         }
 
         protected void InitSize(int size) {
-            J1 = new idMatX(size, 6);
-            J2 = new idMatX(size, 6);
-            c1 = new idVecX(size);
-            c2 = new idVecX(size);
-            s = new idVecX(size);
-            lm = new idVecX(size);
+            J1.oSet(new idMatX(size, 6));
+            J2.oSet(new idMatX(size, 6));
+            c1.oSet(new idVecX(size));
+            c2.oSet(new idVecX(size));
+            s.oSet(new idVecX(size));
+            lm.oSet(new idVecX(size));
         }
 
         protected static final class constraintFlags_s {
@@ -2908,7 +2908,7 @@ public class Physics_AF {
             float a;
             idVec6 J1row = new idVec6(), J2row = new idVec6();
             final idVec3 ax = new idVec3(), anchor = new idVec3(), body1ax = new idVec3(), normal = new idVec3(), coneVector = new idVec3(), p1 = new idVec3(), p2 = new idVec3();
-            idQuat q = new idQuat();
+            final idQuat q = new idQuat();
             idAFBody master;
 
             if (af_skipLimits.GetBool()) {
@@ -3142,7 +3142,7 @@ public class Physics_AF {
             idMat3 worldBase = new idMat3();
             final idVec3 anchor = new idVec3(), body1ax = new idVec3(), v = new idVec3(), normal = new idVec3(), pyramidVector = new idVec3(), p1 = new idVec3(), p2 = new idVec3();
             final idVec3[] ax = idVec3.generateArray(2);
-            idQuat q = new idQuat();
+            final idQuat q = new idQuat();
             idAFBody master;
 
             if (af_skipLimits.GetBool()) {
@@ -3229,7 +3229,7 @@ public class Physics_AF {
             final idVec3[] p = idVec3.generateArray(4);
             idMat3 worldBase = new idMat3();
             idMat3[] m = new idMat3[2];
-            idQuat q = new idQuat();
+            final idQuat q = new idQuat();
             idAFBody master;
 
             master = body2 != null ? body2 : physics.GetMasterBody();
@@ -3649,10 +3649,10 @@ public class Physics_AF {
         private idMat3 atRestAxis;                  // axis at rest
         private idVecX auxForce;                           // force from auxiliary constraints
         private float bouncyness;          // bounce
-        private idList<idAFBody> children;            // children of this body
+        private final idList<idAFBody> children = new idList<>();            // children of this body
         private int clipMask;            // contents this body collides with
         private idClipModel clipModel;           // model used for collision detection
-        private idList<idAFConstraint> constraints;         // all constraints attached to this body
+        private final idList<idAFConstraint> constraints = new idList<>();         // all constraints attached to this body
         private float contactFriction;     // friction with contact surfaces
         private float contactMotorForce;   // maximum force applied to reach the motor velocity
         private float contactMotorVelocity;// contact motor velocity
@@ -3720,10 +3720,10 @@ public class Physics_AF {
         public void Init() {
             name = new idStr("noname");
             parent = null;
-            children = new idList<>();
+            children.Clear();
+            constraints.Clear();
             clipModel = null;
             primaryConstraint = null;
-            constraints = new idList<>();
             tree = null;
 
             linearFriction = -1.0f;
@@ -4120,12 +4120,12 @@ public class Physics_AF {
                         child.body1.J.TransposeMultiply(child.body1.I).Multiply(childI, child.body1.J);
                         childI.Negate();
 
-                        child.invI = new idMatX(childI);
+                        child.invI.oSet(new idMatX(childI));
                         if (!child.invI.InverseFastSelf()) {
                             gameLocal.Warning("idAFTree::Factor: couldn't invert %dx%d matrix for constraint '%s'",
                                     child.invI.GetNumRows(), child.invI.GetNumColumns(), child.GetName());
                         }
-                        child.J = child.invI.oMultiply(child.J);
+                        child.J.oSet(child.invI.oMultiply(child.J));
 
                         final float[] bodyI = body.I.ToFloatPtr().clone();
                         body.I.oMinSet(child.J.TransposeMultiply(childI).oMultiply(child.J));
@@ -4197,7 +4197,7 @@ public class Physics_AF {
 
                     final float[] s = primaryConstraint.s.ToFloatPtr().clone();
                     if (!primaryConstraint.fl.isZero) {
-                        primaryConstraint.s = primaryConstraint.invI.oMultiply(primaryConstraint.s);
+                        primaryConstraint.s.oSet(primaryConstraint.invI.oMultiply(primaryConstraint.s));
                     }
                     primaryConstraint.J.MultiplySub(primaryConstraint.s, primaryConstraint.body2.s);
 
@@ -4374,7 +4374,7 @@ public class Physics_AF {
                 if (primaryConstraint != null) {
                     // b = ( J * acc + c )
                     c = primaryConstraint;
-                    c.s = c.J1.oMultiply(c.body1.acceleration).oPlus(c.J2.oMultiply(c.body2.acceleration)).oPlus((c.c1.oPlus(c.c2)).oMultiply(invStep));
+                    c.s.oSet(c.J1.oMultiply(c.body1.acceleration).oPlus(c.J2.oMultiply(c.body2.acceleration)).oPlus((c.c1.oPlus(c.c2)).oMultiply(invStep)));
                     c.fl.isZero = false;
                 }
                 body.s.Zero();
@@ -4448,7 +4448,7 @@ public class Physics_AF {
             SortBodies_r(sortedBodies, body);
         }
 
-        public void SortBodies_r(idList<idAFBody> sortedList, idAFBody body) {
+        public void SortBodies_r(final idList<idAFBody> sortedList, idAFBody body) {
             int i;
 
             for (i = 0; i < body.children.Num(); i++) {
@@ -4593,7 +4593,7 @@ public class Physics_AF {
             frameConstraints = new idList<>();
             contactConstraints = new idList<>();
             contactBodies = new idList<>();
-            contacts = new idList<>();
+            contacts.Clear();
             collisions = new idList<>();
             changedAF = true;
             masterBody = null;
@@ -6321,7 +6321,7 @@ public class Physics_AF {
             for (i = 0; i < primaryConstraints.Num(); i++) {
                 c = primaryConstraints.oGet(i);
                 c.Evaluate(invTimeStep);
-                c.J = new idMatX(c.J2);
+                c.J.oSet(new idMatX(c.J2));
             }
             for (i = 0; i < auxiliaryConstraints.Num(); i++) {
                 auxiliaryConstraints.oGet(i).Evaluate(invTimeStep);

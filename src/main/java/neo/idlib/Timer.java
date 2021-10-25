@@ -133,7 +133,7 @@ public class Timer {
 
         private idStrList names;
         private idStr reportName;
-        private idList<idTimer> timers;
+        private final idList<idTimer> timers = new idList<>();
         //
         //
 

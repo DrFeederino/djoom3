@@ -873,7 +873,7 @@ public class TempDump {//TODO:rename/refactor to ToolBox or something
             public CInt time = new CInt();
             public CInt viewID = new CInt();
             public idMat3 viewaxis = new idMat3();
-            public idVec3 vieworg = new idVec3();
+            public final idVec3 vieworg = new idVec3();
             //
             public CInt x = new CInt(), y = new CInt(), width = new CInt(), height = new CInt();
         }

@@ -4,17 +4,12 @@ import neo.CM.CollisionModel.trace_s;
 import neo.CM.CollisionModel_local;
 import neo.Game.AFEntity.idAFAttachment;
 import neo.Game.AFEntity.idAFEntity_Generic;
-import neo.Game.AFEntity.idAFEntity_WithAttachedHead;
 import neo.Game.AI.AAS.idAAS;
-import neo.Game.AI.AI_Vagary;
 import neo.Game.Actor.idActor;
 import neo.Game.Animation.Anim.idAnimManager;
 import neo.Game.Animation.Anim_Blend.idDeclModelDef;
 import neo.Game.Animation.Anim_Testmodel.idTestModel;
-import neo.Game.BrittleFracture.idBrittleFracture;
 import neo.Game.Camera.idCamera;
-import neo.Game.Camera.idCameraAnim;
-import neo.Game.Camera.idCameraView;
 import neo.Game.Entity.idEntity;
 import neo.Game.FX.idEntityFx;
 import neo.Game.GameEdit.idEditEntities;
@@ -27,12 +22,8 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.GameSys.TypeInfo.ListTypeInfo_f;
 import neo.Game.GameSys.TypeInfo.TestSaveGame_f;
 import neo.Game.GameSys.TypeInfo.WriteGameState_f;
-import neo.Game.Item.*;
-import neo.Game.Light.idLight;
-import neo.Game.Misc.*;
-import neo.Game.Moveable.idExplodingBarrel;
-import neo.Game.Moveable.idMoveable;
-import neo.Game.Mover.*;
+import neo.Game.Misc.idLocationEntity;
+import neo.Game.Misc.idPathCorner;
 import neo.Game.MultiplayerGame.gameType_t;
 import neo.Game.MultiplayerGame.idMultiplayerGame;
 import neo.Game.MultiplayerGame.snd_evt_t;
@@ -44,9 +35,6 @@ import neo.Game.Physics.Physics_Actor.idPhysics_Actor;
 import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric;
 import neo.Game.Physics.Push.idPush;
 import neo.Game.Player.idPlayer;
-import neo.Game.Projectile.idBFGProjectile;
-import neo.Game.Projectile.idDebris;
-import neo.Game.Projectile.idGuidedProjectile;
 import neo.Game.Projectile.idProjectile;
 import neo.Game.Pvs.idPVS;
 import neo.Game.Pvs.pvsHandle_t;
@@ -55,9 +43,7 @@ import neo.Game.Script.Script_Program.function_t;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Script.idProgram;
 import neo.Game.SmokeParticles.idSmokeParticles;
-import neo.Game.Sound.idSound;
-import neo.Game.Target.*;
-import neo.Game.Trigger.*;
+import neo.Game.Trigger.idTrigger;
 import neo.Game.WorldSpawn.idWorldspawn;
 import neo.Renderer.ModelManager;
 import neo.Renderer.RenderSystem;
@@ -1252,8 +1238,7 @@ public class Game_local {
                 }
             }
 
-            idList<idThread> threads;
-            threads = idThread.GetThreads();
+            final idList<idThread> threads = idThread.GetThreads();
 
             for (i = 0; i < threads.Num(); i++) {
                 savegame.AddObject(threads.oGet(i));
@@ -3248,285 +3233,8 @@ public class Game_local {
             // check if we should spawn a class object
             spawnArgs.GetString("spawnclass", null, spawn);
             if (spawn[0] != null) {
-                idEntity obj = null;
-                switch (spawn[0]) {
-                    case "idWorldspawn":
-                        obj = new idWorldspawn();
-                        break;
-                    case "idStaticEntity":
-                        obj = new idStaticEntity();
-                        break;
-                    case "idPathCorner":
-                        obj = new idPathCorner();
-                        break;
-                    case "idTrigger_Multi":
-                        obj = new idTrigger_Multi();
-                        break;
-                    case "idTarget_Tip":
-                        obj = new idTarget_Tip();
-                        break;
-                    case "idTarget_Remove":
-                        obj = new idTarget_Remove();
-                        break;
-                    case "idMover":
-                        obj = new idMover();
-                        break;
-                    case "idMoveable":
-                        obj = new idMoveable();
-                        break;
-                    case "idLight":
-                        obj = new idLight();
-                        break;
-                    case "idCameraAnim":
-                        obj = new idCameraAnim();
-                        break;
-                    case "idAI":
-                        obj = new idAI();
-                        break;
-                    case "idFuncEmitter":
-                        obj = new idFuncEmitter();
-                        break;
-                    case "idAnimated":
-                        obj = new idAnimated();
-                        break;
-                    case "idBFGProjectile":
-                        obj = new idBFGProjectile();
-                        break;
-                    case "idTrigger_Hurt":
-                        obj = new idTrigger_Hurt();
-                        break;
-                    case "idMoveablePDAItem":
-                        obj = new idMoveablePDAItem();
-                        break;
-                    case "idLocationEntity":
-                        obj = new idLocationEntity();
-                        break;
-                    case "idPlayerStart":
-                        obj = new idPlayerStart();
-                        break;
-                    case "idSound":
-                        obj = new idSound();
-                        break;
-                    case "idTarget_GiveEmail":
-                        obj = new idTarget_GiveEmail();
-                        break;
-                    case "idTarget_SetPrimaryObjective":
-                        obj = new idTarget_SetPrimaryObjective();
-                        break;
-                    case "idObjectiveComplete":
-                        obj = new idObjectiveComplete();
-                        break;
-                    case "idTarget":
-                        obj = new idTarget();
-                        break;
-                    case "idCameraView":
-                        obj = new idCameraView();
-                        break;
-                    case "idObjective":
-                        obj = new idObjective();
-                        break;
-                    case "idTarget_SetShaderParm":
-                        obj = new idTarget_SetShaderParm();
-                        break;
-                    case "idTarget_FadeEntity":
-                        obj = new idTarget_FadeEntity();
-                        break;
-                    case "idEntityFx":
-                        obj = new idEntityFx();
-                        break;
-                    case "idItem":
-                        obj = new idItem();
-                        break;
-                    case "idSplinePath":
-                        obj = new idSplinePath();
-                        break;
-                    case "idAFEntity_Generic":
-                        obj = new idAFEntity_Generic();
-                        break;
-                    case "idDoor":
-                        obj = new idDoor();
-                        break;
-                    case "idProjectile":
-                        obj = new idProjectile();
-                        break;
-                    case "idTrigger_Count":
-                        obj = new idTrigger_Count();
-                        break;
-                    case "idTarget_EndLevel":
-                        obj = new idTarget_EndLevel();
-                        break;
-                    case "idTarget_CallObjectFunction":
-                        obj = new idTarget_CallObjectFunction();
-                        break;
-                    case "idTrigger_Fade":
-                        obj = new idTrigger_Fade();
-                        break;
-                    case "idPDAItem":
-                        obj = new idPDAItem();
-                        break;
-                    case "idVideoCDItem":
-                        obj = new idVideoCDItem();
-                        break;
-                    case "idLocationSeparatorEntity":
-                        obj = new idLocationSeparatorEntity();
-                        break;
-                    case "idPlayer":
-                        obj = new idPlayer();
-                        break;
-                    case "idDebris":
-                        obj = new idDebris();
-                        break;
-                    case "idSpawnableEntity":
-                        obj = new idSpawnableEntity();
-                        break;
-                    case "idTarget_LightFadeIn":
-                        obj = new idTarget_LightFadeIn();
-                        break;
-                    case "idTarget_LightFadeOut":
-                        obj = new idTarget_LightFadeOut();
-                        break;
-                    case "idItemPowerup":
-                        obj = new idItemPowerup();
-                        break;
-                    case "idForceField":
-                        obj = new idForceField();
-                        break;
-                    case "idTarget_LockDoor":
-                        obj = new idTarget_LockDoor();
-                        break;
-                    case "idTarget_SetInfluence":
-                        obj = new idTarget_SetInfluence();
-                        break;
-                    case "idExplodingBarrel":
-                        obj = new idExplodingBarrel();
-                        break;
-                    case "idTarget_EnableLevelWeapons":
-                        obj = new idTarget_EnableLevelWeapons();
-                        break;
-                    case "idAFEntity_WithAttachedHead":
-                        obj = new idAFEntity_WithAttachedHead();
-                        break;
-                    case "idCombatNode":
-                        obj = new idCombatNode();
-                        break;
-                    case "idFuncAASObstacle":
-                        obj = new idFuncAASObstacle();
-                        break;
-                    case "idVacuumEntity":
-                        obj = new idVacuumEntity();
-                        break;
-                    case "idRotater":
-                        obj = new idRotater();
-                        break;
-                    case "idElevator":
-                        obj = new idElevator();
-                        break;
-                    case "idShaking":
-                        obj = new idShaking();
-                        break;
-                    case "idFuncRadioChatter":
-                        obj = new idFuncRadioChatter();
-                        break;
-                    case "idFuncPortal":
-                        obj = new idFuncPortal();
-                        break;
-                    case "idMoveableItem":
-                        obj = new idMoveableItem();
-                        break;
-                    case "idFuncSmoke":
-                        obj = new idFuncSmoke();
-                        break;
-                    case "idPhantomObjects":
-                        obj = new idPhantomObjects();
-                        break;
-                    case "idBeam":
-                        obj = new idBeam();
-                        break;
-                    case "idExplodable":
-                        obj = new idExplodable();
-                        break;
-                    case "idEarthQuake":
-                        obj = new idEarthQuake();
-                        break;
-                    case "idGuidedProjectile":
-                        obj = new idGuidedProjectile();
-                        break;
-                    case "idTarget_Show":
-                        obj = new idTarget_Show();
-                        break;
-                    case "idBrittleFracture":
-                        obj = new idBrittleFracture();
-                        break;
-                    case "idTrigger_Timer":
-                        obj = new idTrigger_Timer();
-                        break;
-                    case "idPendulum":
-                        obj = new idPendulum();
-                        break;
-                    case "idItemRemover":
-                        obj = new idItemRemover();
-                        break;
-                    case "idTarget_GiveSecurity":
-                        obj = new idTarget_GiveSecurity();
-                        break;
-                    case "idTrigger_EntityName":
-                        obj = new idTrigger_EntityName();
-                        break;
-                    case "idBarrel":
-                        obj = new Moveable.idBarrel();
-                        break;
-                    case "idActivator":
-                        obj = new idActivator();
-                        break;
-                    case "idFuncSplat":
-                        obj = new idFuncSplat();
-                        break;
-                    case "idTarget_Damage":
-                        obj = new idTarget_Damage();
-                        break;
-                    case "idTarget_SetKeyVal":
-                        obj = new idTarget_SetKeyVal();
-                        break;
-                    case "idTarget_EnableStamina":
-                        obj = new idTarget_EnableStamina();
-                        break;
-                    case "idVacuumSeparatorEntity":
-                        obj = new idVacuumSeparatorEntity();
-                        break;
-                    case "idDamagable":
-                        obj = new idDamagable();
-                        break;
-                    case "idSecurityCamera":
-                        obj = new SecurityCamera.idSecurityCamera();
-                        break;
-                    case "idTrigger_Touch":
-                        obj = new idTrigger_Touch();
-                        break;
-                    case "idAFEntity_ClawFourFingers":
-                        obj = new AFEntity.idAFEntity_ClawFourFingers();
-                        break;
-                    case "idAI_Vagary":
-                        obj = new AI_Vagary.idAI_Vagary();
-                        break;
-                    case "idBobber":
-                        obj = new idBobber();
-                        break;
-                    case "idTarget_LevelTrigger":
-                        obj = new idTarget_LevelTrigger();
-                        break;
-                    case "idTarget_RemoveWeapons":
-                        obj = new idTarget_RemoveWeapons();
-                        break;
-                    case "idTeleporter":
-                        obj = new FX.idTeleporter();
-                        break;
-                    case "idPlat":
-                        obj = new idPlat();
-                        break;
-                    default:
-                        idGameLocal.Error("Could not spawn '%s'. Class '%s' not found%s.\"", classname[0], spawn[0], error);
-                        return false;
-                }
+                idEntity obj = idClass.GetEntity(spawn[0]);
+
 
                 if (obj == null) {
                     idGameLocal.Error("Could not spawn '%s'. Instance could not be created%s.", spawn[0], classname[0]);
@@ -3911,7 +3619,7 @@ public class Game_local {
             return false;
         }
 
-        public int GetTargets(final idDict args, idList<idEntityPtr<idEntity>> list, final String ref) {
+        public int GetTargets(final idDict args, final idList<idEntityPtr<idEntity>> list, final String ref) {
             int i, num, refLength;
             idKeyValue arg;
             idEntity ent;

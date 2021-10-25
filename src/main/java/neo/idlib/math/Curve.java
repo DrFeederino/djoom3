@@ -25,8 +25,8 @@ public class Curve {
         protected final Class<type> clazz;
         protected boolean changed;
         protected int currentIndex;              // cached index for fast lookup
-        protected idList<Float> times = new idList<>();   // knots
-        protected idList<type> values = new idList<>();   // knot values
+        protected final idList<Float> times = new idList<>();   // knots
+        protected final idList<type> values = new idList<>();   // knot values
 
 
         public idCurve(final Class<type> clazz) {
@@ -926,9 +926,9 @@ public class Curve {
      */
     static class idCurve_NaturalCubicSpline<type extends Vector.idVec> extends idCurve_Spline<type> {
 
-        protected idList<type> b;
-        protected idList<type> c;
-        protected idList<type> d;
+        protected final idList<type> b = new idList<>();
+        protected final idList<type> c = new idList<>();
+        protected final idList<type> d = new idList<>();
 
         public idCurve_NaturalCubicSpline(final Class<type> clazz) {
             super(clazz);
@@ -1145,8 +1145,8 @@ public class Curve {
             int i, j;
             float c0, c1;
             float[] d0;
-            idMatX mat = new idMatX();
-            idVecX x = new idVecX();
+            final idMatX mat = new idMatX();
+            final idVecX x = new idVecX();
 
             d0 = new float[(this.values.Num() - 1)];
             x.SetData(this.values.Num(), Vector.idVecX.VECX_ALLOCA(this.values.Num()));
@@ -1367,9 +1367,9 @@ public class Curve {
      */
     static class idCurve_KochanekBartelsSpline<type extends Vector.idVec> extends idCurve_Spline<type> {
 
-        protected idList<Float> bias;
-        protected idList<Float> continuity;
-        protected idList<Float> tension;
+        protected final idList<Float> bias = new idList<>();
+        protected final idList<Float> continuity = new idList<>();
+        protected final idList<Float> tension = new idList<>();
 
         public idCurve_KochanekBartelsSpline(final Class<type> clazz) {
             super(clazz);
@@ -2099,7 +2099,7 @@ public class Curve {
      */
     public static class idCurve_NURBS<type extends Vector.idVec> extends idCurve_NonUniformBSpline<type> {
 
-        protected idList<Float> weights = new idList<>();
+        protected final idList<Float> weights = new idList<>();
 
 
         public idCurve_NURBS(final Class<type> clazz) {

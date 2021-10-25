@@ -538,7 +538,7 @@ public class BrushBSP {
                           Allowance MergeAllowed) /*boolean (*MergeAllowed)( idBrush *b1, idBrush *b2 ) )*/ {
 
             int i;
-            idList<idBrushBSPNode> gridCells = new idList<>();
+            final idList<idBrushBSPNode> gridCells = new idList<>();
 
             common.Printf("[Brush BSP]\n");
             common.Printf("%6d brushes\n", brushList.Num());
@@ -1147,7 +1147,7 @@ public class BrushBSP {
             return node;
         }
 
-        private void BuildGrid_r(idList<idBrushBSPNode> gridCells, idBrushBSPNode node) {
+        private void BuildGrid_r(final idList<idBrushBSPNode> gridCells, idBrushBSPNode node) {
             int axis;
             float dist = 0;
             idBounds bounds;

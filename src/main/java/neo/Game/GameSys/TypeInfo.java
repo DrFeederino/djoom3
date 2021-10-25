@@ -1354,9 +1354,9 @@ public class TypeInfo {
         }
 
         @Override
-        public void run(idCmdArgs args) {
+        public void run(final idCmdArgs args) {
             int i, j;
-            idList<Integer> index = new idList<>();
+            final idList<Integer> index = new idList<>();
 
             common.Printf("%-32s : %-32s size (B)\n", "type name", "super type name");
             for (i = 0; classTypeInfo[i].typeName != null; i++) {

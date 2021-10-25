@@ -131,7 +131,7 @@ public class Script_Program {
         public int firstStatement;
         public int locals;            // total ints of parms + locals
         public int numStatements;//TODO:booleans?
-        public idList<Integer> parmSize = new idList<>();
+        public final idList<Integer> parmSize = new idList<>();
         public int parmTotal;
         public idTypeDef type;
         private final idStr name = new idStr();
@@ -258,10 +258,10 @@ public class Script_Program {
         //
         // function types are more complex
         private idTypeDef auxType;  // return type
-        private idList<function_t> functions = new idList<>();
+        private final idList<function_t> functions = new idList<>();
         private idStr name;
         private idStrList parmNames = new idStrList();
-        private idList<idTypeDef> parmTypes = new idList<>();
+        private final idList<idTypeDef> parmTypes = new idList<>();
         private int size;
         private int/*etype_t*/ type;
 //
@@ -301,9 +301,9 @@ public class Script_Program {
             name = other.name;
             size = other.size;
             auxType = other.auxType;
-            parmTypes = other.parmTypes;
+            parmTypes.oSet(other.parmTypes);
             parmNames = other.parmNames;
-            functions = other.functions;
+            functions.oSet(other.functions);
         }
 
         public int/*size_t*/ Allocated() {

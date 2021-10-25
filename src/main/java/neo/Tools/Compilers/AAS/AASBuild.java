@@ -113,7 +113,7 @@ public class AASBuild {
         private static final float GRAVSUBDIV_EPSILON = 0.1f;
         private idAASSettings aasSettings;
         private idAASFileLocal file;
-        private idList<idLedge> ledgeList;
+        private final idList<idLedge> ledgeList = new idList<>();
         private idBrushMap ledgeMap;
         private int numGravitationalSubdivisions;
         private int numLedgeSubdivisions;
@@ -138,7 +138,7 @@ public class AASBuild {
             int i, bit, mask, startTime;
             idMapFile mapFile;
             idBrushList brushList = new idBrushList();
-            idList<idBrushList> expandedBrushes = new idList<>();
+            final idList<idBrushList> expandedBrushes = new idList<>();
             idBrush b;
             idBrushBSP bsp = new idBrushBSP();
             idStr name;
@@ -546,7 +546,7 @@ public class AASBuild {
             int contents, i;
             idMapBrushSide mapSide;
             idMaterial mat;
-            idList<idBrushSide> sideList = new idList<>();
+            final idList<idBrushSide> sideList = new idList<>();
             idBrush brush;
             idPlane plane;
 
@@ -1097,7 +1097,7 @@ public class AASBuild {
             int s1, i;
             idBrushBSPPortal p1;
             idWinding w;
-            idList<idBrushBSPNode> nodeList = new idList<>();
+            final idList<idBrushBSPNode> nodeList = new idList<>();
 
             if ((node.GetFlags() & NODE_VISITED) != 0) {
                 return;
@@ -1189,7 +1189,7 @@ public class AASBuild {
         private void LedgeSubdiv(idBrushBSPNode root) {
             int i, j;
             idBrush brush;
-            idList<idBrushSide> sideList = new idList<>();
+            final idList<idBrushSide> sideList = new idList<>();
 
             // create ledge bevels and expand ledges
             for (i = 0; i < ledgeList.Num(); i++) {

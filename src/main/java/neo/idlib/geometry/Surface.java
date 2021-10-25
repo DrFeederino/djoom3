@@ -59,25 +59,21 @@ public class Surface {
     }
 
     public static class idSurface {
-        protected idList<Integer> edgeIndexes;    // 3 references to edges for each triangle, may be negative for reversed edge
-        protected idList<surfaceEdge_t> edges;          // edges
-        protected idList<Integer> indexes;        // 3 references to vertices for each triangle
-        protected idList<idDrawVert> verts;          // vertices
+        protected final idList<Integer> edgeIndexes = new idList<>();    // 3 references to edges for each triangle, may be negative for reversed edge
+        protected final idList<surfaceEdge_t> edges = new idList<>();          // edges
+        protected final idList<Integer> indexes = new idList<>();        // 3 references to vertices for each triangle
+        protected final idList<idDrawVert> verts = new idList<>();          // vertices
         //
         //
 
         public idSurface() {
-            this.verts = new idList<>();
-            this.indexes = new idList<>();
-            this.edges = new idList<>();
-            this.edgeIndexes = new idList<>();
         }
 
         public idSurface(final idSurface surf) {
-            this.verts = surf.verts;
-            this.indexes = surf.indexes;
-            this.edges = surf.edges;
-            this.edgeIndexes = surf.edgeIndexes;
+            this.verts.oSet(surf.verts);
+            this.indexes.oSet(surf.indexes);
+            this.edges.oSet(surf.edges);
+            this.edgeIndexes.oSet(surf.edgeIndexes);
         }
 
         public idSurface(final idDrawVert[] verts, final int numVerts, final int[] indexes, final int numIndexes) {
@@ -510,8 +506,8 @@ public class Surface {
             int indexNum;
             int numEdgeSplitVertexes;
             idDrawVert v = new idDrawVert();
-            idList<idDrawVert> newVerts = new idList<>();
-            idList<Integer> newIndexes = new idList<>();
+            final idList<idDrawVert> newVerts = new idList<>();
+            final idList<Integer> newIndexes = new idList<>();
 
             dists = new float[verts.Num()];
             sides = new byte[verts.Num()];
@@ -715,8 +711,8 @@ public class Surface {
             }
 
             // copy back to this surface
-            indexes = newIndexes;
-            verts = newVerts;
+            indexes.oSet(newIndexes);
+            verts.oSet(newVerts);
 
             GenerateEdgeIndexes();
 

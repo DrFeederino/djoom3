@@ -413,7 +413,7 @@ public class Image_init {
 
             if (byClassification) {
 
-                idList<Integer>[] classifications = new idList[IC_COUNT];
+                final idList<Integer>[] classifications = new idList[IC_COUNT];
 
                 for (i = 0; i < count; i++) {
                     int cl = ClassifyImage(sortedArray[i].image.imgName.toString());
@@ -422,7 +422,7 @@ public class Image_init {
 
                 for (i = 0; i < IC_COUNT; i++) {
                     partialSize = 0;
-                    idList<Integer> overSizedList = new idList<>();
+                    final idList<Integer> overSizedList = new idList<>();
                     for (j = 0; j < classifications[i].Num(); j++) {
                         partialSize += sortedArray[classifications[i].oGet(j)].image.StorageSize();
                         if (overSized) {

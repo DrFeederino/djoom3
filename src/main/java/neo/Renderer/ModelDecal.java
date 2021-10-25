@@ -19,6 +19,7 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import static neo.Renderer.VertexCache.vertexCache;
 import static neo.Renderer.tr_light.R_AddDrawSurf;
@@ -51,16 +52,16 @@ public class ModelDecal {
 
     static class decalProjectionInfo_s {
 
-        idPlane[] boundingPlanes = new idPlane[6];
+        idPlane[] boundingPlanes = Stream.generate(idPlane::new).limit(6).toArray(idPlane[]::new);
         float fadeDepth;
-        idPlane[] fadePlanes = new idPlane[2];
+        idPlane[] fadePlanes = Stream.generate(idPlane::new).limit(2).toArray(idPlane[]::new);
         boolean force;
-        idMaterial material;
+        idMaterial material = new idMaterial();
         boolean parallel;
-        idBounds projectionBounds;
+        idBounds projectionBounds = new idBounds();
         final idVec3 projectionOrigin = new idVec3();
         int startTime;
-        idPlane[] textureAxis = new idPlane[2];
+        idPlane[] textureAxis = Stream.generate(idPlane::new).limit(2).toArray(idPlane[]::new);
     }
 
     static class idRenderModelDecal {
@@ -80,6 +81,7 @@ public class ModelDecal {
 
         public idRenderModelDecal() {
 //	memset( &tri, 0, sizeof( tri ) );
+            tri = new srfTriangles_s();
             tri.verts = verts;
             tri.indexes = indexes;
             material = null;
@@ -107,7 +109,7 @@ public class ModelDecal {
             assert (material != null);
 
             info.projectionOrigin.oSet(projectionOrigin);
-            info.material = material;
+            info.material = new idMaterial(material);
             info.parallel = parallel;
             info.fadeDepth = fadeDepth;
             info.startTime = startTime;
@@ -202,7 +204,7 @@ public class ModelDecal {
             localInfo.projectionBounds = info.projectionBounds;
             localInfo.projectionBounds.TranslateSelf(origin.oNegative());
             localInfo.projectionBounds.RotateSelf(axis.Transpose());
-            localInfo.material = info.material;
+            localInfo.material = new idMaterial(info.material);
             localInfo.parallel = info.parallel;
             localInfo.fadeDepth = info.fadeDepth;
             localInfo.startTime = info.startTime;

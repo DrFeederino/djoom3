@@ -465,7 +465,7 @@ public class Simd {
 
         public abstract void /*VPCALL*/ ConvertJointQuatsToJointMats(idJointMat[] jointMats, final idJointQuat[] jointQuats, final int numJoints);
 
-        public abstract void /*VPCALL*/ ConvertJointMatsToJointQuats(idList<idJointQuat> jointQuats, final idJointMat[] jointMats, final int numJoints);
+        public abstract void /*VPCALL*/ ConvertJointMatsToJointQuats(final idList<idJointQuat> jointQuats, final idJointMat[] jointMats, final int numJoints);
 
         public abstract void /*VPCALL*/ TransformJoints(idJointMat[] jointMats, final int[] parents, final int firstJoint, final int lastJoint);
 

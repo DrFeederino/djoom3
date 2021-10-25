@@ -165,7 +165,7 @@ public class snd_world {
         public idStr aviDemoName;
         public idStr aviDemoPath;
         //
-        public idList<idSoundEmitterLocal> emitters;
+        public final idList<idSoundEmitterLocal> emitters;
         public boolean enviroSuitActive;
         //
         // avi stuff

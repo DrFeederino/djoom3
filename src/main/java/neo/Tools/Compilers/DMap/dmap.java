@@ -712,7 +712,7 @@ public class dmap {
         boolean glview;
         char[] mapFileBase = new char[1024];
         //
-        idList<mapLight_t> mapLights;
+        final idList<mapLight_t> mapLights = new idList<>();
         //
         idPlaneSet mapPlanes;
         boolean noClipSides;        // don't cut sides by solid leafs, use the entire thing

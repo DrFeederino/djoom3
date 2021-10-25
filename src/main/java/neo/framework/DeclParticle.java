@@ -964,7 +964,7 @@ public class DeclParticle {
 
         public idBounds bounds;
         public float depthHack;
-        public idList<idParticleStage> stages;
+        public final idList<idParticleStage> stages;
         //
         //
 

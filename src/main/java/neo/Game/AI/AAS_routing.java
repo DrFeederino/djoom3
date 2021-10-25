@@ -76,7 +76,7 @@ public class AAS_routing {
     static class idRoutingObstacle {
         // friend class idAASLocal;
 
-        idList<Integer> areas;           // areas the bounds are in
+        final idList<Integer> areas = new idList();           // areas the bounds are in
         idBounds bounds;          // obstacle bounds
         //
         //

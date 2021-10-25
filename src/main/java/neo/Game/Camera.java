@@ -55,7 +55,7 @@ public class Camera {
     public static abstract class idCamera extends idEntity {
         //public	ABSTRACT_PROTOTYPE( idCamera );
 
-        public abstract void GetViewParms(renderView_s view);
+        public abstract void GetViewParms(final renderView_s view);
 
         @Override
         public renderView_s GetRenderView() {
@@ -323,7 +323,7 @@ public class Camera {
         }
 
         @Override
-        public void GetViewParms(renderView_s view) {
+        public void GetViewParms(final renderView_s view) {
             int realFrame;
             int frame;
             int frameTime;
@@ -332,7 +332,7 @@ public class Camera {
             cameraFrame_t camFrame;
             int i;
             int cut;
-            idQuat q1, q2, q3 = new idQuat();
+            final idQuat q1 = new idQuat(), q2 = new idQuat(), q3 = new idQuat();
 
             assert (view != null);
             if (null == view) {
@@ -424,8 +424,8 @@ public class Camera {
                 camFrame = camera.oGet(frame);
                 final cameraFrame_t nextFrame = camera.oGet(frame + 1);
                 invlerp = 1.0f - lerp;
-                q1 = camFrame/*[ 0 ]*/.q.ToQuat();
-                q2 = nextFrame.q.ToQuat();
+                q1.oSet(camFrame/*[ 0 ]*/.q.ToQuat());
+                q2.oSet(nextFrame.q.ToQuat());
                 q3.Slerp(q1, q2, lerp);
                 view.viewaxis = q3.ToMat3();
                 view.vieworg.oSet(camFrame/*[ 0 ]*/.t.oMultiply(invlerp).oPlus(nextFrame.t.oMultiply(lerp).oPlus(offset)));

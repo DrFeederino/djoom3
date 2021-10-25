@@ -1638,7 +1638,7 @@ public class Projectile {
     public static class beamTarget_t {
 
         int/*qhandle_t*/ modelDefHandle;
-        renderEntity_s renderEntity;
+        renderEntity_s renderEntity = new renderEntity_s();
         final idEntityPtr<idEntity> target = new idEntityPtr<>();
     }
 

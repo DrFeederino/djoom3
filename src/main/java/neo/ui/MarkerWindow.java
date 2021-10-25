@@ -55,7 +55,7 @@ public class MarkerWindow {
         private idMaterial markerStop;
         //
         //
-        private idList<markerData_t> markerTimes;
+        private final idList<markerData_t> markerTimes = new idList<>();
         private int numStats;
 //virtual ~idMarkerWindow();
         private idStr statData;

@@ -198,7 +198,7 @@ public class RenderWorld_local {
         //
         public doublePortal_s[] doublePortals;
         //
-        public idList<idRenderEntityLocal> entityDefs = new idList<>();
+        public final idList<idRenderEntityLocal> entityDefs = new idList<>();
         //
         //
         public boolean generateAllInteractionsCalled;
@@ -214,11 +214,11 @@ public class RenderWorld_local {
         public idInteraction[] interactionTable;
         public int interactionTableHeight;        // lightDefs
         public int interactionTableWidth;        // entityDefs
-        public idList<idRenderLightLocal> lightDefs = new idList<>();
+        public final idList<idRenderLightLocal> lightDefs = new idList<>();
         //
         //
         //
-        public idList<idRenderModel> localModels = new idList<>();
+        public final idList<idRenderModel> localModels = new idList<>();
         // virtual					~idRenderWorldLocal();
         public idStr mapName;         // ie: maps/tim_dm2.proc, written to demoFile
         public long[] /*ID_TIME_T*/ mapTimeStamp;    // for fast reloads of the same level

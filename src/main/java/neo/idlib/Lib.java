@@ -232,7 +232,7 @@ public class Lib {
         LittleRevBytes(bp, 0, elcount);
     }
 
-    public static void LittleRevBytes(idVec5 v) {
+    public static void LittleRevBytes(final idVec5 v) {
         if (SWAP_TEST) {
             final float x = v.x;
             final float y = v.y;

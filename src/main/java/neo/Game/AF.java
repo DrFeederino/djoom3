@@ -93,8 +93,8 @@ public class AF {
         protected boolean hasBindConstraints;  // true if the bind constraints have been added
         protected boolean isActive;            // true if the articulated figure physics is active
         protected boolean isLoaded;            // true when the articulated figure is properly loaded
-        protected idList<Integer> jointBody;           // table to find the nearest articulated figure body for a joint of the skeletal model
-        protected idList<jointConversion_s> jointMods;           // list with transforms from skeletal model joints to articulated figure bodies
+        protected final idList<Integer> jointBody;           // table to find the nearest articulated figure body for a joint of the skeletal model
+        protected final idList<jointConversion_s> jointMods;           // list with transforms from skeletal model joints to articulated figure bodies
         protected int modifiedAnim;        // anim to modify
         protected idStr name;                // name of the loaded .af file
         protected idPhysics_AF physicsObj;          // articulated figure physics
@@ -932,7 +932,7 @@ public class AF {
             idMat3 axis, inertiaTensor = new idMat3();
             final idVec3 centerOfMass = new idVec3(), origin = new idVec3();
             idBounds bounds = new idBounds();
-            idList<Integer/*jointHandle_t*/> jointList = new idList<>();
+            final idList<Integer/*jointHandle_t*/> jointList = new idList<>();
 
             origin.oSet(fb.origin.ToVec3());
             axis = fb.angles.ToMat3();

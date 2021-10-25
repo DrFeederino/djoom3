@@ -50,8 +50,8 @@ public class Physics_StaticMulti {
         private static contactInfo_t info;
         //
         //
-        protected idList<idClipModel> clipModels;    // collision model
-        protected idList<staticPState_s> current;    // physics state
+        protected final idList<idClipModel> clipModels;    // collision model
+        protected final idList<staticPState_s> current;    // physics state
         //
         // master
         protected boolean hasMaster;
@@ -62,6 +62,8 @@ public class Physics_StaticMulti {
             self = null;
             hasMaster = false;
             isOrientated = false;
+            clipModels = new idList();
+            current = new idList();
 
             defaultState.origin.Zero();
             defaultState.axis.Identity();

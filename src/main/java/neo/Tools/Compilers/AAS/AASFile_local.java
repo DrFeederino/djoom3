@@ -734,14 +734,14 @@ public class AASFile_local {
             aasFace_s face;
             aasEdge_s edge;
             idReachability reach;
-            idList<Integer> vertexRemap = new idList<>();
-            idList<Integer> edgeRemap = new idList<>();
-            idList<Integer> faceRemap = new idList<>();
-            idList<idVec3/*aasVertex_t*/> newVertices = new idList<>();
-            idList<aasEdge_s> newEdges = new idList<>();
-            idList<Integer/*aasIndex_t*/> newEdgeIndex = new idList<>();
-            idList<aasFace_s> newFaces = new idList<>();
-            idList<Integer/*aasIndex_t*/> newFaceIndex = new idList<>();
+            final idList<Integer> vertexRemap = new idList<>();
+            final idList<Integer> edgeRemap = new idList<>();
+            final idList<Integer> faceRemap = new idList<>();
+            final idList<idVec3/*aasVertex_t*/> newVertices = new idList<>();
+            final idList<aasEdge_s> newEdges = new idList<>();
+            final idList<Integer/*aasIndex_t*/> newEdgeIndex = new idList<>();
+            final idList<aasFace_s> newFaces = new idList<>();
+            final idList<Integer/*aasIndex_t*/> newFaceIndex = new idList<>();
 
             vertexRemap.AssureSize(vertices.Num(), -1);
             edgeRemap.AssureSize(edges.Num(), 0);
@@ -829,11 +829,11 @@ public class AASFile_local {
             }
 
             // store new list
-            vertices = newVertices;
-            edges = newEdges;
-            edgeIndex = newEdgeIndex;
-            faces = newFaces;
-            faceIndex = newFaceIndex;
+            vertices.oSet(newVertices);
+            edges.oSet(newEdges);
+            edgeIndex.oSet(newEdgeIndex);
+            faces.oSet(newFaces);
+            faceIndex.oSet(newFaceIndex);
         }
 
         public void LinkReversedReachability() {
@@ -906,7 +906,7 @@ public class AASFile_local {
             clusters.Append(cluster);
         }
 
-        private boolean ParseIndex(idLexer src, idList<Integer/*aasIndex_t*/> indexes) {
+        private boolean ParseIndex(idLexer src, final idList<Integer/*aasIndex_t*/> indexes) {
             int/*aasIndex_s*/ index;
 
             final int numIndexes = src.ParseInt();

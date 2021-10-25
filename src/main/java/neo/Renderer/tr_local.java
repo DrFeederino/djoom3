@@ -1310,7 +1310,7 @@ public class tr_local {
         //
         //
         //
-        public idList<idRenderWorldLocal> worlds;
+        public final idList<idRenderWorldLocal> worlds;
         // ~idRenderSystemLocal( void );
 
         // external functions

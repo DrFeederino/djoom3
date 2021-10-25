@@ -1934,7 +1934,7 @@ public class Mover {
         protected int decelTime;
         protected int duration;
         protected boolean enabled;
-        protected idList<idEntityPtr<idEntity>> guiTargets;
+        protected final idList<idEntityPtr<idEntity>> guiTargets;
         protected idMover_Binary moveMaster;
         protected int move_thread;
         protected moverState_t moverState;

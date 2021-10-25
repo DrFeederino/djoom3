@@ -848,7 +848,7 @@ public class CVarSystem {
             idStr match, indent = new idStr(), str = new idStr();
             String string;
             idInternalCVar cvar;
-            idList<idInternalCVar> cvarList = new idList<>();
+            final idList<idInternalCVar> cvarList = new idList<>();
 
             argNum = 1;
             show show = SHOW_VALUE;

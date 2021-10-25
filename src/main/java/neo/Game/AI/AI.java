@@ -736,8 +736,8 @@ public class AI {
         protected boolean lastHitCheckResult;
         protected int lastHitCheckTime;
         protected idAngles lookAng;
-        protected idList<idAngles> lookJointAngles;
-        protected idList<Integer/*jointHandle_t*/> lookJoints;
+        protected final idList<idAngles> lookJointAngles;
+        protected final idList<Integer/*jointHandle_t*/> lookJoints;
         protected idAngles lookMax;
         protected idAngles lookMin;
         protected float melee_range;
@@ -748,7 +748,7 @@ public class AI {
         // cinematics
         protected int num_cinematics;
         protected int/*jointHandle_t*/             orientationJoint;
-        protected idList<particleEmitter_s> particles;                // particle data
+        protected final idList<particleEmitter_s> particles;                // particle data
         //
         // physics
         protected idPhysics_Monster physicsObj;
@@ -5050,7 +5050,7 @@ public class AI {
         public boolean UpdateAnimationControllers() {
             final idVec3 local = new idVec3();
             final idVec3 focusPos = new idVec3();
-            idQuat jawQuat;
+            final idQuat jawQuat = new idQuat();
             final idVec3 left = new idVec3();
             final idVec3 dir = new idVec3();
             final idVec3 orientationJointPos = new idVec3();

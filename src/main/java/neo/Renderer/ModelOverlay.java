@@ -61,13 +61,13 @@ public class ModelOverlay {
     static class overlayMaterial_s {
 
         idMaterial material;
-        idList<overlaySurface_s> surfaces;
+        final idList<overlaySurface_s> surfaces = new idList();
     }
 
     static class idRenderModelOverlay {
 
         //
-        private idList<overlayMaterial_s> materials;
+        private final idList<overlayMaterial_s> materials = new idList();
         // ~idRenderModelOverlay();
 
         public idRenderModelOverlay() {

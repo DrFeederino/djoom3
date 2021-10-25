@@ -396,10 +396,10 @@ public class snd_cache {
             purged = true;
 
             if (hardwareBuffer && idSoundSystemLocal.useOpenAL) {
-                alGetError();
+                int error = alGetError();
 //                alDeleteBuffers(1, openalBuffer);
                 AL10.alDeleteBuffers(openalBuffer);
-                if (alGetError() != AL_NO_ERROR) {
+                if (error != AL_NO_ERROR) {
                     common.Error("idSoundCache: error unloading data from OpenAL hardware buffer");
                 } else {
                     openalBuffer = 0;

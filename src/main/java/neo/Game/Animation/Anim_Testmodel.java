@@ -106,7 +106,7 @@ public class Anim_Testmodel {
         private idStr animName;
         private int animTime;
         //
-        private idList<copyJoints_t> copyJoints;
+        private final idList<copyJoints_t> copyJoints = new idList();
         private idAnim customAnim;
         private int frame;
         private final idEntityPtr<idEntity> head;

@@ -861,7 +861,7 @@ public class Simd_Generic {
         }
 
         @Override
-        public void MatX_MultiplyVecX(idVecX dst, idMatX mat, idVecX vec) {
+        public void MatX_MultiplyVecX(final idVecX dst, idMatX mat, final idVecX vec) {
             int i, j, numRows;
             int mIndex = 0;
             final float[] mPtr, vPtr;
@@ -2494,7 +2494,7 @@ public class Simd_Generic {
         }
 
         @Override
-        public void ConvertJointMatsToJointQuats(idList<idJointQuat> jointQuats, idJointMat[] jointMats, int numJoints) {
+        public void ConvertJointMatsToJointQuats(final idList<idJointQuat> jointQuats, idJointMat[] jointMats, int numJoints) {
             int i;
 
             for (i = 0; i < numJoints; i++) {

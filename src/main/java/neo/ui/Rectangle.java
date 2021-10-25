@@ -271,7 +271,7 @@ public class Rectangle {
 
     static class idRegion {
 
-        protected idList<idRectangle> rects;
+        protected final idList<idRectangle> rects = new idList<>();
         //
         //
 

@@ -194,7 +194,7 @@ public class Brush {
         private int planeSide;     // side of a plane this brush is on
         private int primitiveNum;  // primitive number in editor
         private int savedPlaneSide;// saved plane side
-        private idList<idBrushSide> sides;         // list with sides
+        private final idList<idBrushSide> sides = new idList<>();         // list with sides
         private boolean windingsValid; // set when side windings are valid
         //
         //
@@ -294,7 +294,7 @@ public class Brush {
             return savedPlaneSide;
         }
 
-        public boolean FromSides(idList<idBrushSide> sideList) {
+        public boolean FromSides(final idList<idBrushSide> sideList) {
             int i;
 
             for (i = 0; i < sideList.Num(); i++) {

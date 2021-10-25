@@ -1195,8 +1195,8 @@ public class Model_ma {
         //Material Resolution
         idHashTable<maFileNode_t> fileNodes;
         idHashTable<maMaterialNode_s> materialNodes;
-        idList<maMaterial_t> materials;
-        idList<maObject_t> objects;
+        final idList<maMaterial_t> materials = new idList<>();
+        final idList<maObject_t> objects = new idList<>();
         long[]/*ID_TIME_T*/ timeStamp = new long[1];
         idHashTable<maTransform_s> transforms;
     }

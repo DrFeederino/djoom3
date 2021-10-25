@@ -193,7 +193,7 @@ public class GameBearShootWindow {
         //
         private int currentLevel;
         //
-        private idList<BSEntity> entities;
+        private final idList<BSEntity> entities = new idList<>();
         private boolean gameOver;
         //
 //

@@ -810,8 +810,8 @@ public class FileSystem_h {
 
     static class addonInfo_t {
 
-        idList<Integer> depends;
-        idList<idDict> mapDecls;
+        final idList<Integer> depends = new idList();
+        final idList<idDict> mapDecls = new idList();
     }
 
     static class pack_t {

@@ -805,8 +805,8 @@ public class Box {
             float invNumPoints, sumXX, sumXY, sumXZ, sumYY, sumYZ, sumZZ;
             final idVec3 dir = new idVec3();
             idBounds bounds = new idBounds();
-            idMatX eigenVectors = new idMatX();
-            idVecX eigenValues = new idVecX();
+            final idMatX eigenVectors = new idMatX();
+            final idVecX eigenValues = new idVecX();
 
             // compute mean of points
             center.oSet(points[0]);

@@ -3,7 +3,6 @@ package neo.idlib;
 import neo.framework.File_h.idFile;
 import neo.idlib.Lib.idException;
 import neo.idlib.Lib.idLib;
-import neo.idlib.Text.Lexer.*;
 import neo.idlib.Text.Str;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
@@ -38,7 +37,7 @@ public class LangDict {
     public static class idLangDict {
 
         private static final int DBG_GetString = 1;
-        public idList<idLangKeyValue> args = new idList<>();
+        public final idList<idLangKeyValue> args = new idList<>();
         //
         private int baseID;
         //

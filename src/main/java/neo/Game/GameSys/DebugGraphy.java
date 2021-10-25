@@ -17,7 +17,7 @@ public class DebugGraphy {
     public static class idDebugGraph {
 
         private int index;
-        private idList<Float> samples;
+        private final idList<Float> samples = new idList();
         //
         //
 

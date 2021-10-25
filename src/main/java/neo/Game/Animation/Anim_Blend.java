@@ -242,7 +242,7 @@ public class Anim_Blend {
             return true;
         }
 
-        public boolean GetOriginRotation(idQuat rotation, int animNum, int currentTime, int cyclecount) {
+        public boolean GetOriginRotation(final idQuat rotation, int animNum, int currentTime, int cyclecount) {
             if (null == anims[animNum]) {
                 rotation.Set(0.0f, 0.0f, 0.0f, 1.0f);
                 return false;
@@ -1021,7 +1021,7 @@ public class Anim_Blend {
             String jointnames;
             int channel;
             int/*jointHandle_t*/ jointnum;
-            idList<Integer/*jointHandle_t*/> jointList = new idList<>();
+            final idList<Integer/*jointHandle_t*/> jointList = new idList<>();
             int numDefaultAnims;
 
             src.LoadMemory(text, textLength, GetFileName(), GetLineNum());
@@ -1313,7 +1313,7 @@ public class Anim_Blend {
             return modelHandle;
         }
 
-        public void GetJointList(final String jointnames, idList<Integer/*jointHandle_t*/> jointList) {
+        public void GetJointList(final String jointnames, final idList<Integer/*jointHandle_t*/> jointList) {
             String jointname;
             jointInfo_t joint;
             jointInfo_t child;
@@ -2198,9 +2198,9 @@ public class Anim_Blend {
         }
 
         private void BlendDeltaRotation(int fromtime, int totime, idQuat blendDelta, CFloat blendWeight) {
-            idQuat q1 = new idQuat();
-            idQuat q2 = new idQuat();
-            idQuat q3 = new idQuat();
+            final idQuat q1 = new idQuat();
+            final idQuat q2 = new idQuat();
+            final idQuat q3 = new idQuat();
             int time1;
             int time2;
             float lerp;
@@ -2250,7 +2250,7 @@ public class Anim_Blend {
                 }
             }
 
-            q3 = q1.Inverse().oMultiply(q2);
+            q3.oSet(q1.Inverse().oMultiply(q2));
             if (0 == blendWeight.getVal()) {
                 blendDelta.oSet(q3);
                 blendWeight.setVal(weight);
@@ -2916,13 +2916,13 @@ public class Anim_Blend {
             return removeOriginOffset;
         }
 
-        public void GetJointList(final String jointnames, idList<Integer/*jointHandle_t*/> jointList) {
+        public void GetJointList(final String jointnames, final idList<Integer/*jointHandle_t*/> jointList) {
             if (modelDef != null) {
                 modelDef.GetJointList(jointnames, jointList);
             }
         }
 
-        public void GetJointList(final idStr jointnames, idList<Integer/*jointHandle_t*/> jointList) {
+        public void GetJointList(final idStr jointnames, final idList<Integer/*jointHandle_t*/> jointList) {
             GetJointList(jointnames.toString(), jointList);
         }
 
@@ -3413,14 +3413,14 @@ public class Anim_Blend {
             int i;
             idAnimBlend[] blend;
             CFloat blendWeight = new CFloat();
-            idQuat q;
+            final idQuat q = new idQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
             if (null == modelDef || null == modelDef.ModelHandle() || (fromtime == totime)) {
                 delta.Identity();
                 return false;
             }
 
-            q = new idQuat(0.0f, 0.0f, 0.0f, 1.0f);
+
             blendWeight.setVal(0.0f);
 
             blend = channels[ANIMCHANNEL_ALL];

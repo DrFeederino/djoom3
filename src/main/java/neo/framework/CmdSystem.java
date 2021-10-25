@@ -374,7 +374,7 @@ public class CmdSystem {
             int i;
             String match;
             commandDef_s cmd;
-            idList<commandDef_s> cmdList = new idList<>();
+            final idList<commandDef_s> cmdList = new idList<>();
 
             if (args.Argc() > 1) {
                 match = args.Args(1, -1);

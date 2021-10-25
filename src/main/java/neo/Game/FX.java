@@ -90,7 +90,7 @@ public class FX {
             eventCallbacks.put(EV_Fx_KillFx, (eventCallback_t0<idEntityFx>) idEntityFx::Event_ClearFx);
         }
 
-        protected idList<idFXLocalAction> actions;
+        protected final idList<idFXLocalAction> actions;
         protected idDeclFX fxEffect;                // GetFX() should be called before using fxEffect as a pointer
         protected int nextTriggerTime;
         protected int started;

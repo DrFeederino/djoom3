@@ -50,8 +50,8 @@ public class Physics_Base {
         // CLASS_PROTOTYPE( idPhysics_Base );
 
         protected int clipMask;         // contents the physics object collides with
-        protected idList<contactEntity_t> contactEntities;  // entities touching this physics object
-        protected idList<contactInfo_t> contacts;         // contacts with other physics objects
+        protected final idList<contactEntity_t> contactEntities;  // entities touching this physics object
+        protected final idList<contactInfo_t> contacts;         // contacts with other physics objects
         protected final idVec3 gravityNormal;    // normalized direction of gravity
         protected final idVec3 gravityVector;    // direction and magnitude of gravity
         //

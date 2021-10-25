@@ -106,11 +106,11 @@ public class Model_md5 {
             int jointnum;
             idStr shaderName;
             int i, j;
-            idList<Integer> tris = new idList<>();
-            idList<Integer> firstWeightForVertex = new idList<>();
-            idList<Integer> numWeightsForVertex = new idList<>();
+            final idList<Integer> tris = new idList<>();
+            final idList<Integer> firstWeightForVertex = new idList<>();
+            final idList<Integer> numWeightsForVertex = new idList<>();
             int maxweight;
-            idList<vertexWeight_s> tempWeights = new idList<>();
+            final idList<vertexWeight_s> tempWeights = new idList<>();
 
             parser.ExpectTokenString("{");
 
@@ -609,7 +609,7 @@ public class Model_md5 {
                 poseMat3[i].SetTranslation(pose.t);
                 if (joint.parent != null) {
                     parentNum = joints.Find(joint.parent);
-                    pose.q = (poseMat3[i].ToMat3().oMultiply(poseMat3[parentNum].ToMat3().Transpose())).ToQuat();
+                    pose.q.oSet((poseMat3[i].ToMat3().oMultiply(poseMat3[parentNum].ToMat3().Transpose())).ToQuat());
                     pose.t.oSet((poseMat3[i].ToVec3().oMinus(poseMat3[parentNum].ToVec3())).oMultiply(poseMat3[parentNum].ToMat3().Transpose()));
                 }
             }

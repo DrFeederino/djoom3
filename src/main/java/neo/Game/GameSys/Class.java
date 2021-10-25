@@ -1,7 +1,10 @@
 package neo.Game.GameSys;
 
 import neo.CM.CollisionModel.trace_s;
+import neo.Game.*;
+import neo.Game.AI.AI;
 import neo.Game.AI.AI.idAI;
+import neo.Game.AI.AI_Vagary;
 import neo.Game.Entity.idEntity;
 import neo.Game.GameSys.SaveGame.idRestoreGame;
 import neo.Game.GameSys.SaveGame.idSaveGame;
@@ -10,7 +13,6 @@ import neo.Game.Projectile.idProjectile;
 import neo.Game.Script.Script_Thread.idThread;
 import neo.Game.Target.idTarget_Remove;
 import neo.Game.Trigger.idTrigger_Multi;
-import neo.TempDump.Deprecation_Exception;
 import neo.TempDump.TODO_Exception;
 import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
@@ -342,44 +344,206 @@ public class Class {
          so it must be called as idClass::GetClass( classname )
          ================
          */
-        @Deprecated
         public static idTypeInfo GetClass(final String name) {
             switch (name) {
                 case "idWorldspawn":
+                    break;
             }
-            throw new Deprecation_Exception();
-//            idTypeInfo c;
-//            int order;
-//            int mid;
-//            int min;
-//            int max;
-//
-//            if (!initialized) {
-//                // idClass::Init hasn't been called yet, so do a slow lookup
-//                for (c = typelist; c != null; c = c.next) {
-//                    if (NOT(idStr.Cmp(c.classname, name))) {
-//                        return c;
-//                    }
-//                }
-//            } else {
-//                // do a binary search through the list of types
-//                min = 0;
-//                max = types.Num() - 1;
-//                while (min <= max) {
-//                    mid = (min + max) / 2;
-//                    c = types.oGet(mid);
-//                    order = idStr.Cmp(c.classname, name);
-//                    if (0 == order) {
-//                        return c;
-//                    } else if (order > 0) {
-//                        max = mid - 1;
-//                    } else {
-//                        min = mid + 1;
-//                    }
-//                }
-//            }
-//
-//            return null;
+            return null;
+        }
+
+        public static idEntity GetEntity(final String name) {
+            if (name == null || name.isEmpty()) {
+                return null;
+            }
+            switch (name) {
+                case "idWorldspawn":
+                    return new WorldSpawn.idWorldspawn();
+                case "idStaticEntity":
+                    return new Misc.idStaticEntity();
+                case "idPathCorner":
+                    return new Misc.idPathCorner();
+                case "idTrigger_Multi":
+                    return new idTrigger_Multi();
+                case "idTarget_Tip":
+                    return new Target.idTarget_Tip();
+                case "idTarget_Remove":
+                    return new idTarget_Remove();
+                case "idMover":
+                    return new Mover.idMover();
+                case "idMoveable":
+                    return new Moveable.idMoveable();
+                case "idLight":
+                    return new Light.idLight();
+                case "idCameraAnim":
+                    return new Camera.idCameraAnim();
+                case "idAI":
+                    return new idAI();
+                case "idFuncEmitter":
+                    return new Misc.idFuncEmitter();
+                case "idAnimated":
+                    return new Misc.idAnimated();
+                case "idBFGProjectile":
+                    return new Projectile.idBFGProjectile();
+                case "idTrigger_Hurt":
+                    return new Trigger.idTrigger_Hurt();
+                case "idMoveablePDAItem":
+                    return new Item.idMoveablePDAItem();
+                case "idLocationEntity":
+                    return new Misc.idLocationEntity();
+                case "idPlayerStart":
+                    return new Misc.idPlayerStart();
+                case "idSound":
+                    return new Sound.idSound();
+                case "idTarget_GiveEmail":
+                    return new Target.idTarget_GiveEmail();
+                case "idTarget_SetPrimaryObjective":
+                    return new Target.idTarget_SetPrimaryObjective();
+                case "idObjectiveComplete":
+                    return new Item.idObjectiveComplete();
+                case "idTarget":
+                    return new Target.idTarget();
+                case "idCameraView":
+                    return new Camera.idCameraView();
+                case "idObjective":
+                    return new Item.idObjective();
+                case "idTarget_SetShaderParm":
+                    return new Target.idTarget_SetShaderParm();
+                case "idTarget_FadeEntity":
+                    return new Target.idTarget_FadeEntity();
+                case "idEntityFx":
+                    return new FX.idEntityFx();
+                case "idItem":
+                    return new Item.idItem();
+                case "idSplinePath":
+                    return new Mover.idSplinePath();
+                case "idAFEntity_Generic":
+                    return new AFEntity.idAFEntity_Generic();
+                case "idDoor":
+                    return new Mover.idDoor();
+                case "idProjectile":
+                    return new Projectile.idProjectile();
+                case "idTrigger_Count":
+                    return new Trigger.idTrigger_Count();
+                case "idTarget_EndLevel":
+                    return new Target.idTarget_EndLevel();
+                case "idTarget_CallObjectFunction":
+                    return new Target.idTarget_CallObjectFunction();
+                case "idTrigger_Fade":
+                    return new Trigger.idTrigger_Fade();
+                case "idPDAItem":
+                    return new Item.idPDAItem();
+                case "idVideoCDItem":
+                    return new Item.idVideoCDItem();
+                case "idLocationSeparatorEntity":
+                    return new Misc.idLocationSeparatorEntity();
+                case "idPlayer":
+                    return new Player.idPlayer();
+                case "idDebris":
+                    return new Projectile.idDebris();
+                case "idSpawnableEntity":
+                    return new Misc.idSpawnableEntity();
+                case "idTarget_LightFadeIn":
+                    return new Target.idTarget_LightFadeIn();
+                case "idTarget_LightFadeOut":
+                    return new Target.idTarget_LightFadeOut();
+                case "idItemPowerup":
+                    return new Item.idItemPowerup();
+                case "idForceField":
+                    return new Misc.idForceField();
+                case "idTarget_LockDoor":
+                    return new Target.idTarget_LockDoor();
+                case "idTarget_SetInfluence":
+                    return new Target.idTarget_SetInfluence();
+                case "idExplodingBarrel":
+                    return new Moveable.idExplodingBarrel();
+                case "idTarget_EnableLevelWeapons":
+                    return new Target.idTarget_EnableLevelWeapons();
+                case "idAFEntity_WithAttachedHead":
+                    return new AFEntity.idAFEntity_WithAttachedHead();
+                case "idCombatNode":
+                    return new AI.idCombatNode();
+                case "idFuncAASObstacle":
+                    return new Misc.idFuncAASObstacle();
+                case "idVacuumEntity":
+                    return new Misc.idVacuumEntity();
+                case "idRotater":
+                    return new Mover.idRotater();
+                case "idElevator":
+                    return new Mover.idElevator();
+                case "idShaking":
+                    return new Misc.idShaking();
+                case "idFuncRadioChatter":
+                    return new Misc.idFuncRadioChatter();
+                case "idFuncPortal":
+                    return new Misc.idFuncPortal();
+                case "idMoveableItem":
+                    return new Item.idMoveableItem();
+                case "idFuncSmoke":
+                    return new Misc.idFuncSmoke();
+                case "idPhantomObjects":
+                    return new Misc.idPhantomObjects();
+                case "idBeam":
+                    return new Misc.idBeam();
+                case "idExplodable":
+                    return new Misc.idExplodable();
+                case "idEarthQuake":
+                    return new Misc.idEarthQuake();
+                case "idGuidedProjectile":
+                    return new Projectile.idGuidedProjectile();
+                case "idTarget_Show":
+                    return new Target.idTarget_Show();
+                case "idBrittleFracture":
+                    return new BrittleFracture.idBrittleFracture();
+                case "idTrigger_Timer":
+                    return new Trigger.idTrigger_Timer();
+                case "idPendulum":
+                    return new Mover.idPendulum();
+                case "idItemRemover":
+                    return new Item.idItemRemover();
+                case "idTarget_GiveSecurity":
+                    return new Target.idTarget_GiveSecurity();
+                case "idTrigger_EntityName":
+                    return new Trigger.idTrigger_EntityName();
+                case "idBarrel":
+                    return new Moveable.idBarrel();
+                case "idActivator":
+                    return new Misc.idActivator();
+                case "idFuncSplat":
+                    return new Misc.idFuncSplat();
+                case "idTarget_Damage":
+                    return new Target.idTarget_Damage();
+                case "idTarget_SetKeyVal":
+                    return new Target.idTarget_SetKeyVal();
+                case "idTarget_EnableStamina":
+                    return new Target.idTarget_EnableStamina();
+                case "idVacuumSeparatorEntity":
+                    return new Misc.idVacuumSeparatorEntity();
+                case "idDamagable":
+                    return new Misc.idDamagable();
+                case "idSecurityCamera":
+                    return new SecurityCamera.idSecurityCamera();
+                case "idTrigger_Touch":
+                    return new Trigger.idTrigger_Touch();
+                case "idAFEntity_ClawFourFingers":
+                    return new AFEntity.idAFEntity_ClawFourFingers();
+                case "idAI_Vagary":
+                    return new AI_Vagary.idAI_Vagary();
+                case "idBobber":
+                    return new Mover.idBobber();
+                case "idTarget_LevelTrigger":
+                    return new Target.idTarget_LevelTrigger();
+                case "idTarget_RemoveWeapons":
+                    return new Target.idTarget_RemoveWeapons();
+                case "idTeleporter":
+                    return new FX.idTeleporter();
+                case "idPlat":
+                    return new Mover.idPlat();
+                case "idSoulCubeMissile":
+                    return new Projectile.idSoulCubeMissile();
+                default:
+                    return null;
+            }
         }
 
 // #ifdef ID_REDIRECT_NEWDELETE
@@ -402,7 +566,7 @@ public class Class {
 //                return null;
 //            }
 //
-//            obj = type.CreateInstance();
+//            return type.CreateInstance();
 //            return obj;
 
             throw new TODO_Exception();
@@ -665,12 +829,12 @@ public class Class {
 //            // switch( ev.GetFormatspecIndex() ) {
 //            // case 1 << D_EVENT_MAXARGS :
 //            // ( this.*callback )();
-//            // break;
+//            // 
 //// // generated file - see CREATE_EVENT_CODE
 //// #include "Callbacks.cpp"
 //            // default:
 //            // gameLocal.Warning( "Invalid formatspec on event '%s'", ev.GetName() );
-//            // break;
+//            // 
 //            // }
 //// #else
             assert (D_EVENT_MAXARGS == 8);
@@ -678,48 +842,48 @@ public class Class {
             switch (ev.GetNumArgs()) {
                 case 0:
 //                    callback.run();
-//                    break;
+//                    
 //
                 case 1:
 ////		typedef void ( idClass.*eventCallback_1_t )( const int );
 ////		( this.*( eventCallback_1_t )callback )( data[ 0 ] );
 //                    callback.run(data[0]);
-//                    break;
+//                    
 //
                 case 2:
 ////		typedef void ( idClass.*eventCallback_2_t )( const int, const int );
 ////		( this.*( eventCallback_2_t )callback )( data[ 0 ], data[ 1 ] );
 //                    callback.run(data[0], data[1]);
-//                    break;
+//                    
 //
                 case 3:
 ////		typedef void ( idClass.*eventCallback_3_t )( const int, const int, const int );
 ////		( this.*( eventCallback_3_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ] );
 //                    callback.run(data[0], data[1], data[2]);
-//                    break;
+//                    
 //
                 case 4:
 ////		typedef void ( idClass.*eventCallback_4_t )( const int, const int, const int, const int );
 ////		( this.*( eventCallback_4_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ] );
 //                    callback.run(data[0], data[1], data[2], data[3]);
-//                    break;
+//                    
 //
                 case 5:
 ////		typedef void ( idClass.*eventCallback_5_t )( const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_5_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4]);
-//                    break;
+//                    
 //
                 case 6:
 ////		typedef void ( idClass.*eventCallback_6_t )( const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_6_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ] );
-//                    break;
+//                    
 //
                 case 7:
 ////		typedef void ( idClass.*eventCallback_7_t )( const int, const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_7_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ], data[ 6 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
-//                    break;
+//                    
 //
                 case 8:
 ////		typedef void ( idClass.*eventCallback_8_t )( const int, const int, const int, const int, const int, const int, const int, const int );

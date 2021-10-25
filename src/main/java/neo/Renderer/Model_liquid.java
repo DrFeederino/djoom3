@@ -65,7 +65,7 @@ public class Model_liquid {
         private Float[] page1;
         private Float[] page2;
         //
-        private idList<Float> pages;
+        private final idList<Float> pages = new idList<>();
         //
         private idRandom random;
         private float scale_x;
@@ -76,7 +76,7 @@ public class Model_liquid {
         private int time;
         private int update_tics;
         //
-        private idList<idDrawVert> verts;
+        private final idList<idDrawVert> verts = new idList<>();
         private int verts_x;
         private int verts_y;
         //
@@ -105,7 +105,7 @@ public class Model_liquid {
             int i, x, y;
             idToken token = new idToken();
             idParser parser = new idParser(LEXFL_ALLOWPATHNAMES | LEXFL_NOSTRINGESCAPECHARS);
-            idList<Integer> tris = new idList<>();
+            final idList<Integer> tris = new idList<>();
             float size_x, size_y;
             float rate;
 

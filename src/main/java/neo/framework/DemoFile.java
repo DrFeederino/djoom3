@@ -51,7 +51,7 @@ public class DemoFile {
         private static final idCVar com_preloadDemos = new idCVar("com_preloadDemos", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_ARCHIVE, "Load the whole demo in to RAM before running it");
         private idCompressor compressor;
         //
-        private idList<idStr> demoStrings;
+        private final idList<idStr> demoStrings;
         private idFile f;
         private idFile fLog;
         private ByteBuffer fileImage;
@@ -69,6 +69,7 @@ public class DemoFile {
             fileImage = null;
             compressor = null;
             writing = false;
+            demoStrings = new idList<>();
         }
 
         private static idCompressor AllocCompressor(int type) {

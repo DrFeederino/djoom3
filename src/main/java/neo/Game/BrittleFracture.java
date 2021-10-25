@@ -84,11 +84,11 @@ public class BrittleFracture {
 
         boolean atEdge;
         idClipModel clipModel;
-        idList<idFixedWinding> decals;
+        final idList<idFixedWinding> decals = new idList();
         int droppedTime;
-        idList<Boolean> edgeHasNeighbour;
+        final idList<Boolean> edgeHasNeighbour = new idList();
         int islandNum;
-        idList<shard_s> neighbours;
+        final idList<shard_s> neighbours = new idList();
         idPhysics_RigidBody physicsObj;
         idFixedWinding winding;
     }

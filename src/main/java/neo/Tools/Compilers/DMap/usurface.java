@@ -106,7 +106,7 @@ public class usurface {
     static void TexVecForTri(textureVectors_t texVec, mapTri_s tri) {
         float area, inva;
         final idVec3 temp = new idVec3();
-        idVec5 d0 = new idVec5(), d1 = new idVec5();
+        final idVec5 d0 = new idVec5(), d1 = new idVec5();
         idDrawVert a, b, c;
 
         a = tri.v[0];

@@ -4147,7 +4147,7 @@ public class Session_local {
             }
         }
 
-        public void GetSaveGameList(idStrList fileList, idList<fileTIME_T> fileTimes) {
+        public void GetSaveGameList(idStrList fileList, final idList<fileTIME_T> fileTimes) {
             int i;
             idFileList files;
 
@@ -4237,7 +4237,7 @@ public class Session_local {
             int i;
             idStr name = new idStr();
             idStrList fileList = new idStrList();
-            idList<fileTIME_T> fileTimes = new idList<>();
+            final idList<fileTIME_T> fileTimes = new idList<>();
 
             loadGameList.clear();
             fileList.clear();

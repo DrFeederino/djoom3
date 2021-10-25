@@ -253,14 +253,12 @@ public class Entity {
     }
 
     public static class signal_t {
-
         function_t function;
         int threadnum;
     }
 
     public static class signalList_t {
-
-        public idList<signal_t>[] signal = new idList[etoi(NUM_SIGNALS)];
+        public final idList<signal_t>[] signal = new idList[etoi(NUM_SIGNALS)];
     }
 
     public static class idEntity extends neo.Game.GameSys.Class.idClass implements neo.TempDump.NiLLABLE<idEntity>, neo.TempDump.SERiAL {

@@ -67,6 +67,8 @@ public class CollisionModel {
         public contactInfo_t() {
             point = new idVec3();
             normal = new idVec3();
+            material = new idMaterial();
+            type = contactType_t.CONTACT_NONE;
         }
 
         public contactInfo_t(contactInfo_t c) {
@@ -89,17 +91,16 @@ public class CollisionModel {
 
         public contactInfo_t c;            // contact information, only valid if fraction < 1.0
         public idMat3 endAxis;      // final axis of trace model
-        public final idVec3 endpos;       // final position of trace model
+        public final idVec3 endpos = new idVec3();       // final position of trace model
         public float fraction;     // fraction of movement completed, 1.0 = didn't hit anything
 
         public trace_s() {
-            endpos = new idVec3();
-            endAxis = new idMat3();
             this.c = new contactInfo_t();
+            this.endAxis = new idMat3();
         }
 
         public trace_s(final trace_s other) {
-            endpos = new idVec3(other.endpos);
+            endpos.oSet(other.endpos);
             endAxis = new idMat3(other.endAxis);
             this.c = new contactInfo_t(other.c);
             this.fraction = other.fraction;

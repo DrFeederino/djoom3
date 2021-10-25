@@ -265,22 +265,22 @@ public class Player {
         public int deplete_armor;
         public float deplete_rate;
         public idStrList emails;
-        public idList<idDict> items;
+        public final idList<idDict> items;
         public int lastGiveTime;
         //
-        public idList<idLevelTriggerInfo> levelTriggers;
+        public final idList<idLevelTriggerInfo> levelTriggers;
         public int maxHealth;
         public int maxarmor;
         public int nextArmorDepleteTime;
         public int nextItemNum;
         //
         public int nextItemPickup;
-        public idList<idObjectiveInfo> objectiveNames = new idList<>();
+        public final idList<idObjectiveInfo> objectiveNames = new idList<>();
         public int onePickupTime;
         public boolean pdaOpened;
         public idStrList pdaSecurity;
         public idStrList pdas;
-        public idList<idItemInfo> pickupItemNames = new idList<>(idItemInfo.class);
+        public final idList<idItemInfo> pickupItemNames = new idList<>(idItemInfo.class);
         public int powerups;
         public int selAudio;
         public int selEMail;

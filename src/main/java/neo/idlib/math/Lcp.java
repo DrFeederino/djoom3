@@ -52,7 +52,7 @@ public class Lcp {
         return unClam(dst.ToFloatPtr(), clamArray);
     }
 
-    public static float[] unClam(idVecX dst, final float[] clamArray) {
+    public static float[] unClam(final idVecX dst, final float[] clamArray) {
         return unClam(dst.ToFloatPtr(), clamArray);
     }
 
@@ -122,7 +122,7 @@ public class Lcp {
         }
 
         //public	virtual			~idLCP( void );
-        public boolean Solve(final idMatX A, idVecX x, final idVecX b, final idVecX lo, final idVecX hi) {
+        public boolean Solve(final idMatX A, final idVecX x, final idVecX b, final idVecX lo, final idVecX hi) {
             return Solve(A, x, b, lo, hi, null);
         }
 
@@ -144,16 +144,16 @@ public class Lcp {
     //===============================================================
     static class idLCP_Square extends idLCP {
 
-        idVecX b;                // right hand side
-        idMatX clamped;            // LU factored sub matrix for clamped variables
-        idVecX delta_f, delta_a;// delta force and delta acceleration
-        idVecX diagonal;        // reciprocal of diagonal of U of the LU factored sub matrix for clamped variables
-        idVecX f, a;            // force and acceleration
-        idVecX lo, hi;            // low and high bounds
+        final idVecX b = new idVecX();                // right hand side
+        final idMatX clamped = new idMatX();            // LU factored sub matrix for clamped variables
+        final idVecX delta_f = new idVecX(), delta_a = new idVecX();// delta force and delta acceleration
+        final idVecX diagonal = new idVecX();        // reciprocal of diagonal of U of the LU factored sub matrix for clamped variables
+        final idVecX f = new idVecX(), a = new idVecX();            // force and acceleration
+        final idVecX lo = new idVecX(), hi = new idVecX();            // low and high bounds
+        private final idMatX m = new idMatX();        // original matrix
         int numClamped;            // number of clamped variables
         int numUnbounded;        // number of unbounded variables
         private int[] boxIndex;        // box index
-        private idMatX m;        // original matrix
         private boolean padded;        // set to true if the rows of the initial matrix are 16 byte padded
         private int[] permuted;        // index to keep track of the permutation
         private FloatBuffer[] rowPtrs;    // pointers to the rows of m
@@ -162,7 +162,7 @@ public class Lcp {
         //
 
         @Override
-        public boolean Solve(final idMatX o_m, idVecX o_x, final idVecX o_b, final idVecX o_lo, final idVecX o_hi, final int[] o_boxIndex) {
+        public boolean Solve(final idMatX o_m, final idVecX o_x, final idVecX o_b, final idVecX o_lo, final idVecX o_hi, final int[] o_boxIndex) {
             int i, j, n, boxStartIndex;
             CInt limit = new CInt(), limitSide = new CInt();
             float dir, s;
@@ -201,9 +201,9 @@ public class Lcp {
 
             f.Zero();
             a.Zero();
-            b = o_b;
-            lo = o_lo;
-            hi = o_hi;
+            b.oSet(o_b);
+            lo.oSet(o_lo);
+            hi.oSet(o_hi);
 
             // pointers to the rows of m
             rowPtrs = new FloatBuffer[m.GetNumRows()];//rowPtrs = (float **) _alloca16( m.GetNumRows() * sizeof( float * ) );
@@ -495,7 +495,7 @@ public class Lcp {
             return true;
         }
 
-        void SolveClamped(idVecX x, final float[] b) {
+        void SolveClamped(final idVecX x, final float[] b) {
             int i, j;
             float sum;
 
@@ -912,7 +912,7 @@ public class Lcp {
         }
 
         @Override
-        public boolean Solve(final idMatX o_m, idVecX o_x, final idVecX o_b, final idVecX o_lo, final idVecX o_hi, final int[] o_boxIndex) {
+        public boolean Solve(final idMatX o_m, final idVecX o_x, final idVecX o_b, final idVecX o_lo, final idVecX o_hi, final int[] o_boxIndex) {
             int i, j, n, boxStartIndex;
             CInt limit = new CInt(), limitSide = new CInt();
             float dir, s;
@@ -1226,7 +1226,7 @@ public class Lcp {
             return b;
         }
 
-        private void SolveClamped(idVecX x, final float[] b) {
+        private void SolveClamped(final idVecX x, final float[] b) {
 
             // solve L
             SIMDProcessor.MatX_LowerTriangularSolve(clamped, solveCache1.ToFloatPtr(), b, numClamped, clampedChangeStart);
@@ -1240,7 +1240,7 @@ public class Lcp {
             clampedChangeStart = numClamped;
         }
 
-        private void SolveClamped(idVecX x, final FloatBuffer b) {
+        private void SolveClamped(final idVecX x, final FloatBuffer b) {
             SolveClamped(x, TempDump.fbtofa(b));
         }
 

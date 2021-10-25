@@ -237,8 +237,7 @@ public class Winding {
             int[] counts = new int[3];
             float dot;
             int i, j;
-            idVec5 p1, p2;
-            idVec5 mid = new idVec5();
+            final idVec5 mid = new idVec5();
             idWinding f, b;
             int maxpts;
 
@@ -295,12 +294,12 @@ public class Winding {
             back.oSet(b = new idWinding(maxpts));
 
             for (i = 0; i < numPoints; i++) {
-                p1 = p[i];
+                final idVec5 p1 = p[i];
 
                 if (sides[i] == SIDE_ON) {
-                    f.p[f.numPoints] = p1;
+                    f.p[f.numPoints].oSet(p1);
                     f.numPoints++;
-                    b.p[b.numPoints] = p1;
+                    b.p[b.numPoints].oSet(p1);
                     b.numPoints++;
                     continue;
                 }
@@ -320,7 +319,7 @@ public class Winding {
                 }
 
                 // generate a split point
-                p2 = p[(i + 1) % numPoints];
+                final idVec5 p2 = p[(i + 1) % numPoints];
 
                 // always calculate the split going from the same side
                 // or minor epsilon issues can happen
@@ -386,7 +385,7 @@ public class Winding {
             float dot;
             int i, j;
             idVec5 p1, p2;
-            idVec5 mid = new idVec5();
+            final idVec5 mid = new idVec5();
             int maxpts;
 
 //	assert( this );
@@ -426,7 +425,7 @@ public class Winding {
 
             maxpts = numPoints + 4;        // cant use counts[0]+2 because of fp grouping errors
 
-            newPoints = new idVec5[maxpts];
+            newPoints = idVec5.generateArray(maxpts);
             newNumPoints = 0;
 
             for (i = 0; i < numPoints; i++) {
@@ -437,13 +436,13 @@ public class Winding {
                 }
 
                 if (sides[i] == SIDE_ON) {
-                    newPoints[newNumPoints] = p1;
+                    newPoints[newNumPoints].oSet(p1);
                     newNumPoints++;
                     continue;
                 }
 
                 if (sides[i] == SIDE_FRONT) {
-                    newPoints[newNumPoints] = p1;
+                    newPoints[newNumPoints].oSet(p1);
                     newNumPoints++;
                 }
 
@@ -506,7 +505,7 @@ public class Winding {
             float dot;
             int i, j;
             idVec5 p1, p2;
-            idVec5 mid = new idVec5();
+            final idVec5 mid = new idVec5();
             int maxpts;
 
 //	assert( this );
@@ -633,11 +632,8 @@ public class Winding {
         }
 
         public void ReverseSelf() {
-            idVec5 v;
-            int i;
-
-            for (i = 0; i < (numPoints >> 1); i++) {
-                v = p[i];
+            for (int i = 0; i < (numPoints >> 1); i++) {
+                final idVec5 v = new idVec5(p[i]);
                 p[i] = p[numPoints - i - 1];
                 p[numPoints - i - 1] = v;
             }
@@ -700,7 +696,7 @@ public class Winding {
             }
             if (point < numPoints - 1) {
 //		memmove(&p[point], &p[point+1], (numPoints - point - 1) * sizeof(p[0]) );
-                p[point] = new idVec5().oSet(p[point + 1]);
+                p[point] = new idVec5(p[point + 1]);
             }
             numPoints--;
         }
@@ -924,7 +920,7 @@ public class Winding {
                     if (dir.oMultiply(normal) > 0.0f) {
                         p[2] = new idVec5(point);
                     } else {
-                        p[2] = p[1];
+                        p[2] = new idVec5(p[1]);
                         p[1] = new idVec5(point);
                     }
                     numPoints++;
@@ -966,7 +962,7 @@ public class Winding {
                 return;
             }
 
-            hullPoints = new idVec5[numPoints + 1];
+            hullPoints = idVec5.generateArray(numPoints + 1);
 
             // insert the point here
             hullPoints[0] = new idVec5(point);
@@ -978,7 +974,7 @@ public class Winding {
                 if (hullSide[(j + k) % numPoints] && hullSide[(j + k + 1) % numPoints]) {
                     continue;
                 }
-                hullPoints[numHullPoints] = p[(j + k + 1) % numPoints];
+                hullPoints[numHullPoints].oSet(p[(j + k + 1) % numPoints]);
                 numHullPoints++;
             }
 
@@ -1518,9 +1514,8 @@ public class Winding {
         }
 
         protected boolean ReAllocate(int n, boolean keep) {
-            idVec5[] oldP;
+            final idVec5[] oldP = p;
 
-            oldP = p;
             n = (n + 3) & ~3;    // align up to multiple of four
             p = TempDump.allocArray(idVec5.class, n);
             if (oldP != null && keep) {
@@ -1651,8 +1646,8 @@ public class Winding {
             byte[] sides = new byte[MAX_POINTS_ON_WINDING + 4];
             float dot;
             int i, j;
-            idVec5 p1, p2;
-            idVec5 mid = new idVec5();
+            idVec5 p2;
+            final idVec5 mid = new idVec5();
             idFixedWinding out = new idFixedWinding();
 
             counts[SIDE_FRONT] = counts[SIDE_BACK] = counts[SIDE_ON] = 0;
@@ -1689,7 +1684,7 @@ public class Winding {
             back.numPoints = 0;
 
             for (i = 0; i < numPoints; i++) {
-                p1 = p[i];
+                final idVec5 p1 = p[i];
 
                 if (!out.EnsureAlloced(out.numPoints + 1, true)) {
                     return SIDE_FRONT;        // can't split -- fall back to original
@@ -1699,19 +1694,19 @@ public class Winding {
                 }
 
                 if (sides[i] == SIDE_ON) {
-                    out.p[out.numPoints] = p1;
+                    out.p[out.numPoints].oSet(p1);
                     out.numPoints++;
-                    back.p[back.numPoints] = p1;
+                    back.p[back.numPoints].oSet(p1);
                     back.numPoints++;
                     continue;
                 }
 
                 if (sides[i] == SIDE_FRONT) {
-                    out.p[out.numPoints] = p1;
+                    out.p[out.numPoints].oSet(p1);
                     out.numPoints++;
                 }
                 if (sides[i] == SIDE_BACK) {
-                    back.p[back.numPoints] = p1;
+                    back.p[back.numPoints].oSet(p1);
                     back.numPoints++;
                 }
 

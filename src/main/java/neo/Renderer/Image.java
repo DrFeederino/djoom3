@@ -2872,7 +2872,7 @@ public class Image {
         public idImage fogImage;                // increasing alpha is denser fog
         //
         public idImage[] imageHashTable = new idImage[FILE_HASH_SIZE];
-        public idList<idImage> images = new idList<>();
+        public final idList<idImage> images = new idList<>();
         //
         public boolean insideLevelLoad;                 // don't actually load images now
         public idImage noFalloffImage;                // all 255, but zero clamped

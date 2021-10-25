@@ -395,12 +395,12 @@ public class GameBustOutWindow {
 
         private static int bounceChannel = 1;
         //
-        public idList<BOEntity> entities;
+        public final idList<BOEntity> entities = new idList<>();
         private boolean ballHitCeiling;
         //
         private float ballSpeed;
         //
-        private idList<BOEntity> balls;
+        private final idList<BOEntity> balls = new idList<>();
         private int ballsInPlay;
         private int ballsRemaining;
         //
@@ -424,7 +424,7 @@ public class GameBustOutWindow {
         //
         private BOBrick paddle;
         private float paddleVelocity;
-        private idList<BOEntity> powerUps;
+        private final idList<BOEntity> powerUps = new idList<>();
         //
         //
         //

@@ -116,7 +116,7 @@ public abstract class AbstractCollisionModel_local {
         int[] edges = new int[1];           // variable sized, indexes into cm_edge_t list
         Material.idMaterial material;                // material
         int numEdges;                // number of edges
-        Plane.idPlane plane;                   // polygon plane
+        final Plane.idPlane plane;                   // polygon plane
 
         public cm_polygon_s() {
             this.bounds = new Bounds.idBounds();
@@ -129,7 +129,7 @@ public abstract class AbstractCollisionModel_local {
             this.checkcount = p.checkcount;
             this.contents = p.contents;
             this.material = p.material;
-            this.plane = new Plane.idPlane(p.plane);
+            this.plane.oSet(p.plane);
             this.numEdges = p.numEdges;
             this.edges[0] = p.edges[0];
         }
@@ -197,12 +197,14 @@ public abstract class AbstractCollisionModel_local {
         int contents;                // contents of brush
         Material.idMaterial material;                // material
         int numPlanes;               // number of bounding planes
-        Plane.idPlane[] planes = new Plane.idPlane[1];  // variable sized
+        Plane.idPlane[] planes = Plane.idPlane.generateArray(1);  // variable sized
         int primitiveNum;            // number of brush primitive
 
         public cm_brush_s() {
             this.bounds = new Bounds.idBounds();
         }
+
+
     }
 
     public static class cm_brushRef_s {
@@ -331,7 +333,7 @@ public abstract class AbstractCollisionModel_local {
 
         int[] edges = new int[MAX_TRACEMODEL_POLYEDGES];// index into cm_sraceWork_s->edges
         int numEdges;                   // number of edges
-        Plane.idPlane plane;                      // polygon plane
+        final Plane.idPlane plane;                      // polygon plane
         Bounds.idBounds rotationBounds;            // rotation bounds for this polygon
         boolean used;
 
@@ -353,8 +355,8 @@ public abstract class AbstractCollisionModel_local {
         final Vector.idVec3 end;                // end of trace
         final Vector.idVec3 extents;            // largest of abs(size[0]) and abs(size[1]) for BSP trace
         boolean getContacts;        // true if retrieving contacts
-        Plane.idPlane heartPlane1;        // polygons should be near anough the trace heart planes
-        Plane.idPlane heartPlane2;
+        final Plane.idPlane heartPlane1;        // polygons should be near anough the trace heart planes
+        final Plane.idPlane heartPlane2;
         boolean isConvex;           // true if the trace model is convex
         idMat3 matrix;             // rotates axis of rotation to the z-axis
         int maxContacts;        // max size of contact array
@@ -417,7 +419,7 @@ public abstract class AbstractCollisionModel_local {
      */
     public static class cm_procNode_s {
         int[] children = new int[2];        // negative numbers are (-1 - areaNumber), 0 = solid
-        Plane.idPlane plane;
+        final Plane.idPlane plane = new Plane.idPlane();
     }
 
 }

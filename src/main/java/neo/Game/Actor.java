@@ -398,17 +398,17 @@ public class Actor {
         //
         protected idStr animPrefix;
         //
-        protected idList<idAttachInfo> attachments = new idList<>(idAttachInfo.class);
+        protected final idList<idAttachInfo> attachments = new idList<>(idAttachInfo.class);
         //
         // blinking
         protected int blink_anim;
         protected int blink_max;
         protected int blink_min;
         protected int blink_time;
-        protected idList<copyJoints_t> copyJoints;           // copied from the body animation to the head model
+        protected final idList<copyJoints_t> copyJoints;           // copied from the body animation to the head model
         //
         protected idStrList damageGroups;         // body damage groups
-        protected idList<Float> damageScale;          // damage scale per damage gruop
+        protected final idList<Float> damageScale;          // damage scale per damage gruop
         //
         protected idAngles deltaViewAngles;      // delta angles relative to view input angles
         protected final idVec3 eyeOffset;            // offset of eye relative to physics origin
@@ -1326,7 +1326,7 @@ public class Actor {
             int i;
             idKeyValue arg;
             idStr groupname = new idStr();
-            idList<Integer/*jointHandle_t*/> jointList = new idList<>();
+            final idList<Integer/*jointHandle_t*/> jointList = new idList<>();
             int jointnum;
             float scale;
 

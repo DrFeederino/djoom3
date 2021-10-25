@@ -1908,7 +1908,7 @@ public class AAS_local {
             return foundClusterPortal;
         }
 
-        private void GetBoundsAreas_r(int nodeNum, final idBounds bounds, idList<Integer> areas) {
+        private void GetBoundsAreas_r(int nodeNum, final idBounds bounds, final idList<Integer> areas) {
             int res;
             aasNode_s node;
 

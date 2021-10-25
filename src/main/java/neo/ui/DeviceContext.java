@@ -254,7 +254,7 @@ public class DeviceContext {
             aaaa++;
         }
 
-        public int DrawText(String text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, idList<Integer> breaks /*= NULL*/, int limit /*= 0*/) {
+        public int DrawText(String text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, final idList<Integer> breaks /*= NULL*/, int limit /*= 0*/) {
             if (text == null || text.isEmpty()) {
                 return -1; // why call DrawText if text is garbage?
             }
@@ -405,7 +405,7 @@ public class DeviceContext {
             return idMath.FtoiFast(rectDraw.w / charSkip);
         }
 
-        public int DrawText(final idStr text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, idList<Integer> breaks /*= NULL*/) {
+        public int DrawText(final idStr text, float textScale, int textAlign, idVec4 color, idRectangle rectDraw, boolean wrap, int cursor /*= -1*/, boolean calcOnly /*= false*/, final idList<Integer> breaks /*= NULL*/) {
             return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, calcOnly, breaks, 0);
         }
 

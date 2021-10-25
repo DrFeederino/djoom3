@@ -656,7 +656,7 @@ public class idMat3 {
     }
 
     public idCQuat ToCQuat() {
-        idQuat q = ToQuat();
+        final idQuat q = ToQuat();
         if (q.w < 0.0f) {
             return new idCQuat(-q.x, -q.y, -q.z);
         }

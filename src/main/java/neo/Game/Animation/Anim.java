@@ -874,7 +874,7 @@ public class Anim {
             }
         }
 
-        public void GetOriginRotation(idQuat rotation, int time, int cyclecount) {
+        public void GetOriginRotation(final idQuat rotation, int time, int cyclecount) {
             frameBlend_t frame = new frameBlend_t();
             int animBits;
             int j1_ptr, j2_ptr;
@@ -908,8 +908,8 @@ public class Anim {
                 j2_ptr++;
             }
 
-            idQuat q1 = new idQuat();
-            idQuat q2 = new idQuat();
+            final idQuat q1 = new idQuat();
+            final idQuat q2 = new idQuat();
 
             switch (animBits & (ANIM_QX | ANIM_QY | ANIM_QZ)) {
                 case ANIM_QX:
@@ -1165,7 +1165,7 @@ public class Anim {
         public void FlushUnusedAnims() {
             int i;
             idMD5Anim animptr;
-            idList<idMD5Anim> removeAnims = new idList<>();
+            final idList<idMD5Anim> removeAnims = new idList<>();
 
             for (i = 0; i < animations.Num(); i++) {
                 animptr = animations.GetIndex(i);

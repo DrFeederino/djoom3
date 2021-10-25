@@ -32,7 +32,7 @@ public class snd_efxfile {
 
     static class idEFXFile {
 
-        public idList<idSoundEffect> effects;
+        public final idList<idSoundEffect> effects;
 
         public idEFXFile() {
             effects = new idList<>();

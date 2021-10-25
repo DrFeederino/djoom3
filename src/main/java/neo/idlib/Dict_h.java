@@ -655,9 +655,13 @@ public class Dict_h {
             out.Zero();
 
             String[] sscanf = s[0].split(" ");
-            out.pitch = atof(sscanf[0]);
-            out.yaw = atof(sscanf[1]);
-            out.roll = atof(sscanf[2]);
+            try {
+                out.pitch = atof(sscanf[0]);
+                out.yaw = atof(sscanf[1]);
+                out.roll = atof(sscanf[2]);
+            } catch (IndexOutOfBoundsException e) {
+            }
+
 //	sscanf( s, "%f %f %f", &out.pitch, &out.yaw, &out.roll );
             return found;
         }
@@ -845,7 +849,7 @@ public class Dict_h {
             long[] ret = new long[1];
             int i, n;
 
-            idList<idKeyValue> sorted = args;
+            final idList<idKeyValue> sorted = new idList(args);
             sorted.Sort(new KeyCompare());
             n = sorted.Num();
             CRC32_InitChecksum(ret);
@@ -883,7 +887,7 @@ public class Dict_h {
             @Override
             public void run(idCmdArgs args) throws idException {
                 int i;
-                idList<idPoolStr> keyStrings = new idList<>();
+                final idList<idPoolStr> keyStrings = new idList<>();
 
                 for (i = 0; i < globalKeys.Num(); i++) {
                     keyStrings.Append(globalKeys.oGet(i));
@@ -907,7 +911,7 @@ public class Dict_h {
             @Override
             public void run(idCmdArgs args) throws idException {
                 int i;
-                idList<idPoolStr> valueStrings = new idList<>();
+                final idList<idPoolStr> valueStrings = new idList<>();
 
                 for (i = 0; i < globalValues.Num(); i++) {
                     valueStrings.Append(globalValues.oGet(i));

@@ -325,17 +325,17 @@ public class Window {
         protected float borderSize;
         protected idWindow captureChild;        // if a child window has mouse capture
         protected int childID;            // this childs id
-        protected idList<idWindow> children = new idList<>();    // child windows
+        protected final idList<idWindow> children = new idList<>();    // child windows
         protected final idRectangle clientRect = new idRectangle();// client area
         protected idStr comment = new idStr();
         protected /*unsigned*/ char cursor;
         //
         protected idDeviceContext dc;
         //
-        protected idList<idWinVar> definedVars = new idList<>();
+        protected final idList<idWinVar> definedVars = new idList<>();
         protected final idRectangle drawRect = new idRectangle();// overall rect
-        protected idList<drawWin_t> drawWindows = new idList<>();
-        protected idList<Float> expressionRegisters = new idList<>();
+        protected final idList<drawWin_t> drawWindows = new idList<>();
+        protected final idList<Float> expressionRegisters = new idList<>();
         protected /*unsigned*/ int flags;              // visible, focus, mouseover, cursor, border, etc..
         //
         protected idWindow focusedChild;        // if a child window has the focus
@@ -354,12 +354,12 @@ public class Window {
         protected float matScalex;
         protected float matScaley;
         protected idStr name;
-        protected idList<rvNamedEvent> namedEvents = new idList<>();//  added named events
+        protected final idList<rvNamedEvent> namedEvents = new idList<>();//  added named events
         protected idWinBool noEvents = new idWinBool();
         //
         protected idWinBool noTime = new idWinBool();
         //
-        protected idList<wexpOp_t> ops = new idList<>();// evaluate to make expressionRegisters
+        protected final idList<wexpOp_t> ops = new idList<>();// evaluate to make expressionRegisters
         protected idVec2 origin = new idVec2();
         protected idWindow overChild;           // if a child window has mouse capture
         //
@@ -388,9 +388,9 @@ public class Window {
         //
         protected int timeLine; // time stamp used for various fx
         //
-        protected idList<idTimeLineEvent> timeLineEvents = new idList<>();
-        protected idList<idTransitionData> transitions = new idList<>();
-        protected idList<idWinVar> updateVars = new idList<>();
+        protected final idList<idTimeLineEvent> timeLineEvents = new idList<>();
+        protected final idList<idTransitionData> transitions = new idList<>();
+        protected final idList<idWinVar> updateVars = new idList<>();
         protected idWinBool visible = new idWinBool();
         protected float xOffset;
         protected float yOffset;

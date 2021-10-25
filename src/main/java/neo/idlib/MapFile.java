@@ -166,7 +166,7 @@ public class MapFile {
 
     public static class idMapBrush extends idMapPrimitive {
         protected int numSides;
-        protected idList<idMapBrushSide> sides;
+        protected final idList<idMapBrushSide> sides;
         //
         //
 
@@ -182,7 +182,7 @@ public class MapFile {
             int i;
             final idVec3[] planepts = idVec3.generateArray(3);
             idToken token = new idToken();
-            idList<idMapBrushSide> sides = new idList<>();
+            final idList<idMapBrushSide> sides = new idList<>();
             idMapBrushSide side;
             idDict epairs = new idDict();
 
@@ -312,7 +312,7 @@ public class MapFile {
             float[] scale = new float[2];
             final idVec3[] planepts = new idVec3[3];
             idToken token = new idToken();
-            idList<idMapBrushSide> sides = new idList<>();
+            final idList<idMapBrushSide> sides = new idList<>();
             idMapBrushSide side;
             idDict epairs = new idDict();
 
@@ -446,7 +446,7 @@ public class MapFile {
         protected int maxHeight;        // maximum height allocated for
         protected int maxWidth;                // maximum width allocated for
         protected int vertSubdivisions;
-        protected idList<idDrawVert> verts = new idList<>();    // vertices
+        protected final idList<idDrawVert> verts = new idList<>();    // vertices
         /**
          * i d S u r f a c e_-_P a t c h
          */
@@ -689,7 +689,7 @@ public class MapFile {
 
         public idDict epairs;
         //
-        protected idList<idMapPrimitive> primitives;
+        protected final idList<idMapPrimitive> primitives;
         //
         //
 
@@ -877,7 +877,7 @@ public class MapFile {
 
     public static class idMapFile {
 
-        protected idList<idMapEntity> entities;
+        protected final idList<idMapEntity> entities;
         protected long fileTime;
         protected int geometryCRC;
         protected boolean hasPrimitiveData;

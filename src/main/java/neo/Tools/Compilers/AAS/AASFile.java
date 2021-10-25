@@ -724,21 +724,21 @@ public class AASFile {
      */
     public static abstract class idAASFile {
 
-        protected idList<aasArea_s> areas;
-        protected idList<aasCluster_s> clusters;
+        protected final idList<aasArea_s> areas;
+        protected final idList<aasCluster_s> clusters;
         protected long/*unsigned int*/          crc;
-        protected idList<Integer/*aasIndex_t*/> edgeIndex;
-        protected idList<aasEdge_s> edges;
-        protected idList<Integer/*aasIndex_t*/> faceIndex;
-        protected idList<aasFace_s> faces;
+        protected final idList<Integer/*aasIndex_t*/> edgeIndex;
+        protected final idList<aasEdge_s> edges;
+        protected final idList<Integer/*aasIndex_t*/> faceIndex;
+        protected final idList<aasFace_s> faces;
         protected idStr name;
-        protected idList<aasNode_s> nodes;
+        protected final idList<aasNode_s> nodes;
         //
         protected idPlaneSet planeList;
-        protected idList<Integer/*aasIndex_t*/> portalIndex;
-        protected idList<aasPortal_s> portals;
+        protected final idList<Integer/*aasIndex_t*/> portalIndex;
+        protected final idList<aasPortal_s> portals;
         protected idAASSettings settings;
-        protected idList<idVec3/*aasVertex_t*/> vertices;
+        protected final idList<idVec3/*aasVertex_t*/> vertices;
         //
         //
 

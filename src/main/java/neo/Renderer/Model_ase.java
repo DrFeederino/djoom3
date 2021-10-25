@@ -359,7 +359,7 @@ public class Model_ase {
 
     public static class aseObject_t {
 
-        idList<aseMesh_t> frames;
+        final idList<aseMesh_t> frames;
         int materialRef;
         //
         aseMesh_t mesh;
@@ -377,8 +377,8 @@ public class Model_ase {
 
         //	ID_TIME_T					timeStamp;
         final long[] timeStamp = {1};
-        idList<aseMaterial_t> materials;
-        idList<aseObject_t> objects;
+        final idList<aseMaterial_t> materials;
+        final idList<aseObject_t> objects;
 
         public aseModel_s() {
             this.materials = new idList<>();

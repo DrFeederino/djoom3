@@ -22,7 +22,7 @@ public class JointTransform {
      */
     public static class idJointQuat {
 
-        public idQuat q;
+        public final idQuat q;
         public final idVec3 t;
 
         public idJointQuat() {

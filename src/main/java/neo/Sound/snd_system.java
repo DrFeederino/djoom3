@@ -140,7 +140,7 @@ public class snd_system {
         public boolean efxloaded;
         public float[] finalMixBuffer;                              // points inside realAccum at a 16 byte aligned boundary
         //
-        public idList<SoundFX> fxList;
+        public final idList<SoundFX> fxList = new idList<>();
         //
         public int/*dword*/[] graph;
         //

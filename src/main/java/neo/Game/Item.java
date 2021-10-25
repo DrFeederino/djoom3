@@ -840,7 +840,7 @@ public class Item {
          where <X> is an aribtrary string.
          ================
          */
-        public static void DropItems(idAnimatedEntity ent, final String type, idList<idEntity> list) {
+        public static void DropItems(idAnimatedEntity ent, final String type, final idList<idEntity> list) {
             idKeyValue kv;
             String skinName, c, jointName;
             String key, key2;

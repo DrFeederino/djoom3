@@ -214,7 +214,7 @@ public class SaveGame {
             num = w.GetNumPoints();
             file.WriteInt(num);
             for (i = 0; i < num; i++) {
-                idVec5 v = w.oGet(i);
+                final idVec5 v = new idVec5(w.oGet(i));
                 LittleRevBytes(v/*, sizeof(float), sizeof(v) / sizeof(float)*/);
                 file.Write(v/*, sizeof(v)*/);
             }
@@ -595,7 +595,7 @@ public class SaveGame {
         //
         private final idFile file;
         //
-        private idList<idClass> objects;
+        private final idList<idClass> objects = new idList();
 
         public idRestoreGame(idFile savefile) {
             file = savefile;

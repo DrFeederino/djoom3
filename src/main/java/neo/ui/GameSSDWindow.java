@@ -61,7 +61,7 @@ public class GameSSDWindow {
      ****************************************************************************
      */
     public static final int MAX_ASTEROIDS = 64;
-//    
+    //
     /*
      *****************************************************************************
      * SSDAstronaut
@@ -191,6 +191,7 @@ public class GameSSDWindow {
      */
     public static class SSDEntity {
 
+        public final idVec3 position = new idVec3();
         public int currentTime;
         //
         public boolean destroyed;
@@ -209,7 +210,6 @@ public class GameSSDWindow {
         public idStr materialName;
         public boolean noHit;
         public boolean noPlayerDamage;
-        public final idVec3 position = new idVec3();
         public float radius;
         public float rotation;
         public idVec2 size;
@@ -460,8 +460,8 @@ public class GameSSDWindow {
      */
     public static class SSDMover extends SSDEntity {
 
-        public float rotationSpeed;
         public final idVec3 speed = new idVec3();
+        public float rotationSpeed;
 //
 
         public SSDMover() {
@@ -868,12 +868,12 @@ public class GameSSDWindow {
 
         //
         protected static final SSDPoints[] pointsPool = new SSDPoints[MAX_POINTS];
-        idVec4 beginColor;
         final idVec3 beginPosition = new idVec3();
+        final idVec3 endPosition = new idVec3();
+        idVec4 beginColor;
         int beginTime;
         int distance;
         idVec4 endColor;
-        final idVec3 endPosition = new idVec3();
         int endTime;
         int length;
         // ~SSDPoints();
@@ -1022,11 +1022,11 @@ public class GameSSDWindow {
 
         //
         protected static final SSDProjectile[] projectilePool = new SSDProjectile[MAX_PROJECTILES];
-        int beginTime;
         final idVec3 dir = new idVec3();
         final idVec3 endPosition = new idVec3();
-        int endTime;
         final idVec3 speed = new idVec3();
+        int beginTime;
+        int endTime;
         // ~SSDProjectile();
 
         public SSDProjectile() {
@@ -1166,7 +1166,7 @@ public class GameSSDWindow {
         //        };
 //
         int powerupState;
-//
+        //
         int powerupType;
         // virtual ~SSDPowerup();
 
@@ -1519,8 +1519,13 @@ public class GameSSDWindow {
         static final int MAX_SOUND_CHANNEL = 8;
         //
         public static idRandom random;
-        public idList<SSDAsteroidData_t> asteroidData;
-        public idList<SSDAstronautData_t> astronautData;
+        public final idList<SSDAsteroidData_t> asteroidData = new idList<>();
+        public final idList<SSDAstronautData_t> astronautData = new idList<>();
+        public final idList<SSDEntity> entities = new idList<>();
+        public final idList<SSDLevelData_t> levelData = new idList<>();
+        public final idList<SSDPowerupData_t> powerupData = new idList<>();
+        //	~idGameSSDWindow();
+        public final idList<SSDWeaponData_t> weaponData = new idList<>();
         //WinVars used to call functions from the guis
         public idWinBool beginLevel;
         public idWinBool continueGame;
@@ -1528,15 +1533,12 @@ public class GameSSDWindow {
         public SSDCrossHair crosshair;
         //
         public int currentSound;
-        public idList<SSDEntity> entities;
         //
         //All current game data is stored in this structure (except the entity list)
         public SSDGameStats_t gameStats;
         //
         //Level Data
         public int levelCount;
-        public idList<SSDLevelData_t> levelData;
-        public idList<SSDPowerupData_t> powerupData;
         public idWinBool refreshGuiData;
         public idWinBool resetGame;
         public idBounds screenBounds;
@@ -1549,8 +1551,6 @@ public class GameSSDWindow {
         //
         //Weapon Data
         public int weaponCount;
-//	~idGameSSDWindow();
-        public idList<SSDWeaponData_t> weaponData;
 
         public idGameSSDWindow(idUserInterfaceLocal gui) {
             super(gui);
