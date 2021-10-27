@@ -1514,7 +1514,7 @@ public class Entity {
 
         public void UpdateModelTransform() {
             final idVec3 origin = new idVec3();
-            idMat3 axis = new idMat3();
+            final idMat3 axis = new idMat3();
 
             if (GetPhysicsToVisualTransform(origin, axis)) {
                 renderEntity.axis.oSet(axis.oMultiply(GetPhysics().GetAxis()));
@@ -1530,7 +1530,7 @@ public class Entity {
             idMat3 axis = new idMat3(), axistemp = new idMat3();
             final idVec3 localOrigin = new idVec3();
             final idVec3[] localAxis = idVec3.generateArray(2);
-            idPlane[] localPlane = new idPlane[2];
+            final idPlane[] localPlane = idPlane.generateArray(2);
 
             // make sure the entity has a valid model handle
             if (modelDefHandle < 0) {

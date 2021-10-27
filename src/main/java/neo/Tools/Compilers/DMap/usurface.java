@@ -384,7 +384,7 @@ public class usurface {
         if (!node.opaque && node.area >= 0) {
             mapTri_s list;
             int planeNum;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             textureVectors_t texVec = new textureVectors_t();
 
             list = WindingToTriList(w, originalTri);
@@ -552,7 +552,7 @@ public class usurface {
         }
         if (area >= 0) {
             mapTri_s newTri;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             int planeNum;
             textureVectors_t texVec = new textureVectors_t();
 

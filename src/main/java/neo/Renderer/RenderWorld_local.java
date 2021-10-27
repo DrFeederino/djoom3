@@ -102,13 +102,12 @@ public class RenderWorld_local {
         doublePortal_s doublePortal;
         int intoArea;     // area this portal leads to
         portal_s next;         // next portal of the area
-        idPlane plane;        // view must be on the positive side of the plane to cross
+        final idPlane plane = new idPlane();        // view must be on the positive side of the plane to cross
         idWinding w;            // winding points have counter clockwise ordering seen this area
 
         public portal_s() {
             intoArea = 0;
             w = new idWinding();
-            plane = new idPlane();
         }
     }
 
@@ -151,7 +150,7 @@ public class RenderWorld_local {
 
         int[] children = new int[2];    // negative numbers are (-1 - areaNumber), 0 = solid
         int commonChildrenArea;         // if all children are either solid or a single area,
-        idPlane plane = new idPlane();
+        final idPlane plane = new idPlane();
         //                              // this is the area number, else CHILDREN_HAVE_MULTIPLE_AREAS
     }
 
@@ -749,7 +748,7 @@ public class RenderWorld_local {
         }
 
         @Override
-        public void ProjectOverlay(int entityHandle, idPlane[] localTextureAxis, idMaterial material) {
+        public void ProjectOverlay(int entityHandle, final idPlane[] localTextureAxis, idMaterial material) {
 
             if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle);
@@ -2284,7 +2283,7 @@ public class RenderWorld_local {
             idRenderLightLocal ldef;
             final idWinding w;
             int i;
-            idPlane forward = new idPlane();
+            final idPlane forward = new idPlane();
 
             ldef = p.doublePortal.fogLight;
             if (NOT(ldef)) {

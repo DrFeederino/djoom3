@@ -344,10 +344,8 @@ public class Projectile {
         }
 
         public void Create(idEntity owner, final idVec3 start, final idVec3 dir) {
-//            idDict args;
             String shaderName;
             final idVec3 light_color = new idVec3();
-//            idVec3 light_offset;
             final idVec3 tmp = new idVec3();
             idMat3 axis;
 
@@ -1502,6 +1500,7 @@ public class Projectile {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             startingVelocity.Zero();
             endingVelocity.Zero();
             accelTime = 0.0f;
@@ -1659,7 +1658,7 @@ public class Projectile {
         }
 
         private final idList<beamTarget_t> beamTargets;
-        private idStr damageFreq;
+        private final idStr damageFreq;
         private int nextDamageTime;
         private renderEntity_s secondModel;
         private int/*qhandle_t*/     secondModelDefHandle;
@@ -1753,7 +1752,7 @@ public class Projectile {
                 secondModel.noShadow = true;
             }
             nextDamageTime = 0;
-            damageFreq = null;
+            damageFreq.Clear();
         }
 
         @Override

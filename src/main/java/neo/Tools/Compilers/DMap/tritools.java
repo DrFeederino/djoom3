@@ -369,7 +369,7 @@ public class tritools {
      PlaneForTri
      ==================
      */
-    static void PlaneForTri(final mapTri_s tri, idPlane plane) {
+    static void PlaneForTri(final mapTri_s tri, final idPlane plane) {
         plane.FromPoints(tri.v[0].xyz, tri.v[1].xyz, tri.v[2].xyz);
     }
 }

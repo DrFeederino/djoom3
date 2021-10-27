@@ -907,7 +907,7 @@ public class Lexer {
             return result;
         }
 
-        public boolean Parse1DMatrix(int x, idPlane p) throws idException {
+        public boolean Parse1DMatrix(int x, final idPlane p) throws idException {
             float[] m = new float[x];
             boolean result = Parse1DMatrix(x, m);
             for (int i = 0; i < x; i++) {

@@ -271,7 +271,7 @@ public class ubrush {
     static uBrush_t BrushFromBounds(final idBounds bounds) {
         uBrush_t b;
         int i;
-        idPlane plane = new idPlane();
+        final idPlane plane = new idPlane();
 
         b = new uBrush_t();//AllocBrush(6);
         c_active_brushes++;
@@ -303,7 +303,6 @@ public class ubrush {
         idWinding w;
         final idVec3 corner = new idVec3();
         float d, area, volume;
-        idPlane plane;
 
         if (NOT(brush)) {
             return 0;
@@ -329,7 +328,7 @@ public class ubrush {
             if (NOT(w)) {
                 continue;
             }
-            plane = dmapGlobals.mapPlanes.oGet(brush.sides[i].planenum);
+            final idPlane plane = dmapGlobals.mapPlanes.oGet(brush.sides[i].planenum);
             d = -plane.Distance(corner);
             area = w.GetArea();
             volume += d * area;
@@ -494,7 +493,7 @@ public class ubrush {
 
      ==================
      */
-    static int BrushMostlyOnSide(uBrush_t brush, idPlane plane) {
+    static int BrushMostlyOnSide(uBrush_t brush, final idPlane plane) {
         int i, j;
         idWinding w;
         float d, max;
@@ -538,8 +537,8 @@ public class ubrush {
         side_s s, cs;
         float d, d_front, d_back;
 
-//        front[0] = back[0] = null;
-        idPlane plane = dmapGlobals.mapPlanes.oGet(planenum);
+
+        final idPlane plane = dmapGlobals.mapPlanes.oGet(planenum);
 
         // check all points
         d_front = d_back = 0;
@@ -572,7 +571,7 @@ public class ubrush {
         // create a new winding from the split plane
         w = new idWinding(plane);
         for (i = 0; i < brush.numsides && w != null; i++) {
-            idPlane plane2 = dmapGlobals.mapPlanes.oGet(brush.sides[i].planenum ^ 1);
+            final idPlane plane2 = dmapGlobals.mapPlanes.oGet(brush.sides[i].planenum ^ 1);
             w = w.Clip(plane2, 0); // PLANESIDE_EPSILON);
         }
 

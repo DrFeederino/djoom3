@@ -69,7 +69,7 @@ public class map {
      ===========
      */
     static int FindFloatPlane(final idPlane plane, boolean[] fixedDegeneracies) {
-        idPlane p = plane;
+        final idPlane p = new idPlane(plane); // not sure! however why re-declare it?
         boolean fixed = p.FixDegeneracies(DIST_EPSILON);
         if (fixed && fixedDegeneracies != null) {
             fixedDegeneracies[0] = true;
@@ -212,11 +212,11 @@ public class map {
                 continue;
             }
             for (i = 0; i < b.numsides; i++) {
-                idPlane plane;
+                final idPlane plane = new idPlane();
 
                 s = b.sides[i];
 
-                plane = dmapGlobals.mapPlanes.oGet(s.planenum);
+                plane.oSet(dmapGlobals.mapPlanes.oGet(s.planenum));
                 plane.oPluSet(3, plane.Normal().oMultiply(ent.origin));
 
                 s.planenum = FindFloatPlane(plane);

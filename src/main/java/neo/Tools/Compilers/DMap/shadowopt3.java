@@ -651,7 +651,7 @@ public class shadowopt3 {
             }
 
             // make a plane through the line of check
-            idPlane separate = new idPlane();
+            final idPlane separate = new idPlane();
 
             final idVec3 dir = new idVec3(uniqued[check.index[1]].oMinus(uniqued[check.index[0]]));
             separate.Normal().Cross(dir, silPlane.normal);
@@ -741,10 +741,10 @@ public class shadowopt3 {
             // prepare for optimizing the sil quads on each side of the sil plane
             optimizeGroup_s[] groups = new optimizeGroup_s[2];
 //		memset( &groups, 0, sizeof( groups ) );
-            idPlane[] planes = new idPlane[2];
+            final idPlane[] planes = idPlane.generateArray(2);
             planes[0].SetNormal(sil.normal);//TODO:reinterpret cast
             planes[0].oSet(3, 0);
-            planes[1] = planes[0].oNegative();
+            planes[1].oSet(planes[0].oNegative());
             groups[0].planeNum = FindFloatPlane(planes[0]);
             groups[1].planeNum = FindFloatPlane(planes[1]);
 
@@ -916,7 +916,7 @@ public class shadowopt3 {
      ProjectUniqued
      ======================
      */
-    static void ProjectUniqued(final idVec3 projectionOrigin, idPlane projectionPlane) {
+    static void ProjectUniqued(final idVec3 projectionOrigin, final idPlane projectionPlane) {
         // calculate the projection
         idVec4[] mat = new idVec4[4];
 
@@ -959,7 +959,7 @@ public class shadowopt3 {
 
      ====================
      */
-    public static optimizedShadow_t SuperOptimizeOccluders(idVec4[] verts, final int/*glIndex_t*/[] indexes, int numIndexes, idPlane projectionPlane, final idVec3 projectionOrigin) {
+    public static optimizedShadow_t SuperOptimizeOccluders(idVec4[] verts, final int/*glIndex_t*/[] indexes, int numIndexes, final idPlane projectionPlane, final idVec3 projectionOrigin) {
 //	memset( &ret, 0, sizeof( ret ) );
         ret = new optimizedShadow_t();
 
@@ -1233,7 +1233,7 @@ public class shadowopt3 {
 
         idVec3[] edge = idVec3.generateArray(3);   // positive side is inside the triangle
         int/*glIndex_t*/[] index = new int[3];
-        idPlane plane;                              // positive side is forward for the triangle, which is away from the light
+        final idPlane plane = new idPlane();                              // positive side is forward for the triangle, which is away from the light
         int planeNum;                           // from original triangle, not calculated from the clipped verts
         idVec3[] v = idVec3.generateArray(3);
         ;

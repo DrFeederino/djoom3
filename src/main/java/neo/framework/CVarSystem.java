@@ -1234,7 +1234,7 @@ public class CVarSystem {
                     moveCVarsToDict.Set(cvar.GetName(), cvar.GetString());
                 }
             }
-            return new idDict(moveCVarsToDict);
+            return moveCVarsToDict;
         }
 //
 //public	void					RegisterInternal( idCVar cvar );

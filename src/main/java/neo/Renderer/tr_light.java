@@ -452,7 +452,7 @@ public class tr_light {
      Assumes positive sides face outward
      ===================
      */
-    public static boolean R_PointInFrustum(final idVec3 p, idPlane[] planes, int numPlanes) {
+    public static boolean R_PointInFrustum(final idVec3 p, final idPlane[] planes, int numPlanes) {
         for (int i = 0; i < numPlanes; i++) {
             float d = planes[i].Distance(p);
             if (d > 0) {
@@ -621,7 +621,7 @@ public class tr_light {
 
             // project these points to the screen and add to bounds
             for (j = 0; j < w.GetNumPoints(); j++) {
-                idPlane eye = new idPlane(), clip = new idPlane();
+                final idPlane eye = new idPlane(), clip = new idPlane();
                 final idVec3 ndc = new idVec3();
 
                 R_TransformModelToClip(w.oGet(j).ToVec3(), tr.viewDef.worldSpace.modelViewMatrix, tr.viewDef.projectionMatrix, eye, clip);
@@ -660,7 +660,7 @@ public class tr_light {
     public static idScreenRect R_CalcLightScissorRectangle(viewLight_s vLight) {
         idScreenRect r = new idScreenRect();
         srfTriangles_s tri;
-        idPlane eye = new idPlane(), clip = new idPlane();
+        final idPlane eye = new idPlane(), clip = new idPlane();
         final idVec3 ndc = new idVec3();
 
         if (vLight.lightDef.parms.pointLight) {
@@ -1033,7 +1033,7 @@ public class tr_light {
 
         // set model depth hack value
         if (def.dynamicModel != null && model.DepthHack() != 0.0f && tr.viewDef != null) {
-            idPlane eye = new idPlane(), clip = new idPlane();
+            final idPlane eye = new idPlane(), clip = new idPlane();
             final idVec3 ndc = new idVec3();
             R_TransformModelToClip(def.parms.origin, tr.viewDef.worldSpace.modelViewMatrix, tr.viewDef.projectionMatrix, eye, clip);
             R_TransformClipToDevice(clip, tr.viewDef, ndc);

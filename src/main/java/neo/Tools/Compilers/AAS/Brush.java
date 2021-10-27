@@ -87,7 +87,7 @@ public class Brush {
     static class idBrushSide {
 
         private int flags;
-        private idPlane plane;
+        private final idPlane plane = new idPlane();
         private int planeNum;
         private idWinding winding;
 
@@ -100,7 +100,7 @@ public class Brush {
 
         public idBrushSide(final idPlane plane, int planeNum) {
             this.flags = 0;
-            this.plane = plane;
+            this.plane.oSet(plane);
             this.planeNum = planeNum;
             this.winding = null;
         }
@@ -308,7 +308,7 @@ public class Brush {
 
         public boolean FromWinding(final idWinding w, final idPlane windingPlane) {
             int i, j, bestAxis;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             final idVec3 normal = new idVec3(), axialNormal = new idVec3();
 
             sides.Append(new idBrushSide(windingPlane, -1));
@@ -357,7 +357,7 @@ public class Brush {
         public boolean FromBounds(final idBounds bounds) {
             int axis, dir;
             final idVec3 normal = new idVec3();
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             for (axis = 0; axis < 3; axis++) {
                 for (dir = -1; dir <= 1; dir += 2) {
@@ -869,7 +869,7 @@ public class Brush {
         private void AddBevelsForAxialBox() {
             int axis, dir, i, j, k, l, order;
             idBrushSide side, newSide;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             final idVec3 normal = new idVec3(), vec = new idVec3();
             idWinding w, w2;
             float d, minBack;

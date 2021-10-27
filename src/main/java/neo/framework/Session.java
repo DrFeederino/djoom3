@@ -296,7 +296,7 @@ public class Session {
 
         @Override
         public void run(idCmdArgs args) throws idException {
-            sessLocal.mapSpawnData.serverInfo = cvarSystem.MoveCVarsToDict(CVAR_SERVERINFO);
+            sessLocal.mapSpawnData.serverInfo.oSet(cvarSystem.MoveCVarsToDict(CVAR_SERVERINFO));
             if (game != null && idAsyncNetwork.server.IsActive()) {
                 game.SetServerInfo(sessLocal.mapSpawnData.serverInfo);
             }

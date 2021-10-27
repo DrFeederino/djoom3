@@ -637,7 +637,7 @@ public class dmap {
         uPortal_s[] next = new uPortal_s[2];
         node_s[] nodes = new node_s[2];    // [0] = front side of plane
         node_s onnode;                  // NULL = outside box
-        idPlane plane;
+        final idPlane plane = new idPlane();
         idWinding winding;
 
         void clear() {

@@ -182,8 +182,7 @@ public class portals {
         int i, j, n;
         uPortal_s p;
         uPortal_s[] portals = new uPortal_s[6];
-        idPlane[] bplanes = new idPlane[6];
-        idPlane pl;
+        final idPlane[] bplanes = idPlane.generateArray(6);
         node_s node;
 
         node = tree.headnode;
@@ -214,7 +213,7 @@ public class portals {
                 p = AllocPortal();
                 portals[n] = p;
 
-                pl = bplanes[n] = new idPlane();//TODO:is this a pointer?
+                final idPlane pl = bplanes[n];
 //			memset (pl, 0, sizeof(*pl));
                 if (j != 0) {
                     pl.oSet(i, -1);
@@ -223,7 +222,7 @@ public class portals {
                     pl.oSet(i, 1);
                     pl.oSet(3, -bounds.oGet(j, i));
                 }
-                p.plane = pl;
+                p.plane.oSet(pl);
                 p.winding = new idWinding(pl);
                 AddPortalToNodes(p, node, tree.outside_node);
             }
@@ -261,7 +260,7 @@ public class portals {
                 w = w.Clip(plane, BASE_WINDING_EPSILON);
             } else {
                 // take back
-                idPlane back = plane.oNegative();
+                final idPlane back = new idPlane(plane.oNegative());
                 w = w.Clip(back, BASE_WINDING_EPSILON);
             }
             node = n;
@@ -288,14 +287,14 @@ public class portals {
 
         // clip the portal by all the other portals in the node
         for (p = node.portals; p != null && w != null; p = p.next[side]) {
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             if (p.nodes[0].equals(node)) {
                 side = 0;
-                plane = p.plane;
+                plane.oSet(p.plane);
             } else if (p.nodes[1] == node) {
                 side = 1;
-                plane = p.plane.oNegative();
+                plane.oSet(p.plane.oNegative());
             } else {
                 common.Error("CutNodePortals_r: mislinked portal");
                 side = 0;    // quiet a compiler warning
@@ -315,7 +314,7 @@ public class portals {
         }
 
         new_portal = AllocPortal();
-        new_portal.plane = dmapGlobals.mapPlanes.oGet(node.planenum);
+        new_portal.plane.oSet(dmapGlobals.mapPlanes.oGet(node.planenum));
         new_portal.onnode = node;
         new_portal.winding = w;
         AddPortalToNodes(new_portal, node.children[0], node.children[1]);
@@ -335,10 +334,9 @@ public class portals {
         uPortal_s p, next_portal, new_portal;
         node_s f, b, other_node;
         int side;
-        idPlane plane;
         idWinding frontwinding = new idWinding(), backwinding = new idWinding();
 
-        plane = dmapGlobals.mapPlanes.oGet(node.planenum);
+        final idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
         f = node.children[0];
         b = node.children[1];
 
@@ -519,12 +517,12 @@ public class portals {
     static boolean PlaceOccupant(node_s headnode, idVec3 origin, uEntity_t occupant) {
         node_s node;
         float d;
-        idPlane plane;
+
 
         // find the leaf to start in
         node = headnode;
         while (node.planenum != PLANENUM_LEAF) {
-            plane = dmapGlobals.mapPlanes.oGet(node.planenum);
+            final idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
             d = plane.Distance(origin);
             if (d >= 0.0f) {
                 node = node.children[0];

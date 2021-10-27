@@ -59,7 +59,7 @@ public class BrushBSP {
         private int flags;                                          // portal flags
         private final idBrushBSPPortal[] next = new idBrushBSPPortal[2]; // next portal in list for both nodes
         private final idBrushBSPNode[] nodes = new idBrushBSPNode[2];   // nodes this portal seperates
-        private idPlane plane;                                    // portal plane
+        private final idPlane plane = new idPlane();                                    // portal plane
         private int planeNum;                                 // number of plane this portal is on
         private idWinding winding;                                  // portal winding
         //
@@ -142,7 +142,7 @@ public class BrushBSP {
             }
             AddToNodes(frontNode, backNode);
 
-            plane = plane.oNegative();
+            plane.oSet(plane.oNegative());
             planeNum ^= 1;
             winding.ReverseSelf();
         }
@@ -154,14 +154,14 @@ public class BrushBSP {
             winding.Split(splitPlane, 0.1f, frontWinding, backWinding);
             if (!frontWinding.isNULL()) {
                 front.oSet(new idBrushBSPPortal());
-                front.plane = plane;
+                front.plane.oSet(plane);
                 front.planeNum = planeNum;
                 front.flags = flags;
                 front.winding = frontWinding;
             }
             if (!backWinding.isNULL()) {
                 back.oSet(new idBrushBSPPortal());
-                back.plane = plane;
+                back.plane.oSet(plane);
                 back.planeNum = planeNum;
                 back.flags = flags;
                 back.winding = backWinding;
@@ -233,7 +233,7 @@ public class BrushBSP {
         private idBrushBSPNode parent;                              // parent of this node
         // friend class idBrushBSP;
         // friend class idBrushBSPPortal;
-        private idPlane plane;                               // split plane if this is not a leaf node
+        private final idPlane plane = new idPlane();                               // split plane if this is not a leaf node
         private idBrushBSPPortal portals;                           // portals of this node
         private idBrush volume;                              // node volume
         //
@@ -481,7 +481,7 @@ public class BrushBSP {
 
             // add seperating portal
             midPortal = new idBrushBSPPortal();
-            midPortal.plane = splitPlane;
+            midPortal.plane.oSet(splitPlane);
             midPortal.planeNum = splitPlaneNum;
             midPortal.winding = mid;
             midPortal.AddToNodes(newNodes[0], newNodes[1]);
@@ -489,7 +489,7 @@ public class BrushBSP {
             // set new child nodes
             children[0] = newNodes[0];
             children[1] = newNodes[1];
-            plane = splitPlane;
+            plane.oSet(splitPlane);
 
             return true;
         }
@@ -1082,7 +1082,7 @@ public class BrushBSP {
             SetSplitterUsed(node, planeNum);
 
             // set node split plane
-            node.plane = planeList.oGet(planeNum);
+            node.plane.oSet(planeList.oGet(planeNum));
 
             // allocate children
             node.children[0] = new idBrushBSPNode();
@@ -1357,7 +1357,7 @@ public class BrushBSP {
             }
 
             newPortal = new idBrushBSPPortal();
-            newPortal.plane = node.plane;
+            newPortal.plane.oSet(node.plane);
             newPortal.winding = w;
             newPortal.AddToNodes(node.children[0], node.children[1]);
         }
@@ -1373,10 +1373,9 @@ public class BrushBSP {
             int side = 0;
             idBrushBSPPortal p, nextPortal, newPortal;
             idBrushBSPNode f, b, otherNode;
-            idPlane plane;
             idWinding frontWinding = new idWinding(), backWinding = new idWinding();
 
-            plane = node.plane;
+            final idPlane plane = node.plane;
             f = node.children[0];
             b = node.children[1];
 

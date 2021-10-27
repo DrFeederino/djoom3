@@ -266,7 +266,7 @@ public class Winding {
             //
             // if coplanar, put on the front side if the normals match
             if (0 == counts[SIDE_FRONT] && 0 == counts[SIDE_BACK]) {
-                idPlane windingPlane = new idPlane();
+                final idPlane windingPlane = new idPlane();
 
                 GetPlane(windingPlane);
                 if (windingPlane.Normal().oMultiply(plane.Normal()) > 0.0f) {
@@ -1107,7 +1107,7 @@ public class Winding {
             float d, edgedist;
             final idVec3 dir = new idVec3(), edgenormal = new idVec3();
             float area;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             if (numPoints < 3) {
                 if (print) {
@@ -1244,7 +1244,7 @@ public class Winding {
             dist.setVal(p[0].ToVec3().oMultiply(normal));
         }
 
-        public void GetPlane(idPlane plane) {
+        public void GetPlane(final idPlane plane) {
             final idVec3 v1 = new idVec3(), v2 = new idVec3();
             final idVec3 center = new idVec3();
 

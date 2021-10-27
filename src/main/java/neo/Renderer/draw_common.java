@@ -11,7 +11,6 @@ import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 import static neo.Renderer.Image.globalImages;
 import static neo.Renderer.Material.*;
@@ -55,7 +54,7 @@ public class draw_common {
      */
 
     //========================================================================
-    private static final idPlane[] fogPlanes = Stream.generate(idPlane::new).limit(4).toArray(idPlane[]::new);
+    private static final idPlane[] fogPlanes = idPlane.generateArray(4);
     /*
      ================
      RB_FinishStageTexturing
@@ -1395,7 +1394,7 @@ public class draw_common {
             if (backEnd.viewDef.numClipPlanes != 0 && surf.space != backEnd.currentSpace) {
                 GL_SelectTexture(1);
 
-                idPlane plane = new idPlane();
+                final idPlane plane = new idPlane();
 
                 R_GlobalPlaneToLocal(surf.space.modelMatrix, backEnd.viewDef.clipPlanes[0], plane);
                 plane.oPluSet(3, 0.5f);    // the notch is in the middle
@@ -1688,11 +1687,10 @@ public class draw_common {
             tri = surf.geo;
 
             if (backEnd.currentSpace != surf.space) {
-                idPlane[] lightProject = new idPlane[4];
+                final idPlane[] lightProject = idPlane.generateArray(4);
                 int i;
 
                 for (i = 0; i < 4; i++) {
-                    lightProject[i] = new idPlane();
                     R_GlobalPlaneToLocal(surf.space.modelMatrix, backEnd.vLight.lightProject[i], lightProject[i]);
                 }
 
@@ -1736,7 +1734,7 @@ public class draw_common {
         @Override
         void run(final drawSurf_s surf) {
             if (backEnd.currentSpace != surf.space) {
-                idPlane local = new idPlane();
+                final idPlane local = new idPlane();
 
                 GL_SelectTexture(0);
 

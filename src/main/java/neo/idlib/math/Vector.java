@@ -109,7 +109,7 @@ public class Vector {
         return DotProduct(a, b.ToVec3());
     }
 
-    public static float DotProduct(idPlane a, idPlane b) {
+    public static float DotProduct(final idPlane a, final idPlane b) {
         return (a.oGet(0) * b.oGet(0)
                 + a.oGet(1) * b.oGet(1)
                 + a.oGet(2) * b.oGet(2));

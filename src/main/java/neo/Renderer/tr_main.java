@@ -480,14 +480,14 @@ public class tr_main {
         out.oSet(2, DotProduct(in.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)));
     }
 
-    public static void R_GlobalPlaneToLocal(final float[] modelMatrix/*[16]*/, final idPlane in, idPlane out) {
+    public static void R_GlobalPlaneToLocal(final float[] modelMatrix/*[16]*/, final idPlane in, final idPlane out) {
         out.oSet(0, DotProduct(in.ToFloatPtr(), modelMatrix));
         out.oSet(1, DotProduct(in.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)));
         out.oSet(2, DotProduct(in.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)));
         out.oSet(3, in.oGet(3) + modelMatrix[12] * in.oGet(0) + modelMatrix[13] * in.oGet(1) + modelMatrix[14] * in.oGet(2));
     }
 
-    public static void R_LocalPlaneToGlobal(final float[] modelMatrix/*[16]*/, final idPlane in, idPlane out) {
+    public static void R_LocalPlaneToGlobal(final float[] modelMatrix/*[16]*/, final idPlane in, final idPlane out) {
         final float offset;
 
         R_LocalVectorToGlobal(modelMatrix, in.Normal(), out.Normal());
@@ -621,7 +621,7 @@ public class tr_main {
      R_TransformModelToClip
      ==========================
      */
-    public static void R_TransformModelToClip(final idVec3 src, final float[] modelMatrix, final float[] projectionMatrix, idPlane eye, idPlane dst) {
+    public static void R_TransformModelToClip(final idVec3 src, final float[] modelMatrix, final float[] projectionMatrix, final idPlane eye, final idPlane dst) {
         int i;
 
         for (i = 0; i < 4; i++) {
@@ -650,8 +650,8 @@ public class tr_main {
      */
     public static void R_GlobalToNormalizedDeviceCoordinates(final idVec3 global, final idVec3 ndc) {
         int i;
-        idPlane view = new idPlane();
-        idPlane clip = new idPlane();
+        final idPlane view = new idPlane();
+        final idPlane clip = new idPlane();
 
         // _D3XP added work on primaryView when no viewDef
         if (null == tr.viewDef) {

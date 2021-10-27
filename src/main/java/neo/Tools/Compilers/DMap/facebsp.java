@@ -32,7 +32,7 @@ public class facebsp {
         float d;
 
         while (node.planenum != PLANENUM_LEAF) {
-            idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
+            final idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
             d = plane.Distance(origin);
             if (d >= 0) {
                 node = node.children[0];
@@ -125,7 +125,7 @@ public class facebsp {
             return;
         }
 
-        idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
+        final idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
         common.Printf("#%d (%5.2f %5.2f %5.2f %5.2f)\n", node.planenum,
                 plane.oGet(0), plane.oGet(1), plane.oGet(2), plane.oGet(3));
         PrintTree_r(node.children[0], depth + 1);
@@ -171,9 +171,8 @@ public class facebsp {
         bspface_s bestSplit;
         int splits, facing, front, back;
         int side;
-        idPlane mapPlane;
         int value, bestValue;
-        idPlane plane = new idPlane();
+        final idPlane plane = new idPlane();
         int planenum;
         boolean havePortals;
         float dist;
@@ -220,7 +219,7 @@ public class facebsp {
             if (havePortals != split.portal) {
                 continue;
             }
-            mapPlane = dmapGlobals.mapPlanes.oGet(split.planenum);
+            final idPlane mapPlane = dmapGlobals.mapPlanes.oGet(split.planenum);
             splits = 0;
             facing = 0;
             front = 0;
@@ -283,7 +282,7 @@ public class facebsp {
 
         // partition the list
         node.planenum = splitPlaneNum;
-        idPlane plane = dmapGlobals.mapPlanes.oGet(splitPlaneNum);
+        final idPlane plane = dmapGlobals.mapPlanes.oGet(splitPlaneNum);
         childLists[0] = null;
         childLists[1] = null;
         for (split = list; split != null; split = next) {

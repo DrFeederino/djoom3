@@ -520,16 +520,11 @@ public class tr_local {
 //
         boolean makeClippedPlanes;
         int numPlanes;        // this is always 6 for now
-        idPlane[] planes = new idPlane[6];
+        final idPlane[] planes = idPlane.generateArray(6);
         // a projected light with a single frustum needs to make sil planes
         // from triangles that clip against side planes, but a point light
         // that has adjacent frustums doesn't need to
 
-        public shadowFrustum_t() {
-            for (int p = 0; p < planes.length; p++) {
-                planes[p] = new idPlane();
-            }
-        }
     }
 
     // areas have references to hold all the lights and entities in them
@@ -599,7 +594,7 @@ public class tr_local {
         public doublePortal_s foggedPortals;
         //
 //
-        public idPlane[] frustum = new idPlane[6];    // in global space, positive side facing out, last two are front/back
+        public final idPlane[] frustum = idPlane.generateArray(6);    // in global space, positive side facing out, last two are front/back
         public srfTriangles_s frustumTris;        // triangulated frustumWindings[]
         public idWinding[] frustumWindings = new idWinding[6];// used for culling
         //
@@ -614,7 +609,7 @@ public class tr_local {
         //
 //
         // derived information
-        public idPlane[] lightProject = new idPlane[4];
+        public final idPlane[] lightProject = idPlane.generateArray(4);
         //
         public idMaterial lightShader;            // guaranteed to be valid, even if parms.shader isn't
         //                                                      // first added, so the prelight model is not valid
@@ -790,7 +785,7 @@ public class tr_local {
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
         @Override
-        public void ProjectOverlay(idPlane[] localTextureAxis, idMaterial material) {
+        public void ProjectOverlay(final idPlane[] localTextureAxis, idMaterial material) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -821,7 +816,7 @@ public class tr_local {
         //
         // back end should NOT reference the lightDef, because it can change when running SMP
         public idRenderLightLocal lightDef;
-        public idPlane[] lightProject = new idPlane[4];        // light project used by backend
+        public final idPlane[] lightProject = idPlane.generateArray(4);        // light project used by backend
         public idMaterial lightShader;                // light shader used by backend
         public viewLight_s next;
         //
@@ -904,7 +899,7 @@ public class tr_local {
 
         //
         public int areaNum;               // -1 = not in a valid area
-        public idPlane[] clipPlanes;            // in world space, the positive side
+        public final idPlane[] clipPlanes;            // in world space, the positive side
         //
         public boolean[] connectedAreas;
         //
@@ -913,7 +908,7 @@ public class tr_local {
         public drawSurf_s[] drawSurfs;             // we don't use an idList for this, because
         //
         public float floatTime;
-        public idPlane[] frustum;
+        public final idPlane[] frustum;
         //
         public final idVec3 initialViewAreaOrigin = new idVec3();
         //

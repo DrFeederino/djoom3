@@ -4120,7 +4120,7 @@ public class FileSystem_h {
 //			delete info;
                     return null;
                 }
-                idDict dict = new idDict();
+                final idDict dict = new idDict();
                 dict.Set("path", token.toString());
                 if (!src.ReadToken(token)) {
                     src.Warning("Expected {");

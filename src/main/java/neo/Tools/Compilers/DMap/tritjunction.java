@@ -296,7 +296,7 @@ public class tritjunction {
         final idVec3 temp = new idVec3();
         float d, off;
         final idVec3 v = new idVec3();
-        idPlane plane1 = new idPlane(), plane2 = new idPlane();
+        final idPlane plane1 = new idPlane(), plane2 = new idPlane();
 
         v.oSet(hv.v);
 

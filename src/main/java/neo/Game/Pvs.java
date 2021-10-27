@@ -76,7 +76,7 @@ public class Pvs {
         boolean done;     // true if pvs is calculated for this portal
         byte[] mightSee; // used during construction
         pvsPassage_t[] passages; // passages to portals in the area this portal leads to
-        idPlane plane;    // winding plane, normal points towards the area this portal leads to
+        final idPlane plane;    // winding plane, normal points towards the area this portal leads to
         byte[] vis;      // PVS for this portal
         idWinding w;        // winding goes counter clockwise seen from the area this portal is part of
 
@@ -465,7 +465,7 @@ public class Pvs {
         public void DrawPVS(final idVec3 source, final pvsType_t type /*= PVS_NORMAL*/) {
             int i, j, k, numPoints, n, sourceArea;
             exitPortal_t portal;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             final idVec3 offset = new idVec3();
             idVec4 color;
             pvsHandle_t handle;
@@ -513,7 +513,7 @@ public class Pvs {
             int i, j, k, numPoints, n, num;
             int[] areas = new int[MAX_BOUNDS_AREAS];
             exitPortal_t portal;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             final idVec3 offset = new idVec3();
             idVec4 color;
             pvsHandle_t handle;
@@ -566,7 +566,7 @@ public class Pvs {
         public void DrawCurrentPVS(final pvsHandle_t handle, final idVec3 source) {
             int i, j, k, numPoints, n, sourceArea;
             exitPortal_t portal;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             final idVec3 offset = new idVec3();
             idVec4 color;
 
@@ -687,7 +687,7 @@ public class Pvs {
                     p.w.GetBounds(p.bounds);
                     p.w.GetPlane(p.plane);
                     // plane normal points to outside the area
-                    p.plane = p.plane.oNegative();
+                    p.plane.oSet(p.plane.oNegative());
                     // no PVS calculated for this portal yet
                     p.done = false;
 
@@ -960,12 +960,12 @@ public class Pvs {
             DestroyPassages();
         }
 
-        private void AddPassageBoundaries(final idWinding source, final idWinding pass, boolean flipClip, idPlane[] bounds, CInt numBounds, int maxBounds) {
+        private void AddPassageBoundaries(final idWinding source, final idWinding pass, boolean flipClip, final idPlane[] bounds, CInt numBounds, int maxBounds) {
             int i, j, k, l;
             final idVec3 v1 = new idVec3(), v2 = new idVec3(), normal = new idVec3();
             float d, dist;
             boolean flipTest, front;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             // check all combinations
             for (i = 0; i < source.GetNumPoints(); i++) {
@@ -1062,7 +1062,7 @@ public class Pvs {
                         gameLocal.Warning("max passage boundaries.");
                         break;
                     }
-                    bounds[numBounds.getVal()] = plane;
+                    bounds[numBounds.getVal()].oSet(plane);
                     numBounds.increment();
                     break;
                 }
@@ -1073,7 +1073,7 @@ public class Pvs {
             int i, j, l, n, front, passageMemory, byteNum, bitNum;
             CInt numBounds = new CInt();
             int[] sides = new int[MAX_PASSAGE_BOUNDS];
-            idPlane[] passageBounds = new idPlane[MAX_PASSAGE_BOUNDS];
+            final idPlane[] passageBounds = idPlane.generateArray(MAX_PASSAGE_BOUNDS);
             pvsPortal_t source, target, p;
             pvsArea_t area;
             pvsPassage_t passage;

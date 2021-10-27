@@ -339,7 +339,7 @@ public class GuiModel {
                         }
                     }
                     if (j < 3) {
-                        idPlane p = new idPlane();
+                        final idPlane p = new idPlane();
                         p.NormalY(p.NormalZ(0.0f));
                         p.NormalX(1.0f);
                         p.SetDist(min_x);

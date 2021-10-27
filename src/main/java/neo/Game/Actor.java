@@ -1046,7 +1046,7 @@ public class Actor {
         }
 
         @Override
-        public boolean GetPhysicsToVisualTransform(final idVec3 origin, idMat3 axis) {
+        public boolean GetPhysicsToVisualTransform(final idVec3 origin, final idMat3 axis) {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis);
                 return true;

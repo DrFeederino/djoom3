@@ -5748,7 +5748,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             int i, j;
             idMapBrushSide mapSide;
             idFixedWinding w = new idFixedWinding();
-            final idPlane[] planes = Stream.generate(idPlane::new).limit(mapBrush.GetNumSides()).toArray(idPlane[]::new);
+            final idPlane[] planes = idPlane.generateArray(mapBrush.GetNumSides());
             idMaterial material;
 
             for (i = 0; i < mapBrush.GetNumSides(); i++) {
@@ -5782,16 +5782,15 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             idBounds bounds = new idBounds();
             idMapBrushSide mapSide;
             cm_brush_s brush;
-            idPlane[] planes;
+            final idPlane[] planes = idPlane.generateArray(mapBrush.GetNumSides());
             idFixedWinding w = new idFixedWinding();
             idMaterial material = null;
 
             contents = 0;
             bounds.Clear();
 
-            planes = new idPlane[mapBrush.GetNumSides()];
             for (i = 0; i < mapBrush.GetNumSides(); i++) {
-                planes[i] = mapBrush.GetSide(i).GetPlane();
+                planes[i].oSet(mapBrush.GetSide(i).GetPlane());
                 planes[i].FixDegeneracies(DEGENERATE_DIST_EPSILON);
             }
 

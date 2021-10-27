@@ -255,7 +255,7 @@ public class DemoFile {
             WriteString(str);
         }
 
-        public void ReadDict(idDict dict) throws idException {
+        public void ReadDict(final idDict dict) throws idException {
             int i;
             CInt c = new CInt();
             String key, val;

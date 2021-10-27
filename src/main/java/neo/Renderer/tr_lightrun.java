@@ -195,7 +195,7 @@ public class tr_lightrun {
      This is also called by dmap during map processing.
      =====================
      */
-    public static void R_SetLightProject(idPlane[] lightProject/*[4]*/, final idVec3 origin, final idVec3 target,
+    public static void R_SetLightProject(final idPlane[] lightProject/*[4]*/, final idVec3 origin, final idVec3 target,
                                          final idVec3 rightVector, final idVec3 upVector, final idVec3 start, final idVec3 stop) {
         float dist;
         float scale;
@@ -261,7 +261,7 @@ public class tr_lightrun {
      face out of the light
      ===================
      */
-    public static void R_SetLightFrustum(final idPlane[] lightProject/*[4]*/, idPlane[] frustum/*[6]*/) {
+    public static void R_SetLightFrustum(final idPlane[] lightProject/*[4]*/, final idPlane[] frustum/*[6]*/) {
         int i;
 
         // we want the planes of s=0, s=q, t=0, and t=q
@@ -374,12 +374,12 @@ public class tr_lightrun {
         R_AxisToModelMatrix(light.parms.axis, light.parms.origin, light.modelMatrix);
 
         for (i = 0; i < 6; i++) {
-            idPlane temp = new idPlane();
+            final idPlane temp = new idPlane();
             temp.oSet(light.frustum[i]);
             R_LocalPlaneToGlobal(light.modelMatrix, temp, light.frustum[i]);
         }
         for (i = 0; i < 4; i++) {
-            idPlane temp = new idPlane();
+            final idPlane temp = new idPlane();
             temp.oSet(light.lightProject[i]);
             R_LocalPlaneToGlobal(light.modelMatrix, temp, light.lightProject[i]);
         }
@@ -462,7 +462,7 @@ public class tr_lightrun {
      Called by the editor and dmap to operate on light volumes
      ===============
      */
-    public static void R_RenderLightFrustum(final renderLight_s renderLight, idPlane[] lightFrustum/*[6]*/) {
+    public static void R_RenderLightFrustum(final renderLight_s renderLight, final idPlane[] lightFrustum/*[6]*/) {
         idRenderLightLocal fakeLight = new idRenderLightLocal();
 
 //	memset( &fakeLight, 0, sizeof( fakeLight ) );

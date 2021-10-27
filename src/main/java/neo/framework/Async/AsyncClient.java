@@ -952,7 +952,7 @@ public class AsyncClient {
                 sessLocal.mapSpawnData.userInfo[i].Clear();
             }
 
-            sessLocal.mapSpawnData.serverInfo = serverSI;
+            sessLocal.mapSpawnData.serverInfo.oSet(serverSI);
         }
 
         private void ProcessUnreliableServerMessage(final idBitMsg msg) throws idException {
@@ -1109,7 +1109,7 @@ public class AsyncClient {
                             int clientNum;
                             clientNum = msg.ReadByte();
 
-                            idDict info = sessLocal.mapSpawnData.userInfo[clientNum];
+                            final idDict info = new idDict(sessLocal.mapSpawnData.userInfo[clientNum]);
                             boolean haveBase = (msg.ReadBits(1) != 0);
 
                             if (ID_CLIENTINFO_TAGS) {

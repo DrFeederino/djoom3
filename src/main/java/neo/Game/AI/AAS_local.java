@@ -44,7 +44,7 @@ public class AAS_local {
 
     static class idAASLocal extends idAAS {
 
-        private static idPlane dummy;
+        private static final idPlane dummy = new idPlane();
         private static int lastAreaNum;
         private final idList<idRoutingObstacle> obstacleList;          // list with obstacles
         //
@@ -777,7 +777,7 @@ public class AAS_local {
         public boolean WalkPathValid(int areaNum, final idVec3 origin, int goalAreaNum, final idVec3 goalOrigin, int travelFlags, final idVec3 endPos, CInt endAreaNum) {
             int curAreaNum, lastAreaNum, lastAreaIndex;
             int[] lastAreas = new int[4];
-            idPlane pathPlane = new idPlane(), frontPlane = new idPlane(), farPlane = new idPlane();
+            final idPlane pathPlane = new idPlane(), frontPlane = new idPlane(), farPlane = new idPlane();
             idReachability reach;
             aasArea_s area;
             final idVec3 p = new idVec3(), dir = new idVec3();

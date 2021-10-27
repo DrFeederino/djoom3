@@ -488,7 +488,6 @@ public class output {
     static void WriteNode_r(node_s node) {
         int[] child = new int[2];
         int i;
-        idPlane plane;
 
         if (node.planenum == PLANENUM_LEAF) {
             // we shouldn't get here unless the entire world
@@ -505,7 +504,7 @@ public class output {
             }
         }
 
-        plane = dmapGlobals.mapPlanes.oGet(node.planenum);
+        final idPlane plane = dmapGlobals.mapPlanes.oGet(node.planenum);
 
         procFile.WriteFloatString("/* node %d */ ", node.nodeNumber);
         Write1DMatrix(procFile, 4, plane.ToFloatPtr());

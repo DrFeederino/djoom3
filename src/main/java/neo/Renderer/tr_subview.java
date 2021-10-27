@@ -74,7 +74,7 @@ public class tr_subview {
      FIXME: check for degenerate triangle?
      =============
      */
-    public static void R_PlaneForSurface(final srfTriangles_s tri, idPlane plane) {
+    public static void R_PlaneForSurface(final srfTriangles_s tri, final idPlane plane) {
         idDrawVert v1, v2, v3;
 
         v1 = tri.verts[tri.indexes[0]];
@@ -99,7 +99,7 @@ public class tr_subview {
     public static boolean R_PreciseCullSurface(final drawSurf_s drawSurf, idBounds ndcBounds) {
         final srfTriangles_s tri;
         int numTriangles;
-        idPlane clip = new idPlane(), eye = new idPlane();
+        final idPlane clip = new idPlane(), eye = new idPlane();
         int i, j;
         int pointOr;
         int pointAnd;
@@ -203,7 +203,7 @@ public class tr_subview {
     public static viewDef_s R_MirrorViewBySurface(drawSurf_s drawSurf) {
         viewDef_s parms;
         orientation_t surface = new orientation_t(), camera = new orientation_t();
-        idPlane originalPlane = new idPlane(), plane = new idPlane();
+        final idPlane originalPlane = new idPlane(), plane = new idPlane();
 
         // copy the viewport size from the original
         parms = new viewDef_s(tr.viewDef);//        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));

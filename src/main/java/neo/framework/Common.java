@@ -953,7 +953,7 @@ public class Common {
         }
 
         @Override
-        public void InitTool(int toolFlag_t, idDict dict) {
+        public void InitTool(int toolFlag_t, final idDict dict) {
             if (ID_ALLOW_TOOLS) {
                 if ((toolFlag_t & EDITOR_SOUND) != 0) {
                     SoundEditorInit(dict);

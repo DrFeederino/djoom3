@@ -618,13 +618,7 @@ public class tr_trisurf {
      =================
      */
     public static void R_AllocStaticTriSurfPlanes(srfTriangles_s tri, int numIndexes) {
-//        if (tri.facePlanes != null) {
-//            triPlaneAllocator.Free(tri.facePlanes);
-//        }
-        tri.facePlanes = new idPlane[numIndexes / 3];//triPlaneAllocator.Alloc(numIndexes / 3);
-        for (int a = 0; a < tri.facePlanes.length; a++) {
-            tri.facePlanes[a] = new idPlane();
-        }
+        tri.facePlanes = idPlane.generateArray(numIndexes / 3);//triPlaneAllocator.Alloc(numIndexes / 3);
     }
 
     /*
@@ -1005,7 +999,7 @@ public class tr_trisurf {
         if (omitCoplanarEdges) {
             for (i = 0; i < numSilEdges; i++) {
                 int i1, i2, i3;
-                idPlane plane = new idPlane();
+                final idPlane plane = new idPlane();
                 int base;
                 int j;
                 float d;
@@ -1504,7 +1498,7 @@ public class tr_trisurf {
         if (true) {
 
             if (null == planes) {
-                planes = Stream.generate(idPlane::new).limit(tri.numIndexes / 3).toArray(idPlane[]::new);
+                planes = idPlane.generateArray(tri.numIndexes / 3);
             }
 
             SIMDProcessor.DeriveTangents(planes, tri.verts, tri.numVerts, tri.indexes, tri.numIndexes);

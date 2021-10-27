@@ -931,7 +931,7 @@ public class AASFile_local {
                 return false;
             }
             for (int i = 0; i < numPlanes; i++) {
-                idPlane plane = new idPlane();
+                final idPlane plane = new idPlane();
                 idVec4 vec = new idVec4();
                 src.ParseInt();
                 if (!src.Parse1DMatrix(4, vec)) {

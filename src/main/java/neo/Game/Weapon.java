@@ -1945,9 +1945,9 @@ public class Weapon {
             localAxis.oGet(0).oMulSet(1.0f / size);
             localAxis.oGet(1).oMulSet(1.0f / size);
 
-            idPlane[] localPlane = new idPlane[2];
+            final idPlane[] localPlane = idPlane.generateArray(2);
 
-            localPlane[0].oSet(localAxis.oGet(0));//TODO:check what init value is you lazy arse.
+            localPlane[0].oSet(localAxis.oGet(0));
             localPlane[0].oSet(3, -(localOrigin.oMultiply(localAxis.oGet(0))) + 0.5f);
 
             localPlane[1].oSet(localAxis.oGet(1));
@@ -2562,7 +2562,7 @@ public class Weapon {
             float spread = _spread.value;
             float dmgPower = _dmgPower.value;
             idProjectile proj;
-            idEntity[] ent = {null};
+            idEntity[] ent = new idEntity[1];
             int i;
             final idVec3 dir = new idVec3();
             float ang;
@@ -2686,7 +2686,7 @@ public class Weapon {
                         gameLocal.SpawnEntityDef(projectileDict, ent, false);
                     }
 
-                    if (null == ent[0] || !(ent[0] instanceof idProjectile)) {
+                    if (null == ent || !(ent[0] instanceof idProjectile)) {
                         final String projectileName = weaponDef.dict.GetString("def_projectile");
                         idGameLocal.Error("'%s' is not an idProjectile", projectileName);
                     }

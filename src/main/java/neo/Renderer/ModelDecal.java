@@ -19,7 +19,6 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec5;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 import static neo.Renderer.VertexCache.vertexCache;
 import static neo.Renderer.tr_light.R_AddDrawSurf;
@@ -52,16 +51,16 @@ public class ModelDecal {
 
     static class decalProjectionInfo_s {
 
-        idPlane[] boundingPlanes = Stream.generate(idPlane::new).limit(6).toArray(idPlane[]::new);
+        final idPlane[] boundingPlanes = idPlane.generateArray(6);
         float fadeDepth;
-        idPlane[] fadePlanes = Stream.generate(idPlane::new).limit(2).toArray(idPlane[]::new);
+        final idPlane[] fadePlanes = idPlane.generateArray(2);
         boolean force;
         idMaterial material = new idMaterial();
         boolean parallel;
         idBounds projectionBounds = new idBounds();
         final idVec3 projectionOrigin = new idVec3();
         int startTime;
-        idPlane[] textureAxis = Stream.generate(idPlane::new).limit(2).toArray(idPlane[]::new);
+        final idPlane[] textureAxis = idPlane.generateArray(2);
     }
 
     static class idRenderModelDecal {
@@ -116,7 +115,7 @@ public class ModelDecal {
             info.force = false;
 
             // get the winding plane and the depth of the projection volume
-            idPlane windingPlane = new idPlane();
+            final idPlane windingPlane = new idPlane();
             winding.GetPlane(windingPlane);
             float depth = windingPlane.Distance(projectionOrigin);
 
@@ -141,14 +140,14 @@ public class ModelDecal {
                     info.boundingPlanes[i].FromPoints(projectionOrigin, winding.oGet(i).ToVec3(), winding.oGet((i + 1) % winding.GetNumPoints()).ToVec3());
                 }
             }
-            info.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 2] = windingPlane;
+            info.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 2].oSet(windingPlane);
             info.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 2].oMinSet(3, depth);
-            info.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 1] = windingPlane.oNegative();
+            info.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 1].oSet(windingPlane.oNegative());
 
             // fades will be from these plane
-            info.fadePlanes[0] = windingPlane;
+            info.fadePlanes[0].oSet(windingPlane);
             info.fadePlanes[0].oMinSet(3, fadeDepth);
-            info.fadePlanes[1] = windingPlane.oNegative();
+            info.fadePlanes[1].oSet(windingPlane.oNegative());
             info.fadePlanes[1].oPluSet(3, depth - fadeDepth);
 
             // calculate the texture vectors for the winding

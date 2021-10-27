@@ -791,7 +791,7 @@ public class Surface {
 
         public boolean IsPolytope(final float epsilon) {
             int i, j;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             if (!IsClosed()) {
                 return false;
@@ -904,7 +904,7 @@ public class Surface {
             CFloat s = new CFloat();
             byte[] sidedness;
             idPluecker rayPl = new idPluecker(), pl = new idPluecker();
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             sidedness = new byte[edges.Num()];
             scale.setVal(idMath.INFINITY);

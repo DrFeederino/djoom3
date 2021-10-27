@@ -654,7 +654,7 @@ public class Frustum {
             CFloat min = new CFloat(), max = new CFloat();
             final idVec3[] localPoints = idVec3.generateArray(winding.GetNumPoints()), indexPoints = idVec3.generateArray(8), cornerVecs = idVec3.generateArray(4);
             idMat3 transpose;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             pointCull = new int[winding.GetNumPoints()];
 
@@ -974,7 +974,7 @@ public class Frustum {
          planes point outwards
          ============
          */
-        public void ToPlanes(idPlane[] planes) {            // planes point outwards
+        public void ToPlanes(final idPlane[] planes) {            // planes point outwards
             int i;
             final idVec3[] scaled = idVec3.generateArray(2);
             final idVec3[] points = idVec3.generateArray(4);
@@ -1337,7 +1337,7 @@ public class Frustum {
             CFloat scale = new CFloat();
             final idVec3[] localPoints = idVec3.generateArray(winding.GetNumPoints());
             idMat3 transpose, scaled = new idMat3();
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
 
             projectionBounds.Clear();
 

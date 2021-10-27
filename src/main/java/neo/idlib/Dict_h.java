@@ -596,12 +596,10 @@ public class Dict_h {
             out.Zero();
 
             String[] sscanf = s[0].split(" ");
-            if (sscanf.length > 2) {
-                out.x = atof(sscanf[0]);
-                out.y = atof(sscanf[1]);
-                out.z = atof(sscanf[2]);
+            for (int i = 0; i < sscanf.length; i++) {
+                out.oSet(i, atof(sscanf[i]));
             }
-//	sscanf( s, "%f %f %f", &out.x, &out.y, &out.z );
+
             return found;
         }
 
@@ -617,9 +615,9 @@ public class Dict_h {
             out.Zero();
 
             String[] sscanf = s[0].split(" ");
-            out.x = atof(sscanf[0]);
-            out.y = atof(sscanf[1]);
-//	sscanf( s, "%f %f", &out.x, &out.y );
+            for (int i = 0; i < sscanf.length; i++) {
+                out.oSet(i, atof(sscanf[i]));
+            }
             return found;
         }
 
@@ -635,11 +633,10 @@ public class Dict_h {
             out.Zero();
 
             String[] sscanf = s[0].split(" ");
-            out.x = atof(sscanf[0]);
-            out.y = atof(sscanf[1]);
-            out.z = atof(sscanf[2]);
-            out.w = atof(sscanf[3]);
-//	sscanf( s, "%f %f %f", &out.x, &out.y, &out.z , &out.w);
+            for (int i = 0; i < sscanf.length; i++) {
+                out.oSet(i, atof(sscanf[i]));
+            }
+
             return found;
         }
 
@@ -655,18 +652,14 @@ public class Dict_h {
             out.Zero();
 
             String[] sscanf = s[0].split(" ");
-            try {
-                out.pitch = atof(sscanf[0]);
-                out.yaw = atof(sscanf[1]);
-                out.roll = atof(sscanf[2]);
-            } catch (IndexOutOfBoundsException e) {
+            for (int i = 0; i < sscanf.length; i++) {
+                out.oSet(i, atof(sscanf[i]));
             }
 
-//	sscanf( s, "%f %f %f", &out.pitch, &out.yaw, &out.roll );
             return found;
         }
 
-        public boolean GetMatrix(final String key, String defaultString, idMat3 out) throws idException {
+        public boolean GetMatrix(final String key, String defaultString, final idMat3 out) throws idException {
             boolean found;
             String[] s = new String[1];
 
@@ -678,16 +671,12 @@ public class Dict_h {
             out.Zero();
 
             String[] sscanf = s[0].split(" ");
-            out.oGet(0).x = atof(sscanf[0]);
-            out.oGet(0).y = atof(sscanf[1]);
-            out.oGet(0).z = atof(sscanf[2]);
-            out.oGet(1).x = atof(sscanf[3]);
-            out.oGet(1).y = atof(sscanf[4]);
-            out.oGet(1).z = atof(sscanf[5]);
-            out.oGet(2).x = atof(sscanf[6]);
-            out.oGet(2).y = atof(sscanf[7]);
-            out.oGet(2).z = atof(sscanf[8]);
-//	sscanf( s, "%f %f %f %f %f %f %f %f %f", &out[0].x, &out[0].y, &out[0].z, &out[1].x, &out[1].y, &out[1].z, &out[2].x, &out[2].y, &out[2].z );
+            int halfSize = (int) Math.sqrt(sscanf.length);
+            for (int i = 0, index = 0; i < halfSize; i++) {
+                for (int j = 0; j < halfSize; j++) {
+                    out.oSet(i, j, atof(sscanf[index++]));
+                }
+            }
             return found;
         }
 

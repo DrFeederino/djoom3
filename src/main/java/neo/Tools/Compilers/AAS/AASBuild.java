@@ -592,7 +592,7 @@ public class AASBuild {
             float dot;
             int v1, v2, v3, v4;
             idFixedWinding w = new idFixedWinding();
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             final idVec3 d1 = new idVec3(), d2 = new idVec3();
             idBrush brush;
             idSurface_Patch mesh;
@@ -860,7 +860,7 @@ public class AASBuild {
             idBrushBSPPortal p1, p2;
             idWinding w1, w2;
             final idVec3 normal = new idVec3();
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             idPlaneSet planeList = new idPlaneSet();
             float d, min, max;
             int[] splitterOrder;

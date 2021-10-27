@@ -500,7 +500,7 @@ public class BrittleFracture {
             idVec2[] st = idVec2.generateArray(MAX_POINTS_ON_WINDING);
             final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3(), axisTemp = new idMat3();
-            idPlane[] textureAxis = new idPlane[2];
+            final idPlane[] textureAxis = idPlane.generateArray(2);
 
             if (gameLocal.isServer) {
                 idBitMsg msg = new idBitMsg();
@@ -646,7 +646,7 @@ public class BrittleFracture {
             srfTriangles_s tris, decalTris;
             modelSurface_s surface;
             idDrawVert v;
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             idMat3 tangents;
 
             // this may be triggered by a model trace or other non-view related source,
@@ -1029,12 +1029,12 @@ public class BrittleFracture {
             physicsObj.SetContents(CONTENTS_RENDERMODEL | CONTENTS_TRIGGER);
         }
 
-        private void Fracture_r(idFixedWinding w) {
+        private void Fracture_r(final idFixedWinding w) {
             int i, j, bestPlane;
             float a, c, s, dist, bestDist;
             final idVec3 origin = new idVec3();
-            idPlane windingPlane = new idPlane();
-            idPlane[] splitPlanes = new idPlane[2];
+            final idPlane windingPlane = new idPlane();
+            final idPlane[] splitPlanes = idPlane.generateArray(2);
             idMat3 axis = new idMat3(), axistemp = new idMat3();
             idFixedWinding back = new idFixedWinding();
             idTraceModel trm = new idTraceModel();
@@ -1137,7 +1137,7 @@ public class BrittleFracture {
             int i, j, k, l;
             final idVec3 p1 = new idVec3(), p2 = new idVec3(), dir = new idVec3();
             idMat3 axis;
-            idPlane[] plane = new idPlane[4];
+            final idPlane[] plane = idPlane.generateArray(4);
 
             for (i = 0; i < shards.Num(); i++) {
 

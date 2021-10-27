@@ -112,9 +112,9 @@ public class MapFile {
 //	friend class idMapBrush;
 
         protected final idVec3 origin;
+        protected final idPlane plane;
         protected final idVec3[] texMat = idVec3.generateArray(2);
         protected idStr material;
-        protected idPlane plane;
         //
         //
 
@@ -137,7 +137,7 @@ public class MapFile {
         }
 
         public void SetPlane(final idPlane p) {
-            plane = p;
+            plane.oSet(p);
         }
 
         public void SetTextureMatrix(final idVec3[] mat) {
@@ -165,8 +165,8 @@ public class MapFile {
     }
 
     public static class idMapBrush extends idMapPrimitive {
-        protected int numSides;
         protected final idList<idMapBrushSide> sides;
+        protected int numSides;
         //
         //
 
@@ -436,6 +436,7 @@ public class MapFile {
 
     public static class idMapPatch extends idMapPrimitive {
 
+        protected final idList<idDrawVert> verts = new idList<>();    // vertices
         protected boolean expanded;        // true if vertices are spaced out
         protected boolean explicitSubdivisions;
         protected int height;            // height of patch
@@ -446,7 +447,6 @@ public class MapFile {
         protected int maxHeight;        // maximum height allocated for
         protected int maxWidth;                // maximum width allocated for
         protected int vertSubdivisions;
-        protected final idList<idDrawVert> verts = new idList<>();    // vertices
         /**
          * i d S u r f a c e_-_P a t c h
          */
@@ -687,9 +687,9 @@ public class MapFile {
 //
 //
 
-        public idDict epairs;
         //
         protected final idList<idMapPrimitive> primitives;
+        public idDict epairs;
         //
         //
 

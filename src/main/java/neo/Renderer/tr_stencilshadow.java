@@ -1069,7 +1069,7 @@ public class tr_stencilshadow {
                     final idVec3 p1 = corners[faceCorners[side][0]];
                     final idVec3 p2 = corners[faceCorners[side][1]];
                     final idVec3 p3 = corners[faceCorners[side][2]];
-                    idPlane backPlane = new idPlane();
+                    final idPlane backPlane = new idPlane();
 
                     // plane will have positive side inward
                     backPlane.FromPoints(p1, p2, p3);
@@ -1095,7 +1095,7 @@ public class tr_stencilshadow {
                         // see if we should use an adjacent plane instead
                         if (centerOutside) {
                             final idVec3 p6 = corners[faceEdgeAdjacent[side][edge]];
-                            idPlane sidePlane = new idPlane();
+                            final idPlane sidePlane = new idPlane();
 
                             sidePlane.FromPoints(p5, p4, p6);
                             d = sidePlane.Distance(light.globalLightOrigin);
@@ -1123,7 +1123,7 @@ public class tr_stencilshadow {
         // many projected lights that are faking area lights will have their
         // origin behind solid surfaces.
         for (i = 0; i < 6; i++) {
-            idPlane plane = frust.planes[i];
+            final idPlane plane = frust.planes[i];
 
             plane.SetNormal(light.frustum[i].Normal().oNegative());
             plane.SetDist(-light.frustum[i].Dist());

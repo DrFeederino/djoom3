@@ -3209,9 +3209,9 @@ public class Game_local {
             String error = "";
             String[] name = new String[1];
 
-            if (ent != null) {
-                ent[0] = null;
-            }
+//            if (ent != null) {
+//                ent[0] = null;
+//            }
 
             spawnArgs.oSet(args);
 
@@ -3245,7 +3245,7 @@ public class Game_local {
                 obj.spawnArgs.oSet(args);
                 obj.Spawn();
 
-                if (ent != null) {// && obj instanceof idEntity.class)) {
+                if (ent != null && obj instanceof idEntity) {
                     ent[0] = obj;
                 }
 
@@ -4093,7 +4093,7 @@ public class Game_local {
 
         public void BloodSplat(final idVec3 origin, final idVec3 dir, float size, final String material) {
             float halfSize = size * 0.5f;
-            idVec3[] verts = {new idVec3(0.0f, +halfSize, +halfSize),
+            final idVec3[] verts = {new idVec3(0.0f, +halfSize, +halfSize),
                     new idVec3(0.0f, +halfSize, -halfSize),
                     new idVec3(0.0f, -halfSize, -halfSize),
                     new idVec3(0.0f, -halfSize, +halfSize)};

@@ -542,7 +542,7 @@ public class tr_deform {
     public static void R_FlareDeform(drawSurf_s surf) {
         final srfTriangles_s tri;
         srfTriangles_s newTri;
-        idPlane plane = new idPlane();
+        final idPlane plane = new idPlane();
         float dot;
         final idVec3 localViewer = new idVec3();
         int j;

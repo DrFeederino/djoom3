@@ -1214,7 +1214,7 @@ public class AsyncServer {
             badAddress.type = NA_BAD;
             clients[clientNum].channel.Init(badAddress, serverId);
             clients[clientNum].clientState = SCS_INGAME;
-            sessLocal.mapSpawnData.userInfo[clientNum] = cvarSystem.MoveCVarsToDict(CVAR_USERINFO);
+            sessLocal.mapSpawnData.userInfo[clientNum].oSet(cvarSystem.MoveCVarsToDict(CVAR_USERINFO));
         }
 
         private void BeginLocalClient() {
@@ -1398,7 +1398,7 @@ public class AsyncServer {
                 }
             }
 
-            sessLocal.mapSpawnData.syncedCVars = new idDict(cvars);
+            sessLocal.mapSpawnData.syncedCVars.oSet(cvars);
         }
 
         private void SendSyncedCvarsToClient(int clientNum, final idDict cvars) {

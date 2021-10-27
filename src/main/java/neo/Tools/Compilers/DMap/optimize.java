@@ -1158,7 +1158,7 @@ public class optimize {
             tri.v[1] = optTri.v[1].v;
             tri.v[2] = optTri.v[2].v;
 
-            idPlane plane = new idPlane();
+            final idPlane plane = new idPlane();
             PlaneForTri(tri, plane);
             if (plane.Normal().oMultiply(dmapGlobals.mapPlanes.oGet(island.group.planeNum).Normal()) <= 0) {
                 // this can happen reasonably when a triangle is nearly degenerate in

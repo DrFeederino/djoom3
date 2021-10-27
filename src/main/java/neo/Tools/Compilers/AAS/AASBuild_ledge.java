@@ -28,7 +28,7 @@ public class AASBuild_ledge {
         public int numExpandedPlanes;
         public int numPlanes;
         public int numSplitPlanes;
-        public idPlane[] planes = new idPlane[8];
+        public final idPlane[] planes = idPlane.generateArray(8);
         public final idVec3 start = new idVec3();
         //
         //

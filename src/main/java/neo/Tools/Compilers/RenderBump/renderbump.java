@@ -394,7 +394,7 @@ public class renderbump {
         int j;
         float dist;
         final idVec3[] v = idVec3.generateArray(3);
-        idPlane plane;
+        final idPlane plane = new idPlane();
         final idVec3 edge = new idVec3();
         float d;
         idVec3[] dir = idVec3.generateArray(3);
@@ -406,7 +406,7 @@ public class renderbump {
         v[1].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz);
         v[2].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz);
 
-        plane = highMesh.facePlanes[faceNum];
+        plane.oSet(highMesh.facePlanes[faceNum]);
 
         // only test against planes facing the same direction as our normal
         d = plane.Normal().oMultiply(normal);
@@ -1529,7 +1529,7 @@ public class renderbump {
                             // or smooth shade from the vertex normals
                             for (j = 0; j < mesh.numIndexes; j += 3) {
                                 if (flat) {
-                                    idPlane plane = new idPlane();
+                                    final idPlane plane = new idPlane();
                                     final idVec3 a2 = new idVec3(), b2 = new idVec3(), c2 = new idVec3();
                                     int v1, v2, v3;
 

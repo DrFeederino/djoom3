@@ -98,7 +98,7 @@ public class tr_guisurf {
         axis[1].oSet(1, (d0[3] * d1[1] - d0[1] * d1[3]) * inva);
         axis[1].oSet(2, (d0[3] * d1[2] - d0[2] * d1[3]) * inva);
 
-        idPlane plane = new idPlane();
+        final idPlane plane = new idPlane();
         plane.FromPoints(a.xyz, b.xyz, c.xyz);
         axis[2].oSet(0, plane.oGet(0));
         axis[2].oSet(1, plane.oGet(1));

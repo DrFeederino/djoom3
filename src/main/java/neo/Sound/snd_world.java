@@ -1947,7 +1947,7 @@ public class snd_world {
 // #if 1
                 final idVec3 source = new idVec3();
 
-                idPlane pl = new idPlane();
+                final idPlane pl = new idPlane();
                 re.w.GetPlane(pl);
 
                 CFloat scale = new CFloat();

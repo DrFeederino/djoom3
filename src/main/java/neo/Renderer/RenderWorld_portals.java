@@ -4,8 +4,6 @@ import neo.Renderer.RenderWorld_local.portal_s;
 import neo.Renderer.tr_local.idScreenRect;
 import neo.idlib.math.Plane.idPlane;
 
-import java.util.stream.Stream;
-
 /**
  *
  */
@@ -31,7 +29,7 @@ public class RenderWorld_portals {
         //
         int numPortalPlanes;
         portal_s p;
-        idPlane[] portalPlanes = Stream.generate(idPlane::new).limit(MAX_PORTAL_PLANES + 1).toArray(idPlane[]::new);
+        final idPlane[] portalPlanes = idPlane.generateArray(MAX_PORTAL_PLANES + 1);
         //
         idScreenRect rect;
         // positive side is outside the visible frustum
