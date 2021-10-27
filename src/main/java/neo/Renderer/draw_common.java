@@ -383,7 +383,7 @@ public class draw_common {
      to force the alpha test to fail when behind that clip plane
      =====================
      */
-    public static void RB_STD_FillDepthBuffer(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_STD_FillDepthBuffer(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         // if we are just doing 2D rendering, no need to fill the depth buffer
         if (NOT(backEnd.viewDef.viewEntitys)) {
             return;
@@ -824,7 +824,7 @@ public class draw_common {
      Draw non-light dependent passes
      =====================
      */
-    public static int RB_STD_DrawShaderPasses(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static int RB_STD_DrawShaderPasses(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i;
 
         // only obey skipAmbient if we are rendering a view

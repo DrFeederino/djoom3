@@ -505,18 +505,7 @@ public class dmap {
     }
 
     static class textureVectors_t {
-
-        idVec4[] v = new idVec4[2];    // the offset value will always be in the 0.0 to 1.0 range
-
-        public textureVectors_t(textureVectors_t val) {
-            if (val != null) {
-                v[0] = new idVec4(val.v[0]);
-                v[1] = new idVec4(val.v[1]);
-            }
-        }
-
-        public textureVectors_t() {
-        }
+        idVec4[] v = idVec4.generateArray(2);    // the offset value will always be in the 0.0 to 1.0 range
     }
 
     static class side_s {

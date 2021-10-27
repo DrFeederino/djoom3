@@ -541,6 +541,8 @@ public class Class {
                     return new Mover.idPlat();
                 case "idSoulCubeMissile":
                     return new Projectile.idSoulCubeMissile();
+                case "idAnimatedEntity":
+                    return new Entity.idAnimatedEntity();
                 default:
                     return null;
             }

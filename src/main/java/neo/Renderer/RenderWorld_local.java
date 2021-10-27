@@ -6,7 +6,6 @@ import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
 import neo.Renderer.Model.idRenderModel;
 import neo.Renderer.Model.modelSurface_s;
-import neo.Renderer.Model.shadowCache_s;
 import neo.Renderer.Model.srfTriangles_s;
 import neo.Renderer.ModelDecal.decalProjectionInfo_s;
 import neo.Renderer.ModelDecal.idRenderModelDecal;
@@ -1759,12 +1758,11 @@ public class RenderWorld_local {
 
             R_AllocStaticTriSurfShadowVerts(tri, tri.numVerts);
             tri.bounds.Clear();
-            tri.shadowVertexes = new Model.shadowCache_s[tri.numVerts];
+            tri.shadowVertexes = Model.shadowCache_s.generateArray(tri.numVerts);
             for (j = 0; j < tri.numVerts; j++) {
                 float[] vec = new float[8];
 
                 src.Parse1DMatrix(3, vec);
-                tri.shadowVertexes[j] = new shadowCache_s();
                 tri.shadowVertexes[j].xyz.oSet(0, vec[0]);
                 tri.shadowVertexes[j].xyz.oSet(1, vec[1]);
                 tri.shadowVertexes[j].xyz.oSet(2, vec[2]);

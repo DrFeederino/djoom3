@@ -340,7 +340,7 @@ public class tr_rendertools {
             }
         }
 
-        drawSurf_s[] newDrawSurfs = new drawSurf_s[numDrawSurfs + interactions];// R_FrameAlloc(numDrawSurfs + interactions);
+        drawSurf_s[] newDrawSurfs = drawSurf_s.generateArray(numDrawSurfs + interactions);// R_FrameAlloc(numDrawSurfs + interactions);
 
         for (i = 0; i < numDrawSurfs; i++) {
             surf = drawSurfs[i];
@@ -741,7 +741,7 @@ public class tr_rendertools {
      Debugging tool
      =====================
      */
-    public static void RB_ShowTris(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowTris(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         if (0 == r_showTris.GetInteger()) {
             return;
         }
@@ -789,7 +789,7 @@ public class tr_rendertools {
      Debugging tool
      =====================
      */
-    public static void RB_ShowSurfaceInfo(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowSurfaceInfo(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         modelTrace_s mt = new modelTrace_s();
         final idVec3 start = new idVec3(), end = new idVec3();
 
@@ -911,7 +911,7 @@ public class tr_rendertools {
      green if they have a negative texture area, or blue if degenerate area
      =====================
      */
-    public static void RB_ShowTexturePolarity(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowTexturePolarity(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -980,7 +980,7 @@ public class tr_rendertools {
      Shade materials that are using unsmoothed tangents
      =====================
      */
-    public static void RB_ShowUnsmoothedTangents(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowUnsmoothedTangents(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -1035,7 +1035,7 @@ public class tr_rendertools {
      3 = normal
      =====================
      */
-    public static void RB_ShowTangentSpace(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowTangentSpace(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -1095,7 +1095,7 @@ public class tr_rendertools {
      Draw each triangle with the solid vertex colors
      =====================
      */
-    public static void RB_ShowVertexColor(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowVertexColor(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -1140,7 +1140,7 @@ public class tr_rendertools {
      Debugging tool
      =====================
      */
-    public static void RB_ShowNormals(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowNormals(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         final idVec3 end = new idVec3();
@@ -1234,7 +1234,7 @@ public class tr_rendertools {
      Debugging tool
      =====================
      */
-    public static void RB_AltShowNormals(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_AltShowNormals(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j, k;
         drawSurf_s drawSurf;
         final idVec3 end = new idVec3();
@@ -1309,7 +1309,7 @@ public class tr_rendertools {
      Draw texture vectors in the center of each triangle
      =====================
      */
-    public static void RB_ShowTextureVectors(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowTextureVectors(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -1408,7 +1408,7 @@ public class tr_rendertools {
      Draw lines from each vertex to the dominant triangle center
      =====================
      */
-    public static void RB_ShowDominantTris(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowDominantTris(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -1468,7 +1468,7 @@ public class tr_rendertools {
      Debugging tool
      =====================
      */
-    public static void RB_ShowEdges(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowEdges(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i, j, k, m, n, o;
         drawSurf_s drawSurf;
         srfTriangles_s tri;
@@ -2324,7 +2324,7 @@ public class tr_rendertools {
      RB_RenderDebugTools
      =================
      */
-    public static void RB_RenderDebugTools(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_RenderDebugTools(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         // don't do anything if this was a 2D rendering
         if (null == backEnd.viewDef.viewEntitys) {
             return;

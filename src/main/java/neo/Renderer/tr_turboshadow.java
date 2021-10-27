@@ -243,7 +243,7 @@ public class tr_turboshadow {
             R_AllocStaticTriSurfShadowVerts(newTri, tri.numVerts * 2);
             shadowVerts = newTri.shadowVertexes;
         } else {
-            shadowVerts = new shadowCache_s[tri.numVerts * 2];
+            shadowVerts = shadowCache_s.generateArray(tri.numVerts * 2);
         }
 
         R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, localLightOrigin);

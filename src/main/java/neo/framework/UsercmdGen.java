@@ -94,7 +94,7 @@ public class UsercmdGen {
     //
     static final int KEY_MOVESPEED = 127;
     static final int MAX_BUFFERED_USERCMD = 64;
-//
+    //
     //
     static final int MAX_CHAT_BUFFER = 127;
 
@@ -328,32 +328,30 @@ public class UsercmdGen {
         public int sequence;              // just for debugging
         public byte upmove;                 // up/down movement
 
+        public usercmd_t() {
+        }
+
+        public usercmd_t(usercmd_t val) {
+            this.angles = val.angles;
+            this.buttons = val.buttons;
+            this.duplicateCount = val.duplicateCount;
+            this.flags = val.flags;
+            this.forwardmove = val.forwardmove;
+            this.gameFrame = val.gameFrame;
+            this.gameTime = val.gameTime;
+            this.impulse = val.impulse;
+            this.mx = val.mx;
+            this.my = val.my;
+            this.rightmove = val.rightmove;
+            this.sequence = val.sequence;
+            this.upmove = val.upmove;
+        }
+
         public void ByteSwap() {            // on big endian systems, byte swap the shorts and ints
             angles[0] = LittleShort(angles[0]);
             angles[1] = LittleShort(angles[1]);
             angles[2] = LittleShort(angles[2]);
             sequence = LittleLong(sequence);
-        }
-
-        public usercmd_t() {
-        }
-
-        public usercmd_t(usercmd_t val) {
-            if (val != null) {
-                this.angles = val.angles;
-                this.buttons = val.buttons;
-                this.duplicateCount = val.duplicateCount;
-                this.flags = val.flags;
-                this.forwardmove = val.forwardmove;
-                this.gameFrame = val.gameFrame;
-                this.gameTime = val.gameTime;
-                this.impulse = val.impulse;
-                this.mx = val.mx;
-                this.my = val.my;
-                this.rightmove = val.rightmove;
-                this.sequence = val.sequence;
-                this.upmove = val.upmove;
-            }
         }
 
         @Override
@@ -482,6 +480,7 @@ public class UsercmdGen {
 
         usercmdButton_t button;
         String string;
+
         public userCmdString_t(String string, usercmdButton_t button) {
             this.string = string;
             this.button = button;
@@ -539,6 +538,16 @@ public class UsercmdGen {
         static int historyCounter;
         private final usercmd_t[] buffered = new usercmd_t[MAX_BUFFERED_USERCMD];
         private final int[] buttonState = new int[etoi(UB_MAX_BUTTONS)];
+        private final int[] joystickAxis = new int[etoi(MAX_JOYSTICK_AXIS)];// set by joystick events
+        private final boolean[] keyState = new boolean[K_LAST_KEY];
+        private final int lastCommandTime;
+        //
+        private final buttonState_t toggled_crouch;
+        private final buttonState_t toggled_run;
+        //
+        //
+        private final buttonState_t toggled_zoom;
+        private final idVec3 viewangles;
         //
         private usercmd_t cmd;                                  // the current cmd being built
         //
@@ -549,20 +558,10 @@ public class UsercmdGen {
         private int inhibitCommands;                      // true when in console or menu locally
         //
         private boolean initialized;
-        private final int[] joystickAxis = new int[etoi(MAX_JOYSTICK_AXIS)];// set by joystick events
-        private final boolean[] keyState = new boolean[K_LAST_KEY];
-        private final int lastCommandTime;
         private int mouseButton;                            // for gui event generatioin
         private boolean mouseDown;
         //
         private double mouseDx, mouseDy;                       // added to by mouse events
-        //
-        private final buttonState_t toggled_crouch;
-        private final buttonState_t toggled_run;
-        //
-        //
-        private final buttonState_t toggled_zoom;
-        private final idVec3 viewangles;
 
         public idUsercmdGenLocal() {
             lastCommandTime = 0;

@@ -300,27 +300,11 @@ public class Model_ase {
      ===============================================================================
      */
     public static class aseFace_t {
-
         public int[] tVertexNum = new int[3];
         public byte[][] vertexColors = new byte[3][4];
         public final idVec3 faceNormal = new idVec3();
         public int[] vertexNum = new int[3];
         public final idVec3[] vertexNormals = idVec3.generateArray(3);
-
-        public aseFace_t() {
-        }
-
-        public aseFace_t(aseFace_t val) {
-            if (val != null) {
-                this.tVertexNum = val.tVertexNum;
-                this.vertexColors = val.vertexColors;
-                for (int i = 0; i < vertexNormals.length; i++) {
-                    this.vertexNormals[i].oSet(val.vertexNormals[i]);
-                }
-                this.vertexNum = val.vertexNum;
-                this.faceNormal.oSet(val.faceNormal);
-            }
-        }
     }
 
     public static class aseMesh_t {

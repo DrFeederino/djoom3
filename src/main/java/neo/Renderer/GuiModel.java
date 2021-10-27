@@ -245,7 +245,7 @@ public class GuiModel {
             viewDef.worldSpace.modelViewMatrix[15] = 1.0f;
 
             viewDef.maxDrawSurfs = surfaces.Num();
-            viewDef.drawSurfs = new drawSurf_s[viewDef.maxDrawSurfs];///*(drawSurf_t **)*/ R_FrameAlloc(viewDef.maxDrawSurfs * sizeof(viewDef.drawSurfs[0]));
+            viewDef.drawSurfs = drawSurf_s.generateArray(viewDef.maxDrawSurfs);///*(drawSurf_t **)*/ R_FrameAlloc(viewDef.maxDrawSurfs * sizeof(viewDef.drawSurfs[0]));
             viewDef.numDrawSurfs = 0;
 
             viewDef_s oldViewDef = tr.viewDef;

@@ -2803,9 +2803,7 @@ public class Model_lwo {
         }
         if (oldpolv != null) {
 //            memcpy(plist.pol[0].v, oldpolv, plist.voffset);
-            for (i = 0; i < plist.offset; i++) {
-                plist.pol[0].v[i] = new lwPolVert(oldpolv[i]);
-            }
+            System.arraycopy(oldpolv, 0, plist.pol[0].v, 0, plist.offset);
             oldpolv = null;//Mem_Free(oldpolv);
         }
 //        memset(plist.pol[ 0].v + plist.voffset, 0, nverts);
@@ -5023,35 +5021,19 @@ public class Model_lwo {
         }
 
         public lwPoint(lwPoint val) {
-            if (val != null) {
                 this.npols = val.npols;
                 this.nvmaps = val.nvmaps;
                 this.pol = val.pol;
                 this.pos = val.pos;
                 this.vm = val.vm;
-            }
         }
     }
 
     static class lwPolVert {
-
         int index;               // index into the point array
         float[] norm = new float[3];
         int nvmaps;
         lwVMapPt[] vm;           // array of vmap references
-
-
-        public lwPolVert() {
-        }
-
-        public lwPolVert(lwPolVert val) {
-            if (val != null) {
-                this.index = val.index;
-                this.norm = val.norm;
-                this.nvmaps = val.nvmaps;
-                this.vm = val.vm;
-            }
-        }
     }
 
     static class lwPolygon {
@@ -5079,7 +5061,6 @@ public class Model_lwo {
         }
 
         public lwPolygon(lwPolygon val) {
-            if (val != null) {
                 this.flags = val.flags;
                 this.norm = val.norm;
                 this.nverts = val.nverts;
@@ -5089,7 +5070,6 @@ public class Model_lwo {
                 this.type = val.type;
                 this.v = val.v;
                 this.vOffset = val.vOffset;
-            }
         }
     }
 

@@ -63,50 +63,18 @@ public class UserInterfaceLocal {
         private boolean loading;
         private final idStr pendingCmd = new idStr();
         //
-        private int refs;
+        private final idStr source = new idStr();
         private final idStr returnCmd = new idStr();
         //
-        private idStr source = new idStr();
+        private final idDict state = new idDict();
         //
-        private idDict state = new idDict();
+        private int refs = 1;
         //
         private int time;
         private final long[] timeStamp = {0};
         private boolean uniqued;
         //
         //
-
-        public idUserInterfaceLocal() {
-            cursorX = cursorY = 0;
-            desktop = null;
-            loading = false;
-            active = false;
-            interactive = false;
-            uniqued = false;
-            bindHandler = null;
-            //so the reg eval in gui parsing doesn't get bogus values
-            time = 0;
-            refs = 1;
-            this.source = new idStr();
-            this.state = new idDict();
-        }
-
-        public idUserInterfaceLocal(idUserInterfaceLocal val) {
-            if (val != null) {
-                this.active = val.active;
-                this.bindHandler = val.bindHandler;
-                this.cursorX = val.cursorX;
-                this.cursorY = val.cursorY;
-                this.desktop = val.desktop;
-                this.interactive = val.interactive;
-                this.loading = val.loading;
-                this.refs = val.refs;
-                this.source = val.source;
-                this.state = val.state;
-                this.time = val.time;
-                this.uniqued = val.uniqued;
-            }
-        }
 
         // ~idUserInterfaceLocal();
         @Override

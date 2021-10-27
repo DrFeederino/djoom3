@@ -1630,10 +1630,7 @@ public class Game_local {
                 gameRenderWorld.DebugClearLines(time + 1);
 
                 // set the user commands for this frame
-//                memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
-                for (int i = 0; i < numClients; i++) {
-                    usercmds[i] = clientCmds[i];
-                }
+                System.arraycopy(clientCmds, 0, usercmds, 0, numClients);
 
                 if (player != null) {
                     player.Think();
@@ -1673,9 +1670,7 @@ public class Game_local {
 
                     // set the user commands for this frame
 //                    memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
-                    for (int i = 0; i < numClients; i++) {
-                        usercmds[i] = new usercmd_t(clientCmds[i]);
-                    }
+                    System.arraycopy(clientCmds, 0, usercmds, 0, numClients);
 
                     // free old smoke particles
                     smokeParticles.FreeSmokes();

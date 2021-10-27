@@ -143,7 +143,7 @@ public class tr_local {
     public static final int GLS_SRCBLEND_DST_COLOR = 0x00000003;
 
     public static final int GLS_SRCBLEND_ONE = 0x0;
-//=======================================================================
+    //=======================================================================
     public static final int GLS_SRCBLEND_ONE_MINUS_DST_ALPHA = 0x00000008;
 
     public static final int GLS_SRCBLEND_ONE_MINUS_DST_COLOR = 0x00000004;
@@ -210,6 +210,7 @@ public class tr_local {
     public static frameData_t frameData;
     public static glconfig_s glConfig = new glconfig_s();                 // outside of TR since it shouldn't be cleared during ref re-init
     public static idRenderSystemLocal tr = new idRenderSystemLocal();
+
     enum backEndName_t {
 
         BE_ARB,
@@ -219,6 +220,7 @@ public class tr_local {
         BE_ARB2,
         BE_BAD
     }
+
     enum demoCommand_t {
 
         DC_BAD,
@@ -237,6 +239,7 @@ public class tr_local {
         DC_UPDATE_SOUNDOCCLUSION,
         DC_GUI_MODEL
     }
+
     /*
 
      All vertex programs use the same constant register layout:
@@ -289,6 +292,7 @@ public class tr_local {
         //
         PP_LIGHT_FALLOFF_TQ //= 20	// only for NV programs
     }
+
     //    public static void R_Init();
     /*
      ============================================================
@@ -320,6 +324,7 @@ public class tr_local {
         FPROG_GLASSWARP,
         PROG_USER
     }
+
     /*
      =============================================================
 
@@ -493,26 +498,16 @@ public class tr_local {
         public float sort;                 // material->sort, modified by gui / entity sort offsets
         public viewEntity_s space;
 
-        public drawSurf_s() {
-        }
-
-        public drawSurf_s(drawSurf_s val) {
-            if (val != null) {
-                this.dsFlags = val.dsFlags;
-                this.dynamicTexCoords = val.dynamicTexCoords;
-                this.geo = val.geo;
-                this.material = val.material;
-                this.nextOnLight = val.nextOnLight;
-                this.scissorRect = val.scissorRect;
-                this.shaderRegisters = val.shaderRegisters;
-                this.sort = val.sort;
-                this.space = val.space;
-            }
+        public static drawSurf_s[] generateArray(final int length) {
+            return Stream.generate(drawSurf_s::new)
+                    .limit(length)
+                    .toArray(drawSurf_s[]::new);
         }
     }
 
     public static class shadowFrustum_t {
 
+        final idPlane[] planes = idPlane.generateArray(6);
         // positive sides facing inward
         // plane 5 is always the plane the projection is going to, the
         // other planes are just clip planes
@@ -520,7 +515,6 @@ public class tr_local {
 //
         boolean makeClippedPlanes;
         int numPlanes;        // this is always 6 for now
-        final idPlane[] planes = idPlane.generateArray(6);
         // a projected light with a single frustum needs to make sil planes
         // from triangles that clip against side planes, but a point light
         // that has adjacent frustums doesn't need to
@@ -583,6 +577,15 @@ public class tr_local {
 
     public static class idRenderLightLocal extends idRenderLight {
 
+        //
+//
+        public final idPlane[] frustum = idPlane.generateArray(6);    // in global space, positive side facing out, last two are front/back
+        //
+        public final idVec3 globalLightOrigin;        // accounting for lightCenter and parallel
+        //
+//
+        // derived information
+        public final idPlane[] lightProject = idPlane.generateArray(4);
         //                                                      // and should go in the dynamic frame memory, or kept
 //                                                      // in the cached memory
         public boolean archived;            // for demo writing
@@ -592,13 +595,8 @@ public class tr_local {
         public idInteraction firstInteraction;        // doubly linked list
         //
         public doublePortal_s foggedPortals;
-        //
-//
-        public final idPlane[] frustum = idPlane.generateArray(6);    // in global space, positive side facing out, last two are front/back
         public srfTriangles_s frustumTris;        // triangulated frustumWindings[]
         public idWinding[] frustumWindings = new idWinding[6];// used for culling
-        //
-        public final idVec3 globalLightOrigin;        // accounting for lightCenter and parallel
         public int index;                // in world lightdefs
         public idInteraction lastInteraction;
         //                                                      // interactions if !viewDef->connectedAreas[areaNum]
@@ -606,10 +604,6 @@ public class tr_local {
         public int lastModifiedFrameNum;                // to determine if it is constantly changing,
         //
         public boolean lightHasMoved;            // the light has changed its position since it was
-        //
-//
-        // derived information
-        public final idPlane[] lightProject = idPlane.generateArray(4);
         //
         public idMaterial lightShader;            // guaranteed to be valid, even if parms.shader isn't
         //                                                      // first added, so the prelight model is not valid
@@ -804,7 +798,10 @@ public class tr_local {
 
         public final drawSurf_s[] globalInteractions = {null};      // get shadows from everything
         //
+        public final idVec3 globalLightOrigin = new idVec3();            // global light origin used by backend
+        //
         public final drawSurf_s[] globalShadows = {null};           // shadow everything
+        public final idPlane[] lightProject = idPlane.generateArray(4);        // light project used by backend
         public final drawSurf_s[] localInteractions = {null};       // don't get local shadows
         public final drawSurf_s[] localShadows = {null};            // don't shadow local Surfaces
         public final drawSurf_s[] translucentInteractions = {null}; // get shadows from everything
@@ -812,11 +809,8 @@ public class tr_local {
         public idPlane fogPlane;                // fog plane for backend fog volume rendering
         public srfTriangles_s frustumTris;            // light frustum for backend fog volume rendering
         //
-        public final idVec3 globalLightOrigin = new idVec3();            // global light origin used by backend
-        //
         // back end should NOT reference the lightDef, because it can change when running SMP
         public idRenderLightLocal lightDef;
-        public final idPlane[] lightProject = idPlane.generateArray(4);        // light project used by backend
         public idMaterial lightShader;                // light shader used by backend
         public viewLight_s next;
         //
@@ -897,20 +891,20 @@ public class tr_local {
     public static class viewDef_s {
         // specified in the call to DrawScene()
 
+        public final idPlane[] clipPlanes;            // in world space, the positive side
+        public final idPlane[] frustum;
+        //
+        public final idVec3 initialViewAreaOrigin = new idVec3();
         //
         public int areaNum;               // -1 = not in a valid area
-        public final idPlane[] clipPlanes;            // in world space, the positive side
         //
         public boolean[] connectedAreas;
         //
         // drawSurfs are the visible surfaces of the viewEntities, sorted
         // by the material sort parameter
-        public drawSurf_s[] drawSurfs;             // we don't use an idList for this, because
+        public drawSurf_s[] drawSurfs = drawSurf_s.generateArray(0);             // we don't use an idList for this, because
         //
         public float floatTime;
-        public final idPlane[] frustum;
-        //
-        public final idVec3 initialViewAreaOrigin = new idVec3();
         //
         public boolean isEditor;
         public boolean isMirror;              // the portal is a mirror, invert the face culling
@@ -1241,6 +1235,10 @@ public class tr_local {
          Returns the number of msec spent in the back end
          =============
          */ private static int DBG_EndFrame = 0;
+        //
+        //
+        //
+        public final idList<idRenderWorldLocal> worlds;
         public int DBG_viewCount;                   // incremented every view (twice a scene if subviewed)
         //
         public idImage ambientCubeImage;    // hack for testing dependent ambient lighting
@@ -1302,10 +1300,6 @@ public class tr_local {
         public viewDef_s viewDef;
         //
         public int[] viewportOffset = new int[2];// for doing larger-than-window tiled renderings
-        //
-        //
-        //
-        public final idList<idRenderWorldLocal> worlds;
         // ~idRenderSystemLocal( void );
 
         // external functions
@@ -2622,10 +2616,10 @@ public class tr_local {
     public static class localTrace_t {
 
         final int[] indexes = new int[3];
-        float fraction;
         final idVec3 normal = new idVec3();
         // only valid if fraction < 1.0
         final idVec3 point = new idVec3();
+        float fraction;
     }
 
 }

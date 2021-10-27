@@ -606,10 +606,7 @@ public class tr_trisurf {
      */
     public static void R_AllocStaticTriSurfShadowVerts(srfTriangles_s tri, int numVerts) {
         assert (tri.shadowVertexes == null);
-        tri.shadowVertexes = new shadowCache_s[numVerts];//triShadowVertexAllocator.Alloc(numVerts);
-        for (int a = 0; a < tri.shadowVertexes.length; a++) {
-            tri.shadowVertexes[a] = new shadowCache_s();
-        }
+        tri.shadowVertexes = shadowCache_s.generateArray(numVerts);//triShadowVertexAllocator.Alloc(numVerts);
     }
 
     /*
@@ -2182,9 +2179,7 @@ public class tr_trisurf {
     private static shadowCache_s[] Resize(shadowCache_s[] shadowVertexes, int numVerts) {
         shadowCache_s[] newArray = new shadowCache_s[numVerts];
         int length = Math.min(shadowVertexes.length, numVerts);
-        for (int i = 0; i < length; i++) {
-            newArray[i] = new shadowCache_s(shadowVertexes[i]);
-        }
+        System.arraycopy(shadowVertexes, 0, newArray, 0, length);
         return newArray;
     }
 

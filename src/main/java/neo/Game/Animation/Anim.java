@@ -48,7 +48,7 @@ public class Anim {
 // animation channels
 // these can be changed by modmakers and licensees to be whatever they need.
     public static final int ANIM_NumAnimChannels = 5;
-//
+    //
     public static final int ANIM_QX = (1 << 3);// BIT(3);
     public static final int ANIM_QY = (1 << 4);// BIT(4);
 
@@ -64,6 +64,7 @@ public class Anim {
     public static int FRAME2MS(int framenum) {
         return (framenum * 1000) / 24;
     }
+
     /*
      ==============================================================================================
 
@@ -72,13 +73,12 @@ public class Anim {
      ==============================================================================================
      */
     public enum AFJointModType_t {
-
         AF_JOINTMOD_AXIS,
         AF_JOINTMOD_ORIGIN,
         AF_JOINTMOD_BOTH
     }
-    public enum frameCommandType_t {
 
+    public enum frameCommandType_t {
         FC_SCRIPTFUNCTION,
         FC_SCRIPTFUNCTIONOBJECT,
         FC_EVENTFUNCTION,
@@ -121,11 +121,11 @@ public class Anim {
         FC_RECORDDEMO,
         FC_AVIGAME
     }
+
     //
 // joint modifier modes.  make sure to change script/doom_defs.script if you add any, or change their order.
 //
     public enum jointModTransform_t {
-
         JOINTMOD_NONE, // no modification
         JOINTMOD_LOCAL, // modifies the joint's position or orientation in joint local space
         JOINTMOD_LOCAL_OVERRIDE, // sets the joint's position or orientation in joint local space
@@ -134,7 +134,6 @@ public class Anim {
     }
 
     public static final class frameBlend_t {
-
         float backlerp;
         int cycleCount;    // how many times the anim has wrapped to the begining (0 for clamped anims)
         int frame1;
@@ -143,7 +142,6 @@ public class Anim {
     }
 
     public static final class jointAnimInfo_t {
-
         int animBits;
         int firstComponent;
         int nameIndex;
@@ -151,46 +149,26 @@ public class Anim {
     }
 
     public static final class jointInfo_t {
-
         int channel;
         int/*jointHandle_t*/ num;
         int/*jointHandle_t*/ parentNum;
-
-        public jointInfo_t() {
-        }
-
-        public jointInfo_t(jointInfo_t val) {
-            if (val != null) {
-                this.channel = val.channel;
-                this.num = val.num;
-                this.parentNum = val.parentNum;
-            }
-        }
     }
 
     public static final class jointMod_t {
 
+        final idMat3 mat = new idMat3();
         int/*jointHandle_t*/ jointnum;
-        idMat3 mat;
-        final idVec3 pos;
+        final idVec3 pos = new idVec3();
         jointModTransform_t transform_axis;
         jointModTransform_t transform_pos;
-
-        public jointMod_t() {
-            this.mat = new idMat3();
-            this.pos = new idVec3();
-        }
     }
 
     public static final class frameLookup_t {
-
         int firstCommand;
         int num;
-
     }
 
     public static final class frameCommand_t {
-
         public function_t function;
         public int index;
         public idDeclSkin skin;
@@ -202,7 +180,6 @@ public class Anim {
     }
 
     public static final class animFlags_t {
-
         public boolean ai_no_turn;//: 1;
         public boolean anim_turn;//: 1;
         public boolean prevent_idle_override;//: 1;
@@ -218,18 +195,18 @@ public class Anim {
      */
     public static class idMD5Anim {
 
-        private int animLength;
         private final idList<idJointQuat> baseFrame;
         private final idList<idBounds> bounds;
         private final idList<Float> componentFrames;
-        private int frameRate;
         private final idList<jointAnimInfo_t> jointInfo;
         private final idStr name;
+        private final idVec3 totaldelta;
+        private int animLength;
+        private int frameRate;
         private int numAnimatedComponents;
         private int numFrames;
         private int numJoints;
         private int ref_count;
-        private final idVec3 totaldelta;
 //
 //
 
@@ -1027,9 +1004,9 @@ public class Anim {
     }
 
     public static class idAFPoseJointMod {
+        public final idVec3 origin;
         public idMat3 axis;
         public AFJointModType_t mod;
-        public final idVec3 origin;
         //
         //
 

@@ -1565,7 +1565,7 @@ public class Anim_Blend {
             joints.SetNum(decl.joints.Num());
 //            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
             for (i = 0; i < decl.joints.Num(); i++) {
-                joints.oSet(i, new jointInfo_t(decl.joints.oGet(i)));
+                joints.oSet(i, decl.joints.oGet(i));
             }
             jointParents.SetNum(decl.jointParents.Num());
 //            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));

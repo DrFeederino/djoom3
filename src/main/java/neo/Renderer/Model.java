@@ -94,20 +94,8 @@ public class Model {
 
     // this is used for calculating unsmoothed normals and tangents for deformed models
     public static class dominantTri_s {
-
         public final float[] normalizationScale = new float[3];
         public int/*glIndex_t*/ v2, v3;
-
-        public dominantTri_s() {
-        }
-
-        public dominantTri_s(dominantTri_s val) {
-            if (val != null) {
-                System.arraycopy(val.normalizationScale, 0, this.normalizationScale, 0, this.normalizationScale.length);
-                this.v2 = val.v2;
-                this.v3 = val.v3;
-            }
-        }
     }
 
     static class lightingCache_s {
@@ -118,12 +106,6 @@ public class Model {
 
         lightingCache_s(ByteBuffer Position) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        public lightingCache_s(lightingCache_s val) {
-            if (val != null) {
-                this.localLightVector.oSet(val.localLightVector);
-            }
         }
 
         public static ByteBuffer toByteBuffer(lightingCache_s[] cache) {
@@ -141,22 +123,13 @@ public class Model {
 
         public static final int BYTES = idVec4.BYTES;
 
-        public idVec4 xyz;            // we use homogenous coordinate tricks
+        public idVec4 xyz = new idVec4();            // we use homogenous coordinate tricks
 
         public shadowCache_s() {
-            xyz = new idVec4();
         }
 
         shadowCache_s(ByteBuffer Position) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        shadowCache_s(shadowCache_s val) {
-            if (val != null) {
-                this.xyz = val.xyz;
-            } else {
-                this.xyz = new idVec4();
-            }
         }
 
 
@@ -169,6 +142,12 @@ public class Model {
 
             return data.flip();
         }
+
+        public static shadowCache_s[] generateArray(final int length) {
+            return Stream.generate(shadowCache_s::new)
+                    .limit(length)
+                    .toArray(shadowCache_s[]::new);
+        }
     }
 
     // our only drawing geometry type
@@ -176,7 +155,7 @@ public class Model {
 
         private static int DBG_counter = 0;
         public final int DBG_count = DBG_counter++;
-        public idBounds bounds;                 // for culling
+        public idBounds bounds = new idBounds();                 // for culling
         public idPlane[] facePlanes;            // [numIndexes/3] plane equations
         public int /*glIndex_t*/[] indexes;     // indexes, allocated with special allocator
         public int numIndexes;  // for shadows, this has both front and rear end caps and silhouette planes
@@ -214,104 +193,6 @@ public class Model {
         vertCache_s shadowCache;             // shadowCache_t
         silEdge_t[] silEdges;                   // silhouette edges
 
-        public srfTriangles_s() {
-            this.bounds = new idBounds();
-            this.ambientViewCount = 0;
-            this.generateNormals = false;
-            this.tangentsCalculated = false;
-            this.facePlanesCalculated = false;
-            this.perfectHull = false;
-            this.deformedSurface = false;
-            this.numVerts = 0;
-            this.verts = null;
-            this.numIndexes = 0;
-            this.indexes = null;
-            this.silIndexes = null;
-            this.numMirroredVerts = 0;
-            this.mirroredVerts = null;
-            this.numDupVerts = 0;
-            this.dupVerts = null;
-            this.numSilEdges = 0;
-            this.silEdges = null;
-            this.facePlanes = null;
-            this.dominantTris = null;
-            this.numShadowIndexesNoFrontCaps = 0;
-            this.numShadowIndexesNoCaps = 0;
-            this.shadowCapPlaneBits = 0;
-            this.shadowVertexes = null;
-            this.ambientSurface = null;
-            this.nextDeferredFree = null;
-            this.indexCache = null;
-            this.ambientCache = null;
-            this.lightingCache = null;
-            this.shadowCache = null;
-        }
-
-        public srfTriangles_s(srfTriangles_s val) {
-            if (val != null) {
-                this.bounds = val.bounds;
-                this.ambientViewCount = val.ambientViewCount;
-                this.generateNormals = val.generateNormals;
-                this.tangentsCalculated = val.tangentsCalculated;
-                this.facePlanesCalculated = val.facePlanesCalculated;
-                this.perfectHull = val.perfectHull;
-                this.deformedSurface = val.deformedSurface;
-                this.numVerts = val.numVerts;
-                this.verts = val.verts;
-                this.numIndexes = val.numIndexes;
-                this.indexes = val.indexes;
-                this.silIndexes = val.silIndexes;
-                this.numMirroredVerts = val.numMirroredVerts;
-                this.mirroredVerts = val.mirroredVerts;
-                this.numDupVerts = val.numDupVerts;
-                this.dupVerts = val.dupVerts;
-                this.numSilEdges = val.numSilEdges;
-                this.silEdges = val.silEdges;
-                this.facePlanes = val.facePlanes;
-                this.dominantTris = val.dominantTris;
-                this.numShadowIndexesNoFrontCaps = val.numShadowIndexesNoFrontCaps;
-                this.numShadowIndexesNoCaps = val.numShadowIndexesNoCaps;
-                this.shadowCapPlaneBits = val.shadowCapPlaneBits;
-                this.shadowVertexes = val.shadowVertexes;
-                this.ambientSurface = val.ambientSurface;
-                this.nextDeferredFree = val.nextDeferredFree;
-                this.indexCache = val.indexCache;
-                this.ambientCache = val.ambientCache;
-                this.lightingCache = val.lightingCache;
-                this.shadowCache = val.shadowCache;
-            } else {
-                this.bounds = new idBounds();
-                this.ambientViewCount = 0;
-                this.generateNormals = false;
-                this.tangentsCalculated = false;
-                this.facePlanesCalculated = false;
-                this.perfectHull = false;
-                this.deformedSurface = false;
-                this.numVerts = 0;
-                this.verts = null;
-                this.numIndexes = 0;
-                this.indexes = null;
-                this.silIndexes = null;
-                this.numMirroredVerts = 0;
-                this.mirroredVerts = null;
-                this.numDupVerts = 0;
-                this.dupVerts = null;
-                this.numSilEdges = 0;
-                this.silEdges = null;
-                this.facePlanes = null;
-                this.dominantTris = null;
-                this.numShadowIndexesNoFrontCaps = 0;
-                this.numShadowIndexesNoCaps = 0;
-                this.shadowCapPlaneBits = 0;
-                this.shadowVertexes = null;
-                this.ambientSurface = null;
-                this.nextDeferredFree = null;
-                this.indexCache = null;
-                this.ambientCache = null;
-                this.lightingCache = null;
-                this.shadowCache = null;
-            }
-        }
 
         @Override
         public String toString() {

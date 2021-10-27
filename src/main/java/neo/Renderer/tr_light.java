@@ -530,7 +530,7 @@ public class tr_light {
      R_LinkLightSurf
      =================
      */
-    public static void R_LinkLightSurf(drawSurf_s[] link, final srfTriangles_s tri, final viewEntity_s spaceView,
+    public static void R_LinkLightSurf(final drawSurf_s[] link, final srfTriangles_s tri, final viewEntity_s spaceView,
                                        final idRenderLightLocal light, final idMaterial shader, final idScreenRect scissor, boolean viewInsideShadow) {
         drawSurf_s drawSurf;
         viewEntity_s space = spaceView;//TODO:should a back reference be set here?
@@ -1067,7 +1067,7 @@ public class tr_light {
 
         // if it doesn't fit, resize the list
         if (tr.viewDef.numDrawSurfs == tr.viewDef.maxDrawSurfs) {
-            drawSurf_s[] old = tr.viewDef.drawSurfs;
+            final drawSurf_s[] old = tr.viewDef.drawSurfs;
             int count;
 
             if (tr.viewDef.maxDrawSurfs == 0) {
@@ -1077,13 +1077,9 @@ public class tr_light {
                 count = tr.viewDef.maxDrawSurfs /*sizeof(tr.viewDef.drawSurfs[0])*/;
                 tr.viewDef.maxDrawSurfs *= 2;
             }
-            tr.viewDef.drawSurfs = new drawSurf_s[tr.viewDef.maxDrawSurfs];// R_FrameAlloc(tr.viewDef.maxDrawSurfs);
+            tr.viewDef.drawSurfs = drawSurf_s.generateArray(tr.viewDef.maxDrawSurfs);// R_FrameAlloc(tr.viewDef.maxDrawSurfs);
 //		memcpy( tr.viewDef.drawSurfs, old, count );
-            if (old != null) {
-                for (int i = 0; i < count; i++) {
-                    tr.viewDef.drawSurfs[i] = new drawSurf_s(old[i]);
-                }
-            }
+            System.arraycopy(old, 0, tr.viewDef.drawSurfs, 0, count);
         }
         tr.viewDef.drawSurfs[tr.viewDef.numDrawSurfs++] = drawSurf;
 

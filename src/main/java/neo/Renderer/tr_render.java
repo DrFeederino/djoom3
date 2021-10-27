@@ -6,7 +6,6 @@ import neo.Renderer.Material.idMaterial;
 import neo.Renderer.Material.shaderStage_t;
 import neo.Renderer.Material.textureStage_t;
 import neo.Renderer.Model.srfTriangles_s;
-import neo.Renderer.tr_local.*;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec4;
@@ -247,7 +246,7 @@ public class tr_render {
      be updated after the triangle function completes.
      ====================
      */
-    public static void RB_RenderDrawSurfListWithFunction(drawSurf_s[] drawSurfs, int numDrawSurfs, triFunc triFunc_) {
+    public static void RB_RenderDrawSurfListWithFunction(final drawSurf_s[] drawSurfs, int numDrawSurfs, triFunc triFunc_) {
         int i;
         drawSurf_s drawSurf;
 

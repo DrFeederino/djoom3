@@ -348,7 +348,7 @@ public class tr_trace {
      Debug visualization
      ================
      */
-    public static void RB_ShowTrace(drawSurf_s[] drawSurfs, int numDrawSurfs) {
+    public static void RB_ShowTrace(final drawSurf_s[] drawSurfs, int numDrawSurfs) {
         int i;
         srfTriangles_s tri;
         drawSurf_s surf;
