@@ -31,7 +31,7 @@ import static neo.idlib.math.Vector.getVec3_origin;
  */
 public class Physics_StaticMulti {
 
-    static staticPState_s defaultState;//TODO:?
+    static staticPState_s defaultState = new staticPState_s();//TODO:?
 
     /*
      ===============================================================================
@@ -45,8 +45,8 @@ public class Physics_StaticMulti {
 
         private static final idVec3 gravity = new idVec3(0, 0, -g_gravity.GetFloat());
         private static final idVec3 gravityNormal = new idVec3(0, 0, -1);
-        private static idBounds absBounds;
-        private static idBounds bounds;
+        private static idBounds absBounds = new idBounds();
+        private static idBounds bounds = new idBounds();
         private static contactInfo_t info;
         //
         //

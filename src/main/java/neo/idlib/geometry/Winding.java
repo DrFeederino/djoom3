@@ -4,7 +4,6 @@ import neo.TempDump;
 import neo.TempDump.NiLLABLE;
 import neo.idlib.BV.Bounds.idBounds;
 import neo.idlib.containers.CFloat;
-import neo.idlib.math.Math_h;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Pluecker.idPluecker;
 import neo.idlib.math.Vector.idVec3;
@@ -173,7 +172,7 @@ public class Winding {
             if (!EnsureAlloced(numPoints + 1, true)) {
                 return;
             }
-            p[numPoints] = new idVec5(v);
+            p[numPoints].oSet(v);
             numPoints++;
         }
 
@@ -647,7 +646,8 @@ public class Winding {
             int i, j;
 
             for (i = 0; i < numPoints; i++) {
-                if ((p[i].ToVec3().oMinus(p[(i + numPoints - 1) % numPoints].ToVec3())).LengthSqr() >= Math_h.Square(epsilon)) {
+                System.out.println((p[i].ToVec3().oMinus(p[(i + numPoints - 1) % numPoints].ToVec3())).LengthSqr());
+                if ((p[i].ToVec3().oMinus(p[(i + numPoints - 1) % numPoints].ToVec3())).LengthSqr() >= Math.pow(epsilon, 2)) {
                     continue;
                 }
                 numPoints--;

@@ -468,7 +468,7 @@ public class Lexer {
         }
 
         // read a token
-        public boolean ReadToken(idToken token) throws idException {
+        public boolean ReadToken(final idToken token) throws idException {
             char c, c2;
 
             if (!loaded) {

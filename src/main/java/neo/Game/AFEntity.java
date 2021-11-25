@@ -126,6 +126,8 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+
+            super.Spawn();
             physicsObj.SetSelf(this);
         }
 
@@ -195,6 +197,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             CInt numLinks = new CInt();
             CFloat length = new CFloat(), linkWidth = new CFloat(), density = new CFloat();
             float linkLength;
@@ -1410,6 +1413,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             final String eyesJointName = spawnArgs.GetString("eyesJoint", "eyes");
             final String steeringWheelJointName = spawnArgs.GetString("steeringWheelJoint", "steeringWheel");
             CFloat wheel = new CFloat(), steer = new CFloat();
@@ -1526,7 +1530,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
-
+            super.Spawn();
             int i;
             final idVec3 origin = new idVec3();
             idMat3 axis = new idMat3();
@@ -1716,6 +1720,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             int i;
             String wheelBodyName, wheelJointName, steeringHingeName;
 
@@ -1894,6 +1899,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             int i;
 
             String wheelBodyName, wheelJointName, steeringHingeName;
@@ -2054,6 +2060,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             final idVec3 steamDir = new idVec3();
             final String steamBodyName;
 
@@ -2179,6 +2186,7 @@ public class AFEntity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             int i;
 
             LoadAF();

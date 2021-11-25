@@ -278,8 +278,7 @@ public class draw_common {
         }
     }
 
-    public static void RB_FinishStageTexturing(final shaderStage_t pStage, final drawSurf_s surf, idDrawVert ac) {
-        DBG_RB_FinishStageTexturing++;
+    public static void RB_FinishStageTexturing(final shaderStage_t pStage, final drawSurf_s surf, final idDrawVert ac) {
         // unset privatePolygonOffset if necessary
         if (pStage.privatePolygonOffset != 0 && !surf.material.TestMaterialFlag(MF_POLYGONOFFSET)) {
             qglDisable(GL_POLYGON_OFFSET_FILL);
@@ -361,8 +360,9 @@ public class draw_common {
             qglMatrixMode(GL_TEXTURE);
             qglLoadIdentity();
             qglMatrixMode(GL_MODELVIEW);
-            if (qglGetError() != 0) {
-                System.err.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            int qglGetError = qglGetError();
+            if (qglGetError != 0) {
+                System.err.println(String.format("GL Error code: %d", qglGetError));
             }
         }
     }

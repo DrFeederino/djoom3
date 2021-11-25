@@ -1,6 +1,5 @@
 package neo.idlib.geometry;
 
-import neo.TempDump;
 import neo.TempDump.SERiAL;
 import neo.idlib.math.Vector.idVec2;
 import neo.idlib.math.Vector.idVec3;
@@ -171,7 +170,9 @@ public class DrawVert {
         public void SetColor(long color) {
 //	*reinterpret_cast<dword *>(this->color) = color;
 //            this.color = this.set_reinterpret_cast(color);
-            throw new TempDump.TODO_Exception();
+            ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+            buffer.putLong(color);
+            this.color = buffer.array();
         }
 
         public long GetColor() {
@@ -255,7 +256,7 @@ public class DrawVert {
             }
 
             for (short colour : color) {
-                data.put((byte) colour);
+                data.put((byte) Math.abs((byte) colour));
             }
 
             return data;

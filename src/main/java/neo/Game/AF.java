@@ -31,6 +31,8 @@ import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Rotation.idRotation;
 import neo.idlib.math.Vector.idVec3;
 
+import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -749,6 +751,7 @@ public class AF {
                 body = physicsObj.GetBody(name.toString());
                 if (body != null) {
                     Scanner sscanf = new Scanner(kv.GetValue().toString());
+                    sscanf.useLocale(Locale.US);
 //			sscanf( kv.GetValue(), "%f %f %f %f %f %f", &origin.x, &origin.y, &origin.z, &angles.pitch, &angles.yaw, &angles.roll );
                     origin.x = sscanf.nextFloat();
                     origin.y = sscanf.nextFloat();
@@ -932,7 +935,7 @@ public class AF {
             idMat3 axis, inertiaTensor = new idMat3();
             final idVec3 centerOfMass = new idVec3(), origin = new idVec3();
             idBounds bounds = new idBounds();
-            final idList<Integer/*jointHandle_t*/> jointList = new idList<>();
+            final ArrayList<Integer/*jointHandle_t*/> jointList = new ArrayList<>();
 
             origin.oSet(fb.origin.ToVec3());
             axis = fb.angles.ToMat3();
@@ -1037,14 +1040,14 @@ public class AF {
 
             // update table to find the nearest articulated figure body for a joint of the skeletal model
             animator.GetJointList(fb.containedJoints.toString(), jointList);
-            for (i = 0; i < jointList.Num(); i++) {
-                if (jointBody.oGet(jointList.oGet(i)) != -1) {
+            for (i = 0; i < jointList.size(); i++) {
+                if (jointBody.oGet(jointList.get(i)) != -1) {
                     /*jointHandle_t*/
                     gameLocal.Warning("%s: joint '%s' is already contained by body '%s'",
-                            name, animator.GetJointName(jointList.oGet(i)),
-                            physicsObj.GetBody(jointBody.oGet(jointList.oGet(i))).GetName());
+                            name, animator.GetJointName(jointList.get(i)),
+                            physicsObj.GetBody(jointBody.oGet(jointList.get(i))).GetName());
                 }
-                jointBody.oSet(jointList.oGet(i), id);
+                jointBody.oSet(jointList.get(i), id);
             }
 
             return true;

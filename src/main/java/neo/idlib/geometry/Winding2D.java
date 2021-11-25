@@ -161,6 +161,7 @@ public class Winding2D {
                 assert (numPlanes < MAX_POINTS_ON_WINDING_2D);
                 planes[numPlanes++].oSet(plane);
             }
+            assert (numPlanes != 0);
             if (GetAxialBevel(planes[numPlanes - 1], planes[0], p[0], bevel)) {
                 planes[numPlanes++].oSet(bevel);
             }

@@ -7,6 +7,7 @@ import neo.Game.GameSys.SaveGame.idSaveGame;
 import neo.Game.Game_local;
 import neo.Renderer.Model.idMD5Joint;
 import neo.Renderer.Model.idRenderModel;
+import neo.Renderer.RenderWorld;
 import neo.framework.CVarSystem.idCVar;
 import neo.framework.CmdSystem.idCmdSystem;
 import neo.framework.DeclManager.idDecl;
@@ -18,13 +19,15 @@ import neo.idlib.Text.Lexer.idLexer;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.CFloat;
 import neo.idlib.containers.CInt;
-import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Vector.idVec3;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Stream;
 
 import static java.lang.Character.isDigit;
@@ -94,8 +97,8 @@ public class Anim_Blend {
      */
     public static class idAnim {
 
-        private final idList<frameCommand_t> frameCommands = new idList<>(frameCommand_t.class);
-        private final idList<frameLookup_t> frameLookup = new idList();
+        private final ArrayList<frameCommand_t> frameCommands = new ArrayList<>();
+        private final ArrayList<frameLookup_t> frameLookup = new ArrayList();
         private idMD5Anim[] anims = new idMD5Anim[ANIM_MaxSyncedAnims];
         private animFlags_t flags;
         private idDeclModelDef modelDef;
@@ -108,8 +111,6 @@ public class Anim_Blend {
         public idAnim() {
             modelDef = null;
             numAnims = 0;
-//	memset( anims, 0, sizeof( anims ) );
-//	memset( &flags, 0, sizeof( flags ) );
             flags = new animFlags_t();
         }
 
@@ -118,9 +119,9 @@ public class Anim_Blend {
 
             this.modelDef = modelDef;
             numAnims = anim.numAnims;
-            name = anim.name;
-            realname = anim.realname;
-            flags = anim.flags;
+            name.oSet(anim.name);
+            realname.oSet(anim.realname);
+            flags = new animFlags_t(anim.flags);
 
             anims = new idMD5Anim[anims.length];
             for (i = 0; i < numAnims; i++) {
@@ -128,19 +129,28 @@ public class Anim_Blend {
                 anims[i].IncreaseRefs();
             }
 
-            frameLookup.SetNum(anim.frameLookup.Num());
-            if (frameLookup.Num() > 0) {
-                for (i = 0; i < frameLookup.MemoryUsed(); i++) {
-                    frameLookup_t frameLookup_t = anim.frameLookup.oGet(i);
-                    frameLookup.oSet(i, frameLookup_t);
+            //frameLookup.SetNum(anim.frameLookup.Num());
+            if (anim.frameLookup.size() > 0) {
+                for (i = 0; i < anim.frameLookup.size(); i++) {
+                    frameLookup_t frameLookup_t = anim.frameLookup.get(i);
+                    // this is probably overkill, since it's an object creation, frameLookup is "empty"
+                    //if (i >= frameLookup.size()) {
+                    frameLookup.add(frameLookup_t);
+                    //} else {
+                    //    frameLookup.set(i, frameLookup_t);
+                    //}
                 }
             }
 
-            frameCommands.SetNum(anim.frameCommands.Num());
-            for (i = 0; i < frameCommands.Num(); i++) {
-                frameCommands.oSet(i, anim.frameCommands.oGet(i));
-                if (frameCommands.oGet(i).string != null) {
-                    frameCommands.oGet(i).string = new idStr(anim.frameCommands.oGet(i).string);
+            //frameCommands.SetNum(anim.frameCommands.Num());
+            for (i = 0; i < frameCommands.size(); i++) {
+                if (i >= frameCommands.size()) {
+                    frameCommands.add(anim.frameCommands.get(i));
+                } else {
+                    frameCommands.set(i, anim.frameCommands.get(i));
+                }
+                if (frameCommands.get(i).string != null) {
+                    frameCommands.get(i).string = new idStr(anim.frameCommands.get(i).string);
                 }
             }
         }
@@ -169,12 +179,10 @@ public class Anim_Blend {
 //	memset( &flags, 0, sizeof( flags ) );
             flags = new animFlags_t();
 
-            for (i = 0; i < frameCommands.Num(); i++) {
-//                delete frameCommands[ i ].string;
-            }
+            frameCommands.forEach(frame -> frame.string = null);
 
-            frameLookup.Clear();
-            frameCommands.Clear();
+            frameLookup.clear();
+            frameCommands.clear();
         }
 
         public String Name() {
@@ -292,7 +300,8 @@ public class Anim_Blend {
             if (!src.ReadTokenOnLine(token)) {
                 return "Unexpected end of line";
             }
-            if (token.equals("call")) {
+            //System.out.printf("Anim Token is %s%n", token.toString());
+            if (token.toString().equals("call")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -301,13 +310,13 @@ public class Anim_Blend {
                 if (NOT(fc.function)) {
                     return va("Function '%s' not found", token);
                 }
-            } else if (token.equals("object_call")) {
+            } else if (token.toString().equals("object_call")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
                 fc.type = FC_SCRIPTFUNCTIONOBJECT;
                 fc.string = new idStr(token);
-            } else if (token.equals("event")) {
+            } else if (token.toString().equals("event")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -320,7 +329,7 @@ public class Anim_Blend {
                     return va("Event '%s' has arguments", token);
                 }
                 fc.string = new idStr(token);
-            } else if (token.equals("sound_voice2")) {
+            } else if (token.toString().equals("sound_voice2")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -333,7 +342,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_voice")) {
+            } else if (token.toString().equals("sound_voice")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -346,7 +355,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_body2")) {
+            } else if (token.toString().equals("sound_body2")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -359,7 +368,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_body3")) {
+            } else if (token.toString().equals("sound_body3")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -372,7 +381,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_body")) {
+            } else if (token.toString().equals("sound_body")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -385,7 +394,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_weapon")) {
+            } else if (token.toString().equals("sound_weapon")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -398,7 +407,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_global")) {
+            } else if (token.toString().equals("sound_global")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -411,7 +420,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_item")) {
+            } else if (token.toString().equals("sound_item")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -424,7 +433,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound_chatter")) {
+            } else if (token.toString().equals("sound_chatter")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -437,7 +446,7 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("sound")) {
+            } else if (token.toString().equals("sound")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -450,12 +459,12 @@ public class Anim_Blend {
                         gameLocal.Warning("Sound '%s' not found", token);
                     }
                 }
-            } else if (token.equals("skin")) {
+            } else if (token.toString().equals("skin")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
                 fc.type = FC_SKIN;
-                if (token.equals("none")) {
+                if (token.toString().equals("none")) {
                     fc.skin = null;
                 } else {
                     fc.skin = declManager.FindSkin(token);
@@ -463,7 +472,7 @@ public class Anim_Blend {
                         return va("Skin '%s' not found", token);
                     }
                 }
-            } else if (token.equals("fx")) {
+            } else if (token.toString().equals("fx")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -472,19 +481,19 @@ public class Anim_Blend {
                     return va("fx '%s' not found", token);
                 }
                 fc.string = new idStr(token);
-            } else if (token.equals("trigger")) {
+            } else if (token.toString().equals("trigger")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
                 fc.type = FC_TRIGGER;
                 fc.string = new idStr(token);
-            } else if (token.equals("triggerSmokeParticle")) {
+            } else if (token.toString().equals("triggerSmokeParticle")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
                 fc.type = FC_TRIGGER_SMOKE_PARTICLE;
                 fc.string = new idStr(token);
-            } else if (token.equals("melee")) {
+            } else if (token.toString().equals("melee")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -493,7 +502,7 @@ public class Anim_Blend {
                     return va("Unknown entityDef '%s'", token);
                 }
                 fc.string = new idStr(token);
-            } else if (token.equals("direct_damage")) {
+            } else if (token.toString().equals("direct_damage")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -502,7 +511,7 @@ public class Anim_Blend {
                     return va("Unknown entityDef '%s'", token);
                 }
                 fc.string = new idStr(token);
-            } else if (token.equals("attack_begin")) {
+            } else if (token.toString().equals("attack_begin")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -511,9 +520,9 @@ public class Anim_Blend {
                     return va("Unknown entityDef '%s'", token);
                 }
                 fc.string = new idStr(token);
-            } else if (token.equals("attack_end")) {
+            } else if (token.toString().equals("attack_end")) {
                 fc.type = FC_ENDATTACK;
-            } else if (token.equals("muzzle_flash")) {
+            } else if (token.toString().equals("muzzle_flash")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -522,10 +531,10 @@ public class Anim_Blend {
                 }
                 fc.type = FC_MUZZLEFLASH;
                 fc.string = new idStr(token);
-            } else if (token.equals("muzzle_flash")) {
+            } else if (token.toString().equals("muzzle_flash")) {
                 fc.type = FC_MUZZLEFLASH;
                 fc.string = new idStr("");
-            } else if (token.equals("create_missile")) {
+            } else if (token.toString().equals("create_missile")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -534,7 +543,7 @@ public class Anim_Blend {
                 }
                 fc.type = FC_CREATEMISSILE;
                 fc.string = new idStr(token);
-            } else if (token.equals("launch_missile")) {
+            } else if (token.toString().equals("launch_missile")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -543,7 +552,7 @@ public class Anim_Blend {
                 }
                 fc.type = FC_LAUNCHMISSILE;
                 fc.string = new idStr(token);
-            } else if (token.equals("fire_missile_at_target")) {
+            } else if (token.toString().equals("fire_missile_at_target")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
@@ -557,88 +566,102 @@ public class Anim_Blend {
                 fc.type = FC_FIREMISSILEATTARGET;
                 fc.string = new idStr(token);
                 fc.index = jointInfo.num;
-            } else if (token.equals("footstep")) {
+            } else if (token.toString().equals("footstep")) {
                 fc.type = FC_FOOTSTEP;
-            } else if (token.equals("leftfoot")) {
+            } else if (token.toString().equals("leftfoot")) {
                 fc.type = FC_LEFTFOOT;
-            } else if (token.equals("rightfoot")) {
+            } else if (token.toString().equals("rightfoot")) {
                 fc.type = FC_RIGHTFOOT;
-            } else if (token.equals("enableEyeFocus")) {
+            } else if (token.toString().equals("enableEyeFocus")) {
                 fc.type = FC_ENABLE_EYE_FOCUS;
-            } else if (token.equals("disableEyeFocus")) {
+            } else if (token.toString().equals("disableEyeFocus")) {
                 fc.type = FC_DISABLE_EYE_FOCUS;
-            } else if (token.equals("disableGravity")) {
+            } else if (token.toString().equals("disableGravity")) {
                 fc.type = FC_DISABLE_GRAVITY;
-            } else if (token.equals("enableGravity")) {
+            } else if (token.toString().equals("enableGravity")) {
                 fc.type = FC_ENABLE_GRAVITY;
-            } else if (token.equals("jump")) {
+            } else if (token.toString().equals("jump")) {
                 fc.type = FC_JUMP;
-            } else if (token.equals("enableClip")) {
+            } else if (token.toString().equals("enableClip")) {
                 fc.type = FC_ENABLE_CLIP;
-            } else if (token.equals("disableClip")) {
+            } else if (token.toString().equals("disableClip")) {
                 fc.type = FC_DISABLE_CLIP;
-            } else if (token.equals("enableWalkIK")) {
+            } else if (token.toString().equals("enableWalkIK")) {
                 fc.type = FC_ENABLE_WALK_IK;
-            } else if (token.equals("disableWalkIK")) {
+            } else if (token.toString().equals("disableWalkIK")) {
                 fc.type = FC_DISABLE_WALK_IK;
-            } else if (token.equals("enableLegIK")) {
+            } else if (token.toString().equals("enableLegIK")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
                 fc.type = FC_ENABLE_LEG_IK;
                 fc.index = atoi(token.toString());
-            } else if (token.equals("disableLegIK")) {
+            } else if (token.toString().equals("disableLegIK")) {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line";
                 }
                 fc.type = FC_DISABLE_LEG_IK;
                 fc.index = atoi(token.toString());
-            } else if (token.equals("recordDemo")) {
+            } else if (token.toString().equals("recordDemo")) {
                 fc.type = FC_RECORDDEMO;
                 if (src.ReadTokenOnLine(token)) {
                     fc.string = new idStr(token);
                 }
-            } else if (token.equals("aviGame")) {
+            } else if (token.toString().equals("aviGame")) {
                 fc.type = FC_AVIGAME;
                 if (src.ReadTokenOnLine(token)) {
                     fc.string = new idStr(token);
                 }
             } else {
+                System.out.println(String.format("didnt find anim token %s", token.toString()));
                 return va("Unknown command '%s'", token);
             }
 
-            // check if we've initialized the frame loopup table
-            if (0 == frameLookup.Num()) {
+            // check if we've initialized the frame lookup table
+            if (0 == frameLookup.size()) {
+                frameLookup.clear(); // just in cae?
                 // we haven't, so allocate the table and initialize it
-                frameLookup.SetGranularity(1);
-                frameLookup.SetNum(anims[0].NumFrames());
-                for (i = 0; i < frameLookup.Num(); i++) {
-                    frameLookup.oSet(i, new frameLookup_t()).num = 0;
-                    frameLookup.oGet(i).firstCommand = 0;
+//                frameLookup.SetGranularity(1);
+//                frameLookup.SetNum(anims[0].NumFrames());
+                for (i = 0; i < anims[0].NumFrames(); i++) {
+                    // init with setting size as anims[0].NumFrames()!
+                    frameLookup.add(new frameLookup_t());
+                    // redundant as is setting num = 0, we are creating new frameLookup_t!
+                    //frameLookup.get(i).firstCommand = 0;
                 }
+                //frameLookup.trimToSize();
             }
 
             // allocate space for a new command
-            frameCommands.Alloc();
+            //frameCommands.Alloc();
 
             // calculate the index of the new command
-            index = frameLookup.oGet(framenum).firstCommand + frameLookup.oGet(framenum).num;
+            index = frameLookup.get(framenum).firstCommand + frameLookup.get(framenum).num;
 
             // move all commands from our index onward up one to give us space for our new command
-            for (i = frameCommands.Num() - 1; i > index; i--) {
-                frameCommands.oSet(i, frameCommands.oGet(i - 1));
+            // size is the actual size of the list, not size + 1 like it is in idList
+            for (i = frameCommands.size(); i > index; i--) {
+                if (i >= frameCommands.size()) {
+                    frameCommands.add(frameCommands.get(i - 1));
+                } else {
+                    frameCommands.set(i, frameCommands.get(i - 1));
+                }
             }
 
             // fix the indices of any later frames to account for the inserted command
-            for (i = framenum + 1; i < frameLookup.Num(); i++) {
-                frameLookup.oGet(i).firstCommand++;
+            for (i = framenum + 1; i < frameLookup.size(); i++) {
+                frameLookup.get(i).firstCommand++;
             }
 
             // store the new command
-            frameCommands.oSet(index, fc);
+            if (index >= frameCommands.size()) {
+                frameCommands.add(fc);
+            } else {
+                frameCommands.set(index, fc);
+            }
 
             // increase the number of commands on this frame
-            frameLookup.oGet(framenum).num++;
+            frameLookup.get(framenum).num++;
 
             // return with no error
             return null;
@@ -659,10 +682,10 @@ public class Anim_Blend {
                     frame = 0;
                 }
 
-                index = frameLookup.oGet(frame).firstCommand;
-                end = index + frameLookup.oGet(frame).num;
+                index = frameLookup.get(frame).firstCommand;
+                end = index + frameLookup.get(frame).num;
                 while (index < end) {
-                    final frameCommand_t command = frameCommands.oGet(index++);
+                    final frameCommand_t command = frameCommands.get(index++);
                     switch (command.type) {
                         case FC_SCRIPTFUNCTION: {
                             gameLocal.CallFrameCommand(ent, command.function);
@@ -812,19 +835,19 @@ public class Anim_Blend {
                             break;
                         }
                         case FC_TRIGGER_SMOKE_PARTICLE: {
-                            ent.ProcessEvent(AI_TriggerParticles, command.string.c_str());
+                            ent.ProcessEvent(AI_TriggerParticles, command.string.toString());
                             break;
                         }
                         case FC_MELEE: {
-                            ent.ProcessEvent(AI_AttackMelee, command.string.c_str());
+                            ent.ProcessEvent(AI_AttackMelee, command.string.toString());
                             break;
                         }
                         case FC_DIRECTDAMAGE: {
-                            ent.ProcessEvent(AI_DirectDamage, command.string.c_str());
+                            ent.ProcessEvent(AI_DirectDamage, command.string.toString());
                             break;
                         }
                         case FC_BEGINATTACK: {
-                            ent.ProcessEvent(AI_BeginAttack, command.string.c_str());
+                            ent.ProcessEvent(AI_BeginAttack, command.string.toString());
                             break;
                         }
                         case FC_ENDATTACK: {
@@ -832,19 +855,19 @@ public class Anim_Blend {
                             break;
                         }
                         case FC_MUZZLEFLASH: {
-                            ent.ProcessEvent(AI_MuzzleFlash, command.string.c_str());
+                            ent.ProcessEvent(AI_MuzzleFlash, command.string.toString());
                             break;
                         }
                         case FC_CREATEMISSILE: {
-                            ent.ProcessEvent(AI_CreateMissile, command.string.c_str());
+                            ent.ProcessEvent(AI_CreateMissile, command.string.toString());
                             break;
                         }
                         case FC_LAUNCHMISSILE: {
-                            ent.ProcessEvent(AI_AttackMissile, command.string.c_str());
+                            ent.ProcessEvent(AI_AttackMissile, command.string.toString());
                             break;
                         }
                         case FC_FIREMISSILEATTARGET: {
-                            ent.ProcessEvent(AI_FireMissileAtTarget, modelDef.GetJointName(command.index), command.string.c_str());
+                            ent.ProcessEvent(AI_FireMissileAtTarget, modelDef.GetJointName(command.index), command.string.toString());
                             break;
                         }
                         case FC_FOOTSTEP: {
@@ -925,27 +948,27 @@ public class Anim_Blend {
         }
 
         public boolean HasFrameCommands() {
-            return (0 != frameCommands.Num());
+            return (0 != frameCommands.size());
         }
 
         // returns first frame (zero based) that command occurs.  returns -1 if not found.
-        public int FindFrameForFrameCommand(frameCommandType_t framecommand, final frameCommand_t[] command) {
+        public int FindFrameForFrameCommand(final frameCommandType_t framecommand, final frameCommand_t[] command) {
             int frame;
             int index;
             int numframes;
             int end;
 
-            if (0 == frameCommands.Num()) {
+            if (0 == frameCommands.size()) {
                 return -1;
             }
 
             numframes = anims[0].NumFrames();
             for (frame = 0; frame < numframes; frame++) {
-                end = frameLookup.oGet(frame).firstCommand + frameLookup.oGet(frame).num;
-                for (index = frameLookup.oGet(frame).firstCommand; index < end; index++) {
-                    if (frameCommands.oGet(index).type == framecommand) {
+                end = frameLookup.get(frame).firstCommand + frameLookup.get(frame).num;
+                for (index = frameLookup.get(frame).firstCommand; index < end; index++) {
+                    if (frameCommands.get(index).type == framecommand) {
                         if (command != null) {
-                            command[0] = frameCommands.oGet(index);
+                            command[0] = frameCommands.get(index);
                         }
                         return frame;
                     }
@@ -960,7 +983,7 @@ public class Anim_Blend {
         }
 
         public void SetAnimFlags(final animFlags_t animflags) {
-            flags = animflags;
+            flags = new animFlags_t(animflags);
         }
 
         public animFlags_t GetAnimFlags() {
@@ -978,29 +1001,38 @@ public class Anim_Blend {
     public static class idDeclModelDef extends idDecl {
 
         private static final int MAX_ANIMS = 64;
-        private final idList<idAnim> anims;
-        private final idList<Integer>[] channelJoints = new idList[ANIM_NumAnimChannels];
-        private final idList<Integer> jointParents;
-        private final idList<jointInfo_t> joints;
+        private final ArrayList<idAnim> anims = new ArrayList<>();
+        private final ArrayList<Integer>[] channelJoints = new ArrayList[ANIM_NumAnimChannels];
+        private final ArrayList<Integer> jointParents = new ArrayList<>();
+        private final ArrayList<jointInfo_t> joints = new ArrayList<>();
+        private final idVec3 offset = new idVec3();
         private idRenderModel modelHandle;
-        private final idVec3 offset;
         //
         //
         private idDeclSkin skin;
         // ~idDeclModelDef();
 
         public idDeclModelDef() {
-            offset = new idVec3();
-            joints = new idList<>();
-            jointParents = new idList<>();
-            for (int i = 0; i < ANIM_NumAnimChannels; i++) {
-                channelJoints[i] = new idList<>();
-            }
             modelHandle = null;
-            anims = new idList<>();
             skin = null;
+            offset.Zero();
+            for (int i = 0; i < ANIM_NumAnimChannels; i++) {
+                channelJoints[i] = new ArrayList<>();
+            }
         }
 
+        public idDeclModelDef(idDeclModelDef def) {
+            Collections.copy(this.anims, def.anims);
+            for (int i = 0; i < channelJoints.length; i++) {
+                Collections.copy(this.channelJoints[i], def.channelJoints[i]);
+
+            }
+            Collections.copy(this.jointParents, def.jointParents);
+            Collections.copy(this.joints, def.joints);
+
+            this.offset.oSet(def.offset);
+            this.modelHandle = def.modelHandle;
+        }
 
         @Override
         public String DefaultDefinition() {
@@ -1011,7 +1043,7 @@ public class Anim_Blend {
         public boolean Parse(final String text, final int textLength) throws idException {
             int i;
             int num;
-            idStr filename;
+            idStr filename = new idStr();
             idStr extension = new idStr();
             int md5joint;
             idMD5Joint[] md5joints;
@@ -1021,7 +1053,7 @@ public class Anim_Blend {
             String jointnames;
             int channel;
             int/*jointHandle_t*/ jointnum;
-            final idList<Integer/*jointHandle_t*/> jointList = new idList<>();
+            final ArrayList<Integer> jointList = new ArrayList<>();
             int numDefaultAnims;
 
             src.LoadMemory(text, textLength, GetFileName(), GetLineNum());
@@ -1038,7 +1070,7 @@ public class Anim_Blend {
                     break;
                 }
 
-                if (token.equals("inherit")) {
+                if (token.toString().equals("inherit")) {
                     if (!src.ReadToken(token2)) {
                         src.Warning("Unexpected end of file");
                         MakeDefault();
@@ -1054,9 +1086,9 @@ public class Anim_Blend {
                         return false;
                     } else {
                         CopyDecl(copy);
-                        numDefaultAnims = anims.Num();
+                        numDefaultAnims = anims.size();
                     }
-                } else if (token.equals("skin")) {
+                } else if (token.toString().equals("skin")) {
                     if (!src.ReadToken(token2)) {
                         src.Warning("Unexpected end of file");
                         MakeDefault();
@@ -1068,13 +1100,13 @@ public class Anim_Blend {
                         MakeDefault();
                         return false;
                     }
-                } else if (token.equals("mesh")) {
+                } else if (token.toString().equals("mesh")) {
                     if (!src.ReadToken(token2)) {
                         src.Warning("Unexpected end of file");
                         MakeDefault();
                         return false;
                     }
-                    filename = token2;
+                    filename.oSet(token2);
                     filename.ExtractFileExtension(extension);
                     if (!extension.equals(MD5_MESH_EXT)) {
                         src.Warning("Invalid model for MD5 mesh");
@@ -1101,24 +1133,38 @@ public class Anim_Blend {
                     }
 
                     // set up the joint hierarchy
-                    joints.SetGranularity(1);
-                    joints.SetNum(num);
-                    jointParents.SetNum(num);
-                    channelJoints[0].SetNum(num);
+                    //joints.SetGranularity(1);
+                    //joints.SetNum(num);
+                    //jointParents.SetNum(num);
+                    //channelJoints[0].SetNum(num);
                     md5joints = modelHandle.GetJoints();
                     md5joint = 0;//md5joints;
                     for (i = 0; i < num; i++, md5joint++) {
-                        joints.oSet(i, new jointInfo_t()).channel = ANIMCHANNEL_ALL;
-                        joints.oGet(i).num = i;
-                        if (md5joints[md5joint].parent != null) {
-                            joints.oGet(i).parentNum = indexOf(md5joints[md5joint].parent, md5joints);
+                        jointInfo_t jointInfo_t = new jointInfo_t();
+                        jointInfo_t.channel = ANIMCHANNEL_ALL;
+                        if (i >= joints.size()) {
+                            joints.add(jointInfo_t);
                         } else {
-                            joints.oGet(i).parentNum = INVALID_JOINT;
+                            joints.set(i, jointInfo_t);
                         }
-                        jointParents.oSet(i, joints.oGet(i).parentNum);
-                        channelJoints[0].oSet(i, i);
+                        joints.get(i).num = i;
+                        if (md5joints[md5joint].parent != null) {
+                            joints.get(i).parentNum = indexOf(md5joints[md5joint].parent, md5joints);
+                        } else {
+                            joints.get(i).parentNum = INVALID_JOINT;
+                        }
+                        if (i >= jointParents.size()) {
+                            jointParents.add(joints.get(i).parentNum);
+                        } else {
+                            jointParents.set(i, joints.get(i).parentNum);
+                        }
+                        if (i >= channelJoints[0].size()) {
+                            channelJoints[0].add(i);
+                        } else {
+                            channelJoints[0].set(i, i);
+                        }
                     }
-                } else if (token.equals("remove")) {
+                } else if (token.toString().equals("remove")) {
                     // removes any anims whos name matches
                     if (!src.ReadToken(token2)) {
                         src.Warning("Unexpected end of file");
@@ -1126,10 +1172,10 @@ public class Anim_Blend {
                         return false;
                     }
                     num = 0;
-                    for (i = 0; i < anims.Num(); i++) {
-                        if ((token2.equals(anims.oGet(i).Name())) || (token2.equals(anims.oGet(i).FullName()))) {
+                    for (i = 0; i < anims.size(); i++) {
+                        if ((token2.toString().equals(anims.get(i).Name())) || (token2.toString().equals(anims.get(i).FullName()))) {
 //					delete anims[ i ];
-                            anims.RemoveIndex(i);
+                            anims.remove(i); // remove handles both delete and RemoveIndex
                             if (i >= numDefaultAnims) {
                                 src.Warning("Anim '%s' was not inherited.  Anim should be removed from the model def.", token2);
                                 MakeDefault();
@@ -1146,7 +1192,7 @@ public class Anim_Blend {
                         MakeDefault();
                         return false;
                     }
-                } else if (token.equals("anim")) {
+                } else if (token.toString().equals("anim")) {
                     if (null == modelHandle) {
                         src.Warning("Must specify mesh before defining anims");
                         MakeDefault();
@@ -1156,19 +1202,18 @@ public class Anim_Blend {
                         MakeDefault();
                         return false;
                     }
-                } else if (token.equals("offset")) {
+                } else if (token.toString().equals("offset")) {
                     if (!src.Parse1DMatrix(3, offset)) {
                         src.Warning("Expected vector following 'offset'");
                         MakeDefault();
                         return false;
                     }
-                } else if (token.equals("channel")) {
+                } else if (token.toString().equals("channel")) {
                     if (null == modelHandle) {
                         src.Warning("Must specify mesh before defining channels");
                         MakeDefault();
                         return false;
                     }
-
                     // set the channel for a group of joints
                     if (!src.ReadToken(token2)) {
                         src.Warning("Unexpected end of file");
@@ -1202,25 +1247,32 @@ public class Anim_Blend {
                             MakeDefault();
                             return false;
                         }
-                        jointnames += token2;
-                        if ((!token2.equals("*")) && (!token2.equals("-"))) {
+                        jointnames += token2.toString();
+                        if ((!token2.toString().equals("*")) && (!token2.toString().equals("-"))) {
                             jointnames += " ";
                         }
                     }
 
                     GetJointList(jointnames, jointList);
 
-                    channelJoints[channel].SetNum(jointList.Num());
-                    for (num = i = 0; i < jointList.Num(); i++) {
-                        jointnum = jointList.oGet(i);
-                        if (joints.oGet(jointnum).channel != ANIMCHANNEL_ALL) {
+                    //channelJoints[channel].SetNum(jointList.Num());
+                    //channelJoints[channel].trimToSize();
+                    for (num = i = 0; i < jointList.size(); i++) {
+                        jointnum = jointList.get(i);
+                        if (joints.get(jointnum).channel != ANIMCHANNEL_ALL) {
                             src.Warning("Joint '%s' assigned to multiple channels", modelHandle.GetJointName(jointnum));
                             continue;
                         }
-                        joints.oGet(jointnum).channel = channel;
-                        channelJoints[channel].oSet(num++, jointnum);
+                        joints.get(jointnum).channel = channel;
+                        if (i >= channelJoints[channel].size()) {
+                            num++;
+                            channelJoints[channel].add(jointnum);
+                        } else {
+                            channelJoints[channel].set(num++, jointnum);
+                        }
                     }
-                    channelJoints[channel].SetNum(num);
+                    //channelJoints[channel].SetNum(num);
+                    //channelJoints[channel].trimToSize();
                 } else {
                     src.Warning("unknown token '%s'", token);
                     MakeDefault();
@@ -1229,22 +1281,22 @@ public class Anim_Blend {
             }
 
             // shrink the anim list down to save space
-            anims.SetGranularity(1);
-            anims.SetNum(anims.Num());
+            //anims.SetGranularity(1);
+            // anims.trimToSize();
 
             return true;
         }
 
         @Override
         public void FreeData() {
-            anims.DeleteContents(true);
-            joints.Clear();
-            jointParents.Clear();
+            anims.clear();
+            joints.clear();
+            jointParents.clear();
             modelHandle = null;
             skin = null;
             offset.Zero();
             for (int i = 0; i < ANIM_NumAnimChannels; i++) {
-                channelJoints[i].Clear();
+                channelJoints[i].clear();
             }
         }
 
@@ -1262,16 +1314,18 @@ public class Anim_Blend {
             return modelHandle.GetDefaultPose();
         }
 
-        public void SetupJoints(int[] numJoints, idJointMat[][] jointList, idBounds frameBounds, boolean removeOriginOffset) {
+        public idJointMat[] SetupJoints(CInt numJoints, final idJointMat[] jointList, final idBounds frameBounds, boolean removeOriginOffset) {
             int num;
             idJointQuat[] pose;
             idJointMat[] list;
 
             if (null == modelHandle || modelHandle.IsDefaultModel()) {
 //                Mem_Free16(jointList);
-                jointList[0] = null;
+                for (int i = 0; i < jointList.length; i++) {
+                    jointList[i] = null;
+                }
                 frameBounds.Clear();
-                return;
+                return null;
             }
 
             // get the number of joints
@@ -1286,7 +1340,7 @@ public class Anim_Blend {
             pose = GetDefaultPose();
 
             // convert the joint quaternions to joint matrices
-            SIMDProcessor.ConvertJointQuatsToJointMats(list, pose, joints.Num());
+            SIMDProcessor.ConvertJointQuatsToJointMats(list, pose, joints.size());
 
             // check if we offset the model by the origin joint
             if (removeOriginOffset) {
@@ -1300,20 +1354,21 @@ public class Anim_Blend {
             }
 
             // transform the joint hierarchy
-            SIMDProcessor.TransformJoints(list, itoi(jointParents.getList(Integer[].class)), 1, joints.Num() - 1);
+            SIMDProcessor.TransformJoints(list, itoi(jointParents.toArray(Integer[]::new)), 1, joints.size() - 1);
 
-            numJoints[0] = num;
-            jointList[0] = list;
+            numJoints.setVal(num);
+
 
             // get the bounds of the default pose
             frameBounds.oSet(modelHandle.Bounds(null));
+            return list;
         }
 
         public idRenderModel ModelHandle() {
             return modelHandle;
         }
 
-        public void GetJointList(final String jointnames, final idList<Integer/*jointHandle_t*/> jointList) {
+        public void GetJointList(final String jointnames, final ArrayList<Integer> jointList) {
             String jointname;
             jointInfo_t joint;
             jointInfo_t child;
@@ -1327,7 +1382,7 @@ public class Anim_Blend {
                 return;
             }
 
-            jointList.Clear();
+            jointList.clear();
 
             num = modelHandle.NumJoints();
 
@@ -1357,29 +1412,29 @@ public class Anim_Blend {
                 }
 
                 if (!subtract) {
-                    jointList.AddUnique(joint.num);
+                    jointList.add(joint.num);
                 } else {
-                    jointList.Remove(joint.num);
+                    jointList.remove((Integer) joint.num);
                 }
 
                 if (getChildren) {
                     // include all joint's children
-                    child_i = joints.Find(joint) + 1;
+                    child_i = joints.indexOf(joint) + 1;
                     for (i = joint.num + 1; i < num; i++, child_i++) {
                         // all children of the joint should follow it in the list.
                         // once we reach a joint without a parent or with a parent
                         // who is earlier in the list than the specified joint, then
                         // we've gone through all it's children.
 
-                        child = joints.oGet(child_i);
+                        child = joints.get(child_i);
                         if (child.parentNum < joint.num) {
                             break;
                         }
 
                         if (!subtract) {
-                            jointList.AddUnique(child.num);
+                            jointList.add(child.num);
                         } else {
-                            jointList.Remove(child.num);
+                            jointList.remove((Integer) child.num);
                         }
                     }
                 }
@@ -1395,9 +1450,9 @@ public class Anim_Blend {
             }
 
             joint = modelHandle.GetJoints();
-            for (i = 0; i < joints.Num(); i++) {
+            for (i = 0; i < joints.size(); i++) {
                 if (NOT(joint[i].name.Icmp(name))) {
-                    return joints.oGet(i);
+                    return joints.get(i);
                 }
             }
 
@@ -1405,15 +1460,15 @@ public class Anim_Blend {
         }
 
         public int NumAnims() {
-            return anims.Num() + 1;
+            return anims.size() + 1;
         }
 
         public idAnim GetAnim(int index) {
-            if ((index < 1) || (index > anims.Num())) {
+            if ((index < 1) || (index > anims.size())) {
                 return null;
             }
 
-            return anims.oGet(index - 1);
+            return anims.get(index - 1);
         }
 
         /*
@@ -1427,9 +1482,10 @@ public class Anim_Blend {
             int i;
 
             // find a specific animation
-            for (i = 0; i < anims.Num(); i++) {
-                if (name.startsWith(anims.oGet(i).FullName())) {
-                    return i + 1;
+            for (i = 0; i < anims.size(); i++) {
+                if (name.startsWith(anims.get(i).FullName())) {
+                    return i + 1; // makes no sense, we found it at i, but we return i + 1? is this because all idList entries are shifted by 1?
+                    //return i;
                 }
             }
 
@@ -1452,8 +1508,8 @@ public class Anim_Blend {
 
             // find all animations with same name
             numAnims = 0;
-            for (i = 0; i < anims.Num(); i++) {
-                if (anims.oGet(i).Name().equals(name)) {
+            for (i = 0; i < anims.size(); i++) {
+                if (anims.get(i).Name().equals(name)) {
                     animList[numAnims++] = i;
                     if (numAnims >= MAX_ANIMS) {
                         break;
@@ -1475,8 +1531,8 @@ public class Anim_Blend {
             int i;
 
             // find any animations with same name
-            for (i = 0; i < anims.Num(); i++) {
-                if ((anims.oGet(i).Name().equals(name))) {
+            for (i = 0; i < anims.size(); i++) {
+                if ((anims.get(i).Name().equals(name))) {
                     return true;
                 }
             }
@@ -1496,23 +1552,23 @@ public class Anim_Blend {
             }
         }
 
-        public idList<jointInfo_t> Joints() {
+        public ArrayList<jointInfo_t> Joints() {
             return joints;
         }
 
         public Integer[] JointParents() {
-            return jointParents.getList(Integer[].class);
+            return jointParents.toArray(Integer[]::new);
         }
 
         public int NumJoints() {
-            return joints.Num();
+            return joints.size();
         }
 
         public jointInfo_t GetJoint(int jointHandle) {
-            if ((jointHandle < 0) || (jointHandle > joints.Num())) {
+            if ((jointHandle < 0) || (jointHandle > joints.size())) {
                 Game_local.idGameLocal.Error("idDeclModelDef::GetJoint : joint handle out of range");
             }
-            return joints.oGet(jointHandle);
+            return joints.get(jointHandle);
         }
 
         public String GetJointName(int jointHandle) {
@@ -1522,7 +1578,7 @@ public class Anim_Blend {
                 return null;
             }
 
-            if ((jointHandle < 0) || (jointHandle > joints.Num())) {
+            if ((jointHandle < 0) || (jointHandle > joints.size())) {
                 Game_local.idGameLocal.Error("idDeclModelDef::GetJointName : joint handle out of range");
             }
 
@@ -1534,14 +1590,14 @@ public class Anim_Blend {
             if ((channel < 0) || (channel >= ANIM_NumAnimChannels)) {
                 Game_local.idGameLocal.Error("idDeclModelDef::NumJointsOnChannel : channel out of range");
             }
-            return channelJoints[channel].Num();
+            return channelJoints[channel].size();
         }
 
         public Integer[] GetChannelJoints(int channel) {
             if ((channel < 0) || (channel >= ANIM_NumAnimChannels)) {
                 Game_local.idGameLocal.Error("idDeclModelDef::GetChannelJoints : channel out of range");
             }
-            return channelJoints[channel].getList(Integer[].class);
+            return channelJoints[channel].toArray(Integer[]::new);
         }
 
         public idVec3 GetVisualOffset() {
@@ -1557,67 +1613,78 @@ public class Anim_Blend {
             modelHandle = decl.modelHandle;
             skin = decl.skin;
 
-            anims.SetNum(decl.anims.Num());
-            for (i = 0; i < anims.Num(); i++) {
-                anims.oSet(i, new idAnim(this, decl.anims.oGet(i)));
+            //anims.SetNum(decl.anims.Num());
+            for (i = 0; i < decl.anims.size(); i++) {
+                if (i >= anims.size()) {
+                    anims.add(new idAnim(this, decl.anims.get(i)));
+                } else {
+                    anims.set(i, new idAnim(this, decl.anims.get(i)));
+                }
             }
 
-            joints.SetNum(decl.joints.Num());
+            //joints.SetNum(decl.joints.Num());
 //            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
-            for (i = 0; i < decl.joints.Num(); i++) {
-                joints.oSet(i, decl.joints.oGet(i));
+            for (i = 0; i < decl.joints.size(); i++) {
+                if (i >= joints.size()) {
+                    joints.add(decl.joints.get(i));
+                } else {
+                    joints.set(i, decl.joints.get(i));
+                }
             }
-            jointParents.SetNum(decl.jointParents.Num());
+            //jointParents.SetNum(decl.jointParents.Num());
 //            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
-            for (i = 0; i < decl.jointParents.Num(); i++) {
-                jointParents.oSet(i, decl.jointParents.oGet(i));
+            for (i = 0; i < decl.jointParents.size(); i++) {
+                if (i >= jointParents.size()) {
+                    jointParents.add(decl.jointParents.get(i));
+                } else {
+                    jointParents.set(i, decl.jointParents.get(i));
+                }
             }
 
             for (i = 0; i < ANIM_NumAnimChannels; i++) {
-                channelJoints[i] = decl.channelJoints[i];
+                channelJoints[i] = new ArrayList<>(decl.channelJoints[i]); //idList's = is overloaded!
             }
         }
 
-        private boolean ParseAnim(idLexer src, int numDefaultAnims) {
+        private boolean ParseAnim(final idLexer src, int numDefaultAnims) {
             int i;
             int len;
             idAnim anim;
             final idMD5Anim[] md5anims = new idMD5Anim[ANIM_MaxSyncedAnims];
             idMD5Anim md5anim;
-            idStr alias;
+            idStr alias = new idStr();
             idToken realname = new idToken();
             idToken token = new idToken();
             int numAnims;
-            animFlags_t flags;
+            animFlags_t flags = new animFlags_t();
 
             numAnims = 0;
-//	memset( md5anims, 0, sizeof( md5anims ) );
 
             if (!src.ReadToken(realname)) {
                 src.Warning("Unexpected end of file");
                 MakeDefault();
                 return false;
             }
-            alias = realname;
+            alias.oSet(realname);
 
-            for (i = 0; i < anims.Num(); i++) {
-                if ((anims.oGet(i).FullName().equals(realname))) {
+            for (i = 0; i < anims.size(); i++) {
+                if ((anims.get(i).FullName().equalsIgnoreCase(realname.toString()))) {
                     break;
                 }
             }
 
-            if ((i < anims.Num()) && (i >= numDefaultAnims)) {
+            if ((i < anims.size()) && (i >= numDefaultAnims)) {
                 src.Warning("Duplicate anim '%s'", realname);
                 MakeDefault();
                 return false;
             }
 
             if (i < numDefaultAnims) {
-                anim = anims.oGet(i);
+                anim = anims.get(i);
             } else {
                 // create the alias associated with this animation
                 anim = new idAnim();
-                anims.Append(anim);
+                anims.add(anim);
             }
 
             // random anims end with a number.  find the numeric suffix of the animation.
@@ -1683,8 +1750,6 @@ public class Anim_Blend {
             }
 
             anim.SetAnim(this, realname.toString(), alias.toString(), numAnims, md5anims);
-//	memset( &flags, 0, sizeof( flags ) );
-            flags = new animFlags_t();
 
             // parse any frame commands or animflags
             if (src.CheckTokenString("{")) {
@@ -1694,17 +1759,17 @@ public class Anim_Blend {
                         MakeDefault();
                         return false;
                     }
-                    if (token.equals("}")) {
+                    if (token.toString().equals("}")) {
                         break;
-                    } else if (token.equals("prevent_idle_override")) {
+                    } else if (token.toString().equals("prevent_idle_override")) {
                         flags.prevent_idle_override = true;
-                    } else if (token.equals("random_cycle_start")) {
+                    } else if (token.toString().equals("random_cycle_start")) {
                         flags.random_cycle_start = true;
-                    } else if (token.equals("ai_no_turn")) {
+                    } else if (token.toString().equals("ai_no_turn")) {
                         flags.ai_no_turn = true;
-                    } else if (token.equals("anim_turn")) {
+                    } else if (token.toString().equals("anim_turn")) {
                         flags.anim_turn = true;
-                    } else if (token.equals("frame")) {
+                    } else if (token.toString().equals("frame")) {
                         // create a frame command
                         int framenum;
                         String err;
@@ -1715,7 +1780,7 @@ public class Anim_Blend {
                             MakeDefault();
                             return false;
                         }
-                        if (token.type == TT_PUNCTUATION && token.equals("-")) {
+                        if (token.type == TT_PUNCTUATION && token.toString().equals("-")) {
                             src.Warning("Invalid frame # after 'frame'");
                             MakeDefault();
                             return false;
@@ -1746,9 +1811,6 @@ public class Anim_Blend {
             return true;
         }
 
-        public void oSet(idDeclModelDef idDeclModelDef) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
     }
 
     /*
@@ -1826,7 +1888,7 @@ public class Anim_Blend {
             blendDuration = 0;
         }
 
-        private void CallFrameCommands(idEntity ent, int fromtime, int totime) {
+        private void CallFrameCommands(final idEntity ent, int fromtime, int totime) {
             idMD5Anim md5anim;
             frameBlend_t frame1 = new frameBlend_t();
             frameBlend_t frame2 = new frameBlend_t();
@@ -1878,7 +1940,7 @@ public class Anim_Blend {
             }
 
             final idMD5Anim md5anim = _anim.MD5Anim(0);
-            if (modelDef.Joints().Num() != md5anim.NumJoints()) {
+            if (modelDef.Joints().size() != md5anim.NumJoints()) {
                 gameLocal.Warning("Model '%s' has different # of joints than anim '%s'", modelDef.GetModelName(), md5anim.Name());
                 return;
             }
@@ -1916,7 +1978,7 @@ public class Anim_Blend {
             }
 
             final idMD5Anim md5anim = _anim.MD5Anim(0);
-            if (modelDef.Joints().Num() != md5anim.NumJoints()) {
+            if (modelDef.Joints().size() != md5anim.NumJoints()) {
                 gameLocal.Warning("Model '%s' has different # of joints than anim '%s'", modelDef.GetModelName(), md5anim.Name());
                 return;
             }
@@ -1951,7 +2013,7 @@ public class Anim_Blend {
             }
 
             final idMD5Anim md5anim = _anim.MD5Anim(0);
-            if (modelDef.Joints().Num() != md5anim.NumJoints()) {
+            if (modelDef.Joints().size() != md5anim.NumJoints()) {
                 gameLocal.Warning("Model '%s' has different # of joints than anim '%s'", modelDef.GetModelName(), md5anim.Name());
                 return;
             }
@@ -1969,13 +2031,13 @@ public class Anim_Blend {
             blendStartValue = 0.0f;
         }
 
-        private boolean BlendAnim(int currentTime, int channel, int numJoints, idJointQuat[] blendFrame, CFloat blendWeight, boolean removeOriginOffset, boolean overrideBlend, boolean printInfo) {
+        private boolean BlendAnim(int currentTime, int channel, int numJoints, final idJointQuat[] blendFrame, final CFloat blendWeight, boolean removeOriginOffset, boolean overrideBlend, boolean printInfo) {
             int i;
             float lerp;
             float mixWeight;
             idMD5Anim md5anim;
             idJointQuat[] ptr;
-            frameBlend_t frametime = new frameBlend_t();
+            final frameBlend_t frametime = new frameBlend_t();
             idJointQuat[] jointFrame;
             idJointQuat[] mixFrame;
             int numAnims;
@@ -2098,7 +2160,7 @@ public class Anim_Blend {
             return true;
         }
 
-        private void BlendOrigin(int currentTime, final idVec3 blendPos, CFloat blendWeight, boolean removeOriginOffset) {
+        private void BlendOrigin(int currentTime, final idVec3 blendPos, final CFloat blendWeight, boolean removeOriginOffset) {
             float lerp;
             final idVec3 animpos = new idVec3();
             final idVec3 pos = new idVec3();
@@ -2143,7 +2205,7 @@ public class Anim_Blend {
             }
         }
 
-        private void BlendDelta(int fromtime, int totime, final idVec3 blendDelta, CFloat blendWeight) {
+        private void BlendDelta(int fromtime, int totime, final idVec3 blendDelta, final CFloat blendWeight) {
             final idVec3 pos1 = new idVec3();
             final idVec3 pos2 = new idVec3();
             final idVec3 animpos = new idVec3();
@@ -2197,7 +2259,7 @@ public class Anim_Blend {
             }
         }
 
-        private void BlendDeltaRotation(int fromtime, int totime, idQuat blendDelta, CFloat blendWeight) {
+        private void BlendDeltaRotation(int fromtime, int totime, final idQuat blendDelta, final CFloat blendWeight) {
             final idQuat q1 = new idQuat();
             final idQuat q2 = new idQuat();
             final idQuat q3 = new idQuat();
@@ -2261,10 +2323,10 @@ public class Anim_Blend {
             }
         }
 
-        private boolean AddBounds(int currentTime, idBounds bounds, boolean removeOriginOffset) {
+        private boolean AddBounds(int currentTime, final idBounds bounds, boolean removeOriginOffset) {
             int i;
             int num;
-            idBounds b = new idBounds();
+            final idBounds b = new idBounds();
             int time;
             final idVec3 pos = new idVec3();
             boolean addorigin;
@@ -2447,8 +2509,11 @@ public class Anim_Blend {
             if (0 == frame && (endtime > 0) && (currentTime >= endtime)) {
                 return true;
             }
+            if ((blendEndValue <= 0.0f) && (currentTime >= (blendStartTime + blendDuration))) {
+                return true;
+            }
 
-            return (blendEndValue <= 0.0f) && (currentTime >= (blendStartTime + blendDuration));
+            return false;
         }
 
         public boolean FrameHasChanged(int currentTime) {
@@ -2468,7 +2533,11 @@ public class Anim_Blend {
             }
 
             // if we're a single frame anim and this isn't the frame we started on, we don't need to update
-            return (frame == 0 && (NumFrames() != 1)) || (currentTime == starttime);
+            if ((frame != 0 || (NumFrames() == 1)) && (currentTime != starttime)) {
+                return false;
+            }
+
+            return true;
         }
 
         public int GetCycleCount() {
@@ -2559,7 +2628,7 @@ public class Anim_Blend {
 
         public int GetFrameNumber(int currentTime) {
             final idMD5Anim md5anim;
-            frameBlend_t frameinfo = new frameBlend_t();
+            final frameBlend_t frameinfo = new frameBlend_t();
             int animTime;
 
             final idAnim anim = Anim();
@@ -2687,12 +2756,12 @@ public class Anim_Blend {
 
         private static final idCVar r_showSkel = new idCVar("r_showSkel", "0", CVAR_RENDERER | CVAR_INTEGER, "", 0, 2, new idCmdSystem.ArgCompletion_Integer(0, 2));
         private final idBounds AFPoseBounds;
-        private final idList<idJointQuat> AFPoseJointFrame;
-        private final idList<idAFPoseJointMod> AFPoseJointMods;
-        private final idList<Integer> AFPoseJoints;
+        private final ArrayList<idJointQuat> AFPoseJointFrame;
+        private final ArrayList<idAFPoseJointMod> AFPoseJointMods;
+        private final ArrayList<Integer> AFPoseJoints;
         //
         private final idAnimBlend[][] channels = new idAnimBlend[ANIM_NumAnimChannels][ANIM_MaxAnimsPerChannel];
-        private final idList<jointMod_t> jointMods;
+        private final ArrayList<jointMod_t> jointMods;
         //
         private float AFPoseBlendWeight;
         private int AFPoseTime;
@@ -2704,7 +2773,7 @@ public class Anim_Blend {
         //
         private int lastTransformTime;        // mutable because the value is updated in CreateFrame
         private idDeclModelDef modelDef;
-        private int numJoints;
+        private CInt numJoints;
         private boolean removeOriginOffset;
         //
         //
@@ -2716,8 +2785,8 @@ public class Anim_Blend {
 
             modelDef = null;
             entity = null;
-            jointMods = new idList<>();
-            numJoints = 0;
+            jointMods = new ArrayList<>();
+            numJoints = new CInt();
             joints = null;
             lastTransformTime = -1;
             stoppedAnimatingUpdate = false;
@@ -2727,9 +2796,9 @@ public class Anim_Blend {
             frameBounds = new idBounds();
             frameBounds.Clear();
 
-            AFPoseJoints = new idList<>(1);
-            AFPoseJointMods = new idList<>(1);
-            AFPoseJointFrame = new idList<>(1);
+            AFPoseJoints = new ArrayList<>();
+            AFPoseJointMods = new ArrayList<>();
+            AFPoseJointFrame = new ArrayList<>();
             AFPoseBounds = new idBounds();
 
             ClearAFPose();
@@ -2744,7 +2813,7 @@ public class Anim_Blend {
         public int/*size_t*/ Allocated() {
             int/*size_t*/ size;
 
-            size = jointMods.Allocated() + numJoints + AFPoseJointMods.Allocated() + AFPoseJointFrame.Allocated() + AFPoseJoints.Allocated();
+            size = jointMods.size() + numJoints.getVal() + AFPoseJointMods.size() + AFPoseJointFrame.size() + AFPoseJoints.size();
             return size;
         }
 
@@ -2762,17 +2831,17 @@ public class Anim_Blend {
             savefile.WriteModelDef(modelDef);
             savefile.WriteObject(entity);
 
-            savefile.WriteInt(jointMods.Num());
-            for (i = 0; i < jointMods.Num(); i++) {
-                savefile.WriteInt(jointMods.oGet(i).jointnum);
-                savefile.WriteMat3(jointMods.oGet(i).mat);
-                savefile.WriteVec3(jointMods.oGet(i).pos);
-                savefile.WriteInt(etoi(jointMods.oGet(i).transform_pos));
-                savefile.WriteInt(etoi(jointMods.oGet(i).transform_axis));
+            savefile.WriteInt(jointMods.size());
+            for (i = 0; i < jointMods.size(); i++) {
+                savefile.WriteInt(jointMods.get(i).jointnum);
+                savefile.WriteMat3(jointMods.get(i).mat);
+                savefile.WriteVec3(jointMods.get(i).pos);
+                savefile.WriteInt(etoi(jointMods.get(i).transform_pos));
+                savefile.WriteInt(etoi(jointMods.get(i).transform_axis));
             }
 
-            savefile.WriteInt(numJoints);
-            for (i = 0; i < numJoints; i++) {
+            savefile.WriteInt(numJoints.getVal());
+            for (i = 0; i < numJoints.getVal(); i++) {
                 float[] data = joints[i].ToFloatPtr();
                 for (j = 0; j < 12; j++) {
                     savefile.WriteFloat(data[j]);
@@ -2786,25 +2855,25 @@ public class Anim_Blend {
 
             savefile.WriteFloat(AFPoseBlendWeight);
 
-            savefile.WriteInt(AFPoseJoints.Num());
-            for (i = 0; i < AFPoseJoints.Num(); i++) {
-                savefile.WriteInt(AFPoseJoints.oGet(i));
+            savefile.WriteInt(AFPoseJoints.size());
+            for (i = 0; i < AFPoseJoints.size(); i++) {
+                savefile.WriteInt(AFPoseJoints.get(i));
             }
 
-            savefile.WriteInt(AFPoseJointMods.Num());
-            for (i = 0; i < AFPoseJointMods.Num(); i++) {
-                savefile.WriteInt(etoi(AFPoseJointMods.oGet(i).mod));
-                savefile.WriteMat3(AFPoseJointMods.oGet(i).axis);
-                savefile.WriteVec3(AFPoseJointMods.oGet(i).origin);
+            savefile.WriteInt(AFPoseJointMods.size());
+            for (i = 0; i < AFPoseJointMods.size(); i++) {
+                savefile.WriteInt(etoi(AFPoseJointMods.get(i).mod));
+                savefile.WriteMat3(AFPoseJointMods.get(i).axis);
+                savefile.WriteVec3(AFPoseJointMods.get(i).origin);
             }
 
-            savefile.WriteInt(AFPoseJointFrame.Num());
-            for (i = 0; i < AFPoseJointFrame.Num(); i++) {
-                savefile.WriteFloat(AFPoseJointFrame.oGet(i).q.x);
-                savefile.WriteFloat(AFPoseJointFrame.oGet(i).q.y);
-                savefile.WriteFloat(AFPoseJointFrame.oGet(i).q.z);
-                savefile.WriteFloat(AFPoseJointFrame.oGet(i).q.w);
-                savefile.WriteVec3(AFPoseJointFrame.oGet(i).t);
+            savefile.WriteInt(AFPoseJointFrame.size());
+            for (i = 0; i < AFPoseJointFrame.size(); i++) {
+                savefile.WriteFloat(AFPoseJointFrame.get(i).q.x);
+                savefile.WriteFloat(AFPoseJointFrame.get(i).q.y);
+                savefile.WriteFloat(AFPoseJointFrame.get(i).q.z);
+                savefile.WriteFloat(AFPoseJointFrame.get(i).q.w);
+                savefile.WriteVec3(AFPoseJointFrame.get(i).t);
             }
 
             savefile.WriteBounds(AFPoseBounds);
@@ -2835,19 +2904,24 @@ public class Anim_Blend {
             savefile.ReadObject(/*reinterpret_cast<idClass *&>*/entity);
 
             savefile.ReadInt(num);
-            jointMods.SetNum(num.getVal());
+            //jointMods.SetNum(num.getVal());
             for (i = 0; i < num.getVal(); i++) {
-                jointMods.oSet(i, new jointMod_t());
-                jointMods.oGet(i).jointnum = savefile.ReadInt();
-                savefile.ReadMat3(jointMods.oGet(i).mat);
-                savefile.ReadVec3(jointMods.oGet(i).pos);
-                jointMods.oGet(i).transform_pos = jointModTransform_t.values()[savefile.ReadInt()];
-                jointMods.oGet(i).transform_axis = jointModTransform_t.values()[savefile.ReadInt()];
+                if (i >= jointMods.size()) {
+                    jointMods.add(new jointMod_t());
+
+                } else {
+                    jointMods.set(i, new jointMod_t());
+                }
+                jointMods.get(i).jointnum = savefile.ReadInt();
+                savefile.ReadMat3(jointMods.get(i).mat);
+                savefile.ReadVec3(jointMods.get(i).pos);
+                jointMods.get(i).transform_pos = jointModTransform_t.values()[savefile.ReadInt()];
+                jointMods.get(i).transform_axis = jointModTransform_t.values()[savefile.ReadInt()];
             }
 
-            numJoints = savefile.ReadInt();
-            joints = new idJointMat[numJoints];
-            for (i = 0; i < numJoints; i++) {
+            numJoints.setVal(savefile.ReadInt());
+            joints = new idJointMat[numJoints.getVal()];
+            for (i = 0; i < numJoints.getVal(); i++) {
                 float[] data = joints[i].ToFloatPtr();
                 for (j = 0; j < 12; j++) {
                     data[j] = savefile.ReadFloat();
@@ -2862,30 +2936,34 @@ public class Anim_Blend {
             AFPoseBlendWeight = savefile.ReadFloat();
 
             savefile.ReadInt(num);
-            AFPoseJoints.SetGranularity(1);
-            AFPoseJoints.SetNum(num.getVal());
-            for (i = 0; i < AFPoseJoints.Num(); i++) {
-                AFPoseJoints.oSet(i, savefile.ReadInt());
+            //AFPoseJoints.SetGranularity(1);
+            //AFPoseJoints.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
+                if (i >= AFPoseJoints.size()) {
+                    AFPoseJoints.add(savefile.ReadInt());
+                } else {
+                    AFPoseJoints.set(i, savefile.ReadInt());
+                }
             }
 
             savefile.ReadInt(num);
-            AFPoseJointMods.SetGranularity(1);
-            AFPoseJointMods.SetNum(num.getVal());
-            for (i = 0; i < AFPoseJointMods.Num(); i++) {
-                AFPoseJointMods.oGet(i).mod = AFJointModType_t.values()[savefile.ReadInt()];
-                savefile.ReadMat3(AFPoseJointMods.oGet(i).axis);
-                savefile.ReadVec3(AFPoseJointMods.oGet(i).origin);
+            //AFPoseJointMods.SetGranularity(1);
+            //AFPoseJointMods.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
+                AFPoseJointMods.get(i).mod = AFJointModType_t.values()[savefile.ReadInt()];
+                savefile.ReadMat3(AFPoseJointMods.get(i).axis);
+                savefile.ReadVec3(AFPoseJointMods.get(i).origin);
             }
 
             savefile.ReadInt(num);
-            AFPoseJointFrame.SetGranularity(1);
-            AFPoseJointFrame.SetNum(num.getVal());
-            for (i = 0; i < AFPoseJointFrame.Num(); i++) {
-                AFPoseJointFrame.oGet(i).q.x = savefile.ReadFloat();
-                AFPoseJointFrame.oGet(i).q.y = savefile.ReadFloat();
-                AFPoseJointFrame.oGet(i).q.z = savefile.ReadFloat();
-                AFPoseJointFrame.oGet(i).q.w = savefile.ReadFloat();
-                savefile.ReadVec3(AFPoseJointFrame.oGet(i).t);
+            //AFPoseJointFrame.SetGranularity(1);
+            //AFPoseJointFrame.SetNum(num.getVal());
+            for (i = 0; i < num.getVal(); i++) {
+                AFPoseJointFrame.get(i).q.x = savefile.ReadFloat();
+                AFPoseJointFrame.get(i).q.y = savefile.ReadFloat();
+                AFPoseJointFrame.get(i).q.z = savefile.ReadFloat();
+                AFPoseJointFrame.get(i).q.w = savefile.ReadFloat();
+                savefile.ReadVec3(AFPoseJointFrame.get(i).t);
             }
 
             savefile.ReadBounds(AFPoseBounds);
@@ -2916,13 +2994,13 @@ public class Anim_Blend {
             return removeOriginOffset;
         }
 
-        public void GetJointList(final String jointnames, final idList<Integer/*jointHandle_t*/> jointList) {
+        public void GetJointList(final String jointnames, final ArrayList<Integer/*jointHandle_t*/> jointList) {
             if (modelDef != null) {
                 modelDef.GetJointList(jointnames, jointList);
             }
         }
 
-        public void GetJointList(final idStr jointnames, final idList<Integer/*jointHandle_t*/> jointList) {
+        public void GetJointList(final idStr jointnames, final ArrayList<Integer/*jointHandle_t*/> jointList) {
             GetJointList(jointnames.toString(), jointList);
         }
 
@@ -2999,7 +3077,7 @@ public class Anim_Blend {
             }
 
             // if animating with an articulated figure
-            if (AFPoseJoints.Num() != 0 && currentTime <= AFPoseTime) {
+            if (AFPoseJoints.size() != 0 && currentTime <= AFPoseTime) {
                 return true;
             }
 
@@ -3015,18 +3093,13 @@ public class Anim_Blend {
             return false;
         }
 
-        public void GetJoints(int[] numJoints, idJointMat[][] jointsPtr) {
-            numJoints[0] = this.numJoints;
-            jointsPtr[0] = this.joints;
-        }
-
-        public int GetJoints(idJointMat[][] jointsPtr) {
-            jointsPtr[0] = this.joints;
-            return this.numJoints;
+        public int GetJoints(RenderWorld.renderEntity_s renderEntity) {
+            renderEntity.joints = this.joints;
+            return this.numJoints.getVal();
         }
 
         public int NumJoints() {
-            return numJoints;
+            return numJoints.getVal();
         }
 
         public int/*jointHandle_t*/ GetFirstChild(int/*jointHandle_t*/ jointnum) {
@@ -3057,7 +3130,7 @@ public class Anim_Blend {
 
         public idRenderModel SetModel(final String modelname) {
             int i, j;
-            int[] numJoints = {0};
+            //int[] numJoints = {0};
 
             FreeData();
 
@@ -3079,13 +3152,7 @@ public class Anim_Blend {
 
             // make sure model hasn't been purged
             modelDef.Touch();
-
-            {
-                idJointMat[][] joints = {null};
-                modelDef.SetupJoints(numJoints, joints, frameBounds, removeOriginOffset);
-                this.joints = joints[0];
-                this.numJoints = numJoints[0];
-            }
+            joints = modelDef.SetupJoints(numJoints, joints, frameBounds, removeOriginOffset);
             modelDef.ModelHandle().Reset();
 
             // set the modelDef on all channels
@@ -3130,7 +3197,7 @@ public class Anim_Blend {
             idAnimBlend[] blend;
             Integer[] jointParent;
             jointMod_t jointMod;
-            idJointQuat[] defaultPose;
+            ArrayList<idJointQuat> defaultPose;
 
             if (gameLocal.inCinematic && gameLocal.skipCinematic) {
                 return false;
@@ -3151,7 +3218,7 @@ public class Anim_Blend {
 
             lastTransformTime = currentTime;
             stoppedAnimatingUpdate = false;
-            numJoints = modelDef.Joints().Num();
+            //numJoints = modelDef.Joints().size();
 
             if (entity != null && ((g_debugAnim.GetInteger() == entity.entityNumber) || (g_debugAnim.GetInteger() == -2))) {
                 debugInfo = true;
@@ -3162,11 +3229,11 @@ public class Anim_Blend {
             }
 
             // init the joint buffer
-            if (AFPoseJoints.Num() != 0) {
+            if (AFPoseJoints.size() != 0) {
                 // initialize with AF pose anim for the case where there are no other animations and no AF pose joint modifications
-                defaultPose = AFPoseJointFrame.getList(idJointQuat[].class);
+                defaultPose = AFPoseJointFrame;
             } else {
-                defaultPose = modelDef.GetDefaultPose();
+                defaultPose = new ArrayList(Arrays.asList(modelDef.GetDefaultPose()));
             }
 
             if (null == defaultPose) {
@@ -3174,8 +3241,12 @@ public class Anim_Blend {
                 return false;
             }
 
+            numJoints = modelDef.Joints().size();
             idJointQuat[] jointFrame = new idJointQuat[numJoints];
-            SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
+            //SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
+            for (int index = 0; index < numJoints; index++) {
+                jointFrame[index] = defaultPose.get(index);
+            }
 
             hasAnim = false;
 
@@ -3213,7 +3284,7 @@ public class Anim_Blend {
                         }
                     }
 
-                    if (debugInfo && 0 == AFPoseJoints.Num() && 0 == blendWeight.getVal()) {
+                    if (debugInfo && 0 == AFPoseJoints.size() && 0 == blendWeight.getVal()) {
                         gameLocal.Printf("%d: %s using default pose in model '%s'\n", gameLocal.time, channelNames[i], modelDef.GetModelName());
                     }
                 }
@@ -3239,7 +3310,7 @@ public class Anim_Blend {
                 hasAnim = true;
             }
 
-            if (!hasAnim && 0 == jointMods.Num()) {
+            if (!hasAnim && 0 == jointMods.size()) {
                 // no animations were updated
                 return false;
             }
@@ -3248,35 +3319,29 @@ public class Anim_Blend {
             SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints);
 
             // check if we need to modify the origin
-            if (jointMods.Num() != 0 && (jointMods.oGet(0).jointnum == 0)) {
-                jointMod = jointMods.oGet(0);
+            if (jointMods.size() != 0 && (jointMods.get(0).jointnum == 0)) {
+                jointMod = jointMods.get(0);
 
                 switch (jointMod.transform_axis) {
                     case JOINTMOD_NONE:
                         break;
-
                     case JOINTMOD_LOCAL:
                         joints[0].SetRotation(jointMod.mat.oMultiply(joints[0].ToMat3()));
                         break;
-
                     case JOINTMOD_WORLD:
                         joints[0].SetRotation(joints[0].ToMat3().oMultiply(jointMod.mat));
                         break;
-
                     case JOINTMOD_LOCAL_OVERRIDE:
                     case JOINTMOD_WORLD_OVERRIDE:
                         joints[0].SetRotation(jointMod.mat);
                         break;
                 }
-
                 switch (jointMod.transform_pos) {
                     case JOINTMOD_NONE:
                         break;
-
                     case JOINTMOD_LOCAL:
                         joints[0].SetTranslation(joints[0].ToVec3().oPlus(jointMod.pos));
                         break;
-
                     case JOINTMOD_LOCAL_OVERRIDE:
                     case JOINTMOD_WORLD:
                     case JOINTMOD_WORLD_OVERRIDE:
@@ -3295,8 +3360,8 @@ public class Anim_Blend {
             jointParent = modelDef.JointParents();
 
             // add in any joint modifications
-            for (i = 1; j < jointMods.Num(); j++, i++) {
-                jointMod = jointMods.oGet(j);
+            for (i = 1; j < jointMods.size(); j++, i++) {
+                jointMod = jointMods.get(j);
 
                 // transform any joints preceding the joint modifier
                 SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, jointMod.jointnum - 1);
@@ -3342,7 +3407,9 @@ public class Anim_Blend {
                         break;
 
                     case JOINTMOD_WORLD:
+                        //joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())).oPlus(jointMod.pos));
                         joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3()).oMultiply(joints[parentNum].ToMat3()).oPlus(jointMod.pos));
+
                         break;
 
                     case JOINTMOD_WORLD_OVERRIDE:
@@ -3366,7 +3433,7 @@ public class Anim_Blend {
             }
 
             // if animating with an articulated figure
-            if (AFPoseJoints.Num() != 0 && currentTime <= AFPoseTime) {
+            if (AFPoseJoints.size() != 0 && currentTime <= AFPoseTime) {
                 return true;
             }
 
@@ -3378,8 +3445,11 @@ public class Anim_Blend {
                     }
                 }
             }
+            if (forceUpdate && IsAnimating(currentTime)) {
+                return true;
+            }
 
-            return forceUpdate && IsAnimating(currentTime);
+            return false;
         }
 
         public void GetDelta(int fromtime, int totime, final idVec3 delta) {
@@ -3400,8 +3470,8 @@ public class Anim_Blend {
                 blend[i].BlendDelta(fromtime, totime, delta, blendWeight);
             }
 
-            if (modelDef.Joints().oGet(0).channel != 0) {
-                final int c = modelDef.Joints().oGet(0).channel;
+            if (modelDef.Joints().get(0).channel != 0) {
+                final int c = modelDef.Joints().get(0).channel;
                 blend = channels[c];
                 for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
                     blend[i].BlendDelta(fromtime, totime, delta, blendWeight);
@@ -3409,7 +3479,7 @@ public class Anim_Blend {
             }
         }
 
-        public boolean GetDeltaRotation(int fromtime, int totime, idMat3 delta) {
+        public boolean GetDeltaRotation(int fromtime, int totime, final idMat3 delta) {
             int i;
             idAnimBlend[] blend;
             CFloat blendWeight = new CFloat();
@@ -3428,8 +3498,8 @@ public class Anim_Blend {
                 blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight);
             }
 
-            if (modelDef.Joints().oGet(0).channel != 0) {
-                final int c = modelDef.Joints().oGet(0).channel;
+            if (modelDef.Joints().get(0).channel != 0) {
+                final int c = modelDef.Joints().get(0).channel;
                 blend = channels[c];
                 for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
                     blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight);
@@ -3463,8 +3533,8 @@ public class Anim_Blend {
                 blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset);
             }
 
-            if (modelDef.Joints().oGet(0).channel != 0) {
-                final int k = modelDef.Joints().oGet(0).channel;
+            if (modelDef.Joints().get(0).channel != 0) {
+                final int k = modelDef.Joints().get(0).channel;
                 blend = channels[k];
                 for (i = 0; i < ANIM_MaxAnimsPerChannel; i++) {
                     blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset);
@@ -3474,27 +3544,26 @@ public class Anim_Blend {
             pos.oPluSet(modelDef.GetVisualOffset());
         }
 
-        public boolean GetBounds(int currentTime, idBounds bounds) {
+        public boolean GetBounds(int currentTime, final idBounds bounds) {
             int i, j;
-            idAnimBlend[][] blend;
+            idAnimBlend[] blend;
             int count;
 
             if (null == modelDef || null == modelDef.ModelHandle()) {
                 return false;
             }
 
-            if (AFPoseJoints.Num() != 0) {
-                bounds = AFPoseBounds;
+            if (AFPoseJoints.size() != 0) {
+                bounds.oSet(AFPoseBounds);
                 count = 1;
             } else {
                 bounds.Clear();
                 count = 0;
             }
 
-            blend = channels;
             for (i = ANIMCHANNEL_ALL; i < ANIM_NumAnimChannels; i++) {
                 for (j = 0; j < ANIM_MaxAnimsPerChannel; j++) {
-                    if (blend[i][j].AddBounds(currentTime, bounds, removeOriginOffset)) {
+                    if (channels[i][j].AddBounds(currentTime, bounds, removeOriginOffset)) {
                         count++;
                     }
                 }
@@ -3522,7 +3591,7 @@ public class Anim_Blend {
                 }
             }
 
-            frameBounds = bounds;
+            frameBounds.oSet(bounds);
 
             return true;
         }
@@ -3605,8 +3674,8 @@ public class Anim_Blend {
                 Game_local.idGameLocal.Error("idAnimator::SyncToChannel : channel out of range");
             }
 
-            idAnimBlend fromBlend = channels[fromChannelNum][0];
-            idAnimBlend toBlend = channels[channelNum][0];
+            idAnimBlend fromBlend = new idAnimBlend(channels[fromChannelNum][0]);
+            idAnimBlend toBlend = new idAnimBlend(channels[channelNum][0]);
 
             float weight = fromBlend.blendEndValue;
             if ((fromBlend.Anim() != toBlend.Anim()) || (fromBlend.GetStartTime() != toBlend.GetStartTime()) || (fromBlend.GetEndTime() != toBlend.GetEndTime())) {
@@ -3626,20 +3695,20 @@ public class Anim_Blend {
             }
         }
 
-        public void SetJointPos(int/*jointHandle_t*/ jointnum, jointModTransform_t transform_type, final idVec3 pos) {
+        public void SetJointPos(int/*jointHandle_t*/ jointnum, final jointModTransform_t transform_type, final idVec3 pos) {
             int i;
             jointMod_t jointMod;
 
-            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
+            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints.getVal())) {
                 return;
             }
 
             jointMod = null;
-            for (i = 0; i < jointMods.Num(); i++) {
-                if (jointMods.oGet(i).jointnum == jointnum) {
-                    jointMod = jointMods.oGet(i);
+            for (i = 0; i < jointMods.size(); i++) {
+                if (jointMods.get(i).jointnum == jointnum) {
+                    jointMod = jointMods.get(i);
                     break;
-                } else if (jointMods.oGet(i).jointnum > jointnum) {
+                } else if (jointMods.get(i).jointnum > jointnum) {
                     break;
                 }
             }
@@ -3649,7 +3718,11 @@ public class Anim_Blend {
                 jointMod.jointnum = jointnum;
                 jointMod.mat.Identity();
                 jointMod.transform_axis = JOINTMOD_NONE;
-                jointMods.Insert(jointMod, i);
+                if (i >= jointMods.size()) {
+                    jointMods.add(jointMod);
+                } else {
+                    jointMods.set(i, jointMod);
+                }
             }
 
             jointMod.pos.oSet(pos);
@@ -3661,20 +3734,20 @@ public class Anim_Blend {
             ForceUpdate();
         }
 
-        public void SetJointAxis(int/*jointHandle_t*/ jointnum, jointModTransform_t transform_type, final idMat3 mat) {
+        public void SetJointAxis(int/*jointHandle_t*/ jointnum, final jointModTransform_t transform_type, final idMat3 mat) {
             int i;
             jointMod_t jointMod;
 
-            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
+            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints.getVal())) {
                 return;
             }
 
             jointMod = null;
-            for (i = 0; i < jointMods.Num(); i++) {
-                if (jointMods.oGet(i).jointnum == jointnum) {
-                    jointMod = jointMods.oGet(i);
+            for (i = 0; i < jointMods.size(); i++) {
+                if (jointMods.get(i).jointnum == jointnum) {
+                    jointMod = jointMods.get(i);
                     break;
-                } else if (jointMods.oGet(i).jointnum > jointnum) {
+                } else if (jointMods.get(i).jointnum > jointnum) {
                     break;
                 }
             }
@@ -3684,7 +3757,12 @@ public class Anim_Blend {
                 jointMod.jointnum = jointnum;
                 jointMod.pos.Zero();
                 jointMod.transform_pos = JOINTMOD_NONE;
-                jointMods.Insert(jointMod, i);
+                if (i >= jointMods.size()) {
+                    jointMods.add(jointMod);
+                } else {
+                    jointMods.set(i, jointMod);
+                }
+
             }
 
             jointMod.mat.oSet(mat);
@@ -3699,27 +3777,27 @@ public class Anim_Blend {
         public void ClearJoint(int/*jointHandle_t*/ jointnum) {
             int i;
 
-            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints)) {
+            if (null == modelDef || null == modelDef.ModelHandle() || (jointnum < 0) || (jointnum >= numJoints.getVal())) {
                 return;
             }
 
-            for (i = 0; i < jointMods.Num(); i++) {
-                if (jointMods.oGet(i).jointnum == jointnum) {
+            for (i = 0; i < jointMods.size(); i++) {
+                if (jointMods.get(i).jointnum == jointnum) {
 //			delete jointMods[ i ];
-                    jointMods.RemoveIndex(i);
+                    jointMods.remove(i);
                     ForceUpdate();
                     break;
-                } else if (jointMods.oGet(i).jointnum > jointnum) {
+                } else if (jointMods.get(i).jointnum > jointnum) {
                     break;
                 }
             }
         }
 
         public void ClearAllJoints() {
-            if (jointMods.Num() != 0) {
+            if (jointMods.size() != 0) {
                 ForceUpdate();
             }
-            jointMods.DeleteContents(true);
+            jointMods.clear();
         }
 
         public void InitAFPose() {
@@ -3728,27 +3806,43 @@ public class Anim_Blend {
                 return;
             }
 
-            AFPoseJoints.SetNum(modelDef.Joints().Num(), false);
-            AFPoseJoints.SetNum(0, false);
-            AFPoseJointMods.SetNum(modelDef.Joints().Num(), false);
-            AFPoseJointFrame.SetNum(modelDef.Joints().Num(), false);
+            //AFPoseJoints.SetNum(modelDef.Joints().size(), false);
+            //AFPoseJoints.SetNum(0, false);
+//            AFPoseJoints.clear();
+//            AFPoseJoints.trimToSize();
+//            AFPoseJoints.addAll(new ArrayList<>(modelDef.Joints().size()));
+//            //AFPoseJointFrame.clear();
+////            for (int i = 0; i < modelDef.Joints().size(); i++) {
+////                AFPoseJoints.add(i, -1);
+////                AFPoseJointFrame.add(i, new idJointQuat());
+////            }
+//            AFPoseJointFrame.clear();
+//            AFPoseJointFrame.trimToSize();
+//            AFPoseJointFrame.addAll(new ArrayList<>(modelDef.Joints().size()));
+            //AFPoseJointMods.SetNum(modelDef.Joints().size(), false);
+            //AFPoseJointFrame.SetNum(modelDef.Joints().size(), false);
         }
 
         public void SetAFPoseJointMod(final int/*jointHandle_t*/ jointNum, final AFJointModType_t mod, final idMat3 axis, final idVec3 origin) {
-            AFPoseJointMods.oSet(jointNum, new idAFPoseJointMod());
-            AFPoseJointMods.oGet(jointNum).mod = mod;
-            AFPoseJointMods.oGet(jointNum).axis = axis;
-            AFPoseJointMods.oGet(jointNum).origin.oSet(origin);
-
-            Object[] ptr = AFPoseJoints.getList();
-
-            if (ptr == null || ptr.length == 0) {
-                return;
+            if (jointNum >= AFPoseJointMods.size()) {
+                for (int i = AFPoseJointMods.size(); i <= jointNum; i++) {
+                    AFPoseJointMods.add(i, new idAFPoseJointMod());
+                }
+                AFPoseJointMods.add(jointNum, new idAFPoseJointMod());
+            } else {
+                AFPoseJointMods.set(jointNum, new idAFPoseJointMod());
             }
+            AFPoseJointMods.get(jointNum).mod = mod;
+            AFPoseJointMods.get(jointNum).axis.oSet(axis);
+            AFPoseJointMods.get(jointNum).origin.oSet(origin);
 
-            int index = idBinSearch_GreaterEqual(ptr, AFPoseJoints.Num(), jointNum);
-            if (index >= AFPoseJoints.Num() || jointNum != AFPoseJoints.oGet(index)) {
-                AFPoseJoints.Insert(jointNum, index);
+            int index = idBinSearch_GreaterEqual(AFPoseJoints.toArray(), AFPoseJoints.size(), jointNum);
+            if (index >= AFPoseJoints.size() || jointNum != AFPoseJoints.get(index)) {
+                if (index >= AFPoseJoints.size()) {
+                    AFPoseJoints.add(index);
+                } else {
+                    AFPoseJoints.set(jointNum, index);
+                }
             }
         }
 
@@ -3769,7 +3863,7 @@ public class Anim_Blend {
                 return;
             }
 
-            numJoints = modelDef.Joints().Num();
+            numJoints = modelDef.Joints().size();
             if (0 == numJoints) {
                 return;
             }
@@ -3799,19 +3893,19 @@ public class Anim_Blend {
             SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints);
 
             // first joint is always root of entire hierarchy
-            if (AFPoseJoints.Num() != 0 && AFPoseJoints.oGet(0) == 0) {
-                switch (AFPoseJointMods.oGet(0).mod) {
+            if (AFPoseJoints.size() != 0 && AFPoseJoints.get(0) == 0) {
+                switch (AFPoseJointMods.get(0).mod) {
                     case AF_JOINTMOD_AXIS: {
-                        joints[0].SetRotation(AFPoseJointMods.oGet(0).axis);
+                        joints[0].SetRotation(AFPoseJointMods.get(0).axis);
                         break;
                     }
                     case AF_JOINTMOD_ORIGIN: {
-                        joints[0].SetTranslation(AFPoseJointMods.oGet(0).origin);
+                        joints[0].SetTranslation(AFPoseJointMods.get(0).origin);
                         break;
                     }
                     case AF_JOINTMOD_BOTH: {
-                        joints[0].SetRotation(AFPoseJointMods.oGet(0).axis);
-                        joints[0].SetTranslation(AFPoseJointMods.oGet(0).origin);
+                        joints[0].SetRotation(AFPoseJointMods.get(0).axis);
+                        joints[0].SetTranslation(AFPoseJointMods.get(0).origin);
                         break;
                     }
                 }
@@ -3824,8 +3918,8 @@ public class Anim_Blend {
             jointParent = modelDef.JointParents();
 
             // transform the child joints
-            for (i = 1; j < AFPoseJoints.Num(); j++, i++) {
-                jointMod = AFPoseJoints.oGet(j);
+            for (i = 1; j < AFPoseJoints.size(); j++, i++) {
+                jointMod = AFPoseJoints.get(j);
 
                 // transform any joints preceding the joint modifier
                 SIMDProcessor.TransformJoints(joints, itoi(jointParent), i, jointMod - 1);
@@ -3833,20 +3927,20 @@ public class Anim_Blend {
 
                 parentNum = jointParent[i];
 
-                switch (AFPoseJointMods.oGet(jointMod).mod) {
+                switch (AFPoseJointMods.get(jointMod).mod) {
                     case AF_JOINTMOD_AXIS: {
-                        joints[i].SetRotation(AFPoseJointMods.oGet(jointMod).axis);
+                        joints[i].SetRotation(AFPoseJointMods.get(jointMod).axis);
                         joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())));
                         break;
                     }
                     case AF_JOINTMOD_ORIGIN: {
                         joints[i].SetRotation(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3()));
-                        joints[i].SetTranslation(AFPoseJointMods.oGet(jointMod).origin);
+                        joints[i].SetTranslation(AFPoseJointMods.get(jointMod).origin);
                         break;
                     }
                     case AF_JOINTMOD_BOTH: {
-                        joints[i].SetRotation(AFPoseJointMods.oGet(jointMod).axis);
-                        joints[i].SetTranslation(AFPoseJointMods.oGet(jointMod).origin);
+                        joints[i].SetRotation(AFPoseJointMods.get(jointMod).axis);
+                        joints[i].SetTranslation(AFPoseJointMods.get(jointMod).origin);
                         break;
                     }
                 }
@@ -3865,17 +3959,18 @@ public class Anim_Blend {
             boolean[] blendJoints = new boolean[numJoints];//memset( blendJoints, 0, numJoints * sizeof( bool ) );
 
             // mark all modified joints and their parents
-            for (i = 0; i < AFPoseJoints.Num(); i++) {
-                for (jointNum = AFPoseJoints.oGet(i); jointNum != INVALID_JOINT; jointNum = jointParent[jointNum]) {
+            for (i = 0; i < AFPoseJoints.size(); i++) {
+                for (jointNum = AFPoseJoints.get(i); jointNum != INVALID_JOINT; jointNum = jointParent[jointNum]) {
                     blendJoints[jointNum] = true;
                 }
             }
 
             // lock all parents of modified joints
-            AFPoseJoints.SetNum(0, false);
+            //AFPoseJoints.SetNum(0, false);
+            AFPoseJoints.clear();
             for (i = 0; i < numJoints; i++) {
                 if (blendJoints[i]) {
-                    AFPoseJoints.Append(i);
+                    AFPoseJoints.add(i);
                 }
             }
 
@@ -3889,23 +3984,24 @@ public class Anim_Blend {
             AFPoseBlendWeight = blendWeight;
         }
 
-        public boolean BlendAFPose(idJointQuat[] blendFrame) {
+        public boolean BlendAFPose(final idJointQuat[] blendFrame) {
 
-            if (0 == AFPoseJoints.Num()) {
+            if (0 == AFPoseJoints.size()) {
                 return false;
             }
 
-            SIMDProcessor.BlendJoints(blendFrame, AFPoseJointFrame.getList(idJointQuat[].class), AFPoseBlendWeight, itoi(AFPoseJoints.getList(Integer[].class)), AFPoseJoints.Num());
+            SIMDProcessor.BlendJoints(blendFrame, AFPoseJointFrame, AFPoseBlendWeight, itoi(AFPoseJoints.toArray(Integer[]::new)), AFPoseJoints.size());
 
             return true;
         }
 
         public void ClearAFPose() {
-            if (AFPoseJoints.Num() != 0) {
+            if (AFPoseJoints.size() != 0) {
                 ForceUpdate();
             }
             AFPoseBlendWeight = 1.0f;
-            AFPoseJoints.SetNum(0, false);
+            //AFPoseJoints.SetNum(0, false);
+            AFPoseJoints.clear();
             AFPoseBounds.Clear();
             AFPoseTime = 0;
         }
@@ -3946,14 +4042,14 @@ public class Anim_Blend {
                 Game_local.idGameLocal.Error("idAnimator::GetChannelForJoint: NULL model");
             }
 
-            if ((joint < 0) || (joint >= numJoints)) {
+            if ((joint < 0) || (joint >= numJoints.getVal())) {
                 Game_local.idGameLocal.Error("idAnimator::GetChannelForJoint: invalid joint num (%d)", joint);
             }
 
             return modelDef.GetJoint(joint).channel;
         }
 
-        public boolean GetJointTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, idMat3 axis) {
+        public boolean GetJointTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, final idMat3 axis) {
             if (null == modelDef || (jointHandle < 0) || (jointHandle >= modelDef.NumJoints())) {
                 return false;
             }
@@ -3966,29 +4062,31 @@ public class Anim_Blend {
             return true;
         }
 
-        public boolean GetJointLocalTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, idMat3 axis) {
+        public boolean GetJointLocalTransform(int/*jointHandle_t*/ jointHandle, int currentTime, final idVec3 offset, final idMat3 axis) {
             if (null == modelDef) {
                 return false;
             }
 
-            final idList<jointInfo_t> modelJoints = modelDef.Joints();
+            final ArrayList<jointInfo_t> modelJoints = modelDef.Joints();
 
-            if ((jointHandle < 0) || (jointHandle >= modelJoints.Num())) {
+            if ((jointHandle < 0) || (jointHandle >= modelJoints.size())) {
                 return false;
             }
 
             // FIXME: overkill
             CreateFrame(currentTime, false);
 
-            if (jointHandle > 0) {
-                idJointMat m = new idJointMat(joints[jointHandle]);
-                m.oDivSet(joints[modelJoints.oGet(jointHandle).parentNum]);
-                offset.oSet(m.ToVec3());
-                axis.oSet(m.ToMat3());
-            } else {
+            if (jointHandle == 0) {
                 offset.oSet(joints[jointHandle].ToVec3());
                 axis.oSet(joints[jointHandle].ToMat3());
+
+                return true;
             }
+
+            idJointMat m = new idJointMat(joints[jointHandle]);
+            m.oDivSet(joints[modelJoints.get(jointHandle).parentNum]);
+            offset.oSet(m.ToVec3());
+            axis.oSet(m.ToMat3());
 
             return true;
         }
@@ -4073,11 +4171,11 @@ public class Anim_Blend {
                 }
             }
 
-            jointMods.DeleteContents(true);
+            jointMods.clear();
 
 //	Mem_Free16( joints );
             joints = null;
-            numJoints = 0;
+            numJoints.setVal(0);
 
             modelDef = null;
 
@@ -4094,7 +4192,7 @@ public class Anim_Blend {
             }
 
             for (i = ANIM_MaxAnimsPerChannel - 1; i > 0; i--) {
-                channel[i] = channel[i - 1];
+                channel[i] = new idAnimBlend(channel[i - 1]);
             }
 
             channel[0].Reset(modelDef);

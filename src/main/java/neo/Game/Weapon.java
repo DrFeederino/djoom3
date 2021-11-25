@@ -30,7 +30,6 @@ import neo.idlib.Dict_h.idKeyValue;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.containers.CFloat;
 import neo.idlib.containers.CInt;
-import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.TraceModel.idTraceModel;
 import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
@@ -1331,11 +1330,7 @@ public class Weapon {
             renderEntity.hModel = animator.SetModel(modelname);
             if (renderEntity.hModel != null) {
                 renderEntity.customSkin = animator.ModelDef().GetDefaultSkin();
-                {
-                    idJointMat[][] joints = {null};
-                    renderEntity.numJoints = animator.GetJoints(joints);
-                    renderEntity.joints = joints[0];
-                }
+                renderEntity.numJoints = animator.GetJoints(renderEntity);
             } else {
                 renderEntity.customSkin = null;
                 renderEntity.callback = null;

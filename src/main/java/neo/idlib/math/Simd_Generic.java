@@ -3,7 +3,6 @@ package neo.idlib.math;
 import neo.Renderer.Model.dominantTri_s;
 import neo.TempDump;
 import neo.idlib.containers.CFloat;
-import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
@@ -19,6 +18,7 @@ import neo.idlib.math.Vector.idVecX;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static neo.idlib.math.Math_h.FLOATSIGNBITSET;
@@ -2484,6 +2484,17 @@ public class Simd_Generic {
         }
 
         @Override
+        public void BlendJoints(idJointQuat[] joints, ArrayList<idJointQuat> blendJoints, float lerp, int[] index, int numJoints) {
+            int i;
+
+            for (i = 0; i < numJoints; i++) {
+                int j = index[i];
+                joints[j].q.Slerp(joints[j].q, blendJoints.get(j).q, lerp);
+                joints[j].t.Lerp(joints[j].t, blendJoints.get(j).t, lerp);
+            }
+        }
+
+        @Override
         public void ConvertJointQuatsToJointMats(idJointMat[] jointMats, idJointQuat[] jointQuats, int numJoints) {
             int i;
 
@@ -2494,11 +2505,15 @@ public class Simd_Generic {
         }
 
         @Override
-        public void ConvertJointMatsToJointQuats(final idList<idJointQuat> jointQuats, idJointMat[] jointMats, int numJoints) {
+        public void ConvertJointMatsToJointQuats(final ArrayList<idJointQuat> jointQuats, idJointMat[] jointMats, int numJoints) {
             int i;
 
             for (i = 0; i < numJoints; i++) {
-                jointQuats.oSet(i, jointMats[i].ToJointQuat());
+                if (i >= jointQuats.size()) {
+                    jointQuats.add(i, jointMats[i].ToJointQuat());
+                } else {
+                    jointQuats.set(i, jointMats[i].ToJointQuat());
+                }
             }
         }
 

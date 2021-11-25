@@ -49,6 +49,7 @@ import neo.ui.UserInterface.idUserInterface;
 import neo.ui.UserInterface.idUserInterface.idUserInterfaceManager;
 
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 import static neo.Game.AFEntity.GetArgString;
 import static neo.Game.Animation.Anim.FRAME2MS;
@@ -675,7 +676,7 @@ public class Game {
             return anim.NumFrames();
         }
 
-        public void ANIM_CreateAnimFrame(final idRenderModel model, final idMD5Anim anim, int numJoints, idJointMat[] joints, int time, final idVec3 offset, boolean remove_origin_offset) {
+        public void ANIM_CreateAnimFrame(final idRenderModel model, final idMD5Anim anim, int numJoints, final idJointMat[] joints, int time, final idVec3 offset, boolean remove_origin_offset) {
             int i;
             frameBlend_t frame = new frameBlend_t();
             idMD5Joint[] md5joints;
@@ -736,12 +737,12 @@ public class Game {
         }
 
         public idRenderModel ANIM_CreateMeshForAnim(idRenderModel model, final String classname, String[] animName, int frame, boolean remove_origin_offset) {
-            renderEntity_s ent;
+            renderEntity_s ent = new renderEntity_s();
             idDict args;
             String temp;
             idRenderModel newmodel;
             idMD5Anim md5anim;
-            idStr filename;
+            idStr filename = new idStr();
             idStr extension = new idStr();
             idAnim anim;
             int animNum;
@@ -757,7 +758,7 @@ public class Game {
                 return null;
             }
 
-            ent = new renderEntity_s();//	memset( &ent, 0, sizeof( ent ) );
+            //	memset( &ent, 0, sizeof( ent ) );
 
             ent.bounds.Clear();
             ent.suppressSurfaceInViewID = 0;
@@ -796,7 +797,7 @@ public class Game {
             }
 
             ent.numJoints = model.NumJoints();
-            ent.joints = new idJointMat[ent.numJoints];
+            ent.joints = Stream.generate(idJointMat::new).limit(ent.numJoints).toArray(idJointMat[]::new);
 
             ANIM_CreateAnimFrame(model, md5anim, ent.numJoints, ent.joints, FRAME2MS(frame), offset, remove_origin_offset);
 

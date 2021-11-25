@@ -871,7 +871,6 @@ public class qgl {
     }
 
     public static int qglGetError() {//DEBUG_printName("glGetError");
-        checkGLError();
         return GL11.glGetError();
     }
 
@@ -2119,17 +2118,6 @@ public class qgl {
 //                                                COLORREF *);
 //extern BOOL ( WINAPI * qwglRealizeLayerPalette)(HDC, int, BOOL);
 //extern BOOL ( WINAPI * qwglSwapLayerBuffers)(HDC, UINT);
-
-    private static void checkGLError() {
-        if (GL_DEBUG) {
-            final ByteBuffer messageLog = BufferUtils.createByteBuffer(1000);
-//            while (GL43.glGetDebugMessageLog(1, null, null, null, null, null, messageLog) > 0) {
-//                System.out.println(TempDump.bbtoa(messageLog));
-//                messageLog.clear();
-//            }
-//            Util.checkGLError();
-        }
-    }
 
     /**
      * @deprecated the calling functions should send ByteBuffers instead.

@@ -738,6 +738,7 @@ public class Target {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             if (spawnArgs.GetBool("onSpawn")) {
                 PostEventMS(EV_Activate, 50);
             }
@@ -836,6 +837,7 @@ public class Target {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             idStr model;
 
             model = new idStr(spawnArgs.GetString("newmodel"));

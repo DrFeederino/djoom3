@@ -251,7 +251,7 @@ public class Game_local {
     static final boolean GAME_DLL = true;//TODO:find correct location
 
     //
-    static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM, "force generic platform independent SIMD");
+    static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "1", CVAR_BOOL | CVAR_SYSTEM, "force generic platform independent SIMD");
     //
     private static final gameExport_t gameExport = new gameExport_t();
     //#endif

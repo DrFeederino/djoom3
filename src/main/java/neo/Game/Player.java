@@ -2577,7 +2577,7 @@ public class Player {
             AI_JUMP.underscore(false);
             AI_DEAD.underscore(false);
             AI_CROUCH.underscore(false);
-            AI_ONGROUND.underscore(false);
+            AI_ONGROUND.underscore(true);
             AI_ONLADDER.underscore(false);
             AI_HARDLANDING.underscore(false);
             AI_SOFTLANDING.underscore(false);

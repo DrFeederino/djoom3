@@ -30,11 +30,6 @@ public class HashIndex {
         //
         private static int DBG_counter = 0;
         private final int DBG_count;
-        private int bla = Integer.MIN_VALUE;
-        private int bla2 = Integer.MIN_VALUE;//TODO:remove the "bla's".
-        private int bla3 = Integer.MIN_VALUE;
-        private int bla4 = Integer.MIN_VALUE;
-        private int bla5 = Integer.MIN_VALUE;
         private int granularity;
         private int[] hash;
         private int hashMask;
@@ -66,7 +61,7 @@ public class HashIndex {
             lookupMask = other.lookupMask;
 
             if (other.lookupMask == 0) {
-                bla5 = hashSize = other.hashSize;
+                hashSize = other.hashSize;
                 indexSize = other.indexSize;
                 Free();
             } else {
@@ -74,7 +69,7 @@ public class HashIndex {
                     if (hash != INVALID_INDEX) {
 //				delete[] hash;
                     }
-                    bla4 = hashSize = other.hashSize;
+                    hashSize = other.hashSize;
                     hash = new int[hashSize];
                 }
                 if (other.indexSize != indexSize || indexChain == INVALID_INDEX) {
@@ -215,7 +210,7 @@ public class HashIndex {
         // clear and resize
         public void Clear(final int newHashSize, final int newIndexSize) {
             Free();
-            bla3 = hashSize = newHashSize;
+            hashSize = newHashSize;
             indexSize = newIndexSize;
         }
 
@@ -349,12 +344,12 @@ public class HashIndex {
         private void Init(final int initialHashSize, final int initialIndexSize) {
             assert (idMath.IsPowerOfTwo(initialHashSize));
 
-            bla = hashSize = initialHashSize;
+            hashSize = initialHashSize;
             hash = INVALID_INDEX;
             indexSize = initialIndexSize;
             indexChain = INVALID_INDEX;
             granularity = DEFAULT_HASH_GRANULARITY;
-            bla2 = hashMask = hashSize - 1;
+            hashMask = hashSize - 1;
             lookupMask = 0;
         }
 

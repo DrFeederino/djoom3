@@ -859,6 +859,7 @@ public class Entity {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             int i;
             String[] temp = {null};
             final idVec3 origin = new idVec3();
@@ -4386,8 +4387,8 @@ public class Entity {
                 renderEntity.callback = idEntity.ModelCallback.getInstance();
                 {
                     idJointMat[][] joints = {null};
-                    renderEntity.numJoints = animator.GetJoints(joints);
-                    renderEntity.joints = joints[0];
+                    renderEntity.numJoints = animator.GetJoints(renderEntity);
+                    //renderEntity.joints = joints[0];
                 }
                 animator.GetBounds(gameLocal.time, renderEntity.bounds);
                 if (modelDefHandle != -1) {
@@ -4468,11 +4469,7 @@ public class Entity {
 
             // set the callback to update the joints
             renderEntity.callback = idEntity.ModelCallback.getInstance();
-            {
-                idJointMat[][] joints = {null};
-                renderEntity.numJoints = animator.GetJoints(joints);
-                renderEntity.joints = joints[0];
-            }
+            renderEntity.numJoints = animator.GetJoints(renderEntity);
             animator.GetBounds(gameLocal.time, renderEntity.bounds);
 
             UpdateVisuals();

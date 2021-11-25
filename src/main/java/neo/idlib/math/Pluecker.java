@@ -5,6 +5,7 @@ import neo.idlib.math.Plane.idPlane;
 import neo.idlib.math.Vector.idVec3;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
  * Plücker
@@ -227,6 +228,13 @@ public class Pluecker {
             p[5] = p1.oGet(0) * p2.oGet(2) - p2.oGet(0) * p1.oGet(2);
 
             return (p[2] != 0.0f || p[5] != 0.0f || p[4] != 0.0f);
+        }
+
+        public static idPluecker[] generateArray(final int length) {
+            return Stream.
+                    generate(idPluecker::new).
+                    limit(length).
+                    toArray(idPluecker[]::new);
         }
 
         // pluecker to line

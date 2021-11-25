@@ -9,7 +9,6 @@ import neo.framework.CmdSystem.cmdFunction_t;
 import neo.idlib.CmdArgs.idCmdArgs;
 import neo.idlib.Lib.idLib;
 import neo.idlib.containers.CFloat;
-import neo.idlib.containers.List.idList;
 import neo.idlib.geometry.DrawVert.idDrawVert;
 import neo.idlib.geometry.JointTransform.idJointMat;
 import neo.idlib.geometry.JointTransform.idJointQuat;
@@ -22,6 +21,7 @@ import neo.idlib.math.Vector.idVec4;
 import neo.idlib.math.Vector.idVecX;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static neo.TempDump.btoi;
@@ -373,32 +373,32 @@ public class Simd {
         public abstract void /*VPCALL*/ Memcpy(Object[] dst, final Object[] src, final int count);
 
         public void /*VPCALL*/ Memcpy(idAnimBlend[] dst, final idAnimBlend[] src, final int count) {
+            //System.arraycopy(src, 0, dst, 0, count);
             for (int i = 0; i < count; i++) {
                 dst[i] = new idAnimBlend(src[i]);
             }
         }
 
         public void /*VPCALL*/ Memcpy(idDrawVert[] dst, final idDrawVert[] src, final int count) {
-            for (int i = 0; i < count; i++) {
-                dst[i].oSet(src[i]);
-            }
+            System.arraycopy(src, 0, dst, 0, count);
+//            for (int i = 0; i < count; i++) {
+//                dst[i].oSet(src[i]); // it's not overloaded?
+//            }
         }
 
         public void /*VPCALL*/ Memcpy(idJointQuat[] dst, final idJointQuat[] src, final int count) {
-            for (int i = 0; i < count; i++) {
-                dst[i] = new idJointQuat(src[i]);
-            }
+            System.arraycopy(src, 0, dst, 0, count);
         }
 
         public void /*VPCALL*/ Memcpy(shadowCache_s[] dst, final idVec4[] src, final int count) {
             for (int i = 0; i < count; i++) {
-                dst[i].xyz.oSet(src[i]);
+                dst[i].xyz = src[i];
             }
         }
 
         public void /*VPCALL*/ Memcpy(shadowCache_s[] dst, final shadowCache_s[] src, final int count) {
             for (int i = 0; i < count; i++) {
-                dst[i].xyz.oSet(src[i].xyz);
+                dst[i].xyz = src[i].xyz;
             }
         }
 
@@ -463,9 +463,11 @@ public class Simd {
 
         public abstract void /*VPCALL*/ BlendJoints(idJointQuat[] joints, final idJointQuat[] blendJoints, final float lerp, final int[] index, final int numJoints);
 
+        public abstract void /*VPCALL*/ BlendJoints(idJointQuat[] joints, ArrayList<idJointQuat> blendJoints, float lerp, int[] index, int numJoints);
+
         public abstract void /*VPCALL*/ ConvertJointQuatsToJointMats(idJointMat[] jointMats, final idJointQuat[] jointQuats, final int numJoints);
 
-        public abstract void /*VPCALL*/ ConvertJointMatsToJointQuats(final idList<idJointQuat> jointQuats, final idJointMat[] jointMats, final int numJoints);
+        public abstract void /*VPCALL*/ ConvertJointMatsToJointQuats(final ArrayList<idJointQuat> jointQuats, final idJointMat[] jointMats, final int numJoints);
 
         public abstract void /*VPCALL*/ TransformJoints(idJointMat[] jointMats, final int[] parents, final int firstJoint, final int lastJoint);
 

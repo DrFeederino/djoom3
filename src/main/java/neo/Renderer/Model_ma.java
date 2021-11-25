@@ -4,7 +4,6 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.List.idList;
 import neo.idlib.math.Math_h.idMath;
 import neo.idlib.math.Matrix.idMat4;
@@ -14,6 +13,7 @@ import neo.idlib.math.Vector.idVec4;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.util.HashMap;
 
 import static neo.TempDump.NOT;
 import static neo.TempDump.bbtocb;
@@ -172,15 +172,14 @@ public class Model_ma {
 
         if (!header.parent.isEmpty()) {
             //Find the parent
-            maTransform_s[] parent = new maTransform_s[1];
-            maGlobal.model.transforms.Get(header.parent, parent);
+            maTransform_s parent = maGlobal.model.transforms.get(header.parent);
             if (parent != null) {
-                transform.parent = parent[0];
+                transform.parent = parent;
             }
         }
 
         //Add this transform to the list
-        maGlobal.model.transforms.Set(header.name, transform);
+        maGlobal.model.transforms.put(header.name, transform);
         return true;
     }
 
@@ -571,10 +570,10 @@ public class Model_ma {
         //Find my parent
         if (!nodeHeader.parent.isEmpty()) {
             //Find the parent
-            maTransform_s[] parent = new maTransform_s[1];
-            maGlobal.model.transforms.Get(nodeHeader.parent, parent);
-            if (parent[0] != null) {
-                maGlobal.currentObject.mesh.transform = parent[0];
+            maTransform_s parent = maGlobal.model.transforms.get(nodeHeader.parent);
+
+            if (parent != null) {
+                maGlobal.currentObject.mesh.transform = parent;
             }
         }
 
@@ -714,7 +713,7 @@ public class Model_ma {
                     fileNode.name = header.name;
                     fileNode.path = token.toString();
 
-                    maGlobal.model.fileNodes.Set(fileNode.name, fileNode);
+                    maGlobal.model.fileNodes.put(fileNode.name, fileNode);
                 } else {
                     parser.SkipRestOfLine();
                 }
@@ -734,7 +733,7 @@ public class Model_ma {
 
         matNode.name = header.name;
 
-        maGlobal.model.materialNodes.Set(matNode.name, matNode);
+        maGlobal.model.materialNodes.put(matNode.name, matNode);
     }
 
     public static void MA_ParseCreateNode(idParser parser) throws idException {
@@ -754,11 +753,9 @@ public class Model_ma {
     }
 
     public static int MA_AddMaterial(final String materialName) {
-
-        maMaterialNode_s[] destNode = new maMaterialNode_s[1];
-        maGlobal.model.materialNodes.Get(materialName, destNode);
-        if (destNode[0] != null) {
-            maMaterialNode_s matNode = destNode[0];
+        maMaterialNode_s destNode = maGlobal.model.materialNodes.get(materialName);
+        if (destNode != null) {
+            maMaterialNode_s matNode = destNode;
 
             //Iterate down the tree until we get a file
             while (matNode != null && null == matNode.file) {
@@ -814,26 +811,21 @@ public class Model_ma {
         destType = temp.Right(temp.Length() - dot - 1);
 
         if (srcType.Find("oc") != -1) {
-
             //Is this attribute a material node attribute
-            maMaterialNode_s[] matNode = new maMaterialNode_s[1];
-            maGlobal.model.materialNodes.Get(srcName.toString(), matNode);
-            if (matNode[0] != null) {
-                maMaterialNode_s[] destNode = new maMaterialNode_s[1];
-                maGlobal.model.materialNodes.Get(destName.toString(), destNode);
-                if (destNode[0] != null) {
-                    destNode[0].child = matNode[0];
+            maMaterialNode_s matNode = maGlobal.model.materialNodes.get(srcName.toString());
+            if (matNode != null) {
+                maMaterialNode_s destNode = maGlobal.model.materialNodes.get(destName.toString());
+                if (destNode != null) {
+                    destNode.child = matNode;
                 }
             }
 
             //Is this attribute a file node
-            maFileNode_t[] fileNode = new maFileNode_t[1];
-            maGlobal.model.fileNodes.Get(srcName.toString(), fileNode);
-            if (fileNode[0] != null) {
-                maMaterialNode_s[] destNode = new maMaterialNode_s[1];
-                maGlobal.model.materialNodes.Get(destName.toString(), destNode);
-                if (destNode[0] != null) {
-                    destNode[0].file = fileNode[0];
+            maFileNode_t fileNode = maGlobal.model.fileNodes.get(srcName.toString());
+            if (fileNode != null) {
+                maMaterialNode_s destNode = maGlobal.model.materialNodes.get(destName.toString());
+                if (destNode != null) {
+                    destNode.file = fileNode;
                 }
             }
         }
@@ -1072,7 +1064,7 @@ public class Model_ma {
 //            matNode = ma.materialNodes.GetIndex(i);
 //            Mem_Free(matNode);
 //        }
-        ma.materialNodes.Clear();
+        ma.materialNodes.clear();
 //	delete ma;
     }
 
@@ -1190,15 +1182,14 @@ public class Model_ma {
     }
 
     static class maModel_s {
-
         //
         //Material Resolution
-        idHashTable<maFileNode_t> fileNodes;
-        idHashTable<maMaterialNode_s> materialNodes;
+        HashMap<String, maFileNode_t> fileNodes;
+        HashMap<String, maMaterialNode_s> materialNodes;
         final idList<maMaterial_t> materials = new idList<>();
         final idList<maObject_t> objects = new idList<>();
         long[]/*ID_TIME_T*/ timeStamp = new long[1];
-        idHashTable<maTransform_s> transforms;
+        HashMap<String, maTransform_s> transforms;
     }
 
     // working variables used during parsing

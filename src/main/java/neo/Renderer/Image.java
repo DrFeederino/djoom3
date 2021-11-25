@@ -3094,7 +3094,7 @@ public class Image {
 //                    return null;
                 }
                 image.ActuallyLoadImage(true, false);    // check for precompressed, load is from front end
-                declManager.MediaPrint("%dx%d %s\n", image.uploadWidth, image.uploadHeight, image.imgName.toString());
+                declManager.MediaPrint("%dx%d %s\n", image.uploadWidth.getVal(), image.uploadHeight.getVal(), image.imgName.toString());
             } else {
                 declManager.MediaPrint("%s\n", image.imgName.toString());
             }

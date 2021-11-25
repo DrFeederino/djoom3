@@ -652,7 +652,7 @@ public class TraceModel {
 
         public void SetupPolygon(final idWinding w) {
             int i;
-            final idVec3[] verts = idVec3.generateArray(w.GetNumPoints());
+            final idVec3[] verts = idVec3.generateArray(Math.max(3, w.GetNumPoints())); //TODO: this is a temp hack, for some reason the math is fucked
 
             for (i = 0; i < w.GetNumPoints(); i++) {
                 verts[i].oSet(w.oGet(i).ToVec3());

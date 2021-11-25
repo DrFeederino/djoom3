@@ -27,7 +27,6 @@ import neo.idlib.MapFile.idMapEntity;
 import neo.idlib.MapFile.idMapFile;
 import neo.idlib.Text.Base64.idBase64;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.idStrList;
 import neo.idlib.math.Simd.idSIMD;
 import neo.idlib.math.Vector.idVec4;
@@ -36,6 +35,7 @@ import neo.sys.sys_public;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -113,7 +113,7 @@ public class Common {
             : new idCVar("com_asyncSound", "1", CVAR_INTEGER | CVAR_SYSTEM, ASYNCSOUND_INFO, 0, 1)));
     public static final idCVar com_developer = new idCVar("developer", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "developer mode");
     //
-    public static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "force generic platform independent SIMD");
+    public static final idCVar com_forceGenericSIMD = new idCVar("com_forceGenericSIMD", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "force generic platform independent SIMD");
 
     public static final idCVar com_logFile = new idCVar("logFile", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, new ArgCompletion_Integer(0, 2));
     public static final idCVar com_logFileName = new idCVar("logFileName", "qconsole.log", CVAR_SYSTEM | CVAR_NOCHEAT, "name of log file, if empty, qconsole.log will be used");
@@ -134,7 +134,7 @@ public class Common {
     public static final idCVar com_timescale = new idCVar("timescale", "1", CVAR_SYSTEM | CVAR_FLOAT, "scales the time", 0.1f, 10.0f);
     public static final idCVar com_timestampPrints = new idCVar("com_timestampPrints", "0", CVAR_SYSTEM, "print time with each console print, 1 = msec, 2 = sec", 0, 2, new ArgCompletion_Integer(0, 2));
     public static final idCVar com_updateLoadSize = new idCVar("com_updateLoadSize", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "update the load size after loading a map");
-    public static final idCVar com_videoRam = new idCVar("com_videoRam", "64", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "holds the last amount of detected video ram");
+    public static final idCVar com_videoRam = new idCVar("com_videoRam", "512", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "holds the last amount of detected video ram");
     static final String BUILD_DEBUG = _DEBUG ? "-debug" : "";
     static final boolean ID_WRITE_VERSION = false;
     static final int MAX_PRINT_MSG_SIZE = 4096;
@@ -2963,7 +2963,7 @@ public class Common {
         }
     }
 
-    static class ListHash extends idHashTable<idStrList> {
+    static class ListHash extends HashMap<String, idStrList> {
 
     }
 
@@ -3211,34 +3211,33 @@ public class Common {
                             //Hack: for info_location
                             boolean hasLocation = false;
 
-                            idStrList[] list = {null};
-                            listHash.Get(/*static*/className, list);
-                            if (list[0] != null) {
+                            idStrList list = listHash.get(/*static*/className);
+                            if (list != null) {
 
-                                for (int k = 0; k < list[0].size(); k++) {
+                                for (int k = 0; k < list.size(); k++) {
 
-                                    String val = ent.epairs.GetString(list[0].get(k).toString(), "");
+                                    String val = ent.epairs.GetString(list.get(k).toString(), "");
 
-                                    if (/*static*/className.equals("info_location") && list[0].get(k).equals("location")) {
+                                    if (/*static*/className.equals("info_location") && list.get(k).equals("location")) {
                                         hasLocation = true;
                                     }
 
                                     if (isNotNullOrEmpty(val) && TestMapVal(val)) {
 
-                                        if (!hasLocation || list[0].get(k).equals("location")) {
-                                            String out = va("%s,%s,%s\r\n", val, list[0].get(k), file);
+                                        if (!hasLocation || list.get(k).equals("location")) {
+                                            String out = va("%s,%s,%s\r\n", val, list.get(k), file);
                                             localizeFile.WriteString(out);
                                         }
                                     }
                                 }
                             }
 
-                            listHash.Get("all", list);
-                            if (list[0] != null) {
-                                for (int k = 0; k < list[0].size(); k++) {
-                                    String val = ent.epairs.GetString(list[0].get(k).toString(), "");
+                            list = listHash.get("all");
+                            if (list != null) {
+                                for (int k = 0; k < list.size(); k++) {
+                                    String val = ent.epairs.GetString(list.get(k).toString(), "");
                                     if (isNotNullOrEmpty(val) && TestMapVal(val)) {
-                                        String out = va("%s,%s,%s\r\n", val, list[0].get(k), file);
+                                        String out = va("%s,%s,%s\r\n", val, list.get(k), file);
                                         localizeFile.WriteString(out);
                                     }
                                 }

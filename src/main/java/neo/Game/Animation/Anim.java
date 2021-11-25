@@ -9,14 +9,15 @@ import neo.idlib.Lib.idException;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
 import neo.idlib.containers.HashIndex.idHashIndex;
-import neo.idlib.containers.HashTable.idHashTable;
-import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
 import neo.idlib.geometry.JointTransform.idJointQuat;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Quat.idCQuat;
 import neo.idlib.math.Quat.idQuat;
 import neo.idlib.math.Vector.idVec3;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import static neo.Game.Animation.Anim.AFJointModType_t.AF_JOINTMOD_AXIS;
 import static neo.Game.Game_local.animationLib;
@@ -184,6 +185,16 @@ public class Anim {
         public boolean anim_turn;//: 1;
         public boolean prevent_idle_override;//: 1;
         public boolean random_cycle_start;//: 1;
+
+        public animFlags_t() {
+        }
+
+        public animFlags_t(animFlags_t val) {
+            this.ai_no_turn = val.ai_no_turn;
+            this.anim_turn = val.anim_turn;
+            this.prevent_idle_override = val.prevent_idle_override;
+            this.random_cycle_start = val.random_cycle_start;
+        }
     }
 
     /*
@@ -195,10 +206,10 @@ public class Anim {
      */
     public static class idMD5Anim {
 
-        private final idList<idJointQuat> baseFrame;
-        private final idList<idBounds> bounds;
-        private final idList<Float> componentFrames;
-        private final idList<jointAnimInfo_t> jointInfo;
+        private final ArrayList<idJointQuat> baseFrame;
+        private final ArrayList<idBounds> bounds;
+        private final ArrayList<Float> componentFrames;
+        private final ArrayList<jointAnimInfo_t> jointInfo;
         private final idStr name;
         private final idVec3 totaldelta;
         private int animLength;
@@ -216,10 +227,10 @@ public class Anim {
             numJoints = 0;
             frameRate = 24;
             animLength = 0;
-            bounds = new idList<>();
-            jointInfo = new idList<>();
-            baseFrame = new idList<>();
-            componentFrames = new idList<>();
+            bounds = new ArrayList<>();
+            jointInfo = new ArrayList<>();
+            baseFrame = new ArrayList<>();
+            componentFrames = new ArrayList<>();
             name = new idStr();
             totaldelta = new idVec3();
         }
@@ -231,12 +242,11 @@ public class Anim {
             frameRate = 24;
             animLength = 0;
             name.oSet("");
-
             totaldelta.Zero();
-
-            jointInfo.Clear();
-            bounds.Clear();
-            componentFrames.Clear();
+            jointInfo.clear();
+            bounds.clear();
+            componentFrames.clear();
+            baseFrame.clear();
         }
 
         public boolean Reload() {
@@ -249,14 +259,14 @@ public class Anim {
         }
 
         public int/*size_t*/ Allocated() {
-            int/*size_t*/ size = bounds.Allocated() + jointInfo.Allocated() + componentFrames.Allocated() + name.Allocated();
+            int/*size_t*/ size = bounds.size() + jointInfo.size() + componentFrames.size() + name.Allocated();
             return size;
         }
 
         public boolean LoadAnim(final String filename) throws idException {
             int version;
             idLexer parser = new idLexer(LEXFL_ALLOWPATHNAMES | LEXFL_NOSTRINGESCAPECHARS | LEXFL_NOSTRINGCONCAT);
-            idToken token = new idToken();
+            final idToken token = new idToken();
             int i, j;
             int num;
 
@@ -307,13 +317,18 @@ public class Anim {
             }
 
             // parse the hierarchy
-            jointInfo.SetGranularity(1);
-            jointInfo.SetNum(numJoints);
+//            jointInfo.SetGranularity(1);
+//            jointInfo.SetNum(numJoints);
             parser.ExpectTokenString("hierarchy");
             parser.ExpectTokenString("{");
             for (i = 0; i < numJoints; i++) {
                 parser.ReadToken(token);
-                final jointAnimInfo_t joint = jointInfo.oSet(i, new jointAnimInfo_t());
+                final jointAnimInfo_t joint = new jointAnimInfo_t(); //jointInfo[ i ].nameIndex = animationLib.JointIndex( token );
+                if (i >= jointInfo.size()) {
+                    jointInfo.add(i, joint);
+                } else {
+                    jointInfo.set(i, joint);
+                }
                 joint.nameIndex = animationLib.JointIndex(token.toString());
 
                 // parse parent num
@@ -344,32 +359,42 @@ public class Anim {
             // parse bounds
             parser.ExpectTokenString("bounds");
             parser.ExpectTokenString("{");
-            bounds.SetGranularity(1);
-            bounds.SetNum(numFrames);
+//            bounds.SetGranularity(1);
+//            bounds.SetNum(numFrames);
             for (i = 0; i < numFrames; i++) {
-                final idBounds bound = bounds.oSet(i, new idBounds());
+                final idBounds bound = new idBounds();
+                if (i >= bounds.size()) {
+                    bounds.add(i, bound);
+                } else {
+                    bounds.set(i, bound);
+                }
                 parser.Parse1DMatrix(3, bound.oGet(0));
                 parser.Parse1DMatrix(3, bound.oGet(1));
             }
             parser.ExpectTokenString("}");
 
             // parse base frame
-            baseFrame.SetGranularity(1);
-            baseFrame.SetNum(numJoints);
+//            baseFrame.SetGranularity(1);
+//            baseFrame.SetNum(numJoints);
             parser.ExpectTokenString("baseframe");
             parser.ExpectTokenString("{");
             for (i = 0; i < numJoints; i++) {
                 idCQuat q = new idCQuat();
-                final idJointQuat frame = baseFrame.oSet(i, new idJointQuat());
+                final idJointQuat frame = new idJointQuat();
+                if (i >= baseFrame.size()) {
+                    baseFrame.add(i, frame);
+                } else {
+                    baseFrame.set(i, frame);
+                }
                 parser.Parse1DMatrix(3, frame.t);
                 parser.Parse1DMatrix(3, q);
-                frame.q.oSet(q.ToQuat());
+                baseFrame.get(i).q.oSet(q.ToQuat());
             }
             parser.ExpectTokenString("}");
 
             // parse frames
-            componentFrames.SetGranularity(1);
-            componentFrames.SetNum(numAnimatedComponents * numFrames);
+//            componentFrames.SetGranularity(1);
+//            componentFrames.SetNum(numAnimatedComponents * numFrames);
 
             int c_ptr = 0;
             for (i = 0; i < numFrames; i++) {
@@ -381,7 +406,11 @@ public class Anim {
                 parser.ExpectTokenString("{");
 
                 for (j = 0; j < numAnimatedComponents; j++, c_ptr++) {
-                    componentFrames.oSet(c_ptr, parser.ParseFloat());
+                    if (c_ptr >= componentFrames.size()) {
+                        componentFrames.add(c_ptr, parser.ParseFloat());
+                    } else {
+                        componentFrames.set(c_ptr, parser.ParseFloat());
+                    }
                 }
 
                 parser.ExpectTokenString("}");
@@ -392,38 +421,38 @@ public class Anim {
             if (0 == numAnimatedComponents) {
                 totaldelta.Zero();
             } else {
-                c_ptr = jointInfo.oGet(0).firstComponent;
-                if ((jointInfo.oGet(0).animBits & ANIM_TX) != 0) {
+                c_ptr = jointInfo.get(0).firstComponent;
+                if ((jointInfo.get(0).animBits & ANIM_TX) != 0) {
                     for (i = 0; i < numFrames; i++) {
                         final int index = c_ptr + numAnimatedComponents * i;
-                        componentFrames.oSet(index, componentFrames.oGet(index) - baseFrame.oGet(0).t.x);
+                        componentFrames.set(index, componentFrames.get(index) - baseFrame.get(0).t.x);
                     }
-                    totaldelta.x = componentFrames.oGet(numAnimatedComponents * (numFrames - 1));
+                    totaldelta.x = componentFrames.get(numAnimatedComponents * (numFrames - 1));
                     c_ptr++;
                 } else {
                     totaldelta.x = 0.0f;
                 }
-                if ((jointInfo.oGet(0).animBits & ANIM_TY) != 0) {
+                if ((jointInfo.get(0).animBits & ANIM_TY) != 0) {
                     for (i = 0; i < numFrames; i++) {
                         final int index = c_ptr + numAnimatedComponents * i;
-                        componentFrames.oSet(index, componentFrames.oGet(index) - baseFrame.oGet(0).t.y);
+                        componentFrames.set(index, componentFrames.get(index) - baseFrame.get(0).t.y);
                     }
-                    totaldelta.y = componentFrames.oGet(c_ptr + numAnimatedComponents * (numFrames - 1));
+                    totaldelta.y = componentFrames.get(c_ptr + numAnimatedComponents * (numFrames - 1));
                     c_ptr++;
                 } else {
                     totaldelta.y = 0.0f;
                 }
-                if ((jointInfo.oGet(0).animBits & ANIM_TZ) != 0) {
+                if ((jointInfo.get(0).animBits & ANIM_TZ) != 0) {
                     for (i = 0; i < numFrames; i++) {
                         final int index = c_ptr + numAnimatedComponents * i;
-                        componentFrames.oSet(index, componentFrames.oGet(index) - baseFrame.oGet(0).t.z);
+                        componentFrames.set(index, componentFrames.get(index) - baseFrame.get(0).t.z);
                     }
-                    totaldelta.z = componentFrames.oGet(c_ptr + numAnimatedComponents * (numFrames - 1));
+                    totaldelta.z = componentFrames.get(c_ptr + numAnimatedComponents * (numFrames - 1));
                 } else {
                     totaldelta.z = 0.0f;
                 }
             }
-            baseFrame.oGet(0).t.Zero();
+            baseFrame.get(0).t.Zero();
 
             // we don't count last frame because it would cause a 1 frame pause at the end
             animLength = ((numFrames - 1) * 1000 + frameRate - 1) / frameRate;
@@ -453,14 +482,14 @@ public class Anim {
             int jointNum;
             int parent;
 
-            if (jointInfo.Num() != model.NumJoints()) {
+            if (jointInfo.size() != model.NumJoints()) {
                 Game_local.idGameLocal.Error("Model '%s' has different # of joints than anim '%s'", model.Name(), name);
             }
 
             final idMD5Joint[] modelJoints = model.GetJoints();
-            for (i = 0; i < jointInfo.Num(); i++) {
-                jointNum = jointInfo.oGet(i).nameIndex;
-                if (!modelJoints[i].name.equals(animationLib.JointName(jointNum))) {
+            for (i = 0; i < jointInfo.size(); i++) {
+                jointNum = jointInfo.get(i).nameIndex;
+                if (!modelJoints[i].name.toString().equals(animationLib.JointName(jointNum))) {
                     Game_local.idGameLocal.Error("Model '%s''s joint names don't match anim '%s''s", model.Name(), name);
                 }
                 if (modelJoints[i].parent != null) {
@@ -468,13 +497,13 @@ public class Anim {
                 } else {
                     parent = -1;
                 }
-                if (parent != jointInfo.oGet(i).parentNum) {
-                    Game_local.idGameLocal.Error("Model '%s' has deleteifferent joint hierarchy than anim '%s'", model.Name(), name);
+                if (parent != jointInfo.get(i).parentNum) {
+                    Game_local.idGameLocal.Error("Model '%s' has different joint hierarchy than anim '%s'", model.Name(), name);
                 }
             }
         }
 
-        public void GetInterpolatedFrame(frameBlend_t frame, idJointQuat[] joints, final int[] index, int numIndexes) {
+        public void GetInterpolatedFrame(final frameBlend_t frame, final idJointQuat[] joints, final int[] index, int numIndexes) {
             int i, numLerpJoints;
 //	 Float				[]frame1;
 //	 Float				[]frame2;
@@ -489,28 +518,27 @@ public class Anim {
             int[] lerpIndex;
 
             // copy the baseframe
-            SIMDProcessor.Memcpy(joints, baseFrame.getList(idJointQuat[].class), baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/);
-
+            System.arraycopy(baseFrame.toArray(), 0, joints, 0, baseFrame.size());
             if (0 == numAnimatedComponents) {
                 // just use the base frame
                 return;
             }
 
-            blendJoints = new idJointQuat[baseFrame.Num()];
-            lerpIndex = new int[baseFrame.Num()];
+            blendJoints = new idJointQuat[baseFrame.size()];
+            lerpIndex = new int[baseFrame.size()];
             numLerpJoints = 0;
 
 //	frame1 = componentFrames.Ptr()   ;
 //	frame2 = componentFrames.Ptr();
             f1_ptr = frame.frame1 * numAnimatedComponents;
             f2_ptr = frame.frame2 * numAnimatedComponents;
-            jointframe1 = jointframe2 = componentFrames.getList(Float[].class);
+            jointframe1 = jointframe2 = componentFrames.toArray(Float[]::new);
 
             for (i = 0; i < numIndexes; i++) {
                 int j = index[i];
                 jointPtr = joints[j];
                 blendPtr = blendJoints[j] = new idJointQuat();
-                infoPtr = jointInfo.oGet(j);
+                infoPtr = jointInfo.get(j);
 
                 animBits = infoPtr.animBits;
                 if (animBits != 0) {
@@ -664,7 +692,7 @@ public class Anim {
             }
         }
 
-        public void GetSingleFrame(int framenum, idJointQuat[] joints, final int[] index, int numIndexes) {
+        public void GetSingleFrame(int framenum, final idJointQuat[] joints, final int[] index, int numIndexes) {
             int i;
 //	float				[]frame;
             final int f_ptr;
@@ -675,8 +703,8 @@ public class Anim {
             jointAnimInfo_t infoPtr;
 
             // copy the baseframe
-            SIMDProcessor.Memcpy(joints, baseFrame.getList(idJointQuat[].class), baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/);
-
+            //SIMDProcessor.Memcpy(joints, baseFrame, baseFrame.size() /* sizeof( baseFrame[ 0 ] )*/);
+            System.arraycopy(baseFrame.toArray(), 0, joints, 0, baseFrame.size());
             if ((framenum == 0) || 0 == numAnimatedComponents) {
                 // just use the base frame
                 return;
@@ -688,12 +716,12 @@ public class Anim {
             for (i = 0; i < numIndexes; i++) {
                 int j = index[i];
                 jointPtr = joints[j];
-                infoPtr = jointInfo.oGet(j);
+                infoPtr = jointInfo.get(j);
 
                 animBits = infoPtr.animBits;
                 if (animBits != 0) {
 
-                    jointframe = componentFrames.getList();
+                    jointframe = componentFrames.toArray(Float[]::new);
                     jf_ptr = f_ptr + infoPtr.firstComponent;
 
                     if ((animBits & (ANIM_TX | ANIM_TY | ANIM_TZ)) != 0) {
@@ -751,7 +779,7 @@ public class Anim {
             return name.toString();
         }
 
-        public void GetFrameBlend(int framenum, frameBlend_t frame) {    // frame 1 is first frame
+        public void GetFrameBlend(int framenum, final frameBlend_t frame) {    // frame 1 is first frame
             frame.cycleCount = 0;
             frame.backlerp = 0.0f;
             frame.frontlerp = 1.0f;
@@ -768,7 +796,7 @@ public class Anim {
             frame.frame2 = framenum;
         }
 
-        public void ConvertTimeToFrame(int time, int cyclecount, frameBlend_t frame) {
+        public void ConvertTimeToFrame(int time, int cyclecount, final frameBlend_t frame) {
             int frameTime;
             int frameNum;
 
@@ -817,32 +845,32 @@ public class Anim {
             frameBlend_t frame = new frameBlend_t();
             int c1_ptr, c2_ptr;
 
-            offset.oSet(baseFrame.oGet(0).t);
-            if (0 == (jointInfo.oGet(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ))) {
+            offset.oSet(baseFrame.get(0).t);
+            if (0 == (jointInfo.get(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ))) {
                 // just use the baseframe
                 return;
             }
 
             ConvertTimeToFrame(time, cyclecount, frame);
 
-            Float[] componentPtr1 = componentFrames.getList(Float[].class);
-            c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
-            Float[] componentPtr2 = componentFrames.getList(Float[].class);
-            c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.oGet(0).firstComponent;
+            Float[] componentPtr1 = componentFrames.toArray(Float[]::new);
+            c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.get(0).firstComponent;
+            Float[] componentPtr2 = componentFrames.toArray(Float[]::new);
+            c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.get(0).firstComponent;
 
-            if ((jointInfo.oGet(0).animBits & ANIM_TX) != 0) {
+            if ((jointInfo.get(0).animBits & ANIM_TX) != 0) {
                 offset.x = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp;
                 c1_ptr++;
                 c2_ptr++;
             }
 
-            if ((jointInfo.oGet(0).animBits & ANIM_TY) != 0) {
+            if ((jointInfo.get(0).animBits & ANIM_TY) != 0) {
                 offset.y = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp;
                 c1_ptr++;
                 c2_ptr++;
             }
 
-            if ((jointInfo.oGet(0).animBits & ANIM_TZ) != 0) {
+            if ((jointInfo.get(0).animBits & ANIM_TZ) != 0) {
                 offset.z = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp;
             }
 
@@ -856,19 +884,19 @@ public class Anim {
             int animBits;
             int j1_ptr, j2_ptr;
 
-            animBits = jointInfo.oGet(0).animBits;
+            animBits = jointInfo.get(0).animBits;
             if (NOT(animBits & (ANIM_QX | ANIM_QY | ANIM_QZ))) {
                 // just use the baseframe
-                rotation.oSet(baseFrame.oGet(0).q);
+                rotation.oSet(baseFrame.get(0).q);
                 return;
             }
 
             ConvertTimeToFrame(time, cyclecount, frame);
 
-            Float[] jointframe1 = componentFrames.getList(Float[].class);
-            j1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
-            Float[] jointframe2 = componentFrames.getList(Float[].class);
-            j2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.oGet(0).firstComponent;
+            Float[] jointframe1 = componentFrames.toArray(Float[]::new);
+            j1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.get(0).firstComponent;
+            Float[] jointframe2 = componentFrames.toArray(Float[]::new);
+            j2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.get(0).firstComponent;
 
             if ((animBits & ANIM_TX) != 0) {
                 j1_ptr++;
@@ -892,9 +920,9 @@ public class Anim {
                 case ANIM_QX:
                     q1.x = jointframe1[j1_ptr + 0];
                     q2.x = jointframe2[j2_ptr + 0];
-                    q1.y = baseFrame.oGet(0).q.y;
+                    q1.y = baseFrame.get(0).q.y;
                     q2.y = q1.y;
-                    q1.z = baseFrame.oGet(0).q.z;
+                    q1.z = baseFrame.get(0).q.z;
                     q2.z = q1.z;
                     q1.w = q1.CalcW();
                     q2.w = q2.CalcW();
@@ -902,9 +930,9 @@ public class Anim {
                 case ANIM_QY:
                     q1.y = jointframe1[j1_ptr + 0];
                     q2.y = jointframe2[j2_ptr + 0];
-                    q1.x = baseFrame.oGet(0).q.x;
+                    q1.x = baseFrame.get(0).q.x;
                     q2.x = q1.x;
-                    q1.z = baseFrame.oGet(0).q.z;
+                    q1.z = baseFrame.get(0).q.z;
                     q2.z = q1.z;
                     q1.w = q1.CalcW();
                     q2.w = q2.CalcW();
@@ -912,9 +940,9 @@ public class Anim {
                 case ANIM_QZ:
                     q1.z = jointframe1[j1_ptr + 0];
                     q2.z = jointframe2[j2_ptr + 0];
-                    q1.x = baseFrame.oGet(0).q.x;
+                    q1.x = baseFrame.get(0).q.x;
                     q2.x = q1.x;
-                    q1.y = baseFrame.oGet(0).q.y;
+                    q1.y = baseFrame.get(0).q.y;
                     q2.y = q1.y;
                     q1.w = q1.CalcW();
                     q2.w = q2.CalcW();
@@ -924,7 +952,7 @@ public class Anim {
                     q1.y = jointframe1[j1_ptr + 1];
                     q2.x = jointframe2[j2_ptr + 0];
                     q2.y = jointframe2[j2_ptr + 1];
-                    q1.z = baseFrame.oGet(0).q.z;
+                    q1.z = baseFrame.get(0).q.z;
                     q2.z = q1.z;
                     q1.w = q1.CalcW();
                     q2.w = q2.CalcW();
@@ -934,7 +962,7 @@ public class Anim {
                     q1.z = jointframe1[j1_ptr + 1];
                     q2.x = jointframe2[j2_ptr + 0];
                     q2.z = jointframe2[j2_ptr + 1];
-                    q1.y = baseFrame.oGet(0).q.y;
+                    q1.y = baseFrame.get(0).q.y;
                     q2.y = q1.y;
                     q1.w = q1.CalcW();
                     q2.w = q2.CalcW();
@@ -944,7 +972,7 @@ public class Anim {
                     q1.z = jointframe1[j1_ptr + 1];
                     q2.y = jointframe2[j2_ptr + 0];
                     q2.z = jointframe2[j2_ptr + 1];
-                    q1.x = baseFrame.oGet(0).q.x;
+                    q1.x = baseFrame.get(0).q.x;
                     q2.x = q1.x;
                     q1.w = q1.CalcW();
                     q2.w = q2.CalcW();
@@ -964,37 +992,37 @@ public class Anim {
             rotation.Slerp(q1, q2, frame.backlerp);
         }
 
-        public void GetBounds(idBounds bnds, int time, int cyclecount) {
+        public void GetBounds(final idBounds bnds, int time, int cyclecount) {
             frameBlend_t frame = new frameBlend_t();
             final idVec3 offset = new idVec3();
             int c1_ptr, c2_ptr;
 
             ConvertTimeToFrame(time, cyclecount, frame);
 
-            bnds.oSet(bounds.oGet(frame.frame1));
-            bnds.AddBounds(bounds.oGet(frame.frame2));
+            bnds.oSet(bounds.get(frame.frame1));
+            bnds.AddBounds(bounds.get(frame.frame2));
 
             // origin position
-            offset.oSet(baseFrame.oGet(0).t);
-            if ((jointInfo.oGet(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ)) != 0) {
-                Float[] componentPtr1 = componentFrames.getList(Float[].class);
-                c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.oGet(0).firstComponent;
-                Float[] componentPtr2 = componentFrames.getList(Float[].class);
-                c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.oGet(0).firstComponent;
+            offset.oSet(baseFrame.get(0).t);
+            if ((jointInfo.get(0).animBits & (ANIM_TX | ANIM_TY | ANIM_TZ)) != 0) {
+                Float[] componentPtr1 = componentFrames.toArray(Float[]::new);
+                c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo.get(0).firstComponent;
+                Float[] componentPtr2 = componentFrames.toArray(Float[]::new);
+                c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo.get(0).firstComponent;
 
-                if ((jointInfo.oGet(0).animBits & ANIM_TX) != 0) {
+                if ((jointInfo.get(0).animBits & ANIM_TX) != 0) {
                     offset.x = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp;
                     c1_ptr++;
                     c2_ptr++;
                 }
 
-                if ((jointInfo.oGet(0).animBits & ANIM_TY) != 0) {
+                if ((jointInfo.get(0).animBits & ANIM_TY) != 0) {
                     offset.y = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp;
                     c1_ptr++;
                     c2_ptr++;
                 }
 
-                if ((jointInfo.oGet(0).animBits & ANIM_TZ) != 0) {
+                if ((jointInfo.get(0).animBits & ANIM_TZ) != 0) {
                     offset.z = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp;
                 }
             }
@@ -1005,7 +1033,7 @@ public class Anim {
 
     public static class idAFPoseJointMod {
         public final idVec3 origin;
-        public idMat3 axis;
+        public final idMat3 axis;
         public AFJointModType_t mod;
         //
         //
@@ -1028,20 +1056,20 @@ public class Anim {
 
         // ~idAnimManager();
         public static boolean forceExport = false;
-        private final idHashTable<idMD5Anim> animations;
+        private final HashMap<String, idMD5Anim> animations;
         private final idStrList jointnames;
         //
         //
         private final idHashIndex jointnamesHash;
 
         public idAnimManager() {
-            animations = new idHashTable<>();
+            animations = new HashMap<>();
             jointnames = new idStrList();
             jointnamesHash = new idHashIndex();
         }
 
         public void Shutdown() {
-            animations.DeleteContents();
+            animations.clear();
             jointnames.clear();
             jointnamesHash.Free();
         }
@@ -1051,35 +1079,32 @@ public class Anim {
             idMD5Anim anim;
 
             // see if it has been asked for before
-            if (animations.Get(name, animPtr)) {
-                anim = animPtr[0];
-            } else {
+            anim = animations.get(name);
+            if (anim == null) {
                 idStr extension = new idStr();
                 idStr filename = new idStr(name);
 
                 filename.ExtractFileExtension(extension);
-                if (!extension.equals(MD5_ANIM_EXT)) {
+                if (!extension.toString().equals(MD5_ANIM_EXT)) {
                     return null;
                 }
-
                 anim = new idMD5Anim();
                 if (!anim.LoadAnim(filename)) {
                     gameLocal.Warning("Couldn't load anim: '%s'", filename);
-//                    delete anim;
                     anim = null;
                 }
-                animations.Set(filename.toString(), anim);
+                animations.put(filename.toString(), anim);
             }
-
             return anim;
         }
 
         public void ReloadAnims() {
             int i;
             idMD5Anim animptr;
+            idMD5Anim[] animValues;
 
-            for (i = 0; i < animations.Num(); i++) {
-                animptr = animations.GetIndex(i);
+            for (i = 0, animValues = animations.values().toArray(idMD5Anim[]::new); i < animations.values().size(); i++) {
+                animptr = animValues[i];
                 if (animptr != null) {// && *animptr ) {
                     animptr.Reload();
                 }
@@ -1094,11 +1119,11 @@ public class Anim {
             int/*size_t*/ s;
             int/*size_t*/ namesize;
             int num;
-
+            idMD5Anim[] animValues;
             num = 0;
             size = 0;
-            for (i = 0; i < animations.Num(); i++) {
-                animptr = animations.GetIndex(i);
+            for (i = 0, animValues = animations.values().toArray(idMD5Anim[]::new); i < animations.values().size(); i++) {
+                animptr = animValues[i];
                 if (animptr != null) {// && *animptr ) {//TODO:check this locl shit
                     anim = animptr;
                     s = 0;
@@ -1142,20 +1167,20 @@ public class Anim {
         public void FlushUnusedAnims() {
             int i;
             idMD5Anim animptr;
-            final idList<idMD5Anim> removeAnims = new idList<>();
+            idMD5Anim[] animValues;
+            final ArrayList<idMD5Anim> removeAnims = new ArrayList<>();
 
-            for (i = 0; i < animations.Num(); i++) {
-                animptr = animations.GetIndex(i);
+            for (i = 0, animValues = animations.values().toArray(idMD5Anim[]::new); i < animations.values().size(); i++) {
+                animptr = animValues[i];
                 if (animptr != null) {//&& *animptr ) {
                     if (animptr.NumRefs() <= 0) {
-                        removeAnims.Append(animptr);
+                        removeAnims.add(animptr);
                     }
                 }
             }
 
-            for (i = 0; i < removeAnims.Num(); i++) {
-                animations.Remove(removeAnims.oGet(i).Name());
-//		delete removeAnims[ i ];
+            for (i = 0; i < removeAnims.size(); i++) {
+                animations.remove(removeAnims.get(i).Name());
             }
         }
     }

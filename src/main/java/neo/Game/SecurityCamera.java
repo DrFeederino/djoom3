@@ -107,6 +107,7 @@ public class SecurityCamera {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             idStr str;
 
             sweepAngle = spawnArgs.GetFloat("sweepAngle", "90");

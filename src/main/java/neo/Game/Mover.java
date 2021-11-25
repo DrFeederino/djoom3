@@ -3650,6 +3650,7 @@ public class Mover {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             CFloat lip = new CFloat();
             CFloat height = new CFloat();
             CFloat time = new CFloat();
@@ -4031,6 +4032,7 @@ public class Mover {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             CFloat speed = new CFloat();
             CFloat height = new CFloat();
             CFloat phase = new CFloat();
@@ -4143,6 +4145,7 @@ public class Mover {
         //public	idRiser( ){}
         @Override
         public void Spawn() {
+            super.Spawn();
             physicsObj.SetSelf(this);
             physicsObj.SetClipModel(new idClipModel(GetPhysics().GetClipModel()), 1.0f);
             physicsObj.SetOrigin(GetPhysics().GetOrigin());

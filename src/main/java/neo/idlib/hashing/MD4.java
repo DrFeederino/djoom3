@@ -39,7 +39,7 @@ public class MD4 {
         int hash = 0;
         try {
             final int currentPosition = data.position();
-            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            MessageDigest messageDigest = MD4 ? sun.security.provider.MD4.getInstance() : MessageDigest.getInstance("MD5");
 
             messageDigest.update(data);
 

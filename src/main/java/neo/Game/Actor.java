@@ -37,6 +37,7 @@ import neo.idlib.math.Angles.idAngles;
 import neo.idlib.math.Matrix.idMat3;
 import neo.idlib.math.Vector.idVec3;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -1326,7 +1327,7 @@ public class Actor {
             int i;
             idKeyValue arg;
             idStr groupname = new idStr();
-            final idList<Integer/*jointHandle_t*/> jointList = new idList<>();
+            final ArrayList<Integer/*jointHandle_t*/> jointList = new ArrayList<>();
             int jointnum;
             float scale;
 
@@ -1337,11 +1338,11 @@ public class Actor {
                 groupname.oSet(arg.GetKey());
                 groupname.Strip("damage_zone ");
                 animator.GetJointList(arg.GetValue(), jointList);
-                for (i = 0; i < jointList.Num(); i++) {
-                    jointnum = jointList.oGet(i);
+                for (i = 0; i < jointList.size(); i++) {
+                    jointnum = jointList.get(i);
                     damageGroups.set(jointnum, groupname);
                 }
-                jointList.Clear();
+                jointList.clear();
                 arg = spawnArgs.MatchPrefix("damage_zone ", arg);
             }
 
@@ -2268,8 +2269,14 @@ public class Actor {
             animFlags_t flags;
             idEntity headEnt;
             int anim;
-
-            anim = GetAnim(channel, animName);
+            // for some reason we are coming with typos in animation's name? standstand? range_attackk?
+            if (animName.contains("range_attack")) {
+                anim = GetAnim(channel, "range_attack");
+            } else if (animName.contains("stand")) {
+                anim = GetAnim(channel, "stand");
+            } else {
+                anim = GetAnim(channel, animName);
+            }
             if (0 == anim) {
                 if ((channel == ANIMCHANNEL_HEAD) && head.GetEntity() != null) {
                     gameLocal.DPrintf("missing '%s' animation on '%s' (%s)\n", animName, name.toString(), spawnArgs.GetString("def_head", ""));

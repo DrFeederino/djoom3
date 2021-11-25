@@ -133,13 +133,14 @@ public class BrittleFracture {
         private float minShatterRadius;
         //
         // state
-        private idPhysics_StaticMulti physicsObj;
+        private final idPhysics_StaticMulti physicsObj;
         private float shardMass;
         private final idList<shard_s> shards;
         //
         //
 
         public idBrittleFracture() {
+            physicsObj = new idPhysics_StaticMulti();
             material = null;
             decalMaterial = null;
             decalSize = 0;
@@ -315,6 +316,7 @@ public class BrittleFracture {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             CFloat d = new CFloat(), f = new CFloat(), b = new CFloat();
 
             // get shard properties
@@ -1186,7 +1188,7 @@ public class BrittleFracture {
 
                         for (l = w2.GetNumPoints() - 1; l >= 0; l--) {
                             p1.oSet(origin2.oPlus(w2.oGet(l).ToVec3().oMultiply(axis2)));
-                            p2.oSet(origin2.oPlus(w2.oGet((l - 1) % w2.GetNumPoints()).ToVec3().oMultiply(axis2)));
+                            p2.oSet(origin2.oPlus(w2.oGet((l - 1 + w2.GetNumPoints()) % w2.GetNumPoints()).ToVec3().oMultiply(axis2)));
                             if (plane[0].Side(p2, 0.1f) == SIDE_FRONT && plane[1].Side(p1, 0.1f) == SIDE_FRONT) {
                                 if (plane[2].Side(p1, 0.1f) == SIDE_ON && plane[3].Side(p1, 0.1f) == SIDE_ON) {
                                     if (plane[2].Side(p2, 0.1f) == SIDE_ON && plane[3].Side(p2, 0.1f) == SIDE_ON) {

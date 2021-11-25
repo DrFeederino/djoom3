@@ -108,6 +108,7 @@ public class GameEdit {
 
         @Override
         public void Spawn() {
+            super.Spawn();
         }
 
         @Override

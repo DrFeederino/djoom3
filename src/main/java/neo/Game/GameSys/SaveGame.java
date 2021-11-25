@@ -49,7 +49,8 @@ import static neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI;
 import static neo.TempDump.atobb;
 import static neo.framework.BuildVersion.BUILD_NUMBER;
 import static neo.framework.DeclManager.declManager;
-import static neo.framework.DeclManager.declType_t.*;
+import static neo.framework.DeclManager.declType_t.DECL_FX;
+import static neo.framework.DeclManager.declType_t.DECL_PARTICLE;
 import static neo.idlib.Lib.LittleRevBytes;
 import static neo.idlib.geometry.TraceModel.*;
 import static neo.ui.UserInterface.uiManager;
@@ -150,6 +151,7 @@ public class SaveGame {
         public void WriteInt(final int value) {
             file.WriteInt(value);
         }
+
 
         public void WriteJoint(final int/*jointHandle_t*/ value) {
             file.WriteInt(value);
@@ -916,9 +918,9 @@ public class SaveGame {
 
             ReadString(name);
             if (0 == name.Length()) {
-                modelDef.oSet(null);
+                //modelDef = null;
             } else {
-                modelDef.oSet((idDeclModelDef) declManager.FindType(DECL_MODELDEF, name, false));
+                //modelDef.oSet((idDeclModelDef) declManager.FindType(DECL_MODELDEF, name, false));
             }
         }
 

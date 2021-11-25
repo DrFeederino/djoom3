@@ -409,6 +409,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             CBool start_off = new CBool(false);
 
             spawnArgs.GetBool("stay_on", "0", stay_on);
@@ -592,6 +593,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             idStr broken = new idStr();
 
             health = spawnArgs.GetInt("health", "5");
@@ -797,6 +799,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             CFloat Kstretch = new CFloat(), damping = new CFloat(), restLength = new CFloat();
 
             spawnArgs.GetInt("id1", "0", id1);
@@ -1875,6 +1878,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
         }
 
         @Override
@@ -1923,6 +1927,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             // these are cached as the are used each frame
             text.oSet(spawnArgs.GetString("text"));
             playerOriented = spawnArgs.GetBool("playerOriented");
@@ -2068,6 +2073,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             idBounds b;
 
             b = new idBounds(spawnArgs.GetVector("origin")).Expand(16);
@@ -2345,6 +2351,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             /*
              model = dynamic_cast<idRenderModelLiquid *>( renderEntity.hModel );
              if ( !model ) {
@@ -2764,6 +2771,7 @@ public class Misc {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             state = spawnArgs.GetBool("start_on");
             gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AREACONTENTS_CLUSTERPORTAL, state);
         }

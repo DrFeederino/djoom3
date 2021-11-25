@@ -562,6 +562,7 @@ public class Trigger {
 
         @Override
         public void Spawn() {
+            super.Spawn();
             wait = spawnArgs.GetFloat("wait", "0.5");
             random = spawnArgs.GetFloat("random", "0");
             delay = spawnArgs.GetFloat("delay", "0");

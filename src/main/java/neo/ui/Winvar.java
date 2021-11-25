@@ -1033,20 +1033,20 @@ public class Winvar {
         @Override
         public void Set(final String val) {
 
-            try (final Scanner sscanf = new Scanner(val)) {
+            try (final Scanner sscanf = new Scanner(val).useDelimiter("[, ]")) {
                 if (val.contains(",")) {
 //			sscanf( val, "%f,%f,%f,%f", data.x, data.y, data.z, data.w );
                     if (sscanf.hasNext()) {
                         data.x = sscanf.nextFloat();
                     }
                     if (sscanf.hasNext()) {
-                        data.y = sscanf.skip(",").nextFloat();
+                        data.y = sscanf.nextFloat();
                     }
                     if (sscanf.hasNext()) {
-                        data.z = sscanf.skip(",").nextFloat();
+                        data.z = sscanf.nextFloat();
                     }
                     if (sscanf.hasNext()) {
-                        data.w = sscanf.skip(",").nextFloat();
+                        data.w = sscanf.nextFloat();
                     }
                 } else {
 //			sscanf( val, "%f %f %f %f", data.x, data.y, data.z, data.w );

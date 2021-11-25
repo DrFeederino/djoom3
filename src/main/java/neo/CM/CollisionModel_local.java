@@ -22,6 +22,7 @@ import neo.idlib.math.Vector.idVec3;
 import neo.idlib.math.Vector.idVec6;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -164,7 +165,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
             // models
             maxModels = MAX_SUBMODELS;
             numModels = 0;
-            models = new cm_model_s[maxModels + 1]; //cm_model_s.generateArray(maxModels + 1);
+            models = cm_model_s.generateArray(maxModels + 1);//new cm_model_s[maxModels + 1]; //cm_model_s.generateArray(maxModels + 1);
 
             // setup hash to speed up finding shared vertices and edges
             SetupHash();
@@ -948,7 +949,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                 return;
             }
 
-            testend = new idVec3[cm_testTimes.GetInteger()];// = (idVec3 []) Mem_Alloc( cm_testTimes.GetInteger()  );
+            testend = idVec3.generateArray(cm_testTimes.GetInteger());// = (idVec3 []) Mem_Alloc( cm_testTimes.GetInteger()  );
 
             if (cm_testReset.GetBool() || (cm_testWalk.GetBool() && !start.Compare(start))) {
                 total_translation = total_rotation = 0;
@@ -986,7 +987,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     testend[0].oSet(i, start.oGet(i) + random.CRandomFloat() * cm_testLength.GetFloat());
                 }
                 for (k = 1; k < cm_testTimes.GetInteger(); k++) {
-                    testend[k] = testend[0];
+                    testend[k].oSet(testend[0]);
                 }
             } else {
                 // many traces each in a different random direction
@@ -1026,7 +1027,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
                     testend[0].oSet(i, start.oGet(i) + random.CRandomFloat() * cm_testRadius.GetFloat());
                 }
                 for (k = 1; k < cm_testTimes.GetInteger(); k++) {
-                    testend[k] = testend[0];
+                    testend[k].oSet(testend[0]);
                 }
             } else {
                 // many traces each in a different random direction
@@ -1085,6 +1086,7 @@ public class CollisionModel_local extends AbstractCollisionModel_local {
 
             if (cm_drawColor.IsModified()) {
                 sscanf = new Scanner(cm_drawColor.GetString());//, "%f %f %f %f", &cm_color.x, &cm_color.y, &cm_color.z, &cm_color.w );
+                sscanf.useLocale(Locale.US);
                 cm_color.Set(sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat());
                 cm_drawColor.ClearModified();
             }

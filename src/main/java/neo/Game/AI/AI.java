@@ -5502,10 +5502,10 @@ public class AI {
             TriggerWeaponEffects(muzzle);
         }
 
-        protected void Event_CreateMissile(final idEventArg<char[]> _jointname) {
-            String jointname = String.valueOf(_jointname.value);
+        protected void Event_CreateMissile(final idEventArg<String> _jointname) {
+            String jointname = _jointname.value;
             final idVec3 muzzle = new idVec3();
-            idMat3 axis = new idMat3();
+            final idMat3 axis = new idMat3();
 
             if (null == projectileDef) {
                 gameLocal.Warning("%s (%s) doesn't have a projectile specified", name, GetEntityDefName());
@@ -5524,9 +5524,9 @@ public class AI {
             idThread.ReturnEntity(projectile.GetEntity());
         }
 
-        protected void Event_AttackMissile(final idEventArg<char[]> jointname) {
+        protected void Event_AttackMissile(final idEventArg<String> jointname) {
             idProjectile proj;
-            proj = LaunchProjectile(new String(jointname.value), enemy.GetEntity(), true);
+            proj = LaunchProjectile(jointname.value, enemy.GetEntity(), true);
             idThread.ReturnEntity(proj);
         }
 
@@ -5595,8 +5595,8 @@ public class AI {
             lastAttackTime = gameLocal.time;
         }
 
-        protected void Event_AttackMelee(final idEventArg<char[]> meleeDefName) {
-            int hit = AttackMelee(String.valueOf(meleeDefName.value)) ? 1 : 0;
+        protected void Event_AttackMelee(final idEventArg<String> meleeDefName) {
+            int hit = AttackMelee(meleeDefName.value) ? 1 : 0;
             idThread.ReturnInt(hit);
         }
 
@@ -5622,15 +5622,15 @@ public class AI {
             gameLocal.RadiusDamage(org, this, this, this, this, damageDefName.value);
         }
 
-        protected void Event_BeginAttack(final idEventArg<char[]> name) {
-            BeginAttack(String.valueOf(name.value));
+        protected void Event_BeginAttack(final idEventArg<String> name) {
+            BeginAttack(name.value);
         }
 
         protected void Event_EndAttack() {
             EndAttack();
         }
 
-        protected void Event_MeleeAttackToJoint(final idEventArg<String> jointname, final idEventArg<char[]> meleeDefName) {
+        protected void Event_MeleeAttackToJoint(final idEventArg<String> jointname, final idEventArg<String> meleeDefName) {
             int/*jointHandle_t*/ joint;
             final idVec3 start = new idVec3();
             final idVec3 end = new idVec3();
@@ -6209,7 +6209,7 @@ public class AI {
             idThread.ReturnInt(GetAimDir(fromPos, enemy.GetEntity(), this, dir));
         }
 
-        protected void Event_CanHitEnemyFromJoint(final idEventArg<char[]> jointname) {
+        protected void Event_CanHitEnemyFromJoint(final idEventArg<String> jointname) {
             trace_s tr = new trace_s();
             final idVec3 muzzle = new idVec3();
             final idVec3 start = new idVec3();
@@ -6275,7 +6275,7 @@ public class AI {
             idThread.ReturnInt(result);
         }
 
-        protected void Event_ChargeAttack(final idEventArg<char[]> damageDef) {
+        protected void Event_ChargeAttack(final idEventArg<String> damageDef) {
             idActor enemyEnt = enemy.GetEntity();
 
             StopMove(MOVE_STATUS_DEST_NOT_FOUND);
@@ -6411,7 +6411,7 @@ public class AI {
             idThread.ReturnInt(result);
         }
 
-        protected void Event_TestAnimAttack(final idEventArg<char[]> animname) {
+        protected void Event_TestAnimAttack(final idEventArg<String> animname) {
             int anim;
             predictedPath_s path = new predictedPath_s();
 
@@ -6700,7 +6700,7 @@ public class AI {
             idThread.ReturnEntity(bestEnt);
         }
 
-        protected void Event_GetRandomTarget(final idEventArg<char[]> type) {
+        protected void Event_GetRandomTarget(final idEventArg<String> type) {
             int i;
             int num;
             int which;
@@ -6934,8 +6934,8 @@ public class AI {
             allowHiddenMovement = (enable.value != 0);
         }
 
-        protected void Event_TriggerParticles(final idEventArg<char[]> jointName) {
-            TriggerParticles(String.valueOf(jointName.value));
+        protected void Event_TriggerParticles(final idEventArg<String> jointName) {
+            TriggerParticles(jointName.value);
         }
 
         protected void Event_FindActorsInBounds(final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs) {

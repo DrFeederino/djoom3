@@ -4,7 +4,6 @@ import neo.Renderer.Material.idMaterial;
 import neo.idlib.Text.Parser.idParser;
 import neo.idlib.Text.Str.idStr;
 import neo.idlib.Text.Token.idToken;
-import neo.idlib.containers.HashTable.idHashTable;
 import neo.idlib.containers.List.idList;
 import neo.idlib.containers.idStrList;
 import neo.idlib.math.Vector.idVec2;
@@ -16,6 +15,8 @@ import neo.ui.SimpleWindow.drawWin_t;
 import neo.ui.SliderWindow.idSliderWindow;
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal;
 import neo.ui.Winvar.idWinVar;
+
+import java.util.HashMap;
 
 import static neo.Renderer.Material.MF_DEFAULTED;
 import static neo.Renderer.Material.SS_GUI;
@@ -69,7 +70,7 @@ public class ListWindow {
         private int clickTime;
         private final idList<Integer> currentSel = new idList<>();
         private boolean horizontal;
-        private final idHashTable<idMaterial> iconMaterials = new idHashTable<>();
+        private final HashMap<String, idMaterial> iconMaterials = new HashMap<>();
         //
         private final idStrList listItems = new idStrList();
         private final idStr listName = new idStr();
@@ -428,16 +429,16 @@ public class ListWindow {
                             dc.DrawText(work, scale, tabInfo.oGet(tab).align, color, rect, false, -1);
                         } else if (tabInfo.oGet(tab).type == TAB_TYPE_ICON) {
 
-                            final idMaterial[] hashMat = {null};
+                            idMaterial hashMat;
                             idMaterial iconMat;
 
                             // leaving the icon name empty doesn't draw anything
                             if (isNotNullOrEmpty(work)) {
-
-                                if (iconMaterials.Get(work.toString(), hashMat) == false) {
+                                hashMat = iconMaterials.get(work.toString());
+                                if (hashMat == null) {
                                     iconMat = declManager.FindMaterial("_default");
                                 } else {
-                                    iconMat = hashMat[0];
+                                    iconMat = hashMat;
                                 }
 
                                 idRectangle iconRect = new idRectangle();
@@ -601,7 +602,7 @@ public class ListWindow {
                 if (mat != null && !mat.TestMaterialFlag(MF_DEFAULTED)) {
                     mat.SetSort(SS_GUI);
                 }
-                iconMaterials.Set(_name, mat);
+                iconMaterials.put(_name, mat);
                 return true;
             }
 

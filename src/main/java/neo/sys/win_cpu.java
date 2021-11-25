@@ -956,19 +956,20 @@ public class win_cpu {
     static String wmic(final String query) throws IOException {
         final String result;
 
-        Process wmic = Runtime.getRuntime().exec("wmic " + query);
-//                wmic.waitFor();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(wmic.getInputStream()))) {
-            if (reader.readLine().startsWith("Node")) {
-                return "";// invalid query
-            }
-
-            reader.readLine();// empty line
-            result = reader.readLine();
-        }
-        wmic.destroy();
-
-        return result;
+        return "";
+//        Process wmic = Runtime.getRuntime().exec("wmic " + query);
+////                wmic.waitFor();
+//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(wmic.getInputStream()))) {
+//            if (reader.readLine().startsWith("Node")) {
+//                return "";// invalid query
+//            }
+//
+//            reader.readLine();// empty line
+//            result = reader.readLine();
+//        }
+//        wmic.destroy();
+//
+//        return result;
     }
 
     static String cmd(final String query) throws IOException {
