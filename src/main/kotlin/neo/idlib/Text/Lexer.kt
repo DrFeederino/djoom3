@@ -1,0 +1,1939 @@
+package neo.idlib.Text
+
+import neo.TempDump
+import neo.TempDump.CPP_class.Char
+import neo.framework.File_h.idFile
+import neo.idlib.Lib
+import neo.idlib.Lib.idException
+import neo.idlib.Lib.idLib
+import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Token.idToken
+import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Quat.idCQuat
+import neo.idlib.math.Quat.idQuat
+import neo.idlib.math.Vector.idVec
+import neo.idlib.math.Vector.idVec3
+import java.nio.*
+import java.util.*
+
+/**
+ *
+ */
+object Lexer {
+    val LEXFL_ALLOWBACKSLASHSTRINGCONCAT: Int =
+        Lib.Companion.BIT(12) // allow multiple strings seperated by '\' to be concatenated
+    val LEXFL_ALLOWFLOATEXCEPTIONS: Int =
+        Lib.Companion.BIT(10) // allow float exceptions like 1.#INF or 1.#IND to be parsed
+    val LEXFL_ALLOWIPADDRESSES: Int = Lib.Companion.BIT(9) // allow ip addresses to be parsed as numbers
+    val LEXFL_ALLOWMULTICHARLITERALS: Int = Lib.Companion.BIT(11) // allow multi character literals
+    val LEXFL_ALLOWNUMBERNAMES: Int = Lib.Companion.BIT(8) // allow names to start with a number
+    val LEXFL_ALLOWPATHNAMES: Int = Lib.Companion.BIT(7) // allow path seperators in names
+    val LEXFL_NOBASEINCLUDES: Int = Lib.Companion.BIT(6) // don't include files embraced with < >
+    val LEXFL_NODOLLARPRECOMPILE: Int = Lib.Companion.BIT(5) // don't use the $ sign for precompilation
+
+    /**
+     * ===============================================================================
+     *
+     *
+     * Lexicographical parser
+     *
+     *
+     * Does not use memory allocation during parsing. The lexer uses no memory
+     * allocation if a source is loaded with LoadMemory(). However, idToken may
+     * still allocate memory for large strings.
+     *
+     *
+     * A number directly following the escape character '\' in a string is
+     * assumed to be in decimal format instead of octal. Binary numbers of the
+     * form 0b.. or 0B.. can also be used.
+     *
+     *
+     * ===============================================================================
+     */
+    // lexer flags
+    val LEXFL_NOERRORS: Int = Lib.Companion.BIT(0) // don't print any errors
+    val LEXFL_NOFATALERRORS: Int = Lib.Companion.BIT(2) // errors aren't fatal
+    val LEXFL_NOSTRINGCONCAT: Int =
+        Lib.Companion.BIT(3) // multiple strings seperated by whitespaces are not concatenated
+    val LEXFL_NOSTRINGESCAPECHARS: Int = Lib.Companion.BIT(4) // no escape characters inside strings
+    val LEXFL_NOWARNINGS: Int = Lib.Companion.BIT(1) // don't print any warnings
+    val LEXFL_ONLYSTRINGS: Int =
+        Lib.Companion.BIT(13) // parse as whitespace deliminated strings (quoted strings keep quotes)
+    const val P_PRECOMP = 51
+    const val PUNCTABLE = true
+    const val P_ADD = 29
+    const val P_ADD_ASSIGN = 14
+    const val P_ASSIGN = 31
+    const val P_BACKSLASH = 50
+    const val P_BIN_AND = 32
+    const val P_BIN_AND_ASSIGN = 18
+    const val P_BIN_NOT = 35
+    const val P_BIN_OR = 33
+    const val P_BIN_OR_ASSIGN = 19
+    const val P_BIN_XOR = 34
+    const val P_BIN_XOR_ASSIGN = 20
+    const val P_BRACECLOSE = 47
+    const val P_BRACEOPEN = 46
+    const val P_COLON = 42
+    const val P_COMMA = 40
+    const val P_CPP1 = 24
+    const val P_CPP2 = 25
+    const val P_DEC = 17
+    const val P_DIV = 27
+    const val P_DIV_ASSIGN = 12
+    const val P_DOLLAR = 52
+    const val P_INC = 16
+    const val P_LOGIC_AND = 5
+    const val P_LOGIC_EQ = 9
+    const val P_LOGIC_GEQ = 7
+    const val P_LOGIC_GREATER = 37
+    const val P_LOGIC_LEQ = 8
+    const val P_LOGIC_LESS = 38
+    const val P_LOGIC_NOT = 36
+    const val P_LOGIC_OR = 6
+    const val P_LOGIC_UNEQ = 10
+    const val P_LSHIFT = 22
+    const val P_LSHIFT_ASSIGN = 2
+    const val P_MOD = 28
+    const val P_MOD_ASSIGN = 13
+    const val P_MUL = 26
+    const val P_MUL_ASSIGN = 11
+    const val P_PARENTHESESCLOSE = 45
+    const val P_PARENTHESESOPEN = 44
+    const val P_PARMS = 3
+    const val P_POINTERREF = 23
+    const val P_PRECOMPMERGE = 4
+    const val P_QUESTIONMARK = 43
+    const val P_REF = 39
+    const val P_RSHIFT = 21
+
+    //
+    //
+    // punctuation ids
+    const val P_RSHIFT_ASSIGN = 1
+    const val P_SEMICOLON = 41
+    const val P_SQBRACKETCLOSE = 49
+    const val P_SQBRACKETOPEN = 48
+    const val P_SUB = 30
+    const val P_SUB_ASSIGN = 15
+
+    //
+    //  
+    //longer punctuations first
+    val default_punctuations: Array<punctuation_t?>? = arrayOf( //binary operators
+        punctuation_t(">>=", Lexer.P_RSHIFT_ASSIGN),
+        punctuation_t("<<=", Lexer.P_LSHIFT_ASSIGN),  //
+        punctuation_t("...", Lexer.P_PARMS),  //define merge operator
+        punctuation_t("##", Lexer.P_PRECOMPMERGE),  // pre-compiler
+        //logic operators
+        punctuation_t("&&", Lexer.P_LOGIC_AND),  // pre-compiler
+        punctuation_t("||", Lexer.P_LOGIC_OR),  // pre-compiler
+        punctuation_t(">=", Lexer.P_LOGIC_GEQ),  // pre-compiler
+        punctuation_t("<=", Lexer.P_LOGIC_LEQ),  // pre-compiler
+        punctuation_t("==", Lexer.P_LOGIC_EQ),  // pre-compiler
+        punctuation_t("!=", Lexer.P_LOGIC_UNEQ),  // pre-compiler
+        //arithmatic operators
+        punctuation_t("*=", Lexer.P_MUL_ASSIGN),
+        punctuation_t("/=", Lexer.P_DIV_ASSIGN),
+        punctuation_t("%=", Lexer.P_MOD_ASSIGN),
+        punctuation_t("+=", Lexer.P_ADD_ASSIGN),
+        punctuation_t("-=", Lexer.P_SUB_ASSIGN),
+        punctuation_t("++", Lexer.P_INC),
+        punctuation_t("--", Lexer.P_DEC),  //binary operators
+        punctuation_t("&=", Lexer.P_BIN_AND_ASSIGN),
+        punctuation_t("|=", Lexer.P_BIN_OR_ASSIGN),
+        punctuation_t("^=", Lexer.P_BIN_XOR_ASSIGN),
+        punctuation_t(">>", Lexer.P_RSHIFT),  // pre-compiler
+        punctuation_t("<<", Lexer.P_LSHIFT),  // pre-compiler
+        //reference operators
+        punctuation_t("->", Lexer.P_POINTERREF),  //C++
+        punctuation_t("::", Lexer.P_CPP1),
+        punctuation_t(".*", Lexer.P_CPP2),  //arithmatic operators
+        punctuation_t("*", Lexer.P_MUL),  // pre-compiler
+        punctuation_t("/", Lexer.P_DIV),  // pre-compiler
+        punctuation_t("%", Lexer.P_MOD),  // pre-compiler
+        punctuation_t("+", Lexer.P_ADD),  // pre-compiler
+        punctuation_t("-", Lexer.P_SUB),  // pre-compiler
+        punctuation_t("=", Lexer.P_ASSIGN),  //binary operators
+        punctuation_t("&", Lexer.P_BIN_AND),  // pre-compiler
+        punctuation_t("|", Lexer.P_BIN_OR),  // pre-compiler
+        punctuation_t("^", Lexer.P_BIN_XOR),  // pre-compiler
+        punctuation_t("~", Lexer.P_BIN_NOT),  // pre-compiler
+        //logic operators
+        punctuation_t("!", Lexer.P_LOGIC_NOT),  // pre-compiler
+        punctuation_t(">", Lexer.P_LOGIC_GREATER),  // pre-compiler
+        punctuation_t("<", Lexer.P_LOGIC_LESS),  // pre-compiler
+        //reference operator
+        punctuation_t(".", Lexer.P_REF),  //seperators
+        punctuation_t(",", Lexer.P_COMMA),  // pre-compiler
+        punctuation_t(";", Lexer.P_SEMICOLON),  //label indication
+        punctuation_t(":", Lexer.P_COLON),  // pre-compiler
+        //if statement
+        punctuation_t("?", Lexer.P_QUESTIONMARK),  // pre-compiler
+        //embracements
+        punctuation_t("(", Lexer.P_PARENTHESESOPEN),  // pre-compiler
+        punctuation_t(")", Lexer.P_PARENTHESESCLOSE),  // pre-compiler
+        punctuation_t("{", Lexer.P_BRACEOPEN),  // pre-compiler
+        punctuation_t("}", Lexer.P_BRACECLOSE),  // pre-compiler
+        punctuation_t("[", Lexer.P_SQBRACKETOPEN),
+        punctuation_t("]", Lexer.P_SQBRACKETCLOSE),  //
+        punctuation_t("\\", Lexer.P_BACKSLASH),  //precompiler operator
+        punctuation_t("#", Lexer.P_PRECOMP),  // pre-compiler
+        punctuation_t("$", Lexer.P_DOLLAR),
+        punctuation_t(null, 0)
+    )
+    val default_nextpunctuation: IntArray? = IntArray(Lexer.default_punctuations.size)
+    val default_punctuationtable: IntArray? = IntArray(256)
+    var default_setup = false
+
+    // punctuation
+    internal class punctuation_t(// punctuation character(s)
+        var p: String?, // punctuation id
+        var n: Int
+    )
+
+    class idLexer {
+        var next // next script in a chain
+                : idLexer?
+        var buffer // buffer containing the script
+                : CharBuffer? = null
+        var script_p // current pointer in the script
+                = 0
+        private var allocated // true if buffer memory was allocated
+                : Boolean
+        private var end_p // pointer to the end of the script
+                = 0
+        private /*ID_TIME_T*/  var fileTime // file time
+                : Long = 0
+        private var filename // file name of the script
+                : idStr? = null
+        private var flags // several script flags
+                : Long
+        private var hadError // set by idLexer::Error, even if the error is suppressed
+                : Boolean
+        private var lastScript_p // script pointer before reading token
+                = 0
+        private var lastline // line before reading token
+                = 0
+        private var length // length of the script in bytes
+                = 0
+        private var line // current line in script
+                = 0
+        private var loaded // set when a script file is loaded from file or memory
+                : Boolean
+        private var nextPunctuation // next punctuation in chain
+                : IntArray?
+        private var punctuationTable // ASCII table with punctuations
+                : IntArray?
+        private var punctuations // the punctuations used in the script
+                : Array<punctuation_t?>?
+        private var token // available token
+                : idToken?
+        private var tokenAvailable // set by unreadToken
+                = false
+        private var whiteSpaceEnd_p // end of last white space
+                = 0
+        private var whiteSpaceStart_p // start of last white space
+                = 0
+
+        //
+        //
+        // constructor
+        constructor() {
+            loaded = false
+            filename = idStr("")
+            flags = 0
+            SetPunctuations(null)
+            allocated = false
+            fileTime = 0
+            length = 0
+            line = 0
+            lastline = 0
+            tokenAvailable = false
+            token = idToken()
+            next = null
+            hadError = false
+        }
+
+        constructor(flags: Long) {
+            loaded = false
+            filename = idStr("")
+            this.flags = flags
+            SetPunctuations(null)
+            allocated = false
+            fileTime = 0
+            length = 0
+            line = 0
+            lastline = 0
+            tokenAvailable = false
+            token = idToken()
+            next = null
+            hadError = false
+        }
+
+        constructor(filename: String?) {
+            loaded = false
+            flags = 0
+            SetPunctuations(null)
+            allocated = false
+            token = idToken()
+            next = null
+            hadError = false
+            this.LoadFile(filename, false)
+        }
+
+        constructor(filename: String?, flags: Int) {
+            loaded = false
+            this.flags = flags.toLong()
+            SetPunctuations(null)
+            allocated = false
+            token = idToken()
+            next = null
+            hadError = false
+            this.LoadFile(filename, false)
+        }
+
+        constructor(filename: String?, flags: Int, OSPath: Boolean) {
+            loaded = false
+            this.flags = flags.toLong()
+            SetPunctuations(null)
+            allocated = false
+            token = idToken()
+            next = null
+            hadError = false
+            this.LoadFile(filename, OSPath)
+        }
+
+        constructor(ptr: CharBuffer?, length: Int, name: String?) {
+            loaded = false
+            flags = 0
+            SetPunctuations(null)
+            allocated = false
+            token = idToken()
+            next = null
+            hadError = false
+            this.LoadMemory(ptr, length, name)
+        }
+
+        constructor(ptr: String?, length: Int, name: String?) : this(TempDump.atocb(ptr), length, name)
+        constructor(ptr: String?, length: Int, name: String?, flags: Int) {
+            loaded = false
+            this.flags = flags.toLong()
+            SetPunctuations(null)
+            allocated = false
+            token = idToken()
+            next = null
+            hadError = false
+            this.LoadMemory(ptr, length, name)
+        }
+
+        @Throws(idException::class)
+        fun LoadFile(filename: idStr?): Boolean {
+            return this.LoadFile(filename.toString())
+        }
+
+        // load a script from the given file at the given offset with the given length
+        @JvmOverloads
+        @Throws(idException::class)
+        fun LoadFile(filename: String?, OSPath: Boolean = false /*= false*/): Boolean {
+//        TODO:NIO
+            val fp: idFile?
+            val pathname: String?
+            val length: Int
+            val buf: ByteBuffer?
+            if (loaded) {
+                idLib.common.Error("this.LoadFile: another script already loaded")
+                return false
+            }
+            pathname =
+                if (!OSPath && baseFolder.length > 0 && baseFolder.get(0) != '\u0000') { //TODO: use length isntead?
+                    Str.va("%s/%s", baseFolder, filename)
+                } else {
+                    filename
+                }
+            fp = if (OSPath) {
+                idLib.fileSystem.OpenExplicitFileRead(pathname)
+            } else {
+                idLib.fileSystem.OpenFileRead(pathname)
+            }
+            if (null == fp) {
+                return false
+            }
+            length = fp.Length()
+            buf = ByteBuffer.allocate(length + 1)
+            fp.Read(buf, length)
+            buf.put(length, 0.toByte()) //[length] = '\0';
+            fileTime = fp.Timestamp()
+            this.filename = idStr(fp.GetFullPath())
+            idLib.fileSystem.CloseFile(fp)
+            buffer = TempDump.bbtocb(buf)
+            this.length = length
+            // pointer in script buffer
+//            this.script_p = this.buffer;
+            script_p = 0
+            // pointer in script buffer before reading token
+            lastScript_p = 0 //this.buffer;
+            // pointer to end of script buffer
+            end_p = buffer.length //(this.buffer[length]);
+            tokenAvailable = false //0;
+            line = 1
+            lastline = 1
+            allocated = true
+            loaded = true
+            return true
+        }
+
+        // load a script from the given memory with the given length and a specified line offset,
+        // so source strings extracted from a file can still refer to proper line numbers in the file
+        // NOTE: the ptr is expected to point at a valid C string: ptr[length] == '\0'
+        @Throws(idException::class)
+        fun LoadMemory(ptr: idStr?, length: Int, name: idStr? /*= 1*/): Boolean {
+            return LoadMemory(CharBuffer.wrap(ptr.c_str()), length, name.toString())
+        }
+
+        @Throws(idException::class)
+        fun LoadMemory(ptr: String?, length: Int, name: String? /*= 1*/): Boolean {
+            return LoadMemory(TempDump.atocb(ptr), length, name, 1)
+        }
+
+        @JvmOverloads
+        @Throws(idException::class)
+        fun LoadMemory(ptr: CharBuffer?, length: Int, name: String?, startLine: Int = 1): Boolean {
+            if (loaded) {
+                idLib.common.Error("this.LoadMemory: another script already loaded")
+                return false
+            }
+            filename = idStr(name)
+            buffer = CharBuffer.wrap(ptr.toString() + '\u0000') ///TODO:should ptr and name be the same?
+            fileTime = 0
+            this.length = length
+            // pointer in script buffer
+            script_p = 0 //this.buffer;
+            // pointer in script buffer before reading token
+            lastScript_p = 0 //this.buffer;
+            // pointer to end of script buffer
+            end_p = buffer.length //(this.buffer[length]);
+            tokenAvailable = false //0;
+            line = startLine
+            lastline = startLine
+            allocated = false
+            loaded = true
+            return true
+        }
+
+        @Throws(idException::class)
+        fun LoadMemory(ptr: String?, length: Int, name: String?, startLine: Int): Boolean {
+            return LoadMemory(CharBuffer.wrap(ptr), length, name, startLine) //the \0 is needed for the parsing loops.
+        }
+
+        @Throws(idException::class)
+        fun LoadMemory(ptr: idStr?, length: Int, name: String?): Boolean {
+            return LoadMemory(ptr.toString(), length, name)
+        }
+
+        // free the script
+        fun FreeSource() {
+//#ifdef PUNCTABLE
+            if (punctuationTable != null && punctuationTable != Lexer.default_punctuationtable) {
+//                Mem_Free((void *) this.punctuationtable);
+                punctuationTable = null
+            }
+            if (nextPunctuation != null && nextPunctuation != Lexer.default_nextpunctuation) {
+//                Mem_Free((void *) this.nextpunctuation);
+                nextPunctuation = null
+            }
+            //#endif //PUNCTABLE
+            if (allocated) {
+//                Mem_Free((void *) this.buffer);
+                buffer = null
+                allocated = false
+            }
+            tokenAvailable = false //0;
+            token = null
+            loaded = false
+        }
+
+        // returns true if a script is loaded
+        fun IsLoaded(): Boolean {
+            return loaded
+        }
+
+        // read a token
+        @Throws(idException::class)
+        fun ReadToken(token: idToken?): Boolean {
+            var c: Char
+            val c2: Char
+            if (!loaded) {
+                idLib.common.Error("idLexer::ReadToken: no file loaded")
+                return false
+            }
+
+            // if there is a token available (from unreadToken)
+            if (tokenAvailable) {
+                tokenAvailable = false
+                token.oSet(this.token)
+                return true
+            }
+            // save script pointer
+            lastScript_p = script_p
+            // save line counter
+            lastline = line
+            // clear the token stuff
+            token.data = ""
+            token.len = 0
+            // start of the white space
+            token.whiteSpaceStart_p = script_p
+            whiteSpaceStart_p = token.whiteSpaceStart_p
+            // read white space before token
+            if (!ReadWhiteSpace()) {
+                return false
+            }
+            // end of the white space
+            token.whiteSpaceEnd_p = script_p
+            whiteSpaceEnd_p = token.whiteSpaceEnd_p
+            // line the token is on
+            token.line = line
+            // number of lines crossed before token
+            token.linesCrossed = line - lastline
+            // clear token flags
+            token.flags = 0
+            c = buffer.get(script_p)
+            c2 = buffer.get(script_p + 1)
+
+            // if we're keeping everything as whitespace deliminated strings
+            if (flags and Lexer.LEXFL_ONLYSTRINGS != 0L) {
+                // if there is a leading quote
+                return if (c == '\"' || c == '\'') {
+                    ReadString(token, c.code)
+                } else ReadName(token)
+            } // if there is a number
+            else if (Character.isDigit(c)
+                || c == '.' && Character.isDigit(c2)
+            ) {
+                if (!ReadNumber(token)) {
+                    return false
+                }
+                // if names are allowed to start with a number
+                if (flags and Lexer.LEXFL_ALLOWNUMBERNAMES != 0L) {
+                    c = buffer.get(script_p)
+                    if (Character.isLetter(c) || c == '_') {
+                        return ReadName(token)
+                    }
+                }
+            } // if there is a leading quote
+            else if (c == '\"' || c == '\'') {
+                return ReadString(token, c.code)
+            } // if there is a name
+            else if (Character.isLetter(c) || c == '_') {
+                return ReadName(token)
+            } // names may also start with a slash when pathnames are allowed
+            else if (flags and Lexer.LEXFL_ALLOWPATHNAMES != 0L && (c == '/' || c == '\\' || c == '.')) {
+                return ReadName(token)
+            } // check for punctuations
+            else if (!ReadPunctuation(token)) {
+                Error("unknown punctuation %c", c)
+                return false
+            }
+            // succesfully read a token
+            return true
+        }
+
+        // expect a certain token, reads the token when available
+        @Throws(idException::class)
+        fun ExpectTokenString(string: String?): Boolean {
+            val token = idToken()
+            if (!ReadToken(token)) {
+                Error("couldn't find expected '%s'", string)
+                return false
+            }
+            if (token != string) {
+                Error("expected '%s' but found '%s'", string, token)
+                return false
+            }
+            return true
+        }
+
+        // expect a certain token type
+        @Throws(idException::class)
+        fun ExpectTokenType(type: Int, subtype: Int, token: idToken?): Int {
+            val str = idStr()
+            if (!ReadToken(token)) {
+                Error("couldn't read expected token")
+                return 0
+            }
+            if (token.type != type) {
+                when (type) {
+                    Token.TT_STRING -> str.oSet("string")
+                    Token.TT_LITERAL -> str.oSet("literal")
+                    Token.TT_NUMBER -> str.oSet("number")
+                    Token.TT_NAME -> str.oSet("name")
+                    Token.TT_PUNCTUATION -> str.oSet("punctuation")
+                    else -> str.oSet("unknown type")
+                }
+                Error("expected a %s but found '%s'", str.toString(), token.toString())
+                return 0
+            }
+            if (token.type == Token.TT_NUMBER) {
+                if (token.subtype and subtype != subtype) {
+                    str.Clear()
+                    if (subtype and Token.TT_DECIMAL != 0) {
+                        str.oSet("decimal ")
+                    }
+                    if (subtype and Token.TT_HEX != 0) {
+                        str.oSet("hex ")
+                    }
+                    if (subtype and Token.TT_OCTAL != 0) {
+                        str.oSet("octal ")
+                    }
+                    if (subtype and Token.TT_BINARY != 0) {
+                        str.oSet("binary ")
+                    }
+                    if (subtype and Token.TT_UNSIGNED != 0) {
+                        str.Append("unsigned ")
+                    }
+                    if (subtype and Token.TT_LONG != 0) {
+                        str.Append("long ")
+                    }
+                    if (subtype and Token.TT_FLOAT != 0) {
+                        str.Append("float ")
+                    }
+                    if (subtype and Token.TT_INTEGER != 0) {
+                        str.Append("integer ")
+                    }
+                    str.StripTrailing(' ')
+                    Error("expected %s but found '%s'", str.toString(), token.toString())
+                    return 0
+                }
+            } else if (token.type == Token.TT_PUNCTUATION) {
+                if (subtype < 0) {
+                    Error("BUG: wrong punctuation subtype")
+                    return 0
+                }
+                if (token.subtype != subtype) {
+                    Error("expected '%s' but found '%s'", GetPunctuationFromId(subtype), token.toString())
+                    return 0
+                }
+            }
+            return 1
+        }
+
+        // expect a token
+        @Throws(idException::class)
+        fun ExpectAnyToken(token: idToken?): Boolean {
+            return if (!ReadToken(token)) {
+                Error("couldn't read expected token")
+                false
+            } else {
+                true
+            }
+        }
+
+        // returns true when the token is available
+        @Throws(idException::class)
+        fun CheckTokenString(string: String?): Boolean {
+            val tok = idToken()
+            if (!ReadToken(tok)) {
+                return false
+            }
+            // if the given string is available
+            if (tok.Cmp(string) == 0) {
+                return true
+            }
+            // unread token
+            script_p = lastScript_p
+            line = lastline
+            return false
+        }
+
+        // returns true an reads the token when a token with the given type is available
+        @Throws(idException::class)
+        fun CheckTokenType(type: Int, subtype: Int, token: idToken?): Int {
+            val tok = idToken()
+            if (!ReadToken(tok)) {
+                return 0
+            }
+            // if the type matches
+            if (tok.type == type && tok.subtype and subtype == subtype) {
+                token.oSet(tok)
+                return 1
+            }
+            // unread token
+            script_p = lastScript_p
+            line = lastline
+            return 0
+        }
+
+        // returns true if the next token equals the given string but does not remove the token from the source
+        @Throws(idException::class)
+        fun PeekTokenString(string: String?): Boolean {
+            val tok = idToken()
+            if (!ReadToken(tok)) {
+                return false
+            }
+
+            // unread token
+            script_p = lastScript_p
+            line = lastline
+            return tok.toString() == string
+        }
+
+        // returns true if the next token equals the given type but does not remove the token from the source
+        @Throws(idException::class)
+        fun PeekTokenType(type: Int, subtype: Int, token: Array<idToken?>?): Boolean {
+            val tok = idToken()
+            if (!ReadToken(tok)) {
+                return false
+            }
+
+            // unread token
+            script_p = lastScript_p
+            line = lastline
+
+            // if the type matches
+            if (tok.type == type && tok.subtype and subtype == subtype) {
+                token.get(0) = tok
+                return true
+            }
+            return false
+        }
+
+        // skip tokens until the given token string is read
+        @Throws(idException::class)
+        fun SkipUntilString(string: String?): Boolean {
+            val token = idToken()
+            while (ReadToken(token)) {
+                if (token.toString() == string) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        // skip the rest of the current line
+        @Throws(idException::class)
+        fun SkipRestOfLine(): Int {
+            val token = idToken()
+            while (ReadToken(token)) {
+                if (token.linesCrossed != 0) {
+                    script_p = lastScript_p
+                    line = lastline
+                    return 1
+                }
+            }
+            return 0
+        }
+
+        /*
+         =================
+         idLexer::SkipBracedSection
+
+         Skips until a matching close brace is found.
+         Internal brace depths are properly skipped.
+         =================
+         */
+        // skip the braced section
+        @JvmOverloads
+        @Throws(idException::class)
+        fun SkipBracedSection(parseFirstBrace: Boolean = true): Boolean {
+            val token = idToken()
+            var depth: Int
+            depth = if (parseFirstBrace) 0 else 1
+            do {
+                if (!ReadToken(token)) {
+                    return false
+                }
+                if (token.type == Token.TT_PUNCTUATION) {
+                    if (token == "{") {
+                        depth++
+                    } else if (token == "}") {
+                        depth--
+                    }
+                }
+            } while (depth != 0)
+            return true
+        }
+
+        // unread the given token
+        @Throws(idException::class)
+        fun UnreadToken(token: idToken?) {
+            if (tokenAvailable) {
+                idLib.common.FatalError("idLexer::unreadToken, unread token twice\n")
+            }
+            this.token = token
+            tokenAvailable = true
+        }
+
+        //		
+        // read a token only if on the same line
+        @Throws(idException::class)
+        fun ReadTokenOnLine(token: idToken?): Boolean {
+            val tok = idToken()
+            if (!ReadToken(tok)) {
+                script_p = lastScript_p
+                line = lastline
+                return false
+            }
+            // if no lines were crossed before this token
+            if (0 == tok.linesCrossed) {
+                token.oSet(tok)
+                return true
+            }
+            // restore our position
+            script_p = lastScript_p
+            line = lastline
+            token.Clear()
+            return false
+        }
+
+        //
+        //Returns the rest of the current line
+        fun ReadRestOfLine(out: idStr?): String? {
+            while (true) {
+                if (buffer.get(script_p) == '\n') {
+                    line++
+                    break
+                }
+                if (0 == buffer.get(script_p).code) {
+                    break
+                }
+                if (buffer.get(script_p) <= ' ') {
+                    out.Append(" ")
+                } else {
+                    out.Append(buffer.get(script_p))
+                }
+                script_p++
+            }
+            out.Strip(' ')
+            return out.toString()
+        }
+
+        // read a signed integer
+        @Throws(idException::class)
+        fun ParseInt(): Int {
+            val token = idToken()
+            if (!ReadToken(token)) {
+                Error("couldn't read expected integer")
+                return 0
+            }
+            if (token.type == Token.TT_PUNCTUATION && token == "-") {
+                ExpectTokenType(Token.TT_NUMBER, Token.TT_INTEGER, token)
+                return -token.GetIntValue()
+            } else if (token.type != Token.TT_NUMBER || token.subtype == Token.TT_FLOAT) {
+                Error("expected integer value, found '%s'", token)
+            }
+            return token.GetIntValue()
+        }
+
+        // read a Boolean
+        @Throws(idException::class)
+        fun ParseBool(): Boolean {
+            val token = idToken()
+            if (0 == ExpectTokenType(Token.TT_NUMBER, 0, token)) {
+                Error("couldn't read expected boolean")
+                return false
+            }
+            return token.GetIntValue() != 0
+        }
+
+        // read a floating point number.  If errorFlag is NULL, a non-numeric token will
+        // issue an Error().  If it isn't NULL, it will issue a Warning() and set *errorFlag = true
+        @JvmOverloads
+        @Throws(idException::class)
+        fun ParseFloat(errorFlag: BooleanArray? = null /*= NULL*/): Float {
+            val token = idToken()
+            if (errorFlag != null) {
+                errorFlag[0] = false
+            }
+            if (!ReadToken(token)) {
+                if (errorFlag != null) {
+                    Warning("couldn't read expected floating point number")
+                    errorFlag[0] = true
+                } else {
+                    Error("couldn't read expected floating point number")
+                }
+                return 0
+            }
+            if (token.type == Token.TT_PUNCTUATION && token == "-") {
+                ExpectTokenType(Token.TT_NUMBER, 0, token)
+                return -token.GetFloatValue()
+            } else if (token.type != Token.TT_NUMBER) {
+                if (errorFlag != null) {
+                    Warning("expected float value, found '%s'", token)
+                    errorFlag[0] = true
+                } else {
+                    Error("expected float value, found '%s'", token)
+                }
+            }
+            return token.GetFloatValue()
+        }
+
+        @Throws(idException::class)
+        fun Parse1DMatrix(x: Int, v: idVec<*>?): Boolean {
+            val m = FloatArray(x)
+            val result = Parse1DMatrix(x, m)
+            for (i in 0 until x) {
+                v.oSet(i, m[i])
+            }
+            return result
+        }
+
+        @Throws(idException::class)
+        fun Parse1DMatrix(x: Int, p: idPlane?): Boolean {
+            val m = FloatArray(x)
+            val result = Parse1DMatrix(x, m)
+            for (i in 0 until x) {
+                p.oSet(i, m[i])
+            }
+            return result
+        }
+
+        @Throws(idException::class)
+        fun Parse1DMatrix(x: Int, m: idMat3?): Boolean {
+            val n = FloatArray(x)
+            val result = Parse1DMatrix(x, n)
+            for (i in 0..2) {
+                for (j in 0..2) {
+                    m.oSet(i, j, n[i * 3 + j])
+                }
+            }
+            return result
+        }
+
+        @Throws(idException::class)
+        fun Parse1DMatrix(x: Int, q: idQuat?): Boolean {
+            val m = FloatArray(x)
+            val result = Parse1DMatrix(x, m)
+            for (i in 0 until x) {
+                q.oSet(i, m[i])
+            }
+            return result
+        }
+
+        @Throws(idException::class)
+        fun Parse1DMatrix(x: Int, q: idCQuat?): Boolean {
+            val m = FloatArray(x)
+            val result = Parse1DMatrix(x, m)
+            for (i in 0 until x) {
+                q.oSet(i, m[i])
+            }
+            return result
+        }
+
+        @Throws(idException::class)
+        fun Parse1DMatrix(x: Int, m: FloatArray?): Boolean {
+            return this.Parse1DMatrix(x, m, 0)
+        }
+
+        // parse matrices with floats
+        @Throws(idException::class)
+        private fun Parse1DMatrix(x: Int, m: FloatArray?, offset: Int): Boolean {
+            if (!ExpectTokenString("(")) {
+                return false
+            }
+            for (i in 0 until x) {
+                m.get(offset + i) = ParseFloat()
+            }
+            return ExpectTokenString(")")
+        }
+
+        @Throws(idException::class)
+        fun Parse2DMatrix(y: Int, x: Int, m: Array<idVec3?>?): Boolean {
+            if (!ExpectTokenString("(")) {
+                return false
+            }
+            for (i in 0 until y) {
+                if (!Parse1DMatrix(x, m.get(i))) {
+                    return false
+                }
+            }
+            return ExpectTokenString(")")
+        }
+
+        @Throws(idException::class)
+        fun Parse2DMatrix(y: Int, x: Int, m: FloatArray?): Boolean {
+            return this.Parse2DMatrix(y, x, m, 0)
+        }
+
+        @Throws(idException::class)
+        private fun Parse2DMatrix(y: Int, x: Int, m: FloatArray?, offset: Int): Boolean {
+            if (!ExpectTokenString("(")) {
+                return false
+            }
+            for (i in 0 until y) {
+                if (!this.Parse1DMatrix(x, m, offset + i * x)) {
+                    return false
+                }
+            }
+            return ExpectTokenString(")")
+        }
+
+        @Throws(idException::class)
+        fun Parse3DMatrix(z: Int, y: Int, x: Int, m: FloatArray?): Boolean {
+            if (!ExpectTokenString("(")) {
+                return false
+            }
+            for (i in 0 until z) {
+                if (!this.Parse2DMatrix(y, x, m, i * x * y)) {
+                    return false
+                }
+            }
+            return ExpectTokenString(")")
+        }
+
+        /*
+         =================
+         idLexer::ParseBracedSection
+
+         The next token should be an open brace.
+         Parses until a matching close brace is found.
+         Internal brace depths are properly skipped.
+         =================
+         */
+        // parse a braced section into a string
+        @Throws(idException::class)
+        fun ParseBracedSection(out: idStr?): String? {
+            val token = idToken()
+            var i: Int
+            var depth: Int
+            out.Empty()
+            if (!ExpectTokenString("{")) {
+                return out.toString()
+            }
+            out.oSet("{")
+            depth = 1
+            do {
+                if (!ReadToken(token)) {
+                    Error("missing closing brace")
+                    return out.toString()
+                }
+
+                // if the token is on a new line
+                i = 0
+                while (i < token.linesCrossed) {
+                    out.oPluSet("\r\n")
+                    i++
+                }
+                if (token.type == Token.TT_PUNCTUATION) {
+                    if (token == '{') {
+                        depth++
+                    } else if (token == '}') {
+                        depth--
+                    }
+                }
+                if (token.type == Token.TT_STRING) {
+                    out.oPluSet("\"" + token + "\"")
+                } else {
+                    out.oPluSet(token)
+                }
+                out.oPluSet(" ")
+            } while (depth != 0)
+            return out.toString()
+        }
+
+        /*
+         =================
+         idParser::ParseBracedSection
+
+         The next token should be an open brace.
+         Parses until a matching close brace is found.
+         Maintains exact characters between braces.
+
+         FIXME: this should use ReadToken and replace the token white space with correct indents and newlines
+         =================
+         */
+        @Throws(idException::class)
+        fun ParseBracedSection(out: idStr?, tabs: Int /*= -1*/): String? {
+            var tabs = tabs
+            var depth: Int
+            val doTabs: Boolean
+            var skipWhite: Boolean
+            out.Empty()
+            if (!ExpectTokenString("{")) {
+                return out.toString()
+            }
+            out.oSet("{")
+            depth = 1
+            skipWhite = false
+            doTabs = tabs >= 0
+            while (depth != 0 && buffer.get(script_p).code != 0) {
+                val c: Char = buffer.get(script_p++)
+                when (c) {
+                    '\t', ' ' -> {
+                        if (skipWhite) {
+                            continue
+                        }
+                    }
+                    '\n' -> {
+                        if (doTabs) {
+                            skipWhite = true
+                            out.oPluSet(c)
+                            continue
+                        }
+                    }
+                    '{' -> {
+                        depth++
+                        tabs++
+                    }
+                    '}' -> {
+                        depth--
+                        tabs--
+                    }
+                }
+                if (skipWhite) {
+                    var i = tabs
+                    if (c == '{') {
+                        i--
+                    }
+                    skipWhite = false
+                    while (i > 0) {
+                        out.oPluSet('\t')
+                        i--
+                    }
+                }
+                out.oPluSet(c)
+            }
+            return out.toString()
+        }
+
+        /*
+         =================
+         idParser::ParseBracedSection
+
+         The next token should be an open brace.
+         Parses until a matching close brace is found.
+         Maintains exact characters between braces.
+
+         FIXME: this should use ReadToken and replace the token white space with correct indents and newlines
+         =================
+         */
+        // parse a braced section into a string, maintaining indents and newlines
+        //public	String	ParseBracedSectionExact ( idStr &out, int tabs = -1 );
+        @Throws(idException::class)
+        fun ParseBracedSectionExact(out: idStr?, tabs: Int): String? {
+            var tabs = tabs
+            var depth: Int
+            val doTabs: Boolean
+            var skipWhite: Boolean
+            out.Empty()
+            if (!ExpectTokenString("{")) {
+                return out.toString()
+            }
+            out.oSet("{")
+            depth = 1
+            skipWhite = false
+            doTabs = tabs >= 0
+            while (depth != 0 && buffer.get(script_p).code != 0) {
+                val c: Char = buffer.get(script_p++)
+                when (c) {
+                    '\t', ' ' -> {
+                        if (skipWhite) {
+                            continue
+                        }
+                    }
+                    '\n' -> {
+                        if (doTabs) {
+                            skipWhite = true
+                            out.oPluSet(c)
+                            continue
+                        }
+                    }
+                    '{' -> {
+                        depth++
+                        tabs++
+                    }
+                    '}' -> {
+                        depth--
+                        tabs--
+                    }
+                }
+                if (skipWhite) {
+                    var i = tabs
+                    if (c == '{') {
+                        i--
+                    }
+                    skipWhite = false
+                    while (i > 0) {
+                        out.oPluSet('\t')
+                        i--
+                    }
+                }
+                out.oPluSet(c)
+            }
+            return out.toString()
+        }
+
+        // parse the rest of the line
+        @Throws(idException::class)
+        fun ParseRestOfLine(out: idStr?): String? {
+            val token = idToken()
+            out.Empty()
+            while (ReadToken(token)) {
+                if (token.linesCrossed != 0) {
+                    script_p = lastScript_p
+                    line = lastline
+                    break
+                }
+                if (out.Length() != 0) {
+                    out.oPluSet(" ")
+                }
+                out.oPluSet(token)
+            }
+            return out.toString()
+        }
+
+        // retrieves the white space characters before the last read token
+        fun GetLastWhiteSpace(whiteSpace: idStr?): Int {
+            whiteSpace.Clear()
+            for (p in whiteSpaceStart_p until whiteSpaceEnd_p) {
+                whiteSpace.Append(buffer.get(p))
+            }
+            return whiteSpace.Length()
+        }
+
+        // returns start index into text buffer of last white space
+        fun GetLastWhiteSpaceStart(): Int {
+            return whiteSpaceStart_p // - buffer;
+        }
+
+        // returns end index into text buffer of last white space
+        fun GetLastWhiteSpaceEnd(): Int {
+            return whiteSpaceEnd_p // - buffer;
+        }
+
+        // set an array with punctuations, NULL restores default C/C++ set, see default_punctuations for an example
+        fun SetPunctuations(p: Array<punctuation_t?>?) {
+            if (Lexer.PUNCTABLE) {
+                if (p != null) {
+                    CreatePunctuationTable(p)
+                } else {
+                    CreatePunctuationTable(Lexer.default_punctuations)
+                }
+            } //PUNCTABLE
+            if (p != null) {
+                punctuations = p
+            } else {
+                punctuations = Lexer.default_punctuations
+            }
+        }
+
+        // returns a pointer to the punctuation with the given id
+        fun GetPunctuationFromId(id: Int): String? {
+            var i: Int
+            i = 0
+            while (punctuations.get(i).p != null) {
+                if (punctuations.get(i).n == id) {
+                    return punctuations.get(i).p
+                }
+                i++
+            }
+            return "unkown punctuation"
+        }
+
+        // set lexer flags
+        // get the id for the given punctuation
+        fun GetPunctuationId(p: String?): Int {
+            var i: Int
+            i = 0
+            while (punctuations.get(i).p != null) {
+                if (punctuations.get(i).p == p) {
+                    return punctuations.get(i).n
+                }
+                i++
+            }
+            return 0
+        }
+
+        fun SetFlags(flags: Int) {
+            this.flags = flags.toLong()
+        }
+
+        // get lexer flags
+        fun GetFlags(): Long {
+            return flags
+        }
+
+        // reset the lexer
+        fun Reset() {
+            // pointer in script buffer
+//            this.script_p = this.buffer;
+            script_p = 0
+            // pointer in script buffer before reading token
+//            this.lastScript_p = this.buffer;
+            lastScript_p = 0
+            // begin of white space
+            whiteSpaceStart_p = 0
+            // end of white space
+            whiteSpaceEnd_p = 0
+            // set if there's a token available in this.token
+            tokenAvailable = false
+            line = 1
+            lastline = 1
+            // clear the saved token
+            token = idToken()
+        }
+
+        // returns true if at the end of the file
+        fun EndOfFile(): Boolean {
+            return script_p >= end_p
+        }
+
+        // returns the current filename
+        fun GetFileName(): idStr? {
+            return filename
+        }
+
+        // get offset in script
+        fun GetFileOffset(): Int {
+            return script_p //- this.buffer;
+        }
+
+        // get file time
+        fun  /*ID_TIME_T*/GetFileTime(): Long {
+            return fileTime
+        }
+
+        // returns the current line number
+        fun GetLineNum(): Int {
+            return line
+        }
+
+        // print an error message
+        @Throws(idException::class)
+        fun Error(fmt: String?, vararg str: Any?) { //id_attribute((format(printf,2,3)));
+            val text: String //[MAX_STRING_CHARS];
+            //            va_list ap;
+            hadError = true
+            if (flags and Lexer.LEXFL_NOERRORS != 0L) {
+                return
+            }
+            text = String.format(fmt, *str)
+            //            va_start(ap, str);
+//            vsprintf(text, str, ap);
+//            va_end(ap);
+            if (flags and Lexer.LEXFL_NOFATALERRORS != 0L) {
+                idLib.common.Warning("file %s, line %d: %s", filename.toString(), line, text)
+            } else {
+                idLib.common.Error("file %s, line %d: %s", filename.toString(), line, text)
+            }
+        }
+
+        // print a warning message
+        @Throws(idException::class)
+        fun Warning(fmt: String?, vararg str: Any?) { //id_attribute((format(printf,2,3)));
+            val text: String //[MAX_STRING_CHARS];
+            //	va_list ap;
+            if (flags and Lexer.LEXFL_NOWARNINGS != 0L) {
+                return
+            }
+            text = String.format(fmt, *str)
+            //	va_start( ap, str );
+//	vsprintf( text, str, ap );
+//	va_end( ap );
+            idLib.common.Warning("file %s, line %d: %s", filename.toString(), line, text)
+        }
+
+        // returns true if Error() was called with LEXFL_NOFATALERRORS or LEXFL_NOERRORS set
+        fun HadError(): Boolean {
+            return hadError
+        }
+
+        private fun CreatePunctuationTable(punctuations: Array<punctuation_t?>?) {
+            var i: Int
+            var n: Int
+            var lastp: Int
+            var p: punctuation_t?
+            var newp: punctuation_t?
+
+            //get memory for the table
+            if (Arrays.equals(punctuations, Lexer.default_punctuations)) {
+                punctuationTable = Lexer.default_punctuationtable
+                nextPunctuation = Lexer.default_nextpunctuation
+                if (Lexer.default_setup) {
+                    return
+                }
+                Lexer.default_setup = true
+                i = Lexer.default_punctuations.size
+            } else {
+                if (TempDump.NOT(*punctuationTable) || Arrays.equals(
+                        punctuationTable,
+                        Lexer.default_punctuationtable
+                    )
+                ) {
+                    punctuationTable = IntArray(256) // (int *) Mem_Alloc(256 * sizeof(int));
+                }
+                if (nextPunctuation != null && !Arrays.equals(nextPunctuation, Lexer.default_nextpunctuation)) {
+//			Mem_Free( this.nextPunctuation );
+                    nextPunctuation = null
+                }
+                i = 0
+                while (punctuations.get(i).p != null) {
+                    i++
+                }
+                nextPunctuation = IntArray(i) //(int *) Mem_Alloc(i * sizeof(int));
+            }
+            Arrays.fill(punctuationTable, 0, 256, -1) //memset(this.punctuationTable, 0xFF, 256 * sizeof(int));
+            Arrays.fill(nextPunctuation, 0, i, -1) //memset(this.nextPunctuation, 0xFF, i * sizeof(int));
+            //add the punctuations in the list to the punctuation table
+            i = 0
+            while (punctuations.get(i).p != null) {
+                newp = punctuations.get(i)
+                lastp = -1
+                //sort the punctuations in this table entry on length (longer punctuations first)
+                n = punctuationTable.get(newp.p.get(0).code)
+                while (n >= 0) {
+                    p = punctuations.get(n)
+                    if (p.p.length < newp.p.length) {
+                        nextPunctuation.get(i) = n
+                        if (lastp >= 0) {
+                            nextPunctuation.get(lastp) = i
+                        } else {
+                            punctuationTable.get(newp.p.get(0).code) = i
+                        }
+                        break
+                    }
+                    lastp = n
+                    n = nextPunctuation.get(n)
+                }
+                if (n < 0) {
+                    nextPunctuation.get(i) = -1
+                    if (lastp >= 0) {
+                        nextPunctuation.get(lastp) = i
+                    } else {
+                        punctuationTable.get(newp.p.get(0).code) = i
+                    }
+                }
+                i++
+            }
+        }
+
+        /*
+         ================
+         idLexer::ReadWhiteSpace
+
+         Reads spaces, tabs, C-like comments etc.
+         When a newline character is found the scripts line counter is increased.
+         ================
+         */
+        @Throws(idException::class)
+        private fun ReadWhiteSpace(): Boolean {
+            return try {
+                while (true) {
+                    // skip white space
+                    while (buffer.get(script_p) <= ' ') {
+                        if (0 == buffer.get(script_p).code) {
+                            return false
+                        }
+                        if (buffer.get(script_p) == '\n') {
+                            line++
+                        }
+                        script_p++
+                    }
+                    // skip comments
+                    if (buffer.get(script_p) == '/') {
+                        // comments //
+                        if (buffer.get(script_p + 1) == '/') {
+                            script_p++
+                            do {
+                                script_p++
+                                if (0 == buffer.get(script_p).code) {
+                                    return false
+                                }
+                            } while (buffer.get(script_p) != '\n')
+                            line++
+                            script_p++
+                            if (0 == buffer.get(script_p).code) {
+                                return false
+                            }
+                            continue
+                        } // comments /* */
+                        else if (buffer.get(script_p + 1) == '*') {
+                            script_p++
+                            while (true) {
+                                script_p++
+                                if (0 == buffer.get(script_p).code) {
+                                    return false //0;
+                                }
+                                if (buffer.get(script_p) == '\n') {
+                                    line++
+                                } else if (buffer.get(script_p) == '/') {
+                                    if (buffer.get(script_p - 1) == '*') {
+                                        break
+                                    }
+                                    if (buffer.get(script_p + 1) == '*') {
+                                        Warning("nested comment")
+                                    }
+                                }
+                            }
+                            script_p++
+                            if (0 == buffer.get(script_p).code) {
+                                return false
+                            }
+                            script_p++
+                            if (0 == buffer.get(script_p).code) {
+                                return false
+                            }
+                            continue
+                        }
+                    }
+                    break
+                }
+                true
+            } catch (e: IndexOutOfBoundsException) { //TODO:think of a more elegant solution you lout!
+                false
+            }
+        }
+
+        @Throws(idException::class)
+        private fun ReadEscapeCharacter(ch: CharArray?): Boolean {
+            var c: Int
+            var `val`: Int
+            var i: Int
+
+            // step over the leading '\\'
+            script_p++
+            when (buffer.get(script_p)) {
+                '\\' -> c = '\\'.code
+                'n' -> c = '\n'.code
+                'r' -> c = '\r'.code
+                't' -> c = '\t'.code
+                'v' -> c = '\u000B'.code //'\v';
+                'b' -> c = '\b'.code
+                'f' -> c = '\f'.code
+                'a' -> c = '\u0007'.code //'\a';
+                '\'' -> c = '\''.code
+                '\"' -> c = '\"'.code
+                '?' -> c = '?'.code
+                'x' -> {
+                    script_p++
+                    i = 0
+                    `val` = 0
+                    while (true) {
+                        c = buffer.get(script_p).code
+                        c = if (Character.isDigit(c)) {
+                            c - '0'.code
+                        } else if (Character.isUpperCase(c)) {
+                            c - 'A'.code + 10
+                        } else if (Character.isLowerCase(c)) {
+                            c - 'a'.code + 10
+                        } else {
+                            break
+                        }
+                        `val` = (`val` shl 4) + c
+                        i++
+                        script_p++
+                    }
+                    script_p--
+                    if (`val` > 0xFF) {
+                        Warning("too large value in escape character")
+                        `val` = 0xFF
+                    }
+                    c = `val`
+                }
+                else -> {
+                    if (buffer.get(script_p) < '0' || buffer.get(script_p) > '9') {
+                        Error("unknown escape char")
+                    }
+                    i = 0
+                    `val` = 0
+                    while (true) {
+                        c = buffer.get(script_p).code
+                        c = if (Character.isDigit(c)) {
+                            c - '0'.code
+                        } else {
+                            break
+                        }
+                        `val` = `val` * 10 + c
+                        i++
+                        script_p++
+                    }
+                    script_p--
+                    if (`val` > 0xFF) {
+                        Warning("too large value in escape character")
+                        `val` = 0xFF
+                    }
+                    c = `val`
+                }
+            }
+            // step over the escape character or the last digit of the number
+            script_p++
+            // store the escape character
+            ch.get(0) = c.toChar()
+            // succesfully read escape character
+            return true
+        }
+
+        /*
+         ================
+         idLexer::ReadString
+
+         Escape characters are interpretted.
+         Reads two strings with only a white space between them as one string.
+         ================
+         */
+        @Throws(idException::class)
+        private fun ReadString(token: idToken?, quote: Int): Boolean {
+            var tmpline: Int
+            var tmpscript_p: Int
+            val ch = CharArray(1)
+            if (quote == '\"'.code) {
+                token.type = Token.TT_STRING
+            } else {
+                token.type = Token.TT_LITERAL
+            }
+
+            // leading quote
+            script_p++
+            while (true) {
+                // if there is an escape character and escape characters are allowed
+                if (buffer.get(script_p) == '\\' && 0L == flags and Lexer.LEXFL_NOSTRINGESCAPECHARS) {
+                    if (!ReadEscapeCharacter(ch)) {
+                        return false
+                    }
+                    token.AppendDirty(ch[0])
+                } // if a trailing quote
+                else if (buffer.get(script_p).code == quote) {
+                    // step over the quote
+                    script_p++
+                    // if consecutive strings should not be concatenated
+                    if (flags and Lexer.LEXFL_NOSTRINGCONCAT != 0L
+                        && (0L == flags and Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT || quote != '\"'.code)
+                    ) {
+                        break
+                    }
+                    tmpscript_p = script_p
+                    tmpline = line
+                    // read white space between possible two consecutive strings
+                    if (!ReadWhiteSpace()) {
+                        script_p = tmpscript_p
+                        line = tmpline
+                        break
+                    }
+                    if (flags and Lexer.LEXFL_NOSTRINGCONCAT != 0L) {
+                        if (buffer.get(script_p) != '\\') {
+                            script_p = tmpscript_p
+                            line = tmpline
+                            break
+                        }
+                        // step over the '\\'
+                        script_p++
+                        if (!ReadWhiteSpace() || buffer.get(script_p).code != quote) {
+                            Error("expecting string after '' terminated line")
+                            return false
+                        }
+                    }
+
+                    // if there's no leading qoute
+                    if (buffer.get(script_p).code != quote) {
+                        script_p = tmpscript_p
+                        line = tmpline
+                        break
+                    }
+                    // step over the new leading quote
+                    script_p++
+                } else {
+                    if (buffer.get(script_p) == '\u0000') {
+                        Error("missing trailing quote")
+                        return false
+                    }
+                    if (buffer.get(script_p) == '\n') {
+                        Error("newline inside string")
+                        return false
+                    }
+                    token.AppendDirty(buffer.get(script_p++))
+                }
+            }
+            //            token.oSet(token.len, '\0');
+            if (token.type == Token.TT_LITERAL) {
+                if (0L == flags and Lexer.LEXFL_ALLOWMULTICHARLITERALS) {
+                    if (token.Length() != 1) {
+                        Warning("literal is not one character long")
+                    }
+                }
+                token.subtype = token.oGet(0).code
+            } else {
+                // the sub type is the length of the string
+                token.subtype = token.Length()
+            }
+            return true
+        }
+
+        private fun ReadName(token: idToken?): Boolean {
+            var c: Char
+            token.type = Token.TT_NAME
+            do {
+                token.AppendDirty(buffer.get(script_p))
+            } while (script_p++ + 1 < buffer.capacity()
+                && (Character.isLowerCase(buffer.get(script_p).also { c = it })
+                        || Character.isUpperCase(c)
+                        || Character.isDigit(c)
+                        || c == '_' ||  // if treating all tokens as strings, don't parse '-' as a seperate token
+                        flags and Lexer.LEXFL_ONLYSTRINGS != 0L && c == '-'
+                        ||  // if special path name characters are allowed
+                        flags and Lexer.LEXFL_ALLOWPATHNAMES != 0L && (c == '/' || c == '\\' || c == ':' || c == '.'))
+            )
+            //            token.oSet(token.len, '\0');
+            //the sub type is the length of the name
+            token.subtype = token.Length()
+            return true
+        }
+
+        @Throws(idException::class)
+        private fun ReadNumber(token: idToken?): Boolean {
+            var i: Int
+            var dot: Int
+            var c: Char
+            var c2: Char
+            token.type = Token.TT_NUMBER
+            token.subtype = 0
+            token.intValue = 0
+            token.floatValue = 0.0
+            c = buffer.get(script_p)
+            c2 = buffer.get(script_p + 1)
+            if (c == '0' && c2 != '.') {
+                // check for a hexadecimal number
+                if (c2 == 'x' || c2 == 'X') {
+                    token.AppendDirty(buffer.get(script_p++))
+                    token.AppendDirty(buffer.get(script_p++))
+                    c = buffer.get(script_p)
+                    while (Character.isDigit(c)
+                        || c >= 'a' && c <= 'f'
+                        || c >= 'A' && c <= 'F'
+                    ) {
+                        token.AppendDirty(c)
+                        c = buffer.get(++script_p)
+                    }
+                    token.subtype = Token.TT_HEX or Token.TT_INTEGER
+                } // check for a binary number
+                else if (c2 == 'b' || c2 == 'B') {
+                    token.AppendDirty(buffer.get(script_p++))
+                    token.AppendDirty(buffer.get(script_p++))
+                    c = buffer.get(script_p)
+                    while (c == '0' || c == '1') {
+                        token.AppendDirty(c)
+                        c = buffer.get(++script_p)
+                    }
+                    token.subtype = Token.TT_BINARY or Token.TT_INTEGER
+                } // its an octal number
+                else {
+                    token.AppendDirty(buffer.get(script_p++))
+                    c = buffer.get(script_p)
+                    while (c >= '0' && c <= '7') {
+                        token.AppendDirty(c)
+                        c = buffer.get(++script_p)
+                    }
+                    token.subtype = Token.TT_OCTAL or Token.TT_INTEGER
+                }
+            } else {
+                // decimal integer or floating point number or ip address
+                dot = 0
+                while (true) {
+                    if (Character.isDigit(c)) {
+                        // if (c >= '0' && c <= '9') {
+                    } else if (c == '.') {
+                        dot++
+                    } else {
+                        break
+                    }
+                    token.AppendDirty(c)
+                    c = buffer.get(++script_p)
+                }
+                if (c == 'e' && dot == 0) {
+                    //We have scientific notation without a decimal point
+                    dot++
+                }
+                // if a floating point number
+                if (dot == 1) {
+                    token.subtype = Token.TT_DECIMAL or Token.TT_FLOAT
+                    // check for floating point exponent
+                    if (c == 'e') {
+                        //Append the e so that GetFloatValue code works
+                        token.AppendDirty(c)
+                        c = buffer.get(++script_p)
+                        if (c == '-') {
+                            token.AppendDirty(c)
+                            c = buffer.get(++script_p)
+                        } else if (c == '+') {
+                            token.AppendDirty(c)
+                            c = buffer.get(++script_p)
+                        }
+                        while (Character.isDigit(c)) { //c >= '0' && c <= '9') {
+                            token.AppendDirty(c)
+                            c = buffer.get(++script_p)
+                        }
+                    } // check for floating point exception infinite 1.#INF or indefinite 1.#IND or NaN
+                    else if (c == '#') {
+                        c2 = 4.toChar()
+                        if (CheckString("INF")) {
+                            token.subtype = token.subtype or Token.TT_INFINITE
+                        } else if (CheckString("IND")) {
+                            token.subtype = token.subtype or Token.TT_INDEFINITE
+                        } else if (CheckString("NAN")) {
+                            token.subtype = token.subtype or Token.TT_NAN
+                        } else if (CheckString("QNAN")) {
+                            token.subtype = token.subtype or Token.TT_NAN
+                            c2++
+                        } else if (CheckString("SNAN")) {
+                            token.subtype = token.subtype or Token.TT_NAN
+                            c2++
+                        }
+                        i = 0
+                        while (i < c2.code) {
+                            token.AppendDirty(c)
+                            c = buffer.get(++script_p)
+                            i++
+                        }
+                        while (Character.isDigit(c)) {
+                            token.AppendDirty(c)
+                            c = buffer.get(++script_p)
+                        }
+                        if (0L == flags and Lexer.LEXFL_ALLOWFLOATEXCEPTIONS) {
+//                            token.AppendDirty('\0');	// zero terminate for c_str
+                            Error("parsed %s", token.toString())
+                        }
+                    }
+                } else if (dot > 1) {
+                    if (0L == flags and Lexer.LEXFL_ALLOWIPADDRESSES) {
+                        Error("more than one dot in number")
+                        return false
+                    }
+                    if (dot != 3) {
+                        Error("ip address should have three dots")
+                        return false
+                    }
+                    token.subtype = Token.TT_IPADDRESS
+                } else {
+                    token.subtype = Token.TT_DECIMAL or Token.TT_INTEGER
+                }
+            }
+            if (token.subtype and Token.TT_FLOAT != 0) {
+                if (c > ' ') {
+                    // single-precision: float
+                    if (c == 'f' || c == 'F') {
+                        token.subtype = token.subtype or Token.TT_SINGLE_PRECISION
+                        script_p++
+                    } // extended-precision: long double
+                    else if (c == 'l' || c == 'L') {
+                        token.subtype = token.subtype or Token.TT_EXTENDED_PRECISION
+                        script_p++
+                    } // default is double-precision: double
+                    else {
+                        token.subtype = token.subtype or Token.TT_DOUBLE_PRECISION
+                    }
+                } else {
+                    token.subtype = token.subtype or Token.TT_DOUBLE_PRECISION
+                }
+            } else if (token.subtype and Token.TT_INTEGER != 0) {
+                if (c > ' ') {
+                    // default: signed long
+                    i = 0
+                    while (i < 2) {
+
+                        // long integer
+                        if (c == 'l' || c == 'L') {
+                            token.subtype = token.subtype or Token.TT_LONG
+                        } // unsigned integer
+                        else if (c == 'u' || c == 'U') {
+                            token.subtype = token.subtype or Token.TT_UNSIGNED
+                        } else {
+                            break
+                        }
+                        c = buffer.get(++script_p)
+                        i++
+                    }
+                }
+            } else if (token.subtype and Token.TT_IPADDRESS != 0) {
+                if (c == ':') {
+                    token.AppendDirty(c)
+                    c = buffer.get(++script_p)
+                    while (Character.isDigit(c)) {
+                        token.AppendDirty(c)
+                        c = buffer.get(++script_p)
+                    }
+                    token.subtype = token.subtype or Token.TT_IPPORT
+                }
+            }
+            //            token.oSet(token.len, '\0');
+            return true
+        }
+
+        private fun ReadPunctuation(token: idToken?): Boolean {
+            var l: Int
+            var n: Int
+            var i: Int
+            var p: CharArray
+            var punc: punctuation_t?
+
+// #ifdef PUNCTABLE
+            n = punctuationTable.get(buffer.get(script_p).code)
+            while (n >= 0) {
+                punc = punctuations.get(n)
+                // #else
+//	int i;
+//
+//	for (i = 0; idLexer::punctuations[i].p; i++) {
+//		punc = &idLexer::punctuations[i];
+//#endif
+                p = punc.p.toCharArray()
+                // check for this punctuation in the script
+                l = 0
+                while (l < p.size && buffer.get(script_p + l).code != 0) {
+                    if (buffer.get(script_p + l) != p[l]) {
+                        break
+                    }
+                    l++
+                }
+                if (l >= p.size) {
+                    //
+                    token.EnsureAlloced(l + 1, false)
+                    i = 0
+                    while (i < l) {
+
+//                        token.data[i] = p[i];
+                        token.oSet(i, p[i])
+                        i++
+                    }
+                    token.len = l
+                    //
+                    script_p += l
+                    token.type = Token.TT_PUNCTUATION
+                    // sub type is the punctuation id
+                    token.subtype = punc.n
+                    return true
+                }
+                n = nextPunctuation.get(n)
+            }
+            return false
+        }
+
+        //        private boolean ReadPrimitive(idToken token);
+        private fun CheckString(str: String?): Boolean {
+            var i: Int
+            i = 0
+            while (str.get(i).code != 0) {
+                if (buffer.get(i + script_p) != str.get(i)) {
+                    return false
+                }
+                i++
+            }
+            return true
+        }
+
+        private fun NumLinesCrossed(): Int {
+            return line - lastline
+        }
+
+        companion object {
+            //
+            // base folder to load files from
+            private val baseFolder: StringBuilder? = StringBuilder(256)
+
+            //					// destructor
+            //public					~idLexer();
+            // set the base folder to load files from
+            fun SetBaseFolder(path: String?) {
+                idStr.Companion.Copynz(baseFolder, path) //TODO:length?
+            }
+        }
+    }
+}

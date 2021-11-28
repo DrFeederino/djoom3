@@ -1,0 +1,2366 @@
+package neo.Renderer
+
+import neo.TempDump.TODO_Exception
+import org.lwjgl.BufferUtils
+import org.lwjgl.opengl.*
+import java.nio.ByteBuffer
+import java.nio.DoubleBuffer
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
+
+/**
+ * so yeah, it's easier to use this class as an interface. rather than refactor
+ * all the qwgl stuff to gl and such.
+ */
+object qgl {
+    const val qGL_FALSE = false
+    const val qGL_TRUE = true
+    private const val GL_DEBUG = false
+    var bla = 0
+
+    //
+    //    // multitexture
+    fun qglActiveTextureARB(texture: Int) {
+        qgl.DEBUG_printName("glActiveTextureARB")
+        ARBMultitexture.glActiveTextureARB(texture)
+    }
+
+    fun qglClientActiveTextureARB(texture: Int) {
+        qgl.DEBUG_printName("glClientActiveTextureARB")
+        ARBMultitexture.glClientActiveTextureARB(texture)
+    }
+
+    // ARB_vertex_buffer_object
+    fun qglBindBufferARB(target: Int, buffer: Int) {
+        qgl.DEBUG_printName("glBindBufferARB")
+        ARBVertexBufferObject.glBindBufferARB(target, buffer)
+    }
+
+    //extern PFNGLDELETEBUFFERSARBPROC qglDeleteBuffersARB;
+    fun qglGenBuffersARB(n: Int, buffers: Array<IntBuffer?>?) {
+        qgl.DEBUG_printName("glGenBuffersARB")
+        ARBVertexBufferObject.glGenBuffersARB(BufferUtils.createIntBuffer(n).also { buffers.get(0) = it })
+    }
+
+    fun qglGenBuffersARB(): Int {
+        qgl.DEBUG_printName("glGenBuffersARB")
+        return ARBVertexBufferObject.glGenBuffersARB()
+    }
+
+    //extern PFNGLISBUFFERARBPROC qglIsBufferARB;
+    fun qglBufferDataARB(target: Int, size: Int, data: ByteBuffer?, usage: Int) {
+        qgl.DEBUG_printName("glBufferDataARB")
+        //        GL15.glBufferData(target, data, usage);//TODO:!!!!!!!!!!!!!!!!!!!!!!!!!
+        ARBVertexBufferObject.glBufferDataARB(target, data, usage)
+    }
+
+    fun  /*PFNGLBUFFERSUBDATAARBPROC*/qglBufferSubDataARB(target: Int, offset: Long, size: Long, data: ByteBuffer?) {
+        qgl.DEBUG_printName("glBufferSubDataARB")
+        ARBVertexBufferObject.glBufferSubDataARB(target, offset, data)
+    }
+
+    //extern PFNGLGETBUFFERSUBDATAARBPROC qglGetBufferSubDataARB;
+    //extern PFNGLMAPBUFFERARBPROC qglMapBufferARB;
+    //extern PFNGLUNMAPBUFFERARBPROC qglUnmapBufferARB;
+    //extern PFNGLGETBUFFERPARAMETERIVARBPROC qglGetBufferParameterivARB;
+    //extern PFNGLGETBUFFERPOINTERVARBPROC qglGetBufferPointervARB;
+    //
+    //
+    // NV_register_combiners
+    fun qglCombinerParameterfvNV(pName: Int, params: FloatArray?) {
+        throw UnsupportedOperationException()
+    }
+
+    //extern	void ( APIENTRY *qglCombinerParameterivNV )( GLenum pName, const GLint *params );
+    //extern	void ( APIENTRY *qglCombinerParameterfNV )( GLenum pName, const GLfloat param );
+    fun qglCombinerParameteriNV(pName: Int, param: Int) {
+        qgl.DEBUG_printName("glCombinerParameteriNV")
+        throw UnsupportedOperationException()
+    }
+
+    fun qglCombinerInputNV(stage: Int, portion: Int, variable: Int, input: Int, mapping: Int, componentUsage: Int) {
+        qgl.DEBUG_printName("glCombinerInputNV")
+        throw UnsupportedOperationException()
+    }
+
+    fun qglCombinerOutputNV(
+        stage: Int, portion: Int, abOutput: Int, cdOutput: Int, sumOutput: Int, scale: Int, bias: Int,
+        abDotProduct: Boolean, cdDotProduct: Boolean, muxSum: Boolean
+    ) {
+        qgl.DEBUG_printName("glCombinerOutputNV")
+        throw UnsupportedOperationException()
+    }
+
+    fun qglFinalCombinerInputNV(variable: Int, input: Int, mapping: Int, componentUsage: Int) {
+        qgl.DEBUG_printName("glFinalCombinerInputNV")
+        throw UnsupportedOperationException()
+    }
+
+    // 3D textures
+    fun qglTexImage3D(
+        GLenum1: Int,
+        GLint1: Int,
+        GLint2: Int,
+        GLsizei1: Int,
+        GLsizei2: Int,
+        GLsizei3: Int,
+        GLint4: Int,
+        GLenum2: Int,
+        GLenum3: Int,
+        GLvoid: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glTexImage3D")
+        GL12.glTexImage3D(GLenum1, GLint1, GLint2, GLsizei1, GLsizei2, GLsizei3, GLint4, GLenum2, GLenum3, GLvoid)
+    }
+
+    //
+    // shared texture palette
+    fun qglColorTableEXT(target: Int, internalFormat: Int, width: Int, format: Int, type: Int, data: ByteArray?) {
+        qgl.DEBUG_printName("glColorTableEXT")
+        ARBImaging.glColorTable(target, internalFormat, width, format, type, ByteBuffer.wrap(data))
+    }
+
+    //// EXT_stencil_two_side
+    //extern	PFNGLACTIVESTENCILFACEEXTPROC	qglActiveStencilFaceEXT;
+    //
+    //
+    //// ATI_separate_stencil
+    //extern	PFNGLSTENCILOPSEPARATEATIPROC		qglStencilOpSeparateATI;
+    //extern	PFNGLSTENCILFUNCSEPARATEATIPROC		qglStencilFuncSeparateATI;
+    //
+    // ARB_texture_compression
+    fun  /*PFNGLCOMPRESSEDTEXIMAGE2DARBPROC*/qglCompressedTexImage2DARB(
+        target: Int, level: Int, internalformat: Int,
+        width: Int, height: Int, border: Int, imageSize: Int, data: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glCompressedTexImage2DARB")
+        //        ARBTextureCompression.glCompressedTexImage2DARB(target, level, internalformat, width, height, border, data);
+        GL13.glCompressedTexImage2D(target, level, internalformat, width, height, border, data)
+    }
+
+    @Deprecated("")
+    fun qglCompressedTexImage2DARB(
+        target: Int,
+        level: Int,
+        internalformat: Int,
+        width: Int,
+        height: Int,
+        border: Int,
+        imageSize: Int,
+        pData_buffer_offset: Long
+    ) {
+        GL13.glCompressedTexImage2D(
+            target,
+            level,
+            internalformat,
+            width,
+            height,
+            border,
+            imageSize,
+            pData_buffer_offset
+        )
+        throw UnsupportedOperationException()
+    }
+
+    fun  /*PFNGLGETCOMPRESSEDTEXIMAGEARBPROC*/qglGetCompressedTexImageARB(target: Int, index: Int, img: ByteBuffer?) {
+        qgl.DEBUG_printName("glGetCompressedTexImageARB")
+        ARBTextureCompression.glGetCompressedTexImageARB(target, index, img)
+    }
+
+    //
+    // ARB_vertex_program / ARB_fragment_program
+    @Deprecated("")
+    fun  /*PFNGLVERTEXATTRIBPOINTERARBPROC*/qglVertexAttribPointerARB(
+        index: Int,
+        size: Int,
+        type: Int,
+        normalized: Boolean,
+        stride: Int,
+        pointer: FloatArray?
+    ) {
+//        GL20.glVertexAttribPointer(index, size, normalized, stride, FloatBuffer.wrap(pointer));
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertexAttribPointerARB(index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, pointer: Long) {
+        qgl.DEBUG_printName("glVertexAttribPointerARB")
+        ARBVertexShader.glVertexAttribPointerARB(index, size, type, normalized, stride, pointer)
+    }
+
+    fun  /*PFNGLENABLEVERTEXATTRIBARRAYARBPROC*/qglEnableVertexAttribArrayARB(index: Int) {
+        qgl.DEBUG_printName("glEnableVertexAttribArrayARB")
+        ARBVertexShader.glEnableVertexAttribArrayARB(index)
+    }
+
+    fun  /*PFNGLDISABLEVERTEXATTRIBARRAYARBPROC*/qglDisableVertexAttribArrayARB(index: Int) {
+        qgl.DEBUG_printName("glDisableVertexAttribArrayARB")
+        ARBVertexShader.glDisableVertexAttribArrayARB(index)
+    }
+
+    fun  /*PFNGLPROGRAMSTRINGARBPROC*/qglProgramStringARB(target: Int, format: Int, len: Int, string: ByteBuffer?) {
+        qgl.DEBUG_printName("glProgramStringARB")
+        ARBVertexProgram.glProgramStringARB(target, format, string)
+    }
+
+    fun  /*PFNGLBINDPROGRAMARBPROC*/qglBindProgramARB(target: Int, program: Enum<*>?) {
+        qgl.DEBUG_printName("glBindProgramARB")
+        qgl.qglBindProgramARB(target, program.ordinal)
+    }
+
+    fun  /*PFNGLBINDPROGRAMARBPROC*/qglBindProgramARB(target: Int, program: Int) {
+        qgl.DEBUG_printName("glBindProgramARB")
+        ARBVertexProgram.glBindProgramARB(target, program)
+    }
+
+    //extern PFNGLGENPROGRAMSARBPROC				qglGenProgramsARB;
+    //
+    fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
+        target: Int,
+        index: Enum<*>?,
+        params: FloatBuffer?
+    ) {
+        qgl.DEBUG_printName("glProgramEnvParameter4fvARB")
+        ARBVertexProgram.glProgramEnvParameter4fvARB(target, index.ordinal, params)
+    }
+
+    //    @Deprecated
+    fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
+        target: Int,
+        index: Enum<*>?,
+        params: FloatArray?
+    ) {
+        qgl.DEBUG_printName("glProgramEnvParameter4fvARB") //TODO:convert calls to floatbuffer
+        qgl.qglProgramEnvParameter4fvARB(target, index.ordinal, params)
+    }
+
+    //    @Deprecated
+    fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
+        target: Int,
+        index: Int,
+        params: FloatArray?
+    ) {
+        qgl.DEBUG_printName("glProgramEnvParameter4fvARB") //TODO:convert calls to floatbuffer
+        ARBVertexProgram.glProgramEnvParameter4fvARB(target, index, params)
+        //        qglProgramEnvParameter4fvARB(target, index, wrap(params));
+    }
+
+    fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
+        target: Int,
+        index: Int,
+        params: FloatBuffer?
+    ) {
+        qgl.DEBUG_printName("glProgramEnvParameter4fvARB")
+        ARBVertexProgram.glProgramEnvParameter4fvARB(target, index, params)
+    }
+
+    fun  /*PFNGLPROGRAMLOCALPARAMETER4FVARBPROC*/qglProgramLocalParameter4fvARB(
+        target: Int,
+        index: Int,
+        params: FloatBuffer?
+    ) {
+        qgl.DEBUG_printName("glProgramLocalParameter4fvARB")
+        ARBVertexProgram.glProgramLocalParameter4fvARB(target, index, params)
+    }
+
+    //extern PFNGLPROGRAMLOCALPARAMETER4FVARBPROC	qglProgramLocalParameter4fvARB;
+    //
+    // GL_EXT_depth_bounds_test
+    fun  /*PFNGLDEPTHBOUNDSEXTPROC*/qglDepthBoundsEXT(zmin: Double, zmax: Double) {
+        qgl.DEBUG_printName("glDepthBoundsEXT")
+        EXTDepthBoundsTest.glDepthBoundsEXT(zmin, zmax)
+    }
+    //
+    ////===========================================================================
+    //    public static int qwglChoosePixelFormat(long hdc, PIXELFORMATDESCRIPTOR pixelformatdescriptor) {
+    //        return WGL.wglChoosePixelFormat(hdc, pixelformatdescriptor);
+    //    }
+    //
+    //    public static int qwglDescribePixelFormat(long hdc, int i, int uint, PIXELFORMATDESCRIPTOR lppixelformatdescriptor) {
+    //        return WGL.wglDescribePixelFormat(hdc, i, uint, lppixelformatdescriptor);
+    //    }
+    //
+    //    public static int qwglGetPixelFormat(long hdc) {
+    //        return WGL.wglGetPixelFormat(hdc);
+    //    }
+    //
+    //    public static boolean qwglSetPixelFormat(long hdc, int i, PIXELFORMATDESCRIPTOR pixelformatdescriptor) {
+    //        return WGL.wglSetPixelFormat(hdc, i, pixelformatdescriptor);
+    //    }
+    //
+    //    public static boolean qwglSwapBuffers(long hdc) {
+    //        return WGL.wglSwapBuffers(hdc);
+    //    }
+    /**
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     */
+    //    public static boolean qwglCopyContext(long hglrc1, long hglrc2, int uint) {
+    //        return WGL.wglCopyContext(hglrc1, hglrc2, uint);
+    //    }
+    //
+    //    public static long qwglCreateContext(long hdc) {
+    //        return WGL.wglCreateContext(hdc);
+    //    }
+    //
+    //    public static long qwglCreateLayerContext(long hdc, int i) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    //
+    //    public static boolean qwglDeleteContext(long hglrc) {
+    //        return WGL.wglDeleteContext(hglrc);
+    //    }
+    //
+    //    public static long qwglGetCurrentContext() {
+    //        return WGL.wglGetCurrentContext();
+    //    }
+    //
+    //    public static long qwglGetCurrentDC() {
+    //        return WGL.wglGetCurrentDC();
+    //    }
+    //
+    //    public static long qwglGetProcAddress(String lpcstr) {
+    //        return WGL.wglGetProcAddress(lpcstr);
+    //    }
+    //
+    //    public static boolean qwglMakeCurrent(long hdc, long hglrc) {
+    //        return WGL.wglMakeCurrent(hdc, hglrc);
+    //    }
+    //
+    //    public static boolean qwglShareLists(long hglrc1, long hglrc2) {
+    //        return WGL.wglShareLists(hglrc1, hglrc2);
+    //    }
+    //
+    //    public static boolean qwglUseFontBitmaps(long hdc, long dword1, long dword2, long dword3) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    /**
+     *
+     */
+    //    public static boolean qwglUseFontOutlines(long hdc, long dword1, long dword2, long dword3, float f1, float f2, int, LPGLYPHMETRICSFLOAT lpglyphmetricsfloat) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    //
+    //    public static boolean qwglDescribeLayerPlane(long hdc, int i1, int i2, int uint, LPLAYERPLANEDESCRIPTOR lplayerplanedescriptor) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    //
+    //    public static int qwglSetLayerPaletteEntries(long hdc, int i1, int i2, int i3, long colorref) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    //
+    //    public static int qwglGetLayerPaletteEntries(long hdc, int i1, int i2, int i3, long colorref) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    //
+    //    public static boolean qwglRealizeLayerPalette(long hdc, int i, boolean b) {
+    //        throw new UnsupportedOperationException("Not supported yet.");
+    //    }
+    //
+    //    public static boolean qwglSwapLayerBuffers(long hdc, int uint) {
+    //        return WGL.wglSwapLayerBuffers(hdc, uint);
+    //    }
+    fun qglAccum(op: Int, value: Float) {
+        qgl.DEBUG_printName("glAccum")
+        GL11.glAccum(op, value)
+    }
+
+    fun qglAlphaFunc(func: Int, ref: Float) {
+        qgl.DEBUG_printName("glAlphaFunc")
+        GL11.glAlphaFunc(func, ref)
+    }
+
+    fun qglAreTexturesResident(n: Int, textures: IntBuffer?, residences: ByteBuffer?): Boolean {
+        qgl.DEBUG_printName("glAreTexturesResident")
+        return GL11.glAreTexturesResident(textures, residences) //TODO:is n really necessary?
+    }
+
+    fun qglArrayElement(i: Int) {
+        qgl.DEBUG_printName("glArrayElement")
+        GL11.glArrayElement(i)
+    }
+
+    fun qglBegin(mode: Int) {
+        qgl.DEBUG_printName("glBegin")
+        GL11.glBegin(mode)
+    }
+
+    fun qglBindTexture(target: Int, texture: Int) {
+        qgl.DEBUG_printName("glBindTexture")
+        //        System.out.printf("qglBindTexture(%d, %d)\n", target, texture);
+        GL11.glBindTexture(target, texture)
+    }
+
+    fun qglBitmap(
+        width: Int,
+        height: Int,
+        xorig: Float,
+        yorig: Float,
+        xmove: Float,
+        ymove: Float,
+        bitmap: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glBitmap")
+        GL11.glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap)
+    }
+
+    fun qglBlendFunc(sFactor: Int, dFactor: Int) {
+        qgl.DEBUG_printName("glBlendFunc")
+        //        System.out.printf("--%d, %d\n", sFactor, dFactor);
+        GL11.glBlendFunc(sFactor, dFactor)
+    }
+
+    fun qglCallList(list: Int) {
+        qgl.DEBUG_printName("glCallList")
+        GL11.glCallList(list)
+    }
+
+    fun qglCallLists(n: Int, type: Int, lists: Any?) {
+//        GL11.glCallLists(lists);
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglClear(mask: Int) {
+        qgl.DEBUG_printName("glClear")
+        GL11.glClear(mask)
+    }
+
+    fun qglClearAccum(red: Float, green: Float, blue: Float, alpha: Float) {
+        qgl.DEBUG_printName("glClearAccum")
+        GL11.glClearAccum(red, green, blue, alpha)
+    }
+
+    fun qglClearColor(red: Float, green: Float, blue: Float, alpha: Float) {
+        qgl.DEBUG_printName("glClearColor")
+        GL11.glClearColor(red, green, blue, alpha)
+    }
+
+    fun qglClearDepth(depth: Double) {
+        qgl.DEBUG_printName("glClearDepth")
+        GL11.glClearDepth(depth)
+    }
+
+    fun qglClearIndex(c: Float) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglClearStencil(s: Int) {
+        qgl.DEBUG_printName("glClearStencil")
+        GL11.glClearStencil(s)
+    }
+
+    fun qglClipPlane(plane: Int, equation: DoubleBuffer?) {
+        qgl.DEBUG_printName("glClipPlane")
+        GL11.glClipPlane(plane, equation)
+    }
+
+    fun qglColor3b(red: Byte, green: Byte, blue: Byte) {
+        qgl.DEBUG_printName("glColor3b")
+        GL11.glColor3b(red, green, blue)
+    }
+
+    fun qglColor3bv(v: ByteArray?) {
+        qgl.DEBUG_printName("glColor3bv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3d(red: Double, green: Double, blue: Double) {
+        qgl.DEBUG_printName("glColor3d")
+        GL11.glColor3d(red, green, blue)
+    }
+
+    fun qglColor3dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glColor3dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3f(red: Float, green: Float, blue: Float) {
+        qgl.DEBUG_printName("glColor3f")
+        GL11.glColor3f(red, green, blue)
+    }
+
+    fun qglColor3fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glColor3fv")
+        qgl.qglColor3f(v.get(0), v.get(1), v.get(2))
+    }
+
+    fun qglColor3i(red: Int, green: Int, blue: Int) {
+        qgl.DEBUG_printName("glColor3i")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3iv(v: IntArray?) {
+        qgl.DEBUG_printName("glColor3iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3s(red: Short, green: Short, blue: Short) {
+        qgl.DEBUG_printName("glColor3s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glColor3sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3ub(red: Byte, green: Byte, blue: Byte) {
+        qgl.DEBUG_printName("glColor3ub")
+        GL11.glColor3ub(red, green, blue)
+    }
+
+    fun qglColor3ubv(v: ByteArray?) {
+        qgl.DEBUG_printName("glColor3ubv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3ui(red: Int, green: Int, blue: Int) {
+        qgl.DEBUG_printName("glColor3ui")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3uiv(v: IntArray?) {
+        qgl.DEBUG_printName("glColor3uiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3us(red: Short, green: Short, blue: Short) {
+        qgl.DEBUG_printName("glColor3us")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor3usv(v: ShortArray?) {
+        qgl.DEBUG_printName("glColor3usv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4b(red: Byte, green: Byte, blue: Byte, alpha: Byte) {
+        qgl.DEBUG_printName("glColor4b")
+        GL11.glColor4b(red, green, blue, alpha)
+    }
+
+    fun qglColor4bv(v: ByteArray?) {
+        qgl.DEBUG_printName("glColor4bv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4d(red: Double, green: Double, blue: Double, alpha: Double) {
+        qgl.DEBUG_printName("glColor4d")
+        GL11.glColor4d(red, green, blue, alpha)
+    }
+
+    fun qglColor4dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glColor4dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4f(red: Float, green: Float, blue: Float, alpha: Float) {
+        qgl.DEBUG_printName("glColor4f")
+        GL11.glColor4f(red, green, blue, alpha)
+    }
+
+    fun qglColor4fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glColor4fv")
+        qgl.qglColor4f(v.get(0), v.get(1), v.get(2), v.get(3))
+    }
+
+    fun qglColor4i(red: Int, green: Int, blue: Int, alpha: Int) {
+        qgl.DEBUG_printName("glColor4i")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4iv(v: IntArray?) {
+        qgl.DEBUG_printName("glColor4iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4s(red: Short, green: Short, blue: Short, alpha: Short) {
+        qgl.DEBUG_printName("glColor4s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glColor4sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4ub(red: Byte, green: Byte, blue: Byte, alpha: Byte) {
+        qgl.DEBUG_printName("glColor4ub")
+        GL11.glColor4ub(red, green, blue, alpha)
+    }
+
+    fun qglColor4ubv(v: ByteArray?) {
+        qgl.DEBUG_printName("glColor4ubv")
+        GL11.glColor4ub(v.get(0), v.get(1), v.get(2), v.get(3))
+    }
+
+    fun qglColor4ui(red: Int, green: Int, blue: Int, alpha: Int) {
+        qgl.DEBUG_printName("glColor4ui")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4uiv(v: IntArray?) {
+        qgl.DEBUG_printName("glColor4uiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColor4usv(v: ShortArray?) {
+        qgl.DEBUG_printName("glColor4usv")
+        GL11.glColor4usv(v)
+    }
+
+    fun qglColor4us(red: Short, green: Short, blue: Short, alpha: Short) {
+        qgl.DEBUG_printName("glColor4us")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglColorMask(red: Int, green: Int, blue: Int, alpha: Int) {
+        qgl.qglColorMask(red != 0, green != 0, blue != 0, alpha != 0)
+    }
+
+    fun qglColorMask(red: Boolean, green: Boolean, blue: Boolean, alpha: Boolean) {
+        qgl.DEBUG_printName("glColorMask")
+        GL11.glColorMask(red, green, blue, alpha)
+    }
+
+    fun qglColorMaterial(face: Int, mode: Int) {
+        qgl.DEBUG_printName("glColorMaterial")
+        GL11.glColorMaterial(face, mode)
+    }
+
+    fun qglColorPointer(size: Int, type: Int, stride: Int, pointer: Long) {
+        qgl.DEBUG_printName("glColorPointer")
+        GL11.glColorPointer(size, type, stride, pointer)
+    }
+
+    @Deprecated("")
+    fun qglColorPointer(size: Int, type: Int, stride: Int, pointer: Any?) {
+        qgl.DEBUG_printName("glColorPointer")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglCopyPixels(x: Int, y: Int, width: Int, height: Int, type: Int) {
+        qgl.DEBUG_printName("glCopyPixels")
+        GL11.glCopyPixels(x, y, width, height, type)
+    }
+
+    fun qglCopyTexImage1D(target: Int, level: Int, internalFormat: Int, x: Int, y: Int, width: Int, border: Int) {
+        qgl.DEBUG_printName("glCopyTexImage1D")
+        GL11.glCopyTexImage1D(target, level, internalFormat, x, y, width, border)
+    }
+
+    fun qglCopyTexImage2D(
+        target: Int,
+        level: Int,
+        internalFormat: Int,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        border: Int
+    ) {
+        qgl.DEBUG_printName("glCopyTexImage2D")
+        GL11.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border)
+    }
+
+    fun qglCopyTexSubImage1D(target: Int, level: Int, xoffset: Int, x: Int, y: Int, width: Int) {
+        qgl.DEBUG_printName("glCopyTexSubImage1D")
+        GL11.glCopyTexSubImage1D(target, level, xoffset, x, y, width)
+    }
+
+    fun qglCopyTexSubImage2D(
+        target: Int,
+        level: Int,
+        xoffset: Int,
+        yoffset: Int,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int
+    ) {
+        qgl.DEBUG_printName("glCopyTexSubImage2D")
+        GL11.glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height)
+    }
+
+    fun qglCullFace(mode: Int) {
+        qgl.DEBUG_printName("glCullFace")
+        GL11.glCullFace(mode)
+    }
+
+    fun qglDeleteLists(list: Int, range: Int) {
+        qgl.DEBUG_printName("glDeleteLists")
+        GL11.glDeleteLists(list, range)
+    }
+
+    fun qglDeleteTextures(n: Int, texture: Int) {
+        qgl.DEBUG_printName("glDeleteTextures")
+        GL11.glDeleteTextures(texture)
+    }
+
+    fun qglDeleteTextures(n: Int, textures: IntArray?) {
+        qgl.DEBUG_printName("glDeleteTextures")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglDepthFunc(func: Int) {
+        qgl.DEBUG_printName("glDepthFunc")
+        GL11.glDepthFunc(func)
+    }
+
+    fun qglDepthMask(flag: Boolean) {
+        qgl.DEBUG_printName("glDepthMask")
+        GL11.glDepthMask(flag)
+    }
+
+    fun qglDepthRange(zNear: Double, zFar: Double) {
+        qgl.DEBUG_printName("glDepthRange")
+        GL11.glDepthRange(zNear, zFar)
+    }
+
+    fun qglDisable(cap: Int) {
+        qgl.DEBUG_printName("glDisable")
+        GL11.glDisable(cap)
+    }
+
+    fun qglDisableClientState(array: Int) {
+        qgl.DEBUG_printName("glDisableClientState")
+        GL11.glDisableClientState(array)
+    }
+
+    fun qglDrawArrays(mode: Int, first: Int, count: Int) {
+        qgl.DEBUG_printName("glDrawArrays")
+        GL11.glDrawArrays(mode, first, count)
+    }
+
+    fun qglDrawBuffer(mode: Int) {
+        qgl.DEBUG_printName("glDrawBuffer")
+        GL11.glDrawBuffer(mode)
+    }
+
+    fun qglDrawElements(mode: Int, count: Int, type: Int, indices: ByteBuffer?) {
+        qgl.DEBUG_printName("glDrawElements1")
+        GL11.glDrawElements(mode, type, indices)
+    }
+
+    fun qglDrawElements(mode: Int, count: Int, type: Int, indices: IntArray?) {
+        qgl.DEBUG_printName("glDrawElements2")
+        GL11.glDrawElements(mode, qgl.wrap(indices).position(count).flip()) //TODO:subarray
+    }
+
+    fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer?) {
+        qgl.DEBUG_printName("glDrawPixels")
+        GL11.glDrawPixels(width, height, format, type, pixels)
+    }
+
+    fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: Array<Array<ByteArray?>?>?) {
+        qgl.DEBUG_printName("glDrawPixels")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEdgeFlag(flag: Boolean) {
+        qgl.DEBUG_printName("glEdgeFlag")
+        GL11.glEdgeFlag(flag)
+    }
+
+    fun qglEdgeFlagPointer(stride: Int, pointer: Any?) {
+        qgl.DEBUG_printName("glEdgeFlagPointer")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEdgeFlagv(flag: Boolean) {
+        qgl.DEBUG_printName("glEdgeFlagv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEnable(cap: Int) {
+        qgl.DEBUG_printName("glEnable")
+        //        System.out.println("--"+cap);
+        GL11.glEnable(cap)
+    }
+
+    fun qglEnableClientState(array: Int) {
+        qgl.DEBUG_printName("glEnableClientState")
+        GL11.glEnableClientState(array)
+    }
+
+    fun qglEnd() {
+        qgl.DEBUG_printName("glEnd")
+        GL11.glEnd()
+    }
+
+    fun qglEndList() {
+        qgl.DEBUG_printName("glEndList")
+        GL11.glEndList()
+    }
+
+    fun qglEvalCoord1d(u: Double) {
+        qgl.DEBUG_printName("glEvalCoord1d")
+        GL11.glEvalCoord1d(u)
+    }
+
+    fun qglEvalCoord1dv(u: DoubleArray?) {
+        qgl.DEBUG_printName("glEvalCoord1dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEvalCoord1f(u: Float) {
+        qgl.DEBUG_printName("glEvalCoord1f")
+        GL11.glEvalCoord1f(u)
+    }
+
+    fun qglEvalCoord1fv(u: FloatArray?) {
+        qgl.DEBUG_printName("glEvalCoord1fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEvalCoord2d(u: Double, v: Double) {
+        qgl.DEBUG_printName("glEvalCoord2d")
+        GL11.glEvalCoord2d(u, v)
+    }
+
+    fun qglEvalCoord2dv(u: DoubleArray?) {
+        qgl.DEBUG_printName("glEvalCoord2dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEvalCoord2f(u: Float, v: Float) {
+        qgl.DEBUG_printName("glEvalCoord2f")
+        GL11.glEvalCoord2f(u, v)
+    }
+
+    fun qglEvalCoord2fv(u: FloatArray?) {
+        qgl.DEBUG_printName("glEvalCoord2fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglEvalMesh1(mode: Int, i1: Int, i2: Int) {
+        qgl.DEBUG_printName("glEvalMesh1")
+        GL11.glEvalMesh1(mode, i1, i2)
+    }
+
+    fun qglEvalMesh2(mode: Int, i1: Int, i2: Int, j1: Int, j2: Int) {
+        qgl.DEBUG_printName("glEvalMesh2")
+        GL11.glEvalMesh2(mode, i1, i2, j1, j2)
+    }
+
+    fun qglEvalPoint1(i: Int) {
+        qgl.DEBUG_printName("glEvalPoint1")
+        GL11.glEvalPoint1(i)
+    }
+
+    fun qglEvalPoint2(i: Int, j: Int) {
+        qgl.DEBUG_printName("glEvalPoint2")
+        GL11.glEvalPoint2(i, j)
+    }
+
+    fun qglFeedbackBuffer(size: Int, type: Int, buffer: FloatBuffer?) {
+        qgl.DEBUG_printName("glFeedbackBuffer")
+        GL11.glFeedbackBuffer(type, buffer)
+    }
+
+    fun qglFinish() {
+        qgl.DEBUG_printName("glFinish")
+        GL11.glFinish()
+    }
+
+    fun qglFlush() {
+        qgl.DEBUG_printName("glFlush")
+        GL11.glFlush()
+    }
+
+    fun qglFogf(pName: Int, param: Float) {
+        qgl.DEBUG_printName("glFogf")
+        GL11.glFogf(pName, param)
+    }
+
+    fun qglFogfv(pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glFogfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglFogi(pName: Int, param: Int) {
+        qgl.DEBUG_printName("glFogi")
+        GL11.glFogi(pName, param)
+    }
+
+    fun qglFogiv(pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glFogiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglFrontFace(mode: Int) {
+        qgl.DEBUG_printName("glFrontFace")
+        GL11.glFrontFace(mode)
+    }
+
+    fun qglFrustum(left: Double, right: Double, bottom: Double, top: Double, zNear: Double, zFar: Double) {
+        qgl.DEBUG_printName("glFrustum")
+        GL11.glFrustum(left, right, bottom, top, zNear, zFar)
+    }
+
+    fun qglGenLists(range: Enum<*>?): Int {
+        return qgl.qglGenLists(range.ordinal)
+    }
+
+    fun qglGenLists(range: Int): Int {
+        qgl.DEBUG_printName("glGenLists")
+        return GL11.glGenLists(range)
+    }
+
+    fun qglGenTextures(): Int {
+        qgl.DEBUG_printName("glGenTextures")
+        //        System.out.println("-----"+ (bla++));
+//        TempDump.printCallStack("" + (bla++));
+        return GL11.glGenTextures()
+    }
+
+    fun qglGenTextures(n: Int, textures: IntArray?) {
+        qgl.DEBUG_printName("glGenTextures")
+        GL11.glGenTextures()
+    }
+
+    fun qglGetBooleanv(pName: Int, params: BooleanArray?) {
+        qgl.DEBUG_printName("glGetBooleanv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetClipPlane(plane: Int, equation: DoubleBuffer?) {
+        qgl.DEBUG_printName("glGetClipPlane")
+        GL11.glGetClipPlane(plane, equation)
+    }
+
+    fun qglGetDoublev(pName: Int, params: DoubleArray?) {
+        qgl.DEBUG_printName("glGetDoublev")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetError(): Int { //DEBUG_printName("glGetError");
+        return GL11.glGetError()
+    }
+
+    fun qglGetFloatv(pName: Int, params: FloatBuffer?) {
+        qgl.DEBUG_printName("glGetFloatv")
+        GL11.glGetFloatv(pName, params)
+    }
+
+    fun qglGetInteger(pName: Int): Int {
+        qgl.DEBUG_printName("glGetInteger")
+        return GL11.glGetInteger(pName)
+    }
+
+    fun qglGetIntegerv(pName: Int, params: IntBuffer?) {
+        qgl.DEBUG_printName("glGetIntegerv")
+        GL11.glGetIntegerv(pName, params)
+    }
+
+    fun qglGetLightfv(light: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glGetLightfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetLightiv(light: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glGetLightiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetMapdv(target: Int, query: Int, v: DoubleArray?) {
+        qgl.DEBUG_printName("glGetMapdv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetMapfv(target: Int, query: Int, v: FloatArray?) {
+        qgl.DEBUG_printName("glGetMapfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetMapiv(target: Int, query: Int, v: IntArray?) {
+        qgl.DEBUG_printName("glGetMapiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetMaterialfv(face: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glGetMaterialfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetMaterialiv(face: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glGetMaterialiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetPixelMapfv(map: Int, values: FloatArray?) {
+        qgl.DEBUG_printName("glGetPixelMapfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetPixelMapuiv(map: Int, values: IntArray?) {
+        qgl.DEBUG_printName("glGetPixelMapuiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetPixelMapusv(map: Int, values: ShortArray?) {
+        qgl.DEBUG_printName("glGetPixelMapusv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetPointerv(pName: Int, params: Array<Any?>?) {
+        qgl.DEBUG_printName("glGetPointerv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetPolygonStipple(mask: Byte) {
+        qgl.DEBUG_printName("glGetPolygonStipple")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetString(name: Int): String? {
+        qgl.DEBUG_printName("glGetString")
+        return GL11.glGetString(name)
+    }
+
+    fun qglGetStringi(name: Int, index: Int): String? {
+        qgl.DEBUG_printName("glGetStringi")
+        return GL30.glGetStringi(name, index)
+    }
+
+    fun qglGetTexEnvfv(target: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glGetTexEnvfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexEnviv(target: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glGetTexEnviv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexGendv(coord: Int, pName: Int, params: DoubleArray?) {
+        qgl.DEBUG_printName("glGetTexGendv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexGenfv(coord: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glGetTexGenfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexGeniv(coord: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glGetTexGeniv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexImage(target: Int, level: Int, format: Int, type: Int, pixels: ByteBuffer?) {
+        qgl.DEBUG_printName("glGetTexImage")
+        GL11.glGetTexImage(target, level, format, type, pixels)
+    }
+
+    fun qglGetTexLevelParameterfv(target: Int, level: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glGetTexLevelParameterfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexLevelParameteriv(target: Int, level: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glGetTexLevelParameteriv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexParameterfv(target: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glGetTexParameterfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglGetTexParameteriv(target: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glGetTexParameteriv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglHint(target: Int, mode: Int) {
+        qgl.DEBUG_printName("glHint")
+        GL11.glHint(target, mode)
+    }
+
+    fun qglIndexMask(mask: Int) {
+        qgl.DEBUG_printName("glIndexMask")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexPointer(type: Int, stride: Int, pointer: Any?) {
+        qgl.DEBUG_printName("glIndexPointer")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexd(c: Double) {
+        qgl.DEBUG_printName("glIndexd")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexdv(c: DoubleArray?) {
+        qgl.DEBUG_printName("glIndexdv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexf(c: Float) {
+        qgl.DEBUG_printName("glIndexf")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexfv(c: FloatArray?) {
+        qgl.DEBUG_printName("glIndexfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexi(c: Int) {
+        qgl.DEBUG_printName("glIndexi")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexiv(c: IntArray?) {
+        qgl.DEBUG_printName("glIndexiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexs(c: Short) {
+        qgl.DEBUG_printName("glIndexs")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexsv(c: ShortArray?) {
+        qgl.DEBUG_printName("glIndexsv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexub(c: Byte) {
+        qgl.DEBUG_printName("glIndexub")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIndexubv(c: ByteArray?) {
+        qgl.DEBUG_printName("glIndexubv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglInitNames() {
+        qgl.DEBUG_printName("glInitNames")
+        GL11.glInitNames()
+    }
+
+    fun qglInterleavedArrays(format: Int, stride: Int, pointer: ByteBuffer?) {
+        qgl.DEBUG_printName("glInterleavedArrays")
+        GL11.glInterleavedArrays(format, stride, pointer)
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglIsEnabled(cap: Int): Boolean {
+        qgl.DEBUG_printName("glIsEnabled")
+        return GL11.glIsEnabled(cap)
+    }
+
+    fun qglIsList(list: Int): Boolean {
+        qgl.DEBUG_printName("glIsList")
+        return GL11.glIsList(list)
+    }
+
+    fun qglIsTexture(texture: Int): Boolean {
+        qgl.DEBUG_printName("glIsTexture")
+        return GL11.glIsTexture(texture)
+    }
+
+    fun qglLightModelf(pName: Int, param: Float) {
+        qgl.DEBUG_printName("glLightModelf")
+        GL11.glLightModelf(pName, param)
+    }
+
+    fun qglLightModelfv(pName: Int, params: FloatBuffer?) {
+        qgl.DEBUG_printName("glLightModelfv")
+        GL11.glLightModelfv(pName, params)
+    }
+
+    fun qglLightModeli(pName: Int, param: Int) {
+        qgl.DEBUG_printName("glLightModeli")
+        GL11.glLightModeli(pName, param)
+    }
+
+    fun qglLightModeliv(pName: Int, params: IntBuffer?) {
+        qgl.DEBUG_printName("glLightModeliv")
+        GL11.glLightModeliv(pName, params)
+    }
+
+    fun qglLightf(light: Int, pName: Int, param: Float) {
+        qgl.DEBUG_printName("glLightf")
+        GL11.glLightf(light, pName, param)
+    }
+
+    fun qglLightfv(light: Int, pName: Int, params: FloatBuffer?) {
+        qgl.DEBUG_printName("glLightfv")
+        GL11.glLightfv(light, pName, params)
+    }
+
+    fun qglLighti(light: Int, pName: Int, param: Int) {
+        qgl.DEBUG_printName("glLighti")
+        GL11.glLighti(light, pName, param)
+    }
+
+    fun qglLightiv(light: Int, pName: Int, params: IntBuffer?) {
+        qgl.DEBUG_printName("glLightiv")
+        GL11.glLightiv(light, pName, params)
+    }
+
+    fun qglLineStipple(factor: Int, pattern: Short) {
+        qgl.DEBUG_printName("glLineStipple")
+        GL11.glLineStipple(factor, pattern)
+    }
+
+    fun qglLineWidth(width: Float) {
+        qgl.DEBUG_printName("glLineWidth")
+        GL11.glLineWidth(width)
+    }
+
+    fun qglListBase(base: Int) {
+        qgl.DEBUG_printName("glListBase")
+        GL11.glListBase(base)
+    }
+
+    fun qglLoadIdentity() {
+        qgl.DEBUG_printName("glLoadIdentity")
+        GL11.glLoadIdentity()
+    }
+
+    fun qglLoadMatrixd(m: DoubleBuffer?) {
+        qgl.DEBUG_printName("glLoadMatrixd")
+        GL11.glLoadMatrixd(m)
+    }
+
+    fun qglLoadMatrixf(m: FloatArray?) {
+        qgl.DEBUG_printName("glLoadMatrixf") //TODO:convert to FloatBuffer.
+        GL11.glLoadMatrixf(m)
+    }
+
+    fun qglLoadName(name: Int) {
+        qgl.DEBUG_printName("glLoadName")
+        GL11.glLoadName(name)
+    }
+
+    fun qglLogicOp(opcode: Int) {
+        qgl.DEBUG_printName("glLogicOp")
+        GL11.glLogicOp(opcode)
+    }
+
+    fun qglMap1d(target: Int, u1: Double, u2: Double, stride: Int, order: Int, points: DoubleBuffer?) {
+        qgl.DEBUG_printName("glMap1d")
+        GL11.glMap1d(target, u1, u2, stride, order, points)
+    }
+
+    fun qglMap1f(target: Int, u1: Float, u2: Float, stride: Int, order: Int, points: FloatBuffer?) {
+        qgl.DEBUG_printName("glMap1f")
+        GL11.glMap1f(target, u1, u2, stride, order, points)
+    }
+
+    fun qglMap2d(
+        target: Int,
+        u1: Double,
+        u2: Double,
+        ustride: Int,
+        uorder: Int,
+        v1: Double,
+        v2: Double,
+        vstride: Int,
+        vorder: Int,
+        points: DoubleBuffer?
+    ) {
+        qgl.DEBUG_printName("glMap2d")
+        GL11.glMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
+    }
+
+    fun qglMap2f(
+        target: Int,
+        u1: Float,
+        u2: Float,
+        ustride: Int,
+        uorder: Int,
+        v1: Float,
+        v2: Float,
+        vstride: Int,
+        vorder: Int,
+        points: FloatBuffer?
+    ) {
+        qgl.DEBUG_printName("glMap2f")
+        GL11.glMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
+    }
+
+    fun qglMapGrid1d(un: Int, u1: Double, u2: Double) {
+        qgl.DEBUG_printName("glMapGrid1d")
+        GL11.glMapGrid1d(un, u1, u2)
+    }
+
+    fun qglMapGrid1f(un: Int, u1: Float, u2: Float) {
+        qgl.DEBUG_printName("glMapGrid1f")
+        GL11.glMapGrid1f(un, u1, u2)
+    }
+
+    fun qglMapGrid2d(un: Int, u1: Double, u2: Double, vn: Int, v1: Double, v2: Double) {
+        qgl.DEBUG_printName("glMapGrid2d")
+        GL11.glMapGrid2d(un, u1, u2, vn, v1, v2)
+    }
+
+    fun qglMapGrid2f(un: Int, u1: Float, u2: Float, vn: Int, v1: Float, v2: Float) {
+        qgl.DEBUG_printName("glMapGrid2f")
+        GL11.glMapGrid2f(un, u1, u2, vn, v1, v2)
+    }
+
+    fun qglMaterialf(face: Int, pName: Int, param: Float) {
+        qgl.DEBUG_printName("glMaterialf")
+        GL11.glMaterialf(face, pName, param)
+    }
+
+    fun qglMaterialfv(face: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glMaterialfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglMateriali(face: Int, pName: Int, param: Int) {
+        qgl.DEBUG_printName("glMateriali")
+        GL11.glMateriali(face, pName, param)
+    }
+
+    fun qglMaterialiv(face: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glMaterialiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglMatrixMode(mode: Int) {
+        qgl.DEBUG_printName("glMatrixMode")
+        GL11.glMatrixMode(mode)
+    }
+
+    fun qglMultMatrixd(m: DoubleArray?) {
+        qgl.DEBUG_printName("glMultMatrixd")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglMultMatrixf(m: FloatArray?) {
+        qgl.DEBUG_printName("glMultMatrixf")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNewList(list: Int, mode: Int) {
+        qgl.DEBUG_printName("glNewList")
+        GL11.glNewList(list, mode)
+    }
+
+    fun qglNormal3b(nx: Byte, ny: Byte, nz: Byte) {
+        qgl.DEBUG_printName("glNormal3b")
+        GL11.glNormal3b(nx, ny, nz)
+    }
+
+    fun qglNormal3bv(v: ByteArray?) {
+        qgl.DEBUG_printName("glNormal3bv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNormal3d(nx: Double, ny: Double, nz: Double) {
+        qgl.DEBUG_printName("glNormal3d")
+        GL11.glNormal3d(nx, ny, nz)
+    }
+
+    fun qglNormal3dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glNormal3dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNormal3f(nx: Float, ny: Float, nz: Float) {
+        qgl.DEBUG_printName("glNormal3f")
+        GL11.glNormal3f(nx, ny, nz)
+    }
+
+    fun qglNormal3fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glNormal3fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNormal3i(nx: Int, ny: Int, nz: Int) {
+        qgl.DEBUG_printName("glNormal3i")
+        GL11.glNormal3i(nx, ny, nz)
+    }
+
+    fun qglNormal3iv(v: IntArray?) {
+        qgl.DEBUG_printName("glNormal3iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNormal3s(nx: Short, ny: Short, nz: Short) {
+        qgl.DEBUG_printName("glNormal3s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNormal3sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glNormal3sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglNormalPointer(type: Int, stride: Int, pointer: Long) {
+        qgl.DEBUG_printName("glNormalPointer")
+        GL11.glNormalPointer(type, stride, pointer)
+    }
+
+    fun qglOrtho(left: Double, right: Double, bottom: Double, top: Double, zNear: Double, zFar: Double) {
+        qgl.DEBUG_printName("glOrtho")
+        GL11.glOrtho(left, right, bottom, top, zNear, zFar)
+    }
+
+    fun qglPassThrough(token: Float) {
+        qgl.DEBUG_printName("glPassThrough")
+        GL11.glPassThrough(token)
+    }
+
+    fun qglPixelMapfv(map: Int, mapsize: Int, values: FloatArray?) {
+        qgl.DEBUG_printName("glPixelMapfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglPixelMapuiv(map: Int, mapsize: Int, values: IntArray?) {
+        qgl.DEBUG_printName("glPixelMapuiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglPixelMapusv(map: Int, mapsize: Int, values: ShortArray?) {
+        qgl.DEBUG_printName("glPixelMapusv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglPixelStoref(pName: Int, param: Float) {
+        qgl.DEBUG_printName("glPixelStoref")
+        GL11.glPixelStoref(pName, param)
+    }
+
+    fun qglPixelStorei(pName: Int, param: Int) {
+        qgl.DEBUG_printName("glPixelStorei")
+        GL11.glPixelStorei(pName, param)
+    }
+
+    fun qglPixelTransferf(pName: Int, param: Float) {
+        qgl.DEBUG_printName("glPixelTransferf")
+        GL11.glPixelTransferf(pName, param)
+    }
+
+    fun qglPixelTransferi(pName: Int, param: Int) {
+        qgl.DEBUG_printName("glPixelTransferi")
+        GL11.glPixelTransferi(pName, param)
+    }
+
+    fun qglPixelZoom(xfactor: Float, yfactor: Float) {
+        qgl.DEBUG_printName("glPixelZoom")
+        GL11.glPixelZoom(xfactor, yfactor)
+    }
+
+    fun qglPointSize(size: Float) {
+        qgl.DEBUG_printName("glPointSize")
+        GL11.glPointSize(size)
+    }
+
+    fun qglPolygonMode(face: Int, mode: Int) {
+        qgl.DEBUG_printName("glPolygonMode")
+        GL11.glPolygonMode(face, mode)
+    }
+
+    fun qglPolygonOffset(factor: Float, units: Float) {
+        qgl.DEBUG_printName("glPolygonOffset")
+        GL11.glPolygonOffset(factor, units)
+    }
+
+    fun qglPolygonStipple(mask: ByteBuffer?) {
+        qgl.DEBUG_printName("glPolygonStipple")
+        GL11.glPolygonStipple(mask)
+    }
+
+    fun qglPopAttrib() {
+        qgl.DEBUG_printName("glPopAttrib")
+        GL11.glPopAttrib()
+    }
+
+    fun qglPopClientAttrib() {
+        qgl.DEBUG_printName("glPopClientAttrib")
+        GL11.glPopClientAttrib()
+    }
+
+    fun qglPopMatrix() {
+        qgl.DEBUG_printName("glPopMatrix")
+        GL11.glPopMatrix()
+    }
+
+    fun qglPopName() {
+        qgl.DEBUG_printName("glPopName")
+        GL11.glPopName()
+    }
+
+    fun qglPrioritizeTextures(n: Int, textures: Int, priorities: Float) {
+        qgl.DEBUG_printName("glPrioritizeTextures")
+        throw TODO_Exception()
+    }
+
+    fun qglPrioritizeTextures(n: Int, textures: IntBuffer?, priorities: FloatBuffer?) {
+        qgl.DEBUG_printName("glPrioritizeTextures")
+        GL11.glPrioritizeTextures(textures, priorities)
+    }
+
+    fun qglPushAttrib(mask: Int) {
+        qgl.DEBUG_printName("glPushAttrib")
+        GL11.glPushAttrib(mask)
+    }
+
+    fun qglPushClientAttrib(mask: Int) {
+        qgl.DEBUG_printName("glPushClientAttrib")
+        GL11.glPushClientAttrib(mask)
+    }
+
+    fun qglPushMatrix() {
+        qgl.DEBUG_printName("glPushMatrix")
+        GL11.glPushMatrix()
+    }
+
+    fun qglPushName(name: Int) {
+        qgl.DEBUG_printName("glPushName")
+        GL11.glPushName(name)
+    }
+
+    fun qglRasterPos2d(x: Double, y: Double) {
+        qgl.DEBUG_printName("glRasterPos2d")
+        GL11.glRasterPos2d(x, y)
+    }
+
+    fun qglRasterPos2dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glRasterPos2dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos2f(x: Float, y: Float) {
+        qgl.DEBUG_printName("glRasterPos2f")
+        GL11.glRasterPos2f(x, y)
+    }
+
+    fun qglRasterPos2fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glRasterPos2fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos2i(x: Int, y: Int) {
+        qgl.DEBUG_printName("glRasterPos2i")
+        GL11.glRasterPos2i(x, y)
+    }
+
+    fun qglRasterPos2iv(v: IntArray?) {
+        qgl.DEBUG_printName("glRasterPos2iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos2s(x: Short, y: Short) {
+        qgl.DEBUG_printName("glRasterPos2s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos2sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glRasterPos2sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos3d(x: Double, y: Double, z: Double) {
+        qgl.DEBUG_printName("glRasterPos3d")
+        GL11.glRasterPos3d(x, y, z)
+    }
+
+    fun qglRasterPos3dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glRasterPos3dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos3f(x: Float, y: Float, z: Float) {
+        qgl.DEBUG_printName("glRasterPos3f")
+        GL11.glRasterPos3f(x, y, z)
+    }
+
+    fun qglRasterPos3fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glRasterPos3fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos3i(x: Int, y: Int, z: Int) {
+        qgl.DEBUG_printName("glRasterPos3i")
+        GL11.glRasterPos3i(x, y, z)
+    }
+
+    fun qglRasterPos3iv(v: IntArray?) {
+        qgl.DEBUG_printName("glRasterPos3iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos3s(x: Short, y: Short, z: Short) {
+        qgl.DEBUG_printName("glRasterPos3s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos3sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glRasterPos3sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos4d(x: Double, y: Double, z: Double, w: Double) {
+        qgl.DEBUG_printName("glRasterPos4d")
+        GL11.glRasterPos4d(x, y, z, w)
+    }
+
+    fun qglRasterPos4dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glRasterPos4dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos4f(x: Float, y: Float, z: Float, w: Float) {
+        qgl.DEBUG_printName("glRasterPos4f")
+        GL11.glRasterPos4f(x, y, z, w)
+    }
+
+    fun qglRasterPos4fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glRasterPos4fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos4i(x: Int, y: Int, z: Int, w: Int) {
+        qgl.DEBUG_printName("glRasterPos4i")
+        GL11.glRasterPos4i(x, y, z, w)
+    }
+
+    fun qglRasterPos4iv(v: IntArray?) {
+        qgl.DEBUG_printName("glRasterPos4iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos4s(x: Short, y: Short, z: Short, w: Short) {
+        qgl.DEBUG_printName("glRasterPos4s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRasterPos4sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glRasterPos4sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglReadBuffer(mode: Int) {
+        qgl.DEBUG_printName("glReadBuffer")
+        GL11.glReadBuffer(mode)
+    }
+
+    fun qglReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer?) {
+        qgl.DEBUG_printName("glReadPixels")
+        GL11.glReadPixels(x, y, width, height, format, type, pixels)
+    }
+
+    fun qglRectd(x1: Double, y1: Double, x2: Double, y2: Double) {
+        qgl.DEBUG_printName("glRectd")
+        GL11.glRectd(x1, y1, x2, y2)
+    }
+
+    fun qglRectdv(v1: DoubleArray?, v2: DoubleArray?) {
+        qgl.DEBUG_printName("glRectdv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRectf(x1: Float, y1: Float, x2: Float, y2: Float) {
+        qgl.DEBUG_printName("glRectf")
+        GL11.glRectf(x1, y1, x2, y2)
+    }
+
+    fun qglRectfv(v1: FloatArray?, v2: FloatArray?) {
+        qgl.DEBUG_printName("glRectfv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRecti(x1: Int, y1: Int, x2: Int, y2: Int) {
+        qgl.DEBUG_printName("glRecti")
+        GL11.glRecti(x1, y1, x2, y2)
+    }
+
+    fun qglRectiv(v1: IntArray?, v2: IntArray?) {
+        qgl.DEBUG_printName("glRectiv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRects(x1: Short, y1: Short, x2: Short, y2: Short) {
+        qgl.DEBUG_printName("glRects")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRectsv(v1: ShortArray?, v2: ShortArray?) {
+        qgl.DEBUG_printName("glRectsv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglRenderMode(mode: Int): Int {
+        qgl.DEBUG_printName("glRenderMode")
+        return GL11.glRenderMode(mode)
+    }
+
+    fun qglRotated(angle: Double, x: Double, y: Double, z: Double) {
+        qgl.DEBUG_printName("glRotated")
+        GL11.glRotated(angle, x, y, z)
+    }
+
+    fun qglRotatef(angle: Float, x: Float, y: Float, z: Float) {
+        qgl.DEBUG_printName("glRotatef")
+        GL11.glRotatef(angle, x, y, z)
+    }
+
+    fun qglScaled(x: Double, y: Double, z: Double) {
+        qgl.DEBUG_printName("glScaled")
+        GL11.glScaled(x, y, z)
+    }
+
+    fun qglScalef(x: Float, y: Float, z: Float) {
+        qgl.DEBUG_printName("glScalef")
+        GL11.glScalef(x, y, z)
+    }
+
+    fun qglScissor(x: Int, y: Int, width: Int, height: Int) {
+        qgl.DEBUG_printName("glScissor")
+        GL11.glScissor(x, y, width, height)
+    }
+
+    fun qglSelectBuffer(size: Int, buffer: IntBuffer?) {
+        qgl.DEBUG_printName("glSelectBuffer")
+        GL11.glSelectBuffer(buffer)
+    }
+
+    fun qglShadeModel(mode: Int) {
+        qgl.DEBUG_printName("glShadeModel")
+        GL11.glShadeModel(mode)
+    }
+
+    fun qglStencilFunc(func: Int, ref: Int, mask: Int) {
+        qgl.DEBUG_printName("glStencilFunc")
+        GL11.glStencilFunc(func, ref, mask)
+    }
+
+    fun qglStencilMask(mask: Int) {
+        qgl.DEBUG_printName("glStencilMask")
+        GL11.glStencilMask(mask)
+    }
+
+    fun qglStencilOp(fail: Int, zfail: Int, zpass: Int) {
+        qgl.DEBUG_printName("glStencilOp")
+        GL11.glStencilOp(fail, zfail, zpass)
+    }
+
+    fun qglTexCoord1d(s: Double) {
+        qgl.DEBUG_printName("glTexCoord1d")
+        GL11.glTexCoord1d(s)
+    }
+
+    fun qglTexCoord1dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glTexCoord1dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord1f(s: Float) {
+        qgl.DEBUG_printName("glTexCoord1f")
+        GL11.glTexCoord1f(s)
+    }
+
+    fun qglTexCoord1fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glTexCoord1fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord1i(s: Int) {
+        qgl.DEBUG_printName("glTexCoord1i")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord1iv(v: IntArray?) {
+        qgl.DEBUG_printName("glTexCoord1iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord1s(s: Short) {
+        qgl.DEBUG_printName("glTexCoord1s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord1sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glTexCoord1sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord2d(s: Double, t: Double) {
+        qgl.DEBUG_printName("glTexCoord2d")
+        GL11.glTexCoord2d(s, t)
+    }
+
+    fun qglTexCoord2dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glTexCoord2dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord2f(s: Float, t: Float) {
+        qgl.DEBUG_printName("glTexCoord2f")
+        GL11.glTexCoord2f(s, t)
+    }
+
+    fun qglTexCoord2fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glTexCoord2fv")
+        qgl.qglTexCoord2f(v.get(0), v.get(1))
+    }
+
+    fun qglTexCoord2i(s: Int, t: Int) {
+        qgl.DEBUG_printName("glTexCoord2i")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord2iv(v: IntArray?) {
+        qgl.DEBUG_printName("glTexCoord2iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord2s(s: Short, t: Short) {
+        qgl.DEBUG_printName("glTexCoord2s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord2sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glTexCoord2sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord3d(s: Double, t: Double, r: Double) {
+        qgl.DEBUG_printName("glTexCoord3d")
+        GL11.glTexCoord3d(s, t, r)
+    }
+
+    fun qglTexCoord3dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glTexCoord3dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord3f(s: Float, t: Float, r: Float) {
+        qgl.DEBUG_printName("glTexCoord3f")
+        GL11.glTexCoord3f(s, t, r)
+    }
+
+    fun qglTexCoord3fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glTexCoord3fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord3i(s: Int, t: Int, r: Int) {
+        qgl.DEBUG_printName("glTexCoord3i")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord3iv(v: IntArray?) {
+        qgl.DEBUG_printName("glTexCoord3iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord3s(s: Short, t: Short, r: Short) {
+        qgl.DEBUG_printName("glTexCoord3s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord3sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glTexCoord3sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord4d(s: Double, t: Double, r: Double, q: Double) {
+        qgl.DEBUG_printName("glTexCoord4d")
+        GL11.glTexCoord4d(s, t, r, q)
+    }
+
+    fun qglTexCoord4dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glTexCoord4dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord4f(s: Float, t: Float, r: Float, q: Float) {
+        qgl.DEBUG_printName("glTexCoord4f")
+        GL11.glTexCoord4f(s, t, r, q)
+    }
+
+    fun qglTexCoord4fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glTexCoord4fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord4i(s: Int, t: Int, r: Int, q: Int) {
+        qgl.DEBUG_printName("glTexCoord4i")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord4iv(v: IntArray?) {
+        qgl.DEBUG_printName("glTexCoord4iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord4s(s: Short, t: Short, r: Short, q: Short) {
+        qgl.DEBUG_printName("glTexCoord4s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoord4sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glTexCoord4sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: Long) {
+        qgl.DEBUG_printName("glTexCoordPointer")
+        GL11.glTexCoordPointer(size, type, stride, pointer)
+    }
+
+    @Deprecated("")
+    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: FloatArray?) {
+        qgl.DEBUG_printName("glTexCoordPointer")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer?) {
+        qgl.DEBUG_printName("glTexCoordPointer")
+        GL11.glTexCoordPointer(size, type, stride, pointer)
+    }
+
+    fun qglTexEnvf(target: Int, pName: Int, param: Float) {
+        qgl.DEBUG_printName("glTexEnvf")
+        GL11.glTexEnvf(target, pName, param)
+    }
+
+    fun qglTexEnvfv(target: Int, pName: Int, params: FloatBuffer?) {
+        qgl.DEBUG_printName("glTexEnvfv")
+        GL11.glTexEnvfv(target, pName, params)
+    }
+
+    fun qglTexEnvi(target: Int, pName: Int, param: Int) {
+        qgl.DEBUG_printName("glTexEnvi") //ENVY!!
+        GL11.glTexEnvi(target, pName, param)
+    }
+
+    fun qglTexEnviv(target: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glTexEnviv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexGend(coord: Int, pName: Int, param: Double) {
+        qgl.DEBUG_printName("glTexGend")
+        GL11.glTexGend(coord, pName, param)
+    }
+
+    fun qglTexGendv(coord: Int, pName: Int, params: DoubleArray?) {
+        qgl.DEBUG_printName("glTexGendv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexGenf(coord: Int, pName: Int, param: Float) {
+        qgl.DEBUG_printName("glTexGenf")
+        GL11.glTexGenf(coord, pName, param)
+    }
+
+    fun qglTexGenfv(coord: Int, pName: Int, params: FloatArray?) {
+        qgl.DEBUG_printName("glTexGenfv")
+        GL11.glTexGenfv(coord, pName, params)
+    }
+
+    fun qglTexGeni(coord: Int, pName: Int, param: Int) {
+        qgl.DEBUG_printName("glTexGeni")
+        GL11.glTexGeni(coord, pName, param)
+    }
+
+    fun qglTexGeniv(coord: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glTexGeniv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexImage1D(
+        target: Int,
+        level: Int,
+        internalformat: Int,
+        width: Int,
+        border: Int,
+        format: Int,
+        type: Int,
+        pixels: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glTexImage1D")
+        GL11.glTexImage1D(target, level, internalformat, width, border, format, type, pixels)
+    }
+
+    @Deprecated("")
+    fun qglTexImage2D(
+        target: Int,
+        level: Int,
+        internalformat: Int,
+        width: Int,
+        height: Int,
+        border: Int,
+        format: Int,
+        type: Int,
+        pixels: ByteArray?
+    ) {
+        qgl.DEBUG_printName("glTexImage2D")
+        qgl.qglTexImage2D(target, level, internalformat, width, height, border, format, type, qgl.wrap(pixels))
+        throw UnsupportedOperationException()
+    }
+
+    fun qglTexImage2D(
+        target: Int,
+        level: Int,
+        internalformat: Int,
+        width: Int,
+        height: Int,
+        border: Int,
+        format: Int,
+        type: Int,
+        pixels: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glTexImage2D")
+        GL11.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
+    }
+
+    fun qglTexParameterf(target: Int, pName: Int, param: Float) {
+        qgl.DEBUG_printName("glTexParameterf")
+        GL11.glTexParameterf(target, pName, param)
+    }
+
+    fun qglTexParameterfv(target: Int, pName: Int, params: FloatBuffer?) {
+        qgl.DEBUG_printName("glTexParameterfv")
+        GL11.glTexParameterfv(target, pName, params)
+    }
+
+    fun qglTexParameteri(target: Int, pName: Int, param: Int) {
+        qgl.DEBUG_printName("glTexParameteri")
+        GL11.glTexParameteri(target, pName, param)
+    }
+
+    fun qglTexParameteriv(target: Int, pName: Int, params: IntArray?) {
+        qgl.DEBUG_printName("glTexParameteriv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglTexSubImage1D(
+        target: Int,
+        level: Int,
+        xoffset: Int,
+        width: Int,
+        format: Int,
+        type: Int,
+        pixels: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glTexSubImage1D")
+        GL11.glTexSubImage1D(target, level, xoffset, width, format, type, pixels)
+    }
+
+    fun qglTexSubImage2D(
+        target: Int,
+        level: Int,
+        xoffset: Int,
+        yoffset: Int,
+        width: Int,
+        height: Int,
+        format: Int,
+        type: Int,
+        pixels: ByteBuffer?
+    ) {
+        qgl.DEBUG_printName("glTexSubImage2D")
+        GL11.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
+    }
+
+    fun qglTranslated(x: Double, y: Double, z: Double) {
+        qgl.DEBUG_printName("glTranslated")
+        GL11.glTranslated(x, y, z)
+    }
+
+    fun qglTranslatef(x: Float, y: Float, z: Float) {
+        qgl.DEBUG_printName("glTranslatef")
+        GL11.glTranslatef(x, y, z)
+    }
+
+    fun qglVertex2d(x: Double, y: Double) {
+        qgl.DEBUG_printName("glVertex2d")
+        GL11.glVertex2d(x, y)
+    }
+
+    fun qglVertex2dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glVertex2dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex2f(x: Float, y: Float) {
+        qgl.DEBUG_printName("glVertex2f")
+        GL11.glVertex2f(x, y)
+    }
+
+    fun qglVertex2fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glVertex2fv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex2i(x: Int, y: Int) {
+        qgl.DEBUG_printName("glVertex2i")
+        GL11.glVertex2i(x, y)
+    }
+
+    fun qglVertex2iv(v: IntArray?) {
+        qgl.DEBUG_printName("glVertex2iv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex2s(x: Short, y: Short) {
+        qgl.DEBUG_printName("glVertex2s")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex2sv(v: ShortArray?) {
+        qgl.DEBUG_printName("glVertex2sv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex3d(x: Double, y: Double, z: Double) {
+        qgl.DEBUG_printName("glVertex3d")
+        GL11.glVertex3d(x, y, z)
+    }
+
+    fun qglVertex3dv(v: DoubleArray?) {
+        qgl.DEBUG_printName("glVertex3dv")
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex3f(x: Float, y: Float, z: Float) {
+        qgl.DEBUG_printName("glVertex3f")
+        GL11.glVertex3f(x, y, z)
+    }
+
+    fun qglVertex3fv(v: FloatArray?) {
+        qgl.DEBUG_printName("glVertex3fv")
+        qgl.qglVertex3f(v.get(0), v.get(1), v.get(2))
+    }
+
+    fun qglVertex3i(x: Int, y: Int, z: Int) {
+        qgl.DEBUG_printName("glVertex3i")
+        GL11.glVertex3i(x, y, z)
+    }
+
+    fun qglVertex3iv(v: IntArray?) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex3s(x: Short, y: Short, z: Short) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex3sv(v: ShortArray?) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex4d(x: Double, y: Double, z: Double, w: Double) {
+        qgl.DEBUG_printName("glVertex4d")
+        GL11.glVertex4d(x, y, z, w)
+    }
+
+    fun qglVertex4dv(v: DoubleArray?) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex4f(x: Float, y: Float, z: Float, w: Float) {
+        qgl.DEBUG_printName("glVertex4f")
+        GL11.glVertex4f(x, y, z, w)
+    }
+
+    fun qglVertex4fv(v: FloatArray?) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex4i(x: Int, y: Int, z: Int, w: Int) {
+        qgl.DEBUG_printName("glVertex4i")
+        GL11.glVertex4i(x, y, z, w)
+    }
+
+    fun qglVertex4iv(v: IntArray?) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex4s(x: Short, y: Short, z: Short, w: Short) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertex4sv(v: ShortArray?) {
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: Long) {
+        qgl.DEBUG_printName("glVertexPointer")
+        GL11.glVertexPointer(size, type, stride, pointer)
+    }
+
+    @Deprecated("")
+    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: FloatArray?) {
+//        GL11.glVertexPointer(size, type, stride, 0);
+//        GL11.glVertexPointer(size, stride, wrap(pointer));//TODO:use FloatBuffer.
+        throw UnsupportedOperationException("Not supported yet.")
+    }
+
+    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer?) {
+        qgl.DEBUG_printName("glVertexPointer")
+        GL11.glVertexPointer(size, type, stride, pointer)
+    }
+
+    fun qglViewport(x: Int, y: Int, width: Int, height: Int) {
+        qgl.DEBUG_printName("glViewport")
+        GL11.glViewport(x, y, width, height)
+    }
+
+    private fun DEBUG_printName(functionName: String?) {
+        if (qgl.GL_DEBUG) {
+//            System.out.println(functionName);
+        }
+    }
+    //
+    //    
+    //    
+    //    extern  int   ( WINAPI * qwglChoosePixelFormat )(HDC, CONST PIXELFORMATDESCRIPTOR *);
+    //extern  int   ( WINAPI * qwglDescribePixelFormat) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
+    //extern  int   ( WINAPI * qwglGetPixelFormat)(HDC);
+    //extern  BOOL  ( WINAPI * qwglSetPixelFormat)(HDC, int, CONST PIXELFORMATDESCRIPTOR *);
+    //extern  BOOL  ( WINAPI * qwglSwapBuffers)(HDC);
+    //
+    //extern BOOL  ( WINAPI * qwglCopyContext)(HGLRC, HGLRC, UINT);
+    //extern HGLRC ( WINAPI * qwglCreateContext)(HDC);
+    //extern HGLRC ( WINAPI * qwglCreateLayerContext)(HDC, int);
+    //extern BOOL  ( WINAPI * qwglDeleteContext)(HGLRC);
+    //extern HGLRC ( WINAPI * qwglGetCurrentContext)(VOID);
+    //extern HDC   ( WINAPI * qwglGetCurrentDC)(VOID);
+    //extern PROC  ( WINAPI * qwglGetProcAddress)(LPCSTR);
+    //extern BOOL  ( WINAPI * qwglMakeCurrent)(HDC, HGLRC);
+    //extern BOOL  ( WINAPI * qwglShareLists)(HGLRC, HGLRC);
+    //extern BOOL  ( WINAPI * qwglUseFontBitmaps)(HDC, DWORD, DWORD, DWORD);
+    //
+    //extern BOOL  ( WINAPI * qwglUseFontOutlines)(HDC, DWORD, DWORD, DWORD, FLOAT,
+    //                                           FLOAT, int, LPGLYPHMETRICSFLOAT);
+    //
+    //extern BOOL ( WINAPI * qwglDescribeLayerPlane)(HDC, int, int, UINT,
+    //                                            LPLAYERPLANEDESCRIPTOR);
+    //extern int  ( WINAPI * qwglSetLayerPaletteEntries)(HDC, int, int, int,
+    //                                                CONST COLORREF *);
+    //extern int  ( WINAPI * qwglGetLayerPaletteEntries)(HDC, int, int, int,
+    //                                                COLORREF *);
+    //extern BOOL ( WINAPI * qwglRealizeLayerPalette)(HDC, int, BOOL);
+    //extern BOOL ( WINAPI * qwglSwapLayerBuffers)(HDC, UINT);
+
+    @Deprecated("the calling functions should send ByteBuffers instead.")
+    private fun wrap(byteArray: ByteArray?): ByteBuffer? {
+        return BufferUtils.createByteBuffer(byteArray.size or 16).put(byteArray).flip()
+    }
+
+    @Deprecated("the calling functions should send IntBuffers instead.")
+    private fun wrap(intArray: IntArray?): IntBuffer? {
+        return BufferUtils.createIntBuffer(intArray.size).put(intArray).flip()
+    }
+
+    @Deprecated("the calling functions should send FloatBuffers instead.")
+    private fun wrap(floatArray: FloatArray?): FloatBuffer? {
+        return BufferUtils.createFloatBuffer(floatArray.size or 16).put(floatArray).flip()
+    }
+
+    // ATI_fragment_shader
+    internal object ATI_fragment_shader {
+        fun  /*PFNGLGENFRAGMENTSHADERSATIPROC*/qglGenFragmentShadersATI(range: Int) {}
+        fun  /*PFNGLBINDFRAGMENTSHADERATIPROC*/qglBindFragmentShaderATI(id: Int) {}
+        fun  /*PFNGLDELETEFRAGMENTSHADERATIPROC*/qglDeleteFragmentShaderATI(id: Int) {}
+        fun  /*PFNGLBEGINFRAGMENTSHADERATIPROC*/qglBeginFragmentShaderATI() {}
+        fun  /*PFNGLENDFRAGMENTSHADERATIPROC*/qglEndFragmentShaderATI() {}
+        fun  /*PFNGLPASSTEXCOORDATIPROC*/qglPassTexCoordATI(dst: Int, coord: Int, swizzle: Int) {}
+        fun  /*PFNGLSAMPLEMAPATIPROC*/qglSampleMapATI(dst: Int, interp: Int, swizzle: Int) {}
+        fun  /*PFNGLCOLORFRAGMENTOP1ATIPROC*/qglColorFragmentOp1ATI(
+            op: Int,
+            dst: Int,
+            dstMask: Int,
+            dstMod: Int,
+            arg1: Int,
+            arg1Rep: Int,
+            arg1Mod: Int
+        ) {
+        }
+
+        fun  /*PFNGLCOLORFRAGMENTOP2ATIPROC*/qglColorFragmentOp2ATI(
+            op: Int,
+            dst: Int,
+            dstMask: Int,
+            dstMod: Int,
+            arg1: Int,
+            arg1Rep: Int,
+            arg1Mod: Int,
+            arg2: Int,
+            arg2Rep: Int,
+            arg2Mod: Int
+        ) {
+        }
+
+        fun  /*PFNGLCOLORFRAGMENTOP3ATIPROC*/qglColorFragmentOp3ATI(
+            op: Int,
+            dst: Int,
+            dstMask: Int,
+            dstMod: Int,
+            arg1: Int,
+            arg1Rep: Int,
+            arg1Mod: Int,
+            arg2: Int,
+            arg2Rep: Int,
+            arg2Mod: Int,
+            arg3: Int,
+            arg3Rep: Int,
+            arg3Mod: Int
+        ) {
+        }
+
+        fun  /*PFNGLALPHAFRAGMENTOP1ATIPROC*/qglAlphaFragmentOp1ATI(
+            op: Int,
+            dst: Int,
+            dstMod: Int,
+            arg1: Int,
+            arg1Rep: Int,
+            arg1Mod: Int
+        ) {
+        }
+
+        fun  /*PFNGLALPHAFRAGMENTOP2ATIPROC*/qglAlphaFragmentOp2ATI(
+            op: Int,
+            dst: Int,
+            dstMod: Int,
+            arg1: Int,
+            arg1Rep: Int,
+            arg1Mod: Int,
+            arg2: Int,
+            arg2Rep: Int,
+            arg2Mod: Int
+        ) {
+        }
+
+        fun  /*PFNGLALPHAFRAGMENTOP3ATIPROC*/qglAlphaFragmentOp3ATI(
+            op: Int,
+            dst: Int,
+            dstMod: Int,
+            arg1: Int,
+            arg1Rep: Int,
+            arg1Mod: Int,
+            arg2: Int,
+            arg2Rep: Int,
+            arg2Mod: Int,
+            arg3: Int,
+            arg3Rep: Int,
+            arg3Mod: Int
+        ) {
+        }
+
+        fun  /*PFNGLSETFRAGMENTSHADERCONSTANTATIPROC*/qglSetFragmentShaderConstantATI(dst: Int, value: FloatArray?) {}
+    }
+
+    init {
+        if (qgl.GL_DEBUG) qgl.qglEnable(GL43.GL_DEBUG_OUTPUT)
+    }
+}

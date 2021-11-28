@@ -1,0 +1,907 @@
+package neo.Renderer
+
+import neo.Renderer.Model.idRenderModel
+import neo.Renderer.Model.srfTriangles_s
+import neo.Renderer.ModelDecal.idRenderModelDecal
+import neo.Renderer.ModelOverlay.idRenderModelOverlay
+import neo.Renderer.RenderWorld.renderLight_s
+import neo.Renderer.RenderWorld_local.doublePortal_s
+import neo.Renderer.RenderWorld_local.idRenderWorldLocal
+import neo.Renderer.RenderWorld_local.portalArea_s
+import neo.Renderer.RenderWorld_local.portal_s
+import neo.Renderer.tr_local.areaReference_s
+import neo.Renderer.tr_local.idRenderEntityLocal
+import neo.Renderer.tr_local.idRenderLightLocal
+import neo.framework.*
+import neo.framework.CmdSystem.cmdFunction_t
+import neo.idlib.*
+import neo.idlib.Lib.idException
+import neo.idlib.geometry.Winding.idWinding
+import neo.idlib.math.*
+import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector.idVec3
+import neo.idlib.math.Vector.idVec4
+
+/**
+ *
+ */
+object tr_lightrun {
+    /*
+
+
+     Prelight models
+
+     "_prelight_<lightname>", ie "_prelight_light1"
+
+     Static surfaces available to dmap will be processed to optimized
+     shadow and lit surface geometry
+
+     Entity models are never prelighted.
+
+     Light entity can have a "noPrelight 1" key set to avoid the preprocessing
+     and carving of the world.  A light that will move should usually have this
+     set.
+
+     Prelight models will usually have multiple surfaces
+
+     Shadow volume surfaces will have the material "_shadowVolume"
+
+     The exact same vertexes as the ambient surfaces will be used for the
+     non-shadow surfaces, so there is opportunity to share
+
+
+     Reference their parent surfaces?
+     Reference their parent area?
+
+
+     If we don't track parts that are in different areas, there will be huge
+     losses when an areaportal closed door has a light poking slightly
+     through it.
+
+     There is potential benefit to splitting even the shadow volumes
+     at area boundaries, but it would involve the possibility of an
+     extra plane of shadow drawing at the area boundary.
+
+
+     interaction	lightName	numIndexes
+
+     Shadow volume surface
+
+     Surfaces in the world cannot have "no self shadow" properties, because all
+     the surfaces are considered together for the optimized shadow volume.  If
+     you want no self shadow on a static surface, you must still make it into an
+     entity so it isn't considered in the prelight.
+
+
+     r_hidePrelights
+     r_hideNonPrelights
+
+
+
+     each surface could include prelight indexes
+
+     generation procedure in dmap:
+
+     carve original surfaces into areas
+
+     for each light
+     build shadow volume and beam tree
+     cut all potentially lit surfaces into the beam tree
+     move lit fragments into a new optimize group
+
+     optimize groups
+
+     build light models
+
+
+
+
+     */
+    /*
+     =================
+     R_CreateLightRefs
+     =================
+     */
+    const val MAX_LIGHT_VERTS = 40
+
+    //======================================================================================
+    /*
+     ===============
+     R_CreateEntityRefs
+
+     Creates all needed model references in portal areas,
+     chaining them to both the area and the entityDef.
+
+     Bumps tr.viewCount.
+     ===============
+     */
+    fun R_CreateEntityRefs(def: idRenderEntityLocal?) {
+        var i: Int
+        val transformed: Array<idVec3?> = idVec3.Companion.generateArray(8)
+        val v = idVec3()
+        if (null == def.parms.hModel) {
+            def.parms.hModel = ModelManager.renderModelManager.DefaultModel()
+        }
+
+        // if the entity hasn't been fully specified due to expensive animation calcs
+        // for md5 and particles, use the provided conservative bounds.
+        if (def.parms.callback != null) {
+            def.referenceBounds.oSet(def.parms.bounds)
+        } else {
+            def.referenceBounds.oSet(def.parms.hModel.Bounds(def.parms))
+        }
+
+        // some models, like empty particles, may not need to be added at all
+        if (def.referenceBounds.IsCleared()) {
+            return
+        }
+        if (RenderSystem_init.r_showUpdates.GetBool()
+            && (def.referenceBounds.oGet(1, 0) - def.referenceBounds.oGet(0, 0) > 1024
+                    || def.referenceBounds.oGet(1, 1) - def.referenceBounds.oGet(0, 1) > 1024)
+        ) {
+            Common.common.Printf(
+                "big entityRef: %f,%f\n", def.referenceBounds.oGet(1, 0) - def.referenceBounds.oGet(0, 0),
+                def.referenceBounds.oGet(1, 1) - def.referenceBounds.oGet(0, 1)
+            )
+        }
+        i = 0
+        while (i < 8) {
+            v.oSet(0, def.referenceBounds.oGet(i shr 0 and 1, 0))
+            v.oSet(1, def.referenceBounds.oGet(i shr 1 and 1, 1))
+            v.oSet(2, def.referenceBounds.oGet(i shr 2 and 1, 2))
+            transformed[i].oSet(tr_main.R_LocalPointToGlobal(def.modelMatrix, v))
+            i++
+        }
+
+        // bump the view count so we can tell if an
+        // area already has a reference
+        tr_local.tr.viewCount++
+        //        System.out.println("tr.viewCount::R_CreateEntityRefs");
+
+        // push these points down the BSP tree into areas
+        def.world.PushVolumeIntoTree(def, null, 8, transformed)
+    }
+
+    /*
+     =================================================================================
+
+     CREATE LIGHT REFS
+
+     =================================================================================
+     */
+    /*
+     =====================
+     R_SetLightProject
+
+     All values are reletive to the origin
+     Assumes that right and up are not normalized
+     This is also called by dmap during map processing.
+     =====================
+     */
+    fun R_SetLightProject(
+        lightProject: Array<idPlane?>? /*[4]*/, origin: idVec3?, target: idVec3?,
+        rightVector: idVec3?, upVector: idVec3?, start: idVec3?, stop: idVec3?
+    ) {
+        var dist: Float
+        var scale: Float
+        val rLen: Float
+        val uLen: Float
+        val normal = idVec3()
+        var ofs: Float
+        val right = idVec3()
+        val up = idVec3()
+        val startGlobal = idVec3()
+        val targetGlobal = idVec4()
+        right.oSet(rightVector)
+        rLen = right.Normalize()
+        up.oSet(upVector)
+        uLen = up.Normalize()
+        normal.oSet(up.Cross(right))
+        //normal = right.Cross( up );
+        normal.Normalize()
+        dist = target.oMultiply(normal) //  - ( origin * normal );
+        if (dist < 0) {
+            dist = -dist
+            normal.oSet(normal.oNegative())
+        }
+        scale = 0.5f * dist / rLen
+        right.oMulSet(scale)
+        scale = -(0.5f * dist) / uLen
+        up.oMulSet(scale)
+        lightProject.get(2).oSet(normal)
+        lightProject.get(2).oSet(3, -origin.oMultiply(lightProject.get(2).Normal()))
+        lightProject.get(0).oSet(right)
+        lightProject.get(0).oSet(3, -origin.oMultiply(lightProject.get(0).Normal()))
+        lightProject.get(1).oSet(up)
+        lightProject.get(1).oSet(3, -origin.oMultiply(lightProject.get(1).Normal()))
+
+        // now offset to center
+        targetGlobal.oSet(target.oPlus(origin))
+        targetGlobal.oSet(3, 1f)
+        ofs = 0.5f - targetGlobal.oMultiply(lightProject.get(0).ToVec4()) / targetGlobal.oMultiply(
+            lightProject.get(2).ToVec4()
+        )
+        lightProject.get(0).ToVec4_oPluSet(lightProject.get(2).ToVec4().oMultiply(ofs))
+        ofs = 0.5f - targetGlobal.oMultiply(lightProject.get(1).ToVec4()) / targetGlobal.oMultiply(
+            lightProject.get(2).ToVec4()
+        )
+        lightProject.get(1).ToVec4_oPluSet(lightProject.get(2).ToVec4().oMultiply(ofs))
+
+        // set the falloff vector
+        normal.oSet(stop.oMinus(start))
+        dist = normal.Normalize()
+        if (dist <= 0) {
+            dist = 1f
+        }
+        lightProject.get(3).oSet(normal.oMultiply(1.0f / dist))
+        startGlobal.oSet(start.oPlus(origin))
+        lightProject.get(3).oSet(3, -startGlobal.oMultiply(lightProject.get(3).Normal()))
+    }
+
+    /*
+     ===================
+     R_SetLightFrustum
+
+     Creates plane equations from the light projection, positive sides
+     face out of the light
+     ===================
+     */
+    fun R_SetLightFrustum(lightProject: Array<idPlane?>? /*[4]*/, frustum: Array<idPlane?>? /*[6]*/) {
+        var i: Int
+
+        // we want the planes of s=0, s=q, t=0, and t=q
+        frustum.get(0) = idPlane(lightProject.get(0))
+        frustum.get(1) = idPlane(lightProject.get(1))
+        frustum.get(2) = lightProject.get(2).oMinus(lightProject.get(0))
+        frustum.get(3) = lightProject.get(2).oMinus(lightProject.get(1))
+
+        // we want the planes of s=0 and s=1 for front and rear clipping planes
+        frustum.get(4) = idPlane(lightProject.get(3))
+        frustum.get(5) = idPlane(lightProject.get(3))
+        frustum.get(5).oMinSet(3, 1.0f)
+        frustum.get(5) = frustum.get(5).oNegative()
+        i = 0
+        while (i < 6) {
+            var f: Float
+            frustum.get(i) = frustum.get(i).oNegative()
+            f = frustum.get(i).Normalize()
+            frustum.get(i).oDivSet(3, f)
+            i++
+        }
+    }
+
+    /*
+     ====================
+     R_FreeLightDefFrustum
+     ====================
+     */
+    fun R_FreeLightDefFrustum(ldef: idRenderLightLocal?) {
+        var i: Int
+
+        // free the frustum tris
+        if (ldef.frustumTris != null) {
+            tr_trisurf.R_FreeStaticTriSurf(ldef.frustumTris)
+            ldef.frustumTris = null
+        }
+        // free frustum windings
+        i = 0
+        while (i < 6) {
+            if (ldef.frustumWindings[i] != null) {
+//			delete ldef.frustumWindings[i];
+                ldef.frustumWindings[i] = null
+            }
+            i++
+        }
+    }
+
+    /*
+     =================
+     R_DeriveLightData
+
+     Fills everything in based on light.parms
+     =================
+     */
+    @Throws(idException::class)
+    fun R_DeriveLightData(light: idRenderLightLocal?) {
+        var i: Int
+
+        // decide which light shader we are going to use
+        if (light.parms.shader != null) {
+            light.lightShader = light.parms.shader
+        }
+        if (null == light.lightShader) {
+            if (light.parms.pointLight) {
+                light.lightShader = DeclManager.declManager.FindMaterial("lights/defaultPointLight")
+            } else {
+                light.lightShader = DeclManager.declManager.FindMaterial("lights/defaultProjectedLight")
+            }
+        }
+
+        // get the falloff image
+        light.falloffImage = light.lightShader.LightFalloffImage()
+        if (null == light.falloffImage) {
+            // use the falloff from the default shader of the correct type
+            val defaultShader: idMaterial?
+            if (light.parms.pointLight) {
+                defaultShader = DeclManager.declManager.FindMaterial("lights/defaultPointLight")
+                light.falloffImage = defaultShader.LightFalloffImage()
+            } else {
+                // projected lights by default don't diminish with distance
+                defaultShader = DeclManager.declManager.FindMaterial("lights/defaultProjectedLight")
+                light.falloffImage = defaultShader.LightFalloffImage()
+            }
+        }
+
+        // set the projection
+        if (!light.parms.pointLight) {
+            // projected light
+            tr_lightrun.R_SetLightProject(
+                light.lightProject, Vector.getVec3_origin() /* light.parms.origin */, light.parms.target,
+                light.parms.right, light.parms.up, light.parms.start, light.parms.end
+            )
+        } else {
+            // point light
+//            memset(light.lightProject, 0, sizeof(light.lightProject));
+            for (l in light.lightProject.indices) {
+                light.lightProject[l] = idPlane()
+            }
+            light.lightProject[0].oSet(0, 0.5f / light.parms.lightRadius.oGet(0))
+            light.lightProject[1].oSet(1, 0.5f / light.parms.lightRadius.oGet(1))
+            light.lightProject[3].oSet(2, 0.5f / light.parms.lightRadius.oGet(2))
+            light.lightProject[0].oSet(3, 0.5f)
+            light.lightProject[1].oSet(3, 0.5f)
+            light.lightProject[2].oSet(3, 1.0f)
+            light.lightProject[3].oSet(3, 0.5f)
+        }
+
+        // set the frustum planes
+        tr_lightrun.R_SetLightFrustum(light.lightProject, light.frustum)
+
+        // rotate the light planes and projections by the axis
+        tr_main.R_AxisToModelMatrix(light.parms.axis, light.parms.origin, light.modelMatrix)
+        i = 0
+        while (i < 6) {
+            val temp = idPlane()
+            temp.oSet(light.frustum[i])
+            tr_main.R_LocalPlaneToGlobal(light.modelMatrix, temp, light.frustum[i])
+            i++
+        }
+        i = 0
+        while (i < 4) {
+            val temp = idPlane()
+            temp.oSet(light.lightProject[i])
+            tr_main.R_LocalPlaneToGlobal(light.modelMatrix, temp, light.lightProject[i])
+            i++
+        }
+
+        // adjust global light origin for off center projections and parallel projections
+        // we are just faking parallel by making it a very far off center for now
+        if (light.parms.parallel) {
+            val dir = idVec3()
+            dir.oSet(light.parms.lightCenter)
+            if (0f == dir.Normalize()) {
+                // make point straight up if not specified
+                dir.oSet(2, 1f)
+            }
+            light.globalLightOrigin.oSet(light.parms.origin.oPlus(dir.oMultiply(100000f)))
+        } else {
+            light.globalLightOrigin.oSet(light.parms.origin.oPlus(light.parms.axis.oMultiply(light.parms.lightCenter)))
+        }
+        tr_lightrun.R_FreeLightDefFrustum(light)
+        light.frustumTris = tr_polytope.R_PolytopeSurface(6, light.frustum, light.frustumWindings)
+
+        // a projected light will have one shadowFrustum, a point light will have
+        // six unless the light center is outside the box
+        tr_stencilshadow.R_MakeShadowFrustums(light)
+    }
+
+    fun R_CreateLightRefs(light: idRenderLightLocal?) {
+        val points: Array<idVec3?> = idVec3.Companion.generateArray(tr_lightrun.MAX_LIGHT_VERTS)
+        var i: Int
+        val tri: srfTriangles_s?
+        tri = light.frustumTris
+
+        // because a light frustum is made of only six intersecting planes,
+        // we should never be able to get a stupid number of points...
+        if (tri.numVerts > tr_lightrun.MAX_LIGHT_VERTS) {
+            Common.common.Error("R_CreateLightRefs: %d points in frustumTris!", tri.numVerts)
+        }
+        i = 0
+        while (i < tri.numVerts) {
+            points[i].oSet(tri.verts[i].xyz)
+            i++
+        }
+        if (RenderSystem_init.r_showUpdates.GetBool() && (tri.bounds.oGet(1, 0) - tri.bounds.oGet(0, 0) > 1024
+                    || tri.bounds.oGet(1, 1) - tri.bounds.oGet(0, 1) > 1024)
+        ) {
+            Common.common.Printf(
+                "big lightRef: %f,%f\n",
+                tri.bounds.oGet(1, 0) - tri.bounds.oGet(0, 0),
+                tri.bounds.oGet(1, 1) - tri.bounds.oGet(0, 1)
+            )
+        }
+
+        // determine the areaNum for the light origin, which may let us
+        // cull the light if it is behind a closed door
+        // it is debatable if we want to use the entity origin or the center offset origin,
+        // but we definitely don't want to use a parallel offset origin
+        light.areaNum = light.world.PointInArea(light.globalLightOrigin)
+        if (light.areaNum == -1) {
+            light.areaNum = light.world.PointInArea(light.parms.origin)
+        }
+
+        // bump the view count so we can tell if an
+        // area already has a reference
+        tr_local.tr.viewCount++
+        //        System.out.println("tr.viewCount::R_CreateLightRefs");
+
+        // if we have a prelight model that includes all the shadows for the major world occluders,
+        // we can limit the area references to those visible through the portals from the light center.
+        // We can't do this in the normal case, because shadows are cast from back facing triangles, which
+        // may be in areas not directly visible to the light projection center.
+        if (light.parms.prelightModel != null && RenderSystem_init.r_useLightPortalFlow.GetBool() && light.lightShader.LightCastsShadows()) {
+            light.world.FlowLightThroughPortals(light)
+        } else {
+            // push these points down the BSP tree into areas
+            light.world.PushVolumeIntoTree(null, light, tri.numVerts, points)
+        }
+    }
+
+    /*
+     ===============
+     R_RenderLightFrustum
+
+     Called by the editor and dmap to operate on light volumes
+     ===============
+     */
+    fun R_RenderLightFrustum(renderLight: renderLight_s?, lightFrustum: Array<idPlane?>? /*[6]*/) {
+        val fakeLight = idRenderLightLocal()
+
+//	memset( &fakeLight, 0, sizeof( fakeLight ) );
+        fakeLight.parms = renderLight
+        tr_lightrun.R_DeriveLightData(fakeLight)
+        tr_trisurf.R_FreeStaticTriSurf(fakeLight.frustumTris)
+        for (i in 0..5) {
+            lightFrustum.get(i) = fakeLight.frustum[i]
+        }
+    }
+
+    /*
+     ===============
+     WindingCompletelyInsideLight
+     ===============
+     */
+    fun WindingCompletelyInsideLight(w: idWinding?, ldef: idRenderLightLocal?): Boolean {
+        var i: Int
+        var j: Int
+        i = 0
+        while (i < w.GetNumPoints()) {
+            j = 0
+            while (j < 6) {
+                var d: Float
+                d = w.oGet(i).ToVec3().oMultiply(ldef.frustum[j].Normal()) + ldef.frustum[j].oGet(3)
+                if (d > 0) {
+                    return false
+                }
+                j++
+            }
+            i++
+        }
+        return true
+    }
+
+    //=================================================================================
+    /*
+     ======================
+     R_CreateLightDefFogPortals
+
+     When a fog light is created or moved, see if it completely
+     encloses any portals, which may allow them to be fogged closed.
+     ======================
+     */
+    fun R_CreateLightDefFogPortals(ldef: idRenderLightLocal?) {
+        var lref: areaReference_s?
+        var area: portalArea_s?
+        ldef.foggedPortals = null
+        if (!ldef.lightShader.IsFogLight()) {
+            return
+        }
+
+        // some fog lights will explicitly disallow portal fogging
+        if (ldef.lightShader.TestMaterialFlag(Material.MF_NOPORTALFOG)) {
+            return
+        }
+        lref = ldef.references
+        while (lref != null) {
+
+            // check all the models in this area
+            area = lref.area
+            var prt: portal_s?
+            var dp: doublePortal_s?
+            prt = area.portals
+            while (prt != null) {
+                dp = prt.doublePortal
+
+                // we only handle a single fog volume covering a portal
+                // this will never cause incorrect drawing, but it may
+                // fail to cull a portal
+                if (dp.fogLight != null) {
+                    prt = prt.next
+                    continue
+                }
+                if (tr_lightrun.WindingCompletelyInsideLight(prt.w, ldef)) {
+                    dp.fogLight = ldef
+                    dp.nextFoggedPortal = ldef.foggedPortals
+                    ldef.foggedPortals = dp
+                }
+                prt = prt.next
+            }
+            lref = lref.ownerNext
+        }
+    }
+
+    /*
+     ====================
+     R_FreeLightDefDerivedData
+
+     Frees all references and lit surfaces from the light
+     ====================
+     */
+    fun R_FreeLightDefDerivedData(ldef: idRenderLightLocal?) {
+        var lref: areaReference_s?
+        var nextRef: areaReference_s?
+
+        // rmove any portal fog references
+        var dp = ldef.foggedPortals
+        while (dp != null) {
+            dp.fogLight = null
+            dp = dp.nextFoggedPortal
+        }
+
+        // free all the interactions
+        while (ldef.firstInteraction != null) {
+            ldef.firstInteraction.UnlinkAndFree()
+        }
+
+        // free all the references to the light
+        lref = ldef.references
+        while (lref != null) {
+            nextRef = lref.ownerNext
+
+            // unlink from the area
+            lref.areaNext.areaPrev = lref.areaPrev
+            lref.areaPrev.areaNext = lref.areaNext
+            lref = nextRef
+        }
+        ldef.references = null
+        tr_lightrun.R_FreeLightDefFrustum(ldef)
+    }
+
+    /*
+     ===================
+     R_FreeEntityDefDerivedData
+
+     Used by both RE_FreeEntityDef and RE_UpdateEntityDef
+     Does not actually free the entityDef.
+     ===================
+     */
+    fun R_FreeEntityDefDerivedData(def: idRenderEntityLocal?, keepDecals: Boolean, keepCachedDynamicModel: Boolean) {
+        var i: Int
+        var ref: areaReference_s?
+        var next: areaReference_s?
+
+        // demo playback needs to free the joints, while normal play
+        // leaves them in the control of the game
+        if (Session.Companion.session.readDemo != null) {
+            if (def.parms.joints != null) {
+//			Mem_Free16( def.parms.joints );
+                def.parms.joints = null
+            }
+            if (def.parms.callbackData != null) {
+//			Mem_Free( def.parms.callbackData );
+                def.parms.callbackData = null
+            }
+            i = 0
+            while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
+                if (def.parms.gui[i] != null) {
+//				delete def.parms.gui[ i ];
+                    def.parms.gui[i] = null
+                }
+                i++
+            }
+        }
+
+        // free all the interactions
+        while (def.firstInteraction != null) {
+            def.firstInteraction.UnlinkAndFree()
+        }
+
+        // clear the dynamic model if present
+        if (def.dynamicModel != null) {
+            def.dynamicModel = null
+        }
+        if (!keepDecals) {
+            tr_lightrun.R_FreeEntityDefDecals(def)
+            tr_lightrun.R_FreeEntityDefOverlay(def)
+        }
+        if (!keepCachedDynamicModel) {
+//		delete def.cachedDynamicModel;
+            def.cachedDynamicModel = null
+        }
+
+        // free the entityRefs from the areas
+        ref = def.entityRefs
+        while (ref != null) {
+            next = ref.ownerNext
+
+            // unlink from the area
+            ref.areaNext.areaPrev = ref.areaPrev
+            ref.areaPrev.areaNext = ref.areaNext
+            ref = next
+        }
+        def.entityRefs = null
+    }
+
+    /*
+     ==================
+     R_ClearEntityDefDynamicModel
+
+     If we know the reference bounds stays the same, we
+     only need to do this on entity update, not the full
+     R_FreeEntityDefDerivedData
+     ==================
+     */
+    fun R_ClearEntityDefDynamicModel(def: idRenderEntityLocal?) {
+        // free all the interaction surfaces
+        var inter = def.firstInteraction
+        while (inter != null && !inter.IsEmpty()) {
+            inter.FreeSurfaces()
+            inter = inter.entityNext
+        }
+
+        // clear the dynamic model if present
+        if (def.dynamicModel != null) {
+            def.dynamicModel = null
+        }
+    }
+
+    /*
+     ===================
+     R_FreeEntityDefDecals
+     ===================
+     */
+    fun R_FreeEntityDefDecals(def: idRenderEntityLocal?) {
+        while (def.decals != null) {
+            val next = def.decals.Next()
+            idRenderModelDecal.Companion.Free(def.decals)
+            def.decals = next
+        }
+    }
+
+    /*
+     ===================
+     R_FreeEntityDefFadedDecals
+     ===================
+     */
+    fun R_FreeEntityDefFadedDecals(def: idRenderEntityLocal?, time: Int) {
+        def.decals = idRenderModelDecal.Companion.RemoveFadedDecals(def.decals, time)
+    }
+
+    /*
+     ===================
+     R_FreeEntityDefOverlay
+     ===================
+     */
+    fun R_FreeEntityDefOverlay(def: idRenderEntityLocal?) {
+        if (def.overlay != null) {
+            idRenderModelOverlay.Companion.Free(def.overlay)
+            def.overlay = null
+        }
+    }
+
+    /*
+     ===================
+     R_FreeDerivedData
+
+     ReloadModels and RegenerateWorld call this
+     // FIXME: need to do this for all worlds
+     ===================
+     */
+    fun R_FreeDerivedData() {
+        var i: Int
+        var j: Int
+        var rw: idRenderWorldLocal?
+        var def: idRenderEntityLocal?
+        var light: idRenderLightLocal?
+        j = 0
+        while (j < tr_local.tr.worlds.Num()) {
+            rw = tr_local.tr.worlds.oGet(j)
+            i = 0
+            while (i < rw.entityDefs.Num()) {
+                def = rw.entityDefs.oGet(i)
+                if (null == def) {
+                    i++
+                    continue
+                }
+                tr_lightrun.R_FreeEntityDefDerivedData(def, false, false)
+                i++
+            }
+            i = 0
+            while (i < rw.lightDefs.Num()) {
+                light = rw.lightDefs.oGet(i)
+                if (null == light) {
+                    i++
+                    continue
+                }
+                tr_lightrun.R_FreeLightDefDerivedData(light)
+                i++
+            }
+            j++
+        }
+    }
+
+    /*
+     ===================
+     R_CheckForEntityDefsUsingModel
+     ===================
+     */
+    fun R_CheckForEntityDefsUsingModel(model: idRenderModel?) {
+        var i: Int
+        var j: Int
+        var rw: idRenderWorldLocal?
+        var def: idRenderEntityLocal?
+        j = 0
+        while (j < tr_local.tr.worlds.Num()) {
+            rw = tr_local.tr.worlds.oGet(j)
+            i = 0
+            while (i < rw.entityDefs.Num()) {
+                def = rw.entityDefs.oGet(i)
+                if (null == def) {
+                    i++
+                    continue
+                }
+                if (def.parms.hModel === model) {
+                    //assert( 0 );
+                    // this should never happen but Radiant messes it up all the time so just free the derived data
+                    tr_lightrun.R_FreeEntityDefDerivedData(def, false, false)
+                }
+                i++
+            }
+            j++
+        }
+    }
+
+    /*
+     ===================
+     R_ReCreateWorldReferences
+
+     ReloadModels and RegenerateWorld call this
+     // FIXME: need to do this for all worlds
+     ===================
+     */
+    fun R_ReCreateWorldReferences() {
+        var i: Int
+        var j: Int
+        var rw: idRenderWorldLocal?
+        var def: idRenderEntityLocal?
+        var light: idRenderLightLocal?
+
+        // let the interaction generation code know this shouldn't be optimized for
+        // a particular view
+        tr_local.tr.viewDef = null
+        j = 0
+        while (j < tr_local.tr.worlds.Num()) {
+            rw = tr_local.tr.worlds.oGet(j)
+            i = 0
+            while (i < rw.entityDefs.Num()) {
+                def = rw.entityDefs.oGet(i)
+                if (null == def) {
+                    i++
+                    continue
+                }
+                // the world model entities are put specifically in a single
+                // area, instead of just pushing their bounds into the tree
+                if (i < rw.numPortalAreas) {
+                    rw.AddEntityRefToArea(def, rw.portalAreas[i])
+                } else {
+                    tr_lightrun.R_CreateEntityRefs(def)
+                }
+                i++
+            }
+            i = 0
+            while (i < rw.lightDefs.Num()) {
+                light = rw.lightDefs.oGet(i)
+                if (null == light) {
+                    i++
+                    continue
+                }
+                val parms = light.parms
+                light.world.FreeLightDef(i)
+                rw.UpdateLightDef(i, parms)
+                i++
+            }
+            j++
+        }
+    }
+
+    /*
+     =================================================================================
+
+     LIGHT TESTING
+
+     =================================================================================
+     */
+    /*
+     ====================
+     R_ModulateLights_f
+
+     Modifies the shaderParms on all the lights so the level
+     designers can easily test different color schemes
+     ====================
+     */
+    class R_ModulateLights_f private constructor() : cmdFunction_t() {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (null == tr_local.tr.primaryWorld) {
+                return
+            }
+            if (args.Argc() != 4) {
+                Common.common.Printf("usage: modulateLights <redFloat> <greenFloat> <blueFloat>\n")
+                return
+            }
+            val modulate = FloatArray(3)
+            var i: Int
+            i = 0
+            while (i < 3) {
+                modulate[i] = args.Argv(i + 1).toFloat()
+                i++
+            }
+            var count = 0
+            i = 0
+            while (i < tr_local.tr.primaryWorld.lightDefs.Num()) {
+                var light: idRenderLightLocal?
+                light = tr_local.tr.primaryWorld.lightDefs.oGet(i)
+                if (light != null) {
+                    count++
+                    for (j in 0..2) {
+                        light.parms.shaderParms[j] *= modulate[j]
+                    }
+                }
+                i++
+            }
+            Common.common.Printf("modulated %d lights\n", count)
+        }
+
+        companion object {
+            private val instance: cmdFunction_t? = R_ModulateLights_f()
+            fun getInstance(): cmdFunction_t? {
+                return instance
+            }
+        }
+    }
+
+    /*
+     ===================
+     R_RegenerateWorld_f
+
+     Frees and regenerates all references and interactions, which
+     must be done when switching between display list mode and immediate mode
+     ===================
+     */
+    class R_RegenerateWorld_f private constructor() : cmdFunction_t() {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            tr_lightrun.R_FreeDerivedData()
+
+            // watch how much memory we allocate
+            tr_local.tr.staticAllocCount = 0
+            tr_lightrun.R_ReCreateWorldReferences()
+            Common.common.Printf("Regenerated world, staticAllocCount = %d.\n", tr_local.tr.staticAllocCount)
+        }
+
+        companion object {
+            private val instance: cmdFunction_t? = R_RegenerateWorld_f()
+            fun getInstance(): cmdFunction_t? {
+                return instance
+            }
+        }
+    }
+}

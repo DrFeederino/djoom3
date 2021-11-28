@@ -1,0 +1,736 @@
+package neo.Game.Physics
+
+import neo.CM.CollisionModel.contactInfo_t
+import neo.CM.CollisionModel.trace_s
+import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class.idClass
+import neo.Game.GameSys.SaveGame.idRestoreGame
+import neo.Game.GameSys.SaveGame.idSaveGame
+import neo.Game.GameSys.SysCvar
+import neo.Game.Game_local
+import neo.Game.Physics.Clip.idClipModel
+import neo.Game.Physics.Force.idForce
+import neo.Game.Physics.Physics.idPhysics
+import neo.Game.Physics.Physics.impactInfo_s
+import neo.Game.Physics.Physics_Static.staticPState_s
+import neo.idlib.BV.Bounds
+import neo.idlib.BV.Bounds.idBounds
+import neo.idlib.BitMsg.idBitMsgDelta
+import neo.idlib.containers.CInt
+import neo.idlib.containers.List.idList
+import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Quat.idCQuat
+import neo.idlib.math.Rotation.idRotation
+import neo.idlib.math.Vector
+import neo.idlib.math.Vector.idVec3
+
+/**
+ *
+ */
+object Physics_StaticMulti {
+    var defaultState: staticPState_s? = staticPState_s() //TODO:?
+
+    /*
+     ===============================================================================
+
+     Physics for a non moving object using no or multiple collision models.
+
+     ===============================================================================
+     */
+    class idPhysics_StaticMulti : idPhysics() {
+        //
+        //
+        protected val clipModels // collision model
+                : idList<idClipModel?>?
+        protected val current // physics state
+                : idList<staticPState_s?>?
+
+        //
+        // master
+        protected var hasMaster = false
+        protected var isOrientated = false
+        protected var self // entity using this physics object
+                : idEntity? = null
+
+        // ~idPhysics_StaticMulti();
+        override fun _deconstructor() {
+            if (self != null && self.GetPhysics() === this) {
+                self.SetPhysics(null)
+            }
+            idForce.Companion.DeletePhysics(this)
+            for (i in 0 until clipModels.Num()) {
+                idClipModel.Companion.delete(clipModels.oGet(i))
+            }
+            super._deconstructor()
+        }
+
+        override fun Save(savefile: idSaveGame?) {
+            var i: Int
+            savefile.WriteObject(self)
+            savefile.WriteInt(current.Num())
+            i = 0
+            while (i < current.Num()) {
+                savefile.WriteVec3(current.oGet(i).origin)
+                savefile.WriteMat3(current.oGet(i).axis)
+                savefile.WriteVec3(current.oGet(i).localOrigin)
+                savefile.WriteMat3(current.oGet(i).localAxis)
+                i++
+            }
+            savefile.WriteInt(clipModels.Num())
+            i = 0
+            while (i < clipModels.Num()) {
+                savefile.WriteClipModel(clipModels.oGet(i))
+                i++
+            }
+            savefile.WriteBool(hasMaster)
+            savefile.WriteBool(isOrientated)
+        }
+
+        override fun Restore(savefile: idRestoreGame?) {
+            var i: Int
+            val num = CInt()
+            savefile.ReadObject( /*reinterpret_cast<idClass *&>*/self)
+            savefile.ReadInt(num)
+            current.AssureSize(num.getVal())
+            i = 0
+            while (i < num.getVal()) {
+                savefile.ReadVec3(current.oGet(i).origin)
+                savefile.ReadMat3(current.oGet(i).axis)
+                savefile.ReadVec3(current.oGet(i).localOrigin)
+                savefile.ReadMat3(current.oGet(i).localAxis)
+                i++
+            }
+            savefile.ReadInt(num)
+            clipModels.SetNum(num.getVal())
+            i = 0
+            while (i < num.getVal()) {
+                savefile.ReadClipModel(clipModels.oGet(i))
+                i++
+            }
+            hasMaster = savefile.ReadBool()
+            isOrientated = savefile.ReadBool()
+        }
+
+        @JvmOverloads
+        fun RemoveIndex(id: Int /*= 0*/, freeClipModel: Boolean = true /*= true*/) {
+            if (id < 0 || id >= clipModels.Num()) {
+                return
+            }
+            if (clipModels.oGet(id) != null && freeClipModel) {
+                idClipModel.Companion.delete(clipModels.oGet(id))
+                clipModels.oSet(id, null)
+            }
+            clipModels.RemoveIndex(id)
+            current.RemoveIndex(id)
+        }
+
+        // common physics interface
+        override fun SetSelf(e: idEntity?) {
+            assert(e != null)
+            self = e
+        }
+
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+            var i: Int
+            assert(self != null)
+            if (id >= clipModels.Num()) {
+                current.AssureSize(id + 1, Physics_StaticMulti.defaultState)
+                clipModels.AssureSize(id + 1, null)
+            }
+            if (clipModels.oGet(id) != null && clipModels.oGet(id) !== model && freeOld) {
+                idClipModel.Companion.delete(clipModels.oGet(id))
+            }
+            clipModels.oSet(id, model)
+            if (clipModels.oGet(id) != null) {
+                clipModels.oGet(id)
+                    .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+            }
+            i = clipModels.Num() - 1
+            while (i >= 1) {
+                if (clipModels.oGet(i) != null) {
+                    break
+                }
+                i--
+            }
+            current.SetNum(i + 1, false)
+            clipModels.SetNum(i + 1, false)
+        }
+
+        override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
+            return if (id >= 0 && id < clipModels.Num() && clipModels.oGet(id) != null) {
+                clipModels.oGet(id)
+            } else Game_local.gameLocal.clip.DefaultClipModel()
+        }
+
+        override fun GetNumClipModels(): Int {
+            return clipModels.Num()
+        }
+
+        override fun SetMass(mass: Float, id: Int /*= -1*/) {}
+        override fun GetMass(id: Int /*= -1*/): Float {
+            return 0.0f
+        }
+
+        override fun SetContents(contents: Int, id: Int /*= -1*/) {
+            var i: Int
+            if (id >= 0 && id < clipModels.Num()) {
+                if (clipModels.oGet(id) != null) {
+                    clipModels.oGet(id).SetContents(contents)
+                }
+            } else if (id == -1) {
+                i = 0
+                while (i < clipModels.Num()) {
+                    if (clipModels.oGet(i) != null) {
+                        clipModels.oGet(i).SetContents(contents)
+                    }
+                    i++
+                }
+            }
+        }
+
+        override fun GetContents(id: Int /*= -1*/): Int {
+            var i: Int
+            var contents = 0
+            if (id >= 0 && id < clipModels.Num()) {
+                if (clipModels.oGet(id) != null) {
+                    contents = clipModels.oGet(id).GetContents()
+                }
+            } else if (id == -1) {
+                i = 0
+                while (i < clipModels.Num()) {
+                    if (clipModels.oGet(i) != null) {
+                        contents = contents or clipModels.oGet(i).GetContents()
+                    }
+                    i++
+                }
+            }
+            return contents
+        }
+
+        override fun SetClipMask(mask: Int, id: Int /*= -1*/) {}
+        override fun GetClipMask(id: Int /*= -1*/): Int {
+            return 0
+        }
+
+        override fun GetBounds(id: Int /*= -1*/): idBounds? {
+            var i: Int
+            if (id >= 0 && id < clipModels.Num()) {
+                if (clipModels.oGet(id) != null) {
+                    return clipModels.oGet(id).GetBounds()
+                }
+            }
+            if (id == -1) {
+                bounds.Clear()
+                i = 0
+                while (i < clipModels.Num()) {
+                    if (clipModels.oGet(i) != null) {
+                        bounds.AddBounds(clipModels.oGet(i).GetAbsBounds())
+                    }
+                    i++
+                }
+                i = 0
+                while (i < clipModels.Num()) {
+                    if (clipModels.oGet(i) != null) {
+                        bounds.oMinSet(0, clipModels.oGet(i).GetOrigin())
+                        bounds.oMinSet(1, clipModels.oGet(i).GetOrigin())
+                        break
+                    }
+                    i++
+                }
+                return bounds
+            }
+            return Bounds.bounds_zero
+        }
+
+        override fun GetAbsBounds(id: Int /*= -1*/): idBounds? {
+            var i: Int
+            if (id >= 0 && id < clipModels.Num()) {
+                if (clipModels.oGet(id) != null) {
+                    return clipModels.oGet(id).GetAbsBounds()
+                }
+            }
+            if (id == -1) {
+                absBounds.Clear()
+                i = 0
+                while (i < clipModels.Num()) {
+                    if (clipModels.oGet(i) != null) {
+                        absBounds.AddBounds(clipModels.oGet(i).GetAbsBounds())
+                    }
+                    i++
+                }
+                return absBounds
+            }
+            return Bounds.bounds_zero
+        }
+
+        override fun Evaluate(timeStepMSec: Int, endTimeMSec: Int): Boolean {
+            var i: Int
+            val masterOrigin = idVec3()
+            val masterAxis = idMat3()
+            if (hasMaster) {
+                self.GetMasterPosition(masterOrigin, masterAxis)
+                i = 0
+                while (i < clipModels.Num()) {
+                    current.oGet(i).origin.oSet(masterOrigin.oPlus(current.oGet(i).localOrigin.oMultiply(masterAxis)))
+                    if (isOrientated) {
+                        current.oGet(i).axis.oSet(current.oGet(i).localAxis.oMultiply(masterAxis))
+                    } else {
+                        current.oGet(i).axis.oSet(current.oGet(i).localAxis)
+                    }
+                    if (clipModels.oGet(i) != null) {
+                        clipModels.oGet(i)
+                            .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                    }
+                    i++
+                }
+
+                // FIXME: return false if master did not move
+                return true
+            }
+            return false
+        }
+
+        override fun UpdateTime(endTimeMSec: Int) {}
+        override fun GetTime(): Int {
+            return 0
+        }
+
+        override fun GetImpactInfo(id: Int, point: idVec3?): impactInfo_s? {
+            return impactInfo_s()
+        }
+
+        override fun ApplyImpulse(id: Int, point: idVec3?, impulse: idVec3?) {}
+        override fun AddForce(id: Int, point: idVec3?, force: idVec3?) {}
+        override fun Activate() {}
+        override fun PutToRest() {}
+        override fun IsAtRest(): Boolean {
+            return true
+        }
+
+        override fun GetRestStartTime(): Int {
+            return 0
+        }
+
+        override fun IsPushable(): Boolean {
+            return false
+        }
+
+        override fun SaveState() {}
+        override fun RestoreState() {}
+        override fun SetOrigin(newOrigin: idVec3?, id: Int /*= -1*/) {
+            val masterOrigin = idVec3()
+            val masterAxis = idMat3()
+            if (id >= 0 && id < clipModels.Num()) {
+                current.oGet(id).localOrigin.oSet(newOrigin)
+                if (hasMaster) {
+                    self.GetMasterPosition(masterOrigin, masterAxis)
+                    current.oGet(id).origin.oSet(masterOrigin.oPlus(newOrigin.oMultiply(masterAxis)))
+                } else {
+                    current.oGet(id).origin.oSet(newOrigin)
+                }
+                if (clipModels.oGet(id) != null) {
+                    clipModels.oGet(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                }
+            } else if (id == -1) {
+                if (hasMaster) {
+                    self.GetMasterPosition(masterOrigin, masterAxis)
+                    Translate(masterOrigin.oPlus(masterAxis.oMultiply(newOrigin).oMinus(current.oGet(0).origin)))
+                } else {
+                    Translate(newOrigin.oMinus(current.oGet(0).origin))
+                }
+            }
+        }
+
+        override fun SetAxis(newAxis: idMat3?, id: Int /*= -1*/) {
+            val masterOrigin = idVec3()
+            val masterAxis = idMat3()
+            if (id >= 0 && id < clipModels.Num()) {
+                current.oGet(id).localAxis.oSet(newAxis)
+                if (hasMaster && isOrientated) {
+                    self.GetMasterPosition(masterOrigin, masterAxis)
+                    current.oGet(id).axis.oSet(newAxis.oMultiply(masterAxis))
+                } else {
+                    current.oGet(id).axis.oSet(newAxis)
+                }
+                if (clipModels.oGet(id) != null) {
+                    clipModels.oGet(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                }
+            } else if (id == -1) {
+                val axis: idMat3?
+                val rotation: idRotation?
+                axis = if (hasMaster) {
+                    self.GetMasterPosition(masterOrigin, masterAxis)
+                    current.oGet(0).axis.Transpose().oMultiply(newAxis.oMultiply(masterAxis))
+                } else {
+                    current.oGet(0).axis.Transpose().oMultiply(newAxis)
+                }
+                rotation = axis.ToRotation()
+                rotation.SetOrigin(current.oGet(0).origin)
+                Rotate(rotation)
+            }
+        }
+
+        override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
+            var i: Int
+            if (id >= 0 && id < clipModels.Num()) {
+                current.oGet(id).localOrigin.oPluSet(translation)
+                current.oGet(id).origin.oPluSet(translation)
+                if (clipModels.oGet(id) != null) {
+                    clipModels.oGet(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                }
+            } else if (id == -1) {
+                i = 0
+                while (i < clipModels.Num()) {
+                    current.oGet(i).localOrigin.oPluSet(translation)
+                    current.oGet(i).origin.oPluSet(translation)
+                    if (clipModels.oGet(i) != null) {
+                        clipModels.oGet(i)
+                            .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                    }
+                    i++
+                }
+            }
+        }
+
+        override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {
+            var i: Int
+            val masterOrigin = idVec3()
+            val masterAxis = idMat3()
+            if (id >= 0 && id < clipModels.Num()) {
+                current.oGet(id).origin.oMulSet(rotation)
+                current.oGet(id).axis.oMulSet(rotation.ToMat3())
+                if (hasMaster) {
+                    self.GetMasterPosition(masterOrigin, masterAxis)
+                    current.oGet(id).localAxis.oMulSet(rotation.ToMat3())
+                    current.oGet(id).localOrigin.oSet(
+                        current.oGet(id).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
+                    )
+                } else {
+                    current.oGet(id).localAxis.oSet(current.oGet(id).axis)
+                    current.oGet(id).localOrigin.oSet(current.oGet(id).origin)
+                }
+                if (clipModels.oGet(id) != null) {
+                    clipModels.oGet(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                }
+            } else if (id == -1) {
+                i = 0
+                while (i < clipModels.Num()) {
+                    current.oGet(i).origin.oMulSet(rotation)
+                    current.oGet(i).axis.oMulSet(rotation.ToMat3())
+                    if (hasMaster) {
+                        self.GetMasterPosition(masterOrigin, masterAxis)
+                        current.oGet(i).localAxis.oMulSet(rotation.ToMat3())
+                        current.oGet(i).localOrigin.oSet(
+                            current.oGet(i).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
+                        )
+                    } else {
+                        current.oGet(i).localAxis.oSet(current.oGet(i).axis)
+                        current.oGet(i).localOrigin.oSet(current.oGet(i).origin)
+                    }
+                    if (clipModels.oGet(i) != null) {
+                        clipModels.oGet(i)
+                            .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                    }
+                    i++
+                }
+            }
+        }
+
+        override fun GetOrigin(id: Int /*= 0*/): idVec3? {
+            if (id >= 0 && id < clipModels.Num()) {
+                return current.oGet(id).origin
+            }
+            return if (clipModels.Num() != 0) {
+                current.oGet(0).origin
+            } else {
+                Vector.getVec3_origin()
+            }
+        }
+
+        override fun GetAxis(id: Int /*= 0*/): idMat3? {
+            if (id >= 0 && id < clipModels.Num()) {
+                return current.oGet(id).axis
+            }
+            return if (clipModels.Num() != 0) {
+                current.oGet(0).axis
+            } else {
+                idMat3.Companion.getMat3_identity()
+            }
+        }
+
+        override fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/) {}
+        override fun SetAngularVelocity(newAngularVelocity: idVec3?, id: Int /*= 0*/) {}
+        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3? {
+            return Vector.getVec3_origin()
+        }
+
+        override fun GetAngularVelocity(id: Int /*= 0*/): idVec3? {
+            return Vector.getVec3_origin()
+        }
+
+        override fun SetGravity(newGravity: idVec3?) {}
+        override fun GetGravity(): idVec3? {
+            return gravity
+        }
+
+        override fun GetGravityNormal(): idVec3? {
+            return gravityNormal
+        }
+
+        override fun ClipTranslation(results: trace_s?, translation: idVec3?, model: idClipModel?) {
+//	memset( &results, 0, sizeof( trace_t ) );//TODO:
+            Game_local.gameLocal.Warning("idPhysics_StaticMulti::ClipTranslation called")
+        }
+
+        override fun ClipRotation(results: trace_s?, rotation: idRotation?, model: idClipModel?) {
+//	memset( &results, 0, sizeof( trace_t ) );//TODO:
+            Game_local.gameLocal.Warning("idPhysics_StaticMulti::ClipRotation called")
+        }
+
+        override fun ClipContents(model: idClipModel?): Int {
+            var i: Int
+            var contents: Int
+            contents = 0
+            i = 0
+            while (i < clipModels.Num()) {
+                if (clipModels.oGet(i) != null) {
+                    contents = if (model != null) {
+                        contents or Game_local.gameLocal.clip.ContentsModel(
+                            clipModels.oGet(i).GetOrigin(), clipModels.oGet(i), clipModels.oGet(i).GetAxis(), -1,
+                            model.Handle(), model.GetOrigin(), model.GetAxis()
+                        )
+                    } else {
+                        contents or Game_local.gameLocal.clip.Contents(
+                            clipModels.oGet(i).GetOrigin(),
+                            clipModels.oGet(i),
+                            clipModels.oGet(i).GetAxis(),
+                            -1,
+                            null
+                        )
+                    }
+                }
+                i++
+            }
+            return contents
+        }
+
+        override fun DisableClip() {
+            var i: Int
+            i = 0
+            while (i < clipModels.Num()) {
+                if (clipModels.oGet(i) != null) {
+                    clipModels.oGet(i).Disable()
+                }
+                i++
+            }
+        }
+
+        override fun EnableClip() {
+            var i: Int
+            i = 0
+            while (i < clipModels.Num()) {
+                if (clipModels.oGet(i) != null) {
+                    clipModels.oGet(i).Enable()
+                }
+                i++
+            }
+        }
+
+        override fun UnlinkClip() {
+            var i: Int
+            i = 0
+            while (i < clipModels.Num()) {
+                if (clipModels.oGet(i) != null) {
+                    clipModels.oGet(i).Unlink()
+                }
+                i++
+            }
+        }
+
+        override fun LinkClip() {
+            var i: Int
+            i = 0
+            while (i < clipModels.Num()) {
+                if (clipModels.oGet(i) != null) {
+                    clipModels.oGet(i)
+                        .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                }
+                i++
+            }
+        }
+
+        override fun EvaluateContacts(): Boolean {
+            return false
+        }
+
+        override fun GetNumContacts(): Int {
+            return 0
+        }
+
+        override fun GetContact(num: Int): contactInfo_t? {
+            info = contactInfo_t()
+            //	memset( &info, 0, sizeof( info ) );
+            return info
+        }
+
+        override fun ClearContacts() {}
+        override fun AddContactEntity(e: idEntity?) {}
+        override fun RemoveContactEntity(e: idEntity?) {}
+        override fun HasGroundContacts(): Boolean {
+            return false
+        }
+
+        override fun IsGroundEntity(entityNum: Int): Boolean {
+            return false
+        }
+
+        override fun IsGroundClipModel(entityNum: Int, id: Int): Boolean {
+            return false
+        }
+
+        override fun SetPushed(deltaTime: Int) {}
+        override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3? {
+            return Vector.getVec3_origin()
+        }
+
+        override fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3? {
+            return Vector.getVec3_origin()
+        }
+
+        override fun SetMaster(master: idEntity?, orientated: Boolean /*= true*/) {
+            var i: Int
+            val masterOrigin = idVec3()
+            val masterAxis = idMat3()
+            if (master != null) {
+                if (!hasMaster) {
+                    // transform from world space to master space
+                    self.GetMasterPosition(masterOrigin, masterAxis)
+                    i = 0
+                    while (i < clipModels.Num()) {
+                        current.oGet(i).localOrigin.oSet(
+                            current.oGet(i).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
+                        )
+                        if (orientated) {
+                            current.oGet(i).localAxis.oSet(current.oGet(i).axis.oMultiply(masterAxis.Transpose()))
+                        } else {
+                            current.oGet(i).localAxis.oSet(current.oGet(i).axis)
+                        }
+                        i++
+                    }
+                    hasMaster = true
+                    isOrientated = orientated
+                }
+            } else {
+                if (hasMaster) {
+                    hasMaster = false
+                }
+            }
+        }
+
+        override fun GetBlockingInfo(): trace_s? {
+            return null
+        }
+
+        override fun GetBlockingEntity(): idEntity? {
+            return null
+        }
+
+        override fun GetLinearEndTime(): Int {
+            return 0
+        }
+
+        override fun GetAngularEndTime(): Int {
+            return 0
+        }
+
+        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+            var i: Int
+            var quat: idCQuat?
+            var localQuat: idCQuat?
+            msg.WriteByte(current.Num())
+            i = 0
+            while (i < current.Num()) {
+                quat = current.oGet(i).axis.ToCQuat()
+                localQuat = current.oGet(i).localAxis.ToCQuat()
+                msg.WriteFloat(current.oGet(i).origin.oGet(0))
+                msg.WriteFloat(current.oGet(i).origin.oGet(1))
+                msg.WriteFloat(current.oGet(i).origin.oGet(2))
+                msg.WriteFloat(quat.x)
+                msg.WriteFloat(quat.y)
+                msg.WriteFloat(quat.z)
+                msg.WriteDeltaFloat(current.oGet(i).origin.oGet(0), current.oGet(i).localOrigin.oGet(0))
+                msg.WriteDeltaFloat(current.oGet(i).origin.oGet(1), current.oGet(i).localOrigin.oGet(1))
+                msg.WriteDeltaFloat(current.oGet(i).origin.oGet(2), current.oGet(i).localOrigin.oGet(2))
+                msg.WriteDeltaFloat(quat.x, localQuat.x)
+                msg.WriteDeltaFloat(quat.y, localQuat.y)
+                msg.WriteDeltaFloat(quat.z, localQuat.z)
+                i++
+            }
+        }
+
+        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+            var i: Int
+            val num: Int
+            val quat = idCQuat()
+            val localQuat = idCQuat()
+            num = msg.ReadByte()
+            assert(num == current.Num())
+            i = 0
+            while (i < current.Num()) {
+                current.oGet(i).origin.oSet(0, msg.ReadFloat())
+                current.oGet(i).origin.oSet(1, msg.ReadFloat())
+                current.oGet(i).origin.oSet(2, msg.ReadFloat())
+                quat.x = msg.ReadFloat()
+                quat.y = msg.ReadFloat()
+                quat.z = msg.ReadFloat()
+                current.oGet(i).localOrigin.oSet(0, msg.ReadDeltaFloat(current.oGet(i).origin.oGet(0)))
+                current.oGet(i).localOrigin.oSet(1, msg.ReadDeltaFloat(current.oGet(i).origin.oGet(1)))
+                current.oGet(i).localOrigin.oSet(2, msg.ReadDeltaFloat(current.oGet(i).origin.oGet(2)))
+                localQuat.x = msg.ReadDeltaFloat(quat.x)
+                localQuat.y = msg.ReadDeltaFloat(quat.y)
+                localQuat.z = msg.ReadDeltaFloat(quat.z)
+                current.oGet(i).axis.oSet(quat.ToMat3())
+                current.oGet(i).localAxis.oSet(localQuat.ToMat3())
+                i++
+            }
+        }
+
+        override fun CreateInstance(): idClass? {
+            throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
+        }
+
+        override fun  /*idTypeInfo*/GetType(): Class<*>? {
+            throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
+        }
+
+        override fun oSet(oGet: idClass?) {
+            throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
+        }
+
+        companion object {
+            // CLASS_PROTOTYPE( idPhysics_StaticMulti );
+            private val gravity: idVec3? = idVec3(0, 0, -SysCvar.g_gravity.GetFloat())
+            private val gravityNormal: idVec3? = idVec3(0, 0, -1)
+            private val absBounds: idBounds? = idBounds()
+            private val bounds: idBounds? = idBounds()
+            private var info: contactInfo_t? = null
+        }
+
+        init {
+            clipModels = idList<Any?>()
+            current = idList<Any?>()
+            Physics_StaticMulti.defaultState.origin.Zero()
+            Physics_StaticMulti.defaultState.axis.Identity()
+            Physics_StaticMulti.defaultState.localOrigin.Zero()
+            Physics_StaticMulti.defaultState.localAxis.Identity()
+            current.SetNum(1)
+            current.oSet(0, Physics_StaticMulti.defaultState)
+            clipModels.SetNum(1)
+            clipModels.oSet(0, null)
+        }
+    }
+}
