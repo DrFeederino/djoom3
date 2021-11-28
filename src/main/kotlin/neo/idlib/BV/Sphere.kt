@@ -21,7 +21,7 @@ class Sphere {
      ===============================================================================
      */
     class idSphere {
-        private val origin: idVec3?
+        private val origin: idVec3
         private var radius = 0f
 
         //
@@ -30,12 +30,12 @@ class Sphere {
             origin = idVec3()
         }
 
-        constructor(point: idVec3?) {
+        constructor(point: idVec3) {
             origin = idVec3(point)
             radius = 0.0f
         }
 
-        constructor(point: idVec3?, r: Float) {
+        constructor(point: idVec3, r: Float) {
             origin = idVec3(point)
             radius = r
         }
@@ -49,11 +49,11 @@ class Sphere {
             return origin.oSet(index, value)
         }
 
-        fun oPlus(t: idVec3?): idSphere? {                // returns tranlated sphere
+        fun oPlus(t: idVec3): idSphere {                // returns tranlated sphere
             return idSphere(origin.oPlus(t), radius)
         }
 
-        fun oPluSet(t: idVec3?): idSphere? {                    // translate the sphere
+        fun oPluSet(t: idVec3): idSphere {                    // translate the sphere
             origin.oPluSet(t)
             return this
         }
@@ -61,11 +61,11 @@ class Sphere {
         //public	idSphere		operator+( final idSphere &s );
         //public	idSphere &		operator+=( final idSphere &s );
         //
-        fun Compare(a: idSphere?): Boolean {                            // exact compare, no epsilon
+        fun Compare(a: idSphere): Boolean {                            // exact compare, no epsilon
             return origin.Compare(a.origin) && radius == a.radius
         }
 
-        fun Compare(a: idSphere?, epsilon: Float): Boolean {    // compare with epsilon
+        fun Compare(a: idSphere, epsilon: Float): Boolean {    // compare with epsilon
             return origin.Compare(a.origin, epsilon) && Math.abs(radius - a.radius) <= epsilon
         }
 
@@ -78,14 +78,14 @@ class Sphere {
             return hash
         }
 
-        override fun equals(obj: Any?): Boolean {
-            if (obj == null) {
+        override fun equals(other: Any?): Boolean {
+            if (other == null) {
                 return false
             }
-            if (javaClass != obj.javaClass) {
+            if (javaClass != other.javaClass) {
                 return false
             }
-            val other = obj as idSphere?
+            val other = other as idSphere
             return if (origin != other.origin) {
                 false
             } else java.lang.Float.floatToIntBits(radius) == java.lang.Float.floatToIntBits(other.radius)
@@ -101,7 +101,7 @@ class Sphere {
             radius = 0.0f
         }
 
-        fun SetOrigin(o: idVec3?) {                    // set origin of sphere
+        fun SetOrigin(o: idVec3) {                    // set origin of sphere
             origin.oSet(o)
         }
 
@@ -109,7 +109,7 @@ class Sphere {
             radius = r
         }
 
-        fun GetOrigin(): idVec3? {                        // returns origin of sphere
+        fun GetOrigin(): idVec3 {                        // returns origin of sphere
             return origin
         }
 
@@ -121,7 +121,7 @@ class Sphere {
             return radius < 0.0f
         }
 
-        fun AddPoint(p: idVec3?): Boolean {                    // add the point, returns true if the sphere expanded
+        fun AddPoint(p: idVec3): Boolean {                    // add the point, returns true if the sphere expanded
             return if (radius < 0.0f) {
                 origin.oSet(p)
                 radius = 0.0f
@@ -138,7 +138,7 @@ class Sphere {
             }
         }
 
-        fun AddSphere(s: idSphere?): Boolean {                    // add the sphere, returns true if the sphere expanded
+        fun AddSphere(s: idSphere): Boolean {                    // add the sphere, returns true if the sphere expanded
             return if (radius < 0.0f) {
                 origin.oSet(s.origin)
                 radius = s.radius
@@ -155,25 +155,25 @@ class Sphere {
             }
         }
 
-        fun Expand(d: Float): idSphere? {                    // return bounds expanded in all directions with the given value
+        fun Expand(d: Float): idSphere {                    // return bounds expanded in all directions with the given value
             return idSphere(origin, radius + d)
         }
 
-        fun ExpandSelf(d: Float): idSphere? {                    // expand bounds in all directions with the given value
+        fun ExpandSelf(d: Float): idSphere {                    // expand bounds in all directions with the given value
             radius += d
             return this
         }
 
-        fun Translate(translation: idVec3?): idSphere? {
+        fun Translate(translation: idVec3): idSphere {
             return idSphere(origin.oPlus(translation), radius)
         }
 
-        fun TranslateSelf(translation: idVec3?): idSphere? {
+        fun TranslateSelf(translation: idVec3): idSphere {
             origin.oPluSet(translation)
             return this
         }
 
-        fun PlaneDistance(plane: idPlane?): Float {
+        fun PlaneDistance(plane: idPlane): Float {
             val d: Float
             d = plane.Distance(origin)
             if (d > radius) {
@@ -185,7 +185,7 @@ class Sphere {
         }
 
         @JvmOverloads
-        fun PlaneSide(plane: idPlane?, epsilon: Float = Plane.ON_EPSILON): Int {
+        fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             val d: Float
             d = plane.Distance(origin)
             if (d > radius + epsilon) {
@@ -196,11 +196,11 @@ class Sphere {
             } else Plane.PLANESIDE_CROSS
         }
 
-        fun ContainsPoint(p: idVec3?): Boolean {            // includes touching
+        fun ContainsPoint(p: idVec3): Boolean {            // includes touching
             return p.oMinus(origin).LengthSqr() <= radius * radius
         }
 
-        fun IntersectsSphere(s: idSphere?): Boolean {    // includes touching
+        fun IntersectsSphere(s: idSphere): Boolean {    // includes touching
             val r = s.radius + radius
             return s.origin.oMinus(origin).LengthSqr() <= r * r
         }
@@ -212,7 +212,7 @@ class Sphere {
          Returns true if the line intersects the sphere between the start and end point.
          ============
          */
-        fun LineIntersection(start: idVec3?, end: idVec3?): Boolean {
+        fun LineIntersection(start: idVec3, end: idVec3): Boolean {
             val r = idVec3()
             val s = idVec3()
             val e = idVec3()
@@ -241,7 +241,7 @@ class Sphere {
          ============
          */
         // intersection points are (start + dir * scale1) and (start + dir * scale2)
-        fun RayIntersection(start: idVec3?, dir: idVec3?, scale1: CFloat?, scale2: CFloat?): Boolean {
+        fun RayIntersection(start: idVec3, dir: idVec3, scale1: CFloat, scale2: CFloat): Boolean {
             var a: Float
             val b: Float
             val c: Float
@@ -258,8 +258,8 @@ class Sphere {
             }
             sqrtd = idMath.Sqrt(d)
             a = 1.0f / a
-            scale1.setVal((-b + sqrtd) * a)
-            scale2.setVal((-b - sqrtd) * a)
+            scale1._val = ((-b + sqrtd) * a)
+            scale2._val = ((-b - sqrtd) * a)
             return true
         }
 
@@ -271,7 +271,7 @@ class Sphere {
          ============
          */
         // Tight sphere for a point set.
-        fun FromPoints(points: Array<idVec3?>?, numPoints: Int) {
+        fun FromPoints(points: Array<idVec3>, numPoints: Int) {
             var i: Int
             var radiusSqr: Float
             var dist: Float
@@ -292,34 +292,34 @@ class Sphere {
         }
 
         // Most tight sphere for a translation.
-        fun FromPointTranslation(point: idVec3?, translation: idVec3?) {
+        fun FromPointTranslation(point: idVec3, translation: idVec3) {
             origin.oSet(point.oPlus(translation.oMultiply(0.5f)))
             radius = idMath.Sqrt(0.5f * translation.LengthSqr())
         }
 
-        fun FromSphereTranslation(sphere: idSphere?, start: idVec3?, translation: idVec3?) {
+        fun FromSphereTranslation(sphere: idSphere, start: idVec3, translation: idVec3) {
             origin.oSet(start.oPlus(sphere.origin).oPlus(translation.oMultiply(0.5f)))
             radius = idMath.Sqrt(0.5f * translation.LengthSqr()) + sphere.radius
         }
 
         // Most tight sphere for a rotation.
-        fun FromPointRotation(point: idVec3?, rotation: idRotation?) {
+        fun FromPointRotation(point: idVec3, rotation: idRotation) {
             val end = idVec3(rotation.oMultiply(point))
             origin.oSet(point.oPlus(end).oMultiply(0.5f))
             radius = idMath.Sqrt(0.5f * end.oMinus(point).LengthSqr())
         }
 
-        fun FromSphereRotation(sphere: idSphere?, start: idVec3?, rotation: idRotation?) {
+        fun FromSphereRotation(sphere: idSphere, start: idVec3, rotation: idRotation) {
             val end = idVec3(rotation.oMultiply(sphere.origin))
             origin.oSet(start.oPlus(sphere.origin.oPlus(end)).oMultiply(0.5f))
             radius = idMath.Sqrt(0.5f * end.oMinus(sphere.origin).LengthSqr()) + sphere.radius
         }
 
-        fun AxisProjection(dir: idVec3?, min: CFloat?, max: CFloat?) {
+        fun AxisProjection(dir: idVec3, min: CFloat, max: CFloat) {
             val d: Float
             d = dir.oMultiply(origin)
-            min.setVal(d - radius)
-            max.setVal(d + radius)
+            min._val = (d - radius)
+            max._val = (d + radius)
         }
     }
 }

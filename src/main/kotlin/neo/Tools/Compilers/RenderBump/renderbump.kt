@@ -1,4 +1,4 @@
-package neo.Tools.Compilers.RenderBumpimport
+package neo.Tools.Compilers.RenderBump
 
 import neo.Renderer.*
 import neo.Renderer.Model.idRenderModel

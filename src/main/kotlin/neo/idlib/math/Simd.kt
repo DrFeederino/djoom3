@@ -30,7 +30,7 @@ object Simd {
     //
     //
     const val MIXBUFFER_SAMPLES = 4096
-    var SIMDProcessor: idSIMDProcessor? = null
+    var SIMDProcessor: idSIMDProcessor = null
     var baseClocks: Long = 0
     var generic: idSIMDProcessor? = null // pointer to generic SIMD implementation
     var p_generic: idSIMDProcessor? = null
@@ -55,10 +55,10 @@ object Simd {
      */
     object idSIMD {
         fun Init() {
-            Simd.generic = idSIMD_Generic()
-            Simd.generic.cpuid = sys_public.CPUID_GENERIC
-            Simd.processor = null
-            Simd.SIMDProcessor = Simd.generic
+            generic = idSIMD_Generic()
+            generic.cpuid = sys_public.CPUID_GENERIC
+            processor = null
+            SIMDProcessor = generic
         }
 
         fun InitProcessor(module: String?, forceGeneric: Boolean) {
@@ -66,7 +66,7 @@ object Simd {
             val cpuid: Int
             val newProcessor: idSIMDProcessor?
             cpuid = idLib.sys.GetProcessorId()
-            newProcessor = Simd.generic //TODO:add useSSE to startup sequence.
+            newProcessor = generic //TODO:add useSSE to startup sequence.
             //            if (forceGeneric) {
 //
 //                newProcessor = generic;
@@ -95,9 +95,9 @@ object Simd {
 //                }
 //                newProcessor = processor;
 //            }
-            if (newProcessor != Simd.SIMDProcessor) {
-                Simd.SIMDProcessor = newProcessor
-                idLib.common.Printf("%s using %s for SIMD processing\n", module, Simd.SIMDProcessor.GetName())
+            if (newProcessor != SIMDProcessor) {
+                SIMDProcessor = newProcessor
+                idLib.common.Printf("%s using %s for SIMD processing\n", module, SIMDProcessor.GetName())
             }
             //            if ((cpuid & CPUID_FTZ) != 0) {
 //                idLib.sys.FPU_SetFTZ(true);
@@ -111,13 +111,13 @@ object Simd {
         }
 
         fun Shutdown() {
-            if (Simd.processor !== Simd.generic) {
+            if (processor !== generic) {
 //		delete processor;
             }
             //	delete generic;
-            Simd.SIMDProcessor = null
-            Simd.processor = Simd.SIMDProcessor
-            Simd.generic = Simd.processor
+            SIMDProcessor = null
+            processor = SIMDProcessor
+            generic = processor
         }
 
         @Deprecated(
@@ -318,7 +318,7 @@ object Simd {
         //
         abstract fun  /*VPCALL*/MinMax(min: CFloat?, max: CFloat?, src: FloatArray?, count: Int)
         abstract fun  /*VPCALL*/MinMax(min: idVec2?, max: idVec2?, src: Array<idVec2?>?, count: Int)
-        abstract fun  /*VPCALL*/MinMax(min: idVec3?, max: idVec3?, src: Array<idVec3?>?, count: Int)
+        abstract fun  /*VPCALL*/MinMax(min: idVec3, max: idVec3, src: Array<idVec3>, count: Int)
         abstract fun  /*VPCALL*/MinMax(min: idVec3?, max: idVec3?, src: Array<idDrawVert?>?, count: Int)
         abstract fun  /*VPCALL*/MinMax(
             min: idVec3?,

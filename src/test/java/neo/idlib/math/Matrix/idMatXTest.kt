@@ -9,18 +9,18 @@ import org.junit.Test
 
 class idMatXTest {
     private var original: idMatX? = idMatX()
-    private var m1: idMatX? = idMatX()
-    private var m2: idMatX? = idMatX()
-    private var m3: idMatX? = idMatX()
-    private val q1: idMatX? = idMatX()
-    private val q2: idMatX? = idMatX()
-    private val r1: idMatX? = idMatX()
-    private val r2: idMatX? = idMatX()
-    private val v: idVecX? = idVecX()
-    private val w: idVecX? = idVecX()
-    private val u: idVecX? = idVecX()
-    private val c: idVecX? = idVecX()
-    private val d: idVecX? = idVecX()
+    private var m1: idMatX = idMatX()
+    private var m2: idMatX = idMatX()
+    private var m3: idMatX = idMatX()
+    private val q1: idMatX = idMatX()
+    private val q2: idMatX = idMatX()
+    private val r1: idMatX = idMatX()
+    private val r2: idMatX = idMatX()
+    private val v: idVecX = idVecX()
+    private val w: idVecX = idVecX()
+    private val u: idVecX = idVecX()
+    private val c: idVecX = idVecX()
+    private val d: idVecX = idVecX()
     private var offset = 0
     private var size = 0
     private var index1: IntArray? = null
@@ -39,9 +39,9 @@ class idMatXTest {
 
     @Test
     fun LowerTriangularInverseTest() {
-        m1?.oSet(original)
-        m1?.ClearUpperTriangle()
-        m2?.oSet(m1)
+        m1.oSet(original)
+        m1.ClearUpperTriangle()
+        m2.oSet(m1)
         m2.InverseSelf()
         m1.LowerTriangularInverse()
         Assert.assertTrue("idMatX::LowerTriangularInverse failed", m1.Compare(m2, 1e-4f))

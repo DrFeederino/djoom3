@@ -17,10 +17,10 @@ import java.util.logging.Logger
  *
  */
 object List {
-    fun <T> idSwap(a1: Array<T?>?, a2: Array<T?>?, p1: Int, p2: Int) {
-        val c = a1.get(p1)
-        a1.get(p1) = a2.get(p2)
-        a2.get(p2) = c
+    fun <T> idSwap(a1: Array<T>, a2: Array<T>, p1: Int, p2: Int) {
+        val c = a1[p1]
+        a1[p1] = a2[p2]
+        a2[p2] = c
     }
 
     //    @Deprecated
@@ -243,7 +243,7 @@ object List {
         fun oGet(index: Int): type {
             assert(index >= 0)
             assert(index < num)
-            return list.get(index)
+            return list!![index] as type
         }
 
         //public	type &			operator[]( int index );

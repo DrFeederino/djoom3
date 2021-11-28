@@ -4,6 +4,7 @@ import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
+import kotlin.math.abs
 
 /**
  *
@@ -17,19 +18,19 @@ class PlaneSet {
      ===============================================================================
      */
     class idPlaneSet : idList<idPlane?>() {
-        private val hash: idHashIndex?
+        private val hash: idHashIndex = idHashIndex()
         override fun Clear() {
             super.Clear()
             hash.Free()
         }
 
         //
-        fun FindPlane(plane: idPlane?, normalEps: Float, distEps: Float): Int {
+        fun FindPlane(plane: idPlane, normalEps: Float, distEps: Float): Int {
             var i: Int
             var border: Int
             val hashKey: Int
             assert(distEps <= 0.125f)
-            hashKey = (Math.abs(plane.Dist()) * 0.125f).toInt()
+            hashKey = (abs(plane.Dist()) * 0.125f).toInt()
             border = -1
             while (border <= 1) {
                 i = hash.First(hashKey + border)
@@ -56,10 +57,5 @@ class PlaneSet {
             }
         }
 
-        //
-        //
-        init {
-            hash = idHashIndex()
-        }
     }
 }

@@ -10,8 +10,8 @@ import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.sound.idSoundEmitter
 import neo.TempDump.CPP_class.Char
 import neo.framework.DeclSkin.idDeclSkin
-import neo.idlib.*
 import neo.idlib.BV.Bounds.idBounds
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CBool
@@ -19,7 +19,7 @@ import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
 import neo.idlib.containers.LinkList.idLinkList
 import neo.idlib.geometry.JointTransform.idJointMat
-import neo.idlib.math.*
+import neo.idlib.math.Curve
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector.idVec3
 import neo.ui.UserInterface.idUserInterface
@@ -30,7 +30,9 @@ import java.io.Serializable
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.FloatBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 import java.nio.file.StandardOpenOption
@@ -38,7 +40,6 @@ import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.stream.IntStream
-import java.util.stream.Stream
 import javax.swing.undo.CannotUndoException
 
 /**
@@ -46,7 +47,7 @@ import javax.swing.undo.CannotUndoException
  */
 object TempDump {
     //TODO:rename/refactor to ToolBox or something
-    private val CALL_STACK_MAP: MutableMap<String?, Int?>? = HashMap()
+    private val CALL_STACK_MAP: MutableMap<String, Int> = HashMap()
 
     /**
      * Our humble java implementation of the C++ strlen function, with NULL
@@ -55,14 +56,14 @@ object TempDump {
      * @param str a char array.
      * @return -1 if the array is NULL or the location of the first terminator.
      */
-    fun strLen(str: CharArray?): Int {
+    fun strLen(str: CharArray): Int {
         var len: Int
-        if (TempDump.NOT(*str)) {
+        if (NOT(str)) {
             return -1
         }
         len = 0
         while (len < str.size) {
-            if (str.get(len) == '\u0000') {
+            if (str[len] == '\u0000') {
                 break
             }
             len++
@@ -71,14 +72,14 @@ object TempDump {
     }
 
     @JvmOverloads
-    fun strLen(str: ByteArray?, offset: Int = 0): Int {
+    fun strLen(str: ByteArray, offset: Int = 0): Int {
         var len: Int
-        if (TempDump.NOT(*str)) {
+        if (NOT(str)) {
             return -1
         }
         len = offset
         while (len < str.size) {
-            if (str.get(len) == 0) {
+            if (str[len].toInt() == 0) {
                 break
             }
             len++
@@ -86,17 +87,17 @@ object TempDump {
         return len
     }
 
-    fun strLen(str: String?): Int {
-        return TempDump.strLen(str.toCharArray())
+    fun strLen(str: String): Int {
+        return strLen(str.toCharArray())
     }
 
-    fun memcmp(ptr1: IntArray?, ptr2: IntArray?, size_t: Int): Boolean {
-        return TempDump.memcmp(ptr1, 0, ptr2, 0, size_t)
+    fun memcmp(ptr1: IntArray, ptr2: IntArray, size_t: Int): Boolean {
+        return memcmp(ptr1, 0, ptr2, 0, size_t)
     }
 
-    fun memcmp(ptr1: IntArray?, p1_offset: Int, ptr2: IntArray?, p2_offset: Int, size_t: Int): Boolean {
+    fun memcmp(ptr1: IntArray, p1_offset: Int, ptr2: IntArray, p2_offset: Int, size_t: Int): Boolean {
         for (i in 0 until size_t) {
-            if (ptr1.get(p1_offset + i) != ptr2.get(p2_offset + i)) {
+            if (ptr1[p1_offset + i] != ptr2[p2_offset + i]) {
                 return false
             }
         }
@@ -142,9 +143,9 @@ object TempDump {
         } else unknownArray.javaClass.toString().split("\\[").toTypedArray().size - 1
     }
 
-    fun flatten(input: Array<ByteArray?>?): ByteArray? {
+    fun flatten(input: Array<ByteArray>): ByteArray {
         val height = input.size
-        val width: Int = input.get(0).length
+        val width: Int = input[0].size
         val output = ByteArray(height * width)
         for (anInput in input) {
             System.arraycopy(anInput, 0, output, width, width)
@@ -152,16 +153,16 @@ object TempDump {
         return output
     }
 
-    fun flatten(input: Array<Array<ByteArray?>?>?): ByteArray? {
+    fun flatten(input: Array<Array<ByteArray>>): ByteArray {
         val height = input.size
-        val width: Int = input.get(0).length
-        val length: Int = input.get(0).get(0).length
+        val width: Int = input[0].size
+        val length: Int = input[0][0].size
         val output = ByteArray(height * width * length)
         for (a in 0 until height) {
             val x = a * width * length
             for (b in 0 until width) {
                 val y = b * length
-                System.arraycopy(input.get(a).get(b), 0, output, x + y, length)
+                System.arraycopy(input[a][b], 0, output, x + y, length)
             }
         }
         return output
@@ -174,7 +175,7 @@ object TempDump {
      * @return substring before **index** + character + substring after
      * **index**.
      */
-    fun replaceByIndex(character: Char, index: Int, string: String?): String? {
+    fun replaceByIndex(character: Char, index: Int, string: String): String {
         return string.substring(0, index) + character + string.substring(index + 1)
     }
 
@@ -240,7 +241,7 @@ object TempDump {
      *
      * ORDINALS!! mine arch enemy!!
      */
-    fun etoi(enumeration: Enum<*>?): Int {
+    fun etoi(enumeration: Enum<*>): Int {
         return enumeration.ordinal
     }
 
@@ -255,14 +256,14 @@ object TempDump {
      * Byte TO Int
      */
     fun btoi(b: Byte): Int {
-        return b and 0xFF
+        return b.toInt()
     }
 
     /**
      * Byte TO Int
      */
-    fun btoi(b: ByteBuffer?): Int {
-        return b.get(0) and 0xFF
+    fun btoi(b: ByteBuffer): Int {
+        return b.get(0).toInt()
     }
 
     /**
@@ -276,20 +277,20 @@ object TempDump {
         return java.lang.Float.floatToIntBits(f)
     }
 
-    fun ftoi(a: FloatArray?): IntArray? {
+    fun ftoi(a: FloatArray): IntArray {
         return IntStream.range(0, a.size).map { i: Int -> java.lang.Float.floatToIntBits(a.get(i)) }.toArray()
     }
 
     /**
      * FloatBuffer to Float Array
      */
-    fun fbtofa(fb: FloatBuffer?): FloatArray? {
+    fun fbtofa(fb: FloatBuffer): FloatArray {
         val fa = FloatArray(fb.capacity())
         fb.duplicate()[fa]
         return fa
     }
 
-    fun atoi(ascii: String?): Int {
+    fun atoi(ascii: String): Int {
         return try {
             ascii.trim { it <= ' ' }.toInt()
         } catch (e: NumberFormatException) {
@@ -297,36 +298,36 @@ object TempDump {
         }
     }
 
-    fun atob(ascii: String?): Boolean {
-        return TempDump.itob(TempDump.atoi(ascii))
+    fun atob(ascii: String): Boolean {
+        return itob(atoi(ascii))
     }
 
-    fun atoi(ascii: idStr?): Int {
-        return TempDump.atoi(ascii.toString())
+    fun atoi(ascii: idStr): Int {
+        return atoi(ascii.toString())
     }
 
-    fun atoi(ascii: CharArray?): Int {
-        return TempDump.atoi(TempDump.ctos(ascii))
+    fun atoi(ascii: CharArray): Int {
+        return atoi(ctos(ascii)!!)
     }
 
-    fun atof(ascii: String?): Float {
+    fun atof(ascii: String): Float {
         return try {
             ascii.trim { it <= ' ' }.toFloat()
         } catch (e: NumberFormatException) {
-            0
+            0f
         }
     }
 
     fun atof(ascii: idStr?): Float {
-        return TempDump.atof(ascii.toString())
+        return atof(ascii.toString())
     }
 
-    fun ctos(ascii: CharArray?): String? { //TODO:rename this moronic overloading!
-        if (TempDump.NOT(*ascii)) {
+    fun ctos(ascii: CharArray): String? { //TODO:rename this moronic overloading!
+        if (NOT(ascii)) {
             return null
         }
         for (a in ascii.indices) {
-            if ('\u0000' == ascii.get(a)) {
+            if ('\u0000' == ascii[a]) {
                 return String(ascii).substring(0, a)
             }
         }
@@ -337,63 +338,63 @@ object TempDump {
         return "" + ascii
     }
 
-    fun btos(bytes: ByteArray?, offset: Int, length: Int): String? {
-        return if (TempDump.NOT(*bytes)) {
+    fun btos(bytes: ByteArray, offset: Int, length: Int): String? {
+        return if (NOT(bytes)) {
             null
         } else String(bytes, offset, length)
     }
 
     @JvmOverloads
-    fun btos(bytes: ByteArray?, offset: Int = 0): String? {
-        val length = TempDump.strLen(bytes, offset) - offset //c style strings
-        return TempDump.btos(bytes, offset, length)
+    fun btos(bytes: ByteArray, offset: Int = 0): String? {
+        val length = strLen(bytes, offset) - offset //c style strings
+        return btos(bytes, offset, length)
     }
 
     fun atobb(ascii: String?): ByteBuffer? {
-        return if (TempDump.NOT(ascii)) {
+        return if (NOT(ascii)) {
             null
         } else StandardCharsets.UTF_8.encode(ascii)
 
 //        return ByteBuffer.wrap(ascii.getBytes());
     }
 
-    fun atobb(ascii: idStr?): ByteBuffer? {
-        return if (TempDump.NOT(ascii)) {
+    fun atobb(ascii: idStr): ByteBuffer? {
+        return if (NOT(ascii)) {
             null
-        } else TempDump.atobb(ascii.toString())
+        } else atobb(ascii.toString())
     }
 
-    fun atobb(ascii: CharArray?): ByteBuffer? {
-        return if (TempDump.NOT(*ascii)) {
+    fun atobb(ascii: CharArray): ByteBuffer? {
+        return if (NOT(ascii)) {
             null
-        } else TempDump.atobb(TempDump.ctos(ascii))
+        } else atobb(ctos(ascii)!!)
     }
 
-    fun stobb(arrau: ShortArray?): ByteBuffer? {
+    fun stobb(arr: ShortArray): ByteBuffer? {
         val buffer: ByteBuffer?
-        if (TempDump.NOT(*arrau)) {
+        if (NOT(arr)) {
             return null
         }
-        buffer = ByteBuffer.allocate(arrau.size * 2)
-        buffer.asShortBuffer().put(arrau)
+        buffer = ByteBuffer.allocate(arr.size * 2)
+        buffer.asShortBuffer().put(arr)
         return buffer.flip()
     }
 
-    fun atocb(ascii: String?): CharBuffer? {
-        return if (TempDump.NOT(ascii)) {
+    fun atocb(ascii: String): CharBuffer? {
+        return if (NOT(ascii)) {
             null
         } else CharBuffer.wrap(ascii.toCharArray())
     }
 
-    fun bbtocb(buffer: ByteBuffer?): CharBuffer? {
+    fun bbtocb(buffer: ByteBuffer): CharBuffer? {
 
 //        buffer.rewind();
 //        return Charset.forName("UTF-8").decode(buffer);
         return StandardCharsets.ISO_8859_1.decode(buffer)
     }
 
-    fun bbtoa(buffer: ByteBuffer?): String? {
-        return TempDump.bbtocb(buffer).toString()
+    fun bbtoa(buffer: ByteBuffer): String? {
+        return bbtocb(buffer).toString()
     }
 
     fun wrapToNativeBuffer(bytes: ByteArray?): ByteBuffer? {
@@ -405,7 +406,7 @@ object TempDump {
     /**
      * Integer array TO Int array
      */
-    fun itoi(integerArray: Array<Int?>?): IntArray? {
+    fun itoi(integerArray: Array<Int>?): IntArray? {
         if (integerArray == null) return null
         val intArray = IntArray(integerArray.size)
         for (a in intArray.indices) {
@@ -414,13 +415,13 @@ object TempDump {
         return intArray
     }
 
-    fun itob(intArray: IntArray?): ByteArray? {
+    fun itob(intArray: IntArray): ByteArray {
         val buffer = ByteBuffer.allocate(intArray.size * 4)
         buffer.asIntBuffer().put(intArray)
         return buffer.array()
     }
 
-    fun btoia(buffer: ByteBuffer?): IntArray? {
+    fun btoia(buffer: ByteBuffer): IntArray {
         val intArray = IntArray(buffer.capacity() / 4)
         for (i in intArray.indices) {
             intArray[i] = buffer.getInt(4 * i)
@@ -428,7 +429,7 @@ object TempDump {
         return intArray
     }
 
-    fun ntohl(ip: ByteArray?): Long {
+    fun ntohl(ip: ByteArray): Long {
         val buffer = ByteBuffer.allocate(8)
         buffer.put(ip)
         buffer.flip()
@@ -436,9 +437,9 @@ object TempDump {
         return buffer.getLong(0)
     }
 
-    fun fopenOptions(mode: String?): MutableSet<StandardOpenOption?>? {
+    fun fopenOptions(mode: String?): MutableSet<StandardOpenOption>? {
         var mode = mode
-        val temp: MutableSet<StandardOpenOption?> = HashSet()
+        val temp: MutableSet<StandardOpenOption> = HashSet()
         if (null == mode) {
             return null
         }
@@ -471,11 +472,11 @@ object TempDump {
     }
 
     @Throws(IOException::class)
-    fun fprintf(logFile: FileChannel?, text: String?) {
+    fun fprintf(logFile: FileChannel, text: String) {
         logFile.write(ByteBuffer.wrap(text.toByteArray()))
     }
 
-    fun reinterpret_cast_long_array(array: ByteArray?): LongArray? {
+    fun reinterpret_cast_long_array(array: ByteArray): LongArray {
         val len = array.size / java.lang.Long.BYTES
         val buffer = ByteBuffer.wrap(array).asLongBuffer()
         val temp = LongArray(len)
@@ -485,7 +486,7 @@ object TempDump {
         return temp
     }
 
-    fun dynamic_cast(glass: Class<*>?, `object`: Any?): Any? {
+    fun dynamic_cast(glass: Class<*>, `object`: Any): Any? {
         return if (glass.isInstance(`object`)) {
             `object`
         } else null
@@ -496,7 +497,7 @@ object TempDump {
      *
      * @param text some we would like to be put on top of our block.
      */
-    fun printCallStack(text: String?) {
+    fun printCallStack(text: String) {
         val elements = Thread.currentThread().stackTrace
         System.out.printf("----------------%s----------------\n", text)
         //e=2, skip current call, and calling class.
@@ -513,11 +514,11 @@ object TempDump {
         for (e in 2 until elements.size) {
             val key =
                 String.format("%s.%s->%d\n", elements[e].className, elements[e].methodName, elements[e].lineNumber)
-            if (TempDump.CALL_STACK_MAP.containsKey(key)) {
-                val value: Int = TempDump.CALL_STACK_MAP[key]
-                TempDump.CALL_STACK_MAP[key] = value + 1 //increment
+            if (CALL_STACK_MAP.containsKey(key)) {
+                val value: Int = CALL_STACK_MAP.getValue(key)
+                CALL_STACK_MAP[key] = value + 1 //increment
             } else {
-                TempDump.CALL_STACK_MAP[key] = 1
+                CALL_STACK_MAP[key] = 1
             }
         }
     }
@@ -530,20 +531,20 @@ object TempDump {
     }
 
     fun printCallStackCount() {
-        println(Arrays.toString(TempDump.CALL_STACK_MAP.entries.toTypedArray()))
+        println(Arrays.toString(CALL_STACK_MAP.entries.toTypedArray()))
     }
 
-    fun printLinkedList(head: idLinkList<idEntity?>?) {
+    fun printLinkedList(head: idLinkList<idEntity?>) {
         var ent = head.Next()
         while (ent != null) {
             println(ent.name)
-            ent = ent.activeNode.Next()
+            ent = ent.activeNode!!.Next()
         }
     }
 
     @Deprecated("")
-    fun <T> allocArray(clazz: Class<T?>?, length: Int): Array<T?>? {
-        val array = java.lang.reflect.Array.newInstance(clazz, length) as Array<T?>
+    fun <T> allocArray(clazz: Class<T>, length: Int): Array<T> {
+        val array = java.lang.reflect.Array.newInstance(clazz, length) as Array<T>
         for (a in 0 until length) {
             try {
                 array[a] = clazz.getConstructor().newInstance()
@@ -575,7 +576,7 @@ object TempDump {
          *
          * @return
          */
-        open fun AllocBuffer(): ByteBuffer?
+        open fun AllocBuffer(): ByteBuffer
 
         /**
          * Reads the ByteBuffer and converts and sets its values to the current
@@ -583,14 +584,14 @@ object TempDump {
          *
          * @param buffer
          */
-        open fun Read(buffer: ByteBuffer?)
+        open fun Read(buffer: ByteBuffer)
 
         /**
          * Prepares a ByteBuffer representation of the class for writing.
          *
          * @return
          */
-        open fun Write(): ByteBuffer?
+        open fun Write(): ByteBuffer
 
         companion object {
             //TODO:remove Serializable
@@ -633,7 +634,7 @@ object TempDump {
         private val O_PLUS: String? = "oPlus"
         private val O_SET: String? = "oSet"
         private val ZERO: String? = "Zero"
-        fun GetDimension(`object`: Any?): Int {
+        fun GetDimension(`object`: Any): Int {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0
             try {
@@ -653,7 +654,7 @@ object TempDump {
             return returnValue
         }
 
-        fun Zero(`object`: Any?) {
+        fun Zero(`object`: Any) {
             val clazz: Class<*> = `object`.javaClass
             val getDimension: Method?
             try {
@@ -672,7 +673,7 @@ object TempDump {
             }
         }
 
-        fun _Get(`object`: Any?, declaredField: String?): Any? {
+        fun _Get(`object`: Any, declaredField: String): Any? {
             val clazz: Class<*> = `object`.javaClass
             val field: Field?
             var returnObject: Any? = null
@@ -691,11 +692,11 @@ object TempDump {
             return returnObject
         }
 
-        fun _Get(`object`: Any?, index: Int): Float {
+        fun _Get(`object`: Any, index: Int): Float {
             return _GetMul(`object`, index, 1f) //TODO:you know what to do
         }
 
-        fun _GetMul(`object`: Any?, index: Int, value: Float): Float {
+        fun _GetMul(`object`: Any, index: Int, value: Float): Float {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0f
             val oGet: Method?
@@ -726,7 +727,7 @@ object TempDump {
             return returnValue
         }
 
-        fun _GetGet(`object`: Any?, x: Int, y: Int): Float {
+        fun _GetGet(`object`: Any, x: Int, y: Int): Float {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0f
             val oGet: Method?
@@ -751,7 +752,7 @@ object TempDump {
             return returnValue
         }
 
-        fun _GetSet(`object`: Any?, x: Int, y: Int, value: Float): Float {
+        fun _GetSet(`object`: Any, x: Int, y: Int, value: Float): Float {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0f
             val oGet: Method?
@@ -776,15 +777,7 @@ object TempDump {
             return returnValue
         }
 
-        fun _Multiply(object1: Any?, object2: Any?): Any? {
-            return ooOOoooOOoo(object1, object2, O_MULTIPLY)
-        }
-
-        fun _Plus(object1: Any?, object2: Any?): Any? {
-            return ooOOoooOOoo(object1, object2, O_PLUS)
-        }
-
-        fun _Minus(object1: Any?, object2: Any?): Any? {
+        fun _Minus(object1: Any, object2: Any): Any? {
             return ooOOoooOOoo(object1, object2, O_MINUS)
         }
 
@@ -798,7 +791,7 @@ object TempDump {
          * @param O_METHOD
          * @return
          */
-        private fun ooOOoooOOoo(object1: Any?, object2: Any?, O_METHOD: String?): Any? {
+        private fun ooOOoooOOoo(object1: Any, object2: Any, O_METHOD: String?): Any? {
             val class1: Class<*> = object1.javaClass
             val class2: Class<*> = object2.javaClass
             val method1: Method?
@@ -847,9 +840,7 @@ object TempDump {
             var fov_x: CFloat? = CFloat()
             var fov_y: CFloat? = CFloat()
             var globalMaterial: idMaterial? = idMaterial()
-            var shaderParms = Stream.generate { CFloat() }
-                .limit(RenderWorld.MAX_GLOBAL_SHADER_PARMS.toLong())
-                .toArray<CFloat?> { _Dummy_.__Array__() }
+            var shaderParms = Array(RenderWorld.MAX_GLOBAL_SHADER_PARMS) { CFloat() }
 
             //
             var time: CInt? = CInt()
@@ -890,7 +881,7 @@ object TempDump {
             //
             var gui: Array<idUserInterface?>? = arrayOfNulls<idUserInterface?>(RenderWorld.MAX_RENDERENTITY_GUI)
             var hModel: idRenderModel? = null
-            var joints: Array<idJointMat?>?
+            var joints: Array<idJointMat?>? = null
 
             //
             var modelDepthHack: CFloat? = CFloat()
@@ -912,9 +903,7 @@ object TempDump {
 
             //
             var remoteRenderView: renderView_s? = null
-            var shaderParms = Stream.generate { CFloat() }
-                .limit(Material.MAX_ENTITY_SHADER_PARMS.toLong())
-                .toArray<CFloat?> { _Dummy_.__Array__() }
+            var shaderParms = Array(Material.MAX_ENTITY_SHADER_PARMS) { CFloat() }
 
             //
             var suppressShadowInLightID: CInt? = CInt()

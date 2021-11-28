@@ -19,9 +19,9 @@ import java.util.*
  *
  */
 object Winvar {
-    val MIN_ONE: idWinVar? = idWinInt(-1)
-    val MIN_TWO: idWinVar? = idWinInt(-2)
-    val VAR_GUIPREFIX: String? = "gui::"
+    val MIN_ONE: idWinVar = idWinInt(-1)
+    val MIN_TWO: idWinVar = idWinInt(-2)
+    val VAR_GUIPREFIX: String = "gui::"
     val VAR_GUIPREFIX_LEN = VAR_GUIPREFIX.length
 
     internal abstract class idWinVar     // public   ~idWinVar();
@@ -31,7 +31,7 @@ object Winvar {
         protected var eval = true
         protected var guiDict: idDict? = null
         protected var name: String? = null
-        fun SetGuiInfo(gd: idDict?, _name: String?) {
+        fun SetGuiInfo(gd: idDict, _name: String) {
             guiDict = gd
             SetName(_name)
         }
@@ -44,7 +44,7 @@ object Winvar {
             } else ""
         }
 
-        fun SetName(_name: String?) {
+        fun SetName(_name: String) {
             // delete []name;
             name = _name
             //            if (_name != null) {

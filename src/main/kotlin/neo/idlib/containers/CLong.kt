@@ -1,18 +1,12 @@
 package neo.idlib.containers
 
 class CLong {
-    private var `val`: Long = 0
+    var _val: Long = 0
 
     constructor()
-    constructor(`val`: Long) {
-        this.`val` = `val`
+    constructor(out: Long) {
+        this._val = out
     }
 
-    fun getVal(): Long {
-        return `val`
-    }
 
-    fun setVal(`val`: Long) {
-        this.`val` = `val`
-    }
 }

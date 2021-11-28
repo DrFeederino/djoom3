@@ -33,7 +33,7 @@ object HashIndex {
 
         constructor() {
             DBG_count = DBG_counter++
-            Init(HashIndex.DEFAULT_HASH_SIZE, HashIndex.DEFAULT_HASH_SIZE)
+            Init(DEFAULT_HASH_SIZE, DEFAULT_HASH_SIZE)
         }
 
         constructor(initialHashSize: Int, initialIndexSize: Int) {

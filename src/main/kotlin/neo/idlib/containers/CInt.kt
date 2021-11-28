@@ -1,35 +1,26 @@
 package neo.idlib.containers
 
 class CInt {
-    private var `val` = 0
-
-    constructor(`val`: Int) {
-        this.`val` = `val`
-    }
+    var _val = 0
 
     constructor()
-
-    fun getVal(): Int {
-        return `val`
-    }
-
-    fun setVal(`val`: Int) {
-        this.`val` = `val`
+    constructor(out: Int) {
+        this._val = out
     }
 
     fun increment(): Int {
-        return `val`++
+        return _val++
     }
 
     fun decrement(): Int {
-        return `val`--
+        return _val--
     }
 
     fun rightShift(power: Int) {
-        `val` = `val` shr power
+        _val = _val shr power
     }
 
     fun leftShit(power: Int) {
-        `val` = `val` shl power
+        _val = _val shl power
     }
 }

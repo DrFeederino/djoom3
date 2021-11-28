@@ -53,7 +53,7 @@ object Str {
     //
     //    static idDynamicBlockAlloc<Character> stringDataAllocator = new idDynamicBlockAlloc<>(1 << 18, 128);
     //
-    val g_color_table: Array<idVec4?>? = arrayOf(
+    val g_color_table: Array<idVec4> = arrayOf(
         idVec4(0.0f, 0.0f, 0.0f, 1.0f),
         idVec4(1.0f, 0.0f, 0.0f, 1.0f),  // S_COLOR_RED
         idVec4(0.0f, 1.0f, 0.0f, 1.0f),  // S_COLOR_GREEN
@@ -82,7 +82,7 @@ object Str {
      ============
      */
     //    @Deprecated
-    fun va(fmt: String?, vararg args: Any?): String? {
+    fun va(fmt: String, vararg args: Any?): String {
 //////	va_list argptr;
 ////        char[] argptr;
 ////        int index = 0;
@@ -109,7 +109,7 @@ object Str {
         //
         protected val baseBuffer: CharArray? = CharArray(Str.STR_ALLOC_BASE)
         var alloced = 0
-        var data: String? =
+        var data: String =
             "" //i·ro·ny: when your program breaks because of two measly double quotes. stu·pid·i·ty: when it takes you 2 days to find said "bug".
         var len //TODO:data is a pointer in the original class.
                 = 0
@@ -118,7 +118,7 @@ object Str {
             Init()
         }
 
-        constructor(text: idStr?) {
+        constructor(text: idStr) {
             val l: Int
             Init()
             l = text.Length()
@@ -128,7 +128,7 @@ object Str {
             len = l
         }
 
-        constructor(text: idStr?, start: Int, end: Int) {
+        constructor(text: idStr, start: Int, end: Int) {
             var start = start
             var end = end
             var i: Int
@@ -279,7 +279,7 @@ object Str {
             return data.toCharArray()
         }
 
-        fun oGet(index: Int): Char {
+        fun oGet(index: Int): kotlin.Char {
             assert(index >= 0 && index <= len)
             return data.get(index)
         }

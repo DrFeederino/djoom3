@@ -10,7 +10,8 @@ import neo.framework.CVarSystem.idCVar
 import neo.framework.CmdSystem
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
-import neo.idlib.*
+import neo.idlib.CmdArgs
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Lexer.idLexer
@@ -20,17 +21,18 @@ import neo.idlib.containers.idStrList
 import neo.sys.RC.CreateResourceIDs_f
 import neo.sys.sys_public.sysEventType_t
 import neo.sys.sys_public.sysEvent_s
-import neo.sys.sys_public.sysMemoryStats_s
 import neo.sys.sys_public.xthreadInfo
 import neo.sys.sys_public.xthreadPriority
 import neo.sys.sys_public.xthread_t
 import neo.sys.win_local.Win32Vars_t
-import java.awt.*
+import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.UnsupportedFlavorException
-import java.io.*
-import java.nio.*
+import java.io.File
+import java.io.FilenameFilter
+import java.io.IOException
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.util.concurrent.Executors
@@ -81,8 +83,8 @@ object win_main {
     //            = 0;
     const val SET_THREAD_AFFINITY = false
     const val WIN98_BUILD_NUMBER = 1998
-    val sys_cmdline: StringBuilder? = StringBuilder(Lib.Companion.MAX_STRING_CHARS)
-    val sys_showMallocs: idCVar? = idCVar("sys_showMallocs", "0", CVarSystem.CVAR_SYSTEM, "")
+    val sys_cmdline: StringBuilder = StringBuilder(Lib.Companion.MAX_STRING_CHARS)
+    val sys_showMallocs: idCVar = idCVar("sys_showMallocs", "0", CVarSystem.CVAR_SYSTEM, "")
     var   /*HANDLE*/hTimer: ScheduledExecutorService? = null
     var debug_current_alloc/*unsigned*/ = 0
     var debug_current_alloc_count/*unsigned*/ = 0
@@ -99,7 +101,7 @@ object win_main {
 
      ========================================================================
      */
-    var eventQue: Array<sysEvent_s?>? = arrayOfNulls<sysEvent_s?>(MAX_QUED_EVENTS)
+    var eventQue: Array<sysEvent_s?> = arrayOfNulls<sysEvent_s?>(MAX_QUED_EVENTS)
     var eventTail = 0
 
     /*
@@ -133,10 +135,10 @@ object win_main {
      Sys_GetExeLaunchMemoryStatus
      ================
      */
-    fun Sys_GetExeLaunchMemoryStatus(stats: sysMemoryStats_s?) {
-        throw TODO_Exception()
-        //	stats = exeLaunchMemoryStats;
-    }
+//    fun Sys_GetExeLaunchMemoryStatus(stats: sysMemoryStats_s?) {
+//        throw TODO_Exception()
+//        //	stats = exeLaunchMemoryStats;
+//    }
 
     /*
      ==================
@@ -146,8 +148,8 @@ object win_main {
     fun Sys_CreateThread(
         function: xthread_t?,
         parms: Any?,
-        priority: xthreadPriority?,
-        info: xthreadInfo?,
+        priority: xthreadPriority,
+        info: xthreadInfo,
         name: String?,
         threads: Array<xthreadInfo?>? /*[MAX_THREADS]*/,
         thread_count: IntArray?

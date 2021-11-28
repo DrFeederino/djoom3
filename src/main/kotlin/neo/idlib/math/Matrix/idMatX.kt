@@ -109,7 +109,7 @@ class idMatX {
     //public	const float *	operator[]( int index ) const;
     //public	float *			operator[]( int index );
     @Deprecated("")
-    fun oGet(index: Int): FloatArray? { ////TODO:by sub array by reference
+    fun oGet(index: Int): FloatArray { ////TODO:by sub array by reference
         return Arrays.copyOfRange(mat, index * numColumns, mat.size)
     }
 

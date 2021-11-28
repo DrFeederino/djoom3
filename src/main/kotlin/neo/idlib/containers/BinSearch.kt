@@ -1,7 +1,5 @@
 package neo.idlib.containers
 
-import neo.framework.DeclAF.idAFVector.type
-
 object BinSearch {
     /*
      ===============================================================================
@@ -19,13 +17,13 @@ object BinSearch {
      Finds the last array element which is smaller than the given value.
      ====================
      */
-    fun <type> idBinSearch_Less(array: Array<type?>?, arraySize: Int, value: type?): Int {
+    fun <T> idBinSearch_Less(array: Array<T>, arraySize: Int, value: T): Int {
         var len = arraySize
         var mid = len
         var offset = 0
         while (mid > 0) {
             mid = len shr 1
-            if (BinSearch.LT(array.get(offset + mid),  /*<*/value)) {
+            if (LT(array[offset + mid],  /*<*/value)) {
                 offset += mid
             }
             len -= mid
@@ -40,13 +38,13 @@ object BinSearch {
      Finds the last array element which is smaller than or equal to the given value.
      ====================
      */
-    fun <type> idBinSearch_LessEqual(array: Array<type?>?, arraySize: Int, value: type?): Int {
+    fun <T> idBinSearch_LessEqual(array: Array<T>, arraySize: Int, value: T): Int {
         var len = arraySize
         var mid = len
         var offset = 0
         while (mid > 0) {
             mid = len shr 1
-            if (BinSearch.LTE(array.get(offset + mid),  /*<=*/value)) {
+            if (LTE(array.get(offset + mid),  /*<=*/value)) {
                 offset += mid
             }
             len -= mid
@@ -61,14 +59,14 @@ object BinSearch {
      Finds the first array element which is greater than the given value.
      ====================
      */
-    fun <type> idBinSearch_Greater(array: Array<type?>?, arraySize: Int, value: type?): Int {
+    fun <T> idBinSearch_Greater(array: Array<T>, arraySize: Int, value: T): Int {
         var len = arraySize
         var mid = len
         var offset = 0
         var res = 0
         while (mid > 0) {
             mid = len shr 1
-            if (BinSearch.GT(array.get(offset + mid),  /*>*/value)) {
+            if (GT(array[offset + mid],  /*>*/value)) {
                 res = 0
             } else {
                 offset += mid
@@ -86,14 +84,14 @@ object BinSearch {
      Finds the first array element which is greater than or equal to the given value.
      ====================
      */
-    fun <type> idBinSearch_GreaterEqual(array: Array<type?>?, arraySize: Int, value: type?): Int {
+    fun <T> idBinSearch_GreaterEqual(array: Array<T>, arraySize: Int, value: T): Int {
         var len = arraySize
         var mid = len
         var offset = 0
         var res = 0
         while (mid > 0) {
             mid = len shr 1
-            if (BinSearch.GTE(array.get(offset + mid),  /*>=*/value)) {
+            if (GTE(array.get(offset + mid),  /*>=*/value)) {
                 res = 0
             } else {
                 offset += mid
@@ -104,22 +102,22 @@ object BinSearch {
         return offset + res
     }
 
-    fun GT(object1: Any?, object2: Any?): Boolean {
-        return (object1 as Number?).toDouble() > (object2 as Number?).toDouble()
+    fun <T> GT(object1: T, object2: T): Boolean {
+        return (object1 as Number).toDouble() > (object2 as Number).toDouble()
     }
 
     //Greater Than or Equal
-    fun GTE(object1: Any?, object2: Any?): Boolean {
-        return (object1 as Number?).toDouble() >= (object2 as Number?).toDouble()
+    fun <T> GTE(object1: T, object2: T): Boolean {
+        return (object1 as Number).toDouble() >= (object2 as Number).toDouble()
     }
 
     //Less Than
-    fun LT(object1: Any?, object2: Any?): Boolean {
-        return (object1 as Number?).toDouble() < (object2 as Number?).toDouble()
+    fun <T> LT(object1: T, object2: T): Boolean {
+        return (object1 as Number).toDouble() < (object2 as Number).toDouble()
     }
 
     //Less Than or Equal
-    fun LTE(object1: Any?, object2: Any?): Boolean {
-        return (object1 as Number?).toDouble() <= (object2 as Number?).toDouble()
+    fun <T> LTE(object1: T, object2: T): Boolean {
+        return (object1 as Number).toDouble() <= (object2 as Number).toDouble()
     }
 }

@@ -6,6 +6,7 @@ import neo.idlib.math.Matrix.idMat2
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
+import kotlin.math.abs
 
 /**
  *
@@ -194,8 +195,8 @@ object Plane {
         //public	boolean			operator==(	const idPlane &p ) const;					// exact compare, no epsilon
         //public	boolean			operator!=(	const idPlane &p ) const;					// exact compare, no epsilon
         // compare with epsilon
-        fun Compare(p: idPlane?, normalEps: Float, distEps: Float): Boolean {
-            return if (Math.abs(d - p.d) > distEps) {
+        fun Compare(p: idPlane, normalEps: Float, distEps: Float): Boolean {
+            return if (abs(d - p.d) > distEps) {
                 false
             } else Normal().Compare(p.Normal(), normalEps)
         }
