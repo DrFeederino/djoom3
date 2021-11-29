@@ -174,8 +174,8 @@ object tr_local {
     const val SMP_FRAMES = 1
     var backEnd: backEndState_t? = null
     var frameData: frameData_t? = null
-    var glConfig: glconfig_s? = glconfig_s() // outside of TR since it shouldn't be cleared during ref re-init
-    var tr: idRenderSystemLocal? = idRenderSystemLocal()
+    var glConfig: glconfig_s = glconfig_s() // outside of TR since it shouldn't be cleared during ref re-init
+    var tr: idRenderSystemLocal = idRenderSystemLocal()
 
     internal enum class backEndName_t {
         BE_ARB, BE_NV10, BE_NV20, BE_R200, BE_ARB2, BE_BAD

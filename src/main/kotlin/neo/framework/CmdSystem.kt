@@ -35,25 +35,25 @@ object CmdSystem {
     // command flags
     //typedef enum {
     const val CMD_FL_ALL: Long = -1
-    val CMD_FL_CHEAT: Long = Lib.Companion.BIT(0) // command is considered a cheat
+    val CMD_FL_CHEAT: Long = Lib.BIT(0) // command is considered a cheat
         .toLong()
-    val CMD_FL_GAME: Long = Lib.Companion.BIT(4) // game command
+    val CMD_FL_GAME: Long = Lib.BIT(4) // game command
         .toLong()
-    val CMD_FL_RENDERER: Long = Lib.Companion.BIT(2) // renderer command
+    val CMD_FL_RENDERER: Long = Lib.BIT(2) // renderer command
         .toLong()
-    val CMD_FL_SOUND: Long = Lib.Companion.BIT(3) // sound command
+    val CMD_FL_SOUND: Long = Lib.BIT(3) // sound command
         .toLong()
-    val CMD_FL_SYSTEM: Long = Lib.Companion.BIT(1) // system command
+    val CMD_FL_SYSTEM: Long = Lib.BIT(1) // system command
         .toLong()
-    val CMD_FL_TOOL: Long = Lib.Companion.BIT(5) // tool command
+    val CMD_FL_TOOL: Long = Lib.BIT(5) // tool command
         .toLong()
-    private val cmdSystemLocal: idCmdSystemLocal? = idCmdSystemLocal()
-    var cmdSystem: idCmdSystem? = CmdSystem.cmdSystemLocal
+    private var cmdSystemLocal: idCmdSystemLocal = idCmdSystemLocal()
+    var cmdSystem: idCmdSystem = cmdSystemLocal
 
     //} cmdFlags_t;
-    fun setCmdSystem(cmdSystem: idCmdSystem?) {
-        CmdSystem.cmdSystemLocal = cmdSystem as idCmdSystemLocal?
-        CmdSystem.cmdSystem = CmdSystem.cmdSystemLocal
+    fun setCmdSystems(cmdSystem: idCmdSystem) {
+        cmdSystemLocal = cmdSystem as idCmdSystemLocal
+        CmdSystem.cmdSystem = cmdSystemLocal
     }
 
     // parameters for command buffer stuffing
@@ -66,15 +66,15 @@ object CmdSystem {
     // command function
     abstract class cmdFunction_t {
         @Throws(idException::class)
-        abstract fun run(args: CmdArgs.idCmdArgs?)
+        abstract fun run(args: CmdArgs.idCmdArgs)
     }
 
     // argument completion function
     abstract class argCompletion_t {
         //typedef void (*argCompletion_t)( final idCmdArgs args, void_callback<String> callback );
         @Throws(idException::class)
-        abstract fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?)
-        fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?, type: Int) {}
+        abstract fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>)
+        fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>, type: Int) {}
     }
 
     abstract class idCmdSystem {
@@ -88,39 +88,39 @@ object CmdSystem {
         // Registers a command and the function to call for it.
         @Throws(idException::class)
         abstract fun AddCommand(
-            cmdName: String?,
-            function: cmdFunction_t?,
+            cmdName: String,
+            function: cmdFunction_t,
             flags: Long,
-            description: String?,
-            argCompletion: CmdSystem.argCompletion_t?
+            description: String,
+            argCompletion: argCompletion_t?
         )
 
         @Throws(idException::class)
         fun AddCommand(
-            cmdName: String?,
-            function: cmdFunction_t?,
+            cmdName: String,
+            function: cmdFunction_t,
             flags: Long,
-            description: String? /*, argCompletion_t argCompletion = NULL*/
+            description: String /*, argCompletion_t argCompletion = NULL*/
         ) {
             AddCommand(cmdName, function, flags, description, null)
         }
 
         // Removes a command.
-        abstract fun RemoveCommand(cmdName: String?)
+        abstract fun RemoveCommand(cmdName: String)
 
         // Remove all commands with one of the flags set.
         abstract fun RemoveFlaggedCommands(flags: Int)
 
         // Command and argument completion using callback for each valid string.
         @Throws(idException::class)
-        abstract fun CommandCompletion(callback: void_callback<String?>?)
+        abstract fun CommandCompletion(callback: void_callback<String>)
 
         @Throws(idException::class)
-        abstract fun ArgCompletion(cmdString: String?, callback: void_callback<String?>?)
+        abstract fun ArgCompletion(cmdString: String, callback: void_callback<String>)
 
         // Adds command text to the command buffer, does not add a final \n
         @Throws(idException::class)
-        abstract fun BufferCommandText(exec: cmdExecution_t?, text: String?)
+        abstract fun BufferCommandText(exec: cmdExecution_t, text: String)
 
         // Pulls off \n \r or ; terminated lines of text from the command buffer and
         // executes the commands. Stops when the buffer is empty.
@@ -131,47 +131,47 @@ object CmdSystem {
         // Base for path/file auto-completion.
         @Throws(idException::class)
         abstract fun ArgCompletion_FolderExtension(
-            args: CmdArgs.idCmdArgs?,
-            callback: void_callback<String?>?,
-            folder: String?,
+            args: CmdArgs.idCmdArgs,
+            callback: void_callback<String>,
+            folder: String,
             stripFolder: Boolean,
             vararg objects: Any?
         )
 
         // Base for decl name auto-completion.
         @Throws(idException::class)
-        abstract fun ArgCompletion_DeclName(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?, type: Int)
+        abstract fun ArgCompletion_DeclName(args: CmdArgs.idCmdArgs, callback: void_callback<String>, type: Int)
 
         // Adds to the command buffer in tokenized form ( CMD_EXEC_NOW or CMD_EXEC_APPEND only )
         @Throws(idException::class)
-        abstract fun BufferCommandArgs(exec: cmdExecution_t?, args: CmdArgs.idCmdArgs?)
+        abstract fun BufferCommandArgs(exec: cmdExecution_t, args: CmdArgs.idCmdArgs)
 
         // Setup a reloadEngine to happen on next command run, and give a command to execute after reload
         @Throws(idException::class)
-        abstract fun SetupReloadEngine(args: CmdArgs.idCmdArgs?)
+        abstract fun SetupReloadEngine(args: CmdArgs.idCmdArgs)
 
         @Throws(idException::class)
         abstract fun PostReloadEngine(): Boolean
 
         // Default argument completion functions.
-        class ArgCompletion_Boolean : CmdSystem.argCompletion_t() {
+        class ArgCompletion_Boolean : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 callback.run(Str.va("%s 0", args.Argv(0)))
                 callback.run(Str.va("%s 1", args.Argv(0)))
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_Boolean()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_Boolean()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_Integer(private val min: Int, private val max: Int) : CmdSystem.argCompletion_t() {
+        class ArgCompletion_Integer(private val min: Int, private val max: Int) : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 for (i in min..max) {
                     callback.run(Str.va("%s %d", args.Argv(0), i))
                 }
@@ -179,9 +179,9 @@ object CmdSystem {
         }
 
         //	template<final String *strings>
-        class ArgCompletion_String(private val listDeclStrings: Array<String?>?) : CmdSystem.argCompletion_t() {
+        class ArgCompletion_String(private val listDeclStrings: Array<String?>) : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 var i = 0
                 while (listDeclStrings.get(i) != null) {
                     callback.run(Str.va("%s %s", args.Argv(0), listDeclStrings.get(i)))
@@ -191,45 +191,45 @@ object CmdSystem {
         }
 
         //	template<int type>
-        class ArgCompletion_Decl(private val type: declType_t?) : CmdSystem.argCompletion_t() {
+        class ArgCompletion_Decl(private val type: declType_t) : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_DeclName(args, callback, type.ordinal)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_DeclName(args, callback, type.ordinal)
             }
         }
 
-        class ArgCompletion_FileName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_FileName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", true, "", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", true, "", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_FileName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_FileName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_MapName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_MapName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "maps/", true, ".map", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "maps/", true, ".map", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_MapName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_MapName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_ModelName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_ModelName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(
                     args,
                     callback,
                     "models/",
@@ -243,31 +243,31 @@ object CmdSystem {
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_ModelName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_ModelName()
+                fun getInstance(): argCompletion_t? {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_SoundName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_SoundName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "sound/", false, ".wav", ".ogg", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "sound/", false, ".wav", ".ogg", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_SoundName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_SoundName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_ImageName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_ImageName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(
                     args,
                     callback,
                     "/",
@@ -281,64 +281,64 @@ object CmdSystem {
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_ImageName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_ImageName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_VideoName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_VideoName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "video/", false, ".roq", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "video/", false, ".roq", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_VideoName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_VideoName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_ConfigName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_ConfigName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", true, ".cfg", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "/", true, ".cfg", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_ConfigName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_ConfigName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_SaveGame : CmdSystem.argCompletion_t() {
+        class ArgCompletion_SaveGame : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "SaveGames/", true, ".save", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "SaveGames/", true, ".save", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_SaveGame()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_SaveGame()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
         }
 
-        class ArgCompletion_DemoName : CmdSystem.argCompletion_t() {
+        class ArgCompletion_DemoName : argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
-                CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "demos/", true, ".demo", null)
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+                cmdSystem.ArgCompletion_FolderExtension(args, callback, "demos/", true, ".demo", null)
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_DemoName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: argCompletion_t = ArgCompletion_DemoName()
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
@@ -353,7 +353,7 @@ object CmdSystem {
      ===============================================================================
      */
     class commandDef_s {
-        var argCompletion: CmdSystem.argCompletion_t? = null
+        var argCompletion: argCompletion_t? = null
         var description: String? = null
         var flags: Long = 0
         var function: cmdFunction_t? = null
@@ -387,39 +387,39 @@ object CmdSystem {
         override fun Init() {
             AddCommand(
                 "listCmds",
-                CmdSystem.idCmdSystemLocal.List_f.Companion.getInstance(),
-                CmdSystem.CMD_FL_SYSTEM,
+                List_f.getInstance(),
+                CMD_FL_SYSTEM,
                 "lists commands"
             )
-            AddCommand("listSystemCmds", SystemList_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "lists system commands")
+            AddCommand("listSystemCmds", SystemList_f.getInstance(), CMD_FL_SYSTEM, "lists system commands")
             AddCommand(
                 "listRendererCmds",
                 RendererList_f.getInstance(),
-                CmdSystem.CMD_FL_SYSTEM,
+                CMD_FL_SYSTEM,
                 "lists renderer commands"
             )
-            AddCommand("listSoundCmds", SoundList_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "lists sound commands")
-            AddCommand("listGameCmds", GameList_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "lists game commands")
-            AddCommand("listToolCmds", ToolList_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "lists tool commands")
+            AddCommand("listSoundCmds", SoundList_f.getInstance(), CMD_FL_SYSTEM, "lists sound commands")
+            AddCommand("listGameCmds", GameList_f.getInstance(), CMD_FL_SYSTEM, "lists game commands")
+            AddCommand("listToolCmds", ToolList_f.getInstance(), CMD_FL_SYSTEM, "lists tool commands")
             AddCommand(
                 "exec",
                 Exec_f.getInstance(),
-                CmdSystem.CMD_FL_SYSTEM,
+                CMD_FL_SYSTEM,
                 "executes a config file",
                 ArgCompletion_ConfigName.getInstance()
             ) //TODO:extend argCompletion_t
             AddCommand(
                 "vstr",
                 Vstr_f.getInstance(),
-                CmdSystem.CMD_FL_SYSTEM,
+                CMD_FL_SYSTEM,
                 "inserts the current value of a cvar as command text"
             )
-            AddCommand("echo", Echo_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "prints text")
-            AddCommand("parse", Parse_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "prints tokenized string")
+            AddCommand("echo", Echo_f.getInstance(), CMD_FL_SYSTEM, "prints text")
+            AddCommand("parse", Parse_f.getInstance(), CMD_FL_SYSTEM, "prints tokenized string")
             AddCommand(
                 "wait",
                 Wait_f.getInstance(),
-                CmdSystem.CMD_FL_SYSTEM,
+                CMD_FL_SYSTEM,
                 "delays remaining buffered commands one or more frames"
             )
             completionString = idStr("*")
@@ -449,14 +449,14 @@ object CmdSystem {
             function: cmdFunction_t?,
             flags: Long,
             description: String?,
-            argCompletion: CmdSystem.argCompletion_t?
+            argCompletion: argCompletion_t?
         ) {
             var cmd: commandDef_s?
 
             // fail if the command already exists
             cmd = commands
             while (cmd != null) {
-                if (idStr.Companion.Cmp(cmdName, cmd.name) == 0) {
+                if (idStr.Cmp(cmdName, cmd.name) == 0) {
                     if (function !== cmd.function) {
                         idLib.common.Printf("idCmdSystemLocal::AddCommand: %s already defined\n", cmdName)
                     }
@@ -479,7 +479,7 @@ object CmdSystem {
             var last: commandDef_s?
             last = commands.also { cmd = it }
             while (cmd != null) {
-                if (idStr.Companion.Cmp(cmdName, cmd.name) == 0) {
+                if (idStr.Cmp(cmdName, cmd.name) == 0) {
                     if (cmd === commands) { //first iteration.
                         commands = cmd.next //TODO:BOINTER. edit: check if this equals **last;
                     } else { //set last.next to last.next.next,
@@ -530,7 +530,7 @@ object CmdSystem {
                     cmd = cmd.next
                     continue
                 }
-                if (idStr.Companion.Icmp(args.Argv(0), cmd.name) == 0) {
+                if (idStr.Icmp(args.Argv(0), cmd.name) == 0) {
                     cmd.argCompletion.run(args, callback)
                     break
                 }
@@ -591,7 +591,7 @@ object CmdSystem {
 //                text[i] = 0;
                 val bla = String(text)
                 txt = bla.substring(0, i) //do not use ctos!
-                if (0 == idStr.Companion.Cmp(txt, "_execTokenized")) {
+                if (0 == idStr.Cmp(txt, "_execTokenized")) {
                     args = tokenizedCmds.oGet(0)
                     tokenizedCmds.RemoveIndex(0)
                 } else {
@@ -618,9 +618,9 @@ object CmdSystem {
 
         @Throws(idException::class)
         override fun ArgCompletion_FolderExtension(
-            args: CmdArgs.idCmdArgs?,
-            callback: void_callback<String?>?,
-            folder: String?,
+            args: CmdArgs.idCmdArgs,
+            callback: void_callback<String>,
+            folder: String,
             stripFolder: Boolean,
             vararg objects: Any?
         ) {
@@ -689,28 +689,28 @@ object CmdSystem {
         }
 
         @Throws(idException::class)
-        override fun ArgCompletion_DeclName(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?, type: Int) {
+        override fun ArgCompletion_DeclName(args: CmdArgs.idCmdArgs, callback: void_callback<String>, type: Int) {
             var i: Int
             val num: Int
             if (DeclManager.declManager == null) {
                 return
             }
-            num = DeclManager.declManager.GetNumDecls(declType_t.values()[type])
+            num = DeclManager.declManager!!.GetNumDecls(declType_t.values()[type])
             i = 0
             while (i < num) {
                 callback.run(
-                    args.Argv(0) + " " + DeclManager.declManager.DeclByIndex(
+                    args.Argv(0) + " " + DeclManager.declManager!!.DeclByIndex(
                         declType_t.values()[type],
                         i,
                         false
-                    ).GetName()
+                    )!!.GetName()
                 )
                 i++
             }
         }
 
         @Throws(idException::class)
-        override fun BufferCommandArgs(exec: cmdExecution_t?, args: CmdArgs.idCmdArgs?) {
+        override fun BufferCommandArgs(exec: cmdExecution_t, args: CmdArgs.idCmdArgs) {
             when (exec) {
                 cmdExecution_t.CMD_EXEC_NOW -> {
                     ExecuteTokenizedString(args)
@@ -726,7 +726,7 @@ object CmdSystem {
         }
 
         @Throws(idException::class)
-        override fun SetupReloadEngine(args: CmdArgs.idCmdArgs?) {
+        override fun SetupReloadEngine(args: CmdArgs.idCmdArgs) {
             BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "reloadEngine\n")
             postReload = args
         }
@@ -753,7 +753,7 @@ object CmdSystem {
         }
 
         @Throws(idException::class)
-        private fun ExecuteTokenizedString(args: CmdArgs.idCmdArgs?) {
+        private fun ExecuteTokenizedString(args: CmdArgs.idCmdArgs) {
             var cmd: commandDef_s?
             var prev: commandDef_s?
 
@@ -770,7 +770,7 @@ object CmdSystem {
             while (cmd != null) {
 
 //                cmd = prev;
-                if (idStr.Companion.Icmp(args.Argv(0), cmd.name) == 0) {
+                if (idStr.Icmp(args.Argv(0), cmd.name) == 0) {
                     // rearrange the links so that the command will be
                     // near the head of the list next time it is used
                     if (cmd !== commands) { //no re-arranging necessary for first element.
@@ -778,7 +778,7 @@ object CmdSystem {
                         cmd.next = commands
                         commands = cmd
                     }
-                    if (cmd.flags and (CmdSystem.CMD_FL_CHEAT or CmdSystem.CMD_FL_TOOL) != 0L && Session.Companion.session != null && Session.Companion.session.IsMultiplayer() && !CVarSystem.cvarSystem.GetCVarBool(
+                    if (cmd.flags and (CMD_FL_CHEAT or CMD_FL_TOOL) != 0L && Session.session != null && Session.session.IsMultiplayer() && !CVarSystem.cvarSystem.GetCVarBool(
                             "net_allowCheats"
                         )
                     ) {
@@ -812,7 +812,7 @@ object CmdSystem {
          ============
          */
         @Throws(idException::class)
-        private fun ExecuteCommandText(text: String?) {
+        private fun ExecuteCommandText(text: String) {
             ExecuteTokenizedString(CmdArgs.idCmdArgs(text, false))
         }
 
@@ -825,7 +825,7 @@ object CmdSystem {
          ============
          */
         @Throws(idException::class)
-        private fun InsertCommandText(text: String?) {
+        private fun InsertCommandText(text: String) {
             val len: Int
             var i: Int
             len = text.length + 1
@@ -858,7 +858,7 @@ object CmdSystem {
          ============
          */
         @Throws(idException::class)
-        private fun AppendCommandText(text: String?) {
+        private fun AppendCommandText(text: String) {
             val l: Int
             l = text.length
             if (textLength + l >= textBuf.size) {
@@ -878,27 +878,27 @@ object CmdSystem {
 
         private class List_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_ALL)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_ALL)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = CmdSystem.idCmdSystemLocal.List_f()
-                fun getInstance(): cmdFunction_t? {
-                    return CmdSystem.idCmdSystemLocal.List_f.Companion.instance
+                private val instance: cmdFunction_t = List_f()
+                fun getInstance(): cmdFunction_t {
+                    return instance
                 }
             }
         }
 
         private class SystemList_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_SYSTEM)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_SYSTEM)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = SystemList_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = SystemList_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -906,13 +906,13 @@ object CmdSystem {
 
         private class RendererList_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_RENDERER)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_RENDERER)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = RendererList_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = RendererList_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -920,13 +920,13 @@ object CmdSystem {
 
         private class SoundList_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_SOUND)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_SOUND)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = SoundList_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = SoundList_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -934,13 +934,13 @@ object CmdSystem {
 
         private class GameList_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_GAME)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_GAME)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = GameList_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = GameList_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -948,13 +948,13 @@ object CmdSystem {
 
         private class ToolList_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_TOOL)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_TOOL)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ToolList_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ToolList_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -963,7 +963,7 @@ object CmdSystem {
         //private	static void				Exec_f( const idCmdArgs &args );
         private class Exec_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 val f = arrayOf<ByteBuffer?>(null)
                 val len: Int
                 val filename: idStr
@@ -979,13 +979,13 @@ object CmdSystem {
                     return
                 }
                 idLib.common.Printf("execing %s\n", args.Argv(1))
-                CmdSystem.cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0].array()))
+                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0].array()))
                 FileSystem_h.fileSystem.FreeFile(f)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Exec_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Exec_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1000,19 +1000,19 @@ object CmdSystem {
          */
         private class Vstr_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 val v: String?
                 if (args.Argc() != 2) {
                     idLib.common.Printf("vstr <variablename> : execute a variable command\n")
                     return
                 }
                 v = CVarSystem.cvarSystem.GetCVarString(args.Argv(1))
-                CmdSystem.cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, Str.va("%s\n", v))
+                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, Str.va("%s\n", v))
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Vstr_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Vstr_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1027,7 +1027,7 @@ object CmdSystem {
          */
         private class Echo_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 var i: Int
                 i = 1
                 while (i < args.Argc()) {
@@ -1038,8 +1038,8 @@ object CmdSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Echo_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Echo_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1064,8 +1064,8 @@ object CmdSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Parse_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Parse_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1079,17 +1079,17 @@ object CmdSystem {
          ============
          */
         private class Wait_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (args.Argc() == 2) {
-                    CmdSystem.cmdSystemLocal.SetWait(args.Argv(1).toInt())
+                    cmdSystemLocal.SetWait(args.Argv(1).toInt())
                 } else {
-                    CmdSystem.cmdSystemLocal.SetWait(1)
+                    cmdSystemLocal.SetWait(1)
                 }
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Wait_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Wait_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1098,14 +1098,14 @@ object CmdSystem {
         //private	static void				PrintMemInfo_f( const idCmdArgs &args );
         private class PrintMemInfo_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
-                ListByFlags(args, CmdSystem.CMD_FL_SYSTEM)
+            override fun run(args: CmdArgs.idCmdArgs) {
+                ListByFlags(args, CMD_FL_SYSTEM)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = CmdSystem.idCmdSystemLocal.PrintMemInfo_f()
-                fun getInstance(): cmdFunction_t? {
-                    return CmdSystem.idCmdSystemLocal.PrintMemInfo_f.Companion.instance
+                private val instance: cmdFunction_t = PrintMemInfo_f()
+                fun getInstance(): cmdFunction_t {
+                    return instance
                 }
             }
         }
@@ -1115,9 +1115,9 @@ object CmdSystem {
             private var DBG_ExecuteCommandBuffer = 0
 
             @Throws(idException::class)
-            private fun ListByFlags(args: CmdArgs.idCmdArgs?, cmdFlags_t: Long) {
+            private fun ListByFlags(args: CmdArgs.idCmdArgs, cmdFlags_t: Long) {
                 var i: Int
-                var match: String?
+                var match: String
                 var cmd: commandDef_s?
                 val cmdList = idList<commandDef_s?>()
                 if (args.Argc() > 1) {
@@ -1126,7 +1126,7 @@ object CmdSystem {
                 } else {
                     match = ""
                 }
-                cmd = CmdSystem.cmdSystemLocal.GetCommands()
+                cmd = cmdSystemLocal.GetCommands()
                 while (cmd != null) {
                     if (0L == cmd.flags and cmdFlags_t) {
                         cmd = cmd.next
@@ -1164,9 +1164,9 @@ object CmdSystem {
      ============
      */
     // NOTE: the const wonkyness is required to make msvc happy
-    class idListSortCompare : cmp_t<commandDef_s?> {
-        override fun compare(a: commandDef_s?, b: commandDef_s?): Int {
-            return idStr.Companion.Icmp(a.name, b.name)
+    class idListSortCompare : cmp_t<commandDef_s> {
+        override fun compare(a: commandDef_s, b: commandDef_s): Int {
+            return idStr.Icmp(a.name, b.name)
         }
     }
 }

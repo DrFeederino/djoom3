@@ -35,31 +35,31 @@ object ServerScan {
 
      ===============================================================================
      */
-    val gui_filter_game: idCVar? = idCVar(
+    val gui_filter_game: idCVar = idCVar(
         "gui_filter_game",
         "0",
         CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
         "Game filter"
     )
-    val gui_filter_gameType: idCVar? = idCVar(
+    val gui_filter_gameType: idCVar = idCVar(
         "gui_filter_gameType",
         "0",
         CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
         "Gametype filter"
     )
-    val gui_filter_idle: idCVar? = idCVar(
+    val gui_filter_idle: idCVar = idCVar(
         "gui_filter_idle",
         "0",
         CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
         "Idle servers filter"
     )
-    val gui_filter_password: idCVar? = idCVar(
+    val gui_filter_password: idCVar = idCVar(
         "gui_filter_password",
         "0",
         CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
         "Password filter"
     )
-    val gui_filter_players: idCVar? = idCVar(
+    val gui_filter_players: idCVar = idCVar(
         "gui_filter_players",
         "0",
         CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
@@ -67,7 +67,7 @@ object ServerScan {
     )
 
     //
-    val l_gameTypes: Array<String?>? = arrayOf(
+    val l_gameTypes: Array<String?> = arrayOf(
         "Deathmatch",
         "Tourney",
         "Team DM",
@@ -90,7 +90,7 @@ object ServerScan {
 
     // storage for incoming servers / server scan
     internal class inServer_t {
-        var adr: netadr_t? = null
+        var adr: netadr_t = netadr_t()
         var id = 0
         var time = 0
     }
@@ -115,21 +115,21 @@ object ServerScan {
      idServerScan
      ================
      */
-    class idServerScan : idList<networkServer_t?>() {
+    class idServerScan : idList<networkServer_t>() {
         private val m_sortedServers // use ascending for the walking order
-                : idList<Int?>?
+                : idList<Int>
 
         //
         // servers we're waiting for a reply from
         // won't exceed MAX_PINGREQUESTS elements
         // holds index of net_servers elements, indexed by 'from' string
-        private val net_info: idDict?
+        private val net_info: idDict
 
         //
-        private val net_servers: idList<inServer_t?>?
+        private val net_servers: idList<inServer_t>
 
         //
-        private val screenshot: idStr?
+        private val screenshot: idStr
         private var challenge // challenge for current scan
                 : Int
 
@@ -156,14 +156,14 @@ object ServerScan {
         private var m_pGUI: idUserInterface? = null
 
         //
-        private var m_sort: serverSort_t?
+        private var m_sort: serverSort_t
         private var m_sortAscending: Boolean
 
         //
-        private var scan_state: scan_state_t? = null
+        private var scan_state: scan_state_t = scan_state_t.IDLE
 
         @Throws(idException::class)
-        fun InfoResponse(server: networkServer_t?): Int {
+        fun InfoResponse(server: networkServer_t): Int {
             if (scan_state == scan_state_t.IDLE) {
                 return 0
             }
@@ -352,7 +352,7 @@ object ServerScan {
             }
         }
 
-        fun GetState(): scan_state_t? {
+        fun GetState(): scan_state_t {
             return scan_state
         }
 

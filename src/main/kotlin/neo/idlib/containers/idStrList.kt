@@ -10,8 +10,8 @@ idStrList re-implementation with ArrayLists
 
 ===============================================================================
 */
-open class idStrList : Comparator<idStr?> {
-    private var stringsList: MutableList<idStr?>?
+open class idStrList : Comparator<idStr> {
+    private var stringsList: MutableList<idStr>
 
     constructor() {
         stringsList = ArrayList()
@@ -21,7 +21,7 @@ open class idStrList : Comparator<idStr?> {
         stringsList = ArrayList(size)
     }
 
-    fun getStringsList(): MutableList<idStr?>? {
+    fun getStringsList(): MutableList<idStr> {
         return stringsList
     }
 
@@ -37,7 +37,7 @@ open class idStrList : Comparator<idStr?> {
         if (stringsList.isEmpty()) {
             return
         }
-        stringsList.sort(this)
+        stringsList.sortWith(this)
     }
 
     /*
@@ -59,14 +59,14 @@ open class idStrList : Comparator<idStr?> {
         if (endIndex > stringsList.size) {
             endIndex = stringsList.size - 1
         }
-        stringsList.subList(startIndex, endIndex).sort(this)
+        stringsList.subList(startIndex, endIndex).sortWith(this)
     }
 
     fun sizeStrings(): Int {
-        return stringsList.stream().mapToInt { obj: idStr? -> obj.Size() }.sum()
+        return stringsList.stream().mapToInt { obj: idStr -> obj.Size() }.sum()
     }
 
-    fun addUnique(obj: String?): Int {
+    fun addUnique(obj: String): Int {
         val newIdStr = idStr(obj)
         val indexOfObj = stringsList.lastIndexOf(newIdStr)
         return if (indexOfObj == -1) {
@@ -75,7 +75,7 @@ open class idStrList : Comparator<idStr?> {
         // already in the array
     }
 
-    fun addUnique(obj: idStr?): Int {
+    fun addUnique(obj: idStr): Int {
         val indexOfObj = stringsList.lastIndexOf(obj)
         return if (indexOfObj == -1) {
             add(obj) // assuming it's added to the end
@@ -83,13 +83,13 @@ open class idStrList : Comparator<idStr?> {
         // already in the array
     }
 
-    fun add(obj: String?): Int {
+    fun add(obj: String): Int {
         val newIdStr = idStr(obj)
         stringsList.add(newIdStr)
         return stringsList.size - 1
     }
 
-    fun add(obj: idStr?): Int {
+    fun add(obj: idStr): Int {
         stringsList.add(obj)
         return stringsList.size - 1
     }
@@ -113,11 +113,11 @@ open class idStrList : Comparator<idStr?> {
         //this.stringsList = null;
     }
 
-    fun insert(obj: idStr?): Int {            // insert the element at the given index
+    fun insert(obj: idStr): Int {            // insert the element at the given index
         return insert(0, obj)
     }
 
-    private fun insert(i: Int, obj: idStr?): Int {
+    private fun insert(i: Int, obj: idStr): Int {
         stringsList.add(i, obj)
         return i
     }
@@ -129,7 +129,7 @@ open class idStrList : Comparator<idStr?> {
      Compares two pointers to strings. Used to sort a list of string pointers alphabetically in idList<idStr>::Sort.
      ================
      */
-    override fun compare(a: idStr?, b: idStr?): Int {
+    override fun compare(a: idStr, b: idStr): Int {
         return a.Icmp(b)
     }
 
@@ -138,7 +138,7 @@ open class idStrList : Comparator<idStr?> {
         return if (result == -1) null else result
     }
 
-    operator fun get(i: Int): idStr? {
+    operator fun get(i: Int): idStr {
         var i = i
         if (i >= stringsList.size) {
             i = if (stringsList.isEmpty()) 0 else stringsList.size - 1
@@ -146,7 +146,7 @@ open class idStrList : Comparator<idStr?> {
         return stringsList.get(i)
     }
 
-    fun set(associatedModels: idStrList?) {
+    fun set(associatedModels: idStrList) {
         stringsList = ArrayList(associatedModels.getStringsList())
     }
 
@@ -159,7 +159,7 @@ open class idStrList : Comparator<idStr?> {
         return stringsList.size
     }
 
-    fun addEmptyStr(): idStr? {
+    fun addEmptyStr(): idStr {
         val idStr = idStr()
         stringsList.add(idStr)
         return idStr
@@ -171,7 +171,7 @@ open class idStrList : Comparator<idStr?> {
         }
     }
 
-    operator fun set(i: Int, value: String?) {
+    operator fun set(i: Int, value: String) {
         var i = i
         if (i >= stringsList.size) {
             i = if (stringsList.isEmpty()) 0 else stringsList.size - 1
@@ -179,7 +179,7 @@ open class idStrList : Comparator<idStr?> {
         stringsList.add(i, idStr(value))
     }
 
-    operator fun set(i: Int, obj: idStr?) {
+    operator fun set(i: Int, obj: idStr) {
         var i = i
         if (i >= stringsList.size) {
             i = if (stringsList.isEmpty()) 0 else stringsList.size - 1
@@ -191,7 +191,7 @@ open class idStrList : Comparator<idStr?> {
         setSize(num, true)
     }
 
-    fun ensureSize(num_files: Int, empty: idStr?) {
+    fun ensureSize(num_files: Int, empty: idStr) {
         val sizeDiff = num_files - stringsList.size // e.g. num_files > list_size
         if (sizeDiff <= 0) {
             return  // it's ok
@@ -209,7 +209,7 @@ open class idStrList : Comparator<idStr?> {
         stringsList.removeAt(i)
     }
 
-    fun remove(idStr: idStr?) {
+    fun remove(idStr: idStr) {
         stringsList.remove(idStr)
     }
 
@@ -222,11 +222,11 @@ open class idStrList : Comparator<idStr?> {
      (a, b) -> a.IcmpPath(b.toString()) is idStrList path sorting.
      ================
      */
-        fun idStrListSortPaths(strings: idStrList?) {
+        fun idStrListSortPaths(strings: idStrList) {
             if (strings.stringsList == null || strings.stringsList.isEmpty()) {
                 return
             }
-            strings.getStringsList().sort(Comparator { a: idStr?, b: idStr? -> a.IcmpPath(b.toString()) })
+            strings.getStringsList().sortWith { a: idStr, b: idStr -> a.IcmpPath(b.toString()) }
         }
     }
 }

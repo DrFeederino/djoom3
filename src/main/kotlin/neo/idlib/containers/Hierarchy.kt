@@ -1,6 +1,5 @@
 package neo.idlib.containers
 
-import neo.framework.DeclAF.idAFVector.type
 import neo.idlib.Lib.idLib
 
 /**
@@ -14,46 +13,46 @@ class Hierarchy {
 
      ==============================================================================
      */
-    class idHierarchy<type>     //
+    class idHierarchy<T>     //
     //
     {
-        private var child: idHierarchy<*>? = null
-        private var owner: type? = null
-        private var parent: idHierarchy<*>? = null
-        private var sibling: idHierarchy<*>? = null
+        private var child: idHierarchy<T>? = null
+        private var owner: T? = null
+        private var parent: idHierarchy<T>? = null
+        private var sibling: idHierarchy<T>? = null
 
         //public						~idHierarchy();
         //	
         /*
          ================
-         idHierarchy<type>::SetOwner
+         idHierarchy<T>::SetOwner
 
          Sets the object that this node is associated with.
          ================
          */
-        fun SetOwner(`object`: type?) {
+        fun SetOwner(`object`: T?) {
             owner = `object`
         }
 
         /*
          ================
-         idHierarchy<type>::Owner
+         idHierarchy<T>::Owner
 
          Gets the object that is associated with this node.
          ================
          */
-        fun Owner(): type? {
+        fun Owner(): T? {
             return owner
         }
 
         /*
          ================
-         idHierarchy<type>::ParentTo
+         idHierarchy<T>::ParentTo
 
          Makes the given node the parent.
          ================
          */
-        fun ParentTo(node: idHierarchy<*>?) {
+        fun ParentTo(node: idHierarchy<T>) {
             RemoveFromParent()
             parent = node
             sibling = node.child
@@ -62,35 +61,35 @@ class Hierarchy {
 
         /*
          ================
-         idHierarchy<type>::MakeSiblingAfter
+         idHierarchy<T>::MakeSiblingAfter
 
          Makes the given node a sibling after the passed in node.
          ================
          */
-        fun MakeSiblingAfter(node: idHierarchy<*>?) {
+        fun MakeSiblingAfter(node: idHierarchy<T>) {
             RemoveFromParent()
             parent = node.parent
             sibling = node.sibling
             node.sibling = this
         }
 
-        fun ParentedBy(node: idHierarchy<*>?): Boolean {
+        fun ParentedBy(node: idHierarchy<T>): Boolean {
             if (parent === node) {
                 return true
             } else if (parent != null) {
-                return parent.ParentedBy(node)
+                return parent!!.ParentedBy(node)
             }
             return false
         }
 
         fun RemoveFromParent() {
-            val prev: idHierarchy<type?>?
+            val prev: idHierarchy<T>?
             if (parent != null) {
                 prev = GetPriorSiblingNode()
                 if (prev != null) {
                     prev.sibling = sibling
                 } else {
-                    parent.child = sibling
+                    parent!!.child = sibling
                 }
             }
             parent = null
@@ -99,64 +98,64 @@ class Hierarchy {
 
         /*
          ================
-         idHierarchy<type>::RemoveFromHierarchy
+         idHierarchy<T>::RemoveFromHierarchy
 
          Removes the node from the hierarchy and adds it's children to the parent.
          ================
          */
         fun RemoveFromHierarchy() {
-            val parentNode: idHierarchy<type?>?
-            var node: idHierarchy<type?>?
+            val parentNode: idHierarchy<T>?
+            var node: idHierarchy<T>?
             parentNode = parent
             RemoveFromParent()
             if (parentNode != null) {
                 while (child != null) {
                     node = child
-                    node.RemoveFromParent()
+                    node!!.RemoveFromParent()
                     node.ParentTo(parentNode)
                 }
             } else {
                 while (child != null) {
-                    child.RemoveFromParent()
+                    child!!.RemoveFromParent()
                 }
             }
         }
 
         // parent of this node
-        fun GetParent(): type? {
+        fun GetParent(): T? {
             return if (parent != null) {
-                parent.owner as type?
+                parent!!.owner
             } else null
         }
 
         // first child of this node
-        fun GetChild(): type? {
+        fun GetChild(): T? {
             return if (child != null) {
-                child.owner as type?
+                child!!.owner
             } else null
         }
 
         // next node with the same parent
-        fun GetSibling(): type? {
+        fun GetSibling(): T? {
             return if (sibling != null) {
-                sibling.owner as type?
+                sibling!!.owner
             } else null
         }
 
         /*
          ================
-         idHierarchy<type>::GetPriorSiblingNode
+         idHierarchy<T>::GetPriorSiblingNode
 
          Returns NULL if no parent, or if it is the first child.
          ================
          */
-        fun GetPriorSibling(): type? {        // previous node with the same parent
-            if (null == parent || parent.child === this) {
+        fun GetPriorSibling(): T? {        // previous node with the same parent
+            if (null == parent || parent!!.child === this) {
                 return null
             }
-            var prev: idHierarchy<type?>?
-            var node: idHierarchy<type?>?
-            node = parent.child
+            var prev: idHierarchy<T>?
+            var node: idHierarchy<T>?
+            node = parent!!.child
             prev = null
             while (node !== this && node != null) {
                 prev = node
@@ -165,27 +164,27 @@ class Hierarchy {
             if (node !== this) {
                 idLib.Error("idHierarchy::GetPriorSibling: could not find node in parent's list of children")
             }
-            return prev as type?
+            return prev as T?
         }
 
         /*
          ================
-         idHierarchy<type>::GetNext
+         idHierarchy<T>::GetNext
 
          Goes through all nodes of the hierarchy.
          ================
          */
-        fun GetNext(): type? {            // goes through all nodes of the hierarchy
-            var node: idHierarchy<type?>?
+        fun GetNext(): T? {            // goes through all nodes of the hierarchy
+            var node: idHierarchy<T>?
             return if (child != null) {
-                child.owner as type?
+                child!!.owner
             } else {
                 node = this
                 while (node != null && null == node.sibling) {
                     node = node.parent
                 }
                 if (node != null) {
-                    node.sibling.owner as type?
+                    node.sibling!!.owner
                 } else {
                     null
                 }
@@ -194,16 +193,16 @@ class Hierarchy {
 
         /*
          ================
-         idHierarchy<type>::GetNextLeaf
+         idHierarchy<T>::GetNextLeaf
 
          Goes through all leaf nodes of the hierarchy.
          ================
          */
-        fun GetNextLeaf(): type? {        // goes through all leaf nodes of the hierarchy
-            var node: idHierarchy<type?>?
+        fun GetNextLeaf(): T? {        // goes through all leaf nodes of the hierarchy
+            var node: idHierarchy<T>?
             return if (child != null) {
                 node = child
-                while (node.child != null) {
+                while (node!!.child != null) {
                     node = node.child
                 }
                 node.owner
@@ -214,7 +213,7 @@ class Hierarchy {
                 }
                 if (node != null) {
                     node = node.sibling
-                    while (node.child != null) {
+                    while (node!!.child != null) {
                         node = node.child
                     }
                     node.owner
@@ -226,16 +225,15 @@ class Hierarchy {
 
         /*
          ================
-         idHierarchy<type>::GetPriorSibling
+         idHierarchy<T>::GetPriorSibling
 
          Returns NULL if no parent, or if it is the first child.
          ================
          */
-        private fun GetPriorSiblingNode(): idHierarchy<type?>? { // previous node with the same parent
-            val prior: idHierarchy<type?>?
-            prior = GetPriorSiblingNode()
+        private fun GetPriorSiblingNode(): idHierarchy<T>? { // previous node with the same parent
+            val prior: idHierarchy<T>? = GetPriorSiblingNode()
             return if (prior != null) {
-                prior.owner as idHierarchy<type?>?
+                prior.owner as idHierarchy<T>?
             } else null
         }
     }

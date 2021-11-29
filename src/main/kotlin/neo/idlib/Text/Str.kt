@@ -128,6 +128,15 @@ object Str {
             len = l
         }
 
+        fun StripTrailing(c: Char) { // strip char from end as many times as the char occurs
+            var i = Length()
+            while (i > 0 && data.get(i - 1) == c) {
+                len--
+                data = data.substring(0, len - 1)
+                i--
+            }
+        }
+
         constructor(text: idStr, start: Int, end: Int) {
             var start = start
             var end = end
@@ -157,7 +166,7 @@ object Str {
             len = l
         }
 
-        constructor(text: String?) {
+        constructor(text: String) {
             val l: Int
             Init()
             if (text != null) {
@@ -170,7 +179,7 @@ object Str {
             }
         }
 
-        constructor(text: CharArray?) {
+        constructor(text: CharArray) {
             val l: Int
             Init()
             if (text != null) {
@@ -178,12 +187,12 @@ object Str {
                 l = text.size
                 EnsureAlloced(l + 1)
                 //		strcpy( data, text );
-                data = TempDump.ctos(text)
+                data = TempDump.ctos(text)!!
                 len = l
             }
         }
 
-        constructor(text: String?, start: Int, end: Int) {
+        constructor(text: String, start: Int, end: Int) {
             var start = start
             var end = end
             var i: Int
@@ -275,7 +284,7 @@ object Str {
         }
 
         @Deprecated("")
-        fun c_str(): CharArray? {
+        fun c_str(): CharArray {
             return data.toCharArray()
         }
 
@@ -813,14 +822,6 @@ object Str {
             return false
         }
 
-        fun StripTrailing(c: Char) { // strip char from end as many times as the char occurs
-            var i = Length()
-            while (i > 0 && data.get(i - 1) == c) {
-                len--
-                data = data.substring(0, len - 1)
-                i--
-            }
-        }
 
         fun StripTrailing(string: String?) { // strip string from end as many times as the string occurs
             val l: Int
@@ -1415,18 +1416,18 @@ object Str {
             data += Str.units[measure.ordinal][unit]
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             len = buffer.getInt()
             buffer.getInt() //skip
             alloced = buffer.getInt()
             buffer.asCharBuffer()[baseBuffer]
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -1480,6 +1481,15 @@ object Str {
                 fun getInstance(): cmdFunction_t? {
                     return Str.idStr.ShowMemoryUsage_f.Companion.instance
                 }
+            }
+        }
+
+        fun IsNumeric(): Boolean {
+            return try {
+                data.toDouble()
+                true
+            } catch (e: NumberFormatException) {
+                false
             }
         }
 
@@ -1551,15 +1561,6 @@ object Str {
                 return s
             }
 
-            @JvmOverloads
-            fun IsNumeric(s: String? = data): Boolean {
-                return try {
-                    s.toDouble()
-                    true
-                } catch (e: NumberFormatException) {
-                    false
-                }
-            }
 
             fun isdigit(c: Char): Boolean {
                 return '0' >= c && c <= '9'

@@ -207,7 +207,7 @@ object Game_local {
     //
     const val DEFAULT_GRAVITY = 1066.0f
     val DEFAULT_GRAVITY_STRING: String? = "1066"
-    val DEFAULT_GRAVITY_VEC3: idVec3? = idVec3(0, 0, -Game_local.DEFAULT_GRAVITY)
+    val DEFAULT_GRAVITY_VEC3: idVec3? = idVec3(0, 0, -DEFAULT_GRAVITY)
     const val GAME_RELIABLE_MESSAGE_CALLVOTE = 14
     const val GAME_RELIABLE_MESSAGE_CASTVOTE = 15
     const val GAME_RELIABLE_MESSAGE_CHAT = 4
@@ -277,29 +277,29 @@ object Game_local {
     const val MAX_GAME_MESSAGE_SIZE = 8192
 
     //
-    const val MAX_GENTITIES = 1 shl Game_local.GENTITYNUM_BITS
-    const val ENTITYNUM_NONE = Game_local.MAX_GENTITIES - 1
-    const val ENTITYNUM_WORLD = Game_local.MAX_GENTITIES - 2
+    const val MAX_GENTITIES = 1 shl GENTITYNUM_BITS
+    const val ENTITYNUM_NONE = MAX_GENTITIES - 1
+    const val ENTITYNUM_WORLD = MAX_GENTITIES - 2
 
     // };
-    const val ENTITYNUM_MAX_NORMAL = Game_local.MAX_GENTITIES - 2
-    const val ENTITY_PVS_SIZE = Game_local.MAX_GENTITIES + 31 shr 5
+    const val ENTITYNUM_MAX_NORMAL = MAX_GENTITIES - 2
+    const val ENTITY_PVS_SIZE = MAX_GENTITIES + 31 shr 5
 
     //============================================================================
     val NUM_RENDER_PORTAL_BITS = idMath.BitsForInteger(TempDump.etoi(portalConnection_t.PS_BLOCK_ALL))
-    val animationLib: idAnimManager? = idAnimManager()
+    val animationLib: idAnimManager = idAnimManager()
 
     //============================================================================
     // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden
-    val gameLocal: idGameLocal? =
+    val gameLocal: idGameLocal =
         idGameLocal() //TODO:these globals should either be collected to a single file, or always be set at the top.
-    val game: idGame? = Game_local.gameLocal // statically pointed at an idGameLocal
+    val game: idGame = gameLocal // statically pointed at an idGameLocal
 
     //============================================================================
     const val GAME_DLL = true //TODO:find correct location
 
     //
-    val com_forceGenericSIMD: idCVar? = idCVar(
+    val com_forceGenericSIMD: idCVar = idCVar(
         "com_forceGenericSIMD",
         "1",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
@@ -329,14 +329,14 @@ object Game_local {
             // set interface pointers used by the game
             sys_public.setSys(gameImport.sys)
             Common.setCommon(gameImport.common)
-            CmdSystem.setCmdSystem(gameImport.cmdSystem)
-            CVarSystem.setCvarSystem(gameImport.cvarSystem)
+            CmdSystem.setCmdSystems(gameImport.cmdSystem)
+            CVarSystem.setCvarSystems(gameImport.cvarSystem)
             FileSystem_h.setFileSystem(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
             NetworkSystem.setNetworkSystem(gameImport.networkSystem)
             RenderSystem.setRenderSystem(gameImport.renderSystem)
-            snd_system.setSoundSystem(gameImport.soundSystem)
+            snd_system.setSoundSystems(gameImport.soundSystem)
             ModelManager.setRenderModelManagers(gameImport.renderModelManager)
-            UserInterface.setUiManager(gameImport.uiManager)
+            UserInterface.setUiManagers(gameImport.uiManager)
             DeclManager.setDeclManager(gameImport.declManager)
             AASFileManager.setAASFileManager(gameImport.AASFileManager)
             CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)
@@ -349,10 +349,10 @@ object Game_local {
         idLib.fileSystem = FileSystem_h.fileSystem
 
         // setup export interface
-        Game_local.gameExport.version = Game.GAME_API_VERSION
-        Game_local.gameExport.game = Game_local.game
-        Game_local.gameExport.gameEdit = GameEdit.gameEdit
-        return Game_local.gameExport
+        gameExport.version = Game.GAME_API_VERSION
+        gameExport.game = game
+        gameExport.gameEdit = GameEdit.gameEdit
+        return gameExport
     }
 
     /*
@@ -376,7 +376,7 @@ object Game_local {
         testImport.declManager = DeclManager.declManager
         testImport.AASFileManager = AASFileManager.AASFileManager
         testImport.collisionModelManager = CollisionModel_local.collisionModelManager
-        testExport = Game_local.GetGameAPI(testImport)
+        testExport = GetGameAPI(testImport)
     }
 
     private fun memmove(
@@ -448,20 +448,20 @@ object Game_local {
         var entityNumber = 0
         var next: entityState_s? = null
         var state: idBitMsg? = null
-        var stateBuf = ByteBuffer.allocate(Game_local.MAX_ENTITY_STATE_SIZE)
+        var stateBuf = ByteBuffer.allocate(MAX_ENTITY_STATE_SIZE)
     }
 
     class snapshot_s {
         var firstEntityState: entityState_s? = null
         var next: snapshot_s? = null
-        var pvs: IntArray? = IntArray(Game_local.ENTITY_PVS_SIZE)
+        var pvs: IntArray? = IntArray(ENTITY_PVS_SIZE)
         var sequence = 0
     }
 
     class entityNetEvent_s {
         var event = 0
         var next: entityNetEvent_s? = null
-        var paramsBuf = ByteBuffer.allocate(Game_local.MAX_EVENT_PARAM_SIZE)
+        var paramsBuf = ByteBuffer.allocate(MAX_EVENT_PARAM_SIZE)
         var paramsSize = 0
         var prev: entityNetEvent_s? = null
         var spawnId = 0
@@ -503,7 +503,7 @@ object Game_local {
                 0
             } else {
                 val entityNumber = ent.entityNumber
-                Game_local.gameLocal.spawnIds[entityNumber] shl Game_local.GENTITYNUM_BITS or entityNumber
+                gameLocal.spawnIds[entityNumber] shl GENTITYNUM_BITS or entityNumber
             }
             return this
         }
@@ -519,7 +519,7 @@ object Game_local {
             if (id == spawnId) {
                 return false
             }
-            if (id shr Game_local.GENTITYNUM_BITS == Game_local.gameLocal.spawnIds[id and (1 shl Game_local.GENTITYNUM_BITS) - 1]) {
+            if (id shr GENTITYNUM_BITS == gameLocal.spawnIds[id and (1 shl GENTITYNUM_BITS) - 1]) {
                 spawnId = id
                 return true
             }
@@ -528,18 +528,18 @@ object Game_local {
 
         //        public boolean UpdateSpawnId();
         fun IsValid(): Boolean {
-            return Game_local.gameLocal.spawnIds[spawnId and (1 shl Game_local.GENTITYNUM_BITS) - 1] == spawnId shr Game_local.GENTITYNUM_BITS
+            return gameLocal.spawnIds[spawnId and (1 shl GENTITYNUM_BITS) - 1] == spawnId shr GENTITYNUM_BITS
         }
 
         fun GetEntity(): type? {
-            val entityNum = spawnId and (1 shl Game_local.GENTITYNUM_BITS) - 1
-            return if (Game_local.gameLocal.spawnIds[entityNum] == spawnId shr Game_local.GENTITYNUM_BITS) {
-                Game_local.gameLocal.entities[entityNum]
+            val entityNum = spawnId and (1 shl GENTITYNUM_BITS) - 1
+            return if (gameLocal.spawnIds[entityNum] == spawnId shr GENTITYNUM_BITS) {
+                gameLocal.entities[entityNum]
             } else null
         }
 
         fun GetEntityNum(): Int {
-            return spawnId and (1 shl Game_local.GENTITYNUM_BITS) - 1
+            return spawnId and (1 shl GENTITYNUM_BITS) - 1
         }
     }
 
@@ -554,7 +554,7 @@ object Game_local {
 
         //
         private val clientDeclRemap: Array<Array<idList<Int?>?>?>? =
-            Array<Array<idList<*>?>?>(Game_local.MAX_CLIENTS) { arrayOfNulls<idList<*>?>(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
+            Array<Array<idList<*>?>?>(MAX_CLIENTS) { arrayOfNulls<idList<*>?>(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
 
         //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
         //        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
@@ -563,7 +563,7 @@ object Game_local {
 
         //
         private val gravity: idVec3? = idVec3() // global gravity vector
-        private val initialSpots: idStaticList<idEntity?>? = idStaticList(Game_local.MAX_GENTITIES)
+        private val initialSpots: idStaticList<idEntity?>? = idStaticList(MAX_GENTITIES)
 
         //
         private val lastAIAlertEntity: idEntityPtr<idActor?>?
@@ -577,7 +577,7 @@ object Game_local {
             idDict() // spawn args used during entity spawning  FIXME: shouldn't be necessary anymore
 
         //
-        private val spawnSpots: idStaticList<spawnSpot_t?>? = idStaticList(Game_local.MAX_GENTITIES)
+        private val spawnSpots: idStaticList<spawnSpot_t?>? = idStaticList(MAX_GENTITIES)
         var activeEntities: idLinkList<idEntity?>? = idLinkList() // all thinking entities (idEntity::thinkFlags != 0)
         var cinematicMaxSkipTime // time to end cinematic when skipping.  there's a possibility of an infinite loop if the map isn't set up right.
                 = 0
@@ -594,7 +594,7 @@ object Game_local {
         var clip: idClip? = idClip() // collision detection
         var editEntities // in game editing
                 : idEditEntities? = null
-        var entities: Array<idEntity?>? = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES) // index to entities
+        var entities: Array<idEntity?>? = arrayOfNulls<idEntity?>(MAX_GENTITIES) // index to entities
         var entityDefBits // bits required to store an entity def number
                 = 0
         var entityHash: idHashIndex? = idHashIndex() // hash table to quickly find entities by name
@@ -639,7 +639,7 @@ object Game_local {
         var num_entities // current number <= MAX_GENTITIES
                 = 0
         var persistentLevelInfo: idDict? = idDict() // contains args that are kept around between levels
-        var persistentPlayerInfo: Array<idDict?>? = arrayOfNulls<idDict?>(Game_local.MAX_CLIENTS)
+        var persistentPlayerInfo: Array<idDict?>? = arrayOfNulls<idDict?>(MAX_CLIENTS)
         var previousTime // time in msec of last frame
                 = 0
 
@@ -667,7 +667,7 @@ object Game_local {
                 = false
         var sortTeamMasters // true if active lists needs to be reordered to place physics team masters before their slaves
                 = false
-        var spawnIds: IntArray? = IntArray(Game_local.MAX_GENTITIES) // for use in idEntityPtr
+        var spawnIds: IntArray? = IntArray(MAX_GENTITIES) // for use in idEntityPtr
         var spawnedEntities: idLinkList<idEntity?>? = idLinkList() // all spawned entities
 
         //
@@ -681,8 +681,8 @@ object Game_local {
                 : idTestModel? = null
         var time // in msec
                 = 0
-        var userInfo: Array<idDict?>? = arrayOfNulls<idDict?>(Game_local.MAX_CLIENTS) // client specific settings
-        var usercmds = Stream.generate { usercmd_t() }.limit(Game_local.MAX_CLIENTS.toLong())
+        var userInfo: Array<idDict?>? = arrayOfNulls<idDict?>(MAX_CLIENTS) // client specific settings
+        var usercmds = Stream.generate { usercmd_t() }.limit(MAX_CLIENTS.toLong())
             .toArray<usercmd_t?> { _Dummy_.__Array__() } // client input commands
 
         //
@@ -696,13 +696,13 @@ object Game_local {
 
         //
         private var clientEntityStates: Array<Array<entityState_s?>?>? =
-            Array(Game_local.MAX_CLIENTS) { arrayOfNulls<entityState_s?>(Game_local.MAX_GENTITIES) }
+            Array(MAX_CLIENTS) { arrayOfNulls<entityState_s?>(MAX_GENTITIES) }
         private var clientPVS: Array<IntArray?>? =
-            Array(Game_local.MAX_CLIENTS) { IntArray(Game_local.ENTITY_PVS_SIZE) }
-        private var clientSnapshots: Array<snapshot_s?>? = arrayOfNulls<snapshot_s?>(Game_local.MAX_CLIENTS)
+            Array(MAX_CLIENTS) { IntArray(ENTITY_PVS_SIZE) }
+        private var clientSnapshots: Array<snapshot_s?>? = arrayOfNulls<snapshot_s?>(MAX_CLIENTS)
         private var currentInitialSpot = 0
         private var gamestate // keeps track of whether we're spawning, shutting down, or normal gameplay
-                : Game_local.gameState_t? = null
+                : gameState_t? = null
         private var globalMaterial // for overriding everything
                 : idMaterial? = null
         private var influenceActive // true when a phantasm is happening
@@ -710,7 +710,7 @@ object Game_local {
 
         //
         private var lagometer: Array<Array<ByteArray?>?>? =
-            Array(Game_local.LAGO_IMG_HEIGHT) { Array(Game_local.LAGO_IMG_WIDTH) { ByteArray(4) } }
+            Array(LAGO_IMG_HEIGHT) { Array(LAGO_IMG_WIDTH) { ByteArray(4) } }
         private var lastAIAlertTime = 0
 
         //
@@ -750,8 +750,8 @@ object Game_local {
         override fun Init() {
             val dict: idDict?
             var aas: idAAS
-            if (Game_local.GAME_DLL) {
-                Game_local.TestGameAPI()
+            if (GAME_DLL) {
+                TestGameAPI()
             } else {
 
                 // initialize idLib
@@ -761,10 +761,10 @@ object Game_local {
                 idCVar.Companion.RegisterStaticVars()
 
                 // initialize processor specific SIMD
-                idSIMD.InitProcessor("game", Game_local.com_forceGenericSIMD.GetBool())
+                idSIMD.InitProcessor("game", com_forceGenericSIMD.GetBool())
             }
             Printf("--------- Initializing Game ----------\n")
-            Printf("gamename: %s\n", Game_local.GAME_VERSION)
+            Printf("gamename: %s\n", GAME_VERSION)
             Printf("gamedate: %s\n", SysCvar.__DATE__)
 
             // register game specific decl types
@@ -821,7 +821,7 @@ object Game_local {
                 aasNames.add(kv.GetValue())
                 kv = dict.MatchPrefix("type", kv)
             }
-            gamestate = Game_local.gameState_t.GAMESTATE_NOMAP
+            gamestate = gameState_t.GAMESTATE_NOMAP
             Printf("...%d aas types\n", aasList.Num())
             Printf("game initialized.\n")
             Printf("--------------------------------------\n")
@@ -873,9 +873,9 @@ object Game_local {
             Clear()
 
             // shut down the animation manager
-            Game_local.animationLib.Shutdown()
+            animationLib.Shutdown()
             Printf("--------------------------------------\n")
-            if (Game_local.GAME_DLL) {
+            if (GAME_DLL) {
 
                 // remove auto-completion function pointers pointing into this DLL
                 CVarSystem.cvarSystem.RemoveFlaggedAutoCompletion(CVarSystem.CVAR_GAME)
@@ -897,7 +897,7 @@ object Game_local {
             var i: Int
             var modifiedInfo = false
             this.isClient = isClient
-            if (clientNum >= 0 && clientNum < Game_local.MAX_CLIENTS) {
+            if (clientNum >= 0 && clientNum < MAX_CLIENTS) {
                 this.userInfo.get(clientNum) = userInfo
 
                 // server sanity
@@ -958,14 +958,14 @@ object Game_local {
 
         override fun SetServerInfo(_serverInfo: idDict?) {
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             serverInfo = _serverInfo
             UpdateServerInfoFlags()
             if (!isClient) {
                 // Let our clients know the server info changed
-                outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
-                outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_SERVERINFO)
-                outMsg.WriteDeltaDict(Game_local.gameLocal.serverInfo, null)
+                outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SERVERINFO)
+                outMsg.WriteDeltaDict(gameLocal.serverInfo, null)
                 NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
             }
         }
@@ -999,9 +999,9 @@ object Game_local {
                 MapShutdown()
             }
             Printf("----------- Game Map Init ------------\n")
-            gamestate = Game_local.gameState_t.GAMESTATE_STARTUP
-            Game_local.gameRenderWorld = renderWorld
-            Game_local.gameSoundWorld = soundWorld
+            gamestate = gameState_t.GAMESTATE_STARTUP
+            gameRenderWorld = renderWorld
+            gameSoundWorld = soundWorld
             LoadMap(mapName, randSeed)
             InitScriptForMap()
             MapPopulate()
@@ -1009,8 +1009,8 @@ object Game_local {
             mpGame.Precache()
 
             // free up any unused animations
-            Game_local.animationLib.FlushUnusedAnims()
-            gamestate = Game_local.gameState_t.GAMESTATE_ACTIVE
+            animationLib.FlushUnusedAnims()
+            gamestate = gameState_t.GAMESTATE_ACTIVE
             Printf("--------------------------------------\n")
         }
 
@@ -1028,9 +1028,9 @@ object Game_local {
                 MapShutdown()
             }
             Printf("------- Game Map Init SaveGame -------\n")
-            gamestate = Game_local.gameState_t.GAMESTATE_STARTUP
-            Game_local.gameRenderWorld = renderWorld
-            Game_local.gameSoundWorld = soundWorld
+            gamestate = gameState_t.GAMESTATE_STARTUP
+            gameRenderWorld = renderWorld
+            gameSoundWorld = soundWorld
             val savegame = idRestoreGame(saveGameFile)
             savegame.ReadBuildNumber()
 
@@ -1079,7 +1079,7 @@ object Game_local {
                 i++
             }
             i = 0
-            while (i < Game_local.MAX_GENTITIES) {
+            while (i < MAX_GENTITIES) {
                 savegame.ReadObject( /*reinterpret_cast<idClass *&>*/entities.get(i))
                 spawnIds.get(i) = savegame.ReadInt()
 
@@ -1159,7 +1159,7 @@ object Game_local {
             spawnCount = savegame.ReadInt()
             num = savegame.ReadInt()
             if (num != 0) {
-                if (num != Game_local.gameRenderWorld.NumAreas()) {
+                if (num != gameRenderWorld.NumAreas()) {
                     savegame.Error("idGameLocal.InitFromSaveGame: number of areas in map differs from save game.")
                 }
                 locationEntities = arrayOfNulls<idLocationEntity?>(num)
@@ -1197,8 +1197,8 @@ object Game_local {
             mpGame.Precache()
 
             // free up any unused animations
-            Game_local.animationLib.FlushUnusedAnims()
-            gamestate = Game_local.gameState_t.GAMESTATE_ACTIVE
+            animationLib.FlushUnusedAnims()
+            gamestate = gameState_t.GAMESTATE_ACTIVE
             Printf("--------------------------------------\n")
             return true
         }
@@ -1225,7 +1225,7 @@ object Game_local {
 
             // go through all entities and threads and add them to the object list
             i = 0
-            while (i < Game_local.MAX_GENTITIES) {
+            while (i < MAX_GENTITIES) {
                 ent = entities.get(i)
                 if (ent != null) {
                     if (ent.GetTeamMaster() != null && ent.GetTeamMaster() != ent) {
@@ -1261,7 +1261,7 @@ object Game_local {
                 i++
             }
             i = 0
-            while (i < Game_local.MAX_GENTITIES) {
+            while (i < MAX_GENTITIES) {
                 savegame.WriteObject(entities.get(i))
                 savegame.WriteInt(spawnIds.get(i))
                 i++
@@ -1328,9 +1328,9 @@ object Game_local {
             if (TempDump.NOT(*locationEntities)) {
                 savegame.WriteInt(0)
             } else {
-                savegame.WriteInt(Game_local.gameRenderWorld.NumAreas())
+                savegame.WriteInt(gameRenderWorld.NumAreas())
                 i = 0
-                while (i < Game_local.gameRenderWorld.NumAreas()) {
+                while (i < gameRenderWorld.NumAreas()) {
                     savegame.WriteObject(locationEntities.get(i))
                     i++
                 }
@@ -1363,11 +1363,11 @@ object Game_local {
 
         override fun MapShutdown() {
             Printf("--------- Game Map Shutdown ----------\n")
-            gamestate = Game_local.gameState_t.GAMESTATE_SHUTDOWN
-            if (Game_local.gameRenderWorld != null) {
+            gamestate = gameState_t.GAMESTATE_SHUTDOWN
+            if (gameRenderWorld != null) {
                 // clear any debug lines, text, and polygons
-                Game_local.gameRenderWorld.DebugClearLines(0)
-                Game_local.gameRenderWorld.DebugClearPolygons(0)
+                gameRenderWorld.DebugClearLines(0)
+                gameRenderWorld.DebugClearPolygons(0)
             }
 
             // clear out camera if we're in a cinematic
@@ -1387,9 +1387,9 @@ object Game_local {
             idClipModel.Companion.ClearTraceModelCache()
             ShutdownAsyncNetwork()
             mapFileName.Clear()
-            Game_local.gameRenderWorld = null
-            Game_local.gameSoundWorld = null
-            gamestate = Game_local.gameState_t.GAMESTATE_NOMAP
+            gameRenderWorld = null
+            gameSoundWorld = null
+            gamestate = gameState_t.GAMESTATE_NOMAP
             Printf("--------------------------------------\n")
         }
 
@@ -1592,7 +1592,7 @@ object Game_local {
             player = GetLocalPlayer()
             if (!isMultiplayer && SysCvar.g_stopTime.GetBool()) {
                 // clear any debug lines from a previous frame
-                Game_local.gameRenderWorld.DebugClearLines(time + 1)
+                gameRenderWorld.DebugClearLines(time + 1)
 
                 // set the user commands for this frame
                 System.arraycopy(clientCmds, 0, usercmds, 0, numClients)
@@ -1604,10 +1604,10 @@ object Game_local {
                     previousTime = time
                     time += msec
                     realClientTime = time
-                    if (Game_local.GAME_DLL) {
+                    if (GAME_DLL) {
                         // allow changing SIMD usage on the fly
-                        if (Game_local.com_forceGenericSIMD.IsModified()) {
-                            idSIMD.InitProcessor("game", Game_local.com_forceGenericSIMD.GetBool())
+                        if (com_forceGenericSIMD.IsModified()) {
+                            idSIMD.InitProcessor("game", com_forceGenericSIMD.GetBool())
                         }
                     }
 
@@ -1618,15 +1618,15 @@ object Game_local {
                         // update the renderview so that any gui videos play from the right frame
                         view = player.GetRenderView()
                         if (view != null) {
-                            Game_local.gameRenderWorld.SetRenderView(view)
+                            gameRenderWorld.SetRenderView(view)
                         }
                     }
 
                     // clear any debug lines from a previous frame
-                    Game_local.gameRenderWorld.DebugClearLines(time)
+                    gameRenderWorld.DebugClearLines(time)
 
                     // clear any debug polygons from a previous frame
-                    Game_local.gameRenderWorld.DebugClearPolygons(time)
+                    gameRenderWorld.DebugClearPolygons(time)
 
                     // set the user commands for this frame
 //                    memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
@@ -1890,15 +1890,15 @@ object Game_local {
 
         override fun ServerClientBegin(clientNum: Int) {
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
 
             // initialize the decl remap
             InitClientDeclRemap(clientNum)
 
             // send message to initialize decl remap at the client (this is always the very first reliable game message)
-            outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+            outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP)
             NetworkSystem.networkSystem.ServerSendReliableMessage(clientNum, outMsg)
 
             // spawn the player
@@ -1908,9 +1908,9 @@ object Game_local {
             }
 
             // send message to spawn the player at the clients
-            outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+            outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_SPAWN_PLAYER)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SPAWN_PLAYER)
             outMsg.WriteByte(clientNum)
             outMsg.WriteLong(spawnIds.get(clientNum))
             NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
@@ -1919,11 +1919,11 @@ object Game_local {
         override fun ServerClientDisconnect(clientNum: Int) {
             var i: Int
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
-            outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
+            outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_DELETE_ENT)
-            outMsg.WriteBits(spawnIds.get(clientNum) shl Game_local.GENTITYNUM_BITS or clientNum, 32) // see GetSpawnId
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_DELETE_ENT)
+            outMsg.WriteBits(spawnIds.get(clientNum) shl GENTITYNUM_BITS or clientNum, 32) // see GetSpawnId
             NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
 
             // free snapshots stored for this client
@@ -1931,7 +1931,7 @@ object Game_local {
 
             // free entity states stored for this client
             i = 0
-            while (i < Game_local.MAX_GENTITIES) {
+            while (i < MAX_GENTITIES) {
                 if (clientEntityStates.get(clientNum).get(i) != null) {
 //                    entityStateAllocator.Free(clientEntityStates[ clientNum][ i]);
                     clientEntityStates.get(clientNum).get(i) = null
@@ -1959,19 +1959,19 @@ object Game_local {
         override fun ServerWriteInitialReliableMessages(clientNum: Int) {
             var i: Int
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             var event: entityNetEvent_s?
 
             // spawn players
             i = 0
-            while (i < Game_local.MAX_CLIENTS) {
+            while (i < MAX_CLIENTS) {
                 if (entities.get(i) == null || i == clientNum) {
                     i++
                     continue
                 }
-                outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+                outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
                 outMsg.BeginWriting()
-                outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_SPAWN_PLAYER)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SPAWN_PLAYER)
                 outMsg.WriteByte(i)
                 outMsg.WriteLong(spawnIds.get(i))
                 NetworkSystem.networkSystem.ServerSendReliableMessage(clientNum, outMsg)
@@ -1981,13 +1981,13 @@ object Game_local {
             // send all saved events
             event = savedEventQueue.Start()
             while (event != null) {
-                outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+                outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
                 outMsg.BeginWriting()
-                outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_EVENT)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_EVENT)
                 outMsg.WriteBits(event.spawnId, 32)
                 outMsg.WriteByte(event.event)
                 outMsg.WriteLong(event.time)
-                outMsg.WriteBits(event.paramsSize, idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
+                outMsg.WriteBits(event.paramsSize, idMath.BitsForInteger(MAX_EVENT_PARAM_SIZE))
                 if (event.paramsSize != 0) {
                     outMsg.WriteData(event.paramsBuf, event.paramsSize)
                 }
@@ -1996,16 +1996,16 @@ object Game_local {
             }
 
             // update portals for opened doors
-            val numPortals = Game_local.gameRenderWorld.NumPortals()
-            outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+            val numPortals = gameRenderWorld.NumPortals()
+            outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_PORTALSTATES)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTALSTATES)
             outMsg.WriteLong(numPortals)
             i = 0
             while (i < numPortals) {
                 outMsg.WriteBits(
-                    Game_local.gameRenderWorld.GetPortalState( /*(qhandle_t)*/i + 1),
-                    Game_local.NUM_RENDER_PORTAL_BITS
+                    gameRenderWorld.GetPortalState( /*(qhandle_t)*/i + 1),
+                    NUM_RENDER_PORTAL_BITS
                 )
                 i++
             }
@@ -2066,12 +2066,12 @@ object Game_local {
 
             // get PVS for this player
             // don't use PVSAreas for networking - PVSAreas depends on animations (and md5 bounds), which are not synchronized
-            numSourceAreas = Game_local.gameRenderWorld.BoundsInAreas(
+            numSourceAreas = gameRenderWorld.BoundsInAreas(
                 spectated.GetPlayerPhysics().GetAbsBounds(),
                 sourceAreas,
                 idEntity.Companion.MAX_PVS_AREAS
             )
-            pvsHandle = Game_local.gameLocal.pvs.SetupCurrentPVS(sourceAreas, numSourceAreas, pvsType_t.PVS_NORMAL)
+            pvsHandle = gameLocal.pvs.SetupCurrentPVS(sourceAreas, numSourceAreas, pvsType_t.PVS_NORMAL)
             if (Game_network.ASYNC_WRITE_TAGS) {
                 tagRandom = idRandom()
                 tagRandom.SetSeed(random.RandomInt())
@@ -2103,7 +2103,7 @@ object Game_local {
                 msg.SaveWriteState(msgSize, msgWriteBit)
 
                 // write the entity to the snapshot
-                msg.WriteBits(ent.entityNumber, Game_local.GENTITYNUM_BITS)
+                msg.WriteBits(ent.entityNumber, GENTITYNUM_BITS)
                 base = clientEntityStates.get(clientNum).get(ent.entityNumber)
                 base?.state?.BeginReading()
                 newBase = entityState_s() //entityStateAllocator.Alloc();
@@ -2111,7 +2111,7 @@ object Game_local {
                 newBase.state.Init(newBase.stateBuf)
                 newBase.state.BeginWriting()
                 deltaMsg.Init(base?.state, newBase.state, msg)
-                deltaMsg.WriteBits(spawnIds.get(ent.entityNumber), 32 - Game_local.GENTITYNUM_BITS)
+                deltaMsg.WriteBits(spawnIds.get(ent.entityNumber), 32 - GENTITYNUM_BITS)
                 //                deltaMsg.WriteBits(ent.GetType().typeNum, idClass.GetTypeNumBits());//TODO:fix this.
                 deltaMsg.WriteBits(ServerRemapDecl(-1, declType_t.DECL_ENTITYDEF, ent.entityDefNumber), entityDefBits)
 
@@ -2129,10 +2129,10 @@ object Game_local {
                 }
                 ent = ent.spawnNode.Next()
             }
-            msg.WriteBits(Game_local.ENTITYNUM_NONE, Game_local.GENTITYNUM_BITS)
+            msg.WriteBits(ENTITYNUM_NONE, GENTITYNUM_BITS)
 
             // write the PVS to the snapshot
-            if (Game_local.ASYNC_WRITE_PVS) {
+            if (ASYNC_WRITE_PVS) {
                 i = 0
                 while (i < idEntity.Companion.MAX_PVS_AREAS) {
                     if (i < numSourceAreas) {
@@ -2142,10 +2142,10 @@ object Game_local {
                     }
                     i++
                 }
-                Game_local.gameLocal.pvs.WritePVS(pvsHandle, msg)
+                gameLocal.pvs.WritePVS(pvsHandle, msg)
             }
             i = 0
-            while (i < Game_local.ENTITY_PVS_SIZE) {
+            while (i < ENTITY_PVS_SIZE) {
                 msg.WriteDeltaLong(clientPVS.get(clientNum).get(i), snapshot.pvs.get(i))
                 i++
             }
@@ -2155,17 +2155,17 @@ object Game_local {
 
             // write the game and player state to the snapshot
             base = clientEntityStates.get(clientNum)
-                .get(Game_local.ENTITYNUM_NONE) // ENTITYNUM_NONE is used for the game and player state
+                .get(ENTITYNUM_NONE) // ENTITYNUM_NONE is used for the game and player state
             base?.state?.BeginReading()
             newBase = entityState_s() //entityStateAllocator.Alloc();
-            newBase.entityNumber = Game_local.ENTITYNUM_NONE
+            newBase.entityNumber = ENTITYNUM_NONE
             newBase.next = snapshot.firstEntityState
             snapshot.firstEntityState = newBase
             newBase.state.Init(newBase.stateBuf)
             newBase.state.BeginWriting()
             deltaMsg.Init(base?.state, newBase.state, msg)
-            if (player.spectating && player.spectator != player.entityNumber && Game_local.gameLocal.entities[player.spectator] != null && Game_local.gameLocal.entities[player.spectator] is idPlayer) {
-                (Game_local.gameLocal.entities[player.spectator] as idPlayer).WritePlayerStateToSnapshot(deltaMsg)
+            if (player.spectating && player.spectator != player.entityNumber && gameLocal.entities[player.spectator] != null && gameLocal.entities[player.spectator] is idPlayer) {
+                (gameLocal.entities[player.spectator] as idPlayer).WritePlayerStateToSnapshot(deltaMsg)
             } else {
                 player.WritePlayerStateToSnapshot(deltaMsg)
             }
@@ -2185,38 +2185,38 @@ object Game_local {
             val id: Int
             id = msg.ReadByte()
             when (id) {
-                Game_local.GAME_RELIABLE_MESSAGE_CHAT, Game_local.GAME_RELIABLE_MESSAGE_TCHAT -> {
+                GAME_RELIABLE_MESSAGE_CHAT, GAME_RELIABLE_MESSAGE_TCHAT -> {
                     val name = CharArray(128)
                     val text = CharArray(128)
                     msg.ReadString(name, 128)
                     msg.ReadString(text, 128)
                     mpGame.ProcessChatMessage(
                         clientNum,
-                        id == Game_local.GAME_RELIABLE_MESSAGE_TCHAT,
+                        id == GAME_RELIABLE_MESSAGE_TCHAT,
                         TempDump.ctos(name),
                         TempDump.ctos(text),
                         null
                     )
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_VCHAT -> {
+                GAME_RELIABLE_MESSAGE_VCHAT -> {
                     val index = msg.ReadLong()
                     val team = msg.ReadBits(1) != 0
                     mpGame.ProcessVoiceChat(clientNum, team, index)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_KILL -> {
+                GAME_RELIABLE_MESSAGE_KILL -> {
                     mpGame.WantKilled(clientNum)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_DROPWEAPON -> {
+                GAME_RELIABLE_MESSAGE_DROPWEAPON -> {
                     mpGame.DropWeapon(clientNum)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_CALLVOTE -> {
+                GAME_RELIABLE_MESSAGE_CALLVOTE -> {
                     mpGame.ServerCallVote(clientNum, msg)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_CASTVOTE -> {
+                GAME_RELIABLE_MESSAGE_CASTVOTE -> {
                     val vote = msg.ReadByte() != 0
                     mpGame.CastVote(clientNum, vote)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_EVENT -> {
+                GAME_RELIABLE_MESSAGE_EVENT -> {
                     val event: entityNetEvent_s?
 
                     // allocate new event
@@ -2225,9 +2225,9 @@ object Game_local {
                     event.spawnId = msg.ReadBits(32)
                     event.event = msg.ReadByte()
                     event.time = msg.ReadLong()
-                    event.paramsSize = msg.ReadBits(idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
+                    event.paramsSize = msg.ReadBits(idMath.BitsForInteger(MAX_EVENT_PARAM_SIZE))
                     if (event.paramsSize != 0) {
-                        if (event.paramsSize > Game_local.MAX_EVENT_PARAM_SIZE) {
+                        if (event.paramsSize > MAX_EVENT_PARAM_SIZE) {
                             NetworkEventWarning(event, "invalid param size")
                             return
                         }
@@ -2282,8 +2282,8 @@ object Game_local {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
-                Game_local.gameRenderWorld.DrawText(
+                gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
+                gameRenderWorld.DrawText(
                     Str.va(
                         "%d: %s (%d,%d bytes of %d,%d)\n", ent.entityNumber,
                         ent.name, ent.snapshotBits shr 3, ent.snapshotBits and 7, baseBits shr 3, baseBits and 7
@@ -2312,10 +2312,10 @@ object Game_local {
             InitLocalClient(clientNum)
             id = msg.ReadByte()
             when (id) {
-                Game_local.GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP -> {
+                GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP -> {
                     InitClientDeclRemap(clientNum)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_REMAP_DECL -> {
+                GAME_RELIABLE_MESSAGE_REMAP_DECL -> {
                     val type: Int
                     val index: Int
                     val name = CharArray(Lib.Companion.MAX_STRING_CHARS)
@@ -2330,7 +2330,7 @@ object Game_local {
                         clientDeclRemap.get(clientNum).get(type).oSet(index, decl.Index())
                     }
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_SPAWN_PLAYER -> {
+                GAME_RELIABLE_MESSAGE_SPAWN_PLAYER -> {
                     val client = msg.ReadByte()
                     val spawnId = msg.ReadLong()
                     if (null == entities.get(client)) {
@@ -2341,14 +2341,14 @@ object Game_local {
                     // otherwise there is going to be a bogus delete/new of the client entity in the first ClientReadFromSnapshot
                     spawnIds.get(client) = spawnId
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_DELETE_ENT -> {
+                GAME_RELIABLE_MESSAGE_DELETE_ENT -> {
                     val spawnId = msg.ReadBits(32)
                     val entPtr = idEntityPtr<idEntity?>()
                     if (!entPtr.SetSpawnId(spawnId)) {
                         break
                     }
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_CHAT, Game_local.GAME_RELIABLE_MESSAGE_TCHAT -> {
+                GAME_RELIABLE_MESSAGE_CHAT, GAME_RELIABLE_MESSAGE_TCHAT -> {
                     // (client should never get a TCHAT though)
                     val name = CharArray(128)
                     val text = CharArray(128)
@@ -2356,18 +2356,18 @@ object Game_local {
                     msg.ReadString(text, 128)
                     mpGame.AddChatLine("%s^0: %s\n", TempDump.ctos(name), TempDump.ctos(text))
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_SOUND_EVENT -> {
+                GAME_RELIABLE_MESSAGE_SOUND_EVENT -> {
                     val snd_evt = snd_evt_t.values()[msg.ReadByte()]
                     mpGame.PlayGlobalSound(-1, snd_evt)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_SOUND_INDEX -> {
-                    val index = Game_local.gameLocal.ClientRemapDecl(declType_t.DECL_SOUND, msg.ReadLong())
+                GAME_RELIABLE_MESSAGE_SOUND_INDEX -> {
+                    val index = gameLocal.ClientRemapDecl(declType_t.DECL_SOUND, msg.ReadLong())
                     if (index >= 0 && index < DeclManager.declManager.GetNumDecls(declType_t.DECL_SOUND)) {
                         val shader = DeclManager.declManager.SoundByIndex(index)
                         mpGame.PlayGlobalSound(-1, snd_evt_t.SND_COUNT, shader.GetName())
                     }
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_DB -> {
+                GAME_RELIABLE_MESSAGE_DB -> {
                     val msg_evt = msg_evt_t.values()[msg.ReadByte()]
                     val parm1: Int
                     val parm2: Int
@@ -2375,7 +2375,7 @@ object Game_local {
                     parm2 = msg.ReadByte()
                     mpGame.PrintMessageEvent(-1, msg_evt, parm1, parm2)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_EVENT -> {
+                GAME_RELIABLE_MESSAGE_EVENT -> {
                     val event: entityNetEvent_s?
 
                     // allocate new event
@@ -2384,9 +2384,9 @@ object Game_local {
                     event.spawnId = msg.ReadBits(32)
                     event.event = msg.ReadByte()
                     event.time = msg.ReadLong()
-                    event.paramsSize = msg.ReadBits(idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
+                    event.paramsSize = msg.ReadBits(idMath.BitsForInteger(MAX_EVENT_PARAM_SIZE))
                     if (event.paramsSize != 0) {
-                        if (event.paramsSize > Game_local.MAX_EVENT_PARAM_SIZE) {
+                        if (event.paramsSize > MAX_EVENT_PARAM_SIZE) {
                             NetworkEventWarning(event, "invalid param size")
                             return
                         }
@@ -2394,15 +2394,15 @@ object Game_local {
                         msg.ReadData(event.paramsBuf, event.paramsSize)
                     }
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_SERVERINFO -> {
+                GAME_RELIABLE_MESSAGE_SERVERINFO -> {
                     val info = idDict()
                     msg.ReadDeltaDict(info, null)
-                    Game_local.gameLocal.SetServerInfo(info)
+                    gameLocal.SetServerInfo(info)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_RESTART -> {
+                GAME_RELIABLE_MESSAGE_RESTART -> {
                     MapRestart()
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_TOURNEYLINE -> {
+                GAME_RELIABLE_MESSAGE_TOURNEYLINE -> {
                     line = msg.ReadByte()
                     p = entities.get(clientNum) as idPlayer?
                     if (null == p) {
@@ -2410,39 +2410,39 @@ object Game_local {
                     }
                     p.tourneyLine = line
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_STARTVOTE -> {
+                GAME_RELIABLE_MESSAGE_STARTVOTE -> {
                     val voteString = CharArray(Lib.Companion.MAX_STRING_CHARS)
                     val clientNum2 = msg.ReadByte()
                     msg.ReadString(voteString, Lib.Companion.MAX_STRING_CHARS)
                     mpGame.ClientStartVote(clientNum2, TempDump.ctos(voteString))
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_UPDATEVOTE -> {
+                GAME_RELIABLE_MESSAGE_UPDATEVOTE -> {
                     val result = msg.ReadByte()
                     val yesCount = msg.ReadByte()
                     val noCount = msg.ReadByte()
                     mpGame.ClientUpdateVote(vote_result_t.values()[result], yesCount, noCount)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_PORTALSTATES -> {
+                GAME_RELIABLE_MESSAGE_PORTALSTATES -> {
                     val numPortals = msg.ReadLong()
-                    assert(numPortals == Game_local.gameRenderWorld.NumPortals())
+                    assert(numPortals == gameRenderWorld.NumPortals())
                     var i = 0
                     while (i < numPortals) {
-                        Game_local.gameRenderWorld.SetPortalState( /*(qhandle_t)*/i + 1,
-                            msg.ReadBits(Game_local.NUM_RENDER_PORTAL_BITS)
+                        gameRenderWorld.SetPortalState( /*(qhandle_t)*/i + 1,
+                            msg.ReadBits(NUM_RENDER_PORTAL_BITS)
                         )
                         i++
                     }
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_PORTAL -> {
+                GAME_RELIABLE_MESSAGE_PORTAL -> {
                     val   /*qhandle_t*/portal = msg.ReadLong()
-                    val blockingBits = msg.ReadBits(Game_local.NUM_RENDER_PORTAL_BITS)
-                    assert(portal > 0 && portal <= Game_local.gameRenderWorld.NumPortals())
-                    Game_local.gameRenderWorld.SetPortalState(portal, blockingBits)
+                    val blockingBits = msg.ReadBits(NUM_RENDER_PORTAL_BITS)
+                    assert(portal > 0 && portal <= gameRenderWorld.NumPortals())
+                    gameRenderWorld.SetPortalState(portal, blockingBits)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_STARTSTATE -> {
+                GAME_RELIABLE_MESSAGE_STARTSTATE -> {
                     mpGame.ClientReadStartState(msg)
                 }
-                Game_local.GAME_RELIABLE_MESSAGE_WARMUPTIME -> {
+                GAME_RELIABLE_MESSAGE_WARMUPTIME -> {
                     mpGame.ClientReadWarmupTime(msg)
                 }
                 else -> {
@@ -2518,7 +2518,7 @@ object Game_local {
 
         override fun SwitchTeam(clientNum: Int, team: Int) {
             val player: idPlayer?
-            player = if (clientNum >= 0) Game_local.gameLocal.entities[clientNum] as idPlayer else null
+            player = if (clientNum >= 0) gameLocal.entities[clientNum] as idPlayer else null
             if (null == player) {
                 return
             }
@@ -2616,7 +2616,7 @@ object Game_local {
             val sameMap = mapFile != null && idStr.Companion.Icmp(mapFileName, mapName) == 0
 
             // clear the sound system
-            Game_local.gameSoundWorld.ClearAllSoundEmitters()
+            gameSoundWorld.ClearAllSoundEmitters()
             InitAsyncNetwork()
             if (!sameMap || mapFile != null && mapFile.NeedsReload()) {
                 // load the .map file
@@ -2654,8 +2654,8 @@ object Game_local {
             // always leave room for the max number of clients,
             // even if they aren't all used, so numbers inside that
             // range are NEVER anything but clients
-            num_entities = Game_local.MAX_CLIENTS
-            firstFreeIndex = Game_local.MAX_CLIENTS
+            num_entities = MAX_CLIENTS
+            firstFreeIndex = MAX_CLIENTS
 
             // reset the random number generator.
             random.SetSeed(if (isMultiplayer) randseed else 0)
@@ -2708,9 +2708,9 @@ object Game_local {
             var i: Int
             val latchSpawnCount: Int
             Printf("----------- Game Map Restart ------------\n")
-            gamestate = Game_local.gameState_t.GAMESTATE_SHUTDOWN
+            gamestate = gameState_t.GAMESTATE_SHUTDOWN
             i = 0
-            while (i < Game_local.MAX_CLIENTS) {
+            while (i < MAX_CLIENTS) {
                 if (entities.get(i) != null && entities.get(i) is idPlayer) {
                     (entities.get(i) as idPlayer?).PrepareForRestart()
                 }
@@ -2724,15 +2724,15 @@ object Game_local {
             smokeParticles.Init()
 
             // clear the sound system
-            if (Game_local.gameSoundWorld != null) {
-                Game_local.gameSoundWorld.ClearAllSoundEmitters()
+            if (gameSoundWorld != null) {
+                gameSoundWorld.ClearAllSoundEmitters()
             }
 
             // the spawnCount is reset to zero temporarily to spawn the map entities with the same spawnId
             // if we don't do that, network clients are confused and don't show any map entities
             latchSpawnCount = spawnCount
             spawnCount = INITIAL_SPAWN_COUNT
-            gamestate = Game_local.gameState_t.GAMESTATE_STARTUP
+            gamestate = gameState_t.GAMESTATE_STARTUP
             program.Restart()
             InitScriptForMap()
             MapPopulate()
@@ -2743,19 +2743,19 @@ object Game_local {
 
             // setup the client entities again
             i = 0
-            while (i < Game_local.MAX_CLIENTS) {
+            while (i < MAX_CLIENTS) {
                 if (entities.get(i) != null && entities.get(i) is idPlayer) {
                     (entities.get(i) as idPlayer?).Restart()
                 }
                 i++
             }
-            gamestate = Game_local.gameState_t.GAMESTATE_ACTIVE
+            gamestate = gameState_t.GAMESTATE_ACTIVE
             Printf("--------------------------------------\n")
         }
 
         fun MapRestart() {
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             val newInfo: idDict?
             var i: Int
             var keyval: idKeyValue?
@@ -2785,8 +2785,8 @@ object Game_local {
                 if (i != newInfo.GetNumKeyVals()) {
                     CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "nextMap")
                 } else {
-                    outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
-                    outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_RESTART)
+                    outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
+                    outMsg.WriteByte(GAME_RELIABLE_MESSAGE_RESTART)
                     outMsg.WriteBits(1, 1)
                     outMsg.WriteDeltaDict(serverInfo, null)
                     NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
@@ -3046,7 +3046,7 @@ object Game_local {
          Used to allow entities to know if they're being spawned during the initial spawn.
          ==============
          */
-        fun GameState(): Game_local.gameState_t? {
+        fun GameState(): gameState_t? {
             return gamestate
         }
 
@@ -3169,7 +3169,7 @@ object Game_local {
         }
 
         fun GetSpawnId(ent: idEntity?): Int {
-            return Game_local.gameLocal.spawnIds[ent.entityNumber] shl Game_local.GENTITYNUM_BITS or ent.entityNumber
+            return gameLocal.spawnIds[ent.entityNumber] shl GENTITYNUM_BITS or ent.entityNumber
         }
 
         @JvmOverloads
@@ -3196,14 +3196,14 @@ object Game_local {
 
         fun RegisterEntity(ent: idEntity?) {
             val spawn_entnum = CInt()
-            if (spawnCount >= 1 shl 32 - Game_local.GENTITYNUM_BITS) {
+            if (spawnCount >= 1 shl 32 - GENTITYNUM_BITS) {
                 Error("idGameLocal::RegisterEntity: spawn count overflow")
             }
             if (!spawnArgs.GetInt("spawn_entnum", "0", spawn_entnum)) {
-                while (entities.get(firstFreeIndex) != null && firstFreeIndex < Game_local.ENTITYNUM_MAX_NORMAL) {
+                while (entities.get(firstFreeIndex) != null && firstFreeIndex < ENTITYNUM_MAX_NORMAL) {
                     firstFreeIndex++
                 }
-                if (firstFreeIndex >= Game_local.ENTITYNUM_MAX_NORMAL) {
+                if (firstFreeIndex >= ENTITYNUM_MAX_NORMAL) {
                     Error("no free entities")
                 }
                 spawn_entnum.setVal(firstFreeIndex++)
@@ -3223,14 +3223,14 @@ object Game_local {
             if (editEntities != null) {
                 editEntities.RemoveSelectedEntity(ent)
             }
-            if (ent.entityNumber != Game_local.ENTITYNUM_NONE && entities.get(ent.entityNumber) === ent) {
+            if (ent.entityNumber != ENTITYNUM_NONE && entities.get(ent.entityNumber) === ent) {
                 ent.spawnNode.Remove()
                 entities.get(ent.entityNumber) = null
                 spawnIds.get(ent.entityNumber) = -1
-                if (ent.entityNumber >= Game_local.MAX_CLIENTS && ent.entityNumber < firstFreeIndex) {
+                if (ent.entityNumber >= MAX_CLIENTS && ent.entityNumber < firstFreeIndex) {
                     firstFreeIndex = ent.entityNumber
                 }
-                ent.entityNumber = Game_local.ENTITYNUM_NONE
+                ent.entityNumber = ENTITYNUM_NONE
             }
         }
 
@@ -3313,7 +3313,7 @@ object Game_local {
                     return
                 }
                 if (time > cinematicStopTime) {
-                    cinematicSkipTime = (time + Game_local.CINEMATIC_SKIP_DELAY).toInt()
+                    cinematicSkipTime = (time + CINEMATIC_SKIP_DELAY).toInt()
                 }
 
                 // set r_znear so that transitioning into/out of the player's head doesn't clip through the view
@@ -3401,7 +3401,7 @@ object Game_local {
             if (!skipCinematic) {
                 skipCinematic = true
                 cinematicMaxSkipTime =
-                    (Game_local.gameLocal.time + Math_h.SEC2MS(SysCvar.g_cinematicMaxSkipTime.GetFloat())).toInt()
+                    (gameLocal.time + Math_h.SEC2MS(SysCvar.g_cinematicMaxSkipTime.GetFloat())).toInt()
             }
             return true
         }
@@ -3644,7 +3644,7 @@ object Game_local {
             val num: Int
             var hit: idEntity
             var cm: idClipModel
-            val clipModels = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModels = arrayOfNulls<idClipModel?>(MAX_GENTITIES)
             val phys: idPhysics?
             phys = ent.GetPhysics()
             if (0 == phys.GetNumClipModels()) {
@@ -3654,7 +3654,7 @@ object Game_local {
                 phys.GetAbsBounds(),
                 phys.GetClipMask(),
                 clipModels,
-                Game_local.MAX_GENTITIES
+                MAX_GENTITIES
             )
             i = 0
             while (i < num) {
@@ -3681,7 +3681,7 @@ object Game_local {
                 } else if (!catch_teleport) {
                     hit.Damage(ent, ent, Vector.getVec3_origin(), "damage_telefrag", 1.0f, Model.INVALID_JOINT)
                 }
-                if (!Game_local.gameLocal.isMultiplayer) {
+                if (!gameLocal.isMultiplayer) {
                     // let the mapper know about it
                     Warning("'%s' telefragged '%s'", ent.name, hit.name)
                 }
@@ -3707,7 +3707,7 @@ object Game_local {
             val attackerDamageScale = CFloat()
             val attackerPushScale = CFloat()
             var ent: idEntity
-            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
+            val entityList = arrayOfNulls<idEntity?>(MAX_GENTITIES)
             val numListedEntities: Int
             val bounds: idBounds?
             val v = idVec3()
@@ -3734,7 +3734,7 @@ object Game_local {
             bounds = idBounds(origin).Expand(radius.getVal().toFloat())
 
             // get all entities touching the bounds
-            numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, Game_local.MAX_GENTITIES)
+            numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, MAX_GENTITIES)
             if (inflictor != null && inflictor is idAFAttachment) {
                 inflictor = (inflictor as idAFAttachment?).GetBody()
             }
@@ -3764,7 +3764,7 @@ object Game_local {
                 }
 
                 // don't damage a dead player
-                if (isMultiplayer && ent.entityNumber < Game_local.MAX_CLIENTS && ent is idPlayer && ent.health < 0) {
+                if (isMultiplayer && ent.entityNumber < MAX_CLIENTS && ent is idPlayer && ent.health < 0) {
                     e++
                     continue
                 }
@@ -3828,7 +3828,7 @@ object Game_local {
             var i: Int
             val numListedClipModels: Int
             var clipModel: idClipModel
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel?>(MAX_GENTITIES)
             val dir = idVec3()
             val bounds: idBounds?
             val result = modelTrace_s()
@@ -3838,7 +3838,7 @@ object Game_local {
             bounds = idBounds(origin).Expand(radius)
 
             // get all clip models touching the bounds
-            numListedClipModels = clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, Game_local.MAX_GENTITIES)
+            numListedClipModels = clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, MAX_GENTITIES)
             if (inflictor != null && inflictor is idAFAttachment) {
                 inflictor.oSet((inflictor as idAFAttachment?).GetBody())
             }
@@ -3875,7 +3875,7 @@ object Game_local {
                     i++
                     continue
                 }
-                if (Game_local.gameRenderWorld.FastWorldTrace(result, origin, clipModel.GetOrigin())) {
+                if (gameRenderWorld.FastWorldTrace(result, origin, clipModel.GetOrigin())) {
                     i++
                     continue
                 }
@@ -4020,7 +4020,7 @@ object Game_local {
                     idVec2(1, 0)
                 )
             )
-            Game_local.gameRenderWorld.ProjectDecalOntoWorld(
+            gameRenderWorld.ProjectDecalOntoWorld(
                 winding,
                 projectionOrigin,
                 parallel,
@@ -4181,7 +4181,7 @@ object Game_local {
             var ent: idEntity?
 
             // allocate the area table
-            val numAreas = Game_local.gameRenderWorld.NumAreas()
+            val numAreas = gameRenderWorld.NumAreas()
             locationEntities = arrayOfNulls<idLocationEntity?>(numAreas)
             //	memset( locationEntities, 0, numAreas * sizeof( *locationEntities ) );
 
@@ -4193,7 +4193,7 @@ object Game_local {
                     continue
                 }
                 val point = idVec3(ent.spawnArgs.GetVector("origin"))
-                val areaNum = Game_local.gameRenderWorld.PointInArea(point)
+                val areaNum = gameRenderWorld.PointInArea(point)
                 if (areaNum < 0) {
                     Printf("SpreadLocations: location '%s' is not in a valid area\n", ent.spawnArgs.GetString("name"))
                     ent = ent.spawnNode.Next()
@@ -4217,7 +4217,7 @@ object Game_local {
                     if (i == areaNum) {
                         continue
                     }
-                    if (Game_local.gameRenderWorld.AreasAreConnected(
+                    if (gameRenderWorld.AreasAreConnected(
                             areaNum,
                             i,
                             portalConnection_t.PS_BLOCK_LOCATION
@@ -4243,11 +4243,11 @@ object Game_local {
                 // before SpreadLocations() has been called
                 return null
             }
-            val areaNum = Game_local.gameRenderWorld.PointInArea(point)
+            val areaNum = gameRenderWorld.PointInArea(point)
             if (areaNum < 0) {
                 return null
             }
-            if (areaNum >= Game_local.gameRenderWorld.NumAreas()) {
+            if (areaNum >= gameRenderWorld.NumAreas()) {
                 Error("idGameLocal::LocationForPoint: areaNum >= gameRenderWorld.NumAreas()")
             }
             return locationEntities.get(areaNum)
@@ -4286,7 +4286,7 @@ object Game_local {
                 // check if we are alone in map
                 alone = true
                 j = 0
-                while (j < Game_local.MAX_CLIENTS) {
+                while (j < MAX_CLIENTS) {
                     if (entities.get(j) != null && entities.get(j) != player) {
                         alone = false
                         break
@@ -4304,7 +4304,7 @@ object Game_local {
                     pos.oSet(spawnSpots.oGet(i).ent.GetPhysics().GetOrigin())
                     spawnSpots.oGet(i).dist = 0x7fffffff
                     j = 0
-                    while (j < Game_local.MAX_CLIENTS) {
+                    while (j < MAX_CLIENTS) {
                         if (null == entities.get(j) || entities.get(j) !is idPlayer
                             || entities.get(j) == player || (entities.get(j) as idPlayer?).spectating
                         ) {
@@ -4333,15 +4333,15 @@ object Game_local {
 
         fun SetPortalState(   /*qhandle_t*/portal: Int, blockingBits: Int) {
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
-            if (!Game_local.gameLocal.isClient) {
-                outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
-                outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_PORTAL)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
+            if (!gameLocal.isClient) {
+                outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTAL)
                 outMsg.WriteLong(portal)
-                outMsg.WriteBits(blockingBits, Game_local.NUM_RENDER_PORTAL_BITS)
+                outMsg.WriteBits(blockingBits, NUM_RENDER_PORTAL_BITS)
                 NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
             }
-            Game_local.gameRenderWorld.SetPortalState(portal, blockingBits)
+            gameRenderWorld.SetPortalState(portal, blockingBits)
         }
 
         fun SaveEntityNetworkEvent(ent: idEntity?, eventId: Int, msg: idBitMsg?) {
@@ -4362,10 +4362,10 @@ object Game_local {
 
         fun ServerSendChatMessage(to: Int, name: String?, text: String?) {
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
-            outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
+            outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_CHAT)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_CHAT)
             outMsg.WriteString(name)
             outMsg.WriteString(text, -1, false)
             NetworkSystem.networkSystem.ServerSendReliableMessage(to, outMsg)
@@ -4381,7 +4381,7 @@ object Game_local {
                 return index
             }
             if (clientNum == -1) {
-                for (i in 0 until Game_local.MAX_CLIENTS) {
+                for (i in 0 until MAX_CLIENTS) {
                     ServerSendDeclRemapToClient(i, type, index)
                 }
             } else {
@@ -4472,7 +4472,7 @@ object Game_local {
             serverInfo.Clear()
             numClients = 0
             i = 0
-            while (i < Game_local.MAX_CLIENTS) {
+            while (i < MAX_CLIENTS) {
                 userInfo.get(i).Clear()
                 persistentPlayerInfo.get(i).Clear()
                 i++
@@ -4508,7 +4508,7 @@ object Game_local {
             locationEntities = null
             smokeParticles = null
             editEntities = null
-            entityHash.Clear(1024, Game_local.MAX_GENTITIES)
+            entityHash.Clear(1024, MAX_GENTITIES)
             inCinematic = false
             cinematicSkipTime = 0
             cinematicStopTime = 0
@@ -4530,7 +4530,7 @@ object Game_local {
             gravity.Set(0f, 0f, -1f)
             playerPVS.h =  /*(unsigned int)*/-1
             playerConnectedAreas.h =  /*(unsigned int)*/-1
-            gamestate = Game_local.gameState_t.GAMESTATE_UNINITIALIZED
+            gamestate = gameState_t.GAMESTATE_UNINITIALIZED
             skipCinematic = false
             influenceActive = false
             localClientNum = 0
@@ -4595,7 +4595,7 @@ object Game_local {
                     }
                 }
             }
-            if (Game_local.gameLocal.isMultiplayer) {
+            if (gameLocal.isMultiplayer) {
                 name = spawnArgs.GetString("classname")
                 if (idStr.Companion.Icmp(name, "weapon_bfg") == 0 || idStr.Companion.Icmp(
                         name,
@@ -4638,8 +4638,8 @@ object Game_local {
             // needed by a level
             mapEnt = mapFile.GetEntity(0)
             args = mapEnt.epairs
-            args.SetInt("spawn_entnum", Game_local.ENTITYNUM_WORLD)
-            if (!SpawnEntityDef(args) || null == entities.get(Game_local.ENTITYNUM_WORLD) || entities.get(Game_local.ENTITYNUM_WORLD) !is idWorldspawn) {
+            args.SetInt("spawn_entnum", ENTITYNUM_WORLD)
+            if (!SpawnEntityDef(args) || null == entities.get(ENTITYNUM_WORLD) || entities.get(ENTITYNUM_WORLD) !is idWorldspawn) {
                 Error("Problem spawning world entity")
             }
             num = 1
@@ -4677,7 +4677,7 @@ object Game_local {
 
             // spawnCount - 1 is the number of entities spawned into the map, their indexes started at MAX_CLIENTS (included)
             // mapSpawnCount is used as the max index of map entities, it's the first index of non-map entities
-            mapSpawnCount = Game_local.MAX_CLIENTS + spawnCount - 1
+            mapSpawnCount = MAX_CLIENTS + spawnCount - 1
 
             // execute pending events before the very first game frame
             // this makes sure the map script main() function is called
@@ -4688,18 +4688,18 @@ object Game_local {
 
         private fun MapClear(clearClients: Boolean) {
             var i: Int
-            i = if (clearClients) 0 else Game_local.MAX_CLIENTS
-            while (i < Game_local.MAX_GENTITIES) {
+            i = if (clearClients) 0 else MAX_CLIENTS
+            while (i < MAX_GENTITIES) {
                 entities.get(i) = null
                 assert(null == entities.get(i))
                 spawnIds.get(i) = -1
                 i++
             }
-            entityHash.Clear(1024, Game_local.MAX_GENTITIES)
+            entityHash.Clear(1024, MAX_GENTITIES)
             if (!clearClients) {
                 // add back the hashes of the clients
                 i = 0
-                while (i < Game_local.MAX_CLIENTS) {
+                while (i < MAX_CLIENTS) {
                     if (null == entities.get(i)) {
                         i++
                         continue
@@ -4916,14 +4916,14 @@ object Game_local {
                     ent = ent.spawnNode.Next()
                     continue
                 }
-                Game_local.gameRenderWorld.DebugBounds(
+                gameRenderWorld.DebugBounds(
                     (if (ent.IsHidden()) Lib.Companion.colorLtGrey else Lib.Companion.colorOrange).oMultiply(
                         frac
                     ), ent.GetPhysics().GetAbsBounds()
                 )
                 if (viewTextBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())) {
                     val center = idVec3(ent.GetPhysics().GetAbsBounds().GetCenter())
-                    Game_local.gameRenderWorld.DrawText(
+                    gameRenderWorld.DrawText(
                         ent.name.toString(),
                         center.oMinus(up),
                         0.1f,
@@ -4931,7 +4931,7 @@ object Game_local {
                         axis,
                         1
                     )
-                    Game_local.gameRenderWorld.DrawText(
+                    gameRenderWorld.DrawText(
                         ent.GetEntityDefName(),
                         center,
                         0.1f,
@@ -4939,7 +4939,7 @@ object Game_local {
                         axis,
                         1
                     )
-                    Game_local.gameRenderWorld.DrawText(
+                    gameRenderWorld.DrawText(
                         Str.va("#%d", ent.entityNumber),
                         center.oPlus(up),
                         0.1f,
@@ -4952,14 +4952,14 @@ object Game_local {
                 while (i < ent.targets.Num()) {
                     target = ent.targets.oGet(i).GetEntity()
                     if (target != null) {
-                        Game_local.gameRenderWorld.DebugArrow(
+                        gameRenderWorld.DebugArrow(
                             Lib.Companion.colorYellow.oMultiply(frac),
                             ent.GetPhysics().GetAbsBounds().GetCenter(),
                             target.GetPhysics().GetOrigin(),
                             10,
                             0
                         )
-                        Game_local.gameRenderWorld.DebugBounds(
+                        gameRenderWorld.DebugBounds(
                             Lib.Companion.colorGreen.oMultiply(frac),
                             box,
                             target.GetPhysics().GetOrigin()
@@ -5003,20 +5003,20 @@ object Game_local {
                     val entBounds = ent.GetPhysics().GetAbsBounds()
                     val contents = ent.GetPhysics().GetContents()
                     if (contents and Material.CONTENTS_BODY != 0) {
-                        Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorCyan, entBounds)
+                        gameRenderWorld.DebugBounds(Lib.Companion.colorCyan, entBounds)
                     } else if (contents and Material.CONTENTS_TRIGGER != 0) {
-                        Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorOrange, entBounds)
+                        gameRenderWorld.DebugBounds(Lib.Companion.colorOrange, entBounds)
                     } else if (contents and Material.CONTENTS_SOLID != 0) {
-                        Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
+                        gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
                     } else {
                         if (0f == entBounds.GetVolume()) {
-                            Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorMdGrey, entBounds.Expand(8.0f))
+                            gameRenderWorld.DebugBounds(Lib.Companion.colorMdGrey, entBounds.Expand(8.0f))
                         } else {
-                            Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorMdGrey, entBounds)
+                            gameRenderWorld.DebugBounds(Lib.Companion.colorMdGrey, entBounds)
                         }
                     }
                     if (viewTextBounds.IntersectsBounds(entBounds)) {
-                        Game_local.gameRenderWorld.DrawText(
+                        gameRenderWorld.DrawText(
                             ent.name.toString(),
                             entBounds.GetCenter(),
                             0.1f,
@@ -5024,7 +5024,7 @@ object Game_local {
                             axis,
                             1
                         )
-                        Game_local.gameRenderWorld.DrawText(
+                        gameRenderWorld.DrawText(
                             Str.va("#%d", ent.entityNumber),
                             entBounds.GetCenter().oPlus(up),
                             0.1f,
@@ -5047,13 +5047,13 @@ object Game_local {
                         b.oSet(1, 0, b.oSet(1, 1, b.oSet(1, 2, 8f)))
                     }
                     if (ent.fl.isDormant) {
-                        Game_local.gameRenderWorld.DebugBounds(
+                        gameRenderWorld.DebugBounds(
                             Lib.Companion.colorYellow,
                             b,
                             ent.GetPhysics().GetOrigin()
                         )
                     } else {
-                        Game_local.gameRenderWorld.DebugBounds(
+                        gameRenderWorld.DebugBounds(
                             Lib.Companion.colorGreen,
                             b,
                             ent.GetPhysics().GetOrigin()
@@ -5708,7 +5708,7 @@ object Game_local {
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "serverNextMap",
-                    Game_local.idGameLocal.NextMap_f.Companion.getInstance(),
+                    NextMap_f.Companion.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "change to the next map"
                 )
@@ -5737,7 +5737,7 @@ object Game_local {
             var i: Int
             var type: Int
             i = 0
-            while (i < Game_local.MAX_CLIENTS) {
+            while (i < MAX_CLIENTS) {
                 type = 0
                 while (type < DeclManager.declManager.GetNumDeclTypes()) {
                     clientDeclRemap.get(i).get(type) = idList()
@@ -5818,7 +5818,7 @@ object Game_local {
 
         private fun ServerSendDeclRemapToClient(clientNum: Int, type: declType_t?, index: Int) {
             val outMsg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
+            val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
 
             // if no client connected for this spot
             if (entities.get(clientNum) == null) {
@@ -5846,9 +5846,9 @@ object Game_local {
             clientDeclRemap.get(clientNum).get(type.ordinal).oSet(index, index)
 
             // write update to client
-            outMsg.Init(msgBuf, Game_local.MAX_GAME_MESSAGE_SIZE)
+            outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_REMAP_DECL)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_REMAP_DECL)
             outMsg.WriteByte(TempDump.etoi(type))
             outMsg.WriteLong(index)
             outMsg.WriteString(decl.GetName())
@@ -6000,7 +6000,7 @@ object Game_local {
                 }
                 val entPtr = idEntityPtr<idEntity?>()
                 if (!entPtr.SetSpawnId(event.spawnId)) {
-                    if (null == Game_local.gameLocal.entities[event.spawnId and (1 shl Game_local.GENTITYNUM_BITS) - 1]) {
+                    if (null == gameLocal.entities[event.spawnId and (1 shl GENTITYNUM_BITS) - 1]) {
                         // if new entity exists in this position, silently ignore
                         NetworkEventWarning(event, "Entity does not exist any longer, or has not been spawned yet.")
                     }
@@ -6053,8 +6053,8 @@ object Game_local {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
-                Game_local.gameRenderWorld.DrawText(
+                gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
+                gameRenderWorld.DrawText(
                     Str.va(
                         "%d: %s (%d,%d bytes of %d,%d)\n", ent.entityNumber,
                         ent.name, ent.snapshotBits shr 3, ent.snapshotBits and 7, baseBits shr 3, baseBits and 7
@@ -6275,7 +6275,7 @@ object Game_local {
 
         override fun SelectTimeGroup(timeGroup: Int) {}
         override fun GetTimeGroupTime(timeGroup: Int): Int {
-            return Game_local.gameLocal.time
+            return gameLocal.time
         }
 
         override fun GetBestGameType(map: String?, gametype: String?, buf: CharArray? /*[MAX_STRING_CHARS ]*/) {
@@ -6315,21 +6315,21 @@ object Game_local {
             val j: Int
             val ahead: Int
             i = 0
-            while (i < Game_local.LAGO_HEIGHT) {
+            while (i < LAGO_HEIGHT) {
 
 //                memmove( (byte *)lagometer + LAGO_WIDTH * 4 * i, (byte *)lagometer + LAGO_WIDTH * 4 * i + 4, ( LAGO_WIDTH - 1 ) * 4 );
-                Game_local.memmove(
+                memmove(
                     lagometer,
-                    Game_local.LAGO_WIDTH * 4 * i,
+                    LAGO_WIDTH * 4 * i,
                     lagometer,
-                    Game_local.LAGO_WIDTH * 4 * i + 4,
-                    (Game_local.LAGO_WIDTH - 1) * 4
+                    LAGO_WIDTH * 4 * i + 4,
+                    (LAGO_WIDTH - 1) * 4
                 ) //TODO:flatten 3d array and copy
                 i++
             }
-            j = Game_local.LAGO_WIDTH - 1
+            j = LAGO_WIDTH - 1
             i = 0
-            while (i < Game_local.LAGO_HEIGHT) {
+            while (i < LAGO_HEIGHT) {
                 lagometer.get(i).get(j).get(3) = 0
                 lagometer.get(i).get(j).get(2) = lagometer.get(i).get(j).get(3)
                 lagometer.get(i).get(j).get(1) = lagometer.get(i).get(j).get(2)
@@ -6353,8 +6353,8 @@ object Game_local {
                     i++
                 }
             }
-            i = Game_local.LAGO_HEIGHT - 2 * Lib.Companion.Min(6, dupeUsercmds)
-            while (i < Game_local.LAGO_HEIGHT) {
+            i = LAGO_HEIGHT - 2 * Lib.Companion.Min(6, dupeUsercmds)
+            while (i < LAGO_HEIGHT) {
                 lagometer.get(i).get(j).get(0) = CCLV
                 if (dupeUsercmds <= 2) {
                     lagometer.get(i).get(j).get(1) = CCLV
@@ -6367,12 +6367,12 @@ object Game_local {
         override fun GetMapLoadingGUI(gui: CharArray? /*[MAX_STRING_CHARS ]*/) {}
         class MapRestart_f private constructor() : cmdFunction_t() {
             override fun run(args: CmdArgs.idCmdArgs?) {
-                if (!Game_local.gameLocal.isMultiplayer || Game_local.gameLocal.isClient) {
+                if (!gameLocal.isMultiplayer || gameLocal.isClient) {
                     Common.common.Printf("server is not running - use spawnServer\n")
                     CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "spawnServer\n")
                     return
                 }
-                Game_local.gameLocal.MapRestart()
+                gameLocal.MapRestart()
             }
 
             companion object {
@@ -6385,19 +6385,19 @@ object Game_local {
 
         class NextMap_f private constructor() : cmdFunction_t() {
             override fun run(args: CmdArgs.idCmdArgs?) {
-                if (!Game_local.gameLocal.isMultiplayer || Game_local.gameLocal.isClient) {
+                if (!gameLocal.isMultiplayer || gameLocal.isClient) {
                     Common.common.Printf("server is not running\n")
                     return
                 }
-                Game_local.gameLocal.NextMap()
+                gameLocal.NextMap()
                 // next map was either voted for or triggered by a server command - always restart
-                Game_local.gameLocal.MapRestart()
+                gameLocal.MapRestart()
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Game_local.idGameLocal.NextMap_f()
+                private val instance: cmdFunction_t? = NextMap_f()
                 fun getInstance(): cmdFunction_t? {
-                    return Game_local.idGameLocal.NextMap_f.Companion.instance
+                    return instance
                 }
             }
         }
@@ -6413,9 +6413,9 @@ object Game_local {
             override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
                 var i: Int
                 i = 0
-                while (i < Game_local.gameLocal.num_entities) {
-                    if (Game_local.gameLocal.entities[i] != null) {
-                        callback.run(Str.va("%s %s", args.Argv(0), Game_local.gameLocal.entities[i].name))
+                while (i < gameLocal.num_entities) {
+                    if (gameLocal.entities[i] != null) {
+                        callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i].name))
                     }
                     i++
                 }
@@ -6510,7 +6510,7 @@ object Game_local {
         }
 
         init {
-            for (u in 0 until Game_local.MAX_CLIENTS) {
+            for (u in 0 until MAX_CLIENTS) {
                 userInfo.get(u) = idDict()
                 persistentPlayerInfo.get(u) = idDict()
             }

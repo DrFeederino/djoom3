@@ -25,7 +25,7 @@ object Vector {
     private val vec3_origin: idVec3 = idVec3(0.0f, 0.0f, 0.0f)
     private val vec3_zero: idVec3 = vec3_origin
     private val vec4_origin: idVec4 = idVec4(0.0f, 0.0f, 0.0f, 0.0f)
-    private val vec4_zero: idVec4? = vec4_origin
+    private val vec4_zero: idVec4 = vec4_origin
     private val vec5_origin: idVec5 = idVec5(0.0f, 0.0f, 0.0f, 0.0f, 0.0f)
     private val vec6_infinity: idVec6 =
         idVec6(idMath.INFINITY, idMath.INFINITY, idMath.INFINITY, idMath.INFINITY, idMath.INFINITY, idMath.INFINITY)
@@ -108,24 +108,24 @@ object Vector {
         return a.oGet(0) * b.oGet(0) + a.oGet(1) * b.oGet(1) + a.oGet(2) * b.oGet(2)
     }
 
-    fun VectorSubtract(a: DoubleArray?, b: DoubleArray?, c: DoubleArray?): DoubleArray? {
-        c.get(0) = a.get(0) - b.get(0)
-        c.get(1) = a.get(1) - b.get(1)
-        c.get(2) = a.get(2) - b.get(2)
+    fun VectorSubtract(a: DoubleArray, b: DoubleArray, c: DoubleArray): DoubleArray {
+        c[0] = a[0] - b[0]
+        c[1] = a[1] - b[1]
+        c[2] = a[2] - b[2]
         return c
     }
 
-    fun VectorSubtract(a: FloatArray?, b: FloatArray?, c: FloatArray?): FloatArray? {
-        c.get(0) = a.get(0) - b.get(0)
-        c.get(1) = a.get(1) - b.get(1)
-        c.get(2) = a.get(2) - b.get(2)
+    fun VectorSubtract(a: FloatArray, b: FloatArray, c: FloatArray): FloatArray {
+        c[0] = a[0] - b[0]
+        c[1] = a[1] - b[1]
+        c[2] = a[2] - b[2]
         return c
     }
 
-    fun VectorSubtract(a: idVec3, b: idVec3, c: FloatArray?): FloatArray? {
-        c.get(0) = a.oGet(0) - b.oGet(0)
-        c.get(1) = a.oGet(1) - b.oGet(1)
-        c.get(2) = a.oGet(2) - b.oGet(2)
+    fun VectorSubtract(a: idVec3, b: idVec3, c: FloatArray): FloatArray {
+        c[0] = a.oGet(0) - b.oGet(0)
+        c[1] = a.oGet(1) - b.oGet(1)
+        c[2] = a.oGet(2) - b.oGet(2)
         return c
     }
 
@@ -136,22 +136,22 @@ object Vector {
         return c
     }
 
-    fun VectorAdd(a: DoubleArray?, b: DoubleArray?, c: Array<Double?>?) {
-        c.get(0) = a.get(0) + b.get(0)
-        c.get(1) = a.get(1) + b.get(1)
-        c.get(2) = a.get(2) + b.get(2)
+    fun VectorAdd(a: DoubleArray, b: DoubleArray, c: Array<Double>) {
+        c[0] = a[0] + b[0]
+        c[1] = a[1] + b[1]
+        c[2] = a[2] + b[2]
     }
 
-    fun VectorScale(v: DoubleArray?, s: Double, o: Array<Double?>?) {
-        o.get(0) = v.get(0) * s
-        o.get(1) = v.get(1) * s
-        o.get(2) = v.get(2) * s
+    fun VectorScale(v: DoubleArray, s: Double, o: Array<Double>) {
+        o[0] = v[0] * s
+        o[1] = v[1] * s
+        o[2] = v[2] * s
     }
 
-    fun VectorMA(v: DoubleArray?, s: Double, b: DoubleArray?, o: Array<Double?>?) {
-        o.get(0) = v.get(0) + b.get(0) * s
-        o.get(1) = v.get(1) + b.get(1) * s
-        o.get(2) = v.get(2) + b.get(2) * s
+    fun VectorMA(v: DoubleArray, s: Double, b: DoubleArray, o: Array<Double>) {
+        o[0] = v[0] + b[0] * s
+        o[1] = v[1] + b[1] * s
+        o[2] = v[2] + b[2] * s
     }
 
     fun VectorMA(v: idVec3, s: Float, b: idVec3, o: idVec3) {
@@ -160,32 +160,32 @@ object Vector {
         o.oSet(2, v.oGet(2) + b.oGet(2) * s)
     }
 
-    fun VectorCopy(a: DoubleArray?, b: Array<Double?>?) {
-        b.get(0) = a.get(0)
-        b.get(1) = a.get(1)
-        b.get(2) = a.get(2)
+    fun VectorCopy(a: DoubleArray, b: Array<Double>) {
+        b[0] = a[0]
+        b[1] = a[1]
+        b[2] = a[2]
     }
 
     fun VectorCopy(a: idVec3, b: idVec3) {
         b.oSet(a)
     }
 
-    fun VectorCopy(a: idVec3, b: idVec5?) {
+    fun VectorCopy(a: idVec3, b: idVec5) {
         b.oSet(a)
     }
 
-    fun VectorCopy(a: idVec5?, b: idVec3) {
+    fun VectorCopy(a: idVec5, b: idVec3) {
         b.oSet(a.ToVec3())
     }
 
-    interface idVec<type : idVec<*>> {
+    interface idVec<T : idVec<T>> {
         //reflection was too slow.
         //never thought I would say this, but thank God for type erasure.
         fun oGet(index: Int): Float {
             throw TODO_Exception()
         }
 
-        fun oSet(a: type): type {
+        fun oSet(a: T): T {
             throw TODO_Exception()
         }
 
@@ -193,27 +193,27 @@ object Vector {
             throw TODO_Exception()
         }
 
-        fun oPlus(a: type?): type? {
+        operator fun plus(a: T): T {
             throw TODO_Exception()
         }
 
-        fun oMinus(a: type?): type? {
+        operator fun minus(a: T): T {
             throw TODO_Exception()
         }
 
-        fun oMultiply(a: type?): Float {
+        operator fun times(a: T): Float {
             throw TODO_Exception()
         }
 
-        fun oMultiply(a: Float): type? {
+        operator fun times(a: Float): T {
             throw TODO_Exception()
         }
 
-        fun oDivide(a: Float): type? {
+        operator fun div(a: Float): T {
             throw TODO_Exception()
         }
 
-        fun oPluSet(a: type?): type? {
+        fun oPluSet(a: T): T {
             throw TODO_Exception()
         }
 
@@ -231,7 +231,7 @@ object Vector {
     //	idVec2 - 2D vector
     //
     //===============================================================
-    class idVec2 : idVec<idVec2?>, SERiAL {
+    class idVec2 : idVec<idVec2>, SERiAL {
         var x = 0f
         var y = 0f
 
@@ -241,7 +241,7 @@ object Vector {
             this.y = y
         }
 
-        constructor(v: idVec2?) {
+        constructor(v: idVec2) {
             x = v.x
             y = v.y
         }
@@ -282,28 +282,28 @@ object Vector {
         }
 
         //public	float			operator*( const idVec2 &a ) const;
-        override fun oMultiply(a: idVec2?): Float {
+        override fun times(a: idVec2): Float {
             return x * a.x + y * a.y
         }
 
         //public	idVec2			operator/( const float a ) const;
         //public	idVec2			operator*( const float a ) const;
-        override fun oMultiply(a: Float): idVec2? {
+        override fun times(a: Float): idVec2 {
             return idVec2(x * a, y * a)
         }
 
-        override fun oDivide(a: Float): idVec2? {
+        override fun div(a: Float): idVec2 {
             val inva = 1.0f / a
             return idVec2(x * inva, y * inva)
         }
 
         //public	idVec2			operator+( const idVec2 &a ) const;
-        override fun oPlus(a: idVec2?): idVec2? {
+        override fun plus(a: idVec2?): idVec2 {
             return idVec2(x + a.x, y + a.y)
         }
 
         //public	idVec2			operator-( const idVec2 &a ) const;
-        override fun oMinus(a: idVec2?): idVec2? {
+        override fun minus(a: idVec2?): idVec2? {
             return idVec2(x - a.x, y - a.y)
         }
 
@@ -454,19 +454,19 @@ object Vector {
             } else if (l >= 1.0f) {
                 this.oSet(v2) //( * this) = v2;
             } else {
-                this.oSet(v2.oMinus(v1).oMultiply(l).oPlus(v1)) //( * this) = v1 + l * (v2 - v1);
+                this.oSet(v2.minus(v1).oMultiply(l).plus(v1)) //( * this) = v1 + l * (v2 - v1);
             }
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -578,12 +578,12 @@ object Vector {
         }
 
         //public	idVec3			operator+( final  idVec3 &a ) final ;F
-        override fun oPlus(a: idVec3): idVec3 {
+        override fun plus(a: idVec3): idVec3 {
             return idVec3(x + a.x, y + a.y, z + a.z)
         }
 
         //public	idVec3			operator-( final  idVec3 &a ) final ;
-        override fun oMinus(a: idVec3): idVec3 {
+        override fun minus(a: idVec3): idVec3 {
             return idVec3(x - a.x, y - a.y, z - a.z)
         }
 
@@ -647,7 +647,7 @@ object Vector {
         //private idVec3  multiply(float a){
         //    return new idVec3( this.x * a, this.y * a, this.z * a );
         //}
-        fun oPlus(a: Float): idVec3 {
+        fun plus(a: Float): idVec3 {
             x += a
             y += a
             z += a
@@ -1071,7 +1071,7 @@ object Vector {
             } else if (l >= 1.0f) {
                 this.oSet(v2) //(*this) = v2;
             } else {
-                this.oSet(v2.oMinus(v1).oMultiply(l).oPlus(v1)) //(*this) = v1 + l * ( v2 - v1 );
+                this.oSet(v2.minus(v1).oMultiply(l).plus(v1)) //(*this) = v1 + l * ( v2 - v1 );
             }
         }
 
@@ -1102,7 +1102,7 @@ object Vector {
             }
 
 //	(*this) = ( v1 * scale0 + v2 * scale1 );
-            oSet(v1.oMultiply(scale0).oPlus(v2.oMultiply(scale1)))
+            oSet(v1.oMultiply(scale0).plus(v2.oMultiply(scale1)))
         }
 
         override fun oGet(i: Int): Float { //TODO:rename you lazy ass
@@ -1155,17 +1155,17 @@ object Vector {
             }
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             return ByteBuffer.allocate(BYTES)
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             x = buffer.getFloat()
             y = buffer.getFloat()
             z = buffer.getFloat()
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             val buffer = ByteBuffer.allocate(BYTES)
             buffer.putFloat(x).putFloat(y).putFloat(z).flip()
             return buffer
@@ -1259,7 +1259,7 @@ object Vector {
                 return out
             }
 
-            fun toByteBuffer(vecs: Array<idVec3>?): ByteBuffer? {
+            fun toByteBuffer(vecs: Array<idVec3>?): ByteBuffer {
                 val data = BufferUtils.createByteBuffer(BYTES * vecs.size)
                 for (vec in vecs) {
                     data.put(vec.Write().rewind())
@@ -1326,11 +1326,11 @@ object Vector {
             return oMultiply(a.toFloat())
         }
 
-        override fun oPlus(a: idVec4?): idVec4? {
+        override fun plus(a: idVec4?): idVec4? {
             return idVec4(x + a.x, y + a.y, z + a.z, w + a.w)
         }
 
-        override fun oMinus(a: idVec4?): idVec4? {
+        override fun minus(a: idVec4?): idVec4? {
             return idVec4(x - a.x, y - a.y, z - a.z, w - a.w)
         }
 
@@ -1525,18 +1525,18 @@ object Vector {
             }
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             return ByteBuffer.allocate(BYTES)
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             x = buffer.getFloat()
             y = buffer.getFloat()
             z = buffer.getFloat()
             w = buffer.getFloat()
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             val buffer = AllocBuffer()
             buffer.putFloat(x).putFloat(y).putFloat(z).putFloat(w).flip()
             return buffer
@@ -1557,7 +1557,7 @@ object Vector {
                 return Stream.generate { idVec4() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
             }
 
-            fun toByteBuffer(vecs: Array<idVec4?>?): ByteBuffer? {
+            fun toByteBuffer(vecs: Array<idVec4?>?): ByteBuffer {
                 val data = BufferUtils.createByteBuffer(BYTES * vecs.size)
                 for (vec in vecs) {
                     data.put(vec.Write().rewind())
@@ -1686,23 +1686,23 @@ object Vector {
             }
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oPlus(a: idVec5?): idVec5? {
+        override fun plus(a: idVec5?): idVec5? {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oMinus(a: idVec5?): idVec5? {
+        override fun minus(a: idVec5?): idVec5? {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -1805,7 +1805,7 @@ object Vector {
         }
 
         //public 	idVec6			operator-( final  idVec6 &a ) final ;
-        override fun oPlus(a: idVec6?): idVec6? {
+        override fun plus(a: idVec6?): idVec6? {
             return idVec6(
                 p.get(0) + a.p.get(0),
                 p.get(1) + a.p.get(1),
@@ -1947,19 +1947,19 @@ object Vector {
         //        public void setP(final int index, final float value) {
         //            p[index] = value;
         //        }
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oMinus(a: idVec6?): idVec6? {
+        override fun minus(a: idVec6?): idVec6? {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -2139,7 +2139,7 @@ object Vector {
 
         //public	idVecX			operator-( const idVecX &a ) const;
         //public	idVecX			operator+( const idVecX &a ) const;
-        fun oPlus(a: idVecX?): idVecX? {
+        fun plus(a: idVecX?): idVecX? {
             val m = idVecX()
             assert(size == a.size)
             m.SetTempSize(size)

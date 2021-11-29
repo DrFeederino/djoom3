@@ -64,9 +64,9 @@ object CollisionModel_rotate {
         val proj = idVec3()
         val v1 = idVec3()
         val v2 = idVec3()
-        t = (tanHalfAngle.getVal() * tanHalfAngle.getVal()).toDouble()
+        t = (tanHalfAngle._val * tanHalfAngle._val).toDouble()
         d = 1.0f / (1.0f + t)
-        s = 2.0f * tanHalfAngle.getVal() * d
+        s = 2.0f * tanHalfAngle._val * d
         c = (1.0f - t) * d
         start.oMinSet(origin)
         proj.oSet(axis.oMultiply(start.oMultiply(axis)))

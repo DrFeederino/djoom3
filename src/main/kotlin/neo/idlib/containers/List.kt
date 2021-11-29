@@ -6,7 +6,6 @@ import neo.framework.CVarSystem
 import neo.framework.CVarSystem.idInternalCVar
 import neo.framework.CmdSystem
 import neo.framework.CmdSystem.commandDef_s
-import neo.framework.DeclAF.idAFVector.type
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.StrPool.idPoolStr
 import java.util.*
@@ -30,29 +29,29 @@ object List {
     //        b = c;
     //    }
     //
-    fun idSwap(array: IntArray?, p1: Int, p2: Int) {
-        neo.idlib.containers.List.idSwap(array, array, p1, p2)
+    fun idSwap(array: IntArray, p1: Int, p2: Int) {
+        idSwap(array, array, p1, p2)
     }
 
-    fun idSwap(a1: IntArray?, a2: IntArray?, p1: Int, p2: Int) {
-        val c = a1.get(p1)
-        a1.get(p1) = a2.get(p2)
-        a2.get(p2) = c
+    fun idSwap(a1: IntArray, a2: IntArray, p1: Int, p2: Int) {
+        val c = a1[p1]
+        a1[p1] = a2[p2]
+        a2[p2] = c
     }
 
-    fun idSwap(a1: Array<IntArray?>?, p11: Int, p12: Int, a2: Array<IntArray?>?, p21: Int, p22: Int) {
-        val c = a1.get(p11).get(p12)
-        a1.get(p11).get(12) = a2.get(p21).get(p22)
-        a2.get(p21).get(p22) = c
+    fun idSwap(a1: Array<IntArray>, p11: Int, p12: Int, a2: Array<IntArray>, p21: Int, p22: Int) {
+        val c = a1[p11][p12]
+        a1[p11][12] = a2[p21][p22]
+        a2[p21][p22] = c
     }
 
-    fun idSwap(a1: FloatArray?, a2: FloatArray?, p1: Int, p2: Int) {
-        val c = a1.get(p1)
-        a1.get(p1) = a2.get(p2)
-        a2.get(p2) = c
+    fun idSwap(a1: FloatArray, a2: FloatArray, p1: Int, p2: Int) {
+        val c = a1[p1]
+        a1[p1] = a2[p2]
+        a2[p2] = c
     }
 
-    fun idSwap(a: FloatArray?, b: FloatArray?) {
+    fun idSwap(a: FloatArray, b: FloatArray) {
         val length = a.size
         val c = FloatArray(length)
         System.arraycopy(a, 0, c, 0, length)
@@ -60,15 +59,15 @@ object List {
         System.arraycopy(c, 0, b, 0, length)
     }
 
-    fun idSwap(a: Array<Float?>?, b: Array<Float?>?) {
+    fun idSwap(a: Array<Float>, b: Array<Float>) {
         val length = a.size
-        val c = arrayOfNulls<Float?>(length)
+        val c = FloatArray(length)
         System.arraycopy(a, 0, c, 0, length)
         System.arraycopy(b, 0, a, 0, length)
         System.arraycopy(c, 0, b, 0, length)
     }
 
-    interface cmp_t<type> : Comparator<type?>
+    interface cmp_t<T> : Comparator<T>
 
     /*
      ===============================================================================
@@ -78,23 +77,23 @@ object List {
 
      ===============================================================================
      */
-    open class idList<type> {
+    open class idList<T> {
         private val DBG_count = DBG_counter++
         protected var granularity = 16
         protected var num = 0
-        private var list: Array<type?>?
+        private var list: Array<T?>?
         private var size = 0
-        private var type: Class<type?>? = null
+        private var type: Class<T?>? = null
 
         //
-        //public	typedef int		cmp_t( const type *, const type * );
-        //public	typedef type	new_t( );
+        //public	typedef int		cmp_t( const T *, const T * );
+        //public	typedef T	new_t( );
         //
         constructor() {
             //            this(16);//disabled to prevent inherited constructors from calling the overridden clear function.
         }
 
-        constructor(type: Class<type?>?) : this() {
+        constructor(type: Class<T?>?) : this() {
             this.type = type
         }
 
@@ -105,22 +104,22 @@ object List {
             Clear()
         }
 
-        constructor(newgranularity: Int, type: Class<type?>?) : this(newgranularity) {
+        constructor(newgranularity: Int, type: Class<T?>?) : this(newgranularity) {
             this.type = type
         }
 
-        constructor(other: idList<type?>?) {
+        constructor(other: idList<T?>?) {
             list = null
             this.oSet(other)
         }
 
-        //public					~idList<type>( );
+        //public					~idList<T>( );
         //
         /*
          ================
-         idList<type>::Clear
+         idList<T>::Clear
 
-         Frees up the memory allocated by the list.  Assumes that type automatically handles freeing up memory.
+         Frees up the memory allocated by the list.  Assumes that T automatically handles freeing up memory.
          ================
          */
         open fun Clear() {                                        // clear the list
@@ -134,7 +133,7 @@ object List {
 
         /*
          ================
-         idList<type>::Num
+         idList<T>::Num
 
          Returns the number of elements currently contained in the list.
          Note that this is NOT an indication of the memory allocated.
@@ -146,7 +145,7 @@ object List {
 
         /*
          ================
-         idList<type>::NumAllocated
+         idList<T>::NumAllocated
 
          Returns the number of elements currently allocated for.
          ================
@@ -157,7 +156,7 @@ object List {
 
         /*
          ================
-         idList<type>::SetGranularity
+         idList<T>::SetGranularity
 
          Sets the base size of the array and resizes the array to match.
          ================
@@ -178,7 +177,7 @@ object List {
 
         /*
          ================
-         idList<type>::GetGranularity
+         idList<T>::GetGranularity
 
          Get the current granularity.
          ================
@@ -190,16 +189,16 @@ object List {
         //
         /*
          ================
-         idList<type>::Allocated
+         idList<T>::Allocated
 
-         return total memory allocated for the list in bytes, but doesn't take into account additional memory allocated by type
+         return total memory allocated for the list in bytes, but doesn't take into account additional memory allocated by T
          ================
          */
         fun Allocated(): Int {                        // returns total size of allocated memory
             return size
         }
 
-        /*size_t*/   fun Size(): Int {                        // returns total size of allocated memory including size of list type
+        /*size_t*/   fun Size(): Int {                        // returns total size of allocated memory including size of list T
             return Allocated()
         }
 
@@ -209,12 +208,12 @@ object List {
 
         /*
          ================
-         idList<type>::operator=
+         idList<T>::operator=
 
          Copies the contents and size attributes of another list.
          ================
          */
-        fun oSet(other: idList<type?>?): idList<type?>? {
+        fun oSet(other: idList<T?>?): idList<T?>? {
             var i: Int
             Clear()
             num = other.num
@@ -222,7 +221,7 @@ object List {
             granularity = other.granularity
             type = other.type
             if (size != 0) {
-                list = arrayOfNulls<Any?>(size) as Array<type?>
+                list = arrayOfNulls<Any?>(size) as Array<T?>
                 i = 0
                 while (i < num) {
                     list.get(i) = other.list.get(i)
@@ -234,44 +233,44 @@ object List {
 
         /*
          ================
-         idList<type>::operator[] const
+         idList<T>::operator[] const
 
          Access operator.  Index must be within range or an assert will be issued in debug builds.
          Release builds do no range checking.
          ================
          */
-        fun oGet(index: Int): type {
+        fun oGet(index: Int): T {
             assert(index >= 0)
             assert(index < num)
-            return list!![index] as type
+            return list!![index] as T
         }
 
-        //public	type &			operator[]( int index );
+        //public	T &			operator[]( int index );
         //
-        //        public type oSet(int index, type value) {
+        //        public T oSet(int index, T value) {
         //            assert (index >= 0);
         //            assert (index < num);
         //
         //            return list[index] = value;
         //        }
-        fun oSet(index: Int, value: Any?): type {
+        fun oSet(index: Int, value: Any?): T {
             assert(index >= 0)
             assert(index < num)
-            return value as type?. also { list.get(index) = it }
+            return value as T?. also { list.get(index) = it }
         }
 
-        fun oPluSet(index: Int, value: type?): type? {
+        fun oPluSet(index: Int, value: T?): T? {
             assert(index >= 0)
             assert(index < num)
 
 //            if (list[index] instanceof Double) {
-//                return list[index] = (type) (Object) ((Double) list[index] + (Double) value);//TODO:test thsi shit
+//                return list[index] = (T) (Object) ((Double) list[index] + (Double) value);//TODO:test thsi shit
 //            }
 //            if (list[index] instanceof Float) {
-//                return list[index] = (type) (Object) ((Float) list[index] + (Float) value);//TODO:test thsi shit
+//                return list[index] = (T) (Object) ((Float) list[index] + (Float) value);//TODO:test thsi shit
 //            }
 //            if (list[index] instanceof Integer) {
-            return ((list.get(index) as Number?).toDouble() + (value as Number?).toDouble()) as type?. also {
+            return ((list.get(index) as Number?).toDouble() + (value as Number?).toDouble()) as T?. also {
                 list.get(index) = it //TODO:test thsi shit
             }
             //            }
@@ -280,7 +279,7 @@ object List {
         //
         /*
          ================
-         idList<type>::Condense
+         idList<T>::Condense
 
          Resizes the array to exactly the number of elements it contains or frees up memory if empty.
          ================
@@ -297,14 +296,14 @@ object List {
 
         /*
          ================
-         idList<type>::Resize
+         idList<T>::Resize
 
          Allocates memory for the amount of elements requested while keeping the contents intact.
          Contents are copied using their = operator so that data is correnctly instantiated.
          ================
          */
         fun Resize(newsize: Int) {                                // resizes list to the given number of elements
-            val temp: Array<type?>?
+            val temp: Array<T?>?
             var i: Int
             assert(newsize >= 0)
 
@@ -324,7 +323,7 @@ object List {
             }
 
             // copy the old list into our new one
-            list = arrayOfNulls<Any?>(size) as Array<type?>
+            list = arrayOfNulls<Any?>(size) as Array<T?>
             i = 0
             while (i < num) {
                 list.get(i) = temp.get(i)
@@ -339,14 +338,14 @@ object List {
 
         /*
          ================
-         idList<type>::Resize
+         idList<T>::Resize
 
          Allocates memory for the amount of elements requested while keeping the contents intact.
          Contents are copied using their = operator so that data is correnctly instantiated.
          ================
          */
         fun Resize(newsize: Int, newgranularity: Int) {            // resizes list and sets new granularity
-            val temp: Array<type?>?
+            val temp: Array<T?>?
             var i: Int
             assert(newsize >= 0)
             assert(newgranularity > 0)
@@ -364,7 +363,7 @@ object List {
             }
 
             // copy the old list into our new one
-            list = arrayOfNulls<Any?>(size) as Array<type?>
+            list = arrayOfNulls<Any?>(size) as Array<T?>
             i = 0
             while (i < num) {
                 list.get(i) = temp.get(i)
@@ -379,7 +378,7 @@ object List {
 
         /*
          ================
-         idList<type>::SetNum
+         idList<T>::SetNum
 
          Resize to the exact size specified irregardless of granularity
          ================
@@ -398,7 +397,7 @@ object List {
 
         /*
          ================
-         idList<type>::AssureSize
+         idList<T>::AssureSize
 
          Makes sure the list has at least the given number of elements.
          ================
@@ -419,14 +418,14 @@ object List {
 
         /*
          ================
-         idList<type>::AssureSize
+         idList<T>::AssureSize
 
          Makes sure the list has at least the given number of elements and initialize any elements not yet initialized.
          ================
          */
         fun AssureSize(
             newSize: Int,
-            initValue: type?
+            initValue: T?
         ) {    // assure list has given number of elements and initialize any new elements
             var newSize = newSize
             val newNum = newSize
@@ -447,7 +446,7 @@ object List {
 
         /*
          ================
-         idList<type>::AssureSizeAlloc
+         idList<T>::AssureSizeAlloc
 
          Makes sure the list has at least the given number of elements and allocates any elements using the allocator.
 
@@ -472,7 +471,7 @@ object List {
                 for (i in num until newSize) {
                     try {
                         list.get(i) =  /*( * allocator) ()*/
-                            allocator.newInstance() as type //TODO: check if any of this is necessary?
+                            allocator.newInstance() as T //TODO: check if any of this is necessary?
                     } catch (ex: InstantiationException) {
                         Logger.getLogger(List::class.java.name).log(Level.SEVERE, null, ex)
                     } catch (ex: IllegalAccessException) {
@@ -486,7 +485,7 @@ object List {
         //
         /*
          ================
-         idList<type>::Ptr
+         idList<T>::Ptr
 
          Returns a pointer to the begining of the array.  Useful for iterating through the list in loops.
 
@@ -496,7 +495,7 @@ object List {
          ================
          */
         @Deprecated("")
-        fun getList(): Array<type?>? {                                        // returns a pointer to the list
+        fun getList(): Array<T?>? {                                        // returns a pointer to the list
             return list
         }
 
@@ -506,15 +505,15 @@ object List {
             // returns a pointer to the list
         }
 
-        //public	const type *	Ptr( ) const;									// returns a pointer to the list
+        //public	const T *	Ptr( ) const;									// returns a pointer to the list
         /*
          ================
-         idList<type>::Alloc
+         idList<T>::Alloc
 
          Returns a reference to a new data element at the end of the list.
          ================
          */
-        fun Alloc(): type? {                                    // returns reference to a new data element at the end of the list
+        fun Alloc(): T? {                                    // returns reference to a new data element at the end of the list
             if (TempDump.NOT(*list)) {
                 Resize(granularity)
             }
@@ -532,14 +531,14 @@ object List {
 
         /*
          ================
-         idList<type>::Append
+         idList<T>::Append
 
          Increases the size of the list by one element and copies the supplied data into it.
 
          Returns the index of the new element.
          ================
          */
-        fun Append(obj: type?): Int { // append element
+        fun Append(obj: T?): Int { // append element
             if (TempDump.NOT(*list)) {
                 Resize(granularity)
             }
@@ -558,14 +557,14 @@ object List {
 
         /*
          ================
-         idList<type>::Append
+         idList<T>::Append
 
          adds the other list to this one
 
          Returns the size of the new combined list
          ================
          */
-        fun Append(other: idList<type?>?): Int {                // append list
+        fun Append(other: idList<T?>?): Int {                // append list
             if (TempDump.NOT(*list)) {
                 if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16
@@ -581,12 +580,12 @@ object List {
 
         /*
          ================
-         idList<type>::AddUnique
+         idList<T>::AddUnique
 
          Adds the data to the list if it doesn't already exist.  Returns the index of the data in the list.
          ================
          */
-        fun AddUnique(obj: type?): Int {            // add unique element
+        fun AddUnique(obj: T?): Int {            // add unique element
             var index: Int
             index = FindIndex(obj)
             if (index < 0) {
@@ -597,7 +596,7 @@ object List {
 
         /*
          ================
-         idList<type>::Insert
+         idList<T>::Insert
 
          Increases the size of the list by at leat one element if necessary
          and inserts the supplied data into it.
@@ -606,7 +605,7 @@ object List {
          ================
          */
         @JvmOverloads
-        fun Insert(obj: type?, index: Int = 0): Int {            // insert the element at the given index
+        fun Insert(obj: T?, index: Int = 0): Int {            // insert the element at the given index
             var index = index
             if (TempDump.NOT(*list)) {
                 Resize(granularity)
@@ -634,12 +633,12 @@ object List {
 
         /*
          ================
-         idList<type>::FindIndex
+         idList<T>::FindIndex
 
          Searches for the specified data in the list and returns it's index.  Returns -1 if the data is not found.
          ================
          */
-        fun FindIndex(obj: type?): Int {                // find the index for the given element
+        fun FindIndex(obj: T?): Int {                // find the index for the given element
             var i: Int
             i = 0
             while (i < num) {
@@ -655,12 +654,12 @@ object List {
 
         /*
          ================
-         idList<type>::Find
+         idList<T>::Find
 
          Searches for the specified data in the list and returns it's address. Returns NULL if the data is not found.
          ================
          */
-        fun Find(obj: type?): Int? {                        // find pointer to the given element
+        fun Find(obj: T?): Int? {                        // find pointer to the given element
             val i: Int
             i = FindIndex(obj)
             return if (i >= 0) {
@@ -670,7 +669,7 @@ object List {
 
         /*
          ================
-         idList<type>::FindNull
+         idList<T>::FindNull
 
          Searches for a NULL pointer in the list.  Returns -1 if NULL is not found.
 
@@ -694,7 +693,7 @@ object List {
 
         /*
          ================
-         idList<type>::IndexOf
+         idList<T>::IndexOf
 
          Takes a pointer to an element in the list and returns the index of the element.
          This is NOT a guarantee that the object is really in the list.
@@ -702,7 +701,7 @@ object List {
          but remains silent in release builds.
          ================
          */
-        fun IndexOf(objptr: type?): Int {                    // returns the index for the pointer to an element in the list
+        fun IndexOf(objptr: T?): Int {                    // returns the index for the pointer to an element in the list
             val index: Int
 
 //            index = objptr - list;
@@ -714,7 +713,7 @@ object List {
 
         /*
          ================
-         idList<type>::RemoveIndex
+         idList<T>::RemoveIndex
 
          Removes the element at the specified index and moves all data following the element down to fill in the gap.
          The number of elements in the list is reduced by one.  Returns false if the index is outside the bounds of the list.
@@ -740,14 +739,14 @@ object List {
 
         /*
          ================
-         idList<type>::Remove
+         idList<T>::Remove
 
          Removes the element if it is found within the list and moves all data following the element down to fill in the gap.
          The number of elements in the list is reduced by one.  Returns false if the data is not found in the list.  Note that
          the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        fun Remove(obj: type?): Boolean {                            // remove the element
+        fun Remove(obj: T?): Boolean {                            // remove the element
             val index: Int
             index = FindIndex(obj)
             return if (index >= 0) {
@@ -757,7 +756,7 @@ object List {
 
         /*
          ================
-         idList<type>::Sort
+         idList<T>::Sort
 
          Performs a qsort on the list using the supplied comparison function.  Note that the data is merely moved around the
          list, so any pointers to data within the list may no longer be valid.
@@ -778,16 +777,16 @@ object List {
             } else if (list.get(0) is commandDef_s) {
                 this.Sort(CmdSystem.idListSortCompare())
             } else {
-                this.Sort(neo.idlib.containers.List.idListSortCompare<type?>())
+                this.Sort(neo.idlib.containers.List.idListSortCompare<T?>())
             }
         }
 
-        fun Sort(compare: cmp_t<*>? /*= ( cmp_t * )&idListSortCompare<type> */) {
+        fun Sort(compare: cmp_t<*>? /*= ( cmp_t * )&idListSortCompare<T> */) {
 
 //	typedef int cmp_c(const void *, const void *);
 //
 //	cmp_c *vCompare = (cmp_c *)compare;
-//	qsort( ( void * )list, ( size_t )num, sizeof( type ), vCompare );
+//	qsort( ( void * )list, ( size_t )num, sizeof( T ), vCompare );
             if (list != null) {
                 Arrays.sort(list, compare)
             }
@@ -795,7 +794,7 @@ object List {
 
         /*
          ================
-         idList<type>::SortSubSection
+         idList<T>::SortSubSection
 
          Sorts a subsection of the list.
          ================
@@ -804,7 +803,7 @@ object List {
         fun SortSubSection(
             startIndex: Int,
             endIndex: Int,
-            compare: cmp_t<*>? = neo.idlib.containers.List.idListSortCompare<type?>() /*= ( cmp_t * )&idListSortCompare<type>*/
+            compare: cmp_t<*>? = neo.idlib.containers.List.idListSortCompare<T?>() /*= ( cmp_t * )&idListSortCompare<T>*/
         ) {
             var startIndex = startIndex
             var endIndex = endIndex
@@ -823,22 +822,22 @@ object List {
             //	typedef int cmp_c(const void *, const void *);
 //
 //	cmp_c *vCompare = (cmp_c *)compare;
-//	qsort( ( void * )( &list[startIndex] ), ( size_t )( endIndex - startIndex + 1 ), sizeof( type ), vCompare );
+//	qsort( ( void * )( &list[startIndex] ), ( size_t )( endIndex - startIndex + 1 ), sizeof( T ), vCompare );
             Arrays.sort(list, startIndex, endIndex, compare)
         }
 
         /*
          ================
-         idList<type>::Swap
+         idList<T>::Swap
 
          Swaps the contents of two lists
          ================
          */
-        fun Swap(other: idList<type?>?) {                        // swap the contents of the lists
+        fun Swap(other: idList<T?>?) {                        // swap the contents of the lists
             val swap_num: Int
             val swap_size: Int
             val swap_granularity: Int
-            val swap_list: Array<type?>?
+            val swap_list: Array<T?>?
             swap_num = num
             swap_size = size
             swap_granularity = granularity
@@ -855,7 +854,7 @@ object List {
 
         /*
          ================
-         idList<type>::DeleteContents
+         idList<T>::DeleteContents
 
          Calls the destructor of all elements in the list.  Conditionally frees up memory used by the list.
          Note that this only works on lists containing pointers to objects and will cause a compiler error
@@ -877,8 +876,8 @@ object List {
             if (clear) {
                 Clear()
             } else {
-//		memset( list, 0, size * sizeof( type ) );
-                list = arrayOfNulls<Any?>(list.size) as Array<type?>
+//		memset( list, 0, size * sizeof( T ) );
+                list = arrayOfNulls<Any?>(list.size) as Array<T?>
             }
         }
 
@@ -887,7 +886,7 @@ object List {
             const val SIZE = (Integer.SIZE
                     + Integer.SIZE
                     + Integer.SIZE
-                    + TempDump.CPP_class.Pointer.SIZE) //type
+                    + TempDump.CPP_class.Pointer.SIZE) //T
 
             //
             private var DBG_counter = 0

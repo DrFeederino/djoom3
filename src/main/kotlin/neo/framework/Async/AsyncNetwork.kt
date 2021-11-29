@@ -14,15 +14,16 @@ import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Integer
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_MapName
 import neo.framework.UsercmdGen.inhibit_t
 import neo.framework.UsercmdGen.usercmd_t
-import neo.idlib.*
 import neo.idlib.BitMsg.idBitMsg
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.sys.sys_public.netadr_t
 import neo.sys.win_input
 import neo.sys.win_net
 import neo.sys.win_syscon
-import java.util.stream.Stream
+import kotlin.experimental.and
+import kotlin.math.abs
 
 object AsyncNetwork {
     /*
@@ -34,7 +35,7 @@ object AsyncNetwork {
      1.3.1:			    41
      */
     const val ASYNC_PROTOCOL_MINOR = 41
-    const val ASYNC_PROTOCOL_VERSION = (Licensee.ASYNC_PROTOCOL_MAJOR shl 16) + AsyncNetwork.ASYNC_PROTOCOL_MINOR
+    const val ASYNC_PROTOCOL_VERSION = (Licensee.ASYNC_PROTOCOL_MAJOR shl 16) + ASYNC_PROTOCOL_MINOR
 
     //
     // special game init ids
@@ -107,148 +108,148 @@ object AsyncNetwork {
 
     /*master_t*/
     internal class master_s {
-        var address: netadr_t? = netadr_t()
+        var address: netadr_t = netadr_t()
         var cVar: idCVar? = null
         var resolved = false
     }
 
     object idAsyncNetwork {
-        val LANServer: idCVar? = idCVar(
+        val LANServer: idCVar = idCVar(
             "net_LANServer",
             "0",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NOCHEAT,
             "config LAN games only - affects clients and servers"
         )
-        val allowCheats: idCVar? = idCVar(
+        val allowCheats: idCVar = idCVar(
             "net_allowCheats",
             "0",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NETWORKSYNC,
             "Allow cheats in network game"
         )
-        val client: idAsyncClient? = idAsyncClient()
-        val clientDownload: idCVar? = idCVar(
+        val client: idAsyncClient = idAsyncClient()
+        val clientDownload: idCVar = idCVar(
             "net_clientDownload",
             "1",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
             "client pk4 downloads policy: 0 - never, 1 - ask, 2 - always  = new idCVar(will still prompt for binary code)"
         )
-        val clientMaxPrediction: idCVar? = idCVar(
+        val clientMaxPrediction: idCVar = idCVar(
             "net_clientMaxPrediction",
             "1000",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "maximum number of milliseconds a client can predict ahead of server."
         )
-        val clientMaxRate: idCVar? = idCVar(
+        val clientMaxRate: idCVar = idCVar(
             "net_clientMaxRate",
             "16000",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_NOCHEAT,
             "maximum rate requested by client from server in bytes/sec"
         )
-        val clientPrediction: idCVar? = idCVar(
+        val clientPrediction: idCVar = idCVar(
             "net_clientPrediction",
             "16",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "additional client side prediction in milliseconds"
         )
-        val clientRemoteConsoleAddress: idCVar? = idCVar(
+        val clientRemoteConsoleAddress: idCVar = idCVar(
             "net_clientRemoteConsoleAddress",
             "localhost",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
             "remote console address"
         )
-        val clientRemoteConsolePassword: idCVar? = idCVar(
+        val clientRemoteConsolePassword: idCVar = idCVar(
             "net_clientRemoteConsolePassword",
             "",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
             "remote console password"
         )
-        val clientServerTimeout: idCVar? = idCVar(
+        val clientServerTimeout: idCVar = idCVar(
             "net_clientServerTimeout",
             "40",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "server time out in seconds"
         )
-        val clientUsercmdBackup: idCVar? = idCVar(
+        val clientUsercmdBackup: idCVar = idCVar(
             "net_clientUsercmdBackup",
             "5",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "number of usercmds to resend"
         )
-        val idleServer: idCVar? = idCVar(
+        val idleServer: idCVar = idCVar(
             "si_idleServer",
             "0",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_INIT or CVarSystem.CVAR_SERVERINFO,
             "game clients are idle"
         )
-        val master0: idCVar? = idCVar(
+        val master0: idCVar = idCVar(
             "net_master0",
             Licensee.IDNET_HOST + ":" + Licensee.IDNET_MASTER_PORT,
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
             "idnet master server address"
         )
-        val master1: idCVar? =
+        val master1: idCVar =
             idCVar("net_master1", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "1st master server address")
-        val master2: idCVar? =
+        val master2: idCVar =
             idCVar("net_master2", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "2nd master server address")
-        val master3: idCVar? =
+        val master3: idCVar =
             idCVar("net_master3", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "3rd master server address")
-        val master4: idCVar? =
+        val master4: idCVar =
             idCVar("net_master4", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "4th master server address")
-        val server: idAsyncServer? = idAsyncServer()
-        val serverAllowServerMod: idCVar? = idCVar(
+        val server: idAsyncServer = idAsyncServer()
+        val serverAllowServerMod: idCVar = idCVar(
             "net_serverAllowServerMod",
             "0",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NOCHEAT,
             "allow server-side mods"
         )
-        val serverClientTimeout: idCVar? = idCVar(
+        val serverClientTimeout: idCVar = idCVar(
             "net_serverClientTimeout",
             "40",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "client time out in seconds"
         )
-        val serverDedicated // if set run a dedicated server
+        var serverDedicated // if set run a dedicated server
                 : idCVar? = null
-        val serverDrawClient: idCVar? = idCVar(
+        val serverDrawClient: idCVar = idCVar(
             "net_serverDrawClient",
             "-1",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER,
             "number of client for which to draw view on server"
         )
-        val serverMaxClientRate: idCVar? = idCVar(
+        val serverMaxClientRate: idCVar = idCVar(
             "net_serverMaxClientRate",
             "16000",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_NOCHEAT,
             "maximum rate to a client in bytes/sec"
         )
-        val serverMaxUsercmdRelay: idCVar? = idCVar(
+        val serverMaxUsercmdRelay: idCVar = idCVar(
             "net_serverMaxUsercmdRelay",
             "5",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "maximum number of usercmds from other clients the server relays to a client",
-            1,
-            AsyncNetwork.MAX_USERCMD_RELAY,
-            ArgCompletion_Integer(1, AsyncNetwork.MAX_USERCMD_RELAY)
+            1f,
+            MAX_USERCMD_RELAY.toFloat(),
+            ArgCompletion_Integer(1, MAX_USERCMD_RELAY)
         )
-        val serverReloadEngine: idCVar? = idCVar(
+        val serverReloadEngine: idCVar = idCVar(
             "net_serverReloadEngine",
             "0",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "perform a full reload on next map restart  = new idCVar(including flushing referenced pak files) - decreased if > 0"
         )
-        val serverRemoteConsolePassword: idCVar? = idCVar(
+        val serverRemoteConsolePassword: idCVar = idCVar(
             "net_serverRemoteConsolePassword",
             "",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
             "remote console password"
         )
-        val serverSnapshotDelay: idCVar? = idCVar(
+        val serverSnapshotDelay: idCVar = idCVar(
             "net_serverSnapshotDelay",
             "50",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "delay between snapshots in milliseconds"
         )
-        val serverZombieTimeout: idCVar? = idCVar(
+        val serverZombieTimeout: idCVar = idCVar(
             "net_serverZombieTimeout",
             "5",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
@@ -256,18 +257,16 @@ object AsyncNetwork {
         )
 
         //
-        val verbose: idCVar? = idCVar(
+        val verbose: idCVar = idCVar(
             "net_verbose",
             "0",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "1 = verbose output, 2 = even more verbose output",
-            0,
-            2,
+            0f,
+            2f,
             ArgCompletion_Integer(0, 2)
         )
-        private val masters = Stream.generate { master_s() }
-            .limit(AsyncNetwork.MAX_MASTER_SERVERS.toLong())
-            .toArray<master_s?> { _Dummy_.__Array__() }
+        private val masters = Array(MAX_MASTER_SERVERS) { master_s() }
 
         //
         private var realTime = 0
@@ -286,11 +285,11 @@ object AsyncNetwork {
                     SpawnServer_f.getInstance(),
                     CmdSystem.CMD_FL_SYSTEM,
                     "spawns a server",
-                    ArgCompletion_MapName.Companion.getInstance()
+                    ArgCompletion_MapName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "nextMap",
-                    AsyncNetwork.idAsyncNetwork.NextMap_f.Companion.getInstance(),
+                    NextMap_f.getInstance(),
                     CmdSystem.CMD_FL_SYSTEM,
                     "loads the next map on the server"
                 )
@@ -382,24 +381,24 @@ object AsyncNetwork {
             server.RunFrame()
         }
 
-        fun WriteUserCmdDelta(msg: idBitMsg?, cmd: usercmd_t?, base: usercmd_t?) {
+        fun WriteUserCmdDelta(msg: idBitMsg, cmd: usercmd_t, base: usercmd_t?) {
             if (base != null) {
                 msg.WriteDeltaLongCounter(base.gameTime, cmd.gameTime)
-                msg.WriteDeltaByte(base.buttons.toInt(), cmd.buttons.toInt())
-                msg.WriteDeltaShort(base.mx.toInt(), cmd.mx.toInt())
-                msg.WriteDeltaShort(base.my.toInt(), cmd.my.toInt())
-                msg.WriteDeltaChar(base.forwardmove.toInt(), cmd.forwardmove.toInt())
-                msg.WriteDeltaChar(base.rightmove.toInt(), cmd.rightmove.toInt())
-                msg.WriteDeltaChar(base.upmove.toInt(), cmd.upmove.toInt())
+                msg.WriteDeltaByte(base.buttons, cmd.buttons)
+                msg.WriteDeltaShort(base.mx, cmd.mx)
+                msg.WriteDeltaShort(base.my, cmd.my)
+                msg.WriteDeltaChar(base.forwardmove, cmd.forwardmove)
+                msg.WriteDeltaChar(base.rightmove, cmd.rightmove)
+                msg.WriteDeltaChar(base.upmove, cmd.upmove)
                 msg.WriteDeltaShort(base.angles[0], cmd.angles[0])
                 msg.WriteDeltaShort(base.angles[1], cmd.angles[1])
                 msg.WriteDeltaShort(base.angles[2], cmd.angles[2])
                 return
             }
             msg.WriteLong(cmd.gameTime)
-            msg.WriteByte(cmd.buttons.toInt())
-            msg.WriteShort(cmd.mx.toInt())
-            msg.WriteShort(cmd.my.toInt())
+            msg.WriteByte(cmd.buttons)
+            msg.WriteShort(cmd.mx)
+            msg.WriteShort(cmd.my)
             msg.WriteChar(cmd.forwardmove.toInt())
             msg.WriteChar(cmd.rightmove.toInt())
             msg.WriteChar(cmd.upmove.toInt())
@@ -409,49 +408,49 @@ object AsyncNetwork {
         }
 
         @Throws(idException::class)
-        fun ReadUserCmdDelta(msg: idBitMsg?, cmd: usercmd_t?, base: usercmd_t?) {
+        fun ReadUserCmdDelta(msg: idBitMsg, cmd: usercmd_t, base: usercmd_t?) {
             if (base != null) {
                 cmd.gameTime = msg.ReadDeltaLongCounter(base.gameTime)
-                cmd.buttons = msg.ReadDeltaByte(base.buttons.toInt()).toByte()
-                cmd.mx = msg.ReadDeltaShort(base.mx.toInt()).toShort()
-                cmd.my = msg.ReadDeltaShort(base.my.toInt()).toShort()
-                cmd.forwardmove = msg.ReadDeltaChar(base.forwardmove.toInt()).toByte()
-                cmd.rightmove = msg.ReadDeltaChar(base.rightmove.toInt()).toByte()
-                cmd.upmove = msg.ReadDeltaChar(base.upmove.toInt()).toByte()
-                cmd.angles[0] = msg.ReadDeltaShort(base.angles[0]).toShort()
-                cmd.angles[1] = msg.ReadDeltaShort(base.angles[1]).toShort()
-                cmd.angles[2] = msg.ReadDeltaShort(base.angles[2]).toShort()
+                cmd.buttons = msg.ReadDeltaByte(base.buttons)
+                cmd.mx = msg.ReadDeltaShort(base.mx)
+                cmd.my = msg.ReadDeltaShort(base.my)
+                cmd.forwardmove = msg.ReadDeltaChar(base.forwardmove)
+                cmd.rightmove = msg.ReadDeltaChar(base.rightmove)
+                cmd.upmove = msg.ReadDeltaChar(base.upmove)
+                cmd.angles[0] = msg.ReadDeltaShort(base.angles[0])
+                cmd.angles[1] = msg.ReadDeltaShort(base.angles[1])
+                cmd.angles[2] = msg.ReadDeltaShort(base.angles[2])
                 return
             }
             cmd.gameTime = msg.ReadLong()
-            cmd.buttons = msg.ReadByte().toByte()
-            cmd.mx = msg.ReadShort().toShort()
-            cmd.my = msg.ReadShort().toShort()
-            cmd.forwardmove = msg.ReadChar().toByte()
-            cmd.rightmove = msg.ReadChar().toByte()
-            cmd.upmove = msg.ReadChar().toByte()
-            cmd.angles[0] = msg.ReadShort().toShort()
-            cmd.angles[1] = msg.ReadShort().toShort()
-            cmd.angles[2] = msg.ReadShort().toShort()
+            cmd.buttons = msg.ReadByte()
+            cmd.mx = msg.ReadShort()
+            cmd.my = msg.ReadShort()
+            cmd.forwardmove = msg.ReadChar()
+            cmd.rightmove = msg.ReadChar()
+            cmd.upmove = msg.ReadChar()
+            cmd.angles[0] = msg.ReadShort()
+            cmd.angles[1] = msg.ReadShort()
+            cmd.angles[2] = msg.ReadShort()
         }
 
-        fun DuplicateUsercmd(previousUserCmd: usercmd_t?, currentUserCmd: usercmd_t?, frame: Int, time: Int): Boolean {
+        fun DuplicateUsercmd(previousUserCmd: usercmd_t, currentUserCmd: usercmd_t, frame: Int, time: Int): Boolean {
             var currentUserCmd = currentUserCmd
             if (currentUserCmd.gameTime <= previousUserCmd.gameTime) {
                 currentUserCmd = previousUserCmd
                 currentUserCmd.gameFrame = frame
                 currentUserCmd.gameTime = time
                 currentUserCmd.duplicateCount++
-                if (currentUserCmd.duplicateCount > AsyncNetwork.MAX_USERCMD_DUPLICATION) {
-                    currentUserCmd.buttons = currentUserCmd.buttons and UsercmdGen.BUTTON_ATTACK.inv()
-                    if (Math.abs(currentUserCmd.forwardmove.toInt()) > 2) {
-                        currentUserCmd.forwardmove = currentUserCmd.forwardmove shr 1
+                if (currentUserCmd.duplicateCount > MAX_USERCMD_DUPLICATION) {
+                    currentUserCmd.buttons = currentUserCmd.buttons and UsercmdGen.BUTTON_ATTACK.inv().toByte()
+                    if (abs(currentUserCmd.forwardmove.toInt()) > 2) {
+                        currentUserCmd.forwardmove = (currentUserCmd.forwardmove.toInt() shr 1).toByte()
                     }
-                    if (Math.abs(currentUserCmd.rightmove.toInt()) > 2) {
-                        currentUserCmd.rightmove = currentUserCmd.rightmove shr 1
+                    if (abs(currentUserCmd.rightmove.toInt()) > 2) {
+                        currentUserCmd.rightmove = (currentUserCmd.rightmove.toInt() shr 1).toByte()
                     }
-                    if (Math.abs(currentUserCmd.upmove.toInt()) > 2) {
-                        currentUserCmd.upmove = currentUserCmd.upmove shr 1
+                    if (abs(currentUserCmd.upmove.toInt()) > 2) {
+                        currentUserCmd.upmove = (currentUserCmd.upmove.toInt() shr 1).toByte()
                     }
                 }
                 return true
@@ -459,23 +458,23 @@ object AsyncNetwork {
             return false
         }
 
-        fun UsercmdInputChanged(previousUserCmd: usercmd_t?, currentUserCmd: usercmd_t?): Boolean {
+        fun UsercmdInputChanged(previousUserCmd: usercmd_t, currentUserCmd: usercmd_t): Boolean {
             return previousUserCmd.buttons != currentUserCmd.buttons || previousUserCmd.forwardmove != currentUserCmd.forwardmove || previousUserCmd.rightmove != currentUserCmd.rightmove || previousUserCmd.upmove != currentUserCmd.upmove || previousUserCmd.angles[0] != currentUserCmd.angles[0] || previousUserCmd.angles[1] != currentUserCmd.angles[1] || previousUserCmd.angles[2] != currentUserCmd.angles[2]
         }
 
         //
         // returns true if the corresponding master is set to something (and could be resolved)
-        fun GetMasterAddress(index: Int, adr: netadr_t?): Boolean {
+        fun GetMasterAddress(index: Int, adr: netadr_t): Boolean {
             if (null == masters[index].cVar) {
                 return false
             }
-            if (masters[index].cVar.GetString().isEmpty()) {
+            if (masters[index].cVar!!.GetString().isEmpty()) {
                 return false
             }
-            if (!masters[index].resolved || masters[index].cVar.IsModified()) {
-                masters[index].cVar.ClearModified()
-                if (!win_net.Sys_StringToNetAdr(masters[index].cVar.GetString(), masters[index].address, true)) {
-                    Common.common.Printf("Failed to resolve master%d: %s\n", index, masters[index].cVar.GetString())
+            if (!masters[index].resolved || masters[index].cVar!!.IsModified()) {
+                masters[index].cVar!!.ClearModified()
+                if (!win_net.Sys_StringToNetAdr(masters[index].cVar!!.GetString(), masters[index].address, true)) {
+                    Common.common.Printf("Failed to resolve master%d: %s\n", index, masters[index].cVar!!.GetString())
                     masters[index].address = netadr_t() //memset( &masters[ index ].address, 0, sizeof( netadr_t ) );
                     masters[index].resolved = true
                     return false
@@ -490,7 +489,7 @@ object AsyncNetwork {
         }
 
         // get the hardcoded idnet master, equivalent to GetMasterAddress( 0, .. )
-        fun GetMasterAddress(): netadr_t? {
+        fun GetMasterAddress(): netadr_t {
             val ret = netadr_t()
             GetMasterAddress(0, ret)
             return masters[0].address
@@ -500,25 +499,25 @@ object AsyncNetwork {
             client.GetNETServers()
         }
 
-        fun ExecuteSessionCommand(sessCmd: String?) {
-            if (!sessCmd.isEmpty()) {
-                if (0 == idStr.Companion.Icmp(sessCmd, "game_startmenu")) {
-                    Session.Companion.session.SetGUI(Game_local.game.StartMenu(), null)
+        fun ExecuteSessionCommand(sessCmd: String) {
+            if (sessCmd.isNotEmpty()) {
+                if (0 == idStr.Icmp(sessCmd, "game_startmenu")) {
+                    Session.session.SetGUI(Game_local.game.StartMenu(), null)
                 }
             }
         }
 
-        fun ExecuteSessionCommand(sessCmd: CharArray?) {
-            ExecuteSessionCommand(TempDump.ctos(sessCmd))
+        fun ExecuteSessionCommand(sessCmd: CharArray) {
+            ExecuteSessionCommand(TempDump.ctos(sessCmd)!!)
         }
 
         // same message used for offline check and network reply
         @Throws(idException::class)
-        fun BuildInvalidKeyMsg(msg: idStr?, valid: BooleanArray? /*[2 ]*/) {
-            if (!valid.get(0)) {
+        fun BuildInvalidKeyMsg(msg: idStr, valid: BooleanArray /*[2 ]*/) {
+            if (!valid[0]) {
                 msg.oPluSet(Common.common.GetLanguageDict().GetString("#str_07194"))
             }
-            if (FileSystem_h.fileSystem.HasD3XP() && !valid.get(1)) {
+            if (FileSystem_h.fileSystem.HasD3XP() && !valid[1]) {
                 if (msg.Length() != 0) {
                     msg.oPluSet("\n")
                 }
@@ -535,12 +534,12 @@ object AsyncNetwork {
          */
         private class SpawnServer_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (args.Argc() > 1) {
                     CVarSystem.cvarSystem.SetCVarString("si_map", args.Argv(1))
                 }
                 // don't let a server spawn with singleplayer game type - it will crash
-                if (idStr.Companion.Icmp(CVarSystem.cvarSystem.GetCVarString("si_gameType"), "singleplayer") == 0) {
+                if (idStr.Icmp(CVarSystem.cvarSystem.GetCVarString("si_gameType"), "singleplayer") == 0) {
                     CVarSystem.cvarSystem.SetCVarString("si_gameType", "deathmatch")
                 }
                 Common.com_asyncInput.SetBool(false)
@@ -569,8 +568,8 @@ object AsyncNetwork {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = SpawnServer_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = SpawnServer_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -582,14 +581,14 @@ object AsyncNetwork {
          ==================
          */
         private class NextMap_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 server.ExecuteMapChange()
             }
 
             companion object {
-                private val instance: cmdFunction_t? = NextMap_f()
-                fun getInstance(): cmdFunction_t? {
-                    return AsyncNetwork.idAsyncNetwork.NextMap_f.Companion.instance
+                private val instance: cmdFunction_t = NextMap_f()
+                fun getInstance(): cmdFunction_t {
+                    return instance
                 }
             }
         }
@@ -601,7 +600,7 @@ object AsyncNetwork {
          */
         private class Connect_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (server.IsActive()) {
                     Common.common.Printf("already running a server\n")
                     return
@@ -615,8 +614,8 @@ object AsyncNetwork {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Connect_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Connect_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -628,13 +627,13 @@ object AsyncNetwork {
          ==================
          */
         private class Reconnect_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 client.Reconnect()
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Reconnect_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Reconnect_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -646,13 +645,13 @@ object AsyncNetwork {
          ==================
          */
         private class GetServerInfo_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 client.GetServerInfo(args.Argv(1))
             }
 
             companion object {
-                private val instance: cmdFunction_t? = GetServerInfo_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = GetServerInfo_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -664,13 +663,13 @@ object AsyncNetwork {
          ==================
          */
         private class GetLANServers_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 client.GetLANServers()
             }
 
             companion object {
-                private val instance: cmdFunction_t? = GetLANServers_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = GetLANServers_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -682,13 +681,13 @@ object AsyncNetwork {
          ==================
          */
         private class ListServers_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 client.ListServers()
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ListServers_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ListServers_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -700,13 +699,13 @@ object AsyncNetwork {
          ==================
          */
         private class RemoteConsole_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 client.RemoteConsole(args.Args())
             }
 
             companion object {
-                private val instance: cmdFunction_t? = RemoteConsole_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = RemoteConsole_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -718,7 +717,7 @@ object AsyncNetwork {
          ==================
          */
         private class Heartbeat_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (!server.IsActive()) {
                     Common.common.Printf("server is not running\n")
                     return
@@ -727,8 +726,8 @@ object AsyncNetwork {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Heartbeat_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Heartbeat_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -740,7 +739,7 @@ object AsyncNetwork {
          ==================
          */
         private class Kick_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 val clientId: idStr
                 val iclient: Int
                 if (!server.IsActive()) {
@@ -761,8 +760,8 @@ object AsyncNetwork {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Kick_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Kick_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -774,13 +773,13 @@ object AsyncNetwork {
          ==================
          */
         private class CheckNewVersion_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 client.SendVersionCheck()
             }
 
             companion object {
-                private val instance: cmdFunction_t? = CheckNewVersion_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = CheckNewVersion_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -792,7 +791,7 @@ object AsyncNetwork {
          =================
          */
         private class UpdateUI_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (args.Argc() != 2) {
                     Common.common.Warning("idAsyncNetwork::UpdateUI_f: wrong arguments\n")
                     return
@@ -806,8 +805,8 @@ object AsyncNetwork {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = UpdateUI_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = UpdateUI_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -829,8 +828,8 @@ object AsyncNetwork {
                     "0",
                     CVarSystem.CVAR_SERVERINFO or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
                     "1 = text console dedicated server, 2 = graphical dedicated server",
-                    0,
-                    2,
+                    0f,
+                    2f,
                     ArgCompletion_Integer(0, 2)
                 )
             }

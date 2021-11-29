@@ -59,13 +59,13 @@ import java.util.logging.Logger
  *
  */
 object Common {
-    val ASYNCSOUND_INFO: String? =
+    val ASYNCSOUND_INFO: String =
         "0: mix sound inline, 1: memory mapped async mix, 2: callback mixing, 3: write async mix"
-    val DMAP_DONE: String? = "DMAPDone"
+    val DMAP_DONE: String = "DMAPDone"
 
     //
     //#ifdef _WIN32
-    val DMAP_MSGID: String? = "DMAPOutput"
+    val DMAP_MSGID: String = "DMAPOutput"
     val EDITOR_AAS: Int = Lib.Companion.BIT(11)
     val EDITOR_AF: Int = Lib.Companion.BIT(8)
     val EDITOR_DEBUGGER: Int = Lib.Companion.BIT(3)
@@ -82,15 +82,15 @@ object Common {
 
     //
     //
-    val STRTABLE_ID: String? = "#str_"
+    val STRTABLE_ID: String = "#str_"
     const val STRTABLE_ID_LENGTH = Common.STRTABLE_ID.length //5
-    val com_allowConsole: idCVar? = idCVar(
+    val com_allowConsole: idCVar = idCVar(
         "com_allowConsole",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "allow toggling console with the tilde key"
     )
-    val com_asyncInput: idCVar? = idCVar(
+    val com_asyncInput: idCVar = idCVar(
         "com_asyncInput",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
@@ -98,7 +98,7 @@ object Common {
     )
 
     //
-    val com_asyncSound: idCVar? = if (BuildDefines.MACOS_X) idCVar(
+    val com_asyncSound: idCVar = if (BuildDefines.MACOS_X) idCVar(
         "com_asyncSound",
         "2",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
@@ -116,7 +116,7 @@ object Common {
         0,
         1
     )
-    val com_developer: idCVar? = idCVar(
+    val com_developer: idCVar = idCVar(
         "developer",
         "1",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
@@ -124,13 +124,13 @@ object Common {
     )
 
     //
-    val com_forceGenericSIMD: idCVar? = idCVar(
+    val com_forceGenericSIMD: idCVar = idCVar(
         "com_forceGenericSIMD",
         "1",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "force generic platform independent SIMD"
     )
-    val com_logFile: idCVar? = idCVar(
+    val com_logFile: idCVar = idCVar(
         "logFile",
         "0",
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
@@ -139,27 +139,27 @@ object Common {
         2,
         ArgCompletion_Integer(0, 2)
     )
-    val com_logFileName: idCVar? = idCVar(
+    val com_logFileName: idCVar = idCVar(
         "logFileName",
         "qconsole.log",
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "name of log file, if empty, qconsole.log will be used"
     )
-    val com_machineSpec: idCVar? = idCVar(
+    val com_machineSpec: idCVar = idCVar(
         "com_machineSpec",
         "-1",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
         "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality"
     )
-    val com_makingBuild: idCVar? =
+    val com_makingBuild: idCVar =
         idCVar("com_makingBuild", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "1 when making a build")
-    val com_memoryMarker: idCVar? = idCVar(
+    val com_memoryMarker: idCVar = idCVar(
         "com_memoryMarker",
         "-1",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT,
         "used as a marker for memory stats"
     )
-    val com_preciseTic: idCVar? = idCVar(
+    val com_preciseTic: idCVar = idCVar(
         "com_preciseTic",
         "1",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
@@ -167,53 +167,53 @@ object Common {
     )
 
     //
-    val com_product_lang_ext: idCVar? = idCVar(
+    val com_product_lang_ext: idCVar = idCVar(
         "com_product_lang_ext",
         "1",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
         "Extension to use when creating language files."
     )
-    val com_purgeAll: idCVar? = idCVar(
+    val com_purgeAll: idCVar = idCVar(
         "com_purgeAll",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
         "purge everything between level loads"
     )
-    val com_showAsyncStats: idCVar? = idCVar(
+    val com_showAsyncStats: idCVar = idCVar(
         "com_showAsyncStats",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "show async network stats"
     )
-    val com_showFPS: idCVar? = idCVar(
+    val com_showFPS: idCVar = idCVar(
         "com_showFPS",
         "1",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_NOCHEAT,
         "show frames rendered per second"
     )
-    val com_showMemoryUsage: idCVar? = idCVar(
+    val com_showMemoryUsage: idCVar = idCVar(
         "com_showMemoryUsage",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "show total and per frame memory usage"
     )
-    val com_showSoundDecoders: idCVar? = idCVar(
+    val com_showSoundDecoders: idCVar = idCVar(
         "com_showSoundDecoders",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "show sound decoders"
     )
-    val com_skipRenderer: idCVar? =
+    val com_skipRenderer: idCVar =
         idCVar("com_skipRenderer", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "skip the renderer completely")
-    val com_speeds: idCVar? = idCVar(
+    val com_speeds: idCVar = idCVar(
         "com_speeds",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "show engine timings"
     )
-    val com_timescale: idCVar? =
+    val com_timescale: idCVar =
         idCVar("timescale", "1", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_FLOAT, "scales the time", 0.1f, 10.0f)
-    val com_timestampPrints: idCVar? = idCVar(
+    val com_timestampPrints: idCVar = idCVar(
         "com_timestampPrints",
         "0",
         CVarSystem.CVAR_SYSTEM,
@@ -222,28 +222,28 @@ object Common {
         2,
         ArgCompletion_Integer(0, 2)
     )
-    val com_updateLoadSize: idCVar? = idCVar(
+    val com_updateLoadSize: idCVar = idCVar(
         "com_updateLoadSize",
         "0",
         CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "update the load size after loading a map"
     )
-    val com_videoRam: idCVar? = idCVar(
+    val com_videoRam: idCVar = idCVar(
         "com_videoRam",
         "512",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT or CVarSystem.CVAR_ARCHIVE,
         "holds the last amount of detected video ram"
     )
-    val BUILD_DEBUG: String? = if (BuildDefines._DEBUG) "-debug" else ""
+    val BUILD_DEBUG: String = if (BuildDefines._DEBUG) "-debug" else ""
     const val ID_WRITE_VERSION = false
     const val MAX_PRINT_MSG_SIZE = 4096
     const val MAX_WARNING_LIST = 256
-    val version: version_s? = version_s()
+    val version: version_s = version_s()
 
     //
     //
     //
-    val com_version: idCVar? = idCVar(
+    val com_version: idCVar = idCVar(
         "si_version",
         Common.version.string,
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM or CVarSystem.CVAR_SERVERINFO,
@@ -609,7 +609,7 @@ object Common {
         abstract fun FatalError(fmt: String?, vararg args: Any?)
 
         // Returns a pointer to the dictionary with language specific strings.
-        abstract fun GetLanguageDict(): idLangDict?
+        abstract fun GetLanguageDict(): idLangDict
 
         // Returns key bound to the command
         abstract fun KeysFromBinding(bind: String?): String?
@@ -662,13 +662,13 @@ object Common {
         private val errorList: idStrList?
 
         //
-        private val errorMessage: Array<String?>? = arrayOf(null) //new char[MAX_PRINT_MSG_SIZE];
+        private val errorMessage: Array<String?> = arrayOf(null) //new char[MAX_PRINT_MSG_SIZE];
 
         //
         private val gameDLL: Int
 
         //
-        private val languageDict: idLangDict?
+        private val languageDict: idLangDict
         private var lastTicMsec = 0
 
         //
@@ -1501,7 +1501,7 @@ object Common {
             win_main.Sys_Error("%s", errorMessage.get(0))
         }
 
-        override fun GetLanguageDict(): idLangDict? {
+        override fun GetLanguageDict(): idLangDict {
             return languageDict
         }
 
@@ -2646,7 +2646,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_Editor_f()
+            private val instance: cmdFunction_t = Com_Editor_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2669,7 +2669,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_ScriptDebugger_f()
+            private val instance: cmdFunction_t = Com_ScriptDebugger_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2687,7 +2687,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditGUIs_f()
+            private val instance: cmdFunction_t = Com_EditGUIs_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2707,7 +2707,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_MaterialEditor_f()
+            private val instance: cmdFunction_t = Com_MaterialEditor_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2754,7 +2754,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Common.PrintMemInfo_f()
+            private val instance: cmdFunction_t = Common.PrintMemInfo_f()
             fun getInstance(): cmdFunction_t? {
                 return Common.PrintMemInfo_f.Companion.instance
             }
@@ -2773,7 +2773,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditLights_f()
+            private val instance: cmdFunction_t = Com_EditLights_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2792,7 +2792,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditSounds_f()
+            private val instance: cmdFunction_t = Com_EditSounds_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2810,7 +2810,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditDecls_f()
+            private val instance: cmdFunction_t = Com_EditDecls_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2828,7 +2828,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditAFs_f()
+            private val instance: cmdFunction_t = Com_EditAFs_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2846,7 +2846,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditParticles_f()
+            private val instance: cmdFunction_t = Com_EditParticles_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2864,7 +2864,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditScripts_f()
+            private val instance: cmdFunction_t = Com_EditScripts_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2882,7 +2882,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_EditPDAs_f()
+            private val instance: cmdFunction_t = Com_EditPDAs_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2911,7 +2911,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_Error_f()
+            private val instance: cmdFunction_t = Com_Error_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2950,7 +2950,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_Freeze_f()
+            private val instance: cmdFunction_t = Com_Freeze_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2976,7 +2976,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_Crash_f()
+            private val instance: cmdFunction_t = Com_Crash_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -2994,7 +2994,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_Quit_f()
+            private val instance: cmdFunction_t = Com_Quit_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3023,7 +3023,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_WriteConfig_f()
+            private val instance: cmdFunction_t = Com_WriteConfig_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3042,7 +3042,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_SetMachineSpec_f()
+            private val instance: cmdFunction_t = Com_SetMachineSpec_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3197,7 +3197,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_ExecMachineSpec_f()
+            private val instance: cmdFunction_t = Com_ExecMachineSpec_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3237,7 +3237,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_ReloadEngine_f()
+            private val instance: cmdFunction_t = Com_ReloadEngine_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3307,7 +3307,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_LocalizeMaps_f()
+            private val instance: cmdFunction_t = Com_LocalizeMaps_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3360,7 +3360,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_LocalizeGuis_f()
+            private val instance: cmdFunction_t = Com_LocalizeGuis_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3407,7 +3407,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_LocalizeGuiParmsTest_f()
+            private val instance: cmdFunction_t = Com_LocalizeGuiParmsTest_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3481,7 +3481,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_LocalizeMapsTest_f()
+            private val instance: cmdFunction_t = Com_LocalizeMapsTest_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3499,7 +3499,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_StartBuild_f()
+            private val instance: cmdFunction_t = Com_StartBuild_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3520,7 +3520,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_FinishBuild_f()
+            private val instance: cmdFunction_t = Com_FinishBuild_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3557,7 +3557,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_Help_f()
+            private val instance: cmdFunction_t = Com_Help_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -3576,7 +3576,7 @@ object Common {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Com_ReloadLanguage_f()
+            private val instance: cmdFunction_t = Com_ReloadLanguage_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }

@@ -49,9 +49,9 @@ object Console {
      */
     const val LINE_WIDTH = 78
     const val NUM_CON_TIMES = 4
-    const val TOTAL_LINES = Console.CON_TEXTSIZE / Console.LINE_WIDTH
-    val localConsole: idConsoleLocal? = idConsoleLocal()
-    val console: idConsole? = Console.localConsole // statically initialized to an idConsoleLocal
+    const val TOTAL_LINES = CON_TEXTSIZE / LINE_WIDTH
+    val localConsole: idConsoleLocal = idConsoleLocal()
+    val console: idConsole = localConsole // statically initialized to an idConsoleLocal
 
     //    
     var index = 0
@@ -64,7 +64,7 @@ object Console {
      =============================================================================
      */
     var previous = 0
-    var previousTimes: IntArray? = IntArray(Console.FPS_FRAMES)
+    var previousTimes: IntArray = IntArray(FPS_FRAMES)
 
     /*
      ==================
@@ -83,7 +83,7 @@ object Console {
             string[0].toCharArray(),
             Lib.Companion.colorWhite,
             true,
-            Console.localConsole.charSetShader
+            localConsole.charSetShader
         )
         y.get(0) += RenderSystem.SMALLCHAR_HEIGHT + 4
     }
@@ -105,7 +105,7 @@ object Console {
             string[0].toCharArray(),
             Lib.Companion.colorWhite,
             true,
-            Console.localConsole.charSetShader
+            localConsole.charSetShader
         )
         y.get(0) += RenderSystem.SMALLCHAR_HEIGHT + 4
     }
@@ -122,22 +122,22 @@ object Console {
         // don't use serverTime, because that will be drifting to
         // correct for internet lag changes, timescales, timedemos, etc
         t = win_shared.Sys_Milliseconds()
-        frameTime = t - Console.previous
-        Console.previous = t
-        Console.previousTimes[Console.index % Console.FPS_FRAMES] = frameTime
-        Console.index++
-        if (Console.index > Console.FPS_FRAMES) {
+        frameTime = t - previous
+        previous = t
+        previousTimes[index % FPS_FRAMES] = frameTime
+        index++
+        if (index > FPS_FRAMES) {
             // average multiple frames together to smooth changes out a bit
             total = 0
             i = 0
-            while (i < Console.FPS_FRAMES) {
-                total += Console.previousTimes[i]
+            while (i < FPS_FRAMES) {
+                total += previousTimes[i]
                 i++
             }
             if (0 == total) {
                 total = 1
             }
-            fps = 10000 * Console.FPS_FRAMES / total
+            fps = 10000 * FPS_FRAMES / total
             fps = (fps + 5) / 10
             s = Str.va("%dfps", fps)
             w = s.length * RenderSystem.BIGCHAR_WIDTH
@@ -147,7 +147,7 @@ object Console {
                 s,
                 Lib.Companion.colorWhite,
                 true,
-                Console.localConsole.charSetShader
+                localConsole.charSetShader
             )
         }
         return y + RenderSystem.BIGCHAR_HEIGHT + 4
@@ -185,13 +185,13 @@ object Console {
         var incomingCompression: Float
         val yy = floatArrayOf(y)
         if (idAsyncNetwork.server.IsActive()) {
-            Console.SCR_DrawTextRightAlign(yy, "server delay = %d msec", idAsyncNetwork.server.GetDelay())
-            Console.SCR_DrawTextRightAlign(
+            SCR_DrawTextRightAlign(yy, "server delay = %d msec", idAsyncNetwork.server.GetDelay())
+            SCR_DrawTextRightAlign(
                 yy,
                 "total outgoing rate = %d KB/s",
                 idAsyncNetwork.server.GetOutgoingRate() shr 10
             )
-            Console.SCR_DrawTextRightAlign(
+            SCR_DrawTextRightAlign(
                 yy,
                 "total incoming rate = %d KB/s",
                 idAsyncNetwork.server.GetIncomingRate() shr 10
@@ -203,7 +203,7 @@ object Console {
                 outgoingCompression = idAsyncNetwork.server.GetClientOutgoingCompression(i)
                 incomingCompression = idAsyncNetwork.server.GetClientIncomingCompression(i)
                 if (outgoingRate != -1 && incomingRate != -1) {
-                    Console.SCR_DrawTextRightAlign(
+                    SCR_DrawTextRightAlign(
                         yy,
                         "client %d: out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)",
                         i,
@@ -217,14 +217,14 @@ object Console {
             }
             val msg = idStr()
             idAsyncNetwork.server.GetAsyncStatsAvgMsg(msg)
-            Console.SCR_DrawTextRightAlign(yy, msg.toString())
+            SCR_DrawTextRightAlign(yy, msg.toString())
         } else if (idAsyncNetwork.client.IsActive()) {
             outgoingRate = idAsyncNetwork.client.GetOutgoingRate()
             incomingRate = idAsyncNetwork.client.GetIncomingRate()
             outgoingCompression = idAsyncNetwork.client.GetOutgoingCompression()
             incomingCompression = idAsyncNetwork.client.GetIncomingCompression()
             if (outgoingRate != -1 && incomingRate != -1) {
-                Console.SCR_DrawTextRightAlign(
+                SCR_DrawTextRightAlign(
                     yy,
                     "out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)",
                     outgoingRate,
@@ -233,13 +233,13 @@ object Console {
                     incomingCompression
                 )
             }
-            Console.SCR_DrawTextRightAlign(
+            SCR_DrawTextRightAlign(
                 yy,
                 "packet loss = %d%%, client prediction = %d",
                 idAsyncNetwork.client.GetIncomingPacketLoss().toInt(),
                 idAsyncNetwork.client.GetPrediction()
             )
-            Console.SCR_DrawTextRightAlign(yy, "predicted frames: %d", idAsyncNetwork.client.GetPredictedFrames())
+            SCR_DrawTextRightAlign(yy, "predicted frames: %d", idAsyncNetwork.client.GetPredictedFrames())
         }
         return yy[0]
     }
@@ -269,7 +269,7 @@ object Console {
             } else {
                 localTime * 100 / sampleTime
             }
-            Console.SCR_DrawTextLeftAlign(
+            SCR_DrawTextLeftAlign(
                 yy,
                 "%3d: %3d%% (%1.2f) %s: %s (%dkB)",
                 numActiveDecoders,
@@ -323,7 +323,7 @@ object Console {
 
     // the console will query the cvar and command systems for
     // command completion information
-    internal class idConsoleLocal : idConsole() {
+    class idConsoleLocal : idConsole() {
         companion object {
             private val con_noPrint: idCVar? = null
             private val con_notifyTime: idCVar? = idCVar(
@@ -366,14 +366,14 @@ object Console {
         }
 
         //
-        private val historyEditLines: Array<idEditField?>? = arrayOfNulls<idEditField?>(Console.COMMAND_HISTORY)
+        private val historyEditLines: Array<idEditField?>? = arrayOfNulls<idEditField?>(COMMAND_HISTORY)
 
         //
-        private val text: ShortArray? = ShortArray(Console.CON_TEXTSIZE)
+        private val text: ShortArray? = ShortArray(CON_TEXTSIZE)
 
         //
         private val times: IntArray? =
-            IntArray(Console.NUM_CON_TIMES) // cls.realtime time the line was generated for transparent notify lines
+            IntArray(NUM_CON_TIMES) // cls.realtime time the line was generated for transparent notify lines
 
         //============================
         var charSetShader: idMaterial? = null
@@ -428,13 +428,13 @@ object Console {
             var i: Int
             keyCatching = false
             lastKeyEvent = -1
-            nextKeyEvent = Console.CONSOLE_FIRSTREPEAT
+            nextKeyEvent = CONSOLE_FIRSTREPEAT
             consoleField = idEditField() //.Clear();
-            consoleField.SetWidthInChars(Console.LINE_WIDTH)
+            consoleField.SetWidthInChars(LINE_WIDTH)
             i = 0
-            while (i < Console.COMMAND_HISTORY) {
+            while (i < COMMAND_HISTORY) {
                 historyEditLines.get(i) = idEditField() //.Clear();
-                historyEditLines.get(i).SetWidthInChars(Console.LINE_WIDTH)
+                historyEditLines.get(i).SetWidthInChars(LINE_WIDTH)
                 i++
             }
             CmdSystem.cmdSystem.AddCommand(
@@ -550,7 +550,7 @@ object Console {
         override fun ClearNotifyLines() {
             var i: Int
             i = 0
-            while (i < Console.NUM_CON_TIMES) {
+            while (i < NUM_CON_TIMES) {
                 times.get(i) = 0
                 i++
             }
@@ -596,14 +596,14 @@ object Console {
                     txt_p += 2
                     continue
                 }
-                y = current % Console.TOTAL_LINES
+                y = current % TOTAL_LINES
 
                 // if we are about to print a new word, check to see
                 // if we should wrap to the new line
-                if (c > ' '.code && (x == 0 || text.get(y * Console.LINE_WIDTH + x - 1) <= ' ')) {
+                if (c > ' '.code && (x == 0 || text.get(y * LINE_WIDTH + x - 1) <= ' ')) {
                     // count word length
                     l = 0
-                    while (l < Console.LINE_WIDTH && l < txt.length) {
+                    while (l < LINE_WIDTH && l < txt.length) {
                         if (txt.get(l) <= ' ') {
                             break
                         }
@@ -611,7 +611,7 @@ object Console {
                     }
 
                     // word wrap
-                    if (l != Console.LINE_WIDTH && x + l >= Console.LINE_WIDTH) {
+                    if (l != LINE_WIDTH && x + l >= LINE_WIDTH) {
                         Linefeed()
                     }
                 }
@@ -619,18 +619,18 @@ object Console {
                 when (c) {
                     '\n' -> Linefeed()
                     '\t' -> do {
-                        text.get(y * Console.LINE_WIDTH + x) = (color shl 8 or ' '.code).toShort()
+                        text.get(y * LINE_WIDTH + x) = (color shl 8 or ' '.code).toShort()
                         x++
-                        if (x >= Console.LINE_WIDTH) {
+                        if (x >= LINE_WIDTH) {
                             Linefeed()
                             x = 0
                         }
                     } while (x and 3 != 0)
                     '\r' -> x = 0
                     else -> {
-                        text.get(y * Console.LINE_WIDTH + x) = (color shl 8 or c).toShort()
+                        text.get(y * LINE_WIDTH + x) = (color shl 8 or c).toShort()
                         x++
-                        if (x >= Console.LINE_WIDTH) {
+                        if (x >= LINE_WIDTH) {
                             Linefeed()
                             x = 0
                         }
@@ -640,7 +640,7 @@ object Console {
 
             // mark time for transparent overlay
             if (current >= 0) {
-                times.get(current % Console.NUM_CON_TIMES) = Common.com_frameTime
+                times.get(current % NUM_CON_TIMES) = Common.com_frameTime
             }
         }
 
@@ -678,16 +678,16 @@ object Console {
             }
 
 //            if (com_showFPS.GetBool()) {
-            y = Console.SCR_DrawFPS(0f)
+            y = SCR_DrawFPS(0f)
             //            }
             if (Common.com_showMemoryUsage.GetBool()) {
-                y = Console.SCR_DrawMemoryUsage(y)
+                y = SCR_DrawMemoryUsage(y)
             }
             if (Common.com_showAsyncStats.GetBool()) {
-                y = Console.SCR_DrawAsyncStats(y)
+                y = SCR_DrawAsyncStats(y)
             }
             if (Common.com_showSoundDecoders.GetBool()) {
-                y = Console.SCR_DrawSoundDecoders(y)
+                y = SCR_DrawSoundDecoders(y)
             }
         }
 
@@ -705,7 +705,7 @@ object Console {
             var i: Int
             var line: Int
             val f: idFile?
-            val buffer = CharArray(Console.LINE_WIDTH + 3)
+            val buffer = CharArray(LINE_WIDTH + 3)
             f = FileSystem_h.fileSystem.OpenFileWrite(fileName)
             if (null == f) {
                 Common.common.Warning("couldn't open %s", fileName)
@@ -713,20 +713,20 @@ object Console {
             }
 
             // skip empty lines
-            l = current - Console.TOTAL_LINES + 1
+            l = current - TOTAL_LINES + 1
             if (l < 0) {
                 l = 0
             }
             while (l <= current) {
-                line = l % Console.TOTAL_LINES * Console.LINE_WIDTH
+                line = l % TOTAL_LINES * LINE_WIDTH
                 x = 0
-                while (x < Console.LINE_WIDTH) {
+                while (x < LINE_WIDTH) {
                     if (text.get(line + x) and 0xff > ' '.code) {
                         break
                     }
                     x++
                 }
-                if (x != Console.LINE_WIDTH) {
+                if (x != LINE_WIDTH) {
                     break
                 }
                 l++
@@ -734,13 +734,13 @@ object Console {
 
             // write the remaining lines
             while (l <= current) {
-                line = l % Console.TOTAL_LINES * Console.LINE_WIDTH
+                line = l % TOTAL_LINES * LINE_WIDTH
                 i = 0
-                while (i < Console.LINE_WIDTH) {
+                while (i < LINE_WIDTH) {
                     buffer[i] = (text.get(line + i) and 0xff).toChar()
                     i++
                 }
-                x = Console.LINE_WIDTH - 1
+                x = LINE_WIDTH - 1
                 while (x >= 0) {
                     if (buffer[x] <= ' ') {
                         buffer[x] = 0
@@ -763,7 +763,7 @@ object Console {
         fun Clear() {
             var i: Int
             i = 0
-            while (i < Console.CON_TEXTSIZE) {
+            while (i < CON_TEXTSIZE) {
                 text.get(i) = (idStr.Companion.ColorIndex(Str.C_COLOR_CYAN) shl 8 or ' '.code).toShort()
                 i++
             }
@@ -800,11 +800,11 @@ object Console {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "\n")
 
                 // copy line to history buffer
-                historyEditLines.get(nextHistoryLine % Console.COMMAND_HISTORY) = consoleField
+                historyEditLines.get(nextHistoryLine % COMMAND_HISTORY) = consoleField
                 nextHistoryLine++
                 historyLine = nextHistoryLine
                 consoleField = idEditField()
-                consoleField.SetWidthInChars(Console.LINE_WIDTH)
+                consoleField.SetWidthInChars(LINE_WIDTH)
                 Session.Companion.session.UpdateScreen() // force an update, because the command
                 // may take some time
                 return
@@ -820,10 +820,10 @@ object Console {
             if (key == KeyInput.K_UPARROW
                 || key.lowercaseChar() == 'p' && idKeyInput.IsDown(KeyInput.K_CTRL)
             ) {
-                if (nextHistoryLine - historyLine < Console.COMMAND_HISTORY && historyLine > 0) {
+                if (nextHistoryLine - historyLine < COMMAND_HISTORY && historyLine > 0) {
                     historyLine--
                 }
-                consoleField = historyEditLines.get(historyLine % Console.COMMAND_HISTORY)
+                consoleField = historyEditLines.get(historyLine % COMMAND_HISTORY)
                 return
             }
             if (key == KeyInput.K_DOWNARROW
@@ -833,7 +833,7 @@ object Console {
                     return
                 }
                 historyLine++
-                consoleField = historyEditLines.get(historyLine % Console.COMMAND_HISTORY)
+                consoleField = historyEditLines.get(historyLine % COMMAND_HISTORY)
                 return
             }
 
@@ -841,13 +841,13 @@ object Console {
             if (key == KeyInput.K_PGUP) {
                 PageUp()
                 lastKeyEvent = EventLoop.eventLoop.Milliseconds()
-                nextKeyEvent = Console.CONSOLE_FIRSTREPEAT
+                nextKeyEvent = CONSOLE_FIRSTREPEAT
                 return
             }
             if (key == KeyInput.K_PGDN) {
                 PageDown()
                 lastKeyEvent = EventLoop.eventLoop.Milliseconds()
-                nextKeyEvent = Console.CONSOLE_FIRSTREPEAT
+                nextKeyEvent = CONSOLE_FIRSTREPEAT
                 return
             }
             if (key == KeyInput.K_MWHEELUP) {
@@ -882,7 +882,7 @@ object Console {
 
             // mark time for transparent overlay
             if (current >= 0) {
-                times.get(current % Console.NUM_CON_TIMES) = Common.com_frameTime
+                times.get(current % NUM_CON_TIMES) = Common.com_frameTime
             }
             x = 0
             if (display == current) {
@@ -890,8 +890,8 @@ object Console {
             }
             current++
             i = 0
-            while (i < Console.LINE_WIDTH) {
-                text.get(current % Console.TOTAL_LINES * Console.LINE_WIDTH + i) =
+            while (i < LINE_WIDTH) {
+                text.get(current % TOTAL_LINES * LINE_WIDTH + i) =
                     (idStr.Companion.ColorIndex(Str.C_COLOR_CYAN) shl 8 or ' '.code).toShort()
                 i++
             }
@@ -899,8 +899,8 @@ object Console {
 
         private fun PageUp() {
             display -= 2
-            if (current - display >= Console.TOTAL_LINES) {
-                display = current - Console.TOTAL_LINES + 1
+            if (current - display >= TOTAL_LINES) {
+                display = current - TOTAL_LINES + 1
             }
         }
 
@@ -954,7 +954,7 @@ object Console {
                 1 * RenderSystem.SMALLCHAR_WIDTH,
                 y,
                 ']'.code,
-                Console.localConsole.charSetShader
+                localConsole.charSetShader
             )
             consoleField.Draw(
                 2 * RenderSystem.SMALLCHAR_WIDTH,
@@ -979,13 +979,13 @@ object Console {
             currentColor = idStr.Companion.ColorIndex(Str.C_COLOR_WHITE)
             RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(currentColor))
             v = 0
-            i = current - Console.NUM_CON_TIMES + 1
+            i = current - NUM_CON_TIMES + 1
             while (i <= current) {
                 if (i < 0) {
                     i++
                     continue
                 }
-                time = times.get(i % Console.NUM_CON_TIMES)
+                time = times.get(i % NUM_CON_TIMES)
                 if (time == 0) {
                     i++
                     continue
@@ -995,10 +995,10 @@ object Console {
                     i++
                     continue
                 }
-                text_p = i % Console.TOTAL_LINES * Console.LINE_WIDTH
+                text_p = i % TOTAL_LINES * LINE_WIDTH
                 //		text_p = text + (i % TOTAL_LINES)*LINE_WIDTH;
                 x = 0
-                while (x < Console.LINE_WIDTH) {
+                while (x < LINE_WIDTH) {
                     if (text.get(text_p + x) and 0xff == ' '.code) {
                         x++
                         continue
@@ -1011,7 +1011,7 @@ object Console {
                         (x + 1) * RenderSystem.SMALLCHAR_WIDTH,
                         v,
                         text.get(text_p + x) and 0xff,
-                        Console.localConsole.charSetShader
+                        localConsole.charSetShader
                     )
                     x++
                 }
@@ -1086,7 +1086,7 @@ object Console {
                     RenderSystem.SCREEN_WIDTH - (i - x) * RenderSystem.SMALLCHAR_WIDTH,
                     lines - (RenderSystem.SMALLCHAR_HEIGHT + RenderSystem.SMALLCHAR_HEIGHT / 2),
                     version[x],
-                    Console.localConsole.charSetShader
+                    localConsole.charSetShader
                 )
                 x++
             }
@@ -1101,12 +1101,12 @@ object Console {
                 // draw arrows to show the buffer is backscrolled
                 RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(Str.C_COLOR_CYAN))
                 x = 0
-                while (x < Console.LINE_WIDTH) {
+                while (x < LINE_WIDTH) {
                     RenderSystem.renderSystem.DrawSmallChar(
                         (x + 1) * RenderSystem.SMALLCHAR_WIDTH,
                         idMath.FtoiFast(y),
                         '^'.code,
-                        Console.localConsole.charSetShader
+                        localConsole.charSetShader
                     )
                     x += 4
                 }
@@ -1124,16 +1124,16 @@ object Console {
                 if (row < 0) {
                     break
                 }
-                if (current - row >= Console.TOTAL_LINES) {
+                if (current - row >= TOTAL_LINES) {
                     // past scrollback wrap point
                     i++
                     y -= RenderSystem.SMALLCHAR_HEIGHT.toFloat()
                     row--
                     continue
                 }
-                text_p = row % Console.TOTAL_LINES * Console.LINE_WIDTH
+                text_p = row % TOTAL_LINES * LINE_WIDTH
                 x = 0
-                while (x < Console.LINE_WIDTH) {
+                while (x < LINE_WIDTH) {
                     if (text.get(text_p + x) and 0xff == ' '.code) {
                         x++
                         continue
@@ -1146,7 +1146,7 @@ object Console {
                         (x + 1) * RenderSystem.SMALLCHAR_WIDTH,
                         idMath.FtoiFast(y),
                         text.get(text_p + x) and 0xff,
-                        Console.localConsole.charSetShader
+                        localConsole.charSetShader
                     )
                     x++
                 }
@@ -1174,12 +1174,12 @@ object Console {
             // console scrolling
             if (idKeyInput.IsDown(KeyInput.K_PGUP)) {
                 PageUp()
-                nextKeyEvent = Console.CONSOLE_REPEAT
+                nextKeyEvent = CONSOLE_REPEAT
                 return
             }
             if (idKeyInput.IsDown(KeyInput.K_PGDN)) {
                 PageDown()
-                nextKeyEvent = Console.CONSOLE_REPEAT
+                nextKeyEvent = CONSOLE_REPEAT
                 //                return;
             }
         }
@@ -1235,7 +1235,7 @@ object Console {
      */
     private class Con_Clear_f private constructor() : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
-            Console.localConsole.Clear()
+            localConsole.Clear()
         }
 
         companion object {
@@ -1260,7 +1260,7 @@ object Console {
             }
             val fileName = idStr(args.Argv(1)).DefaultFileExtension(".txt").toString()
             Common.common.Printf("Dumped console text to %s.\n", fileName)
-            Console.localConsole.Dump(fileName)
+            localConsole.Dump(fileName)
         }
 
         companion object {

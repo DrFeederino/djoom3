@@ -122,8 +122,8 @@ object CVarSystem {
     private const val NUM_COLUMNS = 77 // 78 - 1, or (80 x 2 - 2) / 2 - 2
     private const val NUM_NAME_CHARS = 33
     private const val NUM_DESCRIPTION_CHARS = CVarSystem.NUM_COLUMNS - CVarSystem.NUM_NAME_CHARS
-    private val localCVarSystem: idCVarSystemLocal? = idCVarSystemLocal()
-    var cvarSystem: idCVarSystem? = CVarSystem.localCVarSystem
+    private var localCVarSystem: idCVarSystemLocal = idCVarSystemLocal()
+    var cvarSystem: idCVarSystem = localCVarSystem
     fun CreateColumn(textString: String?, columnWidth: Int, indent: String?, string: idStr?): String? {
         var i: Int
         var lastLine: Int
@@ -149,9 +149,9 @@ object CVarSystem {
         return string.toString()
     }
 
-    fun setCvarSystem(cvarSystem: idCVarSystem?) {
-        CVarSystem.localCVarSystem = cvarSystem as idCVarSystemLocal?
-        CVarSystem.cvarSystem = CVarSystem.localCVarSystem
+    fun setCvarSystems(cvarSystem: idCVarSystem) {
+        localCVarSystem = cvarSystem as idCVarSystemLocal
+        CVarSystem.cvarSystem = localCVarSystem
     }
 
     /*
@@ -1125,7 +1125,7 @@ object CVarSystem {
                     )
                     return
                 }
-                val cvar: idInternalCVar? = CVarSystem.localCVarSystem.FindInternal(args.Argv(1))
+                val cvar: idInternalCVar? = localCVarSystem.FindInternal(args.Argv(1))
                 if (null == cvar) {
                     idLib.common.Warning("Toggle_f: cvar \"%s\" not found", args.Argv(1))
                     return
@@ -1178,7 +1178,7 @@ object CVarSystem {
             override fun run(args: CmdArgs.idCmdArgs?) {
                 val str: String?
                 str = args.Args(2, args.Argc() - 1)
-                CVarSystem.localCVarSystem.SetCVarString(args.Argv(1), str)
+                localCVarSystem.SetCVarString(args.Argv(1), str)
             }
 
             companion object {
@@ -1194,7 +1194,7 @@ object CVarSystem {
             override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = CVarSystem.localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1214,7 +1214,7 @@ object CVarSystem {
             override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = CVarSystem.localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1234,7 +1234,7 @@ object CVarSystem {
             override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = CVarSystem.localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1254,7 +1254,7 @@ object CVarSystem {
             override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = CVarSystem.localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args.Argv(1))
                 //                if (null == cvar) {
 //                    return;
 //                }
@@ -1281,7 +1281,7 @@ object CVarSystem {
                     idLib.common.Printf("usage: reset <variable>\n")
                     return
                 }
-                cvar = CVarSystem.localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1316,8 +1316,8 @@ object CVarSystem {
                 var hash: Int
                 var cvar: idInternalCVar?
                 i = 0
-                while (i < CVarSystem.localCVarSystem.cvars.Num()) {
-                    cvar = CVarSystem.localCVarSystem.cvars.oGet(i)
+                while (i < localCVarSystem.cvars.Num()) {
+                    cvar = localCVarSystem.cvars.oGet(i)
 
                     // don't mess with rom values
                     if (cvar.flags and (CVarSystem.CVAR_ROM or CVarSystem.CVAR_INIT) != 0) {
@@ -1327,10 +1327,10 @@ object CVarSystem {
 
                     // throw out any variables the user created
                     if (0 == cvar.flags and CVarSystem.CVAR_STATIC) {
-                        hash = CVarSystem.localCVarSystem.cvarHash.GenerateKey(cvar.nameString.toString(), false)
+                        hash = localCVarSystem.cvarHash.GenerateKey(cvar.nameString.toString(), false)
                         //			delete cvar;
-                        CVarSystem.localCVarSystem.cvars.RemoveIndex(i)
-                        CVarSystem.localCVarSystem.cvarHash.RemoveIndex(hash, i)
+                        localCVarSystem.cvars.RemoveIndex(i)
+                        localCVarSystem.cvarHash.RemoveIndex(hash, i)
                         i--
                         i++
                         continue
@@ -1399,8 +1399,8 @@ object CVarSystem {
                     match = idStr()
                 }
                 i = 0
-                while (i < CVarSystem.localCVarSystem.cvars.Num()) {
-                    cvar = CVarSystem.localCVarSystem.cvars.oGet(i)
+                while (i < localCVarSystem.cvars.Num()) {
+                    cvar = localCVarSystem.cvars.oGet(i)
                     if (0L == cvar.GetFlags() and flags) {
                         i++
                         continue

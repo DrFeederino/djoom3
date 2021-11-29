@@ -129,7 +129,7 @@ object DeclManager {
     var totalCompressedLength = 0
     var totalUncompressedLength = 0
     private val declManagerLocal: idDeclManagerLocal = idDeclManagerLocal()
-    var declManager: idDeclManager = DeclManager.declManagerLocal
+    var declManager: idDeclManager? = DeclManager.declManagerLocal
     fun idDeclAllocator(   /*<idDecl>*/theMobRules: Class<*>?): Constructor<idDecl?>? {
         //TODO:use reflection. EDIT:cross fingers.
         try {

@@ -73,13 +73,13 @@ class UserInterfaceLocal {
         //
         //
         // ~idUserInterfaceLocal();
-        override fun Name(): String? {
+        override fun Name(): String {
             return source.toString()
         }
 
         override fun Comment(): String? {
             return if (desktop != null) {
-                desktop.GetComment()
+                desktop!!.GetComment()
             } else ""
         }
 

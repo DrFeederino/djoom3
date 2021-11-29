@@ -1,7 +1,5 @@
 package neo.idlib.containers
 
-import neo.framework.DeclAF.idAFVector.type
-
 /**
  * //TODO:implement starcraft linked list
  */
@@ -15,14 +13,14 @@ class LinkList {
 
      ==============================================================================
      */
-    class idLinkList<type>() {
+    class idLinkList<T>() {
         private val DBG_count = DBG_counter++
         private var head: idLinkList<*>?
         private var next: idLinkList<*>?
-        private var owner: type? = null
+        private var owner: T? = null
         private var prev: idLinkList<*>?
 
-        constructor(owner: type?) : this() {
+        constructor(owner: T?) : this() {
             this.owner = owner
         }
 
@@ -30,7 +28,7 @@ class LinkList {
         //
         /*
          ================
-         idLinkList<type>::IsListEmpty
+         idLinkList<T>::IsListEmpty
 
          Returns true if the list is empty.
          ================
@@ -41,7 +39,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::InList
+         idLinkList<T>::InList
 
          Returns true if the node is in a list.  If called on the head of a list, will always return false.
          ================
@@ -52,13 +50,13 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::Num
+         idLinkList<T>::Num
 
          Returns the number of nodes in the list.
          ================
          */
         fun Num(): Int {
-            var node: idLinkList<type?>?
+            var node: idLinkList<T?>?
             var num: Int
             num = 0
             node = head.next
@@ -71,7 +69,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::Clear
+         idLinkList<T>::Clear
 
          If node is the head of the list, clears the list.  Otherwise it just removes the node from the list.
          ================
@@ -88,7 +86,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::InsertBefore
+         idLinkList<T>::InsertBefore
 
          Places the node before the existing node in the list.  If the existing node is the head,
          then the new node is placed at the end of the list.
@@ -105,7 +103,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::InsertAfter
+         idLinkList<T>::InsertAfter
 
          Places the node after the existing node in the list.  If the existing node is the head,
          then the new node is placed at the beginning of the list.
@@ -122,7 +120,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::AddToEnd
+         idLinkList<T>::AddToEnd
 
          Adds node at the end of the list
          ================
@@ -133,7 +131,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::AddToFront
+         idLinkList<T>::AddToFront
 
          Adds node at the beginning of the list
          ================
@@ -144,7 +142,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::Remove
+         idLinkList<T>::Remove
 
          Removes node from list
          ================
@@ -159,57 +157,57 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::Next
+         idLinkList<T>::Next
 
          Returns the next object in the list, or NULL if at the end.
          ================
          */
-        fun Next(): type? {
+        fun Next(): T? {
             return if (null == next || next === head) {
                 null
-            } else next.owner as type?
+            } else next!!.owner as T?
         }
 
         /*
          ================
-         idLinkList<type>::Prev
+         idLinkList<T>::Prev
 
          Returns the previous object in the list, or NULL if at the beginning.
          ================
          */
-        fun Prev(): type? {
+        fun Prev(): T? {
             return if (null == prev || prev === head) {
                 null
-            } else prev.owner as type?
+            } else prev!!.owner as T?
         }
 
         //
         /*
          ================
-         idLinkList<type>::Owner
+         idLinkList<T>::Owner
 
          Gets the object that is associated with this node.
          ================
          */
-        fun Owner(): type? {
+        fun Owner(): T? {
             return owner
         }
 
         /*
          ================
-         idLinkList<type>::SetOwner
+         idLinkList<T>::SetOwner
 
          Sets the object that this node is associated with.
          ================
          */
-        fun SetOwner(`object`: type?) {
+        fun SetOwner(`object`: T?) {
             owner = `object`
         }
 
         //
         /*
          ================
-         idLinkList<type>::ListHead
+         idLinkList<T>::ListHead
 
          Returns the head of the list.  If the node isn't in a list, it returns
          a pointer to itself.
@@ -221,7 +219,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::NextNode
+         idLinkList<T>::NextNode
 
          Returns the next node in the list, or NULL if at the end.
          ================
@@ -234,7 +232,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::PrevNode
+         idLinkList<T>::PrevNode
 
          Returns the previous node in the list, or NULL if at the beginning.
          ================
@@ -253,7 +251,7 @@ class LinkList {
 
         /*
          ================
-         idLinkList<type>::idLinkList
+         idLinkList<T>::idLinkList
 
          Node is initialized to be the head of an empty list
          ================

@@ -14,11 +14,11 @@ import neo.ui.UserInterfaceLocal.idUserInterfaceManagerLocal
  *
  */
 object UserInterface {
-    var uiManagerLocal: idUserInterfaceManagerLocal? = idUserInterfaceManagerLocal()
-    var uiManager: idUserInterfaceManager? = UserInterface.uiManagerLocal
-    fun setUiManager(uiManager: idUserInterfaceManager?) {
-        UserInterface.uiManagerLocal = uiManager
-        UserInterface.uiManager = UserInterface.uiManagerLocal
+    var uiManagerLocal: idUserInterfaceManagerLocal = idUserInterfaceManagerLocal()
+    var uiManager: idUserInterfaceManager = uiManagerLocal
+    fun setUiManagers(uiManager: idUserInterfaceManager) {
+        uiManagerLocal = uiManager as idUserInterfaceManagerLocal
+        UserInterface.uiManager = uiManagerLocal
     }
 
     /*

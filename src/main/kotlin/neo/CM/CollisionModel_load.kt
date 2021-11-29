@@ -100,8 +100,8 @@ object CollisionModel_load {
                         t = Math.abs(bounds.oGet(1, type) - dist - (dist - bounds.oGet(0, type)))
                         if (t < bestt) {
                             bestt = t
-                            planeType.setVal(type)
-                            planeDist.setVal(dist)
+                            planeType._val = (type)
+                            planeDist._val = (dist)
                         }
                         j++
                     }
@@ -127,8 +127,8 @@ object CollisionModel_load {
                         t = Math.abs(bounds.oGet(1, type) - dist - (dist - bounds.oGet(0, type)))
                         if (t < bestt) {
                             bestt = t
-                            planeType.setVal(type)
-                            planeDist.setVal(dist)
+                            planeType._val = (type)
+                            planeDist._val = (dist)
                         }
                         j++
                     }
@@ -146,8 +146,8 @@ object CollisionModel_load {
                 if (bounds.oGet(
                         1,
                         type
-                    ) - planeDist.getVal() > Companion.MIN_NODE_SIZE * 0.5f
-                    && planeDist.getVal() - bounds.oGet(
+                    ) - planeDist._val > Companion.MIN_NODE_SIZE * 0.5f
+                    && planeDist._val - bounds.oGet(
                         0,
                         type
                     ) > Companion.MIN_NODE_SIZE * 0.5f
@@ -196,8 +196,8 @@ object CollisionModel_load {
         var j: Int
         var width: Int
         var height: Int
-        numVerts.setVal(0)
-        numEdges.setVal(0)
+        numVerts._val = (0)
+        numEdges._val = (0)
         j = 0
         while (j < mapEnt.GetNumPrimitives()) {
             val mapPrim: idMapPrimitive = mapEnt.GetPrimitive(j)
@@ -205,15 +205,16 @@ object CollisionModel_load {
                 // assume maximum tesselation without adding verts
                 width = (mapPrim as idMapPatch).GetWidth()
                 height = mapPrim.GetHeight()
-                numVerts.setVal(width * height + numVerts.getVal())
-                numEdges.setVal((width - 1) * height + width * (height - 1) + (width - 1) * (height - 1) + numEdges.getVal())
+                numVerts._val = (width * height + numVerts._val)
+                numEdges._val =
+                    ((width - 1) * height + width * (height - 1) + (width - 1) * (height - 1) + numEdges._val)
                 j++
                 continue
             }
             if (mapPrim.GetType() == idMapPrimitive.TYPE_BRUSH) {
                 // assume cylinder with a polygon with (numSides - 2) edges ontop and on the bottom
-                numVerts.setVal(((mapPrim as idMapBrush).GetNumSides() - 2) * 2 + numVerts.getVal())
-                numEdges.setVal((mapPrim.GetNumSides() - 2) * 3 + numEdges.getVal())
+                numVerts._val = (((mapPrim as idMapBrush).GetNumSides() - 2) * 2 + numVerts._val)
+                numEdges._val = ((mapPrim.GetNumSides() - 2) * 3 + numEdges._val)
                 //                continue;
             }
             j++

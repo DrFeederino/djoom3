@@ -353,7 +353,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 Common.common.Printf("idCollisionModelManagerLocal::GetModelContents: invalid model handle\n")
                 return false
             }
-            contents.setVal(models!![model]!!.contents)
+            contents._val = (models!![model]!!.contents)
             return true
         }
 
@@ -1430,18 +1430,18 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              l2[2] * (edgeDir[1]*dir[2] - edgeDir[2]*dir[1]);
              */d = l2.oGet(4) * cross.oGet(0) + l2.oGet(5) * cross.oGet(1) + l2.oGet(2) * cross.oGet(2)
             if (d == 0.0f) {
-                fraction.setVal(1.0f)
+                fraction._val = (1.0f)
                 // no collision ever
                 return false
             }
             t = -l1.PermutedInnerProduct(l2)
             // if the lines cross each other to begin with
             if (t == 0.0f) {
-                fraction.setVal(0.0f)
+                fraction._val = (0.0f)
                 return true
             }
             // fraction of movement at the time the lines cross each other
-            fraction.setVal(t / d)
+            fraction._val = (t / d)
             return true
         }
 
@@ -1522,7 +1522,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     continue
                 }
                 // if moving away from edge
-                if (f1.getVal() < 0.0f) {
+                if (f1._val < 0.0f) {
                     i++
                     continue
                 }
@@ -1538,15 +1538,15 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     continue
                 }
                 // if no collision with epsilon edge or moving away from edge
-                if (f2.getVal() > 1.0f || f1.getVal() < f2.getVal()) {
+                if (f2._val > 1.0f || f1._val < f2._val) {
                     i++
                     continue
                 }
-                if (f2.getVal() < 0.0f) {
-                    f2.setVal(0.0f)
+                if (f2._val < 0.0f) {
+                    f2._val = (0.0f)
                 }
-                if (f2.getVal() < tw.trace.fraction) {
-                    tw.trace.fraction = f2.getVal()
+                if (f2._val < tw.trace.fraction) {
+                    tw.trace.fraction = f2._val
                     // create plane with normal vector orthogonal to both the polygon edge and the trm edge
                     start.oSet(tw.model!!.vertices!![edge.vertexNum[0]].p)
                     end.oSet(tw.model!!.vertices!![edge.vertexNum[1]].p)
@@ -1571,9 +1571,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     dist = normal.oMultiply(trmEdge.start)
                     d1 = normal.oMultiply(start) - dist
                     d2 = normal.oMultiply(end) - dist
-                    f1.setVal(d1 / (d1 - d2))
+                    f1._val = (d1 / (d1 - d2))
                     //assert( f1 >= 0.0f && f1 <= 1.0f );
-                    tw.trace.c.point.oSet(start.oPlus(end.oMinus(start).oMultiply(f1.getVal())))
+                    tw.trace.c.point.oSet(start.oPlus(end.oMinus(start).oMultiply(f1._val)))
                     // if retrieving contacts
                     if (tw.getContacts) {
                         CollisionModel_translate.CM_AddContact(tw)
@@ -1988,7 +1988,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val pl2 = idPluecker()
             at.oSet(va)
             bt.oSet(vb)
-            if (tanHalfAngle.getVal() != 0.0f) {
+            if (tanHalfAngle._val != 0.0f) {
                 CollisionModel_rotate.CM_RotateEdge(at, bt, tw.origin, tw.axis, tanHalfAngle)
             }
             dir1.oSet(at.oMinus(tw.origin).Cross(tw.axis))
@@ -2153,7 +2153,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
              MrE gives Pluecker a banana.. good monkey
 
-             */tanHalfAngle.setVal(tw.maxTan)
+             */tanHalfAngle._val = (tw.maxTan)
 
             // transform rotation axis to z-axis
             ct.oSet(vc.oMinus(tw.origin).oMultiply(tw.matrix))
@@ -2197,14 +2197,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // get smallest tangent for which a collision occurs
-            if (frac1 >= minTan && frac1 < tanHalfAngle.getVal()) {
-                tanHalfAngle.setVal(frac1.toFloat())
+            if (frac1 >= minTan && frac1 < tanHalfAngle._val) {
+                tanHalfAngle._val = (frac1.toFloat())
             }
-            if (frac2 >= minTan && frac2 < tanHalfAngle.getVal()) {
-                tanHalfAngle.setVal(frac2.toFloat())
+            if (frac2 >= minTan && frac2 < tanHalfAngle._val) {
+                tanHalfAngle._val = (frac2.toFloat())
             }
             if (tw.angle < 0.0f) {
-                tanHalfAngle.setVal(-tanHalfAngle.getVal())
+                tanHalfAngle._val = (-tanHalfAngle._val)
             }
             return true
         }
@@ -2258,7 +2258,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              -v2 * 2 * r + v1 * (1 - r*r) = 0;
              (-v1) * r * r + (-2 * v2) * r + (v1) = 0;
 
-             */tanHalfAngle.setVal(0.0f)
+             */tanHalfAngle._val = (0.0f)
 
             // transform rotation axis to z-axis
             ct.oSet(vc.oMinus(tw.origin).oMultiply(tw.matrix))
@@ -2278,19 +2278,19 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             c = v0 + v2
             if (tw.angle > 0.0f) {
                 if (c > 0.0f) {
-                    dir.setVal(v1.toFloat())
+                    dir._val = (v1.toFloat())
                 } else {
-                    dir.setVal(-v1.toFloat())
+                    dir._val = (-v1.toFloat())
                 }
             } else {
                 if (c > 0.0f) {
-                    dir.setVal(-v1.toFloat())
+                    dir._val = (-v1.toFloat())
                 } else {
-                    dir.setVal(v1.toFloat())
+                    dir._val = (v1.toFloat())
                 }
             }
             // negative direction means the edges move towards each other at the initial position
-            if (dir.getVal() <= 0.0f) {
+            if (dir._val <= 0.0f) {
                 return true
             }
             a = -v1
@@ -2324,12 +2324,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 return false
             }
             if (frac1 > frac2) {
-                tanHalfAngle.setVal(frac1.toFloat())
+                tanHalfAngle._val = (frac1.toFloat())
             } else {
-                tanHalfAngle.setVal(frac2.toFloat())
+                tanHalfAngle._val = (frac2.toFloat())
             }
             if (tw.angle < 0.0f) {
-                tanHalfAngle.setVal(-tanHalfAngle.getVal())
+                tanHalfAngle._val = (-tanHalfAngle._val)
             }
             return true
         }
@@ -2425,10 +2425,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         i++
                         continue
                     }
-                    if (dir.getVal() <= 0.0f) {
+                    if (dir._val <= 0.0f) {
                         // moving towards the polygon edge so stop immediately
-                        tanHalfAngle.setVal(0.0f)
-                    } else if (Math.abs(startTan.getVal()) >= tw.maxTan) {
+                        tanHalfAngle._val = (0.0f)
+                    } else if (Math.abs(startTan._val) >= tw.maxTan) {
                         // never going to get beyond the start tangent during the current rotation
                         i++
                         continue
@@ -2439,11 +2439,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                                 trmEdge.plzaxis,
                                 v1.p.oPlus(epsDir),
                                 v2.p.oPlus(epsDir),
-                                Math.abs(startTan.getVal()),
+                                Math.abs(startTan._val),
                                 tanHalfAngle
                             )
                         ) {
-                            tanHalfAngle.setVal(startTan.getVal())
+                            tanHalfAngle._val = (startTan._val)
                         }
                     }
                 } else {
@@ -2462,7 +2462,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         continue
                     }
                 }
-                if (Math.abs(tanHalfAngle.getVal()) >= tw.maxTan) {
+                if (Math.abs(tanHalfAngle._val) >= tw.maxTan) {
                     i++
                     continue
                 }
@@ -2491,7 +2491,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
 
                 // fill in trace structure
-                tw.maxTan = Math.abs(tanHalfAngle.getVal())
+                tw.maxTan = Math.abs(tanHalfAngle._val)
                 tw.trace.c.normal.oSet(collisionNormal)
                 tw.trace.c.normal.Normalize()
                 tw.trace.c.dist = tw.trace.c.normal.oMultiply(v1.p)
@@ -2571,7 +2571,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              v1 * 2 * r + v2 - v2 * r*r = -v0 + -v0 * r*r
              (v0 - v2) * r * r + (2 * v1) * r + (v0 + v2) = 0;
 
-             */tanHalfAngle.setVal(tw.maxTan)
+             */tanHalfAngle._val = (tw.maxTan)
 
             // transform rotation axis to z-axis
             p.oSet(point.oMinus(tw.origin).oMultiply(tw.matrix))
@@ -2609,14 +2609,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // get smallest tangent for which a collision occurs
-            if (frac1 >= minTan && frac1 < tanHalfAngle.getVal()) {
-                tanHalfAngle.setVal(frac1.toFloat())
+            if (frac1 >= minTan && frac1 < tanHalfAngle._val) {
+                tanHalfAngle._val = (frac1.toFloat())
             }
-            if (frac2 >= minTan && frac2 < tanHalfAngle.getVal()) {
-                tanHalfAngle.setVal(frac2.toFloat())
+            if (frac2 >= minTan && frac2 < tanHalfAngle._val) {
+                tanHalfAngle._val = (frac2.toFloat())
             }
             if (angle < 0.0f) {
-                tanHalfAngle.setVal(-tanHalfAngle.getVal())
+                tanHalfAngle._val = (-tanHalfAngle._val)
             }
             return true
         }
@@ -2668,7 +2668,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              -v2 * 2 * r + v1 * (1 - r*r) = 0;
              (-v1) * r * r + (-2 * v2) * r + (v1) = 0;
 
-             */tanHalfAngle.setVal(0.0f)
+             */tanHalfAngle._val = (0.0f)
 
             // transform rotation axis to z-axis
             p.oSet(point.oMinus(tw.origin).oMultiply(tw.matrix))
@@ -2678,12 +2678,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // the point will always start at the front of the plane, therefore v0 + v2 > 0 is always true
             if (angle < 0.0f) {
-                dir.setVal(-v1.toFloat())
+                dir._val = (-v1.toFloat())
             } else {
-                dir.setVal(v1.toFloat())
+                dir._val = (v1.toFloat())
             }
             // negative direction means the point moves towards the plane at the initial position
-            if (dir.getVal() <= 0.0f) {
+            if (dir._val <= 0.0f) {
                 return true
             }
             a = -v1
@@ -2717,12 +2717,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 return false
             }
             if (frac1 > frac2) {
-                tanHalfAngle.setVal(frac1.toFloat())
+                tanHalfAngle._val = (frac1.toFloat())
             } else {
-                tanHalfAngle.setVal(frac2.toFloat())
+                tanHalfAngle._val = (frac2.toFloat())
             }
             if (angle < 0.0f) {
-                tanHalfAngle.setVal(-tanHalfAngle.getVal())
+                tanHalfAngle._val = (-tanHalfAngle._val)
             }
             return true
         }
@@ -2787,10 +2787,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (!PointFurthestFromPlane(tw, point, plane, angle, startTan, dir)) {
                     return false
                 }
-                if (dir.getVal() <= 0.0f) {
+                if (dir._val <= 0.0f) {
                     // moving towards the polygon plane so stop immediately
-                    tanHalfAngle.setVal(0.0f)
-                } else if (Math.abs(startTan.getVal()) >= tw.maxTan) {
+                    tanHalfAngle._val = (0.0f)
+                } else if (Math.abs(startTan._val) >= tw.maxTan) {
                     // never going to get beyond the start tangent during the current rotation
                     return false
                 } else {
@@ -2800,11 +2800,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                             point,
                             epsPlane,
                             angle,
-                            Math.abs(startTan.getVal()),
+                            Math.abs(startTan._val),
                             tanHalfAngle
                         )
                     ) {
-                        tanHalfAngle.setVal(startTan.getVal())
+                        tanHalfAngle._val = (startTan._val)
                     }
                 }
             } else {
@@ -2816,8 +2816,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // calculate collision point
             collisionPoint.oSet(point)
-            if (tanHalfAngle.getVal() != 0.0f) {
-                CollisionModel_rotate.CM_RotatePoint(collisionPoint, tw.origin, tw.axis, tanHalfAngle.getVal())
+            if (tanHalfAngle._val != 0.0f) {
+                CollisionModel_rotate.CM_RotatePoint(collisionPoint, tw.origin, tw.axis, tanHalfAngle._val)
             }
             // calculate direction of motion at collision point
             endDir.oSet(collisionPoint.oMinus(origin).Cross(tw.axis))
@@ -2861,7 +2861,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             ) {
                 return
             }
-            if (Math.abs(tanHalfAngle.getVal()) < tw.maxTan) {
+            if (Math.abs(tanHalfAngle._val) < tw.maxTan) {
                 // verify if 'collisionPoint' moving along 'endDir' moves between polygon edges
                 pl.FromRay(collisionPoint, endDir)
                 i = 0
@@ -2877,7 +2877,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     }
                     i++
                 }
-                tw.maxTan = Math.abs(tanHalfAngle.getVal())
+                tw.maxTan = Math.abs(tanHalfAngle._val)
                 // collision plane is the polygon plane
                 tw.trace.c.normal.oSet(poly.plane.Normal())
                 tw.trace.c.dist = poly.plane.Dist()
@@ -2936,7 +2936,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             ) {
                 return
             }
-            if (Math.abs(tanHalfAngle.getVal()) < tw.maxTan) {
+            if (Math.abs(tanHalfAngle._val) < tw.maxTan) {
                 // verify if 'collisionPoint' moving along 'endDir' moves between polygon edges
                 pl.FromRay(collisionPoint, endDir)
                 i = 0
@@ -2954,7 +2954,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     }
                     i++
                 }
-                tw.maxTan = Math.abs(tanHalfAngle.getVal())
+                tw.maxTan = Math.abs(tanHalfAngle._val)
                 // collision plane is the flipped trm polygon plane
                 tw.trace.c.normal.oSet(trmpoly.plane.Normal().oNegative())
                 tw.trace.c.dist = tw.trace.c.normal.oMultiply(v.p)
@@ -5215,7 +5215,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
          FIXME: if the nodes would be at the start of the .proc file it would speed things up considerably
          ================
          */
-        private fun LoadProcBSP(name: String?) {
+        private fun LoadProcBSP(name: String) {
             val filename: idStr
             val token = idToken()
             val src: idLexer?
@@ -5829,7 +5829,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             model.maxEdges = TraceModel.MAX_TRACEMODEL_EDGES + 1
             model.edges = cm_edge_s.generateArray(model.maxEdges)
             // create a material for the trace model polygons
-            trmMaterial = DeclManager.declManager.FindMaterial("_tracemodel", false)
+            trmMaterial = DeclManager.declManager!!.FindMaterial("_tracemodel", false)
             if (null == trmMaterial) {
                 Common.common.FatalError("_tracemodel material not found")
             }
@@ -5952,13 +5952,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             model.numNodes += 2
             // set front node bounds
             frontBounds = idBounds(bounds)
-            frontBounds.oGet(0).oSet(planeType.getVal(), planeDist.getVal())
+            frontBounds.oGet(0).oSet(planeType._val, planeDist._val)
             // set back node bounds
             backBounds = idBounds(bounds)
-            backBounds.oGet(1).oSet(planeType.getVal(), planeDist.getVal())
+            backBounds.oGet(1).oSet(planeType._val, planeDist._val)
             //
-            node.planeType = planeType.getVal()
-            node.planeDist = planeDist.getVal()
+            node.planeType = planeType._val
+            node.planeDist = planeDist._val
             node.children[0] = frontNode
             node.children[1] = backNode
             // filter polygons and brushes down the tree if necesary
@@ -6131,7 +6131,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         vert.oGet(0) - p.oGet(0)
                     ) < VERTEX_EPSILON && Math.abs(vert.oGet(1) - p.oGet(1)) < VERTEX_EPSILON
                 ) {
-                    vertexNum.setVal(vn)
+                    vertexNum._val = (vn)
                     return true
                 }
                 vn = cm_vertexHash!!.Next(vn)
@@ -6148,7 +6148,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
             model.vertices!![model.numVertices].p.oSet(vert)
             model.vertices!![model.numVertices].checkcount = 0
-            vertexNum.setVal(model.numVertices)
+            vertexNum._val = (model.numVertices)
             // add vertice to hash
             cm_vertexHash!!.Add(hashKey, model.numVertices)
             //
@@ -6178,18 +6178,18 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             if (model.numEdges == 0) {
                 model.numEdges = 1
             }
-            found = if (v1num.getVal() != -1) {
+            found = if (v1num._val != -1) {
                 true
             } else {
                 GetVertex(model, v1, v1num)
             }
             found = found and GetVertex(model, v2, v2num)
             // if both vertices are the same or snapped onto each other
-            if (v1num.getVal() == v2num.getVal()) {
+            if (v1num._val == v2num._val) {
                 edgeNum[edgeOffset] = 0
                 return true
             }
-            hashKey = cm_edgeHash!!.GenerateKey(v1num.getVal(), v2num.getVal())
+            hashKey = cm_edgeHash!!.GenerateKey(v1num._val, v2num._val)
             // if both vertices where already stored
             if (found) {
                 e = cm_edgeHash!!.First(hashKey)
@@ -6201,8 +6201,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         continue
                     }
                     vertexNum = model.edges!![e].vertexNum
-                    if (vertexNum[0] == v2num.getVal()) {
-                        if (vertexNum[1] == v1num.getVal()) {
+                    if (vertexNum[0] == v2num._val) {
+                        if (vertexNum[1] == v1num._val) {
                             // negative for a reversed edge
                             edgeNum[edgeOffset] = -e
                             break
@@ -6230,8 +6230,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 cm_edgeHash!!.ResizeIndex(model.maxEdges)
             }
             // setup edge
-            model.edges!![model.numEdges].vertexNum[0] = v1num.getVal()
-            model.edges!![model.numEdges].vertexNum[1] = v2num.getVal()
+            model.edges!![model.numEdges].vertexNum[0] = v1num._val
+            model.edges!![model.numEdges].vertexNum[1] = v2num._val
             model.edges!![model.numEdges].internal = false
             model.edges!![model.numEdges].checkcount = 0
             model.edges!![model.numEdges].numUsers = 1 // used by one polygon atm
@@ -6261,7 +6261,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // turn the winding into a sequence of edges
             numPolyEdges = 0
-            v1num.setVal(-1) // first vertex unknown
+            v1num._val = (-1) // first vertex unknown
             i = 0
             j = 1
             while (i < w.GetNumPoints()) {
@@ -6271,11 +6271,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 GetEdge(model, w.oGet(i).ToVec3(), w.oGet(j).ToVec3(), polyEdges, numPolyEdges, v1num)
                 if (polyEdges[numPolyEdges] != 0) {
                     // last vertex of this edge is the first vertex of the next edge
-                    v1num.setVal(
-                        model.edges!![Math.abs(polyEdges[numPolyEdges])].vertexNum[Math_h.INTSIGNBITNOTSET(
-                            polyEdges[numPolyEdges]
-                        )]
-                    )
+                    v1num._val = (
+                            model.edges!![Math.abs(polyEdges[numPolyEdges])].vertexNum[Math_h.INTSIGNBITNOTSET(
+                                polyEdges[numPolyEdges]
+                            )]
+                            )
                     // this edge is valid so keep it
                     numPolyEdges++
                 }
@@ -6505,7 +6505,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
         private fun ConvertPatch(model: cm_model_s, patch: idMapPatch, primitiveNum: Int) {
             val material: idMaterial?
             val cp: idSurface_Patch?
-            material = DeclManager.declManager.FindMaterial(patch.GetMaterial())
+            material = DeclManager.declManager!!.FindMaterial(patch.GetMaterial())
             if (0 == material.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                 return
             }
@@ -6547,7 +6547,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < mapBrush.GetNumSides()) {
                 mapSide = mapBrush.GetSide(i)
-                material = DeclManager.declManager.FindMaterial(mapSide.GetMaterial())
+                material = DeclManager.declManager!!.FindMaterial(mapSide.GetMaterial())
                 if (0 == material.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                     i++
                     continue
@@ -6593,7 +6593,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < mapBrush.GetNumSides() - 1) {
                 mapSide = mapBrush.GetSide(i)
-                material = DeclManager.declManager.FindMaterial(mapSide.GetMaterial())
+                material = DeclManager.declManager!!.FindMaterial(mapSide.GetMaterial())
                 contents = contents or (material.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL)
                 w.BaseForPlane(planes[i].oNegative())
                 j = 0
@@ -6922,8 +6922,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val maxVertices = CInt()
             val maxEdges = CInt()
             CollisionModel_load.CM_EstimateVertsAndEdges(mapEnt, maxVertices, maxEdges)
-            model.maxVertices = maxVertices.getVal()
-            model.maxEdges = maxEdges.getVal()
+            model.maxVertices = maxVertices._val
+            model.maxEdges = maxEdges._val
             model.numVertices = 0
             model.numEdges = 0
             model.vertices = cm_vertex_s.generateArray(model.maxVertices)
@@ -7592,7 +7592,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 src.Parse1DMatrix(3, p.bounds.oGet(1))
                 src.ExpectTokenType(Token.TT_STRING, 0, token)
                 // get material
-                p.material = DeclManager.declManager.FindMaterial(token)
+                p.material = DeclManager.declManager!!.FindMaterial(token)
                 p.contents = p.material!!.GetContentFlags()
                 p.checkcount = 0
                 // filter polygon into tree

@@ -44,11 +44,11 @@ import java.util.*
  *
  */
 object snd_system {
-    var soundSystemLocal: idSoundSystemLocal? = idSoundSystemLocal()
-    var soundSystem: idSoundSystem? = snd_system.soundSystemLocal
-    fun setSoundSystem(soundSystem: idSoundSystem?) {
-        snd_system.soundSystemLocal = soundSystem
-        snd_system.soundSystem = snd_system.soundSystemLocal
+    var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
+    var soundSystem: idSoundSystem = soundSystemLocal
+    fun setSoundSystems(soundSystem: idSoundSystem) {
+        soundSystemLocal = soundSystem
+        snd_system.soundSystem = soundSystemLocal
     }
 
     /*
@@ -960,7 +960,7 @@ object snd_system {
             var j: Int
             val firstEmitter: Int
             var firstChannel: Int
-            val sw = snd_system.soundSystemLocal.currentSoundWorld
+            val sw = soundSystemLocal.currentSoundWorld
             if (index < 0) {
                 firstEmitter = 0
                 firstChannel = 0
@@ -998,7 +998,7 @@ object snd_system {
                     decoderInfo.looping = chan.parms.soundShaderFlags and snd_shader.SSF_LOOPING != 0
                     decoderInfo.lastVolume = chan.lastVolume
                     decoderInfo.start44kHzTime = chan.trigger44kHzTime
-                    decoderInfo.current44kHzTime = snd_system.soundSystemLocal.GetCurrent44kHzTime()
+                    decoderInfo.current44kHzTime = soundSystemLocal.GetCurrent44kHzTime()
                     return i * snd_local.SOUND_MAX_CHANNELS + j
                     j++
                 }
@@ -1332,13 +1332,13 @@ object snd_system {
      */
     internal class SoundReloadSounds_f private constructor() : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
-            if (TempDump.NOT(snd_system.soundSystemLocal.soundCache)) {
+            if (TempDump.NOT(soundSystemLocal.soundCache)) {
                 return
             }
             val force = args.Argc() == 2
-            snd_system.soundSystem.SetMute(true)
-            snd_system.soundSystemLocal.soundCache.ReloadSounds(force)
-            snd_system.soundSystem.SetMute(false)
+            soundSystem.SetMute(true)
+            soundSystemLocal.soundCache.ReloadSounds(force)
+            soundSystem.SetMute(false)
             Common.common.Printf("sound: changed sounds reloaded\n")
         }
 
@@ -1358,7 +1358,7 @@ object snd_system {
         override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val snd = args.Argv(1)
-            if (TempDump.NOT(snd_system.soundSystemLocal.soundCache)) {
+            if (TempDump.NOT(soundSystemLocal.soundCache)) {
                 Common.common.Printf("No sound.\n")
                 return
             }
@@ -1367,8 +1367,8 @@ object snd_system {
             var totalMemory = 0
             var totalPCMMemory = 0
             i = 0
-            while (i < snd_system.soundSystemLocal.soundCache.GetNumObjects()) {
-                val sample = snd_system.soundSystemLocal.soundCache.GetObject(i)
+            while (i < soundSystemLocal.soundCache.GetNumObjects()) {
+                val sample = soundSystemLocal.soundCache.GetObject(i)
                 if (TempDump.NOT(sample)) {
                     i++
                     continue
@@ -1383,7 +1383,7 @@ object snd_system {
                 val defaulted = if (sample.defaultSound) "(DEFAULTED)" else if (sample.purged) "(PURGED)" else ""
                 Common.common.Printf(
                     "%s %dkHz %6dms %5dkB %4s %s%s\n", stereo, sample.objectInfo.nSamplesPerSec / 1000,
-                    snd_system.soundSystemLocal.SamplesToMilliseconds(sample.LengthIn44kHzSamples()),
+                    soundSystemLocal.SamplesToMilliseconds(sample.LengthIn44kHzSamples()),
                     sample.objectMemSize shr 10, format, sample.name, defaulted
                 )
                 if (!sample.purged) {
@@ -1422,7 +1422,7 @@ object snd_system {
             var j: Int
             var numActiveDecoders: Int
             var numWaitingDecoders: Int
-            val sw = snd_system.soundSystemLocal.currentSoundWorld
+            val sw = soundSystemLocal.currentSoundWorld
             numWaitingDecoders = 0
             numActiveDecoders = numWaitingDecoders
             i = 0
@@ -1476,7 +1476,7 @@ object snd_system {
                         continue
                     }
                     val format = if (sample.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV"
-                    val localTime = snd_system.soundSystemLocal.GetCurrent44kHzTime() - chan.trigger44kHzTime
+                    val localTime = soundSystemLocal.GetCurrent44kHzTime() - chan.trigger44kHzTime
                     val sampleTime = sample.LengthIn44kHzSamples() * sample.objectInfo.nChannels
                     var percent: Int
                     percent = if (localTime > sampleTime) {
@@ -1522,8 +1522,8 @@ object snd_system {
                 Common.common.Printf("Usage: testSound <file>\n")
                 return
             }
-            if (snd_system.soundSystemLocal.currentSoundWorld != null) {
-                snd_system.soundSystemLocal.currentSoundWorld.PlayShaderDirectly(args.Argv(1))
+            if (soundSystemLocal.currentSoundWorld != null) {
+                soundSystemLocal.currentSoundWorld.PlayShaderDirectly(args.Argv(1))
             }
         }
 
@@ -1543,10 +1543,10 @@ object snd_system {
      */
     internal class SoundSystemRestart_f private constructor() : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
-            snd_system.soundSystem.SetMute(true)
-            snd_system.soundSystemLocal.ShutdownHW()
-            snd_system.soundSystemLocal.InitHW()
-            snd_system.soundSystem.SetMute(false)
+            soundSystem.SetMute(true)
+            soundSystemLocal.ShutdownHW()
+            soundSystemLocal.InitHW()
+            soundSystem.SetMute(false)
         }
 
         companion object {

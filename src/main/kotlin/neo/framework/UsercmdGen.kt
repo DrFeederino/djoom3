@@ -85,7 +85,7 @@ object UsercmdGen {
      ===============================================================================
      */
     const val USERCMD_HZ = 60 // 60 frames per second
-    const val USERCMD_MSEC = 1000 / UsercmdGen.USERCMD_HZ
+    const val USERCMD_MSEC = 1000 / USERCMD_HZ
 
     //
     const val KEY_MOVESPEED = 127
@@ -96,7 +96,7 @@ object UsercmdGen {
     const val MAX_CHAT_BUFFER = 127
 
     //
-    val userCmdStrings: Array<userCmdString_t?>? = arrayOf(
+    val userCmdStrings: Array<userCmdString_t> = arrayOf(
         userCmdString_t("_moveUp", usercmdButton_t.UB_UP),
         userCmdString_t("_moveDown", usercmdButton_t.UB_DOWN),
         userCmdString_t("_left", usercmdButton_t.UB_LEFT),
@@ -190,12 +190,12 @@ object UsercmdGen {
 
     //
     //
-    val NUM_USER_COMMANDS = UsercmdGen.userCmdStrings.size
-    private val localUsercmdGen: idUsercmdGenLocal? = idUsercmdGenLocal()
-    var usercmdGen: idUsercmdGen? = UsercmdGen.localUsercmdGen
-    fun setUsercmdGen(usercmdGen: idUsercmdGen?) {
-        UsercmdGen.localUsercmdGen = usercmdGen as idUsercmdGenLocal?
-        UsercmdGen.usercmdGen = UsercmdGen.localUsercmdGen
+    val NUM_USER_COMMANDS = userCmdStrings.size
+    private var localUsercmdGen: idUsercmdGenLocal = idUsercmdGenLocal()
+    var usercmdGen: idUsercmdGen = localUsercmdGen
+    fun setUsercmdGens(usercmdGen: idUsercmdGen) {
+        localUsercmdGen = usercmdGen as idUsercmdGenLocal
+        UsercmdGen.usercmdGen = localUsercmdGen
     }
 
     enum class inhibit_t {
@@ -212,7 +212,7 @@ object UsercmdGen {
     }
 
     class usercmd_t : SERiAL {
-        var angles: ShortArray? = ShortArray(3) // view angles
+        var angles: ShortArray = ShortArray(3) // view angles
         var buttons // buttons
                 : Byte = 0
         var duplicateCount // duplication count for networking
@@ -239,20 +239,20 @@ object UsercmdGen {
                 : Byte = 0
 
         constructor()
-        constructor(`val`: usercmd_t?) {
-            angles = `val`.angles
-            buttons = `val`.buttons
-            duplicateCount = `val`.duplicateCount
-            flags = `val`.flags
-            forwardmove = `val`.forwardmove
-            gameFrame = `val`.gameFrame
-            gameTime = `val`.gameTime
-            impulse = `val`.impulse
-            mx = `val`.mx
-            my = `val`.my
-            rightmove = `val`.rightmove
-            sequence = `val`.sequence
-            upmove = `val`.upmove
+        constructor(fromValue: usercmd_t) {
+            angles = fromValue.angles
+            buttons = fromValue.buttons
+            duplicateCount = fromValue.duplicateCount
+            flags = fromValue.flags
+            forwardmove = fromValue.forwardmove
+            gameFrame = fromValue.gameFrame
+            gameTime = fromValue.gameTime
+            impulse = fromValue.impulse
+            mx = fromValue.mx
+            my = fromValue.my
+            rightmove = fromValue.rightmove
+            sequence = fromValue.sequence
+            upmove = fromValue.upmove
         }
 
         fun ByteSwap() {            // on big endian systems, byte swap the shorts and ints
@@ -383,7 +383,7 @@ object UsercmdGen {
         abstract fun GetDirectUsercmd(): usercmd_t?
     }
 
-    internal class userCmdString_t(var string: String?, var button: usercmdButton_t?)
+    class userCmdString_t(var string: String?, var button: usercmdButton_t?)
 
     //    
     //   
@@ -413,7 +413,7 @@ object UsercmdGen {
     }
 
     internal class idUsercmdGenLocal : idUsercmdGen() {
-        private val buffered: Array<usercmd_t?>? = arrayOfNulls<usercmd_t?>(UsercmdGen.MAX_BUFFERED_USERCMD)
+        private val buffered: Array<usercmd_t?>? = arrayOfNulls<usercmd_t?>(MAX_BUFFERED_USERCMD)
         private val buttonState: IntArray? = IntArray(TempDump.etoi(usercmdButton_t.UB_MAX_BUTTONS))
         private val joystickAxis: IntArray? =
             IntArray(TempDump.etoi(joystickAxis_t.MAX_JOYSTICK_AXIS)) // set by joystick events
@@ -505,12 +505,12 @@ object UsercmdGen {
             if (ticNumber > Common.com_ticNumber + 1) {
                 Common.common.Error("idUsercmdGenLocal::TicCmd ticNumber > com_ticNumber")
             }
-            if (ticNumber <= Common.com_ticNumber - UsercmdGen.MAX_BUFFERED_USERCMD) {
+            if (ticNumber <= Common.com_ticNumber - MAX_BUFFERED_USERCMD) {
                 // this can happen when something in the game code hitches badly, allowing the
                 // async code to overflow the buffers
                 //common.Printf( "warning: idUsercmdGenLocal::TicCmd ticNumber <= com_ticNumber - MAX_BUFFERED_USERCMD\n" );
             }
-            return buffered.get(ticNumber and UsercmdGen.MAX_BUFFERED_USERCMD - 1)
+            return buffered.get(ticNumber and MAX_BUFFERED_USERCMD - 1)
         }
 
         override fun InhibitUsercmd(subsystem: inhibit_t?, inhibit: Boolean) {
@@ -552,7 +552,7 @@ object UsercmdGen {
 
             // save a number for debugging cmdDemos and networking
             cmd.sequence = Common.com_ticNumber + 1
-            buffered.get(Common.com_ticNumber + 1 and UsercmdGen.MAX_BUFFERED_USERCMD - 1) = cmd
+            buffered.get(Common.com_ticNumber + 1 and MAX_BUFFERED_USERCMD - 1) = cmd
         }
 
         /*
@@ -563,7 +563,7 @@ object UsercmdGen {
          ================
          */
         override fun CommandStringUsercmdData(cmdString: String?): Int {
-            for (ucs in UsercmdGen.userCmdStrings) {
+            for (ucs in userCmdStrings) {
                 if (idStr.Companion.Icmp(cmdString, ucs.string) == 0) {
                     return ucs.button.ordinal
                 }
@@ -572,12 +572,12 @@ object UsercmdGen {
         }
 
         override fun GetNumUserCommands(): Int {
-            return UsercmdGen.NUM_USER_COMMANDS
+            return NUM_USER_COMMANDS
         }
 
         override fun GetUserCommandName(index: Int): String? {
-            return if (index >= 0 && index < UsercmdGen.NUM_USER_COMMANDS) {
-                UsercmdGen.userCmdStrings[index].string
+            return if (index >= 0 && index < NUM_USER_COMMANDS) {
+                userCmdStrings[index].string
             } else ""
         }
 
@@ -709,8 +709,8 @@ object UsercmdGen {
             cmd.flags = flags.toByte()
             cmd.impulse = impulse.toByte()
             cmd.buttons =
-                cmd.buttons or if (in_alwaysRun.GetBool() && idAsyncNetwork.IsActive()) UsercmdGen.BUTTON_RUN else 0
-            cmd.buttons = cmd.buttons or if (in_freeLook.GetBool()) UsercmdGen.BUTTON_MLOOK else 0
+                cmd.buttons or if (in_alwaysRun.GetBool() && idAsyncNetwork.IsActive()) BUTTON_RUN else 0
+            cmd.buttons = cmd.buttons or if (in_freeLook.GetBool()) BUTTON_MLOOK else 0
         }
 
         /*
@@ -734,9 +734,9 @@ object UsercmdGen {
         private fun AdjustAngles() {
             val speed: Float
             speed = if ((toggled_run.on != 0) xor (in_alwaysRun.GetBool() && idAsyncNetwork.IsActive())) {
-                idMath.M_MS2SEC * UsercmdGen.USERCMD_MSEC * in_angleSpeedKey.GetFloat()
+                idMath.M_MS2SEC * USERCMD_MSEC * in_angleSpeedKey.GetFloat()
             } else {
-                idMath.M_MS2SEC * UsercmdGen.USERCMD_MSEC
+                idMath.M_MS2SEC * USERCMD_MSEC
             }
             if (0 == ButtonState(usercmdButton_t.UB_STRAFE)) {
                 viewangles.oMinSet(Angles.YAW, speed * in_yawSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_RIGHT))
@@ -764,15 +764,15 @@ object UsercmdGen {
             side = 0
             up = 0
             if (ButtonState(usercmdButton_t.UB_STRAFE) != 0) {
-                side += UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_RIGHT)
-                side -= UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_LEFT)
+                side += KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_RIGHT)
+                side -= KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_LEFT)
             }
-            side += UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_MOVERIGHT)
-            side -= UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_MOVELEFT)
-            up -= UsercmdGen.KEY_MOVESPEED * toggled_crouch.on
-            up += UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_UP)
-            forward += UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_FORWARD)
-            forward -= UsercmdGen.KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_BACK)
+            side += KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_MOVERIGHT)
+            side -= KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_MOVELEFT)
+            up -= KEY_MOVESPEED * toggled_crouch.on
+            up += KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_UP)
+            forward += KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_FORWARD)
+            forward -= KEY_MOVESPEED * ButtonState(usercmdButton_t.UB_BACK)
             cmd.forwardmove = idMath.ClampChar(forward).code.toByte()
             cmd.rightmove = idMath.ClampChar(side).code.toByte()
             cmd.upmove = idMath.ClampChar(up).code.toByte()
@@ -781,9 +781,9 @@ object UsercmdGen {
         private fun JoystickMove() {
             val anglespeed: Float
             anglespeed = if ((toggled_run.on != 0) xor (in_alwaysRun.GetBool() && idAsyncNetwork.IsActive())) {
-                idMath.M_MS2SEC * UsercmdGen.USERCMD_MSEC * in_angleSpeedKey.GetFloat()
+                idMath.M_MS2SEC * USERCMD_MSEC * in_angleSpeedKey.GetFloat()
             } else {
-                idMath.M_MS2SEC * UsercmdGen.USERCMD_MSEC
+                idMath.M_MS2SEC * USERCMD_MSEC
             }
             if (0 == ButtonState(usercmdButton_t.UB_STRAFE)) {
                 viewangles.oPluSet(
@@ -873,7 +873,7 @@ object UsercmdGen {
             if (0.0f == strafeMx && 0.0f == strafeMy) {
                 return
             }
-            if (ButtonState(usercmdButton_t.UB_STRAFE) != 0 || 0 == cmd.buttons and UsercmdGen.BUTTON_MLOOK) {
+            if (ButtonState(usercmdButton_t.UB_STRAFE) != 0 || 0 == cmd.buttons and BUTTON_MLOOK) {
                 // add mouse X/Y movement to cmd
                 strafeMx *= m_strafeScale.GetFloat()
                 strafeMy *= m_strafeScale.GetFloat()
@@ -889,7 +889,7 @@ object UsercmdGen {
             } else {
                 cmd.rightmove = idMath.ClampChar((cmd.rightmove + strafeMx).toInt()).code.toByte()
             }
-            if (0 == ButtonState(usercmdButton_t.UB_STRAFE) && cmd.buttons and UsercmdGen.BUTTON_MLOOK != 0) {
+            if (0 == ButtonState(usercmdButton_t.UB_STRAFE) && cmd.buttons and BUTTON_MLOOK != 0) {
                 viewangles.oPluSet(Angles.PITCH, m_pitch.GetFloat() * my)
             } else {
                 cmd.forwardmove = idMath.ClampChar((cmd.forwardmove - strafeMy).toInt()).code.toByte()
@@ -911,28 +911,28 @@ object UsercmdGen {
 
             // check the attack button
             if (ButtonState(usercmdButton_t.UB_ATTACK) != 0) {
-                cmd.buttons = cmd.buttons or UsercmdGen.BUTTON_ATTACK
+                cmd.buttons = cmd.buttons or BUTTON_ATTACK
             }
 
             // check the run button
             if ((toggled_run.on != 0) xor (in_alwaysRun.GetBool() && idAsyncNetwork.IsActive())) {
-                cmd.buttons = cmd.buttons or UsercmdGen.BUTTON_RUN
+                cmd.buttons = cmd.buttons or BUTTON_RUN
             }
 
             // check the zoom button
             if (toggled_zoom.on != 0) {
-                cmd.buttons = cmd.buttons or UsercmdGen.BUTTON_ZOOM
+                cmd.buttons = cmd.buttons or BUTTON_ZOOM
             }
 
             // check the scoreboard button
             if (ButtonState(usercmdButton_t.UB_SHOWSCORES) != 0 || ButtonState(usercmdButton_t.UB_IMPULSE19) != 0) {
                 // the button is toggled in SP mode as well but without effect
-                cmd.buttons = cmd.buttons or UsercmdGen.BUTTON_SCORES
+                cmd.buttons = cmd.buttons or BUTTON_SCORES
             }
 
             // check the mouse look button
             if (ButtonState(usercmdButton_t.UB_MLOOK) xor in_freeLook.GetInteger() != 0) {
-                cmd.buttons = cmd.buttons or UsercmdGen.BUTTON_MLOOK
+                cmd.buttons = cmd.buttons or BUTTON_MLOOK
             }
         }
 
@@ -961,7 +961,7 @@ object UsercmdGen {
                     if (action >= usercmdButton_t.UB_IMPULSE0.ordinal && action <= usercmdButton_t.UB_IMPULSE61.ordinal) {
                         cmd.impulse = (action - usercmdButton_t.UB_IMPULSE0.ordinal).toByte()
                         impulse = cmd.impulse.toInt()
-                        cmd.flags = cmd.flags xor UsercmdGen.UCF_IMPULSE_SEQUENCE
+                        cmd.flags = cmd.flags xor UCF_IMPULSE_SEQUENCE
                         flags = cmd.flags.toInt()
                     }
                 }

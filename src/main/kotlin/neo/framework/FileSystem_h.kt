@@ -321,7 +321,7 @@ object FileSystem_h {
         var dlstatus = 0
         var dltotal = 0
         var status: dlStatus_t? = null
-        var url: idStr? = idStr()
+        var url: idStr = idStr()
 
         constructor()
 
@@ -330,7 +330,7 @@ object FileSystem_h {
          *
          * @param url
          */
-        private constructor(url: urlDownload_s?) {
+        private constructor(url: urlDownload_s) {
             this.url = idStr(url.url)
             dlerror = url.dlerror
             dlnow = url.dlnow
@@ -361,7 +361,7 @@ object FileSystem_h {
          *
          * @param file
          */
-        private constructor(file: fileDownload_s?) {
+        public constructor(file: fileDownload_s) {
             position = file.position
             length = file.length
             buffer = file.buffer.duplicate()
@@ -383,7 +383,7 @@ object FileSystem_h {
         var next // set by the fileSystem
                 : backgroundDownload_s? = null
         var opcode: dlType_t? = null
-        var url: urlDownload_s? = urlDownload_s()
+        var url: urlDownload_s = urlDownload_s()
 
         constructor()
 
@@ -392,7 +392,7 @@ object FileSystem_h {
          *
          * @param bgl
          */
-        constructor(bgl: backgroundDownload_s?) {
+        constructor(bgl: backgroundDownload_s) {
             next = bgl.next //pointer
             opcode = bgl.opcode
             f = bgl.f //pointer

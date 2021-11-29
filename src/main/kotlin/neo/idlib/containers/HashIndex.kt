@@ -24,21 +24,38 @@ object HashIndex {
     class idHashIndex {
         private val DBG_count: Int
         private var granularity = 0
-        private var hash: IntArray?
+        private var hash: IntArray
         private var hashMask = 0
         private var hashSize = 0
-        private var indexChain: IntArray?
+        private var indexChain: IntArray
         private var indexSize = 0
         private var lookupMask = 0
 
         constructor() {
             DBG_count = DBG_counter++
-            Init(DEFAULT_HASH_SIZE, DEFAULT_HASH_SIZE)
+            //Init(DEFAULT_HASH_SIZE, DEFAULT_HASH_SIZE)
+            assert(idMath.IsPowerOfTwo(DEFAULT_HASH_SIZE))
+            hashSize = DEFAULT_HASH_SIZE
+            hash = INVALID_INDEX
+            indexSize = DEFAULT_HASH_SIZE
+            indexChain = INVALID_INDEX
+            granularity = DEFAULT_HASH_GRANULARITY
+            hashMask = hashSize - 1
+            lookupMask = 0
         }
 
         constructor(initialHashSize: Int, initialIndexSize: Int) {
             DBG_count = DBG_counter++
-            Init(initialHashSize, initialIndexSize)
+            //Init(initialHashSize, initialIndexSize)
+            assert(idMath.IsPowerOfTwo(initialHashSize))
+            hashSize = initialHashSize
+            hash = INVALID_INDEX
+            indexSize = initialIndexSize
+            indexChain = INVALID_INDEX
+            granularity = DEFAULT_HASH_GRANULARITY
+            hashMask = hashSize - 1
+            lookupMask = 0
+
         }
 
         /*size_t*/   fun Allocated(): Int {
@@ -49,7 +66,7 @@ object HashIndex {
             return Allocated()
         }
 
-        fun oSet(other: idHashIndex?): idHashIndex? {
+        fun oSet(other: idHashIndex): idHashIndex {
             granularity = other.granularity
             hashMask = other.hashMask
             lookupMask = other.lookupMask
@@ -58,15 +75,15 @@ object HashIndex {
                 indexSize = other.indexSize
                 Free()
             } else {
-                if (other.hashSize != hashSize || hash == INVALID_INDEX) {
-                    if (hash != INVALID_INDEX) {
+                if (other.hashSize != hashSize || hash.contentEquals(INVALID_INDEX)) {
+                    if (!hash.contentEquals(INVALID_INDEX)) {
 //				delete[] hash;
                     }
                     hashSize = other.hashSize
                     hash = IntArray(hashSize)
                 }
-                if (other.indexSize != indexSize || indexChain == INVALID_INDEX) {
-                    if (indexChain != INVALID_INDEX) {
+                if (other.indexSize != indexSize || indexChain.contentEquals(INVALID_INDEX)) {
+                    if (!indexChain.contentEquals(INVALID_INDEX)) {
 //				delete[] indexChain;
                     }
                     indexSize = other.indexSize
@@ -82,72 +99,72 @@ object HashIndex {
         fun Add(key: Int, index: Int) {
             val h: Int
             assert(index >= 0)
-            if (hash == INVALID_INDEX) {
+            if (hash.contentEquals(INVALID_INDEX)) {
                 Allocate(hashSize, if (index >= indexSize) index + 1 else indexSize)
             } else if (index >= indexSize) {
                 ResizeIndex(index + 1)
             }
             h = key and hashMask
-            indexChain.get(index) = hash.get(h)
-            hash.get(h) = index
+            indexChain[index] = hash[h]
+            hash[h] = index
         }
 
         // remove an index from the hash
         fun Remove(key: Int, index: Int) {
             val k = key and hashMask
-            if (hash == INVALID_INDEX) {
+            if (hash.contentEquals(INVALID_INDEX)) {
                 return
             }
-            if (hash.get(k) == index) {
-                hash.get(k) = indexChain.get(index)
+            if (hash[k] == index) {
+                hash[k] = indexChain[index]
             } else {
-                var i = hash.get(k)
+                var i = hash[k]
                 while (i != -1) {
-                    if (indexChain.get(i) == index) {
-                        indexChain.get(i) = indexChain.get(index)
+                    if (indexChain[i] == index) {
+                        indexChain[i] = indexChain[index]
                         break
                     }
-                    i = indexChain.get(i)
+                    i = indexChain[i]
                 }
             }
-            indexChain.get(index) = -1
+            indexChain[index] = -1
         }
 
         // get the first index from the hash, returns -1 if empty hash entry
         fun First(key: Int): Int {
             return if (null == hash) {
                 -1
-            } else hash.get(key and hashMask and lookupMask)
+            } else hash[key and hashMask and lookupMask]
         }
 
         // get the next index from the hash, returns -1 if at the end of the hash chain
         fun Next(index: Int): Int {
             assert(index >= 0 && index < indexSize)
-            return indexChain.get(index and lookupMask)
+            return indexChain[index and lookupMask]
         }
 
         // insert an entry into the index and add it to the hash, increasing all indexes >= index
         fun InsertIndex(key: Int, index: Int) {
             var i: Int
             var max: Int
-            if (hash != INVALID_INDEX) {
+            if (!hash.contentEquals(INVALID_INDEX)) {
                 max = index
                 i = 0
                 while (i < hashSize) {
-                    if (hash.get(i) >= index) {
-                        hash.get(i)++
-                        if (hash.get(i) > max) {
-                            max = hash.get(i)
+                    if (hash[i] >= index) {
+                        hash[i]++
+                        if (hash[i] > max) {
+                            max = hash[i]
                         }
                     }
                     i++
                 }
                 i = 0
                 while (i < indexSize) {
-                    if (indexChain.get(i) >= index) {
-                        indexChain.get(i)++
-                        if (indexChain.get(i) > max) {
-                            max = indexChain.get(i)
+                    if (indexChain[i] >= index) {
+                        indexChain[i]++
+                        if (indexChain[i] > max) {
+                            max = indexChain[i]
                         }
                     }
                     i++
@@ -157,10 +174,10 @@ object HashIndex {
                 }
                 i = max
                 while (i > index) {
-                    indexChain.get(i) = indexChain.get(i - 1)
+                    indexChain[i] = indexChain[i - 1]
                     i--
                 }
-                indexChain.get(index) = -1
+                indexChain[index] = -1
             }
             Add(key, index)
         }
@@ -170,41 +187,41 @@ object HashIndex {
             var i: Int
             var max: Int
             Remove(key, index)
-            if (hash != INVALID_INDEX) {
+            if (!hash.contentEquals(INVALID_INDEX)) {
                 max = index
                 i = 0
                 while (i < hashSize) {
-                    if (hash.get(i) >= index) {
-                        if (hash.get(i) > max) {
-                            max = hash.get(i)
+                    if (hash[i] >= index) {
+                        if (hash[i] > max) {
+                            max = hash[i]
                         }
-                        hash.get(i)--
+                        hash[i]--
                     }
                     i++
                 }
                 i = 0
                 while (i < indexSize) {
-                    if (indexChain.get(i) >= index) {
-                        if (indexChain.get(i) > max) {
-                            max = indexChain.get(i)
+                    if (indexChain[i] >= index) {
+                        if (indexChain[i] > max) {
+                            max = indexChain[i]
                         }
-                        indexChain.get(i)--
+                        indexChain[i]--
                     }
                     i++
                 }
                 i = index
                 while (i < max) {
-                    indexChain.get(i) = indexChain.get(i + 1)
+                    indexChain[i] = indexChain[i + 1]
                     i++
                 }
-                indexChain.get(max) = -1
+                indexChain[max] = -1
             }
         }
 
         // clear the hash
         fun Clear() {
             // only clear the hash table because clearing the indexChain is not really needed
-            if (hash != INVALID_INDEX) {
+            if (!hash.contentEquals(INVALID_INDEX)) {
 //		memset( hash, 0xff, hashSize * sizeof( hash[0] ) );
                 Arrays.fill(hash, -1) //0xff);
             }
@@ -261,7 +278,7 @@ object HashIndex {
             } else {
                 newIndexSize + granularity - mod
             }
-            if (indexChain == INVALID_INDEX) {
+            if (indexChain.contentEquals(INVALID_INDEX)) {
                 indexSize = newSize
                 return
             }
@@ -284,7 +301,7 @@ object HashIndex {
             var error: Int
             var e: Int
             val numHashItems: IntArray
-            if (hash == INVALID_INDEX) {
+            if (hash.contentEquals(INVALID_INDEX)) {
                 return 100
             }
             totalItems = 0
@@ -292,10 +309,10 @@ object HashIndex {
             i = 0
             while (i < hashSize) {
                 numHashItems[i] = 0
-                index = hash.get(i)
+                index = hash[i]
                 while (index >= 0) {
                     numHashItems[i]++
-                    index = indexChain.get(index)
+                    index = indexChain[index]
                 }
                 totalItems += numHashItems[i]
                 i++
@@ -323,36 +340,25 @@ object HashIndex {
         @JvmOverloads
         fun GenerateKey(string: CharArray?, caseSensitive: Boolean = true): Int {
             return if (caseSensitive) {
-                idStr.Companion.Hash(string) and hashMask
+                idStr.Hash(string) and hashMask
             } else {
-                idStr.Companion.IHash(string) and hashMask
+                idStr.IHash(string) and hashMask
             }
         }
 
         @JvmOverloads
-        fun GenerateKey(string: String?, caseSensitive: Boolean = true): Int {
+        fun GenerateKey(string: String, caseSensitive: Boolean = true): Int {
             return GenerateKey(string.toCharArray(), caseSensitive)
         }
 
         // returns a key for a vector
-        fun GenerateKey(v: idVec3?): Int {
+        fun GenerateKey(v: idVec3): Int {
             return v.oGet(0).toInt() + v.oGet(1).toInt() + v.oGet(2).toInt() and hashMask
         }
 
         // returns a key for two integers
         fun GenerateKey(n1: Int, n2: Int): Int {
             return n1 + n2 and hashMask
-        }
-
-        private fun Init(initialHashSize: Int, initialIndexSize: Int) {
-            assert(idMath.IsPowerOfTwo(initialHashSize))
-            hashSize = initialHashSize
-            hash = INVALID_INDEX
-            indexSize = initialIndexSize
-            indexChain = INVALID_INDEX
-            granularity = HashIndex.DEFAULT_HASH_GRANULARITY
-            hashMask = hashSize - 1
-            lookupMask = 0
         }
 
         private fun Allocate(newHashSize: Int, newIndexSize: Int) {
@@ -372,9 +378,8 @@ object HashIndex {
 
         companion object {
             //
-            private val INVALID_INDEX: IntArray? = intArrayOf(-1)
+            private val INVALID_INDEX: IntArray = intArrayOf(-1)
 
-            //
             //
             private var DBG_counter = 0
         }

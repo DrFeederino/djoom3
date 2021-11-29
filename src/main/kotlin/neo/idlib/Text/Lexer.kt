@@ -209,7 +209,7 @@ object Lexer {
         private var filename // file name of the script
                 : idStr? = null
         private var flags // several script flags
-                : Long
+                : Int
         private var hadError // set by idLexer::Error, even if the error is suppressed
                 : Boolean
         private var lastScript_p // script pointer before reading token
@@ -256,7 +256,7 @@ object Lexer {
             hadError = false
         }
 
-        constructor(flags: Long) {
+        constructor(flags: Int) {
             loaded = false
             filename = idStr("")
             this.flags = flags

@@ -303,11 +303,11 @@ object BitMsg {
             WriteBits(c, -8)
         }
 
-        fun WriteByte(c: Int) {
+        fun WriteByte(c: Byte) {
             WriteBits(c, 8)
         }
 
-        fun WriteShort(c: Int) {
+        fun WriteShort(c: Short) {
             WriteBits(c, -16)
         }
 
@@ -397,15 +397,15 @@ object BitMsg {
             WriteUShort(adr.port.toInt())
         }
 
-        fun WriteDeltaChar(oldValue: Int, newValue: Int) {
+        fun WriteDeltaChar(oldValue: Byte, newValue: Byte) {
             WriteDelta(oldValue, newValue, -8)
         }
 
-        fun WriteDeltaByte(oldValue: Int, newValue: Int) {
+        fun WriteDeltaByte(oldValue: Byte, newValue: Byte) {
             WriteDelta(oldValue, newValue, 8)
         }
 
-        fun WriteDeltaShort(oldValue: Int, newValue: Int) {
+        fun WriteDeltaShort(oldValue: Short, newValue: Short) {
             WriteDelta(oldValue, newValue, -16)
         }
 
@@ -597,17 +597,17 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun ReadChar(): Int {
+        fun ReadChar(): Byte {
             return ReadBits(-8)
         }
 
         @Throws(idException::class)
-        fun ReadByte(): Int {
+        fun ReadByte(): Byte {
             return ReadBits(8)
         }
 
         @Throws(idException::class)
-        fun ReadShort(): Int {
+        fun ReadShort(): Short {
             return ReadBits(-16)
         }
 
@@ -705,17 +705,17 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun ReadDeltaChar(oldValue: Int): Int {
+        fun ReadDeltaChar(oldValue: Byte): Byte {
             return ReadDelta(oldValue, -8)
         }
 
         @Throws(idException::class)
-        fun ReadDeltaByte(oldValue: Int): Int {
+        fun ReadDeltaByte(oldValue: Byte): Byte {
             return ReadDelta(oldValue, 8)
         }
 
         @Throws(idException::class)
-        fun ReadDeltaShort(oldValue: Int): Int {
+        fun ReadDeltaShort(oldValue: Short): Short {
             return ReadDelta(oldValue, -16)
         }
 

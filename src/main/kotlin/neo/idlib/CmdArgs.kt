@@ -51,17 +51,17 @@ class CmdArgs {
         }
 
         // Argv() will return an empty string, not NULL if arg >= argc.
-        fun Argv(arg: Int): String? {
+        fun Argv(arg: Int): String {
             return if (arg >= 0 && arg < argc) argv.get(arg) else ""
         }
 
         // Returns a single string containing argv(start) to argv(end)
         // escapeArgs is a fugly way to put the string back into a state ready to tokenize again
         @JvmOverloads
-        fun Args(start: Int = 1, end: Int = -1, escapeArgs: Boolean = false): String? {
+        fun Args(start: Int = 1, end: Int = -1, escapeArgs: Boolean = false): String {
 //	char []cmd_args=new char[MAX_COMMAND_STRING];
             var end = end
-            var cmd_args: String? = ""
+            var cmd_args: String = ""
             var i: Int
             if (end < 0) {
                 end = argc - 1

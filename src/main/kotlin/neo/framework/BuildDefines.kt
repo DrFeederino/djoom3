@@ -1,6 +1,5 @@
 package neo.framework
 
-import java.lang.Boolean
 
 /**
  *
@@ -39,7 +38,7 @@ object BuildDefines {
 
     // if this is defined, the executable positively won't work with any paks other
     // than the demo pak, even if productid is present.
-    val ID_DEMO_BUILD = System.getProperty("ID_DEMO_BUILD") == Boolean.TRUE.toString()
+    val ID_DEMO_BUILD = System.getProperty("ID_DEMO_BUILD") == "true"
     const val ID_ENABLE_CURL = true
     var ID_ENFORCE_KEY = false
 
@@ -55,26 +54,26 @@ object BuildDefines {
     val MACOS_X = System.getProperty("os.name") == "MacOSX"
     const val _DEBUG = true
     val _WIN32 = System.getProperty("os.name").startsWith("Windows")
-    val WIN32 = BuildDefines._WIN32
+    val WIN32 = _WIN32
     val __linux__ = System.getProperty("os.name") == "Linux"
 
     init {
-        if (BuildDefines._WIN32 || BuildDefines.MACOS_X) {
-            BuildDefines.ID_CONSOLE_LOCK = !BuildDefines._DEBUG
+        if (_WIN32 || MACOS_X) {
+            ID_CONSOLE_LOCK = !_DEBUG
         } else {
-            BuildDefines.ID_CONSOLE_LOCK = false
+            ID_CONSOLE_LOCK = false
         }
     }
 
     init {
-        if (BuildDefines.__linux__) {
-            BuildDefines.ID_BT_STUB = BuildDefines._DEBUG
+        if (__linux__) {
+            ID_BT_STUB = _DEBUG
         } else {
-            BuildDefines.ID_BT_STUB = true
+            ID_BT_STUB = true
         }
     }
 
     init {
-        BuildDefines.ID_ENFORCE_KEY = !BuildDefines.ID_DEDICATED && !BuildDefines.ID_DEMO_BUILD
+        ID_ENFORCE_KEY = !ID_DEDICATED && !ID_DEMO_BUILD
     }
 }

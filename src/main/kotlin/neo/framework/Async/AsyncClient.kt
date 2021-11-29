@@ -94,7 +94,7 @@ object AsyncClient {
     }
 
     class idAsyncClient {
-        var serverList: idServerScan? = idServerScan()
+        var serverList: idServerScan = idServerScan()
 
         //
         //
@@ -102,7 +102,7 @@ object AsyncClient {
                 = false
 
         //
-        private val backgroundDownload: backgroundDownload_s? = backgroundDownload_s()
+        private val backgroundDownload: backgroundDownload_s = backgroundDownload_s()
 
         //
         private val channel // message channel to server
@@ -130,7 +130,7 @@ object AsyncClient {
             IntArray(FileSystem_h.MAX_PURE_PAKS) // 0-terminated, first element is the game pak checksum or 0
         private var dlCount // total number of paks we request download for ( including the game pak )
                 = 0
-        private val dlList: idList<pakDlEntry_t?>? = idList() // list of paks to download, with url and name
+        private val dlList: idList<pakDlEntry_t?> = idList() // list of paks to download, with url and name
 
         //
         private var dlRequest // randomized number to keep track of the requests
@@ -191,18 +191,18 @@ object AsyncClient {
         private var totalDlSize // for partial progress stuff
                 = 0
         private var updateDirectDownload = false
-        private var updateFallback: idStr? = idStr()
-        private val updateFile: idStr? = idStr()
-        private var updateMSG: idStr? = idStr()
+        private var updateFallback: idStr = idStr()
+        private val updateFile: idStr = idStr()
+        private var updateMSG: idStr = idStr()
         private var updateMime: dlMime_t? = null
         private var updateSentTime = 0
 
         //
-        private var updateState: clientUpdateState_t?
-        private var updateURL: idStr? = idStr()
+        private var updateState: clientUpdateState_t = clientUpdateState_t.UPDATE_NONE
+        private var updateURL: idStr = idStr()
 
         //
-        private val userCmds: Array<Array<usercmd_t?>?>? =
+        private val userCmds: Array<Array<usercmd_t?>?> =
             Array(AsyncNetwork.MAX_USERCMD_BACKUP) { arrayOfNulls<usercmd_t?>(AsyncNetwork.MAX_ASYNC_CLIENTS) }
 
         fun Shutdown() {
@@ -1367,7 +1367,7 @@ object AsyncClient {
         }
 
         @Throws(idException::class)
-        private fun ProcessInfoResponseMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessInfoResponseMessage(from: netadr_t, msg: idBitMsg) {
             var i: Int
             val protocol: Int
             val index: Int
@@ -1393,7 +1393,7 @@ object AsyncClient {
                 Common.common.Printf("server IP = %s\n", win_net.Sys_NetAdrToString(serverInfo.adr))
                 serverInfo.serverInfo.Print()
             }
-            i = msg.ReadByte()
+            i = msg.ReadByte().toInt()
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
                 serverInfo.pings[serverInfo.clients] = msg.ReadShort().toShort()
                 serverInfo.rate[serverInfo.clients] = msg.ReadLong()

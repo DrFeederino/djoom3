@@ -43,7 +43,7 @@ object RenderSystem {
     const val SCREEN_WIDTH = 640
     const val SMALLCHAR_HEIGHT = 16
     const val SMALLCHAR_WIDTH = 8
-    var renderSystem: idRenderSystem? = tr_local.tr
+    var renderSystem: idRenderSystem = tr_local.tr
 
     /*
      =====================

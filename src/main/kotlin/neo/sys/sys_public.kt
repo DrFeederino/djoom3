@@ -199,15 +199,15 @@ object sys_public {
     }
 
     class netadr_t {
-        val ip: CharArray? = CharArray(4)
+        val ip: CharArray = CharArray(4)
         var port: Short = 0
-        var type: netadrtype_t? = null
-        fun oSet(address: netadr_t?) {
+        var type: netadrtype_t = netadrtype_t.NA_BAD
+        fun oSet(address: netadr_t) {
             type = address.type
-            ip.get(0) = address.ip.get(0)
-            ip.get(1) = address.ip.get(1)
-            ip.get(2) = address.ip.get(2)
-            ip.get(3) = address.ip.get(3)
+            ip[0] = address.ip[0]
+            ip[1] = address.ip[1]
+            ip[2] = address.ip[2]
+            ip[3] = address.ip[3]
             port = port
         }
 

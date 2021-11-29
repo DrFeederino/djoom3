@@ -19,15 +19,15 @@ class JointTransform {
      ===============================================================================
      */
     class idJointQuat {
-        val q: idQuat?
-        val t: idVec3?
+        val q: idQuat
+        val t: idVec3
 
         constructor() {
             q = idQuat()
             t = idVec3()
         }
 
-        constructor(quat: idJointQuat?) {
+        constructor(quat: idJointQuat) {
             q = idQuat(quat.q)
             t = idVec3(quat.t)
         }
