@@ -64,11 +64,11 @@ object Plane {
             this.d = d
         }
 
-        constructor(array: FloatArray?) {
-            abc.x = array.get(0)
-            abc.y = array.get(1)
-            abc.z = array.get(2)
-            d = array.get(4)
+        constructor(array: FloatArray) {
+            abc.x = array[0]
+            abc.y = array[1]
+            abc.z = array[2]
+            d = array[4]
         }
 
         constructor(normal: idVec3, dist: Float) {
@@ -76,14 +76,14 @@ object Plane {
             d = -dist
         }
 
-        constructor(vec: idVec4?) {
+        constructor(vec: idVec4) {
             abc.x = vec.x
             abc.y = vec.y
             abc.z = vec.z
             d = vec.w
         }
 
-        constructor(plane: idPlane?) {
+        constructor(plane: idPlane) {
             abc.x = plane.abc.x
             abc.y = plane.abc.y
             abc.z = plane.abc.z
@@ -143,7 +143,7 @@ object Plane {
         }
 
         // sets normal and sets idPlane::d to zero
-        fun oSet(v: idVec3): idPlane? {
+        fun oSet(v: idVec3): idPlane {
             abc.oSet(v)
             d = 0f
             return this
@@ -158,38 +158,38 @@ object Plane {
 
         //public	idPlane			operator-( const idPlane &p ) const;	// subtract plane equations
         // add plane equations
-        fun oPlus(p: idPlane?): idPlane? {
+        fun oPlus(p: idPlane): idPlane {
             return idPlane(abc.x + p.abc.x, abc.y + p.abc.y, abc.z + p.abc.z, d + p.d)
         }
 
         //public	idPlane &		operator*=( const idMat3 &m );			// Normal() *= m
         // subtract plane equations
-        fun oMinus(p: idPlane?): idPlane? {
+        fun oMinus(p: idPlane): idPlane {
             return idPlane(abc.x - p.abc.x, abc.y - p.abc.y, abc.z - p.abc.z, d - p.d)
         }
 
         // Normal() *= m
-        fun oMulSet(m: idMat3?): idPlane? {
-            Normal().oMulSet(m)
+        fun oMulSet(m: idMat3): idPlane {
+            Normal().timesAssign(m)
             return this
         }
 
         // exact compare, no epsilon
-        fun Compare(p: idPlane?): Boolean {
+        fun Compare(p: idPlane): Boolean {
             return abc.x == p.abc.x && abc.y == p.abc.y && abc.z == p.abc.z && d == p.d
         }
 
         // compare with epsilon
-        fun Compare(p: idPlane?, epsilon: Float): Boolean {
-            if (Math.abs(abc.x - p.abc.x) > epsilon) {
+        fun Compare(p: idPlane, epsilon: Float): Boolean {
+            if (abs(abc.x - p.abc.x) > epsilon) {
                 return false
             }
-            if (Math.abs(abc.y - p.abc.y) > epsilon) {
+            if (abs(abc.y - p.abc.y) > epsilon) {
                 return false
             }
-            return if (Math.abs(abc.z - p.abc.z) > epsilon) {
+            return if (abs(abc.z - p.abc.z) > epsilon) {
                 false
-            } else Math.abs(d - p.d) <= epsilon
+            } else abs(d - p.d) <= epsilon
         }
 
         //public	boolean			operator==(	const idPlane &p ) const;					// exact compare, no epsilon
@@ -217,7 +217,7 @@ object Plane {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idPlane?
+            val other = obj as idPlane
             if (java.lang.Float.floatToIntBits(abc.x) != java.lang.Float.floatToIntBits(other.abc.x)) {
                 return false
             }
@@ -262,7 +262,7 @@ object Plane {
         /**
          * sets the normal **ONLY**; a, b and c. d is ignored.
          */
-        fun oNorSet(v: idVec3): idPlane? {
+        fun oNorSet(v: idVec3): idPlane {
             abc.oSet(v)
             return this
         }
@@ -301,7 +301,7 @@ object Plane {
             val fixedNormal = FixDegenerateNormal()
             // only fix dist if the normal was degenerate
             if (fixedNormal) {
-                if (Math.abs(d - idMath.Rint(d)) < distEpsilon) {
+                if (abs(d - idMath.Rint(d)) < distEpsilon) {
                     d = idMath.Rint(d)
                 }
             }
@@ -322,32 +322,32 @@ object Plane {
         fun Type(): Int {
             return if (Normal().oGet(0) == 0.0f) {
                 if (Normal().oGet(1) == 0.0f) {
-                    if (Normal().oGet(2) > 0.0f) Plane.PLANETYPE_Z else Plane.PLANETYPE_NEGZ
+                    if (Normal().oGet(2) > 0.0f) PLANETYPE_Z else PLANETYPE_NEGZ
                 } else if (Normal().oGet(2) == 0.0f) {
-                    if (Normal().oGet(1) > 0.0f) Plane.PLANETYPE_Y else Plane.PLANETYPE_NEGY
+                    if (Normal().oGet(1) > 0.0f) PLANETYPE_Y else PLANETYPE_NEGY
                 } else {
-                    Plane.PLANETYPE_ZEROX
+                    PLANETYPE_ZEROX
                 }
             } else if (Normal().oGet(1) == 0.0f) {
                 if (Normal().oGet(2) == 0.0f) {
-                    if (Normal().oGet(0) > 0.0f) Plane.PLANETYPE_X else Plane.PLANETYPE_NEGX
+                    if (Normal().oGet(0) > 0.0f) PLANETYPE_X else PLANETYPE_NEGX
                 } else {
-                    Plane.PLANETYPE_ZEROY
+                    PLANETYPE_ZEROY
                 }
             } else if (Normal().oGet(2) == 0.0f) {
-                Plane.PLANETYPE_ZEROZ
+                PLANETYPE_ZEROZ
             } else {
-                Plane.PLANETYPE_NONAXIAL
+                PLANETYPE_NONAXIAL
             }
         }
 
         @JvmOverloads
         fun FromPoints(p1: idVec3, p2: idVec3, p3: idVec3, fixDegenerate: Boolean = true): Boolean {
-            Normal().oSet(p1.oMinus(p2).Cross(p3.oMinus(p2)))
+            Normal().oSet((p1 - p2).Cross(p3 - p2))
             if (Normalize(fixDegenerate) == 0.0f) {
                 return false
             }
-            d = -Normal().oMultiply(p2)
+            d = -(Normal() * p2)
             return true
         }
 
@@ -362,16 +362,16 @@ object Plane {
             if (Normalize(fixDegenerate) == 0.0f) {
                 return false
             }
-            d = -Normal().oMultiply(p)
+            d = -(Normal() * p)
             return true
         }
 
         // assumes normal is valid
         fun FitThroughPoint(p: idVec3) {
-            d = -Normal().oMultiply(p)
+            d = -(Normal() * p)
         }
 
-        fun HeightFit(points: Array<idVec3>?, numPoints: Int): Boolean {
+        fun HeightFit(points: Array<idVec3>, numPoints: Int): Boolean {
             var i: Int
             var sumXX = 0.0f
             var sumXY = 0.0f
@@ -385,31 +385,31 @@ object Plane {
                 abc.x = 0.0f
                 abc.y = 0.0f
                 abc.z = 1.0f
-                d = -points.get(0).z
+                d = -points[0].z
                 return true
             }
             if (numPoints == 2) {
-                dir.oSet(points.get(1).oMinus(points.get(0)))
+                dir.oSet(points[1] - points[0])
                 //		Normal() = dir.Cross( idVec3( 0, 0, 1 ) ).Cross( dir );
                 run {
                     val oldD = d //save old d
-                    this.oSet(dir.Cross(idVec3(0, 0, 1)).Cross(dir))
+                    this.oSet(dir.Cross(idVec3(0f, 0f, 1f)).Cross(dir))
                     d = oldD //replace the zeroed d with its original value
                 }
                 Normalize()
-                d = -Normal().oMultiply(points.get(0))
+                d = -Normal().times(points[0])
                 return true
             }
             sum.Zero()
             i = 0
             while (i < numPoints) {
-                sum.oPluSet(points.get(i))
+                sum.plusAssign(points[i])
                 i++
             }
-            average.oSet(sum.oDivide(numPoints.toFloat()))
+            average.oSet(sum.div(numPoints.toFloat()))
             i = 0
             while (i < numPoints) {
-                dir.oSet(points.get(i).oMinus(average))
+                dir.oSet(points[i] - average)
                 sumXX += dir.x * dir.x
                 sumXY += dir.x * dir.y
                 sumXZ += dir.x * dir.z
@@ -429,30 +429,30 @@ object Plane {
             return true
         }
 
-        fun Translate(translation: idVec3): idPlane? {
-            return idPlane(abc.x, abc.y, abc.z, d - translation.oMultiply(Normal()))
+        fun Translate(translation: idVec3): idPlane {
+            return idPlane(abc.x, abc.y, abc.z, d - translation.times(Normal()))
         }
 
-        fun TranslateSelf(translation: idVec3): idPlane? {
-            d -= translation.oMultiply(Normal())
+        fun TranslateSelf(translation: idVec3): idPlane {
+            d -= translation.times(Normal())
             return this
         }
 
-        fun Rotate(origin: idVec3, axis: idMat3?): idPlane? {
+        fun Rotate(origin: idVec3, axis: idMat3): idPlane {
             val p = idPlane()
-            p.oSet(axis.oMultiply(Normal()))
-            p.d = d + origin.oMultiply(Normal()) - origin.oMultiply(p.Normal())
+            p.oSet(axis.times(Normal()))
+            p.d = d + origin.times(Normal()) - origin.times(p.Normal())
             return p
         }
 
-        fun RotateSelf(origin: idVec3, axis: idMat3?): idPlane? {
-            d += origin.oMultiply(Normal())
+        fun RotateSelf(origin: idVec3, axis: idMat3): idPlane {
+            d += origin.times(Normal())
             run {
                 val oldD = d //save old d
-                this.oSet(axis.oMultiply(Normal())) //set new values
+                this.oSet(axis.times(Normal())) //set new values
                 d = oldD //replace the zeroed d with its original value
             }
-            d -= origin.oMultiply(Normal())
+            d -= origin.times(Normal())
             return this
         }
 
@@ -464,11 +464,11 @@ object Plane {
         fun Side(v: idVec3, epsilon: Float = 0.0f): Int {
             val dist = Distance(v)
             return if (dist > epsilon) {
-                Plane.PLANESIDE_FRONT
+                PLANESIDE_FRONT
             } else if (dist < -epsilon) {
-                Plane.PLANESIDE_BACK
+                PLANESIDE_BACK
             } else {
-                Plane.PLANESIDE_ON
+                PLANESIDE_ON
             }
         }
 
@@ -476,8 +476,8 @@ object Plane {
             val d1: Float
             val d2: Float
             val fraction: Float
-            d1 = Normal().oMultiply(start.oPlus(d))
-            d2 = Normal().oMultiply(end.oPlus(d))
+            d1 = Normal().times(start + d)
+            d2 = Normal().times(end + d)
             if (d1 == d2) {
                 return false
             }
@@ -492,19 +492,19 @@ object Plane {
         }
 
         // intersection point is start + dir * scale
-        fun RayIntersection(start: idVec3, dir: idVec3, scale: CFloat?): Boolean {
+        fun RayIntersection(start: idVec3, dir: idVec3, scale: CFloat): Boolean {
             val d1: Float
             val d2: Float
-            d1 = Normal().oMultiply(start.oPlus(d))
-            d2 = Normal().oMultiply(dir)
+            d1 = Normal().times(start + d)
+            d2 = Normal().times(dir)
             if (d2 == 0.0f) {
                 return false
             }
-            scale.setVal(-(d1 / d2))
+            scale._val = (-(d1 / d2))
             return true
         }
 
-        fun PlaneIntersection(plane: idPlane?, start: idVec3, dir: idVec3): Boolean {
+        fun PlaneIntersection(plane: idPlane, start: idVec3, dir: idVec3): Boolean {
             val n00: Float
             val n01: Float
             val n11: Float
@@ -513,10 +513,10 @@ object Plane {
             val f0: Float
             val f1: Float
             n00 = Normal().LengthSqr()
-            n01 = Normal().oMultiply(plane.Normal())
+            n01 = Normal().times(plane.Normal())
             n11 = plane.Normal().LengthSqr()
             det = n00 * n11 - n01 * n01
-            if (Math.abs(det) < 1e-6f) {
+            if (abs(det) < 1e-6f) {
                 return false
             }
             invDet = 1.0f / det
@@ -524,7 +524,7 @@ object Plane {
             f1 = (n01 * d - n00 * plane.d) * invDet
             dir.oSet(Normal().Cross(plane.Normal()))
             //            start = f0 * Normal() + f1 * plane.Normal();
-            start.oSet(Normal().oMultiply(f0).oPlus(plane.Normal().oMultiply(f1)))
+            start.oSet(Normal() * f0 + plane.Normal() * f1)
             return true
         }
 
@@ -534,11 +534,11 @@ object Plane {
             return 4
         }
 
-        fun ToVec4(): idVec4? {
+        fun ToVec4(): idVec4 {
             return idVec4(abc.x, abc.y, abc.z, d)
         }
 
-        fun ToVec4_oPluSet(v: idVec4?) {
+        fun ToVec4_oPluSet(v: idVec4) {
             abc.x += v.x
             abc.y += v.y
             abc.z += v.z
@@ -554,7 +554,7 @@ object Plane {
         }
 
         //public	float *			ToFloatPtr( void );
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return floatArrayOf(abc.x, abc.y, abc.z, d)
         }
 
@@ -567,7 +567,7 @@ object Plane {
         }
 
         companion object {
-            val BYTES: Int = idVec3.Companion.BYTES + java.lang.Float.BYTES
+            val BYTES: Int = idVec3.BYTES + java.lang.Float.BYTES
 
             //
             //public	float			operator[]( int index ) const;

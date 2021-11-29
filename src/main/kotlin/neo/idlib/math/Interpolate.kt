@@ -1,7 +1,6 @@
 package neo.idlib.math
 
 import neo.TempDump.SERiAL
-import neo.framework.DeclAF.idAFVector.type
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Extrapolate.idExtrapolate
 import neo.idlib.math.Math_h.idMath
@@ -20,14 +19,14 @@ class Interpolate {
 
      ==============================================================================================
      */
-    class idInterpolate<type> {
+    class idInterpolate<T> {
         private var currentTime: Float
-        private var currentValue: type? = null
+        private var currentValue: T? = null
         private var duration = 0f
-        private var endValue: type? = null
+        private var endValue: T? = null
         private var startTime: Float
-        private var startValue: type? = null
-        fun Init(startTime: Float, duration: Float, startValue: type?, endValue: type?) {
+        private var startValue: T? = null
+        fun Init(startTime: Float, duration: Float, startValue: T, endValue: T) {
             this.startTime = startTime
             this.duration = duration
             this.startValue = startValue
@@ -44,15 +43,15 @@ class Interpolate {
             this.duration = duration
         }
 
-        fun SetStartValue(startValue: type?) {
+        fun SetStartValue(startValue: T) {
             this.startValue = startValue
         }
 
-        fun SetEndValue(endValue: type?) {
+        fun SetEndValue(endValue: T) {
             this.endValue = endValue
         }
 
-        fun GetCurrentValue(time: Float): type? {
+        fun GetCurrentValue(time: Float): T {
             val deltaTime: Float
             deltaTime = time - startTime
             if (time != currentTime) {
@@ -63,18 +62,18 @@ class Interpolate {
                     currentValue = endValue
                 } else {
                     if (currentValue is Int) {
-                        val e: Int = endValue as Int?
-                        val s: Int = startValue as Int?
-                        currentValue = (s + (e - s) * (deltaTime / duration)).toInt() as type
+                        val e: Int = endValue as Int
+                        val s: Int = startValue as Int
+                        currentValue = (s + (e - s) * (deltaTime / duration)).toInt() as T
                     }
                     if (currentValue is Float) {
-                        val e: Float = endValue as Float?
-                        val s: Float = startValue as Float?
-                        currentValue = (s + (e - s) * (deltaTime / duration)) as type
+                        val e: Float = endValue as Float
+                        val s: Float = startValue as Float
+                        currentValue = (s + (e - s) * (deltaTime / duration)) as T
                     }
                 }
             }
-            return currentValue
+            return currentValue!!
         }
 
         fun IsDone(time: Float): Boolean {
@@ -93,12 +92,12 @@ class Interpolate {
             return duration
         }
 
-        fun GetStartValue(): type? {
-            return startValue
+        fun GetStartValue(): T {
+            return startValue!!
         }
 
-        fun GetEndValue(): type? {
-            return endValue
+        fun GetEndValue(): T {
+            return endValue!!
         }
 
         //
@@ -119,23 +118,23 @@ class Interpolate {
 
      ==============================================================================================
      */
-    class idInterpolateAccelDecelLinear<type> : SERiAL {
+    class idInterpolateAccelDecelLinear<T> : SERiAL {
         private var accelTime: Float
         private var decelTime = 0f
-        private var endValue: type?
-        private val extrapolate: idExtrapolate<type?>?
+        private var endValue: T?
+        private val extrapolate: idExtrapolate<T>
         private var linearTime: Float
         private var startTime: Float
-        private var startValue: type? = null
+        private var startValue: T? = null
         fun Init(
             startTime: Float,
             accelTime: Float,
             decelTime: Float,
             duration: Float,
-            startValue: type?,
-            endValue: type?
+            startValue: T,
+            endValue: T
         ) {
-            val speed: type?
+            val speed: T
             this.startTime = startTime
             this.accelTime = accelTime
             this.decelTime = decelTime
@@ -188,22 +187,22 @@ class Interpolate {
             Invalidate()
         }
 
-        fun SetStartValue(startValue: type?) {
+        fun SetStartValue(startValue: T) {
             this.startValue = startValue
             Invalidate()
         }
 
-        fun SetEndValue(endValue: type?) {
+        fun SetEndValue(endValue: T) {
             this.endValue = endValue
             Invalidate()
         }
 
-        fun GetCurrentValue(time: Float): type? {
+        fun GetCurrentValue(time: Float): T {
             SetPhase(time)
             return extrapolate.GetCurrentValue(time)
         }
 
-        fun GetCurrentSpeed(time: Float): type? {
+        fun GetCurrentSpeed(time: Float): T {
             SetPhase(time)
             return extrapolate.GetCurrentSpeed(time)
         }
@@ -232,12 +231,12 @@ class Interpolate {
             return decelTime
         }
 
-        fun GetStartValue(): type? {
-            return startValue
+        fun GetStartValue(): T {
+            return startValue!!
         }
 
-        fun GetEndValue(): type? {
-            return endValue
+        fun GetEndValue(): T {
+            return endValue!!
         }
 
         private fun Invalidate() {
@@ -259,7 +258,7 @@ class Interpolate {
                     extrapolate.Init(
                         startTime,
                         accelTime,
-                        startValue,
+                        startValue!!,
                         extrapolate.GetBaseSpeed(),
                         extrapolate.GetSpeed(),
                         Extrapolate.EXTRAPOLATION_ACCELLINEAR
@@ -270,7 +269,7 @@ class Interpolate {
                     extrapolate.Init(
                         startTime + accelTime,
                         linearTime,
-                        _Plus(startValue, _Multiply(extrapolate.GetSpeed(), accelTime * 0.001f * 0.5f)),
+                        _Plus(startValue!!, _Multiply(extrapolate.GetSpeed(), accelTime * 0.001f * 0.5f)),
                         extrapolate.GetBaseSpeed(),
                         extrapolate.GetSpeed(),
                         Extrapolate.EXTRAPOLATION_LINEAR
@@ -281,7 +280,7 @@ class Interpolate {
                     extrapolate.Init(
                         startTime + accelTime + linearTime,
                         decelTime,
-                        _Minus(endValue, _Multiply(extrapolate.GetSpeed(), decelTime * 0.001f * 0.5f)),
+                        _Minus(endValue!!, _Multiply(extrapolate.GetSpeed(), decelTime * 0.001f * 0.5f)),
                         extrapolate.GetBaseSpeed(),
                         extrapolate.GetSpeed(),
                         Extrapolate.EXTRAPOLATION_DECELLINEAR
@@ -290,53 +289,53 @@ class Interpolate {
             }
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        private fun _Multiply(t: type?, f: Float): type? {
+        private fun _Multiply(t: T, f: Float): T {
             if (t is idVec3) {
-                return (t as idVec3?).oMultiply(f)
+                return (t as idVec3 * f) as T
             } else if (t is idVec4) {
-                return (t as idVec4?).oMultiply(f)
+                return (t as idVec4 * f) as T
             } else if (t is idAngles) {
-                return (t as idAngles?).oMultiply(f)
+                return (t as idAngles * f) as T
             } else if (t is Double) {
-                return java.lang.Double.valueOf(f * t as Double?) as type
+                return java.lang.Double.valueOf(f * t as Double) as T
             }
-            return java.lang.Float.valueOf(f * t as Float?) as type
+            return java.lang.Float.valueOf(f * t as Float) as T
         }
 
-        private fun _Plus(t1: type?, t2: type?): type? {
+        private fun _Plus(t1: T, t2: T): T {
             if (t1 is idVec3) {
-                return (t1 as idVec3?).oPlus(t2 as idVec3?)
+                return (t1 as idVec3 + t2 as idVec3) as T
             } else if (t1 is idVec4) {
-                return (t1 as idVec4?).oPlus(t2 as idVec4?)
+                return (t1 as idVec4 + t2 as idVec4) as T
             } else if (t1 is idAngles) {
-                return (t1 as idAngles?).oPlus(t2 as idAngles?)
+                return (t1 as idAngles + t2 as idAngles) as T
             } else if (t1 is Double) {
-                return java.lang.Double.valueOf(t1 as Double? + t2 as Double?) as type
+                return java.lang.Double.valueOf(t1 as Double + t2 as Double) as T
             }
-            return java.lang.Float.valueOf(t1 as Float? + t2 as Float?) as type
+            return java.lang.Float.valueOf(t1 as Float + t2 as Float) as T
         }
 
-        private fun _Minus(t1: type?, t2: type?): type? {
+        private fun _Minus(t1: T, t2: T): T {
             if (t1 is idVec3) {
-                return (t1 as idVec3?).oMinus(t2 as idVec3?)
+                return (t1 as idVec3 - t2 as idVec3) as T
             } else if (t1 is idVec4) {
-                return (t1 as idVec4?).oMinus(t2 as idVec4?)
+                return (t1 as idVec4 - t2 as idVec4) as T
             } else if (t1 is idAngles) {
-                return (t1 as idAngles?).oMinus(t2 as idAngles?)
+                return (t1 as idAngles - t2 as idAngles) as T
             }
-            return java.lang.Float.valueOf(t1 as Float? - t2 as Float?) as type
+            return java.lang.Float.valueOf(t1 as Float - t2 as Float) as T
         }
 
         //
@@ -359,23 +358,23 @@ class Interpolate {
 
      ==============================================================================================
      */
-    internal inner class idInterpolateAccelDecelSine<type> {
+    internal inner class idInterpolateAccelDecelSine<T> {
         private var accelTime: Float
         private var decelTime = 0f
-        private var endValue: type?
-        private val extrapolate: idExtrapolate<type?>? = null
+        private var endValue: T?
+        private val extrapolate: idExtrapolate<T>? = null
         private var linearTime: Float
         private var startTime: Float
-        private var startValue: type? = null
+        private var startValue: T? = null
         fun Init(
             startTime: Float,
             accelTime: Float,
             decelTime: Float,
             duration: Float,
-            startValue: type?,
-            endValue: type?
+            startValue: T,
+            endValue: T
         ) {
-            val speed: type?
+            val speed: T
             this.startTime = startTime
             this.accelTime = accelTime
             this.decelTime = decelTime
@@ -390,11 +389,11 @@ class Interpolate {
             }
             linearTime = duration - this.accelTime - this.decelTime
             speed = _Multiply(
-                _Minus(endValue, startValue),
+                _Minus(endValue!!, startValue!!),
                 1000.0f / (linearTime + (this.accelTime + this.decelTime) * idMath.SQRT_1OVER2)
             )
             if (0f != this.accelTime) {
-                extrapolate.Init(
+                extrapolate!!.Init(
                     startTime,
                     this.accelTime,
                     startValue,
@@ -403,7 +402,7 @@ class Interpolate {
                     Extrapolate.EXTRAPOLATION_ACCELSINE
                 )
             } else if (0f != linearTime) {
-                extrapolate.Init(
+                extrapolate!!.Init(
                     startTime,
                     linearTime,
                     startValue,
@@ -412,7 +411,7 @@ class Interpolate {
                     Extrapolate.EXTRAPOLATION_LINEAR
                 )
             } else {
-                extrapolate.Init(
+                extrapolate!!.Init(
                     startTime,
                     this.decelTime,
                     startValue,
@@ -428,24 +427,24 @@ class Interpolate {
             Invalidate()
         }
 
-        fun SetStartValue(startValue: type?) {
+        fun SetStartValue(startValue: T) {
             this.startValue = startValue
             Invalidate()
         }
 
-        fun SetEndValue(endValue: type?) {
+        fun SetEndValue(endValue: T) {
             this.endValue = endValue
             Invalidate()
         }
 
-        fun GetCurrentValue(time: Float): type? {
+        fun GetCurrentValue(time: Float): T {
             SetPhase(time)
-            return extrapolate.GetCurrentValue(time)
+            return extrapolate!!.GetCurrentValue(time)
         }
 
-        fun GetCurrentSpeed(time: Float): type? {
+        fun GetCurrentSpeed(time: Float): T {
             SetPhase(time)
-            return extrapolate.GetCurrentSpeed(time)
+            return extrapolate!!.GetCurrentSpeed(time)
         }
 
         fun IsDone(time: Float): Boolean {
@@ -472,16 +471,16 @@ class Interpolate {
             return decelTime
         }
 
-        fun GetStartValue(): type? {
-            return startValue
+        fun GetStartValue(): T {
+            return startValue!!
         }
 
-        fun GetEndValue(): type? {
-            return endValue
+        fun GetEndValue(): T {
+            return endValue!!
         }
 
         private fun Invalidate() {
-            extrapolate.Init(
+            extrapolate!!.Init(
                 0f,
                 0f,
                 extrapolate.GetStartValue(),
@@ -495,33 +494,39 @@ class Interpolate {
             val deltaTime: Float
             deltaTime = time - startTime
             if (deltaTime < accelTime) {
-                if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_ACCELSINE) {
+                if (extrapolate!!.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_ACCELSINE) {
                     extrapolate.Init(
                         startTime,
                         accelTime,
-                        startValue,
+                        startValue!!,
                         extrapolate.GetBaseSpeed(),
                         extrapolate.GetSpeed(),
                         Extrapolate.EXTRAPOLATION_ACCELSINE
                     )
                 }
             } else if (deltaTime < accelTime + linearTime) {
-                if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_LINEAR) {
+                if (extrapolate!!.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_LINEAR) {
                     extrapolate.Init(
                         startTime + accelTime,
                         linearTime,
-                        _Plus(startValue, _Plus(extrapolate.GetSpeed(), accelTime * 0.001f * idMath.SQRT_1OVER2)),
+                        _Plus(
+                            startValue!!,
+                            _Plus(extrapolate.GetSpeed(), accelTime * 0.001f * idMath.SQRT_1OVER2) as Any
+                        ),
                         extrapolate.GetBaseSpeed(),
                         extrapolate.GetSpeed(),
                         Extrapolate.EXTRAPOLATION_LINEAR
                     )
                 }
             } else {
-                if (extrapolate.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_DECELSINE) {
+                if (extrapolate!!.GetExtrapolationType() != Extrapolate.EXTRAPOLATION_DECELSINE) {
                     extrapolate.Init(
                         startTime + accelTime + linearTime,
                         decelTime,
-                        _Plus(endValue, _Minus(extrapolate.GetSpeed(), decelTime * 0.001f * idMath.SQRT_1OVER2)),
+                        _Plus(
+                            endValue!!,
+                            _Minus(extrapolate.GetSpeed(), decelTime * 0.001f * idMath.SQRT_1OVER2) as Any
+                        ),
                         extrapolate.GetBaseSpeed(),
                         extrapolate.GetSpeed(),
                         Extrapolate.EXTRAPOLATION_DECELSINE
@@ -530,41 +535,41 @@ class Interpolate {
             }
         }
 
-        private fun _Multiply(t: type?, f: Float): type? {
+        private fun _Multiply(t: T, f: Float): T {
             if (t is idVec3) {
-                return (t as idVec3?).oMultiply(f)
+                return (t as idVec3 * f) as T
             } else if (t is idVec4) {
-                return (t as idVec4?).oMultiply(f)
+                return (t as idVec4 * f) as T
             } else if (t is idAngles) {
-                return (t as idAngles?).oMultiply(f)
+                return (t as idAngles * f) as T
             } else if (t is Double) {
-                return java.lang.Double.valueOf(f * t as Double?) as type
+                return java.lang.Double.valueOf(f * t as Double) as T
             }
-            return java.lang.Float.valueOf(f * t as Float?) as type
+            return java.lang.Float.valueOf(f * t as Float) as T
         }
 
-        private fun _Plus(t1: type?, t2: Any?): type? {
+        private fun _Plus(t1: T, t2: Any): T {
             if (t1 is idVec3) {
-                return (t1 as idVec3?).oPlus(t2 as idVec3?)
+                return (t1 as idVec3 + t2 as idVec3) as T
             } else if (t1 is idVec4) {
-                return (t1 as idVec4?).oPlus(t2 as idVec4?)
+                return (t1 as idVec4 + t2 as idVec4) as T
             } else if (t1 is idAngles) {
-                return (t1 as idAngles?).oPlus(t2 as idAngles?)
+                return (t1 as idAngles + t2 as idAngles) as T
             } else if (t1 is Double) {
-                return java.lang.Double.valueOf(t1 as Double? + t2 as Double?) as type
+                return java.lang.Double.valueOf(t1 as Double + t2 as Double) as T
             }
-            return java.lang.Float.valueOf(t1 as Float? + t2 as Float?) as type
+            return java.lang.Float.valueOf(t1 as Float + t2 as Float) as T
         }
 
-        private fun _Minus(t1: type?, t2: Any?): type? {
+        private fun _Minus(t1: T, t2: Any): T {
             if (t1 is idVec3) {
-                return (t1 as idVec3?).oMinus(t2 as idVec3?)
+                return (t1 as idVec3 - t2 as idVec3) as T
             } else if (t1 is idVec4) {
-                return (t1 as idVec4?).oMinus(t2 as idVec4?)
+                return (t1 as idVec4 - t2 as idVec4) as T
             } else if (t1 is idAngles) {
-                return (t1 as idAngles?).oMinus(t2 as idAngles?)
+                return (t1 as idAngles - t2 as idAngles) as T
             }
-            return java.lang.Float.valueOf(t1 as Float? - t2 as Float?) as type
+            return java.lang.Float.valueOf(t1 as Float - t2 as Float) as T
         }
 
         //

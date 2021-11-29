@@ -2185,7 +2185,7 @@ object Str {
                 return c1 >= 0
             }
 
-            fun FloatArrayToString(array: FloatArray?, length: Int, precision: Int): String? {
+            fun FloatArrayToString(array: FloatArray, length: Int, precision: Int): String {
                 var i: Int
                 val n: Int
                 var format: String

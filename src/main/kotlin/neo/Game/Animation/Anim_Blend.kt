@@ -2318,7 +2318,7 @@ object Anim_Blend {
             i = 0
             while (i < num) {
                 anim.GetOrigin(animpos, i, time, cycle.toInt())
-                pos.oPluSet(animpos.oMultiply(animWeights.get(i)))
+                pos.plusAssign(animpos.times(animWeights.get(i)))
                 i++
             }
             if (0f == blendWeight.getVal()) {
@@ -2326,7 +2326,7 @@ object Anim_Blend {
                 blendWeight.setVal(weight)
             } else {
                 lerp = weight / (blendWeight.getVal() + weight)
-                blendPos.oPluSet(pos.oMinus(blendPos).oMultiply(lerp))
+                blendPos.plusAssign(pos.oMinus(blendPos).oMultiply(lerp))
                 blendWeight.setVal(blendWeight.getVal() + weight)
             }
         }
@@ -2360,9 +2360,9 @@ object Anim_Blend {
             i = 0
             while (i < num) {
                 anim.GetOrigin(animpos, i, time1, cycle.toInt())
-                pos1.oPluSet(animpos.oMultiply(animWeights.get(i)))
+                pos1.plusAssign(animpos.times(animWeights.get(i)))
                 anim.GetOrigin(animpos, i, time2, cycle.toInt())
-                pos2.oPluSet(animpos.oMultiply(animWeights.get(i)))
+                pos2.plusAssign(animpos.times(animWeights.get(i)))
                 i++
             }
             delta.oSet(pos2.oMinus(pos1))
@@ -2371,7 +2371,7 @@ object Anim_Blend {
                 blendWeight.setVal(weight)
             } else {
                 lerp = weight / (blendWeight.getVal() + weight)
-                blendDelta.oPluSet(delta.oMinus(blendDelta).oMultiply(lerp))
+                blendDelta.plusAssign(delta.oMinus(blendDelta).oMultiply(lerp))
                 blendWeight.setVal(blendWeight.getVal() + weight)
             }
         }
@@ -3394,9 +3394,9 @@ object Anim_Blend {
                 when (jointMod.transform_axis) {
                     jointModTransform_t.JOINTMOD_NONE -> {}
                     jointModTransform_t.JOINTMOD_LOCAL -> joints.get(0)
-                        .SetRotation(jointMod.mat.oMultiply(joints.get(0).ToMat3()))
+                        .SetRotation(jointMod.mat.times(joints.get(0).ToMat3()))
                     jointModTransform_t.JOINTMOD_WORLD -> joints.get(0)
-                        .SetRotation(joints.get(0).ToMat3().oMultiply(jointMod.mat))
+                        .SetRotation(joints.get(0).ToMat3().times(jointMod.mat))
                     jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE, jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints.get(
                         0
                     ).SetRotation(jointMod.mat)
@@ -3431,30 +3431,30 @@ object Anim_Blend {
                 parentNum = jointParent.get(i)
                 when (jointMod.transform_axis) {
                     jointModTransform_t.JOINTMOD_NONE -> joints.get(i)
-                        .SetRotation(joints.get(i).ToMat3().oMultiply(joints.get(parentNum).ToMat3()))
+                        .SetRotation(joints.get(i).ToMat3().times(joints.get(parentNum).ToMat3()))
                     jointModTransform_t.JOINTMOD_LOCAL -> joints.get(i).SetRotation(
-                        jointMod.mat.oMultiply(
-                            joints.get(i).ToMat3().oMultiply(joints.get(parentNum).ToMat3())
+                        jointMod.mat.times(
+                            joints.get(i).ToMat3().times(joints.get(parentNum).ToMat3())
                         )
                     )
                     jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE -> joints.get(i)
-                        .SetRotation(jointMod.mat.oMultiply(joints.get(parentNum).ToMat3()))
+                        .SetRotation(jointMod.mat.times(joints.get(parentNum).ToMat3()))
                     jointModTransform_t.JOINTMOD_WORLD -> joints.get(i).SetRotation(
-                        joints.get(i).ToMat3().oMultiply(joints.get(parentNum).ToMat3()).oMultiply(jointMod.mat)
+                        joints.get(i).ToMat3().times(joints.get(parentNum).ToMat3()).times(jointMod.mat)
                     )
                     jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints.get(i).SetRotation(jointMod.mat)
                 }
                 when (jointMod.transform_pos) {
                     jointModTransform_t.JOINTMOD_NONE -> joints.get(i).SetTranslation(
                         joints.get(parentNum).ToVec3()
-                            .oPlus(joints.get(i).ToVec3().oMultiply(joints.get(parentNum).ToMat3()))
+                            .oPlus(joints.get(i).ToVec3().times(joints.get(parentNum).ToMat3()))
                     )
                     jointModTransform_t.JOINTMOD_LOCAL -> joints.get(i).SetTranslation(
                         joints.get(parentNum).ToVec3().oPlus(joints.get(i).ToVec3().oPlus(jointMod.pos))
                             .oMultiply(joints.get(parentNum).ToMat3())
                     )
                     jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE -> joints.get(i).SetTranslation(
-                        joints.get(parentNum).ToVec3().oPlus(jointMod.pos.oMultiply(joints.get(parentNum).ToMat3()))
+                        joints.get(parentNum).ToVec3().oPlus(jointMod.pos.times(joints.get(parentNum).ToMat3()))
                     )
                     jointModTransform_t.JOINTMOD_WORLD ->                         //joints[i].SetTranslation(joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3())).oPlus(jointMod.pos));
                         joints.get(i).SetTranslation(
@@ -3585,7 +3585,7 @@ object Anim_Blend {
                     i++
                 }
             }
-            pos.oPluSet(modelDef.GetVisualOffset())
+            pos.plusAssign(modelDef.GetVisualOffset())
         }
 
         fun GetBounds(currentTime: Int, bounds: idBounds?): Boolean {
@@ -3969,11 +3969,11 @@ object Anim_Blend {
                     AFJointModType_t.AF_JOINTMOD_AXIS -> {
                         joints[i].SetRotation(AFPoseJointMods.get(jointMod).axis)
                         joints[i].SetTranslation(
-                            joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().oMultiply(joints[parentNum].ToMat3()))
+                            joints[parentNum].ToVec3().oPlus(joints[i].ToVec3().times(joints[parentNum].ToMat3()))
                         )
                     }
                     AFJointModType_t.AF_JOINTMOD_ORIGIN -> {
-                        joints[i].SetRotation(joints[i].ToMat3().oMultiply(joints[parentNum].ToMat3()))
+                        joints[i].SetRotation(joints[i].ToMat3().times(joints[parentNum].ToMat3()))
                         joints[i].SetTranslation(AFPoseJointMods.get(jointMod).origin)
                     }
                     AFJointModType_t.AF_JOINTMOD_BOTH -> {

@@ -202,10 +202,10 @@ object Winding {
             val org = idVec3()
             val vRight = idVec3()
             val vUp = idVec3()
-            org.oSet(normal.oMultiply(dist))
+            org.oSet(normal.times(dist))
             normal.NormalVectors(vUp, vRight)
-            vUp.oMulSet(Lib.Companion.MAX_WORLD_SIZE.toFloat())
-            vRight.oMulSet(Lib.Companion.MAX_WORLD_SIZE.toFloat())
+            vUp.timesAssign(Lib.Companion.MAX_WORLD_SIZE.toFloat())
+            vRight.timesAssign(Lib.Companion.MAX_WORLD_SIZE.toFloat())
             EnsureAlloced(4)
             numPoints = 4
             p.get(0) = idVec5(org.oMinus(vRight).oPlus(vUp))
@@ -271,7 +271,7 @@ object Winding {
             if (0 == counts[Plane.SIDE_FRONT] && 0 == counts[Plane.SIDE_BACK]) {
                 val windingPlane = idPlane()
                 GetPlane(windingPlane)
-                return if (windingPlane.Normal().oMultiply(plane.Normal()) > 0.0f) {
+                return if (windingPlane.Normal().times(plane.Normal()) > 0.0f) {
                     front.oSet(Copy())
                     Plane.SIDE_FRONT
                 } else {
@@ -675,8 +675,8 @@ object Winding {
                 // create plane through edge orthogonal to winding plane
                 edgeNormal.oSet(p.get(i).ToVec3().oMinus(p.get((i + numPoints - 1) % numPoints).ToVec3()).Cross(normal))
                 edgeNormal.Normalize()
-                dist = edgeNormal.oMultiply(p.get(i).ToVec3())
-                if (Math.abs(edgeNormal.oMultiply(p.get((i + 1) % numPoints).ToVec3()) - dist) > epsilon) {
+                dist = edgeNormal.times(p.get(i).ToVec3())
+                if (Math.abs(edgeNormal.times(p.get((i + 1) % numPoints).ToVec3()) - dist) > epsilon) {
                     i++
                     continue
                 }
@@ -738,14 +738,14 @@ object Winding {
                 // create plane through edge orthogonal to winding plane
                 normal.oSet(p.get((i + 1) % numPoints).ToVec3().oMinus(p.get(i).ToVec3()).Cross(plane.Normal()))
                 normal.Normalize()
-                dist = normal.oMultiply(p.get(i).ToVec3())
-                if (Math.abs(normal.oMultiply(point) - dist) > epsilon) {
+                dist = normal.times(p.get(i).ToVec3())
+                if (Math.abs(normal.times(point) - dist) > epsilon) {
                     i++
                     continue
                 }
                 normal.oSet(plane.Normal().Cross(normal))
-                dot = normal.oMultiply(point)
-                dist = dot - normal.oMultiply(p.get(i).ToVec3())
+                dot = normal.times(point)
+                dist = dot - normal.times(p.get(i).ToVec3())
                 if (dist < epsilon) {
                     // if the winding already has the point
                     if (dist > -epsilon) {
@@ -754,7 +754,7 @@ object Winding {
                     i++
                     continue
                 }
-                dist = dot - normal.oMultiply(p.get((i + 1) % numPoints).ToVec3())
+                dist = dot - normal.times(p.get((i + 1) % numPoints).ToVec3())
                 if (dist > -epsilon) {
                     // if the winding already has the point
                     if (dist < epsilon) {
@@ -823,7 +823,7 @@ object Winding {
                 j = 0
                 while (j < numPoints) {
                     dir.oSet(p1.ToVec3().oMinus(p.get(j).ToVec3()))
-                    d = dir.oMultiply(hullDirs[j])
+                    d = dir.times(hullDirs[j])
                     if (d >= epsilon) {
                         outside = true
                     }
@@ -928,7 +928,7 @@ object Winding {
                         // points don't make a plane
                         return
                     }
-                    if (dir.oMultiply(normal) > 0.0f) {
+                    if (dir.times(normal) > 0.0f) {
                         p.get(2) = idVec5(point)
                     } else {
                         p.get(2) = idVec5(p.get(1))
@@ -954,7 +954,7 @@ object Winding {
             j = 0
             while (j < numPoints) {
                 dir.oSet(point.oMinus(p.get(j).ToVec3()))
-                d = dir.oMultiply(hullDirs[j])
+                d = dir.times(hullDirs[j])
                 if (d >= epsilon) {
                     outside = true
                 }
@@ -1075,7 +1075,7 @@ object Winding {
             normal.Normalize()
             back.oSet(f2.p.get((j + 2) % f2.numPoints).ToVec3())
             delta.oSet(back.oMinus(p1))
-            dot = delta.oMultiply(normal)
+            dot = delta.times(normal)
             if (dot > CONTINUOUS_EPSILON) {
                 return null // not a convex polygon
             }
@@ -1086,7 +1086,7 @@ object Winding {
             normal.Normalize()
             back.oSet(f2.p.get((j + f2.numPoints - 1) % f2.numPoints).ToVec3())
             delta.oSet(back.oMinus(p2))
-            dot = delta.oMultiply(normal)
+            dot = delta.times(normal)
             if (dot > CONTINUOUS_EPSILON) {
                 return null // not a convex polygon
             }
@@ -1171,7 +1171,7 @@ object Winding {
                 j = if (i + 1 == numPoints) 0 else i + 1
 
                 // check if the point is on the face plane
-                d = p1.oMultiply(plane.Normal()) + plane.oGet(3)
+                d = p1.times(plane.Normal()) + plane.oGet(3)
                 if (d < -Plane.ON_EPSILON || d > Plane.ON_EPSILON) {
                     if (print) {
                         idLib.common.Printf("idWinding::Check: point %d off plane.", i)
@@ -1192,7 +1192,7 @@ object Winding {
                 // check if the winding is convex
                 edgenormal.oSet(plane.Normal().Cross(dir))
                 edgenormal.Normalize()
-                edgedist = p1.oMultiply(edgenormal)
+                edgedist = p1.times(edgenormal)
                 edgedist += Plane.ON_EPSILON
 
                 // all other points must be on front side
@@ -1202,7 +1202,7 @@ object Winding {
                         j++
                         continue
                     }
-                    d = p.get(j).ToVec3().oMultiply(edgenormal)
+                    d = p.get(j).ToVec3().times(edgenormal)
                     if (d > edgedist) {
                         if (print) {
                             idLib.common.Printf("idWinding::Check: non-convex.")
@@ -1240,10 +1240,10 @@ object Winding {
             center.Zero()
             i = 0
             while (i < numPoints) {
-                center.oPluSet(p.get(i).ToVec3())
+                center.plusAssign(p.get(i).ToVec3())
                 i++
             }
-            center.oMulSet(1.0f / numPoints)
+            center.timesAssign(1.0f / numPoints)
             return center
         }
 
@@ -1256,7 +1256,7 @@ object Winding {
             i = 0
             while (i < numPoints) {
                 dir.oSet(p.get(i).ToVec3().oMinus(center))
-                r = dir.oMultiply(dir)
+                r = dir.times(dir)
                 if (r > radius) {
                     radius = r
                 }
@@ -1279,7 +1279,7 @@ object Winding {
             v2.oSet(p.get(1).ToVec3().oMinus(center))
             normal.oSet(v2.Cross(v1))
             normal.Normalize()
-            dist.setVal(p.get(0).ToVec3().oMultiply(normal))
+            dist.setVal(p.get(0).ToVec3().times(normal))
         }
 
         fun GetPlane(plane: idPlane?) {
@@ -1448,7 +1448,7 @@ object Winding {
             // check if one of the points of winding 1 is at the back of the plane of winding 2
             i = 0
             while (i < numPoints) {
-                if (normal2.oMultiply(p.get(i).ToVec3()) - dist2 > WCONVEX_EPSILON) {
+                if (normal2.times(p.get(i).ToVec3()) - dist2 > WCONVEX_EPSILON) {
                     return true
                 }
                 i++
@@ -1456,7 +1456,7 @@ object Winding {
             // check if one of the points of winding 2 is at the back of the plane of winding 1
             i = 0
             while (i < w2.numPoints) {
-                if (normal1.oMultiply(w2.p.get(i).ToVec3()) - dist1 > WCONVEX_EPSILON) {
+                if (normal1.times(w2.p.get(i).ToVec3()) - dist1 > WCONVEX_EPSILON) {
                     return true
                 }
                 i++
@@ -1474,7 +1474,7 @@ object Winding {
                 dir.oSet(p.get((i + 1) % numPoints).ToVec3().oMinus(p.get(i).ToVec3()))
                 pointvec.oSet(point.oMinus(p.get(i).ToVec3()))
                 n.oSet(dir.Cross(normal))
-                if (pointvec.oMultiply(n) < -epsilon) {
+                if (pointvec.times(n) < -epsilon) {
                     return false
                 }
                 i++

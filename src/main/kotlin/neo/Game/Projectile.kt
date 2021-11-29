@@ -463,11 +463,11 @@ object Projectile {
                 physicsObj.NoContact()
             }
             physicsObj.SetBouncyness(bounce)
-            physicsObj.SetGravity(gravVec.oMultiply(gravity))
+            physicsObj.SetGravity(gravVec.times(gravity))
             physicsObj.SetContents(contents)
             physicsObj.SetClipMask(clipMask)
-            physicsObj.SetLinearVelocity(pushVelocity.oPlus(axis.oGet(2).oMultiply(speed)))
-            physicsObj.SetAngularVelocity(angular_velocity.ToAngularVelocity().oMultiply(axis))
+            physicsObj.SetLinearVelocity(pushVelocity.oPlus(axis.oGet(2).times(speed)))
+            physicsObj.SetAngularVelocity(angular_velocity.ToAngularVelocity().times(axis))
             physicsObj.SetOrigin(start)
             physicsObj.SetAxis(axis)
             thruster.SetPosition(physicsObj, 0, idVec3(GetPhysics().GetBounds().oGet(0).x, 0, 0))
@@ -538,7 +538,7 @@ object Projectile {
             if (thinkFlags and Entity.TH_THINK != 0) {
                 if (thrust != 0f && Game_local.gameLocal.time < thrust_end) {
                     // evaluate force
-                    thruster.SetForce(GetPhysics().GetAxis().oGet(0).oMultiply(thrust))
+                    thruster.SetForce(GetPhysics().GetAxis().oGet(0).times(thrust))
                     thruster.Evaluate(Game_local.gameLocal.time)
                 }
             }
@@ -565,7 +565,7 @@ object Projectile {
 
             // add the light
             if (renderLight.lightRadius.x > 0.0f && SysCvar.g_projectileLights.GetBool()) {
-                renderLight.origin.oSet(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().oMultiply(lightOffset)))
+                renderLight.origin.oSet(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().times(lightOffset)))
                 renderLight.axis.oSet(GetPhysics().GetAxis())
                 if (lightDefHandle != -1) {
                     if (lightEndTime > 0 && Game_local.gameLocal.time <= lightEndTime + Game_local.gameLocal.GetMSec()) {
@@ -657,7 +657,7 @@ object Projectile {
 
             // projectiles can apply an additional impulse next to the rigid body physics impulse
             if (spawnArgs.GetFloat("push", "0", push) && push.getVal() > 0) {
-                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.oMultiply(push.getVal()))
+                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.times(push.getVal()))
             }
 
             // MP: projectiles open doors
@@ -769,7 +769,7 @@ object Projectile {
             if (spawnArgs.GetVector("detonation_axis", "", normal)) {
                 GetPhysics().SetAxis(normal.ToMat3())
             }
-            GetPhysics().SetOrigin(collision.endpos.oPlus(collision.c.normal.oMultiply(2.0f)))
+            GetPhysics().SetOrigin(collision.endpos.oPlus(collision.c.normal.times(2.0f)))
 
             // default remove time
             removeTime = spawnArgs.GetInt("remove_time", "1500")
@@ -1321,7 +1321,7 @@ object Projectile {
                     rndAng.oSet(2, rndScale.oGet(2) * Game_local.gameLocal.random.CRandomFloat())
                     rndUpdateTime = Game_local.gameLocal.time + 200
                 }
-                nose.oSet(physicsObj.GetOrigin().oPlus(physicsObj.GetAxis().oGet(0).oMultiply(10.0f)))
+                nose.oSet(physicsObj.GetOrigin().oPlus(physicsObj.GetAxis().oGet(0).times(10.0f)))
                 dir.oSet(seekPos.oMinus(nose))
                 dist = dir.Normalize()
                 dirAng = dir.ToAngles()
@@ -1331,7 +1331,7 @@ object Projectile {
                 if (frac > 1.0f) {
                     frac = 1.0f
                 }
-                diff = dirAng.oMinus(angles).oPlus(rndAng.oMultiply(frac))
+                diff = dirAng.minus(angles).plus(rndAng.times(frac))
 
                 // clamp the to the max turn rate
                 diff.Normalize180()
@@ -1344,14 +1344,14 @@ object Projectile {
                     }
                     i++
                 }
-                angles.oPluSet(diff)
+                angles.plusAssign(diff)
 
                 // make the visual model always points the dir we're traveling
                 dir.oSet(angles.ToForward())
-                velocity.oSet(dir.oMultiply(speed))
+                velocity.oSet(dir.times(speed))
                 if (burstMode && dist < burstDist) {
                     unGuided = true
-                    velocity.oMulSet(burstVelocity)
+                    velocity.timesAssign(burstVelocity)
                 }
                 physicsObj.SetLinearVelocity(velocity)
 
@@ -1381,7 +1381,7 @@ object Projectile {
                     val tr = trace_s()
                     val player = owner.GetEntity() as idPlayer?
                     val start2 = idVec3(player.GetEyePosition())
-                    val end2 = idVec3(start2.oPlus(player.viewAxis.oGet(0).oMultiply(1000.0f)))
+                    val end2 = idVec3(start2.oPlus(player.viewAxis.oGet(0).times(1000.0f)))
                     Game_local.gameLocal.clip.TracePoint(
                         tr,
                         start2,
@@ -1421,7 +1421,7 @@ object Projectile {
                     out.oSet(enemyEnt.GetPhysics().GetOrigin())
                 }
             } else {
-                out.oSet(GetPhysics().GetOrigin().oPlus(physicsObj.GetLinearVelocity().oMultiply(2.0f)))
+                out.oSet(GetPhysics().GetOrigin().oPlus(physicsObj.GetLinearVelocity().times(2.0f)))
             }
         }
 
@@ -1565,12 +1565,12 @@ object Projectile {
             val ownerEnt: idEntity?
 
             // push it out a little
-            newStart.oSet(start.oPlus(dir.oMultiply(spawnArgs.GetFloat("launchDist"))))
+            newStart.oSet(start.oPlus(dir.times(spawnArgs.GetFloat("launchDist"))))
             offs.oSet(spawnArgs.GetVector("launchOffset", "0 0 -4"))
-            newStart.oPluSet(offs)
+            newStart.plusAssign(offs)
             super.Launch(newStart, dir, pushVelocity, timeSinceFire, launchPower, dmgPower)
             if (enemy.GetEntity() == null || enemy.GetEntity() !is idActor) {
-                destOrg.oSet(start.oPlus(dir.oMultiply(256.0f)))
+                destOrg.oSet(start.oPlus(dir.times(256.0f)))
             } else {
                 destOrg.Zero()
             }
@@ -1578,7 +1578,7 @@ object Projectile {
             startingVelocity.oSet(spawnArgs.GetVector("startingVelocity", "15 0 0"))
             endingVelocity.oSet(spawnArgs.GetVector("endingVelocity", "1500 0 0"))
             accelTime = spawnArgs.GetFloat("accelTime", "5")
-            physicsObj.SetLinearVelocity(physicsObj.GetAxis().oGet(2).oMultiply(startingVelocity.Length()))
+            physicsObj.SetLinearVelocity(physicsObj.GetAxis().oGet(2).times(startingVelocity.Length()))
             launchTime = Game_local.gameLocal.time
             killPhase = false
             UpdateVisuals()
@@ -2160,14 +2160,14 @@ object Projectile {
                 physicsObj.NoContact()
             }
             physicsObj.SetBouncyness(bounce)
-            physicsObj.SetGravity(gravVec.oMultiply(gravity))
+            physicsObj.SetGravity(gravVec.times(gravity))
             physicsObj.SetContents(0)
             physicsObj.SetClipMask(Game_local.MASK_SOLID or Material.CONTENTS_MOVEABLECLIP)
             physicsObj.SetLinearVelocity(
-                axis.oGet(0).oMultiply(velocity.oGet(0))
-                    .oPlus(axis.oGet(1).oMultiply(velocity.oGet(1)).oPlus(axis.oGet(2).oMultiply(velocity.oGet(2))))
+                axis.oGet(0).times(velocity.oGet(0))
+                    .oPlus(axis.oGet(1).times(velocity.oGet(1)).oPlus(axis.oGet(2).times(velocity.oGet(2))))
             )
-            physicsObj.SetAngularVelocity(angular_velocity.ToAngularVelocity().oMultiply(axis))
+            physicsObj.SetAngularVelocity(angular_velocity.ToAngularVelocity().times(axis))
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(axis)
             SetPhysics(physicsObj)

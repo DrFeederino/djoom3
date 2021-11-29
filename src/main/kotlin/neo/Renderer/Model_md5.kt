@@ -208,7 +208,7 @@ object Model_md5 {
                 while (j < numWeightsForVertex.oGet(i)) {
                     scaledWeights.get(count) = idVec4()
                     scaledWeights.get(count)
-                        .oSet(tempWeights.oGet(num).offset.oMultiply(tempWeights.oGet(num).jointWeight))
+                        .oSet(tempWeights.oGet(num).offset.times(tempWeights.oGet(num).jointWeight))
                     scaledWeights.get(count).w = tempWeights.oGet(num).jointWeight
                     weightIndex.get(count * 2 + 0) = tempWeights.oGet(num).joint * idJointMat.Companion.SIZE
                     j++
@@ -596,7 +596,7 @@ object Model_md5 {
                 poseMat3[i].SetTranslation(pose.t)
                 if (joint.parent != null) {
                     parentNum = joints.Find(joint.parent)
-                    pose.q.oSet(poseMat3[i].ToMat3().oMultiply(poseMat3[parentNum].ToMat3().Transpose()).ToQuat())
+                    pose.q.oSet(poseMat3[i].ToMat3().times(poseMat3[parentNum].ToMat3().Transpose()).ToQuat())
                     pose.t.oSet(
                         poseMat3[i].ToVec3().oMinus(poseMat3[parentNum].ToVec3())
                             .oMultiply(poseMat3[parentNum].ToMat3().Transpose())
@@ -793,30 +793,30 @@ object Model_md5 {
             md5Joint = joints.oGet(0)
             i = 0
             while (i < num) {
-                pos.oSet(ent.origin.oPlus(joint.ToVec3().oMultiply(ent.axis)))
+                pos.oSet(ent.origin.oPlus(joint.ToVec3().times(ent.axis)))
                 if (md5Joint.parent != null) {
 //                    parentNum = indexOf(md5Joint.parent, joints.Ptr());
                     parentNum = joints.IndexOf(md5Joint.parent)
                     Session.Companion.session.rw.DebugLine(
                         Lib.Companion.colorWhite,
-                        ent.origin.oPlus(ent.joints[parentNum].ToVec3().oMultiply(ent.axis)),
+                        ent.origin.oPlus(ent.joints[parentNum].ToVec3().times(ent.axis)),
                         pos
                     )
                 }
                 Session.Companion.session.rw.DebugLine(
                     Lib.Companion.colorRed,
                     pos,
-                    pos.oPlus(joint.ToMat3().oGet(0).oMultiply(2.0f).oMultiply(ent.axis))
+                    pos.oPlus(joint.ToMat3().oGet(0).times(2.0f).oMultiply(ent.axis))
                 )
                 Session.Companion.session.rw.DebugLine(
                     Lib.Companion.colorGreen,
                     pos,
-                    pos.oPlus(joint.ToMat3().oGet(1).oMultiply(2.0f).oMultiply(ent.axis))
+                    pos.oPlus(joint.ToMat3().oGet(1).times(2.0f).oMultiply(ent.axis))
                 )
                 Session.Companion.session.rw.DebugLine(
                     Lib.Companion.colorBlue,
                     pos,
-                    pos.oPlus(joint.ToMat3().oGet(2).oMultiply(2.0f).oMultiply(ent.axis))
+                    pos.oPlus(joint.ToMat3().oGet(2).times(2.0f).oMultiply(ent.axis))
                 )
                 joint = ent.joints[++i]
                 md5Joint = joints.oGet(i)
@@ -834,7 +834,7 @@ object Model_md5 {
                 num = ent.numJoints
                 i = 0
                 while (i < num) {
-                    pos.oSet(ent.origin.oPlus(joint.ToVec3().oMultiply(ent.axis)))
+                    pos.oSet(ent.origin.oPlus(joint.ToVec3().times(ent.axis)))
                     Session.Companion.session.rw.DrawText(
                         joints.oGet(i).name.toString(),
                         pos.oPlus(offset),

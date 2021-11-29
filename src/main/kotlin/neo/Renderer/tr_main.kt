@@ -994,22 +994,22 @@ object tr_main {
         ang = Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_x) * 0.5f
         idMath.SinCos(ang, xs, xc)
         tr_local.tr.viewDef.frustum[0].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal())
-                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc.getVal()))
+            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
+                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.oGet(1).times(xc.getVal()))
         )
         tr_local.tr.viewDef.frustum[1].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal())
-                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.oGet(1).oMultiply(xc.getVal()))
+            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
+                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.oGet(1).times(xc.getVal()))
         )
         ang = Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_y) * 0.5f
         idMath.SinCos(ang, xs, xc)
         tr_local.tr.viewDef.frustum[2].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal())
-                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc.getVal()))
+            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
+                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.oGet(2).times(xc.getVal()))
         )
         tr_local.tr.viewDef.frustum[3].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).oMultiply(xs.getVal())
-                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.oGet(2).oMultiply(xc.getVal()))
+            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
+                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.oGet(2).times(xc.getVal()))
         )
 
         // plane four is the front clipping plane
@@ -1021,7 +1021,7 @@ object tr_main {
             tr_local.tr.viewDef.frustum[i].oSet(tr_local.tr.viewDef.frustum[i].Normal().oNegative())
             tr_local.tr.viewDef.frustum[i].oSet(
                 3,
-                -tr_local.tr.viewDef.renderView.vieworg.oMultiply(tr_local.tr.viewDef.frustum[i].Normal())
+                -tr_local.tr.viewDef.renderView.vieworg.times(tr_local.tr.viewDef.frustum[i].Normal())
             )
             i++
         }

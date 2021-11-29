@@ -512,18 +512,18 @@ object DeviceContext {
             verts[3].tangents[1].oSet(2, 0f)
             val identity = !mat.IsIdentity()
             if (identity) {
-                verts[0].xyz.oMinSet(origin)
-                verts[0].xyz.oMulSet(mat)
-                verts[0].xyz.oPluSet(origin)
-                verts[1].xyz.oMinSet(origin)
-                verts[1].xyz.oMulSet(mat)
-                verts[1].xyz.oPluSet(origin)
-                verts[2].xyz.oMinSet(origin)
-                verts[2].xyz.oMulSet(mat)
-                verts[2].xyz.oPluSet(origin)
-                verts[3].xyz.oMinSet(origin)
-                verts[3].xyz.oMulSet(mat)
-                verts[3].xyz.oPluSet(origin)
+                verts[0].xyz.minusAssign(origin)
+                verts[0].xyz.timesAssign(mat)
+                verts[0].xyz.plusAssign(origin)
+                verts[1].xyz.minusAssign(origin)
+                verts[1].xyz.timesAssign(mat)
+                verts[1].xyz.plusAssign(origin)
+                verts[2].xyz.minusAssign(origin)
+                verts[2].xyz.timesAssign(mat)
+                verts[2].xyz.plusAssign(origin)
+                verts[3].xyz.minusAssign(origin)
+                verts[3].xyz.timesAssign(mat)
+                verts[3].xyz.plusAssign(origin)
             }
             RenderSystem.renderSystem.DrawStretchPic(verts, indexes, 4, 6, shader, identity)
         }
@@ -662,18 +662,18 @@ object DeviceContext {
             verts[3].tangents[1].oSet(2, 0f)
             val ident = !mat.IsIdentity()
             if (ident) {
-                verts[0].xyz.oMinSet(origin)
-                verts[0].xyz.oMulSet(mat)
-                verts[0].xyz.oPluSet(origin)
-                verts[1].xyz.oMinSet(origin)
-                verts[1].xyz.oMulSet(mat)
-                verts[1].xyz.oPluSet(origin)
-                verts[2].xyz.oMinSet(origin)
-                verts[2].xyz.oMulSet(mat)
-                verts[2].xyz.oPluSet(origin)
-                verts[3].xyz.oMinSet(origin)
-                verts[3].xyz.oMulSet(mat)
-                verts[3].xyz.oPluSet(origin)
+                verts[0].xyz.minusAssign(origin)
+                verts[0].xyz.timesAssign(mat)
+                verts[0].xyz.plusAssign(origin)
+                verts[1].xyz.minusAssign(origin)
+                verts[1].xyz.timesAssign(mat)
+                verts[1].xyz.plusAssign(origin)
+                verts[2].xyz.minusAssign(origin)
+                verts[2].xyz.timesAssign(mat)
+                verts[2].xyz.plusAssign(origin)
+                verts[3].xyz.minusAssign(origin)
+                verts[3].xyz.timesAssign(mat)
+                verts[3].xyz.plusAssign(origin)
             }
 
             //Generate a translation so we can translate to the center of the image rotate and draw
@@ -693,13 +693,13 @@ object DeviceContext {
             rotz.oSet(1, 1, cosAng)
             for (i in 0..3) {
                 //Translate to origin
-                verts[i].xyz.oMinSet(origTrans)
+                verts[i].xyz.minusAssign(origTrans)
 
                 //Rotate
-                verts[i].xyz.oSet(rotz.oMultiply(verts[i].xyz))
+                verts[i].xyz.oSet(rotz.times(verts[i].xyz))
 
                 //Translate back
-                verts[i].xyz.oPluSet(origTrans)
+                verts[i].xyz.plusAssign(origTrans)
             }
             RenderSystem.renderSystem.DrawStretchPic(verts, indexes, 4, 6, shader, angle != 0f)
         }

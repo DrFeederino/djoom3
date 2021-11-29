@@ -102,7 +102,7 @@ object Push {
             dir.oSet(translation)
             dir.Normalize()
             dir.z += 1.0f
-            dir.oMulSet(10.0f)
+            dir.timesAssign(10.0f)
 
             // get bounds for the whole movement
             bounds = clipModel.GetBounds()
@@ -201,7 +201,7 @@ object Push {
 
                     // wake up this object
                     if (flags and Push.PUSHFL_APPLYIMPULSE != 0) {
-                        impulse.oSet(dir.oMultiply(physics.GetMass()))
+                        impulse.oSet(dir.times(physics.GetMass()))
                     } else {
                         impulse.Zero()
                     }
@@ -356,7 +356,7 @@ object Push {
                     }
                     return totalMass
                 }
-                clipRotation = rotation.oMultiply(results.fraction)
+                clipRotation = rotation.times(results.fraction)
                 clipAxis = results.endAxis
             } else {
                 clipRotation = rotation
@@ -509,7 +509,7 @@ object Push {
             }
 
             // rotational push
-            rotation = oldAxis.Transpose().oMultiply(newAxis).ToRotation()
+            rotation = oldAxis.Transpose().times(newAxis).ToRotation()
             rotation.SetOrigin(newOrigin)
             rotation.Normalize180()
             rotation.ReCalculateMatrix() // recalculate the rotation matrix to avoid accumulating rounding errors
@@ -518,7 +518,7 @@ object Push {
             if (rotation.GetAngle() != 0.0f) {
 
                 // recalculate new axis to avoid floating point rounding problems
-                newAxis.oSet(oldAxis.oMultiply(rotation.ToMat3()))
+                newAxis.oSet(oldAxis.times(rotation.ToMat3()))
                 newAxis.OrthoNormalizeSelf()
                 newAxis.FixDenormals()
                 newAxis.FixDegeneracies()
@@ -724,7 +724,7 @@ object Push {
                 // if there is a collision
                 if (trace.fraction < 1.0f) {
                     // vector along which the entity is pushed
-                    checkMove.oSet(move.oMultiply(trace.fraction))
+                    checkMove.oSet(move.times(trace.fraction))
                     // test if the entity can stay at it's partly pushed position by moving the entity in reverse only colliding with pusher
                     ClipEntityTranslation(results, check, clipModel, null, move.oMinus(checkMove).oNegative())
                     // if there is a collision
@@ -749,7 +749,7 @@ object Push {
                     return Push.PUSH_NO
                 }
                 // vector along which the entity is pushed
-                checkMove.oSet(move.oMultiply(1.0f - results.fraction))
+                checkMove.oSet(move.times(1.0f - results.fraction))
                 // move the entity colliding with all other entities except the pusher itself
                 ClipEntityTranslation(trace, check, null, clipModel, checkMove)
                 // if there is a collisions

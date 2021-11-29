@@ -288,7 +288,7 @@ object AFEntity {
                         physicsObj.AddConstraint(bsj)
                     }
                 }
-                org.oMinSet(2, linkLength)
+                org.minusAssign(2, linkLength)
                 lastBody = body
                 i++
             }
@@ -616,7 +616,7 @@ object AFEntity {
             val v: Float
             val f: Float
             if (af.IsActive()) {
-                v = -velocity.oMultiply(collision.c.normal)
+                v = -velocity.times(collision.c.normal)
                 if (v > AFEntity.BOUNCE_SOUND_MIN_VELOCITY && Game_local.gameLocal.time > nextSoundTime) {
                     f =
                         if (v > AFEntity.BOUNCE_SOUND_MAX_VELOCITY) 1.0f else idMath.Sqrt(v - AFEntity.BOUNCE_SOUND_MIN_VELOCITY) * (1.0f / idMath.Sqrt(
@@ -927,8 +927,8 @@ object AFEntity {
                     list.oGet(i).GetPhysics().SetClipMask(Material.CONTENTS_SOLID)
                     velocity.oSet(list.oGet(i).GetPhysics().GetAbsBounds().GetCenter().oMinus(entityCenter))
                     velocity.NormalizeFast()
-                    velocity.oPluSet(if (i and 1 == 1) dir else dir.oNegative())
-                    list.oGet(i).GetPhysics().SetLinearVelocity(velocity.oMultiply(75f))
+                    velocity.plusAssign(if (i and 1 == 1) dir else dir.oNegative())
+                    list.oGet(i).GetPhysics().SetLinearVelocity(velocity.times(75f))
                 }
                 list.oGet(i).GetRenderEntity().noShadow = true
                 list.oGet(i).GetRenderEntity().shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
@@ -1224,7 +1224,7 @@ object AFEntity {
                 headEnt.SetCombatModel()
                 head.oSet(headEnt)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)))
+                origin.oSet(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
                 headEnt.SetOrigin(origin)
                 headEnt.SetAxis(renderEntity.axis)
                 headEnt.BindToJoint(this, joint, true)
@@ -1396,7 +1396,7 @@ object AFEntity {
             } else {
                 player = other
                 animator.GetJointTransform(eyesJoint, Game_local.gameLocal.time, origin, axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)))
+                origin.oSet(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
                 player.GetPhysics().SetOrigin(origin)
                 player.BindToBody(this, 0, true)
                 af.GetPhysics().SetComeToRest(false)
@@ -1473,7 +1473,7 @@ object AFEntity {
                     )
                 }
                 GetAnimator().GetJointTransform(wheelJoints.get(i), 0, origin, axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)))
+                origin.oSet(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
                 suspension.get(i) = idAFConstraint_Suspension()
                 suspension.get(i).Setup(
                     Str.va("suspension%d", i),
@@ -1561,7 +1561,7 @@ object AFEntity {
                 while (i < 4) {
                     val body = af.GetPhysics().GetBody(0)
                     origin.oSet(suspension.get(i).GetWheelOrigin())
-                    velocity = body.GetPointVelocity(origin).oMultiply(body.GetWorldAxis().oGet(0))
+                    velocity = body.GetPointVelocity(origin).times(body.GetWorldAxis().oGet(0))
                     wheelAngles.get(i) += velocity * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat()) / wheelRadius
 
                     // additional rotation about the wheel axis
@@ -1575,7 +1575,7 @@ object AFEntity {
                         animator.SetJointAxis(
                             wheelJoints.get(i),
                             jointModTransform_t.JOINTMOD_WORLD,
-                            wheelRotation.ToMat3().oMultiply(steerRotation.ToMat3())
+                            wheelRotation.ToMat3().times(steerRotation.ToMat3())
                         )
                     } else {
                         // set wheel rotation
@@ -1780,13 +1780,13 @@ object AFEntity {
                 i = 0
                 while (i < 4) {
                     if (force == 0f) {
-                        velocity = wheels.get(i).GetLinearVelocity().oMultiply(wheels.get(i).GetWorldAxis().oGet(0))
+                        velocity = wheels.get(i).GetLinearVelocity().times(wheels.get(i).GetWorldAxis().oGet(0))
                     }
                     wheelAngles.get(i) += velocity * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat()) / wheelRadius
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(Vector.RAD2DEG(wheelAngles.get(i)))
                     axis = af.GetPhysics().GetAxis(0)
-                    rotation.SetVec(wheels.get(i).GetWorldAxis().oMultiply(axis.Transpose()).oGet(2))
+                    rotation.SetVec(wheels.get(i).GetWorldAxis().times(axis.Transpose()).oGet(2))
                     animator.SetJointAxis(wheelJoints.get(i), jointModTransform_t.JOINTMOD_WORLD, rotation.ToMat3())
                     i++
                 }
@@ -2004,13 +2004,13 @@ object AFEntity {
                 i = 0
                 while (i < 6) {
                     if (force == 0f) {
-                        velocity = wheels.get(i).GetLinearVelocity().oMultiply(wheels.get(i).GetWorldAxis().oGet(0))
+                        velocity = wheels.get(i).GetLinearVelocity().times(wheels.get(i).GetWorldAxis().oGet(0))
                     }
                     wheelAngles.get(i) += velocity * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat()) / wheelRadius
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(Vector.RAD2DEG(wheelAngles.get(i)))
                     axis = af.GetPhysics().GetAxis(0)
-                    rotation.SetVec(wheels.get(i).GetWorldAxis().oMultiply(axis.Transpose()).oGet(2))
+                    rotation.SetVec(wheels.get(i).GetWorldAxis().times(axis.Transpose()).oGet(2))
                     animator.SetJointAxis(wheelJoints.get(i), jointModTransform_t.JOINTMOD_WORLD, rotation.ToMat3())
                     i++
                 }
@@ -2115,7 +2115,7 @@ object AFEntity {
             steamDir.oSet(af.GetPhysics().GetAxis(steamBody).oGet(2)) //[2];
             steamBody = af.GetPhysics().GetBodyId(steamBodyName)
             force.SetPosition(af.GetPhysics(), steamBody, af.GetPhysics().GetOrigin(steamBody))
-            force.SetForce(steamDir.oMultiply(-steamForce))
+            force.SetForce(steamDir.times(-steamForce))
             InitSteamRenderEntity()
             BecomeActive(Entity.TH_THINK)
         }

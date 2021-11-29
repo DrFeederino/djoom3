@@ -199,33 +199,33 @@ object tr_lightrun {
         normal.oSet(up.Cross(right))
         //normal = right.Cross( up );
         normal.Normalize()
-        dist = target.oMultiply(normal) //  - ( origin * normal );
+        dist = target.times(normal) //  - ( origin * normal );
         if (dist < 0) {
             dist = -dist
             normal.oSet(normal.oNegative())
         }
         scale = 0.5f * dist / rLen
-        right.oMulSet(scale)
+        right.timesAssign(scale)
         scale = -(0.5f * dist) / uLen
-        up.oMulSet(scale)
+        up.timesAssign(scale)
         lightProject.get(2).oSet(normal)
-        lightProject.get(2).oSet(3, -origin.oMultiply(lightProject.get(2).Normal()))
+        lightProject.get(2).oSet(3, -origin.times(lightProject.get(2).Normal()))
         lightProject.get(0).oSet(right)
-        lightProject.get(0).oSet(3, -origin.oMultiply(lightProject.get(0).Normal()))
+        lightProject.get(0).oSet(3, -origin.times(lightProject.get(0).Normal()))
         lightProject.get(1).oSet(up)
-        lightProject.get(1).oSet(3, -origin.oMultiply(lightProject.get(1).Normal()))
+        lightProject.get(1).oSet(3, -origin.times(lightProject.get(1).Normal()))
 
         // now offset to center
         targetGlobal.oSet(target.oPlus(origin))
         targetGlobal.oSet(3, 1f)
-        ofs = 0.5f - targetGlobal.oMultiply(lightProject.get(0).ToVec4()) / targetGlobal.oMultiply(
+        ofs = 0.5f - targetGlobal.times(lightProject.get(0).ToVec4()) / targetGlobal.times(
             lightProject.get(2).ToVec4()
         )
-        lightProject.get(0).ToVec4_oPluSet(lightProject.get(2).ToVec4().oMultiply(ofs))
-        ofs = 0.5f - targetGlobal.oMultiply(lightProject.get(1).ToVec4()) / targetGlobal.oMultiply(
+        lightProject.get(0).ToVec4_oPluSet(lightProject.get(2).ToVec4().times(ofs))
+        ofs = 0.5f - targetGlobal.times(lightProject.get(1).ToVec4()) / targetGlobal.times(
             lightProject.get(2).ToVec4()
         )
-        lightProject.get(1).ToVec4_oPluSet(lightProject.get(2).ToVec4().oMultiply(ofs))
+        lightProject.get(1).ToVec4_oPluSet(lightProject.get(2).ToVec4().times(ofs))
 
         // set the falloff vector
         normal.oSet(stop.oMinus(start))
@@ -233,9 +233,9 @@ object tr_lightrun {
         if (dist <= 0) {
             dist = 1f
         }
-        lightProject.get(3).oSet(normal.oMultiply(1.0f / dist))
+        lightProject.get(3).oSet(normal.times(1.0f / dist))
         startGlobal.oSet(start.oPlus(origin))
-        lightProject.get(3).oSet(3, -startGlobal.oMultiply(lightProject.get(3).Normal()))
+        lightProject.get(3).oSet(3, -startGlobal.times(lightProject.get(3).Normal()))
     }
 
     /*
@@ -383,9 +383,9 @@ object tr_lightrun {
                 // make point straight up if not specified
                 dir.oSet(2, 1f)
             }
-            light.globalLightOrigin.oSet(light.parms.origin.oPlus(dir.oMultiply(100000f)))
+            light.globalLightOrigin.oSet(light.parms.origin.oPlus(dir.times(100000f)))
         } else {
-            light.globalLightOrigin.oSet(light.parms.origin.oPlus(light.parms.axis.oMultiply(light.parms.lightCenter)))
+            light.globalLightOrigin.oSet(light.parms.origin.oPlus(light.parms.axis.times(light.parms.lightCenter)))
         }
         tr_lightrun.R_FreeLightDefFrustum(light)
         light.frustumTris = tr_polytope.R_PolytopeSurface(6, light.frustum, light.frustumWindings)
@@ -479,7 +479,7 @@ object tr_lightrun {
             j = 0
             while (j < 6) {
                 var d: Float
-                d = w.oGet(i).ToVec3().oMultiply(ldef.frustum[j].Normal()) + ldef.frustum[j].oGet(3)
+                d = w.oGet(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j].oGet(3)
                 if (d > 0) {
                     return false
                 }

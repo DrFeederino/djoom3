@@ -62,7 +62,7 @@ class Force_Constant {
             if (null == physics) {
                 return
             }
-            p.oSet(physics.GetOrigin(id).oPlus(point.oMultiply(physics.GetAxis(id))))
+            p.oSet(physics.GetOrigin(id).oPlus(point.times(physics.GetAxis(id))))
             physics.AddForce(id, p, force)
         }
 

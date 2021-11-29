@@ -37,7 +37,7 @@ class Quat {
             this.w = w
         }
 
-        constructor(quat: idQuat?) {
+        constructor(quat: idQuat) {
             x = quat.x
             y = quat.y
             z = quat.z
@@ -70,11 +70,11 @@ class Quat {
             }
         }
 
-        fun oNegative(): idQuat? {
+        fun oNegative(): idQuat {
             return idQuat(-x, -y, -z, -w)
         }
 
-        fun oSet(a: idQuat?): idQuat? {
+        fun oSet(a: idQuat): idQuat {
             x = a.x
             y = a.y
             z = a.z
@@ -82,11 +82,11 @@ class Quat {
             return this
         }
 
-        fun oPlus(a: idQuat?): idQuat? {
+        fun oPlus(a: idQuat): idQuat {
             return idQuat(x + a.x, y + a.y, z + a.z, w + a.w)
         }
 
-        fun oPluSet(a: idQuat?): idQuat? {
+        fun oPluSet(a: idQuat): idQuat {
             x += a.x
             y += a.y
             z += a.z
@@ -94,11 +94,11 @@ class Quat {
             return this
         }
 
-        fun oMinus(a: idQuat?): idQuat? {
+        fun oMinus(a: idQuat): idQuat {
             return idQuat(x - a.x, y - a.y, z - a.z, w - a.w)
         }
 
-        fun oMinSet(a: idQuat?): idQuat? {
+        fun oMinSet(a: idQuat): idQuat {
             x -= a.x
             y -= a.y
             z -= a.z
@@ -106,7 +106,7 @@ class Quat {
             return this
         }
 
-        fun oMultiply(a: idQuat?): idQuat? {
+        fun oMultiply(a: idQuat): idQuat {
             return idQuat(
                 w * a.x + x * a.w + y * a.z - z * a.y,
                 w * a.y + y * a.w + z * a.x - x * a.z,
@@ -115,7 +115,7 @@ class Quat {
             )
         }
 
-        fun oMultiply(a: idVec3?): idVec3? {
+        fun oMultiply(a: idVec3): idVec3 {
 //#if 0
             // it's faster to do the conversion to a 3x3 matrix and multiply the vector by this 3x3 matrix
 //            return (ToMat3() * a);
@@ -137,17 +137,17 @@ class Quat {
             //#endif
         }
 
-        fun oMultiply(a: Float): idQuat? {
+        fun oMultiply(a: Float): idQuat {
             return idQuat(x * a, y * a, z * a, w * a)
         }
 
         //
-        fun oMulSet(a: idQuat?): idQuat? {
+        fun oMulSet(a: idQuat): idQuat {
             this.oSet(this.oMultiply(a))
             return this
         }
 
-        fun oMulSet(a: Float): idQuat? {
+        fun oMulSet(a: Float): idQuat {
             x *= a
             y *= a
             z *= a
@@ -156,11 +156,11 @@ class Quat {
         }
 
         //
-        fun Compare(a: idQuat?): Boolean { // exact compare, no epsilon
+        fun Compare(a: idQuat): Boolean { // exact compare, no epsilon
             return x == a.x && y == a.y && z == a.z && w == a.w
         }
 
-        fun Compare(a: idQuat?, epsilon: Float): Boolean { // compare with epsilon
+        fun Compare(a: idQuat, epsilon: Float): Boolean { // compare with epsilon
             if (Math.abs(x - a.x) > epsilon) {
                 return false
             }
@@ -190,7 +190,7 @@ class Quat {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idQuat?
+            val other = obj as idQuat
             if (java.lang.Float.floatToIntBits(x) != java.lang.Float.floatToIntBits(other.x)) {
                 return false
             }
@@ -203,7 +203,7 @@ class Quat {
         }
 
         //
-        fun Inverse(): idQuat? {
+        fun Inverse(): idQuat {
             return idQuat(-x, -y, -z, w)
         }
 
@@ -213,7 +213,7 @@ class Quat {
             return idMath.Sqrt(len)
         }
 
-        fun Normalize(): idQuat? {
+        fun Normalize(): idQuat {
             val len: Float
             val ilength: Float
             len = Length()
@@ -238,11 +238,11 @@ class Quat {
         }
 
         //
-        fun ToAngles(): idAngles? {
+        fun ToAngles(): idAngles {
             return ToMat3().ToAngles()
         }
 
-        fun ToRotation(): idRotation? {
+        fun ToRotation(): idRotation {
             val vec = idVec3()
             var angle: Float
             vec.x = x
@@ -260,7 +260,7 @@ class Quat {
             return idRotation(Vector.getVec3_origin(), vec, angle)
         }
 
-        fun ToMat3(): idMat3? {
+        fun ToMat3(): idMat3 {
             val mat = idMat3()
             val wx: Float
             val wy: Float
@@ -298,33 +298,33 @@ class Quat {
             return mat
         }
 
-        fun ToMat4(): idMat4? {
+        fun ToMat4(): idMat4 {
             return ToMat3().ToMat4()
         }
 
-        fun ToCQuat(): idCQuat? {
+        fun ToCQuat(): idCQuat {
             return if (w < 0.0f) {
                 idCQuat(-x, -y, -z)
             } else idCQuat(x, y, z)
         }
 
-        fun ToAngularVelocity(): idVec3? {
+        fun ToAngularVelocity(): idVec3 {
             val vec = idVec3()
             vec.x = x
             vec.y = y
             vec.z = z
             vec.Normalize()
-            return vec.oMultiply(idMath.ACos(w))
+            return vec.times(idMath.ACos(w))
         }
 
         //public 	const float *	ToFloatPtr( void ) const;
         @Deprecated("")
-        fun ToFloatPtr(): FloatArray? {
-            return floatArrayOf(x, y, z, w) //TODO:array!?
+        fun ToFloatPtr(): FloatArray {
+            return floatArrayOf(x, y, z, w) //TODO:array!
         }
 
-        fun ToString(precision: Int): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
         //
         /**
@@ -334,8 +334,8 @@ class Quat {
          * Spherical linear interpolation between two quaternions.
          * =====================
          */
-        fun Slerp(from: idQuat?, to: idQuat?, t: Float): idQuat? {
-            var temp: idQuat? = idQuat()
+        fun Slerp(from: idQuat, to: idQuat, t: Float): idQuat {
+            var temp: idQuat = idQuat()
             val omega: Float
             var cosom: Float
             val sinom: Float
@@ -382,13 +382,13 @@ class Quat {
         }
 
         companion object {
-            fun oMultiply(a: Float, b: idQuat?): idQuat? {
+            fun oMultiply(a: Float, b: idQuat): idQuat {
                 return b.oMultiply(a)
             }
 
             //
             //	float			operator[]( int index ) const;
-            fun oMultiply(a: idVec3?, b: idQuat?): idVec3? {
+            fun oMultiply(a: idVec3, b: idQuat): idVec3 {
                 return b.oMultiply(a)
             }
         }
@@ -444,11 +444,11 @@ class Quat {
         }
 
         //
-        fun Compare(a: idCQuat?): Boolean { // exact compare, no epsilon
+        fun Compare(a: idCQuat): Boolean { // exact compare, no epsilon
             return x == a.x && y == a.y && z == a.z
         }
 
-        fun Compare(a: idCQuat?, epsilon: Float): Boolean { // compare with epsilon
+        fun Compare(a: idCQuat, epsilon: Float): Boolean { // compare with epsilon
             if (Math.abs(x - a.x) > epsilon) {
                 return false
             }
@@ -474,7 +474,7 @@ class Quat {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idCQuat?
+            val other = obj as idCQuat
             if (java.lang.Float.floatToIntBits(x) != java.lang.Float.floatToIntBits(other.x)) {
                 return false
             }
@@ -489,34 +489,34 @@ class Quat {
         }
 
         //
-        fun ToAngles(): idAngles? {
+        fun ToAngles(): idAngles {
             return ToQuat().ToAngles()
         }
 
-        fun ToRotation(): idRotation? {
+        fun ToRotation(): idRotation {
             return ToQuat().ToRotation()
         }
 
-        fun ToMat3(): idMat3? {
+        fun ToMat3(): idMat3 {
             return ToQuat().ToMat3()
         }
 
-        fun ToMat4(): idMat4? {
+        fun ToMat4(): idMat4 {
             return ToQuat().ToMat4()
         }
 
-        fun ToQuat(): idQuat? {
+        fun ToQuat(): idQuat {
             // take the absolute value because floating point rounding may cause the dot of x,y,z to be larger than 1
             return idQuat(x, y, z, Math.sqrt(Math.abs(1.0f - (x * x + y * y + z * z)).toDouble()).toFloat())
         }
 
         //	const float *	ToFloatPtr( void ) const;
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return floatArrayOf(x, y, z) //TODO:back redf
         }
 
-        fun ToString(precision: Int): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
     }
 }

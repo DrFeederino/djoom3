@@ -94,7 +94,7 @@ object GameEdit {
             val axis = GetPhysics().GetAxis()
             Game_local.gameRenderWorld.DebugArrow(
                 Lib.Companion.colorYellow,
-                origin.oPlus(axis.oGet(1).oMultiply(-5.0f).oPlus(axis.oGet(2).oMultiply(5.0f))),
+                origin.oPlus(axis.oGet(1).times(-5.0f).oPlus(axis.oGet(2).times(5.0f))),
                 origin,
                 2
             )
@@ -161,7 +161,7 @@ object GameEdit {
                     Game_local.gameLocal.clip.TracePoint(
                         trace,
                         viewPoint,
-                        viewPoint.oPlus(viewAxis.oGet(0).oMultiply(GameEdit.MAX_DRAG_TRACE_DISTANCE)),
+                        viewPoint.oPlus(viewAxis.oGet(0).times(GameEdit.MAX_DRAG_TRACE_DISTANCE)),
                         Material.CONTENTS_SOLID or Material.CONTENTS_RENDERMODEL or Material.CONTENTS_BODY,
                         player
                     )
@@ -232,14 +232,14 @@ object GameEdit {
                     StopDrag()
                     return
                 }
-                cursor.SetOrigin(viewPoint.oPlus(localPlayerPoint.oMultiply(viewAxis)))
+                cursor.SetOrigin(viewPoint.oPlus(localPlayerPoint.times(viewAxis)))
                 cursor.SetAxis(viewAxis)
                 cursor.drag.SetDragPosition(cursor.GetPhysics().GetOrigin())
                 val renderEntity = drag.GetRenderEntity()
                 val dragAnimator = drag.GetAnimator()
                 if (joint != Model.INVALID_JOINT && renderEntity != null && dragAnimator != null) {
                     dragAnimator.GetJointTransform(joint, Game_local.gameLocal.time, cursor.draggedPosition, axis)
-                    cursor.draggedPosition.oSet(renderEntity.origin.oPlus(cursor.draggedPosition.oMultiply(renderEntity.axis)))
+                    cursor.draggedPosition.oSet(renderEntity.origin.oPlus(cursor.draggedPosition.times(renderEntity.axis)))
                     Game_local.gameRenderWorld.DrawText(
                         Str.va(
                             "%s\n%s\n%s, %s",
@@ -407,7 +407,7 @@ object GameEdit {
                 return true
             }
             nextSelectTime = Game_local.gameLocal.time + 300
-            end.oSet(origin.oPlus(dir.oMultiply(4096.0f)))
+            end.oSet(origin.oPlus(dir.times(4096.0f)))
             ent = null
             for (i in 0 until selectableEntityClasses.Num()) {
                 ent = Game_local.gameLocal.FindTraceEntity(origin, end, selectableEntityClasses.oGet(i).typeInfo, skip)
@@ -538,7 +538,7 @@ object GameEdit {
                 Game_local.gameRenderWorld.DebugBounds(color, idBounds(ent.GetPhysics().GetOrigin()).Expand(8f))
                 if (drawArrows) {
                     val start = idVec3(ent.GetPhysics().GetOrigin())
-                    val end = idVec3(start.oPlus(idVec3(1, 0, 0).oMultiply(20.0f)))
+                    val end = idVec3(start.oPlus(idVec3(1, 0, 0).times(20.0f)))
                     Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorWhite, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "x+",
@@ -547,7 +547,7 @@ object GameEdit {
                         Lib.Companion.colorWhite,
                         axis
                     )
-                    end.oSet(start.oPlus(idVec3(1, 0, 0).oMultiply(-20.0f)))
+                    end.oSet(start.oPlus(idVec3(1, 0, 0).times(-20.0f)))
                     Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorWhite, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "x-",
@@ -556,7 +556,7 @@ object GameEdit {
                         Lib.Companion.colorWhite,
                         axis
                     )
-                    end.oSet(start.oPlus(idVec3(0, 1, 0).oMultiply(20.0f)))
+                    end.oSet(start.oPlus(idVec3(0, 1, 0).times(20.0f)))
                     Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorGreen, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "y+",
@@ -565,7 +565,7 @@ object GameEdit {
                         Lib.Companion.colorWhite,
                         axis
                     )
-                    end.oSet(start.oPlus(idVec3(0, 1, 0).oMultiply(-20.0f)))
+                    end.oSet(start.oPlus(idVec3(0, 1, 0).times(-20.0f)))
                     Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorGreen, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "y-",
@@ -574,7 +574,7 @@ object GameEdit {
                         Lib.Companion.colorWhite,
                         axis
                     )
-                    end.oSet(start.oPlus(idVec3(0, 0, 1).oMultiply(20.0f)))
+                    end.oSet(start.oPlus(idVec3(0, 0, 1).times(20.0f)))
                     Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorBlue, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "z+",
@@ -583,7 +583,7 @@ object GameEdit {
                         Lib.Companion.colorWhite,
                         axis
                     )
-                    end.oSet(start.oPlus(idVec3(0, 0, 1).oMultiply(-20.0f)))
+                    end.oSet(start.oPlus(idVec3(0, 0, 1).times(-20.0f)))
                     Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorBlue, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "z-",

@@ -6,7 +6,6 @@ import neo.Game.Animation.Anim.jointModTransform_t
 import neo.Game.Animation.Anim_Blend.idAnim
 import neo.Game.Animation.Anim_Blend.idAnimator
 import neo.Game.Animation.Anim_Import.idModelExport
-import neo.Game.Animation.Anim_Testmodel.idTestModel
 import neo.Game.Entity.idAnimatedEntity
 import neo.Game.Entity.idEntity
 import neo.Game.GameSys.Class.eventCallback_t
@@ -670,16 +669,16 @@ class Anim_Testmodel {
                                 pos,
                                 axis
                             )
-                            pos.oMinSet(head.GetEntity().GetPhysics().GetOrigin())
+                            pos.minusAssign(head.GetEntity().GetPhysics().GetOrigin())
                             headAnimator.SetJointPos(
                                 copyJoints.get(i).to.getVal(),
                                 copyJoints.get(i).mod,
-                                pos.oMultiply(mat)
+                                pos.times(mat)
                             )
                             headAnimator.SetJointAxis(
                                 copyJoints.get(i).to.getVal(),
                                 copyJoints.get(i).mod,
-                                axis.oMultiply(mat)
+                                axis.times(mat)
                             )
                         } else {
                             animator.GetJointLocalTransform(
@@ -932,7 +931,7 @@ class Anim_Testmodel {
                         dict.Set("model", name)
                     }
                 }
-                offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f)))
+                offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
                 dict.Set("origin", offset.ToString())
                 dict.Set("angle", Str.va("%f", player.viewAngles.yaw + 180.0f))
                 Game_local.gameLocal.testmodel = Game_local.gameLocal.SpawnEntityType(idTestModel::class.java, dict)

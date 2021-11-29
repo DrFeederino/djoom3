@@ -49,196 +49,148 @@ class JointTransform {
      */
     class idJointMat {
         private val DBG_count = DBG_counter++
-        private val mat: FloatArray? = FloatArray(3 * 4)
+        private val mat: FloatArray = FloatArray(3 * 4)
 
         constructor() {
             val a = 0
         }
 
-        constructor(mat: FloatArray?) {
+        constructor(mat: FloatArray) {
             System.arraycopy(mat, 0, this.mat, 0, this.mat.size)
         }
 
-        constructor(mat: idJointMat?) : this(mat.mat)
+        constructor(mat: idJointMat) : this(mat.mat)
 
-        fun SetRotation(m: idMat3?) {
+        fun SetRotation(m: idMat3) {
             // NOTE: idMat3 is transposed because it is column-major
-            mat.get(0 * 4 + 0) = m.oGet(0).oGet(0)
-            mat.get(0 * 4 + 1) = m.oGet(1).oGet(0)
-            mat.get(0 * 4 + 2) = m.oGet(2).oGet(0)
-            mat.get(1 * 4 + 0) = m.oGet(0).oGet(1)
-            mat.get(1 * 4 + 1) = m.oGet(1).oGet(1)
-            mat.get(1 * 4 + 2) = m.oGet(2).oGet(1)
-            mat.get(2 * 4 + 0) = m.oGet(0).oGet(2)
-            mat.get(2 * 4 + 1) = m.oGet(1).oGet(2)
-            mat.get(2 * 4 + 2) = m.oGet(2).oGet(2)
+            mat[0 * 4 + 0] = m.oGet(0).oGet(0)
+            mat[0 * 4 + 1] = m.oGet(1).oGet(0)
+            mat[0 * 4 + 2] = m.oGet(2).oGet(0)
+            mat[1 * 4 + 0] = m.oGet(0).oGet(1)
+            mat[1 * 4 + 1] = m.oGet(1).oGet(1)
+            mat[1 * 4 + 2] = m.oGet(2).oGet(1)
+            mat[2 * 4 + 0] = m.oGet(0).oGet(2)
+            mat[2 * 4 + 1] = m.oGet(1).oGet(2)
+            mat[2 * 4 + 2] = m.oGet(2).oGet(2)
         }
 
         fun SetTranslation(t: idVec3?) {
-            mat.get(0 * 4 + 3) = t.oGet(0)
-            mat.get(1 * 4 + 3) = t.oGet(1)
-            mat.get(2 * 4 + 3) = t.oGet(2)
+            mat[0 * 4 + 3] = t.oGet(0)
+            mat[1 * 4 + 3] = t.oGet(1)
+            mat[2 * 4 + 3] = t.oGet(2)
         }
 
         // only rotate
-        fun oMultiply(v: idVec3?): idVec3? {
+        operator fun times(v: idVec3): idVec3 {
             return idVec3(
-                mat.get(0 * 4 + 0) * v.oGet(0) + mat.get(0 * 4 + 1) * v.oGet(1) + mat.get(0 * 4 + 2) * v.oGet(2),
-                mat.get(1 * 4 + 0) * v.oGet(0) + mat.get(1 * 4 + 1) * v.oGet(1) + mat.get(1 * 4 + 2) * v.oGet(2),
-                mat.get(2 * 4 + 0) * v.oGet(0) + mat.get(2 * 4 + 1) * v.oGet(1) + mat.get(2 * 4 + 2) * v.oGet(2)
+                mat[0 * 4 + 0] * v.oGet(0) + mat[0 * 4 + 1] * v.oGet(1) + mat[0 * 4 + 2] * v.oGet(2),
+                mat[1 * 4 + 0] * v.oGet(0) + mat[1 * 4 + 1] * v.oGet(1) + mat[1 * 4 + 2] * v.oGet(2),
+                mat[2 * 4 + 0] * v.oGet(0) + mat[2 * 4 + 1] * v.oGet(1) + mat[2 * 4 + 2] * v.oGet(2)
             )
         }
 
         // rotate and translate
-        fun oMultiply(v: idVec4?): idVec3? {
+        operator fun times(v: idVec4): idVec3 {
             return idVec3(
-                mat.get(0 * 4 + 0) * v.oGet(0) + mat.get(0 * 4 + 1) * v.oGet(1) + mat.get(0 * 4 + 2) * v.oGet(2) + mat.get(
-                    0 * 4 + 3
-                ) * v.oGet(3),
-                mat.get(1 * 4 + 0) * v.oGet(0) + mat.get(1 * 4 + 1) * v.oGet(1) + mat.get(1 * 4 + 2) * v.oGet(2) + mat.get(
-                    1 * 4 + 3
-                ) * v.oGet(3),
-                mat.get(2 * 4 + 0) * v.oGet(0) + mat.get(2 * 4 + 1) * v.oGet(1) + mat.get(2 * 4 + 2) * v.oGet(2) + mat.get(
-                    2 * 4 + 3
-                ) * v.oGet(3)
+                mat[0 * 4 + 0] * v.oGet(0) + mat[0 * 4 + 1] * v.oGet(1) + mat[0 * 4 + 2] * v.oGet(2) + mat[0 * 4 + 3] * v.oGet(
+                    3
+                ),
+                mat[1 * 4 + 0] * v.oGet(0) + mat[1 * 4 + 1] * v.oGet(1) + mat[1 * 4 + 2] * v.oGet(2) + mat[1 * 4 + 3] * v.oGet(
+                    3
+                ),
+                mat[2 * 4 + 0] * v.oGet(0) + mat[2 * 4 + 1] * v.oGet(1) + mat[2 * 4 + 2] * v.oGet(2) + mat[2 * 4 + 3] * v.oGet(
+                    3
+                )
             )
         }
 
         // transform
-        fun oMulSet(a: idJointMat?): idJointMat? {
+        fun timesAssign(a: idJointMat): idJointMat {
             val dst = FloatArray(3)
             dst[0] =
-                mat.get(0 * 4 + 0) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 0) * a.mat.get(0 * 4 + 1) + mat.get(2 * 4 + 0) * a.mat.get(
-                    0 * 4 + 2
-                )
+                mat[0 * 4 + 0] * a.mat[0 * 4 + 0] + mat[1 * 4 + 0] * a.mat[0 * 4 + 1] + mat[2 * 4 + 0] * a.mat[0 * 4 + 2]
             dst[1] =
-                mat.get(0 * 4 + 0) * a.mat.get(1 * 4 + 0) + mat.get(1 * 4 + 0) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 0) * a.mat.get(
-                    1 * 4 + 2
-                )
+                mat[0 * 4 + 0] * a.mat[1 * 4 + 0] + mat[1 * 4 + 0] * a.mat[1 * 4 + 1] + mat[2 * 4 + 0] * a.mat[1 * 4 + 2]
             dst[2] =
-                mat.get(0 * 4 + 0) * a.mat.get(2 * 4 + 0) + mat.get(1 * 4 + 0) * a.mat.get(2 * 4 + 1) + mat.get(2 * 4 + 0) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 0) = dst[0]
-            mat.get(1 * 4 + 0) = dst[1]
-            mat.get(2 * 4 + 0) = dst[2]
+                mat[0 * 4 + 0] * a.mat[2 * 4 + 0] + mat[1 * 4 + 0] * a.mat[2 * 4 + 1] + mat[2 * 4 + 0] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 0] = dst[0]
+            mat[1 * 4 + 0] = dst[1]
+            mat[2 * 4 + 0] = dst[2]
             dst[0] =
-                mat.get(0 * 4 + 1) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 1) * a.mat.get(0 * 4 + 1) + mat.get(2 * 4 + 1) * a.mat.get(
-                    0 * 4 + 2
-                )
+                mat[0 * 4 + 1] * a.mat[0 * 4 + 0] + mat[1 * 4 + 1] * a.mat[0 * 4 + 1] + mat[2 * 4 + 1] * a.mat[0 * 4 + 2]
             dst[1] =
-                mat.get(0 * 4 + 1) * a.mat.get(1 * 4 + 0) + mat.get(1 * 4 + 1) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 1) * a.mat.get(
-                    1 * 4 + 2
-                )
+                mat[0 * 4 + 1] * a.mat[1 * 4 + 0] + mat[1 * 4 + 1] * a.mat[1 * 4 + 1] + mat[2 * 4 + 1] * a.mat[1 * 4 + 2]
             dst[2] =
-                mat.get(0 * 4 + 1) * a.mat.get(2 * 4 + 0) + mat.get(1 * 4 + 1) * a.mat.get(2 * 4 + 1) + mat.get(2 * 4 + 1) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 1) = dst[0]
-            mat.get(1 * 4 + 1) = dst[1]
-            mat.get(2 * 4 + 1) = dst[2]
+                mat[0 * 4 + 1] * a.mat[2 * 4 + 0] + mat[1 * 4 + 1] * a.mat[2 * 4 + 1] + mat[2 * 4 + 1] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 1] = dst[0]
+            mat[1 * 4 + 1] = dst[1]
+            mat[2 * 4 + 1] = dst[2]
             dst[0] =
-                mat.get(0 * 4 + 2) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 2) * a.mat.get(0 * 4 + 1) + mat.get(2 * 4 + 2) * a.mat.get(
-                    0 * 4 + 2
-                )
+                mat[0 * 4 + 2] * a.mat[0 * 4 + 0] + mat[1 * 4 + 2] * a.mat[0 * 4 + 1] + mat[2 * 4 + 2] * a.mat[0 * 4 + 2]
             dst[1] =
-                mat.get(0 * 4 + 2) * a.mat.get(1 * 4 + 0) + mat.get(1 * 4 + 2) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 2) * a.mat.get(
-                    1 * 4 + 2
-                )
+                mat[0 * 4 + 2] * a.mat[1 * 4 + 0] + mat[1 * 4 + 2] * a.mat[1 * 4 + 1] + mat[2 * 4 + 2] * a.mat[1 * 4 + 2]
             dst[2] =
-                mat.get(0 * 4 + 2) * a.mat.get(2 * 4 + 0) + mat.get(1 * 4 + 2) * a.mat.get(2 * 4 + 1) + mat.get(2 * 4 + 2) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 2) = dst[0]
-            mat.get(1 * 4 + 2) = dst[1]
-            mat.get(2 * 4 + 2) = dst[2]
+                mat[0 * 4 + 2] * a.mat[2 * 4 + 0] + mat[1 * 4 + 2] * a.mat[2 * 4 + 1] + mat[2 * 4 + 2] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 2] = dst[0]
+            mat[1 * 4 + 2] = dst[1]
+            mat[2 * 4 + 2] = dst[2]
             dst[0] =
-                mat.get(0 * 4 + 3) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 3) * a.mat.get(0 * 4 + 1) + mat.get(2 * 4 + 3) * a.mat.get(
-                    0 * 4 + 2
-                )
+                mat[0 * 4 + 3] * a.mat[0 * 4 + 0] + mat[1 * 4 + 3] * a.mat[0 * 4 + 1] + mat[2 * 4 + 3] * a.mat[0 * 4 + 2]
             dst[1] =
-                mat.get(0 * 4 + 3) * a.mat.get(1 * 4 + 0) + mat.get(1 * 4 + 3) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 3) * a.mat.get(
-                    1 * 4 + 2
-                )
+                mat[0 * 4 + 3] * a.mat[1 * 4 + 0] + mat[1 * 4 + 3] * a.mat[1 * 4 + 1] + mat[2 * 4 + 3] * a.mat[1 * 4 + 2]
             dst[2] =
-                mat.get(0 * 4 + 3) * a.mat.get(2 * 4 + 0) + mat.get(1 * 4 + 3) * a.mat.get(2 * 4 + 1) + mat.get(2 * 4 + 3) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 3) = dst[0]
-            mat.get(1 * 4 + 3) = dst[1]
-            mat.get(2 * 4 + 3) = dst[2]
-            mat.get(0 * 4 + 3) += a.mat.get(0 * 4 + 3)
-            mat.get(1 * 4 + 3) += a.mat.get(1 * 4 + 3)
-            mat.get(2 * 4 + 3) += a.mat.get(2 * 4 + 3)
+                mat[0 * 4 + 3] * a.mat[2 * 4 + 0] + mat[1 * 4 + 3] * a.mat[2 * 4 + 1] + mat[2 * 4 + 3] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 3] = dst[0]
+            mat[1 * 4 + 3] = dst[1]
+            mat[2 * 4 + 3] = dst[2]
+            mat[0 * 4 + 3] += a.mat[0 * 4 + 3]
+            mat[1 * 4 + 3] += a.mat[1 * 4 + 3]
+            mat[2 * 4 + 3] += a.mat[2 * 4 + 3]
             return this
         }
 
         // untransform
         fun oDivSet(a: idJointMat?): idJointMat? {
             val dst = FloatArray(3)
-            mat.get(0 * 4 + 3) -= a.mat.get(0 * 4 + 3)
-            mat.get(1 * 4 + 3) -= a.mat.get(1 * 4 + 3)
-            mat.get(2 * 4 + 3) -= a.mat.get(2 * 4 + 3)
+            mat[0 * 4 + 3] -= a.mat[0 * 4 + 3]
+            mat[1 * 4 + 3] -= a.mat[1 * 4 + 3]
+            mat[2 * 4 + 3] -= a.mat[2 * 4 + 3]
             dst[0] =
-                mat.get(0 * 4 + 0) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 0) * a.mat.get(1 * 4 + 0) + mat.get(2 * 4 + 0) * a.mat.get(
-                    2 * 4 + 0
-                )
+                mat[0 * 4 + 0] * a.mat[0 * 4 + 0] + mat[1 * 4 + 0] * a.mat[1 * 4 + 0] + mat[2 * 4 + 0] * a.mat[2 * 4 + 0]
             dst[1] =
-                mat.get(0 * 4 + 0) * a.mat.get(0 * 4 + 1) + mat.get(1 * 4 + 0) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 0) * a.mat.get(
-                    2 * 4 + 1
-                )
+                mat[0 * 4 + 0] * a.mat[0 * 4 + 1] + mat[1 * 4 + 0] * a.mat[1 * 4 + 1] + mat[2 * 4 + 0] * a.mat[2 * 4 + 1]
             dst[2] =
-                mat.get(0 * 4 + 0) * a.mat.get(0 * 4 + 2) + mat.get(1 * 4 + 0) * a.mat.get(1 * 4 + 2) + mat.get(2 * 4 + 0) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 0) = dst[0]
-            mat.get(1 * 4 + 0) = dst[1]
-            mat.get(2 * 4 + 0) = dst[2]
+                mat[0 * 4 + 0] * a.mat[0 * 4 + 2] + mat[1 * 4 + 0] * a.mat[1 * 4 + 2] + mat[2 * 4 + 0] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 0] = dst[0]
+            mat[1 * 4 + 0] = dst[1]
+            mat[2 * 4 + 0] = dst[2]
             dst[0] =
-                mat.get(0 * 4 + 1) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 1) * a.mat.get(1 * 4 + 0) + mat.get(2 * 4 + 1) * a.mat.get(
-                    2 * 4 + 0
-                )
+                mat[0 * 4 + 1] * a.mat[0 * 4 + 0] + mat[1 * 4 + 1] * a.mat[1 * 4 + 0] + mat[2 * 4 + 1] * a.mat[2 * 4 + 0]
             dst[1] =
-                mat.get(0 * 4 + 1) * a.mat.get(0 * 4 + 1) + mat.get(1 * 4 + 1) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 1) * a.mat.get(
-                    2 * 4 + 1
-                )
+                mat[0 * 4 + 1] * a.mat[0 * 4 + 1] + mat[1 * 4 + 1] * a.mat[1 * 4 + 1] + mat[2 * 4 + 1] * a.mat[2 * 4 + 1]
             dst[2] =
-                mat.get(0 * 4 + 1) * a.mat.get(0 * 4 + 2) + mat.get(1 * 4 + 1) * a.mat.get(1 * 4 + 2) + mat.get(2 * 4 + 1) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 1) = dst[0]
-            mat.get(1 * 4 + 1) = dst[1]
-            mat.get(2 * 4 + 1) = dst[2]
+                mat[0 * 4 + 1] * a.mat[0 * 4 + 2] + mat[1 * 4 + 1] * a.mat[1 * 4 + 2] + mat[2 * 4 + 1] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 1] = dst[0]
+            mat[1 * 4 + 1] = dst[1]
+            mat[2 * 4 + 1] = dst[2]
             dst[0] =
-                mat.get(0 * 4 + 2) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 2) * a.mat.get(1 * 4 + 0) + mat.get(2 * 4 + 2) * a.mat.get(
-                    2 * 4 + 0
-                )
+                mat[0 * 4 + 2] * a.mat[0 * 4 + 0] + mat[1 * 4 + 2] * a.mat[1 * 4 + 0] + mat[2 * 4 + 2] * a.mat[2 * 4 + 0]
             dst[1] =
-                mat.get(0 * 4 + 2) * a.mat.get(0 * 4 + 1) + mat.get(1 * 4 + 2) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 2) * a.mat.get(
-                    2 * 4 + 1
-                )
+                mat[0 * 4 + 2] * a.mat[0 * 4 + 1] + mat[1 * 4 + 2] * a.mat[1 * 4 + 1] + mat[2 * 4 + 2] * a.mat[2 * 4 + 1]
             dst[2] =
-                mat.get(0 * 4 + 2) * a.mat.get(0 * 4 + 2) + mat.get(1 * 4 + 2) * a.mat.get(1 * 4 + 2) + mat.get(2 * 4 + 2) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 2) = dst[0]
-            mat.get(1 * 4 + 2) = dst[1]
-            mat.get(2 * 4 + 2) = dst[2]
+                mat[0 * 4 + 2] * a.mat[0 * 4 + 2] + mat[1 * 4 + 2] * a.mat[1 * 4 + 2] + mat[2 * 4 + 2] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 2] = dst[0]
+            mat[1 * 4 + 2] = dst[1]
+            mat[2 * 4 + 2] = dst[2]
             dst[0] =
-                mat.get(0 * 4 + 3) * a.mat.get(0 * 4 + 0) + mat.get(1 * 4 + 3) * a.mat.get(1 * 4 + 0) + mat.get(2 * 4 + 3) * a.mat.get(
-                    2 * 4 + 0
-                )
+                mat[0 * 4 + 3] * a.mat[0 * 4 + 0] + mat[1 * 4 + 3] * a.mat[1 * 4 + 0] + mat[2 * 4 + 3] * a.mat[2 * 4 + 0]
             dst[1] =
-                mat.get(0 * 4 + 3) * a.mat.get(0 * 4 + 1) + mat.get(1 * 4 + 3) * a.mat.get(1 * 4 + 1) + mat.get(2 * 4 + 3) * a.mat.get(
-                    2 * 4 + 1
-                )
+                mat[0 * 4 + 3] * a.mat[0 * 4 + 1] + mat[1 * 4 + 3] * a.mat[1 * 4 + 1] + mat[2 * 4 + 3] * a.mat[2 * 4 + 1]
             dst[2] =
-                mat.get(0 * 4 + 3) * a.mat.get(0 * 4 + 2) + mat.get(1 * 4 + 3) * a.mat.get(1 * 4 + 2) + mat.get(2 * 4 + 3) * a.mat.get(
-                    2 * 4 + 2
-                )
-            mat.get(0 * 4 + 3) = dst[0]
-            mat.get(1 * 4 + 3) = dst[1]
-            mat.get(2 * 4 + 3) = dst[2]
+                mat[0 * 4 + 3] * a.mat[0 * 4 + 2] + mat[1 * 4 + 3] * a.mat[1 * 4 + 2] + mat[2 * 4 + 3] * a.mat[2 * 4 + 2]
+            mat[0 * 4 + 3] = dst[0]
+            mat[1 * 4 + 3] = dst[1]
+            mat[2 * 4 + 3] = dst[2]
             return this
         }
 
@@ -247,7 +199,7 @@ class JointTransform {
             var i: Int
             i = 0
             while (i < 12) {
-                if (mat.get(i) != a.mat.get(i)) {
+                if (mat[i] != a.mat[i]) {
                     return false
                 }
                 i++
@@ -260,7 +212,7 @@ class JointTransform {
             var i: Int
             i = 0
             while (i < 12) {
-                if (Math.abs(mat.get(i) - a.mat.get(i)) > epsilon) {
+                if (Math.abs(mat[i] - a.mat[i]) > epsilon) {
                     return false
                 }
                 i++
@@ -289,21 +241,21 @@ class JointTransform {
 
         fun ToMat3(): idMat3? {
             return idMat3(
-                mat.get(0 * 4 + 0), mat.get(1 * 4 + 0), mat.get(2 * 4 + 0),
-                mat.get(0 * 4 + 1), mat.get(1 * 4 + 1), mat.get(2 * 4 + 1),
-                mat.get(0 * 4 + 2), mat.get(1 * 4 + 2), mat.get(2 * 4 + 2)
+                mat[0 * 4 + 0], mat[1 * 4 + 0], mat[2 * 4 + 0],
+                mat[0 * 4 + 1], mat[1 * 4 + 1], mat[2 * 4 + 1],
+                mat[0 * 4 + 2], mat[1 * 4 + 2], mat[2 * 4 + 2]
             )
         }
 
         fun ToVec3(): idVec3? {
             return idVec3(
-                mat.get(0 * 4 + 3),
-                mat.get(1 * 4 + 3),
-                mat.get(2 * 4 + 3)
+                mat[0 * 4 + 3],
+                mat[1 * 4 + 3],
+                mat[2 * 4 + 3]
             )
         }
 
-        fun ToJointQuat(): idJointQuat? {
+        fun ToJointQuat(): idJointQuat {
             val jq = idJointQuat()
             val trace: Float
             val s: Float
@@ -312,34 +264,34 @@ class JointTransform {
             val j: Int
             val k: Int
             val next = intArrayOf(1, 2, 0)
-            trace = mat.get(0 * 4 + 0) + mat.get(1 * 4 + 1) + mat.get(2 * 4 + 2)
+            trace = mat[0 * 4 + 0] + mat[1 * 4 + 1] + mat[2 * 4 + 2]
             if (trace > 0.0f) {
                 t = trace + 1.0f
                 s = idMath.InvSqrt(t) * 0.5f
                 jq.q.oSet(3, s * t)
-                jq.q.oSet(0, (mat.get(1 * 4 + 2) - mat.get(2 * 4 + 1)) * s)
-                jq.q.oSet(1, (mat.get(2 * 4 + 0) - mat.get(0 * 4 + 2)) * s)
-                jq.q.oSet(2, (mat.get(0 * 4 + 1) - mat.get(1 * 4 + 0)) * s)
+                jq.q.oSet(0, (mat[1 * 4 + 2] - mat[2 * 4 + 1]) * s)
+                jq.q.oSet(1, (mat[2 * 4 + 0] - mat[0 * 4 + 2]) * s)
+                jq.q.oSet(2, (mat[0 * 4 + 1] - mat[1 * 4 + 0]) * s)
             } else {
                 i = 0
-                if (mat.get(1 * 4 + 1) > mat.get(0 * 4 + 0)) {
+                if (mat[1 * 4 + 1] > mat[0 * 4 + 0]) {
                     i = 1
                 }
-                if (mat.get(2 * 4 + 2) > mat.get(i * 4 + i)) {
+                if (mat[2 * 4 + 2] > mat[i * 4 + i]) {
                     i = 2
                 }
                 j = next[i]
                 k = next[j]
-                t = mat.get(i * 4 + i) - (mat.get(j * 4 + j) + mat.get(k * 4 + k)) + 1.0f
+                t = mat[i * 4 + i] - (mat[j * 4 + j] + mat[k * 4 + k]) + 1.0f
                 s = idMath.InvSqrt(t) * 0.5f
                 jq.q.oSet(i, s * t)
-                jq.q.oSet(3, (mat.get(j * 4 + k) - mat.get(k * 4 + j)) * s)
-                jq.q.oSet(j, (mat.get(i * 4 + j) + mat.get(j * 4 + i)) * s)
-                jq.q.oSet(k, (mat.get(i * 4 + k) + mat.get(k * 4 + i)) * s)
+                jq.q.oSet(3, (mat[j * 4 + k] - mat[k * 4 + j]) * s)
+                jq.q.oSet(j, (mat[i * 4 + j] + mat[j * 4 + i]) * s)
+                jq.q.oSet(k, (mat[i * 4 + k] + mat[k * 4 + i]) * s)
             }
-            jq.t.oSet(0, mat.get(0 * 4 + 3))
-            jq.t.oSet(1, mat.get(1 * 4 + 3))
-            jq.t.oSet(2, mat.get(2 * 4 + 3))
+            jq.t.oSet(0, mat[0 * 4 + 3])
+            jq.t.oSet(1, mat[1 * 4 + 3])
+            jq.t.oSet(2, mat[2 * 4 + 3])
             return jq
         }
 

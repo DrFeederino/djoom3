@@ -791,7 +791,7 @@ object RenderWorld_local {
                 // or environment cube sides
                 val cross = idVec3()
                 cross.oSet(parms.renderView.viewaxis.oGet(1).Cross(parms.renderView.viewaxis.oGet(2)))
-                parms.isMirror = cross.oMultiply(parms.renderView.viewaxis.oGet(0)) <= 0
+                parms.isMirror = cross.times(parms.renderView.viewaxis.oGet(0)) <= 0
                 if (RenderSystem_init.r_lockSurfaces.GetBool()) {
                     RenderSystem.R_LockSurfaceScene(parms)
                     return
@@ -856,7 +856,7 @@ object RenderWorld_local {
             }
             node = areaNodes.get(0)
             while (true) {
-                d = node.plane.Normal().oMultiply(point) + node.plane.oGet(3)
+                d = node.plane.Normal().times(point) + node.plane.oGet(3)
                 nodeNum = if (d > 0) {
                     node.children.get(0)
                 } else {
@@ -1020,8 +1020,8 @@ object RenderWorld_local {
                     cursor.oSet(local.point.oMinus(origin))
                     axisLen[0] = axis[0].Length()
                     axisLen[1] = axis[1].Length()
-                    pt.x = cursor.oMultiply(axis[0]) / (axisLen[0] * axisLen[0])
-                    pt.y = cursor.oMultiply(axis[1]) / (axisLen[1] * axisLen[1])
+                    pt.x = cursor.times(axis[0]) / (axisLen[0] * axisLen[0])
+                    pt.y = cursor.times(axis[1]) / (axisLen[1] * axisLen[1])
                     pt.guiId = shader.GetEntityGui()
                     return pt
                 }
@@ -1103,7 +1103,7 @@ object RenderWorld_local {
                 if (localTrace.fraction < trace.fraction) {
                     trace.fraction = localTrace.fraction
                     trace.point.oSet(tr_main.R_LocalPointToGlobal(modelMatrix, localTrace.point))
-                    trace.normal.oSet(localTrace.normal.oMultiply(refEnt.axis))
+                    trace.normal.oSet(localTrace.normal.times(refEnt.axis))
                     trace.material = shader
                     trace.entity = def.parms
                     trace.jointNumber = refEnt.hModel.NearestJoint(
@@ -1256,7 +1256,7 @@ object RenderWorld_local {
                         if (localTrace.fraction < trace.fraction) {
                             trace.fraction = localTrace.fraction
                             trace.point.oSet(tr_main.R_LocalPointToGlobal(modelMatrix, localTrace.point))
-                            trace.normal.oSet(localTrace.normal.oMultiply(def.parms.axis))
+                            trace.normal.oSet(localTrace.normal.times(def.parms.axis))
                             trace.material = shader
                             trace.entity = def.parms
                             trace.jointNumber = model.NearestJoint(
@@ -1333,15 +1333,15 @@ object RenderWorld_local {
             a = 0f
             while (a < 360.0f) {
                 s = 0.5f * size * arrowCos.get(i)
-                v1.oSet(end.oMinus(forward.oMultiply(size.toFloat())))
-                v1.oSet(v1.oPlus(right.oMultiply(s)))
+                v1.oSet(end.oMinus(forward.times(size.toFloat())))
+                v1.oSet(v1.oPlus(right.times(s)))
                 s = 0.5f * size * arrowSin.get(i)
-                v1.oSet(v1.oPlus(up.oMultiply(s)))
+                v1.oSet(v1.oPlus(up.times(s)))
                 s = 0.5f * size * arrowCos.get(i + 1)
-                v2.oSet(end.oMinus(forward.oMultiply(size.toFloat())))
-                v2.oSet(v2.oPlus(right.oMultiply(s)))
+                v2.oSet(end.oMinus(forward.times(size.toFloat())))
+                v2.oSet(v2.oPlus(right.times(s)))
                 s = 0.5f * size * arrowSin.get(i + 1)
-                v2.oSet(v2.oPlus(up.oMultiply(s)))
+                v2.oSet(v2.oPlus(up.times(s)))
                 DebugLine(color, v1, end, lifetime)
                 DebugLine(color, v1, v2, lifetime)
                 a += arrowStep.toFloat()
@@ -1363,10 +1363,10 @@ object RenderWorld_local {
             if (w.GetNumPoints() < 2) {
                 return
             }
-            lastPoint.oSet(origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().oMultiply(axis)))
+            lastPoint.oSet(origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().times(axis)))
             i = 0
             while (i < w.GetNumPoints()) {
-                point.oSet(origin.oPlus(w.oGet(i).ToVec3().oMultiply(axis)))
+                point.oSet(origin.oPlus(w.oGet(i).ToVec3().times(axis)))
                 DebugLine(color, lastPoint, point, lifetime, depthTest)
                 lastPoint.oSet(point)
                 i++
@@ -1389,13 +1389,13 @@ object RenderWorld_local {
             val point = idVec3()
             val lastPoint = idVec3()
             dir.OrthogonalBasis(left, up)
-            left.oMulSet(radius)
-            up.oMulSet(radius)
+            left.timesAssign(radius)
+            up.timesAssign(radius)
             lastPoint.oSet(origin.oPlus(up))
             i = 1
             while (i <= numSteps) {
                 a = idMath.TWO_PI * i / numSteps
-                point.oSet(origin.oPlus(left.oMultiply(idMath.Sin16(a)).oPlus(up.oMultiply(idMath.Cos16(a)))))
+                point.oSet(origin.oPlus(left.times(idMath.Sin16(a)).oPlus(up.times(idMath.Cos16(a)))))
                 DebugLine(color, lastPoint, point, lifetime, depthTest)
                 lastPoint.oSet(point)
                 i++
@@ -1540,30 +1540,30 @@ object RenderWorld_local {
             axis.oGet(2).NormalVectors(axis.oGet(0), axis.oGet(1))
             axis.oSet(1, axis.oGet(1).oNegative())
             top.oSet(apex.oPlus(dir))
-            lastp2.oSet(top.oPlus(axis.oGet(1).oMultiply(radius2)))
+            lastp2.oSet(top.oPlus(axis.oGet(1).times(radius2)))
             if (radius1 == 0.0f) {
                 i = 20
                 while (i <= 360) {
                     d.oSet(
-                        axis.oGet(0).oMultiply(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
-                            .oPlus(axis.oGet(1).oMultiply(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
+                        axis.oGet(0).times(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
+                            .oPlus(axis.oGet(1).times(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
                     )
-                    p2.oSet(top.oPlus(d.oMultiply(radius2)))
+                    p2.oSet(top.oPlus(d.times(radius2)))
                     DebugLine(color, lastp2, p2, lifetime)
                     DebugLine(color, p2, apex, lifetime)
                     lastp2.oSet(p2)
                     i += 20
                 }
             } else {
-                lastp1.oSet(apex.oPlus(axis.oGet(1).oMultiply(radius1)))
+                lastp1.oSet(apex.oPlus(axis.oGet(1).times(radius1)))
                 i = 20
                 while (i <= 360) {
                     d.oSet(
-                        axis.oGet(0).oMultiply(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
-                            .oPlus(axis.oGet(1).oMultiply(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
+                        axis.oGet(0).times(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
+                            .oPlus(axis.oGet(1).times(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
                     )
-                    p1.oSet(apex.oPlus(d.oMultiply(radius1)))
-                    p2.oSet(top.oPlus(d.oMultiply(radius2)))
+                    p1.oSet(apex.oPlus(d.times(radius1)))
+                    p2.oSet(top.oPlus(d.times(radius2)))
                     DebugLine(color, lastp1, p1, lifetime)
                     DebugLine(color, lastp2, p2, lifetime)
                     DebugLine(color, p1, p2, lifetime)
@@ -1606,7 +1606,7 @@ object RenderWorld_local {
                         bounds.oGet(i shr 1 and 1).z
                     )
                 )
-                p[i].oSet(viewDef.renderView.vieworg.oPlus(p[i].oMultiply(viewDef.renderView.viewaxis)))
+                p[i].oSet(viewDef.renderView.vieworg.oPlus(p[i].times(viewDef.renderView.viewaxis)))
                 i++
             }
             i = 0
@@ -1618,17 +1618,17 @@ object RenderWorld_local {
 
         override fun DebugAxis(origin: idVec3?, axis: idMat3?) {
             val start = idVec3(origin)
-            val end = idVec3(start.oPlus(axis.oGet(0).oMultiply(20.0f)))
+            val end = idVec3(start.oPlus(axis.oGet(0).times(20.0f)))
             DebugArrow(Lib.Companion.colorWhite, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(0).oMultiply(-20.0f)))
+            end.oSet(start.oPlus(axis.oGet(0).times(-20.0f)))
             DebugArrow(Lib.Companion.colorWhite, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(1).oMultiply(20.0f)))
+            end.oSet(start.oPlus(axis.oGet(1).times(20.0f)))
             DebugArrow(Lib.Companion.colorGreen, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(1).oMultiply(-20.0f)))
+            end.oSet(start.oPlus(axis.oGet(1).times(-20.0f)))
             DebugArrow(Lib.Companion.colorGreen, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(2).oMultiply(20.0f)))
+            end.oSet(start.oPlus(axis.oGet(2).times(20.0f)))
             DebugArrow(Lib.Companion.colorBlue, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(2).oMultiply(-20.0f)))
+            end.oSet(start.oPlus(axis.oGet(2).times(-20.0f)))
             DebugArrow(Lib.Companion.colorBlue, start, end, 2)
         }
 
@@ -3968,8 +3968,8 @@ object RenderWorld_local {
             node = areaNodes.get(nodeNum)
 
             // distance from plane for trace start and end
-            t1 = node.plane.Normal().oMultiply(p1) + node.plane.oGet(3)
-            t2 = node.plane.Normal().oMultiply(p2) + node.plane.oGet(3)
+            t1 = node.plane.Normal().times(p1) + node.plane.oGet(3)
+            t2 = node.plane.Normal().times(p2) + node.plane.oGet(3)
             if (t1 >= 0.0f && t2 >= 0.0f) {
                 RecurseProcBSP_r(results, nodeNum, node.children.get(0), p1f, p2f, p1, p2)
                 return
@@ -4180,7 +4180,7 @@ object RenderWorld_local {
                 i = 0
                 while (i < numPoints) {
                     var d: Float
-                    d = points.get(i).oMultiply(node.plane.Normal()) + node.plane.oGet(3)
+                    d = points.get(i).times(node.plane.Normal()) + node.plane.oGet(3)
                     if (d >= 0.0f) {
                         front = true
                     } else if (d <= 0.0f) {
@@ -4225,15 +4225,15 @@ object RenderWorld_local {
             mid.Zero()
             i = 0
             while (i < numPoints) {
-                mid.oPluSet(points.get(i))
+                mid.plusAssign(points.get(i))
                 i++
             }
-            mid.oMulSet(1.0f / numPoints)
+            mid.timesAssign(1.0f / numPoints)
             radSquared = 0f
             i = 0
             while (i < numPoints) {
                 dir.oSet(points.get(i).oMinus(mid))
-                lr = dir.oMultiply(dir)
+                lr = dir.times(dir)
                 if (lr > radSquared) {
                     radSquared = lr
                 }

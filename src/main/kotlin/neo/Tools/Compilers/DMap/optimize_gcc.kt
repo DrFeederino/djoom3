@@ -35,8 +35,8 @@ object optimize_gcc {
         val vert: optVertex_s?
 
         // deal with everything strictly as 2D
-        x = v.xyz.oMultiply(opt.axis[0])
-        y = v.xyz.oMultiply(opt.axis[1])
+        x = v.xyz.times(opt.axis[0])
+        y = v.xyz.times(opt.axis[1])
 
         // should we match based on the t-junction fixing hash verts?
         i = 0

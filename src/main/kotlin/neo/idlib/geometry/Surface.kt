@@ -145,16 +145,16 @@ object Surface {
 
         fun TranslateSelf(translation: idVec3) {
             for (i in 0 until verts.Num()) {
-                verts.oGet(i).xyz.oPluSet(translation)
+                verts.oGet(i).xyz.plusAssign(translation)
             }
         }
 
         fun RotateSelf(rotation: idMat3?) {
             for (i in 0 until verts.Num()) {
-                verts.oGet(i).xyz.oMulSet(rotation)
-                verts.oGet(i).normal.oMulSet(rotation)
-                verts.oGet(i).tangents[0].oMulSet(rotation)
-                verts.oGet(i).tangents[1].oMulSet(rotation)
+                verts.oGet(i).xyz.timesAssign(rotation)
+                verts.oGet(i).normal.timesAssign(rotation)
+                verts.oGet(i).tangents[0].timesAssign(rotation)
+                verts.oGet(i).tangents[1].timesAssign(rotation)
             }
         }
 

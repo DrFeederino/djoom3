@@ -56,19 +56,19 @@ object Model_local {
      */
     fun AddCubeFace(tri: srfTriangles_s?, v1: idVec3?, v2: idVec3?, v3: idVec3?, v4: idVec3?) {
         tri.verts[tri.numVerts + 0].Clear()
-        tri.verts[tri.numVerts + 0].xyz.oSet(v1.oMultiply(8f))
+        tri.verts[tri.numVerts + 0].xyz.oSet(v1.times(8f))
         tri.verts[tri.numVerts + 0].st.oSet(0, 0f)
         tri.verts[tri.numVerts + 0].st.oSet(1, 0f)
         tri.verts[tri.numVerts + 1].Clear()
-        tri.verts[tri.numVerts + 1].xyz.oSet(v2.oMultiply(8f))
+        tri.verts[tri.numVerts + 1].xyz.oSet(v2.times(8f))
         tri.verts[tri.numVerts + 1].st.oSet(0, 1f)
         tri.verts[tri.numVerts + 1].st.oSet(1, 0f)
         tri.verts[tri.numVerts + 2].Clear()
-        tri.verts[tri.numVerts + 2].xyz.oSet(v3.oMultiply(8f))
+        tri.verts[tri.numVerts + 2].xyz.oSet(v3.times(8f))
         tri.verts[tri.numVerts + 2].st.oSet(0, 1f)
         tri.verts[tri.numVerts + 2].st.oSet(1, 1f)
         tri.verts[tri.numVerts + 3].Clear()
-        tri.verts[tri.numVerts + 3].xyz.oSet(v4.oMultiply(8f))
+        tri.verts[tri.numVerts + 3].xyz.oSet(v4.times(8f))
         tri.verts[tri.numVerts + 3].st.oSet(0, 0f)
         tri.verts[tri.numVerts + 3].st.oSet(1, 1f)
         tri.indexes[tri.numIndexes + 0] = tri.numVerts + 0
@@ -217,7 +217,7 @@ object Model_local {
             surfaces.Append(modelSurface_s(surface))
             //surfaces.AppendClone(surface);
             if (surface.geometry != null) {
-                bounds.oPluSet(surface.geometry.bounds)
+                bounds.timesAssign(surface.geometry.bounds)
             }
         }
 
@@ -1050,8 +1050,8 @@ object Model_local {
                     val mins = idVec3()
                     val maxs = idVec3()
                     Simd.SIMDProcessor.MinMax(mins, maxs, mesh.vertexes, mesh.numVertexes)
-                    mins.oMinSet(idVec3(expand, expand, expand))
-                    maxs.oPluSet(idVec3(expand, expand, expand))
+                    mins.minusAssign(idVec3(expand, expand, expand))
+                    maxs.plusAssign(idVec3(expand, expand, expand))
                     vertexSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numVertexes) {
@@ -1162,7 +1162,7 @@ object Model_local {
                                 // matching texcoords is enough
                                 break
                             }
-                            if (mv.normal.oMultiply(normal) > normalEpsilon) {
+                            if (mv.normal.times(normal) > normalEpsilon) {
                                 break // we already have this one
                             }
                             lastmv = mv
@@ -1426,8 +1426,8 @@ object Model_local {
                 val mins = idVec3()
                 val maxs = idVec3()
                 Simd.SIMDProcessor.MinMax(mins, maxs, vList, layer.point.count)
-                mins.oMinSet(idVec3(expand, expand, expand))
-                maxs.oPluSet(idVec3(expand, expand, expand))
+                mins.minusAssign(idVec3(expand, expand, expand))
+                maxs.plusAssign(idVec3(expand, expand, expand))
                 vertexSubset.Init(mins, maxs, 32, 1024)
                 j = 0
                 while (j < layer.point.count) {
@@ -1576,7 +1576,7 @@ object Model_local {
                                 // matching texcoords is enough
                                 break
                             }
-                            if (mv.normal.oMultiply(normal) > normalEpsilon) {
+                            if (mv.normal.times(normal) > normalEpsilon) {
                                 break // we already have this one
                             }
                             lastmv = mv
@@ -1798,8 +1798,8 @@ object Model_local {
                     val mins = idVec3()
                     val maxs = idVec3()
                     Simd.SIMDProcessor.MinMax(mins, maxs, mesh.vertexes, mesh.numVertexes)
-                    mins.oMinSet(idVec3(expand, expand, expand))
-                    maxs.oPluSet(idVec3(expand, expand, expand))
+                    mins.minusAssign(idVec3(expand, expand, expand))
+                    maxs.plusAssign(idVec3(expand, expand, expand))
                     vertexSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numVertexes) {
@@ -1908,7 +1908,7 @@ object Model_local {
                                 // matching texcoords is enough
                                 break
                             }
-                            if (mv.normal.oMultiply(normal) > normalEpsilon) {
+                            if (mv.normal.times(normal) > normalEpsilon) {
                                 break // we already have this one
                             }
                             lastmv = mv

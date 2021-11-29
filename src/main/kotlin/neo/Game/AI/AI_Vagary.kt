@@ -140,7 +140,7 @@ object AI_Vagary {
             entPhys = ent.GetPhysics()
             enemyEnt = enemy.GetEntity()
             if (TempDump.NOT(enemyEnt)) {
-                vel.oSet(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis()).oMultiply(speed))
+                vel.oSet(viewAxis.oGet(0).times(physicsObj.GetGravityAxis()).times(speed))
             } else {
                 idAI.Companion.PredictTrajectory(
                     entPhys.GetOrigin(),
@@ -155,7 +155,7 @@ object AI_Vagary {
                     if (SysCvar.ai_debugTrajectory.GetBool()) 4000 else 0,
                     vel
                 )
-                vel.oMulSet(speed)
+                vel.timesAssign(speed)
             }
             entPhys.SetLinearVelocity(vel)
             if (ent is idMoveable) {

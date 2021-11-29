@@ -133,7 +133,7 @@ object AASBuild_ledge {
                     }
                     j++
                 }
-                planes.get(i).SetDist(planes.get(i).Dist() + v.oMultiply(planes.get(i).Normal().oNegative()))
+                planes.get(i).SetDist(planes.get(i).Dist() + v.times(planes.get(i).Normal().oNegative()))
                 i++
             }
             planes.get(numSplitPlanes + 0).SetDist(planes.get(numSplitPlanes + 0).Dist() + maxStepHeight)

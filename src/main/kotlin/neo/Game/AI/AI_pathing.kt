@@ -416,7 +416,7 @@ object AI_pathing {
                     val v2 = idVec3(physics.GetLinearVelocity())
                     if (v2.LengthSqr() > Math_h.Square(10.0f)) {
                         // if moving in about the same direction
-                        if (v1.oMultiply(v2) > 0.0f) {
+                        if (v1.times(v2) > 0.0f) {
                             i++
                             continue
                         }

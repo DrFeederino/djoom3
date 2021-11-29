@@ -10,7 +10,7 @@ import java.nio.*
  *
  */
 object DrawVert {
-    fun toByteBuffer(verts: Array<idDrawVert?>?): ByteBuffer? {
+    fun toByteBuffer(verts: Array<idDrawVert?>): ByteBuffer {
         val data = BufferUtils.createByteBuffer(idDrawVert.BYTES * verts.size)
         for (vert in verts) {
             if (vert != null) {
@@ -32,10 +32,10 @@ object DrawVert {
      */
     class idDrawVert : SERiAL {
         private val DBG_count = DBG_counter++
-        var color: ByteArray? = ByteArray(4)
-        val normal: idVec3?
-        var st: idVec2?
-        val tangents: Array<idVec3?>?
+        val color: ByteArray = ByteArray(4)
+        val normal: idVec3
+        val st: idVec2
+        val tangents: Array<idVec3>
         val xyz: idVec3
 
         @Transient
@@ -45,7 +45,7 @@ object DrawVert {
             xyz = idVec3()
             st = idVec2()
             normal = idVec3()
-            tangents = idVec3.Companion.generateArray(2)
+            tangents = idVec3.generateArray(2)
         }
 
         /**
@@ -190,7 +190,7 @@ object DrawVert {
             }
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             val data = ByteBuffer.allocate(BYTES)
             data.order(ByteOrder.LITTLE_ENDIAN) //very importante.
             data.putFloat(xyz.oGet(0))

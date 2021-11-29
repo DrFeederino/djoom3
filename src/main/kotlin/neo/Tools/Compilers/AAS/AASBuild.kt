@@ -435,7 +435,7 @@ object AASBuild {
             var dist: Float
             do {
                 node = procNodes.get(nodeNum)
-                dist = node.plane.Normal().oMultiply(origin) + node.plane.oGet(3)
+                dist = node.plane.Normal().times(origin) + node.plane.oGet(3)
                 res = if (dist > radius) {
                     Plane.SIDE_FRONT
                 } else if (dist < -radius) {
@@ -449,7 +449,7 @@ object AASBuild {
                     node.children[1]
                 } else if (res == Plane.SIDE_ON) {
                     // continue with the side the winding faces
-                    if (node.plane.Normal().oMultiply(normal) > 0.0f) {
+                    if (node.plane.Normal().times(normal) > 0.0f) {
                         node.children[0]
                     } else {
                         node.children[1]
@@ -832,7 +832,7 @@ object AASBuild {
                         } else {
                             normal.oSet(p.GetPlane().Normal())
                         }
-                        if (normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal()) {
+                        if (normal.times(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal()) {
                             p.SetFlag(AASFile.FACE_FLOOR)
                         } else {
                             p.SetFlag(AASFile.FACE_SOLID)
@@ -858,7 +858,7 @@ object AASBuild {
             } else {
                 normal.oSet(portal.GetPlane().Normal())
             }
-            return normal.oMultiply(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal()
+            return normal.times(aasSettings.invGravityDir) > aasSettings.minFloorCos.getVal()
         }
 
         private fun GravSubdivLeafNode(node: idBrushBSPNode?) {
@@ -1292,7 +1292,7 @@ object AASBuild {
                     node.GetChild(1)
                 } else if (res == Plane.SIDE_ON) {
                     // continue with the side the winding faces
-                    if (node.GetPlane().Normal().oMultiply(normal) > 0.0f) {
+                    if (node.GetPlane().Normal().times(normal) > 0.0f) {
                         node.GetChild(0)
                     } else {
                         node.GetChild(1)
@@ -1402,21 +1402,21 @@ object AASBuild {
                         continue
                     }
                     winding.Clear()
-                    winding.oPluSet(v1.oPlus(normal.oMultiply(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
-                    winding.oPluSet(v2.oPlus(normal.oMultiply(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
+                    winding.oPluSet(v1.oPlus(normal.times(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
+                    winding.oPluSet(v2.oPlus(normal.times(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
                     winding.oPluSet(
                         winding.oGet(1).ToVec3()
-                            .oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal() + 1.0f))
+                            .oPlus(aasSettings.gravityDir.times(aasSettings.maxStepHeight.getVal() + 1.0f))
                     )
                     winding.oPluSet(
                         winding.oGet(0).ToVec3()
-                            .oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal() + 1.0f))
+                            .oPlus(aasSettings.gravityDir.times(aasSettings.maxStepHeight.getVal() + 1.0f))
                     )
                     winding.GetBounds(bounds)
                     origin.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f))
                     radius = origin.Length() + AASBuild_ledge.LEDGE_EPSILON
                     origin.oSet(bounds.oGet(0).oPlus(origin))
-                    plane.FitThroughPoint(v1.oPlus(aasSettings.gravityDir.oMultiply(aasSettings.maxStepHeight.getVal())))
+                    plane.FitThroughPoint(v1.oPlus(aasSettings.gravityDir.times(aasSettings.maxStepHeight.getVal())))
                     if (!IsLedgeSide_r(root, winding, plane, normal, origin, radius)) {
                         i++
                         continue

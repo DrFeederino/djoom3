@@ -68,7 +68,7 @@ object tr_shadowbounds {
         v.x = n.x
         v.y = n.y
         v.z = n.z
-        v.w = -n.oMultiply(idVec3(a.x, a.y, a.z)) / a.w
+        v.w = -n.times(idVec3(a.x, a.y, a.z)) / a.w
         return v
     }
 
@@ -124,7 +124,7 @@ object tr_shadowbounds {
     fun make_sv(oc: polyhedron?, light: idVec4?): polyhedron? {
         var index = 0
         for (i in 0..5) {
-            if (oc.p.oGet(i).plane.oMultiply(light) > 0) {
+            if (oc.p.oGet(i).plane.times(light) > 0) {
                 index = index or (1 shl i)
             }
         }
@@ -138,7 +138,7 @@ object tr_shadowbounds {
             }
             ph.p.empty()
             for (i in 0 until oc.p.size()) {
-                if (oc.p.oGet(i).plane.oMultiply(light) > 0) {
+                if (oc.p.oGet(i).plane.times(light) > 0) {
                     ph.p.push_back(oc.p.oGet(i))
                 }
             }
@@ -206,8 +206,8 @@ object tr_shadowbounds {
             var c: idVec4
             var discard = false
             for (j in 0 until p.size()) {
-                val da = a.oMultiply(p.oGet(j).plane)
-                val db = b.oMultiply(p.oGet(j).plane)
+                val da = a.times(p.oGet(j).plane)
+                val db = b.times(p.oGet(j).plane)
                 val rdw = 1 / (da - db)
                 var code = 0
                 if (da > 0) {
@@ -219,11 +219,11 @@ object tr_shadowbounds {
                 when (code) {
                     3 -> discard = true
                     2 -> {
-                        c = a.oMultiply(db * rdw).oPlus(b.oMultiply(da * rdw)).oNegative()
+                        c = a.times(db * rdw).oPlus(b.times(da * rdw)).oNegative()
                         a = c
                     }
                     1 -> {
-                        c = a.oMultiply(db * rdw).oPlus(b.oMultiply(da * rdw)).oNegative()
+                        c = a.times(db * rdw).oPlus(b.times(da * rdw)).oNegative()
                         b = c
                     }
                     0 -> {}
@@ -364,7 +364,7 @@ object tr_shadowbounds {
                 return lightDef.viewLight.scissorRect
             }
             val rv = idVec3(v.x, v.y, v.z)
-            rv.oDivSet(v.w)
+            rv.divAssign(v.w)
             outbounds.AddPoint(rv)
         }
 
@@ -579,7 +579,7 @@ object tr_shadowbounds {
 
         fun transform(m: idMat4?) {
             for (i in 0 until v.size()) {
-                v.oSet(i, m.oMultiply(v.oGet(i)))
+                v.oSet(i, m.times(v.oGet(i)))
             }
             recompute_planes()
         }

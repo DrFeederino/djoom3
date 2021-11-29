@@ -49,14 +49,14 @@ object tr_trace {
         startDir.oSet(end.oMinus(start))
         startDir.Normalize()
         startDir.NormalVectors(planes[0].Normal(), planes[1].Normal())
-        planes[0].oSet(3, -start.oMultiply(planes[0].Normal()))
-        planes[1].oSet(3, -start.oMultiply(planes[1].Normal()))
+        planes[0].oSet(3, -start.times(planes[0].Normal()))
+        planes[1].oSet(3, -start.times(planes[1].Normal()))
 
         // create front and end planes so the trace is on the positive sides of both
         planes[2].oSet(startDir)
-        planes[2].oSet(3, -start.oMultiply(planes[2].Normal()))
+        planes[2].oSet(3, -start.times(planes[2].Normal()))
         planes[3].oSet(startDir.oNegative())
-        planes[3].oSet(3, -end.oMultiply(planes[3].Normal()))
+        planes[3].oSet(3, -end.times(planes[3].Normal()))
 
         // catagorize each point against the four planes
         cullBits = ByteArray(tri.numVerts)
@@ -149,14 +149,14 @@ object tr_trace {
             c_testEdges++
 
             // find the exact point of impact with the plane
-            point.oSet(start.oPlus(startDir.oMultiply(f)))
+            point.oSet(start.oPlus(startDir.times(f)))
 
             // see if the point is within the three edges
             // if radius > 0 the triangle is expanded with a circle in the triangle plane
             dir[0].oSet(tri.verts[tri.indexes[i + 0]].xyz.oMinus(point))
             dir[1].oSet(tri.verts[tri.indexes[i + 1]].xyz.oMinus(point))
             cross.oSet(dir[0].Cross(dir[1]))
-            d = plane.Normal().oMultiply(cross)
+            d = plane.Normal().times(cross)
             if (d > 0.0f) {
                 if (radiusSqr <= 0.0f) {
                     i += 3
@@ -170,10 +170,10 @@ object tr_trace {
                     j++
                     continue
                 }
-                d = dir[0].oMultiply(edge)
+                d = dir[0].times(edge)
                 if (d < 0.0f) {
                     edge.oSet(tri.verts[tri.indexes[i + 0]].xyz.oMinus(tri.verts[tri.indexes[i + 2]].xyz))
-                    d = dir[0].oMultiply(edge)
+                    d = dir[0].times(edge)
                     if (d < 0.0f) {
                         if (dir[0].LengthSqr() > radiusSqr) {
                             i += 3
@@ -183,7 +183,7 @@ object tr_trace {
                     }
                 } else if (d > edgeLengthSqr) {
                     edge.oSet(tri.verts[tri.indexes[i + 1]].xyz.oMinus(tri.verts[tri.indexes[i + 2]].xyz))
-                    d = dir[1].oMultiply(edge)
+                    d = dir[1].times(edge)
                     if (d < 0.0f) {
                         if (dir[1].LengthSqr() > radiusSqr) {
                             i += 3
@@ -195,7 +195,7 @@ object tr_trace {
             }
             dir[2].oSet(tri.verts[tri.indexes[i + 2]].xyz.oMinus(point))
             cross.oSet(dir[1].Cross(dir[2]))
-            d = plane.Normal().oMultiply(cross)
+            d = plane.Normal().times(cross)
             if (d > 0.0f) {
                 if (radiusSqr <= 0.0f) {
                     i += 3
@@ -209,10 +209,10 @@ object tr_trace {
                     j++
                     continue
                 }
-                d = dir[1].oMultiply(edge)
+                d = dir[1].times(edge)
                 if (d < 0.0f) {
                     edge.oSet(tri.verts[tri.indexes[i + 1]].xyz.oMinus(tri.verts[tri.indexes[i + 0]].xyz))
-                    d = dir[1].oMultiply(edge)
+                    d = dir[1].times(edge)
                     if (d < 0.0f) {
                         if (dir[1].LengthSqr() > radiusSqr) {
                             i += 3
@@ -222,7 +222,7 @@ object tr_trace {
                     }
                 } else if (d > edgeLengthSqr) {
                     edge.oSet(tri.verts[tri.indexes[i + 2]].xyz.oMinus(tri.verts[tri.indexes[i + 0]].xyz))
-                    d = dir[2].oMultiply(edge)
+                    d = dir[2].times(edge)
                     if (d < 0.0f) {
                         if (dir[2].LengthSqr() > radiusSqr) {
                             i += 3
@@ -233,7 +233,7 @@ object tr_trace {
                 }
             }
             cross.oSet(dir[2].Cross(dir[0]))
-            d = plane.Normal().oMultiply(cross)
+            d = plane.Normal().times(cross)
             if (d > 0.0f) {
                 if (radiusSqr <= 0.0f) {
                     i += 3
@@ -247,10 +247,10 @@ object tr_trace {
                     j++
                     continue
                 }
-                d = dir[2].oMultiply(edge)
+                d = dir[2].times(edge)
                 if (d < 0.0f) {
                     edge.oSet(tri.verts[tri.indexes[i + 2]].xyz.oMinus(tri.verts[tri.indexes[i + 1]].xyz))
-                    d = dir[2].oMultiply(edge)
+                    d = dir[2].times(edge)
                     if (d < 0.0f) {
                         if (dir[2].LengthSqr() > radiusSqr) {
                             i += 3
@@ -260,7 +260,7 @@ object tr_trace {
                     }
                 } else if (d > edgeLengthSqr) {
                     edge.oSet(tri.verts[tri.indexes[i + 0]].xyz.oMinus(tri.verts[tri.indexes[i + 1]].xyz))
-                    d = dir[0].oMultiply(edge)
+                    d = dir[0].times(edge)
                     if (d < 0.0f) {
                         if (dir[0].LengthSqr() > radiusSqr) {
                             i += 3
@@ -315,7 +315,7 @@ object tr_trace {
             dir[1].oSet(p[1].oMinus(p[2]))
             dir[2].oSet(p[2].oMinus(p[0]))
             normal.oSet(dir[0].Cross(dir[1]))
-            if (normal.oMultiply(p[0]) < normal.oMultiply(vieworg)) {
+            if (normal.times(p[0]) < normal.times(vieworg)) {
                 i += 3
                 continue
             }
@@ -335,15 +335,15 @@ object tr_trace {
                 dir[3].Normalize()
                 dir[5].oSet(dir[4].oPlus(dir[k]).oMultiply(0.5f))
                 dir[5].Normalize()
-                point.oSet(p[k].oPlus(dir[j].oMultiply(radius)))
+                point.oSet(p[k].oPlus(dir[j].times(radius)))
                 qgl.qglVertex3f(point.oGet(0), point.oGet(1), point.oGet(2))
-                point.oSet(p[k].oPlus(dir[3].oMultiply(radius)))
+                point.oSet(p[k].oPlus(dir[3].times(radius)))
                 qgl.qglVertex3f(point.oGet(0), point.oGet(1), point.oGet(2))
-                point.oSet(p[k].oPlus(dir[4].oMultiply(radius)))
+                point.oSet(p[k].oPlus(dir[4].times(radius)))
                 qgl.qglVertex3f(point.oGet(0), point.oGet(1), point.oGet(2))
-                point.oSet(p[k].oPlus(dir[5].oMultiply(radius)))
+                point.oSet(p[k].oPlus(dir[5].times(radius)))
                 qgl.qglVertex3f(point.oGet(0), point.oGet(1), point.oGet(2))
-                point.oSet(p[k].oPlus(dir[k].oMultiply(radius)))
+                point.oSet(p[k].oPlus(dir[k].times(radius)))
                 qgl.qglVertex3f(point.oGet(0), point.oGet(1), point.oGet(2))
                 j++
             }
@@ -380,7 +380,7 @@ object tr_trace {
 
         // determine the points of the trace
         start.oSet(tr_local.backEnd.viewDef.renderView.vieworg)
-        end.oSet(start.oPlus(tr_local.backEnd.viewDef.renderView.viewaxis.oGet(0).oMultiply(4000f)))
+        end.oSet(start.oPlus(tr_local.backEnd.viewDef.renderView.viewaxis.oGet(0).times(4000f)))
 
         // check and draw the surfaces
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)

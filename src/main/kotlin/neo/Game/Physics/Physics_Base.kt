@@ -315,7 +315,7 @@ class Physics_Base {
             var i: Int
             i = 0
             while (i < contacts.Num()) {
-                if (contacts.oGet(i).normal.oMultiply(gravityNormal.oNegative()) > 0.0f) {
+                if (contacts.oGet(i).normal.times(gravityNormal.oNegative()) > 0.0f) {
                     return true
                 }
                 i++
@@ -327,7 +327,7 @@ class Physics_Base {
             var i: Int
             i = 0
             while (i < contacts.Num()) {
-                if (contacts.oGet(i).entityNum == entityNum && contacts.oGet(i).normal.oMultiply(gravityNormal.oNegative()) > 0.0f) {
+                if (contacts.oGet(i).entityNum == entityNum && contacts.oGet(i).normal.times(gravityNormal.oNegative()) > 0.0f) {
                     return true
                 }
                 i++
@@ -339,7 +339,7 @@ class Physics_Base {
             var i: Int
             i = 0
             while (i < contacts.Num()) {
-                if (contacts.oGet(i).entityNum == entityNum && contacts.oGet(i).id == id && contacts.oGet(i).normal.oMultiply(
+                if (contacts.oGet(i).entityNum == entityNum && contacts.oGet(i).id == id && contacts.oGet(i).normal.times(
                         gravityNormal.oNegative()
                     ) > 0.0f
                 ) {
@@ -448,7 +448,7 @@ class Physics_Base {
             var length: Float
             var a: Float
             dir.oSet(GetLinearVelocity(id))
-            dir.oMulSet(linearScale)
+            dir.timesAssign(linearScale)
             if (dir.LengthSqr() > Math_h.Square(0.1f)) {
                 dir.Truncate(10.0f)
                 org.oSet(GetOrigin(id))
@@ -465,21 +465,21 @@ class Physics_Base {
                 }
                 axis = GetAxis(id)
                 vec.oSet(axis.oGet(2))
-                if (Math.abs(dir.oMultiply(vec)) > 0.99f) {
+                if (Math.abs(dir.times(vec)) > 0.99f) {
                     vec.oSet(axis.oGet(0))
                 }
-                vec.oMinSet(vec.oMultiply(dir.oMultiply(vec)))
+                vec.minusAssign(vec.times(dir.times(vec)))
                 vec.Normalize()
-                vec.oMulSet(4.0f)
+                vec.timesAssign(4.0f)
                 start.oSet(org.oPlus(vec))
                 a = 20.0f
                 while (a < length) {
-                    end.oSet(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -a).ToMat3().oMultiply(vec)))
+                    end.oSet(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -a).ToMat3().times(vec)))
                     Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorBlue, start, end, 1)
                     start.oSet(end)
                     a += 20.0f
                 }
-                end.oSet(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -length).ToMat3().oMultiply(vec)))
+                end.oSet(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -length).ToMat3().times(vec)))
                 Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorBlue, start, end, 1)
             }
         }

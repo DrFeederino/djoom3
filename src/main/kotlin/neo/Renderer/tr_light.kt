@@ -271,7 +271,7 @@ object tr_light {
         )
 
         // make the second vector exactly perpendicular to the first
-        axis[1].oMinSet(axis[2].oMultiply(axis[2].oMultiply(axis[1])))
+        axis[1].minusAssign(axis[2].times(axis[2].times(axis[1])))
         axis[1].Normalize()
 
         // construct the third with a cross
@@ -872,7 +872,7 @@ object tr_light {
             // a random offset every time
             if (RenderSystem_init.r_lightSourceRadius.GetFloat() != 0.0f) {
                 for (i in 0..2) {
-                    light.globalLightOrigin.oPluSet(
+                    light.globalLightOrigin.plusAssign(
                         i,
                         RenderSystem_init.r_lightSourceRadius.GetFloat() * (-1 + 2 * (Math.random()
                             .toInt() and 0xfff) / 0xf)

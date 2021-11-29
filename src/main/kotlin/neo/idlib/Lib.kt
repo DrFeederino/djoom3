@@ -84,7 +84,7 @@ class Lib {
      ===============================================================================
      */
     object idLib {
-        var common: idCommon? = null
+        var common: idCommon = null
         var cvarSystem: idCVarSystem? = null
         var fileSystem: idFileSystem? = null
         var frameNumber = 0

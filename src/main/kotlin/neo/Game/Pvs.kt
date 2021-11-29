@@ -472,7 +472,7 @@ object Pvs {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
                     numPoints = portal.w.GetNumPoints()
                     portal.w.GetPlane(plane)
-                    offset.oSet(plane.Normal().oMultiply(4.0f))
+                    offset.oSet(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
@@ -533,7 +533,7 @@ object Pvs {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
                     numPoints = portal.w.GetNumPoints()
                     portal.w.GetPlane(plane)
-                    offset.oSet(plane.Normal().oMultiply(4.0f))
+                    offset.oSet(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
@@ -588,7 +588,7 @@ object Pvs {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
                     numPoints = portal.w.GetNumPoints()
                     portal.w.GetPlane(plane)
-                    offset.oSet(plane.Normal().oMultiply(4.0f))
+                    offset.oSet(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
@@ -687,7 +687,7 @@ object Pvs {
                     // no PVS calculated for this portal yet
                     p.done = false
                     portalPtrs[area.numPortals++] = p
-                    area.bounds.oPluSet(p.bounds)
+                    area.bounds.timesAssign(p.bounds)
                     j++
                 }
                 area.portals = portalPtrs
@@ -1034,7 +1034,7 @@ object Pvs {
                         j++
                         continue
                     }
-                    dist = normal.oMultiply(pass.oGet(j).ToVec3())
+                    dist = normal.times(pass.oGet(j).ToVec3())
 
                     //
                     // find out which side of the generated seperating plane has the
@@ -1047,7 +1047,7 @@ object Pvs {
                             k++
                             continue
                         }
-                        d = source.oGet(k).ToVec3().oMultiply(normal) - dist
+                        d = source.oGet(k).ToVec3().times(normal) - dist
                         if (d < -Plane.ON_EPSILON) {
                             // source is on the negative side, so we want all
                             // pass and target on the positive side
@@ -1081,7 +1081,7 @@ object Pvs {
                             k++
                             continue
                         }
-                        d = pass.oGet(k).ToVec3().oMultiply(normal) - dist
+                        d = pass.oGet(k).ToVec3().times(normal) - dist
                         if (d < -Plane.ON_EPSILON) {
                             break
                         } else if (d > Plane.ON_EPSILON) {

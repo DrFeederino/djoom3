@@ -228,7 +228,7 @@ object Physics_Monster {
             // if bound to a master
             if (masterEntity != null) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis)))
+                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
                 current.velocity.oSet(current.origin.oMinus(oldOrigin).oDivide(timeStep))
                 masterDeltaYaw = masterYaw
@@ -244,7 +244,7 @@ object Physics_Monster {
             ActivateContactEntities()
 
             // move the monster velocity into the frame of a pusher
-            current.velocity.oMinSet(current.pushVelocity)
+            current.velocity.minusAssign(current.pushVelocity)
             clipModel.Unlink()
 
             // check if on the ground
@@ -253,7 +253,7 @@ object Physics_Monster {
             // if not on the ground or moving upwards
             val upspeed: Float
             upspeed = if (gravityNormal != Vector.getVec3_zero()) {
-                -current.velocity.oMultiply(gravityNormal)
+                -current.velocity.times(gravityNormal)
             } else {
                 current.velocity.z
             }
@@ -264,21 +264,21 @@ object Physics_Monster {
                     current.onGround = false
                     moveResult = monsterMoveResult_t.MM_OK
                 }
-                delta.oSet(current.velocity.oMultiply(timeStep))
+                delta.oSet(current.velocity.times(timeStep))
                 if (delta != Vector.getVec3_origin()) {
                     moveResult = SlideMove(current.origin, current.velocity, delta)
                     delta.Zero()
                 }
                 if (!fly) {
-                    current.velocity.oPluSet(gravityVector.oMultiply(timeStep))
+                    current.velocity.plusAssign(gravityVector.times(timeStep))
                 }
             } else {
                 if (useVelocityMove) {
-                    delta.oSet(current.velocity.oMultiply(timeStep))
+                    delta.oSet(current.velocity.times(timeStep))
                 } else {
-                    current.velocity.oSet(delta.oDivide(timeStep))
+                    current.velocity.oSet(delta.div(timeStep))
                 }
-                current.velocity.oMinSet(gravityNormal.oMultiply(current.velocity.oMultiply(gravityNormal)))
+                current.velocity.minusAssign(gravityNormal.times(current.velocity.times(gravityNormal)))
                 if (delta == Vector.getVec3_origin()) {
                     Rest()
                 } else {
@@ -293,7 +293,7 @@ object Physics_Monster {
             EvaluateContacts()
 
             // move the monster velocity back into the world frame
-            current.velocity.oPluSet(current.pushVelocity)
+            current.velocity.plusAssign(current.pushVelocity)
             current.pushVelocity.Zero()
             if (IsOutsideWorld()) {
                 Game_local.gameLocal.Warning(
@@ -324,7 +324,7 @@ object Physics_Monster {
             if (noImpact) {
                 return
             }
-            current.velocity.oPluSet(impulse.oMultiply(invMass))
+            current.velocity.plusAssign(impulse.times(invMass))
             Activate()
         }
 
@@ -363,7 +363,7 @@ object Physics_Monster {
             current.localOrigin.oSet(newOrigin)
             if (masterEntity != null) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(newOrigin.oMultiply(masterAxis)))
+                current.origin.oSet(masterOrigin.oPlus(newOrigin.times(masterAxis)))
             } else {
                 current.origin.oSet(newOrigin)
             }
@@ -377,8 +377,8 @@ object Physics_Monster {
         }
 
         override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
-            current.localOrigin.oPluSet(translation)
-            current.origin.oPluSet(translation)
+            current.localOrigin.plusAssign(translation)
+            current.origin.plusAssign(translation)
             clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
             Activate()
         }
@@ -386,7 +386,7 @@ object Physics_Monster {
         override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
-            current.origin.oMulSet(rotation)
+            current.origin.timesAssign(rotation)
             if (masterEntity != null) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
                 current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
@@ -398,7 +398,7 @@ object Physics_Monster {
                 self,
                 0,
                 current.origin,
-                clipModel.GetAxis().oMultiply(rotation.ToMat3())
+                clipModel.GetAxis().times(rotation.ToMat3())
             )
             Activate()
         }
@@ -414,7 +414,7 @@ object Physics_Monster {
 
         override fun SetPushed(deltaTime: Int) {
             // velocity with which the monster is pushed
-            current.pushVelocity.oPluSet(current.origin.oMinus(saved.origin).oDivide(deltaTime * idMath.M_MS2SEC))
+            current.pushVelocity.plusAssign(current.origin.oMinus(saved.origin).oDivide(deltaTime * idMath.M_MS2SEC))
         }
 
         override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3? {
@@ -556,7 +556,7 @@ object Physics_Monster {
                 groundEntityPtr.oSet(null)
                 return
             }
-            down.oSet(state.origin.oPlus(gravityNormal.oMultiply(Physics.CONTACT_EPSILON)))
+            down.oSet(state.origin.oPlus(gravityNormal.times(Physics.CONTACT_EPSILON)))
             Game_local.gameLocal.clip.Translation(
                 groundTrace,
                 state.origin,
@@ -572,7 +572,7 @@ object Physics_Monster {
                 return
             }
             groundEntityPtr.oSet(Game_local.gameLocal.entities[groundTrace.c.entityNum])
-            if (groundTrace.c.normal.oMultiply(gravityNormal.oNegative()) < minFloorCosine) {
+            if (groundTrace.c.normal.times(gravityNormal.oNegative()) < minFloorCosine) {
                 state.onGround = false
                 return
             }
@@ -586,7 +586,7 @@ object Physics_Monster {
                 val info = groundEntityPtr.GetEntity().GetImpactInfo(self, groundTrace.c.id, groundTrace.c.point)
                 if (info.invMass != 0.0f) {
                     groundEntityPtr.GetEntity()
-                        .ApplyImpulse(self, 0, groundTrace.c.point, state.velocity.oDivide(info.invMass * 10.0f))
+                        .ApplyImpulse(self, 0, groundTrace.c.point, state.velocity.div(info.invMass * 10.0f))
                 }
             }
         }
@@ -662,7 +662,7 @@ object Physics_Monster {
                 }
 
                 // try to step down so that we walk down slopes and stairs at a normal rate
-                down.oSet(noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight)))
+                down.oSet(noStepPos.oPlus(gravityNormal.times(maxStepHeight)))
                 Game_local.gameLocal.clip.Translation(
                     tr,
                     noStepPos,
@@ -682,7 +682,7 @@ object Physics_Monster {
             }
             if (blockingEntity != null && blockingEntity is idActor) {
                 // try to step down in case walking into an actor while going down steps
-                down.oSet(noStepPos.oPlus(gravityNormal.oMultiply(maxStepHeight)))
+                down.oSet(noStepPos.oPlus(gravityNormal.times(maxStepHeight)))
                 Game_local.gameLocal.clip.Translation(
                     tr,
                     noStepPos,
@@ -701,7 +701,7 @@ object Physics_Monster {
             }
 
             // try to step up
-            up.oSet(start.oMinus(gravityNormal.oMultiply(maxStepHeight)))
+            up.oSet(start.oMinus(gravityNormal.times(maxStepHeight)))
             Game_local.gameLocal.clip.Translation(tr, start, up, clipModel, clipModel.GetAxis(), clipMask, self)
             if (tr.fraction == 0.0f) {
                 start.oSet(noStepPos)
@@ -720,14 +720,14 @@ object Physics_Monster {
             }
 
             // step down again
-            down.oSet(stepPos.oPlus(gravityNormal.oMultiply(maxStepHeight)))
+            down.oSet(stepPos.oPlus(gravityNormal.times(maxStepHeight)))
             Game_local.gameLocal.clip.Translation(tr, stepPos, down, clipModel, clipModel.GetAxis(), clipMask, self)
             stepPos.oSet(tr.endpos)
 
             // if the move is further without stepping up, or the slope is too steap, don't step up
             nostepdist = noStepPos.oMinus(start).LengthSqr()
             stepdist = stepPos.oMinus(start).LengthSqr()
-            if (nostepdist >= stepdist || tr.c.normal.oMultiply(gravityNormal.oNegative()) < minFloorCosine) {
+            if (nostepdist >= stepdist || tr.c.normal.times(gravityNormal.oNegative()) < minFloorCosine) {
                 start.oSet(noStepPos)
                 velocity.oSet(noStepVel)
                 return monsterMoveResult_t.MM_SLIDING

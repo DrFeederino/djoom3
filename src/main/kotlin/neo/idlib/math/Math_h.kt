@@ -34,7 +34,7 @@ object Math_h {
     }
 
     fun SEC2MS(t: Float): Float {
-        return idMath.FtoiFast(t * idMath.M_SEC2MS)
+        return idMath.FtoiFast(t * idMath.M_SEC2MS).toFloat()
     }
 
     fun MS2SEC(t: Float): Float {
@@ -42,7 +42,7 @@ object Math_h {
     }
 
     fun ANGLE2SHORT(x: Float): Float {
-        return idMath.FtoiFast(x * 65536.0f / 360.0f) and 65535
+        return (idMath.FtoiFast(x * 65536.0f / 360.0f) and 65535).toFloat()
     }
 
     fun SHORT2ANGLE(x: Float): Float {
@@ -50,7 +50,7 @@ object Math_h {
     }
 
     fun ANGLE2BYTE(x: Float): Float {
-        return idMath.FtoiFast(x * 256.0f / 360.0f) and 255
+        return (idMath.FtoiFast(x * 256.0f / 360.0f) and 255).toFloat()
     }
 
     fun BYTE2ANGLE(x: Float): Float {
@@ -154,7 +154,7 @@ object Math_h {
         const val SQRT_1OVER2 = 0.70710678118654752440f // sqrt( 1 / 2 )
         const val SQRT_TABLE_SIZE = 2 shl LOOKUP_BITS
         const val LOOKUP_MASK = SQRT_TABLE_SIZE - 1
-        private val iSqrt: LongArray? = LongArray(SQRT_TABLE_SIZE)
+        private val iSqrt: LongArray = LongArray(SQRT_TABLE_SIZE)
         const val TWO_PI = 2.0f * PI // pi * 2
         const val E = 2.71828182845904523536f // e
         const val HALF_PI = 0.5f * PI // pi / 2
@@ -170,9 +170,9 @@ object Math_h {
             for (i in 0 until SQRT_TABLE_SIZE) {
                 fi = _flint(EXP_BIAS - 1 shl EXP_POS or (i shl LOOKUP_POS))
                 fo = _flint((1.0 / Math.sqrt(fi.f.toDouble())).toFloat())
-                iSqrt.get(i) = (fo.i + (1 shl SEED_POS - 2) shr SEED_POS and 0xFF).toLong() shl SEED_POS
+                iSqrt[i] = (fo.i + (1 shl SEED_POS - 2) shr SEED_POS and 0xFF).toLong() shl SEED_POS
             }
-            iSqrt.get(SQRT_TABLE_SIZE / 2) = 0xFF.toLong() shl SEED_POS
+            iSqrt[SQRT_TABLE_SIZE / 2] = 0xFF.toLong() shl SEED_POS
             initialized = true
         }
 
@@ -199,7 +199,7 @@ object Math_h {
             val y = (x * 0.5f).toDouble()
             seed.setI(
                 3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS
-                        or iSqrt.get(a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK)
+                        or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK]
             )
             var r = seed.f.toDouble()
             r = r * (1.5f - r * r * y)
@@ -212,7 +212,7 @@ object Math_h {
             val a = seed.getI()
             assert(initialized)
             val y = (x * 0.5f).toDouble()
-            seed.setI(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt.get(a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK))
+            seed.setI(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK])
             var r = seed.f.toDouble()
             r = r * (1.5f - r * r * y)
             return r.toFloat()
@@ -223,7 +223,7 @@ object Math_h {
             val a = seed.getI()
             assert(initialized)
             val y = (x * 0.5f).toDouble()
-            seed.setI(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt.get(a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK))
+            seed.setI(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK])
             var r = seed.f.toDouble()
             r = r * (1.5f - r * r * y)
             r = r * (1.5f - r * r * y)
@@ -326,7 +326,7 @@ object Math_h {
             return Math.cos(a.toDouble())
         } // cosine with 64 bits precision
 
-        fun SinCos(a: Float, s: CFloat?, c: CFloat?) { // sine and cosine with 32 bits precision
+        fun SinCos(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 32 bits precision
 //#ifdef _WIN32//i wish.
 //	_asm {
 //		fld		a
@@ -342,7 +342,7 @@ object Math_h {
             //#endif
         }
 
-        fun SinCos16(a: Float, s: CFloat?, c: CFloat?) { // sine and cosine with 16 bits precision
+        fun SinCos16(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 16 bits precision
             var a = a
             val t: Float
             val d: Float
@@ -381,7 +381,7 @@ object Math_h {
             c.setVal(d * (((((-2.605e-07f * t + 2.47609e-05f) * t - 1.3888397e-03f) * t + 4.16666418e-02f) * t - 4.999999963e-01f) * t + 1.0f))
         }
 
-        fun SinCos64(a: Float, s: CFloat?, c: CFloat?) { // sine and cosine with 64 bits precision
+        fun SinCos64(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 64 bits precision
 //#ifdef _WIN32
 //	_asm {
 //		fld		a
@@ -473,13 +473,13 @@ object Math_h {
             }
         }
 
-        fun ASin64(a: Float): Double { // arc sine with 64 bits precision
+        fun ASin64(a: Float): Float { // arc sine with 64 bits precision
             if (a <= -1.0f) {
                 return -HALF_PI
             }
             return if (a >= 1.0f) {
                 HALF_PI
-            } else Math.sin(a.toDouble())
+            } else Math.sin(a.toDouble()).toFloat()
         }
 
         fun ACos(a: Float): Float { // arc cosine with 32 bits precision, input is clamped to [-1, 1] to avoid a silent NaN
@@ -950,7 +950,7 @@ object Math_h {
             return java.lang.Float.intBitsToFloat(value)
         }
 
-        fun FloatHash(array: FloatArray?, numFloats: Int): Int {
+        fun FloatHash(array: FloatArray, numFloats: Int): Int {
             var i: Int
             var hash = 0
             //	const int *ptr;
@@ -960,15 +960,15 @@ object Math_h {
             while (i < numFloats) {
 
 //		hash ^= ptr[i];
-                hash = hash xor java.lang.Float.floatToIntBits(array.get(i))
+                hash = hash xor java.lang.Float.floatToIntBits(array[i])
                 i++
             }
             return hash
         }
 
         internal class _flint {
-            private var f = 0f
-            private var i = 0
+            var f = 0f
+            var i = 0
 
             constructor(i: Int) {
                 setI(i)

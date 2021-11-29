@@ -389,8 +389,8 @@ object Polynomial {
             y.Set(coefficient.get(0), 0.0f)
             z.oSet(x)
             for (i in 1..degree) {
-                y.oPluSet(z.oMultiply(coefficient.get(i)))
-                z.oMulSet(x)
+                y.plusAssign(z.times(coefficient.get(i)))
+                z.timesAssign(x)
             }
             return y
         }
@@ -447,7 +447,7 @@ object Polynomial {
                 while (j >= 0) {
                     c.oSet(coef[j])
                     coef[j].oSet(b)
-                    b.oSet(x.oMultiply(b).oPlus(c))
+                    b.oSet(x.times(b).plus(c))
                     j--
                 }
                 i--
@@ -574,42 +574,42 @@ object Polynomial {
                 abx = x.Abs()
                 j = degree - 1
                 while (j >= 0) {
-                    f = x.oMultiply(f).oPlus(d)
-                    d = x.oMultiply(d).oPlus(b)
-                    b = x.oMultiply(b).oPlus(coef.get(j))
+                    f = x.times(f).plus(d)
+                    d = x.times(d).plus(b)
+                    b = x.times(b).plus(coef.get(j))
                     err = b.Abs() + abx * err
                     j--
                 }
                 if (b.Abs() < err * Polynomial.EPSILON) {
                     return i
                 }
-                g = d.oDivide(b)
-                g2 = g.oMultiply(g)
-                s = g2.oMinus(f.oDivide(b).oMultiply(2.0f)).oMultiply(degree.toFloat()).oMinus(g2)
-                    .oMultiply((degree - 1).toFloat()).Sqrt()
-                gps = g.oPlus(s)
-                gms = g.oMinus(s)
+                g = d.div(b)
+                g2 = g.times(g)
+                s = g2.minus(f.div(b).times(2.0f)).times(degree.toFloat()).minus(g2)
+                    .times((degree - 1).toFloat()).Sqrt()
+                gps = g.plus(s)
+                gms = g.minus(s)
                 abp = gps.Abs()
                 abm = gms.Abs()
                 if (abp < abm) {
                     gps = gms
                 }
                 dx = if (Lib.Companion.Max(abp, abm) > 0.0f) {
-                    idComplex.Companion.oDivide(degree.toFloat(), gps)
+                    idComplex.Companion.div(degree.toFloat(), gps)
                 } else {
                     idComplex(
                         idMath.Cos(i.toFloat()),
                         idMath.Sin(i.toFloat())
-                    ).oMultiply(idMath.Exp(idMath.Log(1.0f + abx)))
+                    ).times(idMath.Exp(idMath.Log(1.0f + abx)))
                 }
-                cx = x.oMinus(dx)
+                cx = x.minus(dx)
                 if (x === cx) {
                     return i
                 }
                 if (i % MT == 0) {
                     x.oSet(cx)
                 } else {
-                    x.oMinSet(dx.oMultiply(frac[i / MT]))
+                    x.minusAssign(dx.times(frac[i / MT]))
                 }
                 i++
             }

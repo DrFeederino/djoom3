@@ -1,7 +1,6 @@
 package neo.idlib.math
 
 import neo.TempDump.SERiAL
-import neo.TempDump.TODO_Exception
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CFloat
 import neo.idlib.math.Angles.idAngles
@@ -13,9 +12,9 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Random.idRandom
 import neo.idlib.math.Rotation.idRotation
 import org.lwjgl.BufferUtils
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
-import java.util.stream.Stream
+import kotlin.math.*
 
 /**
  *
@@ -181,49 +180,17 @@ object Vector {
     interface idVec<T : idVec<T>> {
         //reflection was too slow.
         //never thought I would say this, but thank God for type erasure.
-        fun oGet(index: Int): Float {
-            throw TODO_Exception()
-        }
-
-        fun oSet(a: T): T {
-            throw TODO_Exception()
-        }
-
-        fun oSet(index: Int, value: Float): Float {
-            throw TODO_Exception()
-        }
-
-        operator fun plus(a: T): T {
-            throw TODO_Exception()
-        }
-
-        operator fun minus(a: T): T {
-            throw TODO_Exception()
-        }
-
-        operator fun times(a: T): Float {
-            throw TODO_Exception()
-        }
-
-        operator fun times(a: Float): T {
-            throw TODO_Exception()
-        }
-
-        operator fun div(a: Float): T {
-            throw TODO_Exception()
-        }
-
-        fun oPluSet(a: T): T {
-            throw TODO_Exception()
-        }
-
-        fun GetDimension(): Int {
-            throw TODO_Exception()
-        }
-
-        fun Zero() {
-            throw TODO_Exception()
-        }
+        fun oGet(index: Int): Float
+        fun oSet(a: T): T
+        fun oSet(index: Int, value: Float): Float
+        operator fun plus(a: T): T
+        operator fun minus(a: T): T
+        operator fun times(a: T): Float
+        operator fun times(a: Float): T
+        operator fun div(a: Float): T
+        fun plusAssign(a: T): T  // too bad kotlin's augmented assigns are Unit-only :(
+        fun GetDimension(): Int
+        fun Zero()
     }
 
     //===============================================================
@@ -298,17 +265,17 @@ object Vector {
         }
 
         //public	idVec2			operator+( const idVec2 &a ) const;
-        override fun plus(a: idVec2?): idVec2 {
+        override fun plus(a: idVec2): idVec2 {
             return idVec2(x + a.x, y + a.y)
         }
 
         //public	idVec2			operator-( const idVec2 &a ) const;
-        override fun minus(a: idVec2?): idVec2? {
+        override fun minus(a: idVec2): idVec2 {
             return idVec2(x - a.x, y - a.y)
         }
 
         //public	idVec2 &		operator+=( const idVec2 &a );
-        override fun oPluSet(a: idVec2?): idVec2? {
+        override fun plusAssign(a: idVec2): idVec2 {
             x += a.x
             y += a.y
             return this
@@ -316,37 +283,37 @@ object Vector {
 
         //public	idVec2 &		operator/=( const idVec2 &a );
         //public	idVec2 &		operator/=( const float a );
-        //public	idVec2 &		operator*=( const float a );
         //public	idVec2 &		operator-=( const idVec2 &a );
-        fun oMinSet(a: idVec2?): idVec2? {
+        fun minusAssign(a: idVec2): idVec2 {
             x -= a.x
             y -= a.y
             return this
         }
 
-        fun oMulSet(a: Float): idVec2? {
+        //public	idVec2 &		operator*=( const float a );
+        fun timesAssign(a: Float): idVec2 {
             x *= a
             y *= a
             return this
         }
 
         //public	friend idVec2	operator*( const float a, const idVec2 b );
-        override fun oSet(a: idVec2?): idVec2? {
+        override fun oSet(a: idVec2): idVec2 {
             x = a.x
             y = a.y
             return this
         }
 
-        fun Compare(a: idVec2?): Boolean { // exact compare, no epsilon
+        fun Compare(a: idVec2): Boolean { // exact compare, no epsilon
             return x == a.x && y == a.y
         }
 
         //public	bool			operator==(	const idVec2 &a ) const;						// exact compare, no epsilon
         //public	bool			operator!=(	const idVec2 &a ) const;						// exact compare, no epsilon
-        fun Compare(a: idVec2?, epsilon: Float): Boolean { // compare with epsilon
-            return if (Math.abs(x - a.x) > epsilon) {
+        fun Compare(a: idVec2, epsilon: Float): Boolean { // compare with epsilon
+            return if (abs(x - a.x) > epsilon) {
                 false
-            } else Math.abs(y - a.y) <= epsilon
+            } else abs(y - a.y) <= epsilon
         }
 
         fun Length(): Float {
@@ -354,8 +321,7 @@ object Vector {
         }
 
         fun LengthFast(): Float {
-            val sqrLength: Float
-            sqrLength = x * x + y * y
+            val sqrLength: Float = x * x + y * y
             return sqrLength * idMath.RSqrt(sqrLength)
         }
 
@@ -364,26 +330,22 @@ object Vector {
         }
 
         fun Normalize(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength = x * x + y * y
-            invLength = idMath.InvSqrt(sqrLength)
+            val sqrLength: Float = x * x + y * y
+            val invLength: Float = idMath.InvSqrt(sqrLength)
             x *= invLength
             y *= invLength
             return invLength * sqrLength
         }
 
         fun NormalizeFast(): Float { // returns length
-            val lengthSqr: Float
-            val invLength: Float
-            lengthSqr = x * x + y * y
-            invLength = idMath.RSqrt(lengthSqr)
+            val lengthSqr: Float = x * x + y * y
+            val invLength: Float = idMath.RSqrt(lengthSqr)
             x *= invLength
             y *= invLength
             return invLength * lengthSqr
         }
 
-        fun Truncate(length: Float): idVec2? { // cap length
+        fun Truncate(length: Float): idVec2 { // cap length
             val length2: Float
             val ilength: Float
             if (length == 0f) {
@@ -399,7 +361,7 @@ object Vector {
             return this
         }
 
-        fun Clamp(min: idVec2?, max: idVec2?) {
+        fun Clamp(min: idVec2, max: idVec2) {
             if (x < min.x) {
                 x = min.x
             } else if (x > max.x) {
@@ -414,8 +376,8 @@ object Vector {
 
         fun Snap() { // snap to closest integer value
 //            x = floor(x + 0.5f);
-            x = Math.floor((x + 0.5f).toDouble()).toFloat()
-            y = Math.floor((y + 0.5f).toDouble()).toFloat()
+            x = floor((x + 0.5f).toDouble()).toFloat()
+            y = floor((y + 0.5f).toDouble()).toFloat()
         }
 
         fun SnapInt() { // snap towards integer (floor)
@@ -428,13 +390,13 @@ object Vector {
         }
 
         //public	float *			ToFloatPtr( void );
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return floatArrayOf(x, y)
         }
 
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
         override fun toString(): String {
@@ -448,13 +410,13 @@ object Vector {
          Linearly inperpolates one vector to another.
          =============
          */
-        fun Lerp(v1: idVec2?, v2: idVec2?, l: Float) {
+        fun Lerp(v1: idVec2, v2: idVec2, l: Float) {
             if (l <= 0.0f) {
                 this.oSet(v1) //( * this) = v1;
             } else if (l >= 1.0f) {
                 this.oSet(v2) //( * this) = v2;
             } else {
-                this.oSet(v2.minus(v1).oMultiply(l).plus(v1)) //( * this) = v1 + l * (v2 - v1);
+                this.oSet(v1 + (v2 - v1) * l) //( * this) = v1 + l * (v2 - v1);
             }
         }
 
@@ -476,8 +438,8 @@ object Vector {
 
             @Transient
             val BYTES = SIZE / java.lang.Byte.SIZE
-            fun generateArray(length: Int): Array<idVec2?>? {
-                return Stream.generate { idVec2() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<idVec2> {
+                return Array(length) { idVec2() }
             }
         }
     }
@@ -506,10 +468,10 @@ object Vector {
         }
 
         @JvmOverloads
-        constructor(xyz: FloatArray?, offset: Int = 0) {
-            x = xyz.get(offset + 0)
-            y = xyz.get(offset + 1)
-            z = xyz.get(offset + 2)
+        constructor(xyz: FloatArray, offset: Int = 0) {
+            x = xyz[offset + 0]
+            y = xyz[offset + 1]
+            z = xyz[offset + 2]
         }
 
         fun Set(x: Float, y: Float, z: Float) {
@@ -527,7 +489,7 @@ object Vector {
         //public	float			operator[]( final  int index ) final ;
         //public	float &			operator[]( final  int index );
         //public	idVec3			operator-() final ;
-        fun oNegative(): idVec3 {
+        operator fun unaryMinus(): idVec3 {
             return idVec3(-x, -y, -z)
         }
 
@@ -539,23 +501,23 @@ object Vector {
             return this
         }
 
-        fun oSet(a: idVec2?): idVec3 {
+        fun oSet(a: idVec2): idVec3 {
             x = a.x
             y = a.y
             return this
         }
 
         //public	float			operator*( final  idVec3 &a ) final ;
-        override fun oMultiply(a: idVec3): Float {
+        override fun times(a: idVec3): Float {
             return a.x * x + a.y * y + a.z * z
         }
 
         //public	idVec3			operator*( final  float a ) final ;
-        override fun oMultiply(a: Float): idVec3 {
+        override fun times(a: Float): idVec3 {
             return idVec3(x * a, y * a, z * a)
         }
 
-        fun oMultiply(a: idMat3?): idVec3 {
+        operator fun times(a: idMat3): idVec3 {
             return idVec3(
                 a.getRow(0).oGet(0) * x + a.getRow(1).oGet(0) * y + a.getRow(2).oGet(0) * z,
                 a.getRow(0).oGet(1) * x + a.getRow(1).oGet(1) * y + a.getRow(2).oGet(1) * z,
@@ -563,16 +525,16 @@ object Vector {
             )
         }
 
-        fun oMultiply(a: idRotation?): idVec3 {
-            return a.oMultiply(this)
+        operator fun times(a: idRotation): idVec3 {
+            return a.times(this)
         }
 
-        fun oMultiply(a: idMat4?): idVec3 {
-            return a.oMultiply(this)
+        operator fun times(a: idMat4): idVec3 {
+            return a.times(this)
         }
 
         //public	idVec3			operator/( final  float a ) final ;
-        override fun oDivide(a: Float): idVec3 {
+        override fun div(a: Float): idVec3 {
             val inva = 1.0f / a
             return idVec3(x * inva, y * inva, z * inva)
         }
@@ -588,7 +550,7 @@ object Vector {
         }
 
         //public	idVec3 &		operator+=( final  idVec3 &a );
-        override fun oPluSet(a: idVec3): idVec3 {
+        override fun plusAssign(a: idVec3): idVec3 {
             x += a.x
             y += a.y
             z += a.z
@@ -596,7 +558,7 @@ object Vector {
         }
 
         //public	idVec3 &		operator-=( final  idVec3 &a );
-        fun oMinSet(a: idVec3): idVec3 {
+        fun minusAssign(a: idVec3): idVec3 {
             x -= a.x
             y -= a.y
             z -= a.z
@@ -604,7 +566,7 @@ object Vector {
         }
 
         //public	idVec3 &		operator/=( final  idVec3 &a );
-        fun oDivSet(a: Float): idVec3 {
+        fun divAssign(a: Float): idVec3 {
             x /= a
             y /= a
             z /= a
@@ -612,22 +574,22 @@ object Vector {
         }
 
         //public	idVec3 &		operator*=( final  float a );
-        fun oMulSet(a: Float): idVec3 {
+        fun timesAssign(a: Float): idVec3 {
             x *= a
             y *= a
             z *= a
             return this
         }
 
-        fun oMulSet(mat: idMat3?): idVec3 {
-            this.oSet(idMat3.Companion.oMulSet(this, mat))
+        fun timesAssign(mat: idMat3): idVec3 {
+            this.oSet(idMat3.timesAssign(this, mat))
             return this
         }
 
         //public	boolean			operator==(	final  idVec3 &a ) final ;						// exact compare, no epsilon
         //public	boolean			operator!=(	final  idVec3 &a ) final ;						// exact compare, no epsilon
-        fun oMulSet(rotation: idRotation?): idVec3 {
-            this.oSet(rotation.oMultiply(this))
+        fun timesAssign(rotation: idRotation): idVec3 {
+            this.oSet(rotation.times(this))
             return this
         }
 
@@ -636,25 +598,25 @@ object Vector {
         }
 
         fun Compare(a: idVec3, epsilon: Float): Boolean { // compare with epsilon
-            if (Math.abs(x - a.x) > epsilon) {
+            if (abs(x - a.x) > epsilon) {
                 return false
             }
-            return if (Math.abs(y - a.y) > epsilon) {
+            return if (abs(y - a.y) > epsilon) {
                 false
-            } else Math.abs(z - a.z) <= epsilon
+            } else abs(z - a.z) <= epsilon
         }
 
         //private idVec3  multiply(float a){
         //    return new idVec3( this.x * a, this.y * a, this.z * a );
         //}
-        fun plus(a: Float): idVec3 {
+        operator fun plus(a: Float): idVec3 {
             x += a
             y += a
             z += a
             return this
         }
 
-        private fun oDivide(a: idVec3, b: Float): idVec3 {
+        fun div(a: idVec3, b: Float): idVec3 {
             val invB = 1.0f / b
             return idVec3(a.x * b, a.y * b, a.z * b)
         }
@@ -704,21 +666,21 @@ object Vector {
                     return false
                 }
             }
-            if (Math.abs(x) == 1.0f) {
+            if (abs(x) == 1.0f) {
                 if (y != 0.0f || z != 0.0f) {
                     z = 0.0f
                     y = z
                     return true
                 }
                 return false
-            } else if (Math.abs(y) == 1.0f) {
+            } else if (abs(y) == 1.0f) {
                 if (x != 0.0f || z != 0.0f) {
                     z = 0.0f
                     x = z
                     return true
                 }
                 return false
-            } else if (Math.abs(z) == 1.0f) {
+            } else if (abs(z) == 1.0f) {
                 if (x != 0.0f || y != 0.0f) {
                     y = 0.0f
                     x = y
@@ -731,15 +693,15 @@ object Vector {
 
         fun FixDenormals(): Boolean { // change tiny numbers to zero
             var denormal = false
-            if (Math.abs(x) < 1e-30f) {
+            if (abs(x) < 1e-30f) {
                 x = 0.0f
                 denormal = true
             }
-            if (Math.abs(y) < 1e-30f) {
+            if (abs(y) < 1e-30f) {
                 y = 0.0f
                 denormal = true
             }
-            if (Math.abs(z) < 1e-30f) {
+            if (abs(z) < 1e-30f) {
                 z = 0.0f
                 denormal = true
             }
@@ -766,16 +728,13 @@ object Vector {
         }
 
         fun LengthFast(): Float {
-            val sqrLength: Float
-            sqrLength = x * x + y * y + z * z
+            val sqrLength: Float = x * x + y * y + z * z
             return sqrLength * idMath.RSqrt(sqrLength)
         }
 
         fun Normalize(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength = x * x + y * y + z * z
-            invLength = idMath.InvSqrt(sqrLength)
+            val sqrLength: Float = x * x + y * y + z * z
+            val invLength: Float = idMath.InvSqrt(sqrLength)
             x *= invLength
             y *= invLength
             z *= invLength
@@ -783,10 +742,8 @@ object Vector {
         }
 
         fun NormalizeFast(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength = x * x + y * y + z * z
-            invLength = idMath.RSqrt(sqrLength)
+            val sqrLength: Float = x * x + y * y + z * z
+            val invLength: Float = idMath.RSqrt(sqrLength)
             x *= invLength
             y *= invLength
             z *= invLength
@@ -829,9 +786,9 @@ object Vector {
         }
 
         fun Snap() { // snap to closest integer value
-            x = Math.floor((x + 0.5f).toDouble()).toFloat()
-            y = Math.floor((y + 0.5f).toDouble()).toFloat()
-            z = Math.floor((z + 0.5f).toDouble()).toFloat()
+            x = floor((x + 0.5f).toDouble()).toFloat()
+            y = floor((y + 0.5f).toDouble()).toFloat()
+            z = floor((z + 0.5f).toDouble()).toFloat()
         }
 
         fun SnapInt() { // snap towards integer (floor)
@@ -849,7 +806,7 @@ object Vector {
             if (y == 0.0f && x == 0.0f) {
                 yaw = 0.0f
             } else {
-                yaw = RAD2DEG(Math.atan2(y.toDouble(), x.toDouble()))
+                yaw = RAD2DEG(atan2(y.toDouble(), x.toDouble()))
                 if (yaw < 0.0f) {
                     yaw += 360.0f
                 }
@@ -868,7 +825,7 @@ object Vector {
                 }
             } else {
                 forward = idMath.Sqrt(x * x + y * y)
-                pitch = RAD2DEG(Math.atan2(z.toDouble(), forward.toDouble()))
+                pitch = RAD2DEG(atan2(z.toDouble(), forward.toDouble()))
                 if (pitch < 0.0f) {
                     pitch += 360.0f
                 }
@@ -876,7 +833,7 @@ object Vector {
             return pitch
         }
 
-        fun ToAngles(): idAngles? {
+        fun ToAngles(): idAngles {
             val forward: Float
             var yaw: Float
             var pitch: Float
@@ -888,12 +845,12 @@ object Vector {
                     270.0f
                 }
             } else {
-                yaw = RAD2DEG(Math.atan2(y.toDouble(), x.toDouble()))
+                yaw = RAD2DEG(atan2(y.toDouble(), x.toDouble()))
                 if (yaw < 0.0f) {
                     yaw += 360.0f
                 }
                 forward = idMath.Sqrt(x * x + y * y)
-                pitch = RAD2DEG(Math.atan2(z.toDouble(), forward.toDouble()))
+                pitch = RAD2DEG(atan2(z.toDouble(), forward.toDouble()))
                 if (pitch < 0.0f) {
                     pitch += 360.0f
                 }
@@ -902,7 +859,7 @@ object Vector {
         }
 
         //public	idVec2 &		ToVec2( void );
-        fun ToPolar(): idPolar3? {
+        fun ToPolar(): idPolar3 {
             val forward: Float
             var yaw: Float
             var pitch: Float
@@ -914,12 +871,12 @@ object Vector {
                     270.0f
                 }
             } else {
-                yaw = RAD2DEG(Math.atan2(y.toDouble(), x.toDouble()))
+                yaw = RAD2DEG(atan2(y.toDouble(), x.toDouble()))
                 if (yaw < 0.0f) {
                     yaw += 360.0f
                 }
                 forward = idMath.Sqrt(x * x + y * y)
-                pitch = RAD2DEG(Math.atan2(z.toDouble(), forward.toDouble()))
+                pitch = RAD2DEG(atan2(z.toDouble(), forward.toDouble()))
                 if (pitch < 0.0f) {
                     pitch += 360.0f
                 }
@@ -956,13 +913,13 @@ object Vector {
             return idVec2(x, y)
         }
 
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return floatArrayOf(x, y, z)
         }
 
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
         override fun toString(): String {
@@ -989,7 +946,7 @@ object Vector {
         fun OrthogonalBasis(left: idVec3, up: idVec3) {
             val l: Float
             val s: Float
-            if (Math.abs(z) > 0.7f) {
+            if (abs(z) > 0.7f) {
                 l = y * y + z * z
                 s = idMath.InvSqrt(l)
                 up.x = 0f
@@ -1019,9 +976,8 @@ object Vector {
          */
         @JvmOverloads
         fun ProjectOntoPlane(normal: idVec3, overBounce: Float = 1.0f) {
-            var backoff: Float
             // x * a.x + y * a.y + z * a.z;
-            backoff = this.oMultiply(normal) //	backoff = this.x * normal.x;//TODO:normal.x???
+            var backoff: Float = this.times(normal) //	backoff = this.x * normal.x;//TODO:normal.x???
             if (overBounce.toDouble() != 1.0) {
                 if (backoff < 0) {
                     backoff *= overBounce
@@ -1029,22 +985,21 @@ object Vector {
                     backoff /= overBounce
                 }
             }
-            this.oMinSet(oMultiply(backoff, normal)) //	*this -= backoff * normal;
+            this.minusAssign(this.minusAssign(normal * backoff)) //	*this -= backoff * normal;
         }
 
         @JvmOverloads
         fun ProjectAlongPlane(normal: idVec3, epsilon: Float, overBounce: Float = 1.0f): Boolean {
             val cross = idVec3()
-            val len: Float
             cross.oSet(this.Cross(normal).Cross(this))
             // normalize so a fixed epsilon can be used
             cross.Normalize()
-            len = normal.oMultiply(cross)
-            if (Math.abs(len) < epsilon) {
+            val len: Float = normal.times(cross)
+            if (abs(len) < epsilon) {
                 return false
             }
-            cross.oMulSet(overBounce * normal.oMultiply(this) / len) //	cross *= overBounce * ( normal * (*this) ) / len;
-            this.oMinSet(cross) //(*this) -= cross;
+            cross.timesAssign(overBounce * normal.times(this) / len) //	cross *= overBounce * ( normal * (*this) ) / len;
+            this.minusAssign(cross) //(*this) -= cross;
             return true
         }
 
@@ -1052,9 +1007,9 @@ object Vector {
             val rsqr = radius * radius
             val len = Length()
             z = if (len < rsqr * 0.5f) {
-                Math.sqrt((rsqr - len).toDouble()).toFloat()
+                sqrt((rsqr - len).toDouble()).toFloat()
             } else {
-                (rsqr / (2.0f * Math.sqrt(len.toDouble()))).toFloat()
+                (rsqr / (2.0f * sqrt(len.toDouble()))).toFloat()
             }
         }
 
@@ -1071,13 +1026,12 @@ object Vector {
             } else if (l >= 1.0f) {
                 this.oSet(v2) //(*this) = v2;
             } else {
-                this.oSet(v2.minus(v1).oMultiply(l).plus(v1)) //(*this) = v1 + l * ( v2 - v1 );
+                this.oSet(v2.minus(v1).times(l).plus(v1)) //(*this) = v1 + l * ( v2 - v1 );
             }
         }
 
         fun SLerp(v1: idVec3, v2: idVec3, t: Float) {
             val omega: Float
-            val cosom: Float
             val sinom: Float
             val scale0: Float
             val scale1: Float
@@ -1090,19 +1044,19 @@ object Vector {
                 oSet(v2)
                 return
             }
-            cosom = v1.oMultiply(v2)
+            val cosom: Float = v1.times(v2)
             if (1.0f - cosom > LERP_DELTA) {
-                omega = Math.acos(cosom.toDouble()).toFloat()
-                sinom = Math.sin(omega.toDouble()).toFloat()
-                scale0 = (Math.sin(((1.0f - t) * omega).toDouble()) / sinom).toFloat()
-                scale1 = (Math.sin((t * omega).toDouble()) / sinom).toFloat()
+                omega = acos(cosom.toDouble()).toFloat()
+                sinom = sin(omega.toDouble()).toFloat()
+                scale0 = (sin(((1.0f - t) * omega).toDouble()) / sinom).toFloat()
+                scale1 = (sin((t * omega).toDouble()) / sinom).toFloat()
             } else {
                 scale0 = 1.0f - t
                 scale1 = t
             }
 
 //	(*this) = ( v1 * scale0 + v2 * scale1 );
-            oSet(v1.oMultiply(scale0).plus(v2.oMultiply(scale1)))
+            oSet(v1.times(scale0).plus(v2.times(scale1)))
         }
 
         override fun oGet(i: Int): Float { //TODO:rename you lazy ass
@@ -1125,7 +1079,7 @@ object Vector {
             return value
         }
 
-        fun oPluSet(i: Int, value: Float) {
+        fun plusAssign(i: Int, value: Float) {
             if (i == 1) {
                 y += value
             } else if (i == 2) {
@@ -1135,7 +1089,7 @@ object Vector {
             }
         }
 
-        fun oMinSet(i: Int, value: Float) {
+        fun minusAssign(i: Int, value: Float) {
             if (i == 1) {
                 y -= value
             } else if (i == 2) {
@@ -1145,7 +1099,7 @@ object Vector {
             }
         }
 
-        fun oMulSet(i: Int, value: Float) {
+        fun timesAssign(i: Int, value: Float) {
             if (i == 1) {
                 y *= value
             } else if (i == 2) {
@@ -1160,9 +1114,9 @@ object Vector {
         }
 
         override fun Read(buffer: ByteBuffer) {
-            x = buffer.getFloat()
-            y = buffer.getFloat()
-            z = buffer.getFloat()
+            x = buffer.float
+            y = buffer.float
+            z = buffer.float
         }
 
         override fun Write(): ByteBuffer {
@@ -1174,9 +1128,9 @@ object Vector {
         override fun equals(o: Any?): Boolean {
             if (this === o) return true
             if (o !is idVec3) return false
-            val idVec3 = o as idVec3
-            if (java.lang.Float.compare(idVec3.x, x) != 0) return false
-            return if (java.lang.Float.compare(idVec3.y, y) != 0) false else java.lang.Float.compare(idVec3.z, z) == 0
+            val idVec3 = o
+            if (idVec3.x.compareTo(x) != 0) return false
+            return if (idVec3.y.compareTo(y) != 0) false else idVec3.z.compareTo(z) == 0
         }
 
         override fun hashCode(): Int {
@@ -1186,12 +1140,12 @@ object Vector {
             return result
         }
 
-        fun ToVec2_oPluSet(v: idVec2?) {
+        fun ToVec2_oPluSet(v: idVec2) {
             x += v.x
             y += v.y
         }
 
-        fun ToVec2_oMinSet(v: idVec2?) {
+        fun ToVec2_oMinSet(v: idVec2) {
             x -= v.x
             y -= v.y
         }
@@ -1231,24 +1185,16 @@ object Vector {
             private const val LERP_DELTA = 1e-6
 
             //public	friend idVec3	operator*( final  float a, final  idVec3 b );
-            fun oMultiply(a: Float, b: idVec3): idVec3 {
+            fun times(a: Float, b: idVec3): idVec3 {
                 return idVec3(b.x * a, b.y * a, b.z * a)
             }
 
             fun generateArray(length: Int): Array<idVec3> {
-                val arr = arrayOf<idVec3>()
-                for (i in 0..length) {
-                    arr[i] = idVec3()
-                }
-                return arr
+                return Array(length) { idVec3() }
             }
 
             fun generateArray(firstDimensionSize: Int, secondDimensionSize: Int): Array<Array<idVec3>> {
-                val out = Array<Array<idVec3>>(firstDimensionSize) { arrayOf<idVec3>(secondDimensionSize) }
-                for (i in 0 until firstDimensionSize) {
-                    out[i] = generateArray(secondDimensionSize)
-                }
-                return out
+                return Array(firstDimensionSize) { Array(secondDimensionSize) { idVec3() } }
             }
 
             fun copyVec(arr: Array<idVec3>): Array<idVec3> {
@@ -1259,7 +1205,7 @@ object Vector {
                 return out
             }
 
-            fun toByteBuffer(vecs: Array<idVec3>?): ByteBuffer {
+            fun toByteBuffer(vecs: Array<idVec3>): ByteBuffer {
                 val data = BufferUtils.createByteBuffer(BYTES * vecs.size)
                 for (vec in vecs) {
                     data.put(vec.Write().rewind())
@@ -1274,7 +1220,7 @@ object Vector {
     //	idVec4 - 4D vector
     //
     //===============================================================
-    class idVec4 : idVec<idVec4?>, SERiAL {
+    class idVec4 : idVec<idVec4>, SERiAL {
         private val DBG_count = DBG_counter++
         var w = 0f
         var x = 0f
@@ -1282,7 +1228,7 @@ object Vector {
         var z = 0f
 
         constructor()
-        constructor(v: idVec4?) {
+        constructor(v: idVec4) {
             x = v.x
             y = v.y
             z = v.z
@@ -1313,28 +1259,24 @@ object Vector {
         //public	float			operator[]( final  int index ) final ;
         //public	float &			operator[]( final  int index );
         //public	idVec4			operator-() final ;
-        override fun oMultiply(a: idVec4?): Float {
+        override fun times(a: idVec4): Float {
             return x * a.x + y * a.y + z * a.z + w * a.w
         }
 
         //public	idVec4			operator/( final  float a ) final ;
-        override fun oMultiply(a: Float): idVec4? {
+        override fun times(a: Float): idVec4 {
             return idVec4(x * a, y * a, z * a, w * a)
         }
 
-        fun oMultiply(a: Float?): idVec4? { //for our reflection method
-            return oMultiply(a.toFloat())
-        }
-
-        override fun plus(a: idVec4?): idVec4? {
+        override fun plus(a: idVec4): idVec4 {
             return idVec4(x + a.x, y + a.y, z + a.z, w + a.w)
         }
 
-        override fun minus(a: idVec4?): idVec4? {
+        override fun minus(a: idVec4): idVec4 {
             return idVec4(x - a.x, y - a.y, z - a.z, w - a.w)
         }
 
-        fun oNegative(): idVec4? {
+        operator fun unaryMinus(): idVec4 {
             return idVec4(-x, -y, -z, -w)
         }
 
@@ -1358,7 +1300,7 @@ object Vector {
             }
         }
 
-        override fun oPluSet(a: idVec4?): idVec4? {
+        override fun plusAssign(a: idVec4): idVec4 {
             x += a.x
             y += a.y
             z += a.z
@@ -1374,20 +1316,20 @@ object Vector {
         //public	idVec4 &		operator*=( final  float a );
         //
         //public	friend idVec4	operator*( final  float a, final  idVec4 b );
-        fun Compare(a: idVec4?): Boolean { // exact compare, no epsilon
+        fun Compare(a: idVec4): Boolean { // exact compare, no epsilon
             return x == a.x && y == a.y && z == a.z && w == a.w
         }
 
-        fun Compare(a: idVec4?, epsilon: Float): Boolean { // compare with epsilon
-            if (Math.abs(x - a.x) > epsilon) {
+        fun Compare(a: idVec4, epsilon: Float): Boolean { // compare with epsilon
+            if (abs(x - a.x) > epsilon) {
                 return false
             }
-            if (Math.abs(y - a.y) > epsilon) {
+            if (abs(y - a.y) > epsilon) {
                 return false
             }
-            return if (Math.abs(z - a.z) > epsilon) {
+            return if (abs(z - a.z) > epsilon) {
                 false
-            } else Math.abs(w - a.w) <= epsilon
+            } else abs(w - a.w) <= epsilon
         }
 
         fun Length(): Float {
@@ -1399,10 +1341,8 @@ object Vector {
         }
 
         fun Normalize(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength = x * x + y * y + z * z + w * w
-            invLength = idMath.InvSqrt(sqrLength)
+            val sqrLength: Float = x * x + y * y + z * z + w * w
+            val invLength: Float = idMath.InvSqrt(sqrLength)
             x *= invLength
             y *= invLength
             z *= invLength
@@ -1411,10 +1351,8 @@ object Vector {
         }
 
         fun NormalizeFast(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength = x * x + y * y + z * z + w * w
-            invLength = idMath.RSqrt(sqrLength)
+            val sqrLength: Float = x * x + y * y + z * z + w * w
+            val invLength: Float = idMath.RSqrt(sqrLength)
             x *= invLength
             y *= invLength
             z *= invLength
@@ -1429,7 +1367,7 @@ object Vector {
 
         //public	idVec3 &		ToVec3( void );
         @Deprecated("")
-        fun ToVec2(): idVec2? {
+        fun ToVec2(): idVec2 {
 //	return *reinterpret_cast<const idVec2 *>(this);
             return idVec2(x, y)
         }
@@ -1441,13 +1379,13 @@ object Vector {
             return idVec3(x, y, z)
         }
 
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return floatArrayOf(x, y, z, w) //TODO:put shit in array si we can referef it
         }
 
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
         override fun toString(): String {
@@ -1461,7 +1399,7 @@ object Vector {
          Linearly inperpolates one vector to another.
          =============
          */
-        fun Lerp(v1: idVec4?, v2: idVec4?, l: Float) {
+        fun Lerp(v1: idVec4, v2: idVec4, l: Float) {
             if (l <= 0.0f) {
 //		(*this) = v1;
                 x = v1.x
@@ -1483,7 +1421,7 @@ object Vector {
             }
         }
 
-        override fun oSet(a: idVec4?): idVec4? {
+        override fun oSet(a: idVec4): idVec4 {
             x = a.x
             y = a.y
             z = a.z
@@ -1491,7 +1429,7 @@ object Vector {
             return this
         }
 
-        fun oSet(a: idVec3): idVec4? {
+        fun oSet(a: idVec3): idVec4 {
             x = a.x
             y = a.y
             z = a.z
@@ -1516,7 +1454,7 @@ object Vector {
             }
         }
 
-        fun oPluSet(i: Int, value: Float): Float {
+        fun plusAssign(i: Int, value: Float): Float {
             return when (i) {
                 1 -> value.let { y += it; y }
                 2 -> value.let { z += it; z }
@@ -1530,10 +1468,10 @@ object Vector {
         }
 
         override fun Read(buffer: ByteBuffer) {
-            x = buffer.getFloat()
-            y = buffer.getFloat()
-            z = buffer.getFloat()
-            w = buffer.getFloat()
+            x = buffer.float
+            y = buffer.float
+            z = buffer.float
+            w = buffer.float
         }
 
         override fun Write(): ByteBuffer {
@@ -1542,7 +1480,7 @@ object Vector {
             return buffer
         }
 
-        override fun oDivide(a: Float): idVec4? {
+        override fun div(a: Float): idVec4 {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -1553,11 +1491,11 @@ object Vector {
             @Transient
             val BYTES = SIZE / java.lang.Byte.SIZE
             private var DBG_counter = 0
-            fun generateArray(length: Int): Array<idVec4?>? {
-                return Stream.generate { idVec4() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<idVec4> {
+                return Array(length) { idVec4() }
             }
 
-            fun toByteBuffer(vecs: Array<idVec4?>?): ByteBuffer {
+            fun toByteBuffer(vecs: Array<idVec4>): ByteBuffer {
                 val data = BufferUtils.createByteBuffer(BYTES * vecs.size)
                 for (vec in vecs) {
                     data.put(vec.Write().rewind())
@@ -1572,7 +1510,7 @@ object Vector {
     //	idVec5 - 5D vector
     //
     //===============================================================
-    class idVec5 : idVec<idVec5?>, SERiAL {
+    class idVec5 : idVec<idVec5>, SERiAL {
         var s = 0f
         var t = 0f
         var x = 0f
@@ -1580,7 +1518,7 @@ object Vector {
         var z = 0f
 
         constructor()
-        constructor(xyz: idVec3, st: idVec2?) {
+        constructor(xyz: idVec3, st: idVec2) {
             x = xyz.x
             y = xyz.y
             z = xyz.z
@@ -1605,7 +1543,7 @@ object Vector {
         }
 
         //copy constructor
-        constructor(a: idVec5?) {
+        constructor(a: idVec5) {
             x = a.x
             y = a.y
             z = a.z
@@ -1634,7 +1572,7 @@ object Vector {
             }
         }
 
-        override fun oSet(a: idVec5?): idVec5? {
+        override fun oSet(a: idVec5): idVec5 {
             x = a.x
             y = a.y
             z = a.z
@@ -1645,7 +1583,7 @@ object Vector {
 
         //public	float &			operator[]( int index );
         //public	idVec5 &		operator=( final  idVec3 &a );
-        fun oSet(a: idVec3): idVec5? {
+        fun oSet(a: idVec3): idVec5 {
             x = a.x
             y = a.y
             z = a.z
@@ -1663,16 +1601,16 @@ object Vector {
 
         //public	float *			ToFloatPtr( void );
         //public	idVec3 &		ToVec3( void );
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return floatArrayOf(x, y, z) //TODO:array!?
         }
 
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
-        fun Lerp(v1: idVec5?, v2: idVec5?, l: Float) {
+        fun Lerp(v1: idVec5, v2: idVec5, l: Float) {
             if (l <= 0.0f) {
                 this.oSet(v1) //(*this) = v1;
             } else if (l >= 1.0f) {
@@ -1698,29 +1636,30 @@ object Vector {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun plus(a: idVec5?): idVec5? {
+        override fun plus(a: idVec5): idVec5 {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun minus(a: idVec5?): idVec5? {
+        override fun minus(a: idVec5): idVec5 {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oMultiply(a: idVec5?): Float {
+        override fun times(a: idVec5): Float {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oDivide(a: Float): idVec5? {
+        override fun div(a: Float): idVec5 {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        fun ToVec3_oMulSet(axis: idMat3?) {
-            this.oSet(ToVec3().oMulSet(axis))
+        fun ToVec3_oMulSet(axis: idMat3) {
+            this.oSet(ToVec3().timesAssign(axis))
         }
 
         fun ToVec3_oPluSet(origin: idVec3) {
-            this.oSet(ToVec3().oPluSet(origin))
+            this.oSet(ToVec3().plusAssign(origin))
         }
+
 
         companion object {
             @Transient
@@ -1728,9 +1667,21 @@ object Vector {
 
             @Transient
             val BYTES = SIZE / java.lang.Byte.SIZE
-            fun generateArray(length: Int): Array<idVec5?>? {
-                return Stream.generate { idVec5() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<idVec5> {
+                return Array(length) { idVec5() }
             }
+        }
+
+        override fun times(a: Float): idVec5 {
+            TODO("Not yet implemented")
+        }
+
+        override fun plusAssign(a: idVec5): idVec5 {
+            TODO("Not yet implemented")
+        }
+
+        override fun Zero() {
+            TODO("Not yet implemented")
         }
     }
 
@@ -1739,168 +1690,152 @@ object Vector {
     //	idVec6 - 6D vector
     //
     //===============================================================
-    class idVec6 : idVec<idVec6?>, SERiAL {
+    class idVec6 : idVec<idVec6>, SERiAL {
         private val DBG_count = DBG_counter++
 
         //
         //
-        var p: FloatArray? = FloatArray(6)
+        var p: FloatArray = FloatArray(6)
 
         constructor() {
             DBG_idVec6++
             val a = 0
         }
 
-        constructor(a: FloatArray?) {
+        constructor(a: FloatArray) {
 //	memcpy( p, a, 6 * sizeof( float ) );
             System.arraycopy(a, 0, p, 0, 6)
         }
 
-        constructor(v: idVec6?) {
+        constructor(v: idVec6) {
             System.arraycopy(v.p, 0, p, 0, 6)
         }
 
         constructor(a1: Float, a2: Float, a3: Float, a4: Float, a5: Float, a6: Float) {
-            p.get(0) = a1
-            p.get(1) = a2
-            p.get(2) = a3
-            p.get(3) = a4
-            p.get(4) = a5
-            p.get(5) = a6
+            p[0] = a1
+            p[1] = a2
+            p[2] = a3
+            p[3] = a4
+            p[4] = a5
+            p[5] = a6
         }
 
         fun Set(a1: Float, a2: Float, a3: Float, a4: Float, a5: Float, a6: Float) {
-            p.get(0) = a1
-            p.get(1) = a2
-            p.get(2) = a3
-            p.get(3) = a4
-            p.get(4) = a5
-            p.get(5) = a6
+            p[0] = a1
+            p[1] = a2
+            p[2] = a3
+            p[3] = a4
+            p[4] = a5
+            p[5] = a6
         }
 
         override fun Zero() {
-            p.get(5) = 0.0f
-            p.get(4) = p.get(5)
-            p.get(3) = p.get(4)
-            p.get(2) = p.get(3)
-            p.get(1) = p.get(2)
-            p.get(0) = p.get(1)
+            p[5] = 0.0f
+            p[4] = p[5]
+            p[3] = p[4]
+            p[2] = p[3]
+            p[1] = p[2]
+            p[0] = p[1]
         }
 
         //public 	float			operator[]( final  int index ) final ;
         //public 	float &			operator[]( final  int index );
-        fun oNegative(): idVec6? {
-            return idVec6(-p.get(0), -p.get(1), -p.get(2), -p.get(3), -p.get(4), -p.get(5))
+        operator fun unaryMinus(): idVec6 {
+            return idVec6(-p[0], -p[1], -p[2], -p[3], -p[4], -p[5])
         }
 
-        override fun oMultiply(a: Float): idVec6? {
-            return idVec6(p.get(0) * a, p.get(1) * a, p.get(2) * a, p.get(3) * a, p.get(4) * a, p.get(5) * a)
+        override fun times(a: Float): idVec6 {
+            return idVec6(p[0] * a, p[1] * a, p[2] * a, p[3] * a, p[4] * a, p[5] * a)
         }
 
         //public 	idVec6			operator/( final  float a ) final ;
-        override fun oMultiply(a: idVec6?): Float {
-            return p.get(0) * a.p.get(0) + p.get(1) * a.p.get(1) + p.get(2) * a.p.get(2) + p.get(3) * a.p.get(3) + p.get(
-                4
-            ) * a.p.get(4) + p.get(5) * a.p.get(5)
+        override fun times(a: idVec6): Float {
+            return p[0] * a.p[0] + p[1] * a.p[1] + p[2] * a.p[2] + p[3] * a.p[3] + p[4] * a.p[4] + p[5] * a.p[5]
         }
 
         //public 	idVec6			operator-( final  idVec6 &a ) final ;
-        override fun plus(a: idVec6?): idVec6? {
+        override fun plus(a: idVec6): idVec6 {
             return idVec6(
-                p.get(0) + a.p.get(0),
-                p.get(1) + a.p.get(1),
-                p.get(2) + a.p.get(2),
-                p.get(3) + a.p.get(3),
-                p.get(4) + a.p.get(4),
-                p.get(5) + a.p.get(5)
+                p[0] + a.p[0],
+                p[1] + a.p[1],
+                p[2] + a.p[2],
+                p[3] + a.p[3],
+                p[4] + a.p[4],
+                p[5] + a.p[5]
             )
         }
 
         //public 	idVec6 &		operator*=( final  float a );
         //public 	idVec6 &		operator/=( final  float a );
-        override fun oPluSet(a: idVec6?): idVec6? {
-            p.get(0) += a.p.get(0)
-            p.get(1) += a.p.get(1)
-            p.get(2) += a.p.get(2)
-            p.get(3) += a.p.get(3)
-            p.get(4) += a.p.get(4)
-            p.get(5) += a.p.get(5)
+        override fun plusAssign(a: idVec6): idVec6 {
+            p[0] += a.p[0]
+            p[1] += a.p[1]
+            p[2] += a.p[2]
+            p[3] += a.p[3]
+            p[4] += a.p[4]
+            p[5] += a.p[5]
             return this
         }
 
         //public 	idVec6 &		operator-=( final  idVec6 &a );
         //
         //public 	friend idVec6	operator*( final  float a, final  idVec6 b );
-        fun Compare(a: idVec6?): Boolean { // exact compare, no epsilon
-            return (p.get(0) == a.p.get(0) && p.get(1) == a.p.get(1) && p.get(2) == a.p.get(2)
-                    && p.get(3) == a.p.get(3) && p.get(4) == a.p.get(4) && p.get(5) == a.p.get(5))
+        fun Compare(a: idVec6): Boolean { // exact compare, no epsilon
+            return (p[0] == a.p[0] && p[1] == a.p[1] && p[2] == a.p[2]
+                    && p[3] == a.p[3] && p[4] == a.p[4] && p[5] == a.p[5])
         }
 
-        fun Compare(a: idVec6?, epsilon: Float): Boolean { // compare with epsilon
-            if (Math.abs(p.get(0) - a.p.get(0)) > epsilon) {
+        fun Compare(a: idVec6, epsilon: Float): Boolean { // compare with epsilon
+            if (abs(p[0] - a.p[0]) > epsilon) {
                 return false
             }
-            if (Math.abs(p.get(1) - a.p.get(1)) > epsilon) {
+            if (abs(p[1] - a.p[1]) > epsilon) {
                 return false
             }
-            if (Math.abs(p.get(2) - a.p.get(2)) > epsilon) {
+            if (abs(p[2] - a.p[2]) > epsilon) {
                 return false
             }
-            if (Math.abs(p.get(3) - a.p.get(3)) > epsilon) {
+            if (abs(p[3] - a.p[3]) > epsilon) {
                 return false
             }
-            return if (Math.abs(p.get(4) - a.p.get(4)) > epsilon) {
+            return if (abs(p[4] - a.p[4]) > epsilon) {
                 false
-            } else Math.abs(p.get(5) - a.p.get(5)) <= epsilon
+            } else abs(p[5] - a.p[5]) <= epsilon
         }
 
         //public 	bool			operator==(	final  idVec6 &a ) final ;						// exact compare, no epsilon
         //public 	bool			operator!=(	final  idVec6 &a ) final ;						// exact compare, no epsilon
         fun Length(): Float {
             return idMath.Sqrt(
-                p.get(0) * p.get(0) + p.get(1) * p.get(1) + p.get(2) * p.get(2) + p.get(3) * p.get(3) + p.get(
-                    4
-                ) * p.get(4) + p.get(5) * p.get(5)
+                p[0] * p[0] + p[1] * p[1] + p[2] * p[2] + p[3] * p[3] + p[4] * p[4] + p[5] * p[5]
             )
         }
 
         fun LengthSqr(): Float {
-            return p.get(0) * p.get(0) + p.get(1) * p.get(1) + p.get(2) * p.get(2) + p.get(3) * p.get(3) + p.get(4) * p.get(
-                4
-            ) + p.get(5) * p.get(5)
+            return p[0] * p[0] + p[1] * p[1] + p[2] * p[2] + p[3] * p[3] + p[4] * p[4] + p[5] * p[5]
         }
 
         fun Normalize(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength =
-                p.get(0) * p.get(0) + p.get(1) * p.get(1) + p.get(2) * p.get(2) + p.get(3) * p.get(3) + p.get(4) * p.get(
-                    4
-                ) + p.get(5) * p.get(5)
-            invLength = idMath.InvSqrt(sqrLength)
-            p.get(0) *= invLength
-            p.get(1) *= invLength
-            p.get(2) *= invLength
-            p.get(3) *= invLength
-            p.get(4) *= invLength
-            p.get(5) *= invLength
+            val sqrLength: Float = p[0] * p[0] + p[1] * p[1] + p[2] * p[2] + p[3] * p[3] + p[4] * p[4] + p[5] * p[5]
+            val invLength: Float = idMath.InvSqrt(sqrLength)
+            p[0] *= invLength
+            p[1] *= invLength
+            p[2] *= invLength
+            p[3] *= invLength
+            p[4] *= invLength
+            p[5] *= invLength
             return invLength * sqrLength
         }
 
         fun NormalizeFast(): Float { // returns length
-            val sqrLength: Float
-            val invLength: Float
-            sqrLength =
-                p.get(0) * p.get(0) + p.get(1) * p.get(1) + p.get(2) * p.get(2) + p.get(3) * p.get(3) + p.get(4) * p.get(
-                    4
-                ) + p.get(5) * p.get(5)
-            invLength = idMath.RSqrt(sqrLength)
-            p.get(0) *= invLength
-            p.get(1) *= invLength
-            p.get(2) *= invLength
-            p.get(3) *= invLength
-            p.get(4) *= invLength
-            p.get(5) *= invLength
+            val sqrLength: Float = p[0] * p[0] + p[1] * p[1] + p[2] * p[2] + p[3] * p[3] + p[4] * p[4] + p[5] * p[5]
+            val invLength: Float = idMath.RSqrt(sqrLength)
+            p[0] *= invLength
+            p[1] *= invLength
+            p[2] *= invLength
+            p[3] *= invLength
+            p[4] *= invLength
+            p[5] *= invLength
             return invLength * sqrLength
         }
 
@@ -1911,36 +1846,36 @@ object Vector {
         fun SubVec3(index: Int): idVec3 {
 //	return *reinterpret_cast<const idVec3 *>(p + index * 3);
             var index = index
-            return idVec3(p.get(3.let { index *= it; index }), p.get(index + 1), p.get(index + 2))
+            return idVec3(p[3.let { index *= it; index }], p[index + 1], p[index + 2])
         }
 
         //public 	idVec3 &		SubVec3( int index );
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return p
         }
 
         //public 	float *			ToFloatPtr( void );
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
-        override fun oSet(a: idVec6?): idVec6? {
-            p.get(0) = a.p.get(0)
-            p.get(1) = a.p.get(1)
-            p.get(2) = a.p.get(2)
-            p.get(3) = a.p.get(3)
-            p.get(4) = a.p.get(4)
-            p.get(5) = a.p.get(5)
+        override fun oSet(a: idVec6): idVec6 {
+            p[0] = a.p[0]
+            p[1] = a.p[1]
+            p[2] = a.p[2]
+            p[3] = a.p[3]
+            p[4] = a.p[4]
+            p[5] = a.p[5]
             return this
         }
 
         override fun oGet(index: Int): Float {
-            return p.get(index)
+            return p[index]
         }
 
         override fun oSet(index: Int, value: Float): Float {
-            return value.also { p.get(index) = it }
+            return value.also { p[index] = it }
         }
 
         //
@@ -1959,11 +1894,11 @@ object Vector {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun minus(a: idVec6?): idVec6? {
+        override fun minus(a: idVec6): idVec6 {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oDivide(a: Float): idVec6? {
+        override fun div(a: Float): idVec6 {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -1973,21 +1908,21 @@ object Vector {
 
         fun SubVec3_oPluSet(i: Int, v: idVec3): idVec3 {
             val off = i * 3
-            p.get(off + 0) += v.x
-            p.get(off + 1) += v.y
-            p.get(off + 2) += v.z
+            p[off + 0] += v.x
+            p[off + 1] += v.y
+            p[off + 2] += v.z
             return idVec3(p, off)
         }
 
         fun SubVec3_oMinSet(i: Int, v: idVec3): idVec3 {
-            return SubVec3_oPluSet(i, v.oNegative())
+            return SubVec3_oPluSet(i, v.unaryMinus())
         }
 
         fun SubVec3_oMulSet(i: Int, v: Float) {
             val off = i * 3
-            p.get(off + 0) *= v
-            p.get(off + 1) *= v
-            p.get(off + 2) *= v
+            p[off + 0] *= v
+            p[off + 1] *= v
+            p[off + 2] *= v
         }
 
         fun SubVec3_Normalize(i: Int): Float {
@@ -2004,7 +1939,7 @@ object Vector {
         override fun equals(o: Any?): Boolean {
             if (this === o) return true
             if (o == null || javaClass != o.javaClass) return false
-            val idVec6 = o as idVec6?
+            val idVec6 = o as idVec6
             return Arrays.equals(p, idVec6.p)
         }
 
@@ -2035,34 +1970,25 @@ object Vector {
     //
     //===============================================================
     class idVecX {
+        private var size // size of the vector
+                : Int = 0
         var p // memory the vector is stored
-                : FloatArray?
+                : FloatArray = FloatArray(size)
         var VECX_SIMD = false
         private var alloced // if -1 p points to data set with SetData
-                : Int
+                : Int = 0
 
-        //
-        //
-        private var size // size of the vector
-                : Int
-
-        constructor() {
-            alloced = 0
-            size = alloced
-            p = null
-        }
+        constructor()
 
         constructor(length: Int) {
             alloced = 0
             size = alloced
-            p = null
             SetSize(length)
         }
 
-        constructor(length: Int, data: FloatArray?) {
+        constructor(length: Int, data: FloatArray) {
             alloced = 0
             size = alloced
-            p = null
             SetData(length, data)
         }
 
@@ -2071,52 +1997,50 @@ object Vector {
             var s = size
             ////            while (s < ((s + 3) & ~3)) {
             while (s < p.size) {
-                p.get(s++) = 0.0f
+                p[s++] = 0.0f
             }
         }
 
         //public					~idVecX( void );
         //public	float			operator[]( const int index ) const;
         fun oGet(index: Int): Float {
-            return p.get(index)
+            return p[index]
         }
 
         fun oSet(index: Int, value: Float): Float {
-            return value.also { p.get(index) = it }
+            return value.also { p[index] = it }
         }
 
         //public	float &			operator[]( const int index );
         //public	idVecX			operator-() const;
-        fun oNegative(): idVecX? {
-            var i: Int
+        operator fun unaryMinus(): idVecX {
             val m = idVecX()
             m.SetTempSize(size)
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                m.p.get(i) = -p.get(i)
+                m.p[i] = -p[i]
                 i++
             }
             return m
         }
 
         //public	idVecX &		operator=( const idVecX &a );
-        fun oSet(a: idVecX?): idVecX? {
+        fun oSet(a: idVecX): idVecX {
             SetSize(a.size)
             System.arraycopy(a.p, 0, p, 0, p.size)
             tempIndex = 0
             return this
         }
 
-        fun oMultiply(a: Float): idVecX? {
+        operator fun times(a: Float): idVecX {
             val m = idVecX()
             m.SetTempSize(size)
             if (VECX_SIMD) {
                 Simd.SIMDProcessor.Mul16(m.p, p, a, size)
             } else {
-                var i: Int
-                i = 0
+                var i: Int = 0
                 while (i < size) {
-                    m.p.get(i) = p.get(i) * a
+                    m.p[i] = p[i] * a
                     i++
                 }
             }
@@ -2125,31 +2049,39 @@ object Vector {
 
         //public	idVecX			operator/( const float a ) const;
         //public	float			operator*( const idVecX &a ) const;
-        fun oMultiply(a: idVecX?): Float {
-            var i: Int
+        operator fun times(a: idVecX): Float {
             var sum = 0.0f
             assert(size == a.size)
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                sum += p.get(i) * a.p.get(i)
+                sum += p[i] * a.p[i]
                 i++
             }
             return sum
         }
 
         //public	idVecX			operator-( const idVecX &a ) const;
+        operator fun minus(a: idVecX): idVecX {
+            val m = idVecX()
+            assert(size == a.size);
+            m.SetTempSize(size);
+            for (i in 0..size) {
+                m.p[i] = p[i] - a.p[i];
+            }
+            return m;
+        }
+
         //public	idVecX			operator+( const idVecX &a ) const;
-        fun plus(a: idVecX?): idVecX? {
+        operator fun plus(a: idVecX): idVecX {
             val m = idVecX()
             assert(size == a.size)
             m.SetTempSize(size)
             //#ifdef VECX_SIMD
 //	SIMDProcessor->Add16( m.p, p, a.p, size );
 //#else
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                m.p.get(i) = p.get(i) + a.p.get(i)
+                m.p[i] = p[i] + a.p[i]
                 i++
             }
             //#endif
@@ -2157,14 +2089,13 @@ object Vector {
         }
 
         //public	idVecX &		operator*=( const float a );
-        fun oMulSet(a: Float): idVecX? {
+        fun timesAssign(a: Float): idVecX {
 //#ifdef VECX_SIMD
 //	SIMDProcessor->MulAssign16( p, a, size );
 //#else
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                p.get(i) *= a
+                p[i] *= a
                 i++
             }
             //#endif
@@ -2175,12 +2106,11 @@ object Vector {
         //public	idVecX &		operator+=( const idVecX &a );
         //public	idVecX &		operator-=( const idVecX &a );
         //public	friend idVecX	operator*( const float a, const idVecX b );
-        fun Compare(a: idVecX?): Boolean { // exact compare, no epsilon
-            var i: Int
+        fun Compare(a: idVecX): Boolean { // exact compare, no epsilon
             assert(size == a.size)
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                if (p.get(i) != a.p.get(i)) {
+                if (p[i] != a.p[i]) {
                     return false
                 }
                 i++
@@ -2188,12 +2118,11 @@ object Vector {
             return true
         }
 
-        fun Compare(a: idVecX?, epsilon: Float): Boolean { // compare with epsilon
-            var i: Int
+        fun Compare(a: idVecX, epsilon: Float): Boolean { // compare with epsilon
             assert(size == a.size)
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                if (Math.abs(p.get(i) - a.p.get(i)) > epsilon) {
+                if (abs(p[i] - a.p[i]) > epsilon) {
                     return false
                 }
                 i++
@@ -2206,9 +2135,6 @@ object Vector {
         fun SetSize(newSize: Int) {
             val alloc = newSize + 3 and 3.inv()
             if (alloc > alloced && alloced != -1) {
-                if (p != null) {
-                    p = null
-                }
                 p = FloatArray(alloc)
                 alloced = alloc
             }
@@ -2224,14 +2150,11 @@ object Vector {
                 //		p = (float *) Mem_Alloc16( alloc * sizeof( float ) );
                 p = FloatArray(alloc)
                 alloced = alloc
-                if (oldVec != null) {
-                    System.arraycopy(oldVec, 0, p, 0, size)
-                    //			Mem_Free16( oldVec );//garbage collect me!
-                } //TODO:ifelse
+                System.arraycopy(oldVec, 0, p, 0, size) //TODO:ifelse
                 if (makeZero) {
                     // zero any new elements
                     for (i in size until newSize) {
-                        p.get(i) = 0.0f
+                        p[i] = 0.0f
                     }
                 }
             }
@@ -2243,10 +2166,9 @@ object Vector {
             return size
         }
 
-        fun SetData(length: Int, data: FloatArray?) {
-            if (p != null && (p.get(0) < tempPtr.get(0) || p.get(0) >= tempPtr.get(0) + VECX_MAX_TEMP) && alloced != -1) {
+        fun SetData(length: Int, data: FloatArray) {
+            if ((p[0] < tempPtr.get(0) || p[0] >= tempPtr.get(0) + VECX_MAX_TEMP) && alloced != -1) {
 //		Mem_Free16( p );
-                p = null
             }
             //	assert( ( ( (int) data ) & 15 ) == 0 ); // data must be 16 byte aligned
             p = data
@@ -2276,30 +2198,26 @@ object Vector {
 
         @JvmOverloads
         fun Random(seed: Int, l: Float = 0.0f, u: Float = 1.0f) {
-            var i: Int
-            val c: Float
             val rnd = idRandom(seed)
-            c = u - l
-            i = 0
+            val c: Float = u - l
+            var i: Int = 0
             while (i < size) {
-                p.get(i) = l + rnd.RandomFloat() * c
+                p[i] = l + rnd.RandomFloat() * c
                 i++
             }
         }
 
         @JvmOverloads
         fun Random(length: Int, seed: Int, l: Float = 0.0f, u: Float = 1.0f) {
-            var i: Int
-            val c: Float
             val rnd = idRandom(seed)
             SetSize(length)
-            c = u - l
-            i = 0
+            val c: Float = u - l
+            var i: Int = 0
             while (i < size) {
-                if (idMatX.Companion.DISABLE_RANDOM_TEST) { //for testing.
-                    p.get(i) = i
+                if (idMatX.DISABLE_RANDOM_TEST) { //for testing.
+                    p[i] = i.toFloat()
                 } else {
-                    p.get(i) = l + rnd.RandomFloat() * c
+                    p[i] = l + rnd.RandomFloat() * c
                 }
                 i++
             }
@@ -2309,73 +2227,67 @@ object Vector {
 //#ifdef VECX_SIMD
 //	SIMDProcessor.Negate16( p, size );
 //#else
-            var oGet: Int
-            oGet = 0
+            var oGet: Int = 0
             while (oGet < size) {
-                p.get(oGet) = -p.get(oGet)
+                p[oGet] = -p[oGet]
                 oGet++
             }
             //#endif
         }
 
         fun Clamp(min: Float, max: Float) {
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                if (p.get(i) < min) {
-                    p.get(i) = min
-                } else if (p.get(i) > max) {
-                    p.get(i) = max
+                if (p[i] < min) {
+                    p[i] = min
+                } else if (p[i] > max) {
+                    p[i] = max
                 }
                 i++
             }
         }
 
-        fun SwapElements(e1: Int, e2: Int): idVecX? {
-            val tmp: Float
-            tmp = p.get(e1)
-            p.get(e1) = p.get(e2)
-            p.get(e2) = tmp
+        fun SwapElements(e1: Int, e2: Int): idVecX {
+            val tmp: Float = p[e1]
+            p[e1] = p[e2]
+            p[e2] = tmp
             return this
         }
 
         fun Length(): Float {
-            var i: Int
             var sum = 0.0f
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                sum += p.get(i) * p.get(i)
+                sum += p[i] * p[i]
                 i++
             }
             return idMath.Sqrt(sum)
         }
 
         fun LengthSqr(): Float {
-            var i: Int
             var sum = 0.0f
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                sum += p.get(i) * p.get(i)
+                sum += p[i] * p[i]
                 i++
             }
             return sum
         }
 
-        fun Normalize(): idVecX? {
-            var i: Int
+        fun Normalize(): idVecX {
             val m = idVecX()
             val invSqrt: Float
             var sum = 0.0f
             m.SetTempSize(size)
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                sum += p.get(i) * p.get(i)
+                sum += p[i] * p[i]
                 i++
             }
             invSqrt = idMath.InvSqrt(sum)
             i = 0
             while (i < size) {
-                m.p.get(i) = p.get(i) * invSqrt
+                m.p[i] = p[i] * invSqrt
                 i++
             }
             return m
@@ -2384,16 +2296,15 @@ object Vector {
         fun NormalizeSelf(): Float {
             val invSqrt: Float
             var sum = 0.0f
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < size) {
-                sum += p.get(i) * p.get(i)
+                sum += p[i] * p[i]
                 i++
             }
             invSqrt = idMath.InvSqrt(sum)
             i = 0
             while (i < size) {
-                p.get(i) *= invSqrt
+                p[i] *= invSqrt
                 i++
             }
             return invSqrt * sum
@@ -2408,34 +2319,34 @@ object Vector {
             var index = index
             assert(index >= 0 && index * 3 + 3 <= size)
             //	return *reinterpret_cast<idVec3 *>(p + index * 3);
-            return idVec3(p.get(3.let { index *= it; index }), p.get(index + 1), p.get(index + 2))
+            return idVec3(p[3.let { index *= it; index }], p[index + 1], p[index + 2])
         }
         //public	idVec3 &		SubVec3( int index );
 
         @Deprecated("readonly")
-        fun SubVec6(index: Int): idVec6? {
+        fun SubVec6(index: Int): idVec6 {
             var index = index
             assert(index >= 0 && index * 6 + 6 <= size)
             //	return *reinterpret_cast<idVec6 *>(p + index * 6);
             return idVec6(
-                p.get(6.let { index *= it; index }),
-                p.get(index + 1),
-                p.get(index + 2),
-                p.get(index + 3),
-                p.get(index + 4),
-                p.get(index + 5)
+                p[6.let { index *= it; index }],
+                p[index + 1],
+                p[index + 2],
+                p[index + 3],
+                p[index + 4],
+                p[index + 5]
             )
         }
 
         //public	idVec6 &		SubVec6( int index );
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return p
         }
 
         //public	float *			ToFloatPtr( void );
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
         fun SetTempSize(newSize: Int) {
@@ -2461,33 +2372,33 @@ object Vector {
         }
 
         fun SubVec3_oSet(i: Int, v: idVec3) {
-            p.get(i * 3 + 0) = v.oGet(0)
-            p.get(i * 3 + 1) = v.oGet(1)
-            p.get(i * 3 + 2) = v.oGet(2)
+            p[i * 3 + 0] = v.oGet(0)
+            p[i * 3 + 1] = v.oGet(1)
+            p[i * 3 + 2] = v.oGet(2)
         }
 
-        fun SubVec6_oSet(i: Int, v: idVec6?) {
-            p.get(i * 6 + 0) = v.oGet(0)
-            p.get(i * 6 + 1) = v.oGet(1)
-            p.get(i * 6 + 2) = v.oGet(2)
-            p.get(i * 6 + 3) = v.oGet(3)
-            p.get(i * 6 + 4) = v.oGet(4)
-            p.get(i * 6 + 5) = v.oGet(5)
+        fun SubVec6_oSet(i: Int, v: idVec6) {
+            p[i * 6 + 0] = v.oGet(0)
+            p[i * 6 + 1] = v.oGet(1)
+            p[i * 6 + 2] = v.oGet(2)
+            p[i * 6 + 3] = v.oGet(3)
+            p[i * 6 + 4] = v.oGet(4)
+            p[i * 6 + 5] = v.oGet(5)
         }
 
-        fun SubVec6_oPluSet(i: Int, v: idVec6?) {
-            p.get(i * 6 + 0) += v.oGet(0)
-            p.get(i * 6 + 1) += v.oGet(1)
-            p.get(i * 6 + 2) += v.oGet(2)
-            p.get(i * 6 + 3) += v.oGet(3)
-            p.get(i * 6 + 4) += v.oGet(4)
-            p.get(i * 6 + 5) += v.oGet(5)
+        fun SubVec6_oPluSet(i: Int, v: idVec6) {
+            p[i * 6 + 0] += v.oGet(0)
+            p[i * 6 + 1] += v.oGet(1)
+            p[i * 6 + 2] += v.oGet(2)
+            p[i * 6 + 3] += v.oGet(3)
+            p[i * 6 + 4] += v.oGet(4)
+            p[i * 6 + 5] += v.oGet(5)
         }
 
         companion object {
             // friend class idMatX;
             const val VECX_MAX_TEMP = 1024
-            private val temp: FloatArray? = FloatArray(VECX_MAX_TEMP + 4) // used to store intermediate results
+            private val temp: FloatArray = FloatArray(VECX_MAX_TEMP + 4) // used to store intermediate results
             private val tempPtr = temp // pointer to 16 byte aligned temporary memory
             private var tempIndex // index into memory pool, wraps around
                     = 0
@@ -2513,7 +2424,7 @@ object Vector {
     //	idPolar3
     //
     //===============================================================
-    internal class idPolar3 {
+    class idPolar3 {
         var radius = 0f
         var theta = 0f
         var phi = 0f
@@ -2545,7 +2456,7 @@ object Vector {
             //            sp = cp = st = ct = 0.0f;
             idMath.SinCos(phi, sp, cp)
             idMath.SinCos(theta, st, ct)
-            return idVec3(cp.getVal() * radius * ct.getVal(), cp.getVal() * radius * st.getVal(), radius * sp.getVal())
+            return idVec3(cp._val * radius * ct._val, cp._val * radius * st._val, radius * sp._val)
         }
     }
 }

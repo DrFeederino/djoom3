@@ -57,7 +57,7 @@ object Trigger {
             private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
             fun DrawDebugInfo() {
                 val axis = Game_local.gameLocal.GetLocalPlayer().viewAngles.ToMat3()
-                val up = idVec3(axis.oGet(2).oMultiply(5.0f))
+                val up = idVec3(axis.oGet(2).times(5.0f))
                 val viewTextBounds = idBounds(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
                 val viewBounds = idBounds(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
                 val box = idBounds(idVec3(-4.0f, -4.0f, -4.0f), idVec3(4.0f, 4.0f, 4.0f))
@@ -404,7 +404,7 @@ object Trigger {
                     return true
                 }
                 val player = activator as idPlayer?
-                val dot = player.viewAngles.ToForward().oMultiply(GetPhysics().GetAxis().oGet(0))
+                val dot = player.viewAngles.ToForward().times(GetPhysics().GetAxis().oGet(0))
                 val angle = Vector.RAD2DEG(idMath.ACos(dot))
                 return angle <= spawnArgs.GetFloat("angleLimit", "30")
             }

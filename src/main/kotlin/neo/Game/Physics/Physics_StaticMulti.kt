@@ -271,9 +271,9 @@ object Physics_StaticMulti {
                 self.GetMasterPosition(masterOrigin, masterAxis)
                 i = 0
                 while (i < clipModels.Num()) {
-                    current.oGet(i).origin.oSet(masterOrigin.oPlus(current.oGet(i).localOrigin.oMultiply(masterAxis)))
+                    current.oGet(i).origin.oSet(masterOrigin.oPlus(current.oGet(i).localOrigin.times(masterAxis)))
                     if (isOrientated) {
-                        current.oGet(i).axis.oSet(current.oGet(i).localAxis.oMultiply(masterAxis))
+                        current.oGet(i).axis.oSet(current.oGet(i).localAxis.times(masterAxis))
                     } else {
                         current.oGet(i).axis.oSet(current.oGet(i).localAxis)
                     }
@@ -324,7 +324,7 @@ object Physics_StaticMulti {
                 current.oGet(id).localOrigin.oSet(newOrigin)
                 if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(id).origin.oSet(masterOrigin.oPlus(newOrigin.oMultiply(masterAxis)))
+                    current.oGet(id).origin.oSet(masterOrigin.oPlus(newOrigin.times(masterAxis)))
                 } else {
                     current.oGet(id).origin.oSet(newOrigin)
                 }
@@ -335,7 +335,7 @@ object Physics_StaticMulti {
             } else if (id == -1) {
                 if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    Translate(masterOrigin.oPlus(masterAxis.oMultiply(newOrigin).oMinus(current.oGet(0).origin)))
+                    Translate(masterOrigin.oPlus(masterAxis.times(newOrigin).oMinus(current.oGet(0).origin)))
                 } else {
                     Translate(newOrigin.oMinus(current.oGet(0).origin))
                 }
@@ -349,7 +349,7 @@ object Physics_StaticMulti {
                 current.oGet(id).localAxis.oSet(newAxis)
                 if (hasMaster && isOrientated) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(id).axis.oSet(newAxis.oMultiply(masterAxis))
+                    current.oGet(id).axis.oSet(newAxis.times(masterAxis))
                 } else {
                     current.oGet(id).axis.oSet(newAxis)
                 }
@@ -362,9 +362,9 @@ object Physics_StaticMulti {
                 val rotation: idRotation?
                 axis = if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(0).axis.Transpose().oMultiply(newAxis.oMultiply(masterAxis))
+                    current.oGet(0).axis.Transpose().times(newAxis.times(masterAxis))
                 } else {
-                    current.oGet(0).axis.Transpose().oMultiply(newAxis)
+                    current.oGet(0).axis.Transpose().times(newAxis)
                 }
                 rotation = axis.ToRotation()
                 rotation.SetOrigin(current.oGet(0).origin)
@@ -375,8 +375,8 @@ object Physics_StaticMulti {
         override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
             var i: Int
             if (id >= 0 && id < clipModels.Num()) {
-                current.oGet(id).localOrigin.oPluSet(translation)
-                current.oGet(id).origin.oPluSet(translation)
+                current.oGet(id).localOrigin.plusAssign(translation)
+                current.oGet(id).origin.plusAssign(translation)
                 if (clipModels.oGet(id) != null) {
                     clipModels.oGet(id)
                         .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
@@ -384,8 +384,8 @@ object Physics_StaticMulti {
             } else if (id == -1) {
                 i = 0
                 while (i < clipModels.Num()) {
-                    current.oGet(i).localOrigin.oPluSet(translation)
-                    current.oGet(i).origin.oPluSet(translation)
+                    current.oGet(i).localOrigin.plusAssign(translation)
+                    current.oGet(i).origin.plusAssign(translation)
                     if (clipModels.oGet(i) != null) {
                         clipModels.oGet(i)
                             .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
@@ -400,11 +400,11 @@ object Physics_StaticMulti {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             if (id >= 0 && id < clipModels.Num()) {
-                current.oGet(id).origin.oMulSet(rotation)
-                current.oGet(id).axis.oMulSet(rotation.ToMat3())
+                current.oGet(id).origin.timesAssign(rotation)
+                current.oGet(id).axis.timesAssign(rotation.ToMat3())
                 if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(id).localAxis.oMulSet(rotation.ToMat3())
+                    current.oGet(id).localAxis.timesAssign(rotation.ToMat3())
                     current.oGet(id).localOrigin.oSet(
                         current.oGet(id).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
                     )
@@ -419,11 +419,11 @@ object Physics_StaticMulti {
             } else if (id == -1) {
                 i = 0
                 while (i < clipModels.Num()) {
-                    current.oGet(i).origin.oMulSet(rotation)
-                    current.oGet(i).axis.oMulSet(rotation.ToMat3())
+                    current.oGet(i).origin.timesAssign(rotation)
+                    current.oGet(i).axis.timesAssign(rotation.ToMat3())
                     if (hasMaster) {
                         self.GetMasterPosition(masterOrigin, masterAxis)
-                        current.oGet(i).localAxis.oMulSet(rotation.ToMat3())
+                        current.oGet(i).localAxis.timesAssign(rotation.ToMat3())
                         current.oGet(i).localOrigin.oSet(
                             current.oGet(i).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
                         )
@@ -615,7 +615,7 @@ object Physics_StaticMulti {
                             current.oGet(i).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
                         )
                         if (orientated) {
-                            current.oGet(i).localAxis.oSet(current.oGet(i).axis.oMultiply(masterAxis.Transpose()))
+                            current.oGet(i).localAxis.oSet(current.oGet(i).axis.times(masterAxis.Transpose()))
                         } else {
                             current.oGet(i).localAxis.oSet(current.oGet(i).axis)
                         }

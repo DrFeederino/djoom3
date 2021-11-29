@@ -914,10 +914,10 @@ object RenderSystem_init {
         } else {
             5
         }
-        var fx = dir.oMultiply(RenderSystem_init.cubeAxis[axis].oGet(1)) / dir.oMultiply(
+        var fx = dir.times(RenderSystem_init.cubeAxis[axis].oGet(1)) / dir.times(
             RenderSystem_init.cubeAxis[axis].oGet(0)
         )
-        var fy = dir.oMultiply(RenderSystem_init.cubeAxis[axis].oGet(2)) / dir.oMultiply(
+        var fy = dir.times(RenderSystem_init.cubeAxis[axis].oGet(2)) / dir.times(
             RenderSystem_init.cubeAxis[axis].oGet(0)
         )
         fx = -fx
@@ -1633,9 +1633,9 @@ object RenderSystem_init {
                             val total = FloatArray(3)
                             dir.oSet(
                                 cubeAxis.get(i).oGet(0).oPlus(
-                                    cubeAxis.get(i).oGet(1).oMultiply(-(-1 + 2.0f * x / (outSize - 1)))
+                                    cubeAxis.get(i).oGet(1).times(-(-1 + 2.0f * x / (outSize - 1)))
                                 ).oPlus(
-                                    cubeAxis.get(i).oGet(2).oMultiply(-(-1 + 2.0f * y / (outSize - 1)))
+                                    cubeAxis.get(i).oGet(2).times(-(-1 + 2.0f * y / (outSize - 1)))
                                 )
                             )
                             dir.Normalize()
@@ -1657,7 +1657,7 @@ object RenderSystem_init {
                                         continue
                                     }
                                     test.Normalize()
-                                    if (test.oMultiply(dir) > limit) {    // don't do a complete hemisphere
+                                    if (test.times(dir) > limit) {    // don't do a complete hemisphere
                                         break
                                     }
                                 }
@@ -2267,10 +2267,10 @@ object RenderSystem_init {
                 tr_local.tr.primaryView.renderView.vieworg.oPlus(
                     tr_local.tr.primaryView.renderView.viewaxis.oGet(
                         0
-                    ).oMultiply(16f)
+                    ).times(16f)
                 )
             )
-            end.oSet(start.oPlus(tr_local.tr.primaryView.renderView.viewaxis.oGet(0).oMultiply(1000.0f)))
+            end.oSet(start.oPlus(tr_local.tr.primaryView.renderView.viewaxis.oGet(0).times(1000.0f)))
             if (!tr_local.tr.primaryWorld.Trace(mt, start, end, 0.0f, false)) {
                 return
             }

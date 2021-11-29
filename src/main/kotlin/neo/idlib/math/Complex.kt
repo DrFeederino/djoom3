@@ -1,6 +1,7 @@
 package neo.idlib.math
 
 import neo.idlib.math.Math_h.idMath
+import kotlin.math.abs
 
 /**
  *
@@ -43,7 +44,7 @@ class Complex {
         //public		idComplex			operator*( final idComplex &a ) final;
         //public	float				operator[]( int index ) final;
         fun oGet(index: Int): Float {
-            assert(index >= 0 && index < 2)
+            assert(index in 0..1)
             return if (0 == index) {
                 r
             } else {
@@ -53,7 +54,7 @@ class Complex {
 
         //public		idComplex			operator/( final idComplex &a ) final;
         fun oSet(index: Int, value: Float) {
-            assert(index >= 0 && index < 2)
+            assert(index in 0..1)
             if (0 == index) {
                 r = value
             } else {
@@ -62,12 +63,12 @@ class Complex {
         }
 
         //public		idComplex			operator+( final idComplex &a ) final;
-        fun oNegative(): idComplex? {
+        operator fun unaryMinus(): idComplex {
             return idComplex(-r, -i)
         }
 
         //public		idComplex			operator-( final idComplex &a ) final;
-        fun oSet(a: idComplex?): idComplex? {
+        fun oSet(a: idComplex): idComplex {
             r = a.r
             i = a.i
             return this
@@ -75,15 +76,15 @@ class Complex {
 
         //
         //public		idComplex &			operator*=( final idComplex &a );
-        fun oMultiply(a: idComplex?): idComplex? {
+        operator fun times(a: idComplex): idComplex {
             return idComplex(r * a.r - i * a.i, i * a.r + r * a.i)
         }
 
         //public		idComplex &			operator/=( final idComplex &a );
-        fun oDivide(a: idComplex?): idComplex? {
+        operator fun div(a: idComplex): idComplex {
             val s: Float
             val t: Float
-            return if (Math.abs(a.r) >= Math.abs(a.i)) {
+            return if (abs(a.r) >= abs(a.i)) {
                 s = a.i / a.r
                 t = 1.0f / (a.r + s * a.i)
                 idComplex((r + s * i) * t, (i - s * r) * t)
@@ -95,27 +96,27 @@ class Complex {
         }
 
         //public		idComplex &			operator+=( final idComplex &a );
-        fun oPlus(a: idComplex?): idComplex? {
+        operator fun plus(a: idComplex): idComplex {
             return idComplex(r + a.r, i + a.i)
         }
 
         //public		idComplex &			operator-=( final idComplex &a );
-        fun oMinus(a: idComplex?): idComplex? {
+        operator fun minus(a: idComplex): idComplex {
             return idComplex(r - a.r, i - a.i)
         }
 
         //
         //public		idComplex			operator*( final float a ) final;
-        fun oMulSet(a: idComplex?): idComplex? {
+        fun timesAssign(a: idComplex): idComplex {
             Set(r * a.r - i * a.i, i * a.r + r * a.i)
             return this
         }
 
         //public		idComplex			operator/( final float a ) final;
-        fun oDivSet(a: idComplex?): idComplex? {
+        fun divAssign(a: idComplex): idComplex {
             val s: Float
             val t: Float
-            if (Math.abs(a.r) >= Math.abs(a.i)) {
+            if (abs(a.r) >= abs(a.i)) {
                 s = a.i / a.r
                 t = 1.0f / (a.r + s * a.i)
                 Set((r + s * i) * t, (i - s * r) * t)
@@ -128,14 +129,14 @@ class Complex {
         }
 
         //public		idComplex			operator+( final float a ) final;
-        fun oPluSet(a: idComplex?): idComplex? {
+        fun plusAssign(a: idComplex): idComplex {
             r += a.r
             i += a.i
             return this
         }
 
         //public		idComplex			operator-( final float a ) final;
-        fun oMinSet(a: idComplex?): idComplex? {
+        fun minusAssign(a: idComplex): idComplex {
             r -= a.r
             i -= a.i
             return this
@@ -143,36 +144,36 @@ class Complex {
 
         //
         //public		idComplex &			operator*=( final float a );
-        fun oMultiply(a: Float): idComplex? {
+        fun times(a: Float): idComplex {
             return idComplex(r * a, i * a)
         }
 
         //public		idComplex &			operator/=( final float a );
-        fun oDivide(a: Float): idComplex? {
+        fun div(a: Float): idComplex {
             val s = 1.0f / a
             return idComplex(r * s, i * s)
         }
 
         //public		idComplex &			operator+=( final float a );
-        fun oPlus(a: Float): idComplex? {
+        fun plus(a: Float): idComplex {
             return idComplex(r + a, i)
         }
 
         //public		idComplex &			operator-=( final float a );
-        fun oMinus(a: Float): idComplex? {
+        fun minus(a: Float): idComplex {
             return idComplex(r - a, i)
         }
 
         //
         //public		friend idComplex	operator*( final float a, final idComplex &b );
-        fun oMulSet(a: Float): idComplex? {
+        fun timesAssign(a: Float): idComplex {
             r *= a
             i *= a
             return this
         }
 
         //public		friend idComplex	operator/( final float a, final idComplex &b );
-        fun oDivSet(a: Float): idComplex? {
+        fun divAssign(a: Float): idComplex {
             val s = 1.0f / a
             r *= s
             i *= s
@@ -180,26 +181,26 @@ class Complex {
         }
 
         //public		friend idComplex	operator+( final float a, final idComplex &b );
-        fun oPluSet(a: Float): idComplex? {
+        fun plusAssign(a: Float): idComplex {
             r += a
             return this
         }
 
         //public		friend idComplex	operator-( final float a, final idComplex &b );
-        fun oMinSet(a: Float): idComplex? {
+        fun minusAssign(a: Float): idComplex {
             r -= a
             return this
         }
 
         //
-        fun Compare(a: idComplex?): Boolean { // exact compare, no epsilon
+        fun Compare(a: idComplex): Boolean { // exact compare, no epsilon
             return r == a.r && i == a.i
         }
 
-        fun Compare(a: idComplex?, epsilon: Float): Boolean { // compare with epsilon
-            return if (Math.abs(r - a.r) > epsilon) {
+        fun Compare(a: idComplex, epsilon: Float): Boolean { // compare with epsilon
+            return if (abs(r - a.r) > epsilon) {
                 false
-            } else Math.abs(i - a.i) <= epsilon
+            } else abs(i - a.i) <= epsilon
         }
 
         //public		boolean				operator==(	final idComplex &a ) final;						// exact compare, no epsilon
@@ -211,23 +212,23 @@ class Complex {
             return hash
         }
 
-        override fun equals(obj: Any?): Boolean {
-            if (obj == null) {
+        override fun equals(other: Any?): Boolean {
+            if (other == null) {
                 return false
             }
-            if (javaClass != obj.javaClass) {
+            if (javaClass != other.javaClass) {
                 return false
             }
-            val other = obj as idComplex?
-            return if (java.lang.Float.floatToIntBits(r) != java.lang.Float.floatToIntBits(other.r)) {
+            val idComplex = other as idComplex
+            return if (java.lang.Float.floatToIntBits(r) != java.lang.Float.floatToIntBits(idComplex.r)) {
                 false
-            } else java.lang.Float.floatToIntBits(i) == java.lang.Float.floatToIntBits(other.i)
+            } else java.lang.Float.floatToIntBits(i) == java.lang.Float.floatToIntBits(idComplex.i)
         }
 
-        fun Reciprocal(): idComplex? {
+        fun Reciprocal(): idComplex {
             val s: Float
             val t: Float
-            return if (Math.abs(r) >= Math.abs(i)) {
+            return if (abs(r) >= abs(i)) {
                 s = i / r
                 t = 1.0f / (r + s * i)
                 idComplex(t, -s * t)
@@ -238,15 +239,13 @@ class Complex {
             }
         }
 
-        fun Sqrt(): idComplex? {
-            val x: Float
-            val y: Float
+        fun Sqrt(): idComplex {
             var w: Float
             if (r == 0.0f && i == 0.0f) {
                 return idComplex(0.0f, 0.0f)
             }
-            x = Math.abs(r)
-            y = Math.abs(i)
+            val x: Float = abs(r)
+            val y: Float = abs(i)
             if (x >= y) {
                 w = y / x
                 w = idMath.Sqrt(x) * idMath.Sqrt(0.5f * (1.0f + idMath.Sqrt(1.0f + w * w)))
@@ -265,11 +264,9 @@ class Complex {
         }
 
         fun Abs(): Float {
-            val x: Float
-            val y: Float
             val t: Float
-            x = Math.abs(r)
-            y = Math.abs(i)
+            val x: Float = abs(r)
+            val y: Float = abs(i)
             return if (x == 0.0f) {
                 y
             } else if (y == 0.0f) {
@@ -291,14 +288,14 @@ class Complex {
         //public		float *				ToFloatPtr( void );
         //public		final char *		ToString( int precision = 2 ) final;
         companion object {
-            fun oMultiply(a: Float, b: idComplex?): idComplex? {
+            fun times(a: Float, b: idComplex): idComplex {
                 return idComplex(a * b.r, a * b.i)
             }
 
-            fun oDivide(a: Float, b: idComplex?): idComplex? {
+            fun div(a: Float, b: idComplex): idComplex {
                 val s: Float
                 val t: Float
-                return if (Math.abs(b.r) >= Math.abs(b.i)) {
+                return if (abs(b.r) >= abs(b.i)) {
                     s = b.i / b.r
                     t = a / (b.r + s * b.i)
                     idComplex(t, -s * t)
@@ -309,11 +306,11 @@ class Complex {
                 }
             }
 
-            fun oPlus(a: Float, b: idComplex?): idComplex? {
+            fun plus(a: Float, b: idComplex): idComplex {
                 return idComplex(a + b.r, b.i)
             }
 
-            fun oMinus(a: Float, b: idComplex?): idComplex? {
+            fun minus(a: Float, b: idComplex): idComplex {
                 return idComplex(a - b.r, -b.i)
             }
         }

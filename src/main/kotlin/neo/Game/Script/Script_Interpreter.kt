@@ -918,19 +918,19 @@ object Script_Interpreter {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
                         var_c = GetVariable(st.c)
-                        var_c.setFloatPtr(var_a.getVectorPtr().oMultiply(var_b.getVectorPtr()))
+                        var_c.setFloatPtr(var_a.getVectorPtr().times(var_b.getVectorPtr()))
                     }
                     Script_Compiler.OP_MUL_FV -> {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
                         var_c = GetVariable(st.c)
-                        var_c.setVectorPtr(var_b.getVectorPtr().oMultiply(var_a.getFloatPtr()))
+                        var_c.setVectorPtr(var_b.getVectorPtr().times(var_a.getFloatPtr()))
                     }
                     Script_Compiler.OP_MUL_VF -> {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
                         var_c = GetVariable(st.c)
-                        var_c.getVectorPtr().oSet(var_a.getVectorPtr().oMultiply(var_b.getFloatPtr()))
+                        var_c.getVectorPtr().oSet(var_a.getVectorPtr().times(var_b.getFloatPtr()))
                     }
                     Script_Compiler.OP_DIV_F -> {
                         var_a = GetVariable(st.a)
@@ -1173,7 +1173,7 @@ object Script_Interpreter {
                     Script_Compiler.OP_UMUL_V -> {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
-                        var_b.setVectorPtr(var_b.getVectorPtr().oMultiply(var_a.getFloatPtr()))
+                        var_b.setVectorPtr(var_b.getVectorPtr().times(var_a.getFloatPtr()))
                     }
                     Script_Compiler.OP_UDIV_F -> {
                         var_a = GetVariable(st.a)
@@ -1192,7 +1192,7 @@ object Script_Interpreter {
                             Warning("Divide by zero")
                             var_b.setVectorPtr(floatArrayOf(idMath.INFINITY, idMath.INFINITY, idMath.INFINITY))
                         } else {
-                            var_b.setVectorPtr(var_b.getVectorPtr().oDivide(var_a.getFloatPtr()))
+                            var_b.setVectorPtr(var_b.getVectorPtr().div(var_a.getFloatPtr()))
                         }
                     }
                     Script_Compiler.OP_UMOD_F -> {

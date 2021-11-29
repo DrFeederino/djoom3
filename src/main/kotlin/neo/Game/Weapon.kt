@@ -1273,8 +1273,8 @@ object Weapon {
             if (viewModel) {
                 // view model
                 if (animator.GetJointTransform(jointHandle, Game_local.gameLocal.time, offset, axis)) {
-                    offset.oSet(offset.oMultiply(viewWeaponAxis).oPlus(viewWeaponOrigin))
-                    axis.oSet(axis.oMultiply(viewWeaponAxis))
+                    offset.oSet(offset.times(viewWeaponAxis).oPlus(viewWeaponOrigin))
+                    axis.oSet(axis.times(viewWeaponAxis))
                     return true
                 }
             } else {
@@ -1284,9 +1284,9 @@ object Weapon {
                 ) {
                     offset.oSet(
                         worldModel.GetEntity().GetPhysics().GetOrigin()
-                            .oPlus(offset.oMultiply(worldModel.GetEntity().GetPhysics().GetAxis()))
+                            .oPlus(offset.times(worldModel.GetEntity().GetPhysics().GetAxis()))
                     )
-                    axis.oSet(axis.oMultiply(worldModel.GetEntity().GetPhysics().GetAxis()))
+                    axis.oSet(axis.times(worldModel.GetEntity().GetPhysics().GetAxis()))
                     return true
                 }
             }
@@ -1685,7 +1685,7 @@ object Weapon {
                     Hide()
                 }
             }
-            viewWeaponOrigin.oPluSet(viewWeaponAxis.oGet(2).oMultiply(hideOffset))
+            viewWeaponOrigin.plusAssign(viewWeaponAxis.oGet(2).times(hideOffset))
 
             // kick up based on repeat firing
             MuzzleRise(viewWeaponOrigin, viewWeaponAxis)
@@ -1836,9 +1836,9 @@ object Weapon {
             if (!GetGlobalJointTransform(true, ejectJointView, localOrigin, localAxis)) {
                 return false
             }
-            localOrigin.oPluSet(0, Game_local.gameLocal.random.RandomFloat() * -10.0f)
-            localOrigin.oPluSet(1, Game_local.gameLocal.random.RandomFloat() * 1.0f)
-            localOrigin.oPluSet(2, Game_local.gameLocal.random.RandomFloat() * -2.0f)
+            localOrigin.plusAssign(0, Game_local.gameLocal.random.RandomFloat() * -10.0f)
+            localOrigin.plusAssign(1, Game_local.gameLocal.random.RandomFloat() * 1.0f)
+            localOrigin.plusAssign(2, Game_local.gameLocal.random.RandomFloat() * -2.0f)
             normal.oSet(
                 idVec3(
                     Game_local.gameLocal.random.CRandomFloat(),
@@ -1850,15 +1850,15 @@ object Weapon {
             idMath.SinCos16(Game_local.gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c)
             localAxis.oSet(2, normal.oNegative())
             localAxis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1))
-            localAxis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())))
-            localAxis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())))
-            localAxis.oGet(0).oMulSet(1.0f / size)
-            localAxis.oGet(1).oMulSet(1.0f / size)
+            localAxis.oSet(0, axistemp.oGet(0).times(c.getVal()).oPlus(axistemp.oGet(1).times(-s.getVal())))
+            localAxis.oSet(1, axistemp.oGet(0).times(-s.getVal()).oPlus(axistemp.oGet(1).times(-c.getVal())))
+            localAxis.oGet(0).timesAssign(1.0f / size)
+            localAxis.oGet(1).timesAssign(1.0f / size)
             val localPlane: Array<idPlane?> = idPlane.Companion.generateArray(2)
             localPlane[0].oSet(localAxis.oGet(0))
-            localPlane[0].oSet(3, -localOrigin.oMultiply(localAxis.oGet(0)) + 0.5f)
+            localPlane[0].oSet(3, -localOrigin.times(localAxis.oGet(0)) + 0.5f)
             localPlane[1].oSet(localAxis.oGet(1))
-            localPlane[1].oSet(3, -localOrigin.oMultiply(localAxis.oGet(1)) + 0.5f)
+            localPlane[1].oSet(3, -localOrigin.times(localAxis.oGet(1)) + 0.5f)
             val mtr: idMaterial? = DeclManager.declManager.FindMaterial("textures/decals/duffysplatgun")
             Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane, mtr)
             return true
@@ -1973,7 +1973,7 @@ object Weapon {
         private fun AlertMonsters() {
             val tr = trace_s()
             var ent: idEntity?
-            val end = idVec3(muzzleFlash.origin.oPlus(muzzleFlash.axis.oMultiply(muzzleFlash.target)))
+            val end = idVec3(muzzleFlash.origin.oPlus(muzzleFlash.axis.times(muzzleFlash.target)))
             Game_local.gameLocal.clip.TracePoint(
                 tr,
                 muzzleFlash.origin,
@@ -1996,8 +1996,8 @@ object Weapon {
             }
 
             // jitter the trace to try to catch cases where a trace down the center doesn't hit the monster
-            end.oPluSet(muzzleFlash.axis.oMultiply(muzzleFlash.right.oMultiply(idMath.Sin16(Math_h.MS2SEC(Game_local.gameLocal.time.toFloat()) * 31.34f))))
-            end.oPluSet(muzzleFlash.axis.oMultiply(muzzleFlash.up.oMultiply(idMath.Sin16(Math_h.MS2SEC(Game_local.gameLocal.time.toFloat()) * 12.17f))))
+            end.oPluSet(muzzleFlash.axis.times(muzzleFlash.right.times(idMath.Sin16(Math_h.MS2SEC(Game_local.gameLocal.time.toFloat()) * 31.34f))))
+            end.oPluSet(muzzleFlash.axis.times(muzzleFlash.up.times(idMath.Sin16(Math_h.MS2SEC(Game_local.gameLocal.time.toFloat()) * 12.17f))))
             Game_local.gameLocal.clip.TracePoint(
                 tr,
                 muzzleFlash.origin,
@@ -2111,10 +2111,10 @@ object Weapon {
                 time = muzzle_kick_maxtime
             }
             amount = time.toFloat() / muzzle_kick_maxtime.toFloat()
-            ang = muzzle_kick_angles.oMultiply(amount)
-            offset.oSet(muzzle_kick_offset.oMultiply(amount))
-            origin.oSet(origin.oMinus(axis.oMultiply(offset)))
-            axis.oSet(ang.ToMat3().oMultiply(axis))
+            ang = muzzle_kick_angles.times(amount)
+            offset.oSet(muzzle_kick_offset.times(amount))
+            origin.oSet(origin.oMinus(axis.times(offset)))
+            axis.oSet(ang.ToMat3().times(axis))
         }
 
         private fun UpdateNozzleFx() {
@@ -2171,12 +2171,12 @@ object Weapon {
             GetGlobalJointTransform(true, flashJointView, muzzleFlash.origin, muzzleFlash.axis)
 
             // if the desired point is inside or very close to a wall, back it up until it is clear
-            val start = idVec3(muzzleFlash.origin.oMinus(playerViewAxis.oGet(0).oMultiply(16f)))
-            val end = idVec3(muzzleFlash.origin.oPlus(playerViewAxis.oGet(0).oMultiply(8f)))
+            val start = idVec3(muzzleFlash.origin.oMinus(playerViewAxis.oGet(0).times(16f)))
+            val end = idVec3(muzzleFlash.origin.oPlus(playerViewAxis.oGet(0).times(8f)))
             val tr = trace_s()
             Game_local.gameLocal.clip.TracePoint(tr, start, end, Game_local.MASK_SHOT_RENDERMODEL, owner)
             // be at least 8 units away from a solid
-            muzzleFlash.origin.oSet(tr.endpos.oMinus(playerViewAxis.oGet(0).oMultiply(8f)))
+            muzzleFlash.origin.oSet(tr.endpos.oMinus(playerViewAxis.oGet(0).times(8f)))
 
             // put the world muzzle flash on the end of the joint, no matter what
             GetGlobalJointTransform(false, flashJointWorld, worldMuzzleFlash.origin, worldMuzzleFlash.axis)
@@ -2552,22 +2552,22 @@ object Weapon {
                 // predict instant hit projectiles
                 if (projectileDict.GetBool("net_instanthit")) {
                     val spreadRad = Math_h.DEG2RAD(spread)
-                    muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f)))
+                    muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).times(2.0f)))
                     i = 0
                     while (i < num_projectiles) {
                         ang = idMath.Sin(spreadRad * Game_local.gameLocal.random.RandomFloat())
                         spin = Math_h.DEG2RAD(360.0f) * Game_local.gameLocal.random.RandomFloat()
                         dir.oSet(
                             playerViewAxis.oGet(0).oPlus(
-                                playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin))
-                                    .oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin)))
+                                playerViewAxis.oGet(2).times(ang * idMath.Sin(spin))
+                                    .oMinus(playerViewAxis.oGet(1).times(ang * idMath.Cos(spin)))
                             )
                         )
                         dir.Normalize()
                         Game_local.gameLocal.clip.Translation(
                             tr,
                             muzzle_pos,
-                            muzzle_pos.oPlus(dir.oMultiply(4096.0f)),
+                            muzzle_pos.oPlus(dir.times(4096.0f)),
                             null,
                             idMat3.Companion.getMat3_identity(),
                             Game_local.MASK_SHOT_RENDERMODEL,
@@ -2595,8 +2595,8 @@ object Weapon {
                     spin = Math_h.DEG2RAD(360.0f) * Game_local.gameLocal.random.RandomFloat()
                     dir.oSet(
                         playerViewAxis.oGet(0).oPlus(
-                            playerViewAxis.oGet(2).oMultiply(ang * idMath.Sin(spin))
-                                .oMinus(playerViewAxis.oGet(1).oMultiply(ang * idMath.Cos(spin)))
+                            playerViewAxis.oGet(2).times(ang * idMath.Sin(spin))
+                                .oMinus(playerViewAxis.oGet(1).times(ang * idMath.Cos(spin)))
                         )
                     )
                     dir.Normalize()
@@ -2622,11 +2622,11 @@ object Weapon {
 
                     // make sure the projectile starts inside the bounding box of the owner
                     if (i == 0) {
-                        muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).oMultiply(2.0f)))
+                        muzzle_pos.oSet(muzzleOrigin.oPlus(playerViewAxis.oGet(0).times(2.0f)))
                         if (ownerBounds.oMinus(projBounds)
                                 .RayIntersection(muzzle_pos, playerViewAxis.oGet(0), distance)
                         ) {
-                            start.oSet(muzzle_pos.oPlus(playerViewAxis.oGet(0).oMultiply(distance.getVal())))
+                            start.oSet(muzzle_pos.oPlus(playerViewAxis.oGet(0).times(distance.getVal())))
                         } else {
                             start.oSet(ownerBounds.GetCenter())
                         }
@@ -2732,7 +2732,7 @@ object Weapon {
                 val start = idVec3(playerViewOrigin)
                 val end = idVec3(
                     start.oPlus(
-                        playerViewAxis.oGet(0).oMultiply(meleeDistance * owner.PowerUpModifier(Player.MELEE_DISTANCE))
+                        playerViewAxis.oGet(0).times(meleeDistance * owner.PowerUpModifier(Player.MELEE_DISTANCE))
                     )
                 )
                 Game_local.gameLocal.clip.TracePoint(tr, start, end, Game_local.MASK_SHOT_RENDERMODEL, owner)
@@ -2756,7 +2756,7 @@ object Weapon {
                 var hitSound = meleeDef.dict.GetString("snd_miss")
                 if (ent != null) {
                     val push = meleeDef.dict.GetFloat("push")
-                    val impulse = idVec3(tr.c.normal.oMultiply(-push * owner.PowerUpModifier(Player.SPEED)))
+                    val impulse = idVec3(tr.c.normal.times(-push * owner.PowerUpModifier(Player.SPEED)))
                     if (Game_local.gameLocal.world.spawnArgs.GetBool("no_Weapons") && (ent is idActor || ent is idAFAttachment)) {
                         idThread.Companion.ReturnInt(0)
                         return
@@ -2778,7 +2778,7 @@ object Weapon {
                         val kickDir = idVec3()
                         val globalKickDir = idVec3()
                         meleeDef.dict.GetVector("kickDir", "0 0 0", kickDir)
-                        globalKickDir.oSet(muzzleAxis.oMultiply(kickDir))
+                        globalKickDir.oSet(muzzleAxis.times(kickDir))
                         ent.Damage(
                             owner,
                             owner,
@@ -2826,7 +2826,7 @@ object Weapon {
                             }
                             strikeSmokeStartTime = Game_local.gameLocal.time
                             strikePos.oSet(tr.c.point)
-                            strikeAxis.oSet(tr.endAxis.oNegative())
+                            strikeAxis.oSet(tr.endAxis.unaryMinus())
                         }
                     }
                 }

@@ -24,7 +24,7 @@ class Random {
             this.seed = seed
         }
 
-        constructor(random: idRandom?) {
+        constructor(random: idRandom) {
             seed = random.seed
         }
 

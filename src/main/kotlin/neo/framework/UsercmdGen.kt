@@ -739,11 +739,17 @@ object UsercmdGen {
                 idMath.M_MS2SEC * USERCMD_MSEC
             }
             if (0 == ButtonState(usercmdButton_t.UB_STRAFE)) {
-                viewangles.oMinSet(Angles.YAW, speed * in_yawSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_RIGHT))
-                viewangles.oPluSet(Angles.YAW, speed * in_yawSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_LEFT))
+                viewangles.minusAssign(
+                    Angles.YAW,
+                    speed * in_yawSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_RIGHT)
+                )
+                viewangles.plusAssign(Angles.YAW, speed * in_yawSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_LEFT))
             }
-            viewangles.oMinSet(Angles.PITCH, speed * in_pitchSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_LOOKUP))
-            viewangles.oPluSet(
+            viewangles.minusAssign(
+                Angles.PITCH,
+                speed * in_pitchSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_LOOKUP)
+            )
+            viewangles.plusAssign(
                 Angles.PITCH,
                 speed * in_pitchSpeed.GetFloat() * ButtonState(usercmdButton_t.UB_LOOKDOWN)
             )
@@ -786,11 +792,11 @@ object UsercmdGen {
                 idMath.M_MS2SEC * USERCMD_MSEC
             }
             if (0 == ButtonState(usercmdButton_t.UB_STRAFE)) {
-                viewangles.oPluSet(
+                viewangles.plusAssign(
                     Angles.YAW,
                     anglespeed * in_yawSpeed.GetFloat() * joystickAxis.get(joystickAxis_t.AXIS_SIDE.ordinal)
                 )
-                viewangles.oPluSet(
+                viewangles.plusAssign(
                     Angles.PITCH,
                     anglespeed * in_pitchSpeed.GetFloat() * joystickAxis.get(joystickAxis_t.AXIS_FORWARD.ordinal)
                 )
@@ -885,12 +891,12 @@ object UsercmdGen {
                 }
             }
             if (0 == ButtonState(usercmdButton_t.UB_STRAFE)) {
-                viewangles.oMinSet(Angles.YAW, m_yaw.GetFloat() * mx)
+                viewangles.minusAssign(Angles.YAW, m_yaw.GetFloat() * mx)
             } else {
                 cmd.rightmove = idMath.ClampChar((cmd.rightmove + strafeMx).toInt()).code.toByte()
             }
             if (0 == ButtonState(usercmdButton_t.UB_STRAFE) && cmd.buttons and BUTTON_MLOOK != 0) {
-                viewangles.oPluSet(Angles.PITCH, m_pitch.GetFloat() * my)
+                viewangles.plusAssign(Angles.PITCH, m_pitch.GetFloat() * my)
             } else {
                 cmd.forwardmove = idMath.ClampChar((cmd.forwardmove - strafeMy).toInt()).code.toByte()
             }

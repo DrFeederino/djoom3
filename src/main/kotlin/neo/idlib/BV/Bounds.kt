@@ -34,12 +34,12 @@ object Bounds {
         val axis = idVec3()
         val end = idVec3()
         val bounds = idBounds()
-        end.oSet(rotation.oMultiply(start))
+        end.oSet(rotation * start)
         axis.oSet(rotation.GetVec())
-        origin.oSet(rotation.GetOrigin().oPlus(axis.oMultiply(axis.oMultiply(start.oMinus(rotation.GetOrigin())))))
-        radiusSqr = start.oMinus(origin).LengthSqr()
-        v1.oSet(start.oMinus(origin).Cross(axis))
-        v2.oSet(end.oMinus(origin).Cross(axis))
+        origin.oSet(rotation.GetOrigin() + axis * (axis * (start - rotation.origin)))
+        radiusSqr = (start - origin).LengthSqr();
+        v1.oSet((start - origin).Cross(axis))
+        v2.oSet((end - origin).Cross(axis))
         i = 0
         while (i < 3) {
 
@@ -89,7 +89,7 @@ object Bounds {
             b[1].oSet(point)
         }
 
-        operator fun set(v0: Float, v1: Float, v2: Float, v3: Float, v4: Float, v5: Float) {
+        fun oSet(v0: Float, v1: Float, v2: Float, v3: Float, v4: Float, v5: Float) {
             b[0].oSet(idVec3(v0, v1, v2))
             b[1].oSet(idVec3(v3, v4, v5))
         }
@@ -101,7 +101,7 @@ object Bounds {
             b[1].oSet(bounds.b[1])
         }
 
-        fun oGet(index: Int): idVec3 {
+        operator fun get(index: Int): idVec3 {
             return b[index]
         }
 
@@ -118,23 +118,23 @@ object Bounds {
         }
 
         // returns translated bounds
-        fun oPlus(t: idVec3): idBounds {
-            return idBounds(b[0].oPlus(t), b[1].oPlus(t))
+        operator fun plus(t: idVec3): idBounds {
+            return idBounds(b[0] + t, b[1] + t)
         }
 
         // translate the bounds
-        fun oPluSet(t: idVec3): idBounds {
-            b[0].oPluSet(t)
-            b[1].oPluSet(t)
+        fun timesAssign(t: idVec3): idBounds {
+            b[0].plusAssign(t)
+            b[1].plusAssign(t)
             return this
         }
 
-        fun oPluSet(index: Int, t: idVec3): idVec3 {
-            return b[index].oPluSet(t)
+        fun timesAssign(index: Int, t: idVec3): idVec3 {
+            return b[index].plusAssign(t)
         }
 
         // returns rotated bounds
-        fun oMultiply(r: idMat3): idBounds {
+        operator fun times(r: idMat3): idBounds {
             val bounds = idBounds()
             bounds.FromTransformedBounds(this, Vector.getVec3_origin(), r)
             return bounds
@@ -146,14 +146,14 @@ object Bounds {
             return this
         }
 
-        fun oPlus(a: idBounds): idBounds {
+        fun plus(a: idBounds): idBounds {
             val newBounds: idBounds
             newBounds = idBounds(this)
             newBounds.AddBounds(a)
             return newBounds
         }
 
-        fun oPluSet(a: idBounds): idBounds {
+        fun timesAssign(a: idBounds): idBounds {
             AddBounds(a)
             return this
         }
@@ -184,19 +184,19 @@ object Bounds {
                     .oGet(1) - b[0].oGet(1) > a.b[1].oGet(1) - a.b[0].oGet(1) && b[1].oGet(2) - b[0]
                     .oGet(2) > a.b[1].oGet(2) - a.b[0].oGet(2)
             )
-            b[0].oPluSet(a.b[1])
-            b[1].oPluSet(a.b[0])
+            b[0].plusAssign(a.b[1])
+            b[1].plusAssign(a.b[0])
             return this
         }
 
         fun oMinSet(t: idVec3): idBounds {
-            b[0].oMinSet(t)
-            b[1].oMinSet(t)
+            b[0].minusAssign(t)
+            b[1].minusAssign(t)
             return this
         }
 
         fun oMinSet(index: Int, t: idVec3): idVec3 {
-            return b[index].oMinSet(t)
+            return b[index].minusAssign(t)
         }
 
         fun Compare(a: idBounds): Boolean {                            // exact compare, no epsilon
@@ -418,7 +418,7 @@ object Bounds {
          * expand bounds in all directions with the given value
          */
         fun ExpandSelf(d: Float): idBounds {
-            b[0].oMinSet(idVec3(d, d, d))
+            b[0].minusAssign(idVec3(d, d, d))
             b[1].x += d
             b[1].y += d
             b[1].z += d
@@ -426,13 +426,13 @@ object Bounds {
         }
 
         fun Translate(translation: idVec3): idBounds { // return translated bounds
-            return idBounds(b[0].oPlus(translation), b[1].oPlus(translation))
+            return idBounds(b[0] + translation, b[1] + translation)
         }
 
         // translate this bounds
         fun TranslateSelf(translation: idVec3): idBounds {
-            b[0].oPluSet(translation)
-            b[1].oPluSet(translation)
+            b[0].plusAssign(translation)
+            b[1].plusAssign(translation)
             return this
         }
 
@@ -453,7 +453,7 @@ object Bounds {
             val center = idVec3()
             val d1: Float
             val d2: Float
-            center.oSet(b[0].oPlus(b[1]).oMultiply(0.5f))
+            center.oSet((b[0] + b[1]) * 0.5f)
             d1 = plane.Distance(center)
             d2 = (abs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
                     + abs((b[1].oGet(1) - center.oGet(1)) * plane.Normal().oGet(1))
@@ -471,7 +471,7 @@ object Bounds {
             val center = idVec3()
             val d1: Float
             val d2: Float
-            center.oSet(b[0].oPlus(b[1]).oMultiply(0.5f))
+            center.oSet(b[0] + b[1] * 0.5f)
             d1 = plane.Distance(center)
             d2 = (abs((b[1].oGet(0) - center.oGet(0)) * plane.Normal().oGet(0))
                     + abs((b[1].oGet(1) - center.oGet(1)) * plane.Normal().oGet(1))
@@ -507,11 +507,11 @@ object Bounds {
          */
         fun LineIntersection(start: idVec3, end: idVec3): Boolean {
             val ld = FloatArray(3)
-            val center = idVec3(b[0].oPlus(b[1]).oMultiply(0.5f))
-            val extents = idVec3(b[1].oMinus(center))
-            val lineDir = idVec3(end.oMinus(start).oMultiply(0.5f))
-            val lineCenter = idVec3(start.oPlus(lineDir))
-            val dir = idVec3(lineCenter.oMinus(center))
+            val center = (b[0] + b[1]) * 0.5f
+            val extents = b[1] - center;
+            val lineDir = (end - start) * 0.5f;
+            val lineCenter = start + lineDir;
+            val dir = lineCenter - center;
             ld[0] = abs(lineDir.oGet(0))
             if (abs(dir.oGet(0)) > extents.oGet(0) + ld[0]) {
                 return false
@@ -599,8 +599,8 @@ object Bounds {
             val center = idVec3()
             val extents = idVec3()
             val rotatedExtents = idVec3()
-            center.oSet(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f))
-            extents.oSet(bounds.oGet(1).oMinus(center))
+            center.oSet((bounds[0] + bounds[1]) * 0.5f)
+            extents.oSet(bounds[1] - center)
             i = 0
             while (i < 3) {
                 rotatedExtents.oSet(
@@ -610,9 +610,9 @@ object Bounds {
                 )
                 i++
             }
-            center.oSet(origin.oPlus(axis.oMultiply(center)))
-            b[0].oSet(center.oMinus(rotatedExtents))
-            b[1].oSet(center.oPlus(rotatedExtents))
+            center.oSet(origin + center * axis)
+            b[0].oSet(center - rotatedExtents)
+            b[1].oSet(center + rotatedExtents)
         }
 
         /*
@@ -660,15 +660,15 @@ object Bounds {
             if (axis.IsRotated()) {
                 FromTransformedBounds(bounds, origin, axis)
             } else {
-                b[0].oSet(bounds.oGet(0).oPlus(origin))
-                b[1].oSet(bounds.oGet(1).oPlus(origin))
+                b[0].oSet(bounds[0] + origin)
+                b[1].oSet(bounds[1] + origin)
             }
             i = 0
             while (i < 3) {
                 if (translation.oGet(i) < 0.0f) {
-                    b[0].oPluSet(i, translation.oGet(i))
+                    b[0].plusAssign(i, translation.oGet(i))
                 } else {
-                    b[1].oPluSet(i, translation.oGet(i))
+                    b[1].plusAssign(i, translation.oGet(i))
                 }
                 i++
             }
@@ -686,7 +686,7 @@ object Bounds {
             if (abs(rotation.GetAngle()) < 180.0f) {
                 BoundsForPointRotation(point, rotation)
             } else {
-                radius = point.oMinus(rotation.GetOrigin()).Length()
+                radius = (point - rotation.GetOrigin()).Length()
 
                 // FIXME: these bounds are usually way larger
                 b[0].Set(-radius, -radius, -radius)
@@ -708,7 +708,7 @@ object Bounds {
             if (abs(rotation.GetAngle()) < 180.0f) {
                 val rotationPointBounds: Array<idVec3> = idVec3.copyVec(
                     BoundsForPointRotation(
-                        axis.oMultiply(bounds.oGet(0)).oPlus(origin),
+                        bounds[0] * axis + origin,
                         rotation
                     ).b
                 )
@@ -716,10 +716,10 @@ object Bounds {
                 b[1].oSet(rotationPointBounds[1])
                 i = 1
                 while (i < 8) {
-                    point.oSet(0, bounds.oGet(i xor (i shr 1) and 1).oGet(0))
-                    point.oSet(1, bounds.oGet(i shr 1 and 1).oGet(1))
-                    point.oSet(2, bounds.oGet(i shr 2 and 1).oGet(2))
-                    this.oPluSet(BoundsForPointRotation(axis.oMultiply(point).oPlus(origin), rotation))
+                    point.oSet(0, bounds[i xor (i shr 1) and 1].oGet(0))
+                    point.oSet(1, bounds[i shr 1 and 1].oGet(1))
+                    point.oSet(2, bounds[i shr 2 and 1].oGet(2))
+                    this.timesAssign(point * axis + origin, rotation)
                     i++
                 }
             } else {
@@ -754,7 +754,7 @@ object Bounds {
             val extents = idVec3()
             center.oSet(b[0].oPlus(b[1]).oMultiply(0.5f))
             extents.oSet(b[1].oMinus(center))
-            d1 = dir.oMultiply(center)
+            d1 = dir.times(center)
             d2 = (abs(extents.oGet(0) * dir.oGet(0))
                     + abs(extents.oGet(1) * dir.oGet(1))
                     + abs(extents.oGet(2) * dir.oGet(2)))
@@ -769,11 +769,11 @@ object Bounds {
             val extents = idVec3()
             center.oSet(b[0].oPlus(b[1]).oMultiply(0.5f))
             extents.oSet(b[1].oMinus(center))
-            center.oSet(origin.oPlus(axis.oMultiply(center)))
-            d1 = dir.oMultiply(center)
-            d2 = (abs(extents.oGet(0) * dir.oMultiply(axis.oGet(0)))
-                    + abs(extents.oGet(1) * dir.oMultiply(axis.oGet(1)))
-                    + abs(extents.oGet(2) * dir.oMultiply(axis.oGet(2))))
+            center.oSet(origin.oPlus(axis.times(center)))
+            d1 = dir.times(center)
+            d2 = (abs(extents.oGet(0) * dir.times(axis.oGet(0)))
+                    + abs(extents.oGet(1) * dir.times(axis.oGet(1)))
+                    + abs(extents.oGet(2) * dir.times(axis.oGet(2))))
             min._val = d1 - d2
             max._val = d1 + d2
         }

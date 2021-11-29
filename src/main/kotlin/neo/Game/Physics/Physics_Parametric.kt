@@ -507,14 +507,14 @@ object Physics_Parametric {
                     current.localAngles = current.spline.GetCurrentFirstDerivative(t).ToAngles()
                 }
             } else if (current.linearInterpolation.GetDuration() != 0f) {
-                current.localOrigin.oPluSet(current.linearInterpolation.GetCurrentValue(endTimeMSec.toFloat()))
+                current.localOrigin.plusAssign(current.linearInterpolation.GetCurrentValue(endTimeMSec.toFloat()))
             } else {
-                current.localOrigin.oPluSet(current.linearExtrapolation.GetCurrentValue(endTimeMSec.toFloat()))
+                current.localOrigin.plusAssign(current.linearExtrapolation.GetCurrentValue(endTimeMSec.toFloat()))
             }
             if (current.angularInterpolation.GetDuration() != 0f) {
-                current.localAngles.oPluSet(current.angularInterpolation.GetCurrentValue(endTimeMSec.toFloat()))
+                current.localAngles.plusAssign(current.angularInterpolation.GetCurrentValue(endTimeMSec.toFloat()))
             } else {
-                current.localAngles.oPluSet(current.angularExtrapolation.GetCurrentValue(endTimeMSec.toFloat()))
+                current.localAngles.plusAssign(current.angularExtrapolation.GetCurrentValue(endTimeMSec.toFloat()))
             }
             current.localAngles.Normalize360()
             current.origin.oSet(current.localOrigin)
@@ -523,13 +523,13 @@ object Physics_Parametric {
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
                 if (masterAxis.IsRotated()) {
-                    current.origin.oSet(current.origin.oMultiply(masterAxis).oPlus(masterOrigin))
+                    current.origin.oSet(current.origin.times(masterAxis).oPlus(masterOrigin))
                     if (isOrientated) {
-                        current.axis.oMulSet(masterAxis)
+                        current.axis.timesAssign(masterAxis)
                         current.angles = current.axis.ToAngles()
                     }
                 } else {
-                    current.origin.oPluSet(masterOrigin)
+                    current.origin.plusAssign(masterOrigin)
                 }
             }
             if (isPusher) {
@@ -622,7 +622,7 @@ object Physics_Parametric {
             current.localOrigin.oSet(current.linearExtrapolation.GetCurrentValue(current.time.toFloat()))
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis)))
+                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
             } else {
                 current.origin.oSet(current.localOrigin)
             }
@@ -641,7 +641,7 @@ object Physics_Parametric {
             current.localAngles = current.angularExtrapolation.GetCurrentValue(current.time.toFloat())
             if (hasMaster && isOrientated) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.axis = current.localAngles.ToMat3().oMultiply(masterAxis)
+                current.axis = current.localAngles.ToMat3().times(masterAxis)
                 current.angles = current.axis.ToAngles()
             } else {
                 current.axis = current.localAngles.ToMat3()
@@ -740,7 +740,7 @@ object Physics_Parametric {
                     self.GetMasterPosition(masterOrigin, masterAxis)
                     current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
                     if (orientated) {
-                        current.localAngles = current.axis.oMultiply(masterAxis.Transpose()).ToAngles()
+                        current.localAngles = current.axis.times(masterAxis.Transpose()).ToAngles()
                     } else {
                         current.localAngles = current.axis.ToAngles()
                     }

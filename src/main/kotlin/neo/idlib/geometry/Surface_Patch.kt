@@ -159,7 +159,7 @@ class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta.oPluSet(verts.oGet(i * maxWidth + j + 1).xyz.oMinus(midxyz))
+                    delta.plusAssign(verts.oGet(i * maxWidth + j + 1).xyz.oMinus(midxyz))
                     if (delta.LengthSqr() > maxHorizontalErrorSqr) {
                         break
                     }
@@ -554,7 +554,7 @@ class Surface_Patch {
             vec.oSet(vEnd.oMinus(vStart))
             vec.Normalize()
             // project onto the directional vector for this segment
-            vProj.oSet(vStart.oPlus(vec.oMultiply(pVec.oMultiply(vec))))
+            vProj.oSet(vStart.oPlus(vec.times(pVec.times(vec))))
         }
 
         /*
@@ -612,10 +612,10 @@ class Surface_Patch {
 
             // wrapped patched may not get a valid normal here
             if (norm.Normalize() != 0.0f) {
-                offset = verts.oGet(0).xyz.oMultiply(norm)
+                offset = verts.oGet(0).xyz.times(norm)
                 i = 1
                 while (i < width * height) {
-                    val d = verts.oGet(i).xyz.oMultiply(norm)
+                    val d = verts.oGet(i).xyz.times(norm)
                     if (Math.abs(d - offset) > COPLANAR_EPSILON) {
                         break
                     }
@@ -713,7 +713,7 @@ class Surface_Patch {
                             k++
                             continue
                         }
-                        sum.oPluSet(norm)
+                        sum.plusAssign(norm)
                         count++
                         k++
                     }

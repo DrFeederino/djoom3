@@ -2536,7 +2536,7 @@ object Player {
             // activate the spawn locations targets
             spot.PostEventMS(Entity.EV_ActivateTargets, 0f, this)
             origin.oSet(spot.GetPhysics().GetOrigin())
-            origin.oPluSet(
+            origin.plusAssign(
                 2,
                 4.0f + CollisionModel.CM_BOX_EPSILON
             ) // move up to make sure the player is at least an epsilon above the floor
@@ -2592,8 +2592,8 @@ object Player {
                 SetOrigin(spawn_origin)
             } else {
                 spec_origin.oSet(spawn_origin)
-                spec_origin.oPluSet(2, SysCvar.pm_normalheight.GetFloat())
-                spec_origin.oPluSet(2, Player.SPECTATE_RAISE.toFloat())
+                spec_origin.plusAssign(2, SysCvar.pm_normalheight.GetFloat())
+                spec_origin.plusAssign(2, Player.SPECTATE_RAISE.toFloat())
                 SetOrigin(spec_origin)
             }
 
@@ -2913,15 +2913,15 @@ object Player {
 
             // minus the push velocity to avoid playing the walking animation and sounds when riding a mover
             velocity.oSet(physicsObj.GetLinearVelocity().oMinus(physicsObj.GetPushedLinearVelocity()))
-            fallspeed = velocity.oMultiply(physicsObj.GetGravityNormal())
+            fallspeed = velocity.times(physicsObj.GetGravityNormal())
             if (influenceActive != 0) {
                 AI_FORWARD.underscore(false)
                 AI_BACKWARD.underscore(false)
                 AI_STRAFE_LEFT.underscore(false)
                 AI_STRAFE_RIGHT.underscore(false)
             } else if (Game_local.gameLocal.time - lastDmgTime < 500) {
-                forwardspeed = velocity.oMultiply(viewAxis.oGet(0))
-                sidespeed = velocity.oMultiply(viewAxis.oGet(1))
+                forwardspeed = velocity.times(viewAxis.oGet(0))
+                sidespeed = velocity.times(viewAxis.oGet(1))
                 AI_FORWARD.underscore(AI_ONGROUND.underscore() && forwardspeed > 20.01f)
                 AI_BACKWARD.underscore(AI_ONGROUND.underscore() && forwardspeed < -20.01f)
                 AI_STRAFE_LEFT.underscore(AI_ONGROUND.underscore() && sidespeed > 20.01f)
@@ -3196,7 +3196,7 @@ object Player {
                 }
                 kick.oSet(dir)
                 kick.Normalize()
-                kick.oMulSet(SysCvar.g_knockback.GetFloat() * knockback.getVal() * attackerPushScale.getVal() / 200)
+                kick.timesAssign(SysCvar.g_knockback.GetFloat() * knockback.getVal() * attackerPushScale.getVal() / 200)
                 physicsObj.SetLinearVelocity(physicsObj.GetLinearVelocity().oPlus(kick))
 
                 // set the timer so that the player can't cancel out the movement immediately
@@ -3418,8 +3418,8 @@ object Player {
                 return
             }
             if (GetAnimator().GetJointTransform(jointHandle, Game_local.gameLocal.time, offset, axis)) {
-                offset.oSet(GetPhysics().GetOrigin().oPlus(offset.oMultiply(GetPhysics().GetAxis())))
-                axis = axis.oMultiply(GetPhysics().GetAxis())
+                offset.oSet(GetPhysics().GetOrigin().oPlus(offset.times(GetPhysics().GetAxis())))
+                axis = axis.times(GetPhysics().GetAxis())
             }
             idEntityFx.Companion.StartFx(fx, offset, axis, this, true)
         }
@@ -3535,21 +3535,21 @@ object Player {
                 val axis = idMat3()
                 val origin = idVec3()
                 val ang: idAngles?
-                ang = viewBobAngles.oPlus(playerView.AngleOffset())
+                ang = viewBobAngles.plus(playerView.AngleOffset())
                 ang.yaw += viewAxis.oGet(0).ToYaw()
                 val joint = animator.GetJointHandle("camera")
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
                 firstPersonViewOrigin.oSet(
-                    origin.oPlus(modelOffset).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis()))
+                    origin.oPlus(modelOffset).oMultiply(viewAxis.times(physicsObj.GetGravityAxis()))
                         .oPlus(physicsObj.GetOrigin()).oPlus(viewBob)
                 )
-                firstPersonViewAxis = axis.oMultiply(ang.ToMat3()).oMultiply(physicsObj.GetGravityAxis())
+                firstPersonViewAxis = axis.times(ang.ToMat3()).times(physicsObj.GetGravityAxis())
             } else {
                 // offset for local bobbing and kicks
                 GetViewPos(firstPersonViewOrigin, firstPersonViewAxis)
                 if (false) {
                     // shakefrom sound stuff only happens in first person
-                    firstPersonViewAxis = firstPersonViewAxis.oMultiply(playerView.ShakeAxis())
+                    firstPersonViewAxis = firstPersonViewAxis.times(playerView.ShakeAxis())
                 }
             }
         }
@@ -3688,19 +3688,19 @@ object Player {
             // gun angles from turning
             if (Game_local.gameLocal.isMultiplayer) {
                 val offset = GunTurningOffset()
-                offset.oMulSet(SysCvar.g_mpWeaponAngleScale.GetFloat())
-                angles.oPluSet(offset)
+                offset.timesAssign(SysCvar.g_mpWeaponAngleScale.GetFloat())
+                angles.plusAssign(offset)
             } else {
-                angles.oPluSet(GunTurningOffset())
+                angles.plusAssign(GunTurningOffset())
             }
             val gravity = physicsObj.GetGravityNormal()
 
             // drop the weapon when landing after a jump / fall
             delta = Game_local.gameLocal.time - landTime
             if (delta < Player.LAND_DEFLECT_TIME) {
-                origin.oMinSet(gravity.oMultiply(landChange * 0.25f * delta / Player.LAND_DEFLECT_TIME))
+                origin.minusAssign(gravity.times(landChange * 0.25f * delta / Player.LAND_DEFLECT_TIME))
             } else if (delta < Player.LAND_DEFLECT_TIME + Player.LAND_RETURN_TIME) {
-                origin.oMinSet(gravity.oMultiply(landChange * 0.25f * (Player.LAND_DEFLECT_TIME + Player.LAND_RETURN_TIME - delta) / Player.LAND_RETURN_TIME))
+                origin.minusAssign(gravity.times(landChange * 0.25f * (Player.LAND_DEFLECT_TIME + Player.LAND_RETURN_TIME - delta) / Player.LAND_RETURN_TIME))
             }
 
             // speed sensitive idle drift
@@ -3710,7 +3710,7 @@ object Player {
             angles.roll += fracsin
             angles.yaw += fracsin
             angles.pitch += fracsin
-            axis.oSet(angles.ToMat3().oMultiply(viewAxis))
+            axis.oSet(angles.ToMat3().times(viewAxis))
         }
 
         override fun GetEyePosition(): idVec3? {
@@ -3722,7 +3722,7 @@ object Player {
             } else {
                 org.oSet(GetPhysics().GetOrigin())
             }
-            return org.oPlus(GetPhysics().GetGravityNormal().oMultiply(-eyeOffset.z))
+            return org.oPlus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
         }
 
         override fun GetViewPos(origin: idVec3?, axis: idMat3?) {
@@ -3737,14 +3737,14 @@ object Player {
                 origin.oSet(GetEyePosition())
             } else {
                 origin.oSet(GetEyePosition().oPlus(viewBob))
-                angles = viewAngles.oPlus(viewBobAngles).oPlus(playerView.AngleOffset())
-                axis.oSet(angles.ToMat3().oMultiply(physicsObj.GetGravityAxis()))
+                angles = viewAngles.plus(viewBobAngles).plus(playerView.AngleOffset())
+                axis.oSet(angles.ToMat3().times(physicsObj.GetGravityAxis()))
 
                 // adjust the origin based on the camera nodal distance (eye distance from neck)
-                origin.oPluSet(physicsObj.GetGravityNormal().oMultiply(SysCvar.g_viewNodalZ.GetFloat()))
-                origin.oPluSet(
-                    axis.oGet(0).oMultiply(SysCvar.g_viewNodalX.GetFloat())
-                        .oPlus(axis.oGet(2).oMultiply(SysCvar.g_viewNodalZ.GetFloat()))
+                origin.plusAssign(physicsObj.GetGravityNormal().times(SysCvar.g_viewNodalZ.GetFloat()))
+                origin.plusAssign(
+                    axis.oGet(0).times(SysCvar.g_viewNodalX.GetFloat())
+                        .oPlus(axis.oGet(2).times(SysCvar.g_viewNodalZ.GetFloat()))
                 )
             }
         }
@@ -3770,15 +3770,15 @@ object Player {
                     angles.pitch = 0f
                 }
             }
-            focusPoint.oSet(origin.oPlus(angles.ToForward().oMultiply(Player.THIRD_PERSON_FOCUS_DISTANCE)))
+            focusPoint.oSet(origin.oPlus(angles.ToForward().times(Player.THIRD_PERSON_FOCUS_DISTANCE)))
             focusPoint.z += height
             view.oSet(origin)
             view.z += 8 + height
             angles.pitch *= 0.5f
-            renderView.viewaxis = angles.ToMat3().oMultiply(physicsObj.GetGravityAxis())
+            renderView.viewaxis = angles.ToMat3().times(physicsObj.GetGravityAxis())
             idMath.SinCos(Math_h.DEG2RAD(angle), sideScale, forwardScale)
-            view.oMinSet(renderView.viewaxis.oGet(0).oMultiply(range * forwardScale.getVal()))
-            view.oPluSet(renderView.viewaxis.oGet(1).oMultiply(range * sideScale.getVal()))
+            view.minusAssign(renderView.viewaxis.oGet(0).times(range * forwardScale.getVal()))
+            view.plusAssign(renderView.viewaxis.oGet(1).times(range * sideScale.getVal()))
             if (clip) {
                 // trace a ray from the origin to the viewpoint to make sure the view isn't
                 // in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
@@ -3796,7 +3796,7 @@ object Player {
             }
 
             // select pitch to look at focus point from vieword
-            focusPoint.oMinSet(view)
+            focusPoint.minusAssign(view)
             focusDist = idMath.Sqrt(focusPoint.oGet(0) * focusPoint.oGet(0) + focusPoint.oGet(1) * focusPoint.oGet(1))
             if (focusDist < 1.0f) {
                 focusDist = 1.0f // should never happen
@@ -3804,7 +3804,7 @@ object Player {
             angles.pitch = -Vector.RAD2DEG(Math.atan2(focusPoint.z.toDouble(), focusDist.toDouble()))
             angles.yaw -= angle
             renderView.vieworg.oSet(view)
-            renderView.viewaxis = angles.ToMat3().oMulSet(physicsObj.GetGravityAxis())
+            renderView.viewaxis = angles.ToMat3().timesAssign(physicsObj.GetGravityAxis())
             renderView.viewID = 0
         }
 
@@ -4462,7 +4462,7 @@ object Player {
             } else {
                 viewAngles.ToVectors(forward, null, up)
                 weapon.GetEntity()
-                    .DropItem(forward.oMultiply(250f).oPlus(up.oMultiply(150f)), 500, Player.WEAPON_DROP_TIME, died)
+                    .DropItem(forward.times(250f).oPlus(up.times(150f)), 500, Player.WEAPON_DROP_TIME, died)
             }
             if (null == item) {
                 return
@@ -5465,11 +5465,11 @@ object Player {
 
             // update the smoothed view angles
             if (Game_local.gameLocal.framenum >= smoothedFrame && entityNumber != Game_local.gameLocal.localClientNum) {
-                val anglesDiff = viewAngles.oMinus(smoothedAngles)
+                val anglesDiff = viewAngles.minus(smoothedAngles)
                 anglesDiff.Normalize180()
                 if (Math.abs(anglesDiff.yaw) < 90 && Math.abs(anglesDiff.pitch) < 90) {
                     // smoothen by pushing back to the previous angles
-                    viewAngles.oMinSet(anglesDiff.oMultiply(Game_local.gameLocal.clientSmoothing))
+                    viewAngles.minusAssign(anglesDiff.times(Game_local.gameLocal.clientSmoothing))
                     viewAngles.Normalize180()
                 }
                 smoothedAngles = viewAngles
@@ -5663,7 +5663,7 @@ object Player {
                         false
                     ) as idDeclEntityDef
                     if (def != null) {
-                        playerView.DamageImpulse(lastDamageDir.oMultiply(viewAxis.Transpose()), def.dict)
+                        playerView.DamageImpulse(lastDamageDir.times(viewAxis.Transpose()), def.dict)
                         AI_PAIN.underscore(Pain(null, null, oldHealth - health, lastDamageDir, lastDamageLocation))
                         lastDmgTime = Game_local.gameLocal.time
                     } else {
@@ -5763,8 +5763,8 @@ object Player {
             // smooth self origin if snapshots are telling us prediction is off
             if (Game_local.gameLocal.isClient && Game_local.gameLocal.framenum >= smoothedFrame && (entityNumber != Game_local.gameLocal.localClientNum || selfSmooth)) {
                 // render origin and axis
-                val renderAxis = viewAxis.oMultiply(GetPhysics().GetAxis())
-                val renderOrigin = idVec3(GetPhysics().GetOrigin().oPlus(modelOffset.oMultiply(renderAxis)))
+                val renderAxis = viewAxis.times(GetPhysics().GetAxis())
+                val renderOrigin = idVec3(GetPhysics().GetOrigin().oPlus(modelOffset.times(renderAxis)))
 
                 // update the smoothed origin
                 if (!smoothedOriginUpdated) {
@@ -5783,7 +5783,7 @@ object Player {
                     smoothedOriginUpdated = true
                 }
                 axis.oSet(idAngles(0, smoothedAngles.yaw, 0).ToMat3())
-                origin.oSet(axis.Transpose().oMultiply(smoothedOrigin.oMinus(GetPhysics().GetOrigin())))
+                origin.oSet(axis.Transpose().times(smoothedOrigin.oMinus(GetPhysics().GetOrigin())))
             } else {
                 axis.oSet(viewAxis)
                 origin.oSet(modelOffset)
@@ -6263,14 +6263,14 @@ object Player {
                 if (player != null && player !== this && !player.spectating && !player.IsInTeleport()) {
                     newOrig.oSet(player.GetPhysics().GetOrigin())
                     if (player.physicsObj.IsCrouching()) {
-                        newOrig.oPluSet(2, SysCvar.pm_crouchviewheight.GetFloat())
+                        newOrig.plusAssign(2, SysCvar.pm_crouchviewheight.GetFloat())
                     } else {
-                        newOrig.oPluSet(2, SysCvar.pm_normalviewheight.GetFloat())
+                        newOrig.plusAssign(2, SysCvar.pm_normalviewheight.GetFloat())
                     }
-                    newOrig.oPluSet(2, Player.SPECTATE_RAISE.toFloat())
+                    newOrig.plusAssign(2, Player.SPECTATE_RAISE.toFloat())
                     val b = idBounds(Vector.getVec3_origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
                     val start = idVec3(player.GetPhysics().GetOrigin())
-                    start.oPluSet(2, SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
+                    start.plusAssign(2, SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
                     val t = trace_s()
                     // assuming spectate bbox is inside stand or crouch box
                     Game_local.gameLocal.clip.TraceBounds(t, start, newOrig, b, Game_local.MASK_PLAYERSOLID, player)
@@ -6281,8 +6281,8 @@ object Player {
                     SetViewAngles(angle)
                 } else {
                     SelectInitialSpawnPoint(spawn_origin, spawn_angles)
-                    spawn_origin.oPluSet(2, SysCvar.pm_normalviewheight.GetFloat())
-                    spawn_origin.oPluSet(2, Player.SPECTATE_RAISE.toFloat())
+                    spawn_origin.plusAssign(2, SysCvar.pm_normalviewheight.GetFloat())
+                    spawn_origin.plusAssign(2, Player.SPECTATE_RAISE.toFloat())
                     SetOrigin(spawn_origin)
                     SetViewAngles(spawn_angles)
                 }
@@ -6335,15 +6335,15 @@ object Player {
             // calcualte this so the wrap arounds work properly
             for (j in 1 until weaponAngleOffsetAverages.getVal()) {
                 val a2 = loggedViewAngles.get(Game_local.gameLocal.framenum - j and NUM_LOGGED_VIEW_ANGLES - 1)
-                val delta = a2.oMinus(current)
+                val delta = a2.minus(current)
                 if (delta.oGet(1) > 180) {
-                    delta.oMinSet(1, 360f)
+                    delta.minusAssign(1, 360f)
                 } else if (delta.oGet(1) < -180) {
-                    delta.oPluSet(1, 360f)
+                    delta.plusAssign(1, 360f)
                 }
-                av.oPluSet(delta.oMultiply(1.0f / weaponAngleOffsetAverages.getVal()))
+                av.plusAssign(delta.times(1.0f / weaponAngleOffsetAverages.getVal()))
             }
-            a = av.oMinus(current).oMultiply(weaponAngleOffsetScale.getVal())
+            a = av.minus(current).times(weaponAngleOffsetScale.getVal())
             for (i in 0..2) {
                 if (a.oGet(i) < -weaponAngleOffsetMax.getVal()) {
                     a.oSet(i, -weaponAngleOffsetMax.getVal())
@@ -6385,7 +6385,7 @@ object Player {
                 }
                 f = t / weaponOffsetTime.getVal()
                 f = ((Math.cos((f * 2.0f * idMath.PI).toDouble()) - 1.0f) * 0.5f).toFloat()
-                ofs.oPluSet(acc.dir.oMultiply(f * weaponOffsetScale.getVal()))
+                ofs.plusAssign(acc.dir.times(f * weaponOffsetScale.getVal()))
             }
             return ofs
         }
@@ -6425,7 +6425,7 @@ object Player {
             gravityNormal.oSet(physicsObj.GetGravityNormal())
 
             // if the player wasn't going down
-            if (oldVelocity.oMultiply(gravityNormal.oNegative()) >= 0) {
+            if (oldVelocity.times(gravityNormal.oNegative()) >= 0) {
                 return
             }
             waterLevel = physicsObj.GetWaterLevel()
@@ -6450,7 +6450,7 @@ object Player {
 
             // calculate the exact velocity on landing
             dist = origin.oMinus(oldOrigin).oMultiply(gravityNormal.oNegative())
-            vel = oldVelocity.oMultiply(gravityNormal.oNegative())
+            vel = oldVelocity.times(gravityNormal.oNegative())
             acc = -gravityVector.Length()
             a = acc / 2.0f
             b = vel
@@ -6537,7 +6537,7 @@ object Player {
             //
             velocity.oSet(physicsObj.GetLinearVelocity().oMinus(pushVelocity))
             gravityDir.oSet(physicsObj.GetGravityNormal())
-            vel.oSet(velocity.oMinus(gravityDir.oMultiply(velocity.oMultiply(gravityDir))))
+            vel.oSet(velocity.oMinus(gravityDir.times(velocity.times(gravityDir))))
             xyspeed = vel.LengthFast()
 
             // do not evaluate the bob for other clients
@@ -6575,12 +6575,12 @@ object Player {
 
             // calculate angles for view bobbing
             viewBobAngles.Zero()
-            viewaxis = viewAngles.ToMat3().oMultiply(physicsObj.GetGravityAxis())
+            viewaxis = viewAngles.ToMat3().times(physicsObj.GetGravityAxis())
 
             // add angles based on velocity
-            delta = velocity.oMultiply(viewaxis.oGet(0))
+            delta = velocity.times(viewaxis.oGet(0))
             viewBobAngles.pitch += delta * SysCvar.pm_runpitch.GetFloat()
-            delta = velocity.oMultiply(viewaxis.oGet(1))
+            delta = velocity.times(viewaxis.oGet(1))
             viewBobAngles.roll -= delta * SysCvar.pm_runroll.GetFloat()
 
             // add angles based on bob
@@ -6621,7 +6621,7 @@ object Player {
             // if the player stepped up recently
             deltaTime = Game_local.gameLocal.time - stepUpTime
             if (deltaTime < Player.STEPUP_TIME) {
-                viewBob.oPluSet(gravity.oMultiply(stepUpDelta * (Player.STEPUP_TIME - deltaTime) / Player.STEPUP_TIME))
+                viewBob.plusAssign(gravity.times(stepUpDelta * (Player.STEPUP_TIME - deltaTime) / Player.STEPUP_TIME))
             }
 
             // add bob height after any movement smoothing
@@ -6629,17 +6629,17 @@ object Player {
             if (bob > 6) {
                 bob = 6f
             }
-            viewBob.oPluSet(2, bob)
+            viewBob.plusAssign(2, bob)
 
             // add fall height
             delta = (Game_local.gameLocal.time - landTime).toFloat()
             if (delta < Player.LAND_DEFLECT_TIME) {
                 f = delta / Player.LAND_DEFLECT_TIME
-                viewBob.oMinSet(gravity.oMultiply(landChange * f))
+                viewBob.minusAssign(gravity.times(landChange * f))
             } else if (delta < Player.LAND_DEFLECT_TIME + Player.LAND_RETURN_TIME) {
                 delta -= Player.LAND_DEFLECT_TIME.toFloat()
                 f = 1.0f - delta / Player.LAND_RETURN_TIME
-                viewBob.oMinSet(gravity.oMultiply(landChange * f))
+                viewBob.minusAssign(gravity.times(landChange * f))
             }
         }
 
@@ -6670,7 +6670,7 @@ object Player {
             while (i < 3) {
                 cmdAngles.oSet(i, Math_h.SHORT2ANGLE(usercmd.angles[i]))
                 if (influenceActive == Player.INFLUENCE_LEVEL3) {
-                    viewAngles.oPluSet(
+                    viewAngles.plusAssign(
                         i,
                         idMath.ClampFloat(
                             -1.0f,
@@ -7034,7 +7034,7 @@ object Player {
                         vel.ToVec2_oMulSet(SysCvar.pm_walkspeed.GetFloat()) //TODO:ToVec2 back ref.
                     } else {
                         // give em a push in the direction they're going
-                        vel.oMulSet(1.1f)
+                        vel.timesAssign(1.1f)
                     }
                     physicsObj.SetLinearVelocity(vel)
                 }
@@ -7165,8 +7165,8 @@ object Player {
         private fun SetSpectateOrigin() {
             val neworig = idVec3()
             neworig.oSet(GetPhysics().GetOrigin())
-            neworig.oPluSet(2, EyeHeight())
-            neworig.oPluSet(2, 25f)
+            neworig.plusAssign(2, EyeHeight())
+            neworig.plusAssign(2, 25f)
             SetOrigin(neworig)
         }
 
@@ -7236,11 +7236,11 @@ object Player {
                 return
             }
             start.oSet(GetEyePosition())
-            end.oSet(start.oPlus(viewAngles.ToForward().oMultiply(80.0f)))
+            end.oSet(start.oPlus(viewAngles.ToForward().times(80.0f)))
 
             // player identification . names to the hud
             if (Game_local.gameLocal.isMultiplayer && entityNumber == Game_local.gameLocal.localClientNum) {
-                val end2 = idVec3(start.oPlus(viewAngles.ToForward().oMultiply(768.0f)))
+                val end2 = idVec3(start.oPlus(viewAngles.ToForward().times(768.0f)))
                 Game_local.gameLocal.clip.TracePoint(trace, start, end2, Game_local.MASK_SHOT_BOUNDINGBOX, this)
                 var iclient = -1
                 if (trace.fraction < 1.0f && trace.c.entityNum < Game_local.MAX_CLIENTS) {
@@ -7727,7 +7727,7 @@ object Player {
                 (GetBindMaster() as idAFEntity_Vehicle).Use(this)
             } else {
                 start.oSet(GetEyePosition())
-                end.oSet(start.oPlus(viewAngles.ToForward().oMultiply(80.0f)))
+                end.oSet(start.oPlus(viewAngles.ToForward().times(80.0f)))
                 Game_local.gameLocal.clip.TracePoint(trace, start, end, Game_local.MASK_SHOT_RENDERMODEL, this)
                 if (trace.fraction < 1.0f) {
                     ent = Game_local.gameLocal.entities[trace.c.entityNum]
@@ -7861,7 +7861,7 @@ object Player {
             // setup origin and push according to the exit target
             SetOrigin(exitEnt.GetPhysics().GetOrigin().oPlus(idVec3(0, 0, CollisionModel.CM_CLIP_EPSILON)))
             SetViewAngles(exitEnt.GetPhysics().GetAxis().ToAngles())
-            physicsObj.SetLinearVelocity(exitEnt.GetPhysics().GetAxis().oGet(0).oMultiply(pushVel))
+            physicsObj.SetLinearVelocity(exitEnt.GetPhysics().GetAxis().oGet(0).times(pushVel))
             physicsObj.ClearPushedVelocity()
             // teleport fx
             playerView.Flash(Lib.Companion.colorWhite, 120)

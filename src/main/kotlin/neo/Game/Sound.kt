@@ -140,7 +140,7 @@ object Sound {
                 val origin = idVec3()
                 val axis = idMat3()
                 if (GetPhysicsToSoundTransform(origin, axis)) {
-                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.oMultiply(axis)))
+                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.times(axis)))
                 } else {
                     refSound.origin.oSet(GetPhysics().GetOrigin())
                 }

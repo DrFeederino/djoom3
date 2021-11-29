@@ -328,11 +328,11 @@ object BrushBSP {
             p = portals
             while (p != null) {
                 s = if (p.nodes.get(1) === this) 1 else 0
-                center.oPluSet(p.winding.GetCenter())
+                center.plusAssign(p.winding.GetCenter())
                 n++
                 p = p.next.get(s)
             }
-            center.oDivSet(n.toFloat())
+            center.divAssign(n.toFloat())
             p = portals
             while (p != null) {
                 s = if (p.nodes.get(1) == this) 1 else 0
@@ -790,7 +790,7 @@ object BrushBSP {
             while (p != null) {
                 s = if (p.nodes.get(1) == node1) 1 else 0
                 p.GetWinding().GetBounds(b)
-                bounds.oPluSet(b)
+                bounds.timesAssign(b)
                 p = p.next.get(s)
             }
 
@@ -1658,7 +1658,7 @@ object BrushBSP {
                     i++
                     continue
                 }
-                origin.oPluSet(2, 1f)
+                origin.plusAssign(2, 1f)
 
                 // nudge around a little
                 if (FloodFromOrigin(origin, contents)) {

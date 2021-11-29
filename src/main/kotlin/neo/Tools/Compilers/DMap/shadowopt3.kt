@@ -168,7 +168,7 @@ object shadowopt3 {
             var j: Int
             j = 0
             while (j < 3) {
-                val d = a.v.get(j).oMultiply(b.edge.get(i))
+                val d = a.v.get(j).times(b.edge.get(i))
                 if (d > shadowopt3.EDGE_EPSILON) {
                     break
                 }
@@ -291,7 +291,7 @@ object shadowopt3 {
             val d2 = idVec3(tri.v.get(2).oMinus(tri.v.get(0)))
             tri.plane.ToVec4_ToVec3_Cross(d2, d1)
             tri.plane.ToVec4_ToVec3_Normalize()
-            tri.plane.oSet(3, tri.v.get(0).oMultiply(tri.plane.ToVec4().ToVec3()))
+            tri.plane.oSet(3, tri.v.get(0).times(tri.plane.ToVec4().ToVec3()))
 
             // get the plane number before any clipping
             // we should avoid polluting the regular dmap planes with these
@@ -504,8 +504,8 @@ object shadowopt3 {
             var j: Int
             j = 0
             while (j < shadowopt3.numSilPlanes) {
-                val d = v1.oMultiply(shadowopt3.silPlanes[j].normal)
-                val d2 = v2.oMultiply(shadowopt3.silPlanes[j].normal)
+                val d = v1.times(shadowopt3.silPlanes[j].normal)
+                val d2 = v2.times(shadowopt3.silPlanes[j].normal)
                 if (Math.abs(d) < shadowopt3.EDGE_PLANE_EPSILON
                     && Math.abs(d2) < shadowopt3.EDGE_PLANE_EPSILON
                 ) {
@@ -605,13 +605,13 @@ object shadowopt3 {
 
                 // if the other point on check isn't on the negative side of the plane,
                 // flip the plane
-                if (shadowopt3.uniqued[check.index.get( /*!i*/1 xor i)].oMultiply(plane) > 0) {
+                if (shadowopt3.uniqued[check.index.get( /*!i*/1 xor i)].times(plane) > 0) {
                     plane.oSet(plane.oNegative())
                 }
-                val d1 = shadowopt3.uniqued[quad.nearV.get(0)].oMultiply(plane)
-                val d2 = shadowopt3.uniqued[quad.nearV.get(1)].oMultiply(plane)
-                val d3 = shadowopt3.uniqued[quad.farV.get(0)].oMultiply(plane)
-                val d4 = shadowopt3.uniqued[quad.farV.get(1)].oMultiply(plane)
+                val d1 = shadowopt3.uniqued[quad.nearV.get(0)].times(plane)
+                val d2 = shadowopt3.uniqued[quad.nearV.get(1)].times(plane)
+                val d3 = shadowopt3.uniqued[quad.farV.get(0)].times(plane)
+                val d4 = shadowopt3.uniqued[quad.farV.get(1)].times(plane)
 
                 // it is better to conservatively NOT split the quad, which, at worst,
                 // will leave some extra overdraw
@@ -629,13 +629,13 @@ object shadowopt3 {
 
                     // finding uniques may be causing problems here
                     val nearMid = idVec3(
-                        shadowopt3.uniqued[quad.nearV.get(0)].oMultiply(1 - f)
-                            .oPlus(shadowopt3.uniqued[quad.nearV.get(1)].oMultiply(f))
+                        shadowopt3.uniqued[quad.nearV.get(0)].times(1 - f)
+                            .oPlus(shadowopt3.uniqued[quad.nearV.get(1)].times(f))
                     )
                     val nearMidIndex = shadowopt3.FindUniqueVert(nearMid)
                     val farMid = idVec3(
-                        shadowopt3.uniqued[quad.farV.get(0)].oMultiply(1 - f)
-                            .oPlus(shadowopt3.uniqued[quad.farV.get(1)].oMultiply(f))
+                        shadowopt3.uniqued[quad.farV.get(0)].times(1 - f)
+                            .oPlus(shadowopt3.uniqued[quad.farV.get(1)].times(f))
                     )
                     val farMidIndex = shadowopt3.FindUniqueVert(farMid)
                     if (d1 > shadowopt3.EDGE_PLANE_EPSILON) {
@@ -659,7 +659,7 @@ object shadowopt3 {
             val dir = idVec3(shadowopt3.uniqued[check.index.get(1)].oMinus(shadowopt3.uniqued[check.index.get(0)]))
             separate.Normal().Cross(dir, silPlane.normal)
             separate.Normal().Normalize()
-            separate.oSet(3, -shadowopt3.uniqued[check.index.get(1)].oMultiply(separate.Normal()))
+            separate.oSet(3, -shadowopt3.uniqued[check.index.get(1)].times(separate.Normal()))
 
             // this may miss a needed separation when the quad would be
             // clipped into a triangle and a quad
@@ -675,8 +675,8 @@ object shadowopt3 {
             // split the quad at this plane
             var f = d1 / (d1 - d2)
             val mid0 = idVec3(
-                shadowopt3.uniqued[quad.nearV.get(0)].oMultiply(1 - f)
-                    .oPlus(shadowopt3.uniqued[quad.farV.get(0)].oMultiply(f))
+                shadowopt3.uniqued[quad.nearV.get(0)].times(1 - f)
+                    .oPlus(shadowopt3.uniqued[quad.farV.get(0)].times(f))
             )
             val mid0Index = shadowopt3.FindUniqueVert(mid0)
             d1 = separate.Distance(shadowopt3.uniqued[quad.nearV.get(1)])
@@ -687,8 +687,8 @@ object shadowopt3 {
                 continue
             }
             val mid1 = idVec3(
-                shadowopt3.uniqued[quad.nearV.get(1)].oMultiply(1 - f)
-                    .oPlus(shadowopt3.uniqued[quad.farV.get(1)].oMultiply(f))
+                shadowopt3.uniqued[quad.nearV.get(1)].times(1 - f)
+                    .oPlus(shadowopt3.uniqued[quad.farV.get(1)].times(f))
             )
             val mid1Index = shadowopt3.FindUniqueVert(mid1)
             quad.nearV.get(0) = mid0Index
@@ -785,7 +785,7 @@ object shadowopt3 {
                     v1.oSet(mtri.v[1].xyz.oMinus(mtri.v[0].xyz))
                     v2.oSet(mtri.v[2].xyz.oMinus(mtri.v[0].xyz))
                     normal.Cross(v2, v1)
-                    gr = if (normal.oMultiply(planes[0].Normal()) > 0) {
+                    gr = if (normal.times(planes[0].Normal()) > 0) {
                         groups[0]
                     } else {
                         groups[1]

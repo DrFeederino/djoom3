@@ -645,7 +645,7 @@ object Model_ma {
 
         //Now apply the pt transformations
         for (i in 0 until pMesh.numVertTransforms) {
-            pMesh.vertexes.get(pMesh.vertTransforms.get(i).w.toInt()).oPluSet(pMesh.vertTransforms.get(i).ToVec3())
+            pMesh.vertexes.get(pMesh.vertTransforms.get(i).w.toInt()).plusAssign(pMesh.vertTransforms.get(i).ToVec3())
         }
         Model_ma.MA_VERBOSE(Str.va("MESH %s - parent %s\n", nodeHeader.name, nodeHeader.parent))
         Model_ma.MA_VERBOSE(Str.va("\tverts:%d\n", Model_ma.maGlobal.currentObject.mesh.numVertexes))
@@ -860,10 +860,10 @@ object Model_ma {
 
                 //Apply the transformation to each vert
                 for (j in 0 until mesh.numVertexes) {
-                    mesh.vertexes.get(j).oSet(scale.oMultiply(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(rotx.oMultiply(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(rotz.oMultiply(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(roty.oMultiply(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).oSet(scale.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).oSet(rotx.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).oSet(rotz.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).oSet(roty.times(mesh.vertexes.get(j)))
                     mesh.vertexes.get(j).oSet(mesh.vertexes.get(j).oPlus(transform.translate))
                 }
                 transform = transform.parent

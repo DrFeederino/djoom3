@@ -352,7 +352,7 @@ object Script_Thread {
             }
 
             private fun Event_VecDotProduct(t: idThread?, vec1: idEventArg<idVec3?>?, vec2: idEventArg<idVec3?>?) {
-                ReturnFloat(vec1.value.oMultiply(vec2.value))
+                ReturnFloat(vec1.value.times(vec2.value))
             }
 
             private fun Event_VecCrossProduct(t: idThread?, vec1: idEventArg<idVec3?>?, vec2: idEventArg<idVec3?>?) {

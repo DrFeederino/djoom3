@@ -314,8 +314,8 @@ object tr_deform {
             mid.oSet(2, 0.25f * (v.xyz.oGet(2) + v1.xyz.oGet(2) + v2.xyz.oGet(2) + v3.xyz.oGet(2)))
             delta.oSet(v.xyz.oMinus(mid))
             radius = delta.Length() * 0.707f // / sqrt(2)
-            left.oSet(leftDir.oMultiply(radius))
-            up.oSet(upDir.oMultiply(radius))
+            left.oSet(leftDir.times(radius))
+            up.oSet(upDir.times(radius))
             ac[i + 0].xyz.oSet(mid.oPlus(left.oPlus(up)))
             ac[i + 0].st.oSet(0, 0f)
             ac[i + 0].st.oSet(1, 0f)
@@ -448,11 +448,11 @@ object tr_deform {
                 minor.Cross(major, dir)
                 minor.Normalize()
                 if (j != 0) {
-                    av1.xyz.oSet(mid[j].oMinus(minor.oMultiply(l)))
-                    av2.xyz.oSet(mid[j].oPlus(minor.oMultiply(l)))
+                    av1.xyz.oSet(mid[j].oMinus(minor.times(l)))
+                    av2.xyz.oSet(mid[j].oPlus(minor.times(l)))
                 } else {
-                    av1.xyz.oSet(mid[j].oPlus(minor.oMultiply(l)))
-                    av2.xyz.oSet(mid[j].oMinus(minor.oMultiply(l)))
+                    av1.xyz.oSet(mid[j].oPlus(minor.times(l)))
+                    av2.xyz.oSet(mid[j].oMinus(minor.times(l)))
                 }
                 j++
             }
@@ -587,7 +587,7 @@ object tr_deform {
 
         // if viewer is behind the plane, draw nothing
         tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, tr_local.tr.viewDef.renderView.vieworg, localViewer)
-        val distFromPlane = localViewer.oMultiply(plane.Normal()) + plane.oGet(3)
+        val distFromPlane = localViewer.times(plane.Normal()) + plane.oGet(3)
         if (distFromPlane <= 0) {
             newTri.numIndexes = 0
             surf.geo = newTri
@@ -597,10 +597,10 @@ object tr_deform {
         center.oSet(tri.verts[0].xyz)
         j = 1
         while (j < tri.numVerts) {
-            center.oPluSet(tri.verts[j].xyz)
+            center.plusAssign(tri.verts[j].xyz)
             j++
         }
-        center.oMulSet(1.0f / tri.numVerts)
+        center.timesAssign(1.0f / tri.numVerts)
         val dir = idVec3(localViewer.oMinus(center))
         dir.Normalize()
         dot = dir.oMultiply(plane.Normal())
@@ -651,40 +651,40 @@ object tr_deform {
         }
 
         // build all the points
-        ac[4].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(0).oMultiply(spread)))
+        ac[4].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(0).times(spread)))
         ac[4].st.oSet(0, 0f)
         ac[4].st.oSet(1, 0.5f)
-        ac[5].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(2).oMultiply(spread)))
+        ac[5].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(2).times(spread)))
         ac[5].st.oSet(0, 0f)
         ac[5].st.oSet(1, 0f)
-        ac[6].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(1).oMultiply(spread)))
+        ac[6].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(1).times(spread)))
         ac[6].st.oSet(0, 0.5f)
         ac[6].st.oSet(1, 0f)
-        ac[7].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(0).oMultiply(spread)))
+        ac[7].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(0).times(spread)))
         ac[7].st.oSet(0, 0.5f)
         ac[7].st.oSet(1, 0f)
-        ac[8].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(2).oMultiply(spread)))
+        ac[8].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(2).times(spread)))
         ac[8].st.oSet(0, 1f)
         ac[8].st.oSet(1, 0f)
-        ac[9].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(1).oMultiply(spread)))
+        ac[9].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(1).times(spread)))
         ac[9].st.oSet(0, 1f)
         ac[9].st.oSet(1, 0.5f)
-        ac[10].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(0).oMultiply(spread)))
+        ac[10].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(0).times(spread)))
         ac[10].st.oSet(0, 1f)
         ac[10].st.oSet(1, 0.5f)
-        ac[11].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(2).oMultiply(spread)))
+        ac[11].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(2).times(spread)))
         ac[11].st.oSet(0, 1f)
         ac[11].st.oSet(1, 1f)
-        ac[12].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(1).oMultiply(spread)))
+        ac[12].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(1).times(spread)))
         ac[12].st.oSet(0, 0.5f)
         ac[12].st.oSet(1, 1f)
-        ac[13].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(0).oMultiply(spread)))
+        ac[13].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(0).times(spread)))
         ac[13].st.oSet(0, 0.5f)
         ac[13].st.oSet(1, 1f)
-        ac[14].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(2).oMultiply(spread)))
+        ac[14].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(2).times(spread)))
         ac[14].st.oSet(0, 0f)
         ac[14].st.oSet(1, 1f)
-        ac[15].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(1).oMultiply(spread)))
+        ac[15].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(1).times(spread)))
         ac[15].st.oSet(0, 0f)
         ac[15].st.oSet(1, 0.5f)
         i = 4
@@ -745,7 +745,7 @@ object tr_deform {
         i = 0
         while (i < tri.numVerts) {
             ac[i] = tri.verts[i]
-            ac[i].xyz.oSet(tri.verts[i].xyz.oPlus(tri.verts[i].normal.oMultiply(dist)))
+            ac[i].xyz.oSet(tri.verts[i].xyz.oPlus(tri.verts[i].normal.times(dist)))
             i++
         }
         tr_deform.R_FinishDeform(surf, newTri, ac)
@@ -776,7 +776,7 @@ object tr_deform {
         i = 0
         while (i < tri.numVerts) {
             ac[i] = tri.verts[i]
-            ac[i].xyz.oPluSet(0, dist)
+            ac[i].xyz.plusAssign(0, dist)
             i++
         }
         tr_deform.R_FinishDeform(surf, newTri, ac)
@@ -975,7 +975,7 @@ object tr_deform {
             texVec[1].Cross(texVec[0], dir)
             j = 0
             while (j < 2) {
-                texVec[j].oMinSet(dir.oMultiply(texVec[j].oMultiply(dir)))
+                texVec[j].minusAssign(dir.oMultiply(texVec[j].times(dir)))
                 texVec[j].Normalize()
                 j++
             }
@@ -1164,20 +1164,20 @@ object tr_deform {
                     f1 *= ft
                     f2 *= ft
                     f3 *= ft
-                    g.origin.oSet(v1.xyz.oMultiply(f1).oPlus(v2.xyz.oMultiply(f2).oPlus(v3.xyz.oMultiply(f3))))
+                    g.origin.oSet(v1.xyz.times(f1).oPlus(v2.xyz.times(f2).oPlus(v3.xyz.times(f3))))
                     g.axis.oSet(
                         0,
-                        v1.tangents[0].oMultiply(f1)
-                            .oPlus(v2.tangents[0].oMultiply(f2).oPlus(v3.tangents[0].oMultiply(f3)))
+                        v1.tangents[0].times(f1)
+                            .oPlus(v2.tangents[0].times(f2).oPlus(v3.tangents[0].times(f3)))
                     )
                     g.axis.oSet(
                         1,
-                        v1.tangents[1].oMultiply(f1)
-                            .oPlus(v2.tangents[1].oMultiply(f2).oPlus(v3.tangents[1].oMultiply(f3)))
+                        v1.tangents[1].times(f1)
+                            .oPlus(v2.tangents[1].times(f2).oPlus(v3.tangents[1].times(f3)))
                     )
                     g.axis.oSet(
                         2,
-                        v1.normal.oMultiply(f1).oPlus(v2.normal.oMultiply(f2).oPlus(v3.normal.oMultiply(f3)))
+                        v1.normal.times(f1).oPlus(v2.normal.times(f2).oPlus(v3.normal.times(f3)))
                     )
 
                     //-----------------------

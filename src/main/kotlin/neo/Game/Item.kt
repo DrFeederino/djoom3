@@ -812,8 +812,8 @@ object Item {
                             key += "Rotation"
                             ent.spawnArgs.GetAngles(key, "0 0 0", angles)
                         }
-                        axis = angles.ToMat3().oMultiply(axis)
-                        origin.oPluSet(ent.spawnArgs.GetVector(key2, "0 0 0"))
+                        axis = angles.ToMat3().times(axis)
+                        origin.plusAssign(ent.spawnArgs.GetVector(key2, "0 0 0"))
                         item = DropItem(kv.GetValue().toString(), origin, axis, Vector.getVec3_origin(), 0, 0)
                         if (list != null && item != null) {
                             list.Append(item)
@@ -1203,7 +1203,7 @@ object Item {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
                 val v = idVec3(player.GetPhysics().GetOrigin())
-                v.oMinSet(playerPos)
+                v.minusAssign(playerPos)
                 if (v.Length() > 64.0f) {
                     player.hud.HandleNamedEvent("closeObjective")
                     PostEventMS(Class.EV_Remove, 0)

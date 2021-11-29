@@ -12,8 +12,8 @@ class Ode {
         abstract fun run(
             t: Float,
             userData: Any?,
-            state: FloatArray?,
-            derivatives: FloatArray?
+            state: FloatArray,
+            derivatives: FloatArray
         ) //TODO:quadruple check the pointers
     }
 
@@ -32,7 +32,7 @@ class Ode {
         protected var userData // client data
                 : Any? = null
 
-        abstract fun Evaluate(state: FloatArray?, newState: FloatArray?, t0: Float, t1: Float): Float
+        abstract fun Evaluate(state: FloatArray, newState: FloatArray, t0: Float, t1: Float): Float
     }
 
     //===============================================================
@@ -40,9 +40,9 @@ class Ode {
     //	idODE_Euler
     //
     //===============================================================
-    class idODE_Euler(dim: Int, dr: deriveFunction_t?, ud: Any?) : idODE() {
+    class idODE_Euler(dim: Int, dr: deriveFunction_t, ud: Any) : idODE() {
         protected var derivatives // space to store derivatives
-                : FloatArray?
+                : FloatArray
 
         //	virtual				~idODE_Euler( void );
         override fun Evaluate(

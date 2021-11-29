@@ -740,7 +740,7 @@ object Game {
             md5joints = model.GetJoints()
             i = 1
             while (i < numJoints) {
-                joints.get(i).oMulSet(joints.get(TempDump.indexOf(md5joints[i].parent, md5joints)))
+                joints.get(i).timesAssign(joints.get(TempDump.indexOf(md5joints[i].parent, md5joints)))
                 i++
             }
         }
@@ -842,7 +842,7 @@ object Game {
             args.Set("angle", Str.va("%f", yaw + 180))
             org.oSet(
                 player.GetPhysics().GetOrigin()
-                    .oPlus(idAngles(0, yaw, 0).ToForward().oMultiply(80f).oPlus(idVec3(0, 0, 1)))
+                    .oPlus(idAngles(0, yaw, 0).ToForward().times(80f).oPlus(idVec3(0, 0, 1)))
             )
             args.Set("origin", org.ToString())
             args.Set("spawnclass", "idAFEntity_Generic")
@@ -1070,8 +1070,8 @@ object Game {
                 angles.yaw = sscanf.nextFloat()
                 angles.roll = sscanf.nextFloat()
                 if (fb.jointName.Icmp("origin") == 0) {
-                    meshAxis = bodyAxis[i].Transpose().oMultiply(angles.ToMat3())
-                    meshOrigin.oSet(origin.oMinus(bodyOrigin[i].oMultiply(meshAxis)))
+                    meshAxis = bodyAxis[i].Transpose().times(angles.ToMat3())
+                    meshOrigin.oSet(origin.oMinus(bodyOrigin[i].times(meshAxis)))
                     poseIsSet.get(0) = true
                 } else {
                     newBodyOrigin[i].oSet(origin)
@@ -1115,8 +1115,8 @@ object Game {
                 if (jointNum >= 0 && jointNum < ent.numJoints) {
                     jointMod[jointNum] = fb.jointMod
                     modifiedAxis[jointNum] =
-                        bodyAxis[i].oMultiply(originalJoints[jointNum].ToMat3().Transpose()).Transpose()
-                            .oMultiply(newBodyAxis[i].oMultiply(meshAxis.Transpose()))
+                        bodyAxis[i].times(originalJoints[jointNum].ToMat3().Transpose()).Transpose()
+                            .times(newBodyAxis[i].times(meshAxis.Transpose()))
                     // FIXME: calculate correct modifiedOrigin
                     modifiedOrigin[jointNum].oSet(originalJoints[jointNum].ToVec3())
                 }
@@ -1129,14 +1129,14 @@ object Game {
                 MD5joint = MD5joints[i]
                 parentNum = TempDump.indexOf(MD5joint.parent, MD5joints)
                 val parentAxis = originalJoints[parentNum].ToMat3()
-                val localm = originalJoints[i].ToMat3().oMultiply(parentAxis.Transpose())
+                val localm = originalJoints[i].ToMat3().times(parentAxis.Transpose())
                 val localt = idVec3(
                     originalJoints[i].ToVec3().oMinus(originalJoints[parentNum].ToVec3())
                         .oMultiply(parentAxis.Transpose())
                 )
                 when (jointMod[i]) {
                     declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN -> {
-                        ent.joints[i].SetRotation(localm.oMultiply(ent.joints[parentNum].ToMat3()))
+                        ent.joints[i].SetRotation(localm.times(ent.joints[parentNum].ToMat3()))
                         ent.joints[i].SetTranslation(modifiedOrigin[i])
                     }
                     declAFJointMod_t.DECLAF_JOINTMOD_AXIS -> {
@@ -1150,7 +1150,7 @@ object Game {
                         ent.joints[i].SetTranslation(modifiedOrigin[i])
                     }
                     else -> {
-                        ent.joints[i].SetRotation(localm.oMultiply(ent.joints[parentNum].ToMat3()))
+                        ent.joints[i].SetRotation(localm.times(ent.joints[parentNum].ToMat3()))
                         ent.joints[i].SetTranslation(
                             ent.joints[parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[parentNum].ToMat3()))
                         )
@@ -1439,7 +1439,7 @@ object Game {
                 if (mapent != null) {
                     val origin = idVec3()
                     mapent.epairs.GetVector("origin", "", origin)
-                    origin.oPluSet(v)
+                    origin.plusAssign(v)
                     mapent.epairs.SetVector("origin", origin)
                 }
             }

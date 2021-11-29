@@ -326,7 +326,7 @@ object Misc {
 
                 // multiplayer hijacked this entity, so only push the player in multiplayer
                 if (Game_local.gameLocal.isMultiplayer) {
-                    player.GetPhysics().SetLinearVelocity(GetPhysics().GetAxis().oGet(0).oMultiply(pushVel))
+                    player.GetPhysics().SetLinearVelocity(GetPhysics().GetAxis().oGet(0).times(pushVel))
                 }
             }
         }
@@ -791,13 +791,13 @@ object Misc {
                 if (ent1.GetPhysics() != null) {
                     axis = ent1.GetPhysics().GetAxis()
                     origin.oSet(ent1.GetPhysics().GetOrigin())
-                    start.oSet(origin.oPlus(start.oMultiply(axis)))
+                    start.oSet(origin.oPlus(start.times(axis)))
                 }
                 end.oSet(p2)
                 if (ent2.GetPhysics() != null) {
                     axis = ent2.GetPhysics().GetAxis()
                     origin.oSet(ent2.GetPhysics().GetOrigin())
-                    end.oSet(origin.oPlus(p2.oMultiply(axis)))
+                    end.oSet(origin.oPlus(p2.times(axis)))
                 }
                 Game_local.gameRenderWorld.DebugLine(idVec4(1, 1, 0, 1), start, end, 0, true)
             }
@@ -1356,9 +1356,9 @@ object Misc {
             }
             StartSound("snd_missile", gameSoundChannel_t.SND_CHANNEL_WEAPON, 0, false, null)
             animator.GetJointTransform(launchjoint.value, Game_local.gameLocal.time, launchPos, axis)
-            launchPos.oSet(renderEntity.origin.oPlus(launchPos.oMultiply(renderEntity.axis)))
+            launchPos.oSet(renderEntity.origin.oPlus(launchPos.times(renderEntity.axis)))
             animator.GetJointTransform(targetjoint.value, Game_local.gameLocal.time, targetPos, axis)
-            targetPos.oSet(renderEntity.origin.oPlus(targetPos.oMultiply(renderEntity.axis)))
+            targetPos.oSet(renderEntity.origin.oPlus(targetPos.times(renderEntity.axis)))
             dir.oSet(targetPos.oMinus(launchPos))
             dir.Normalize()
             Game_local.gameLocal.SpawnEntityDef(projectileDef, ent, false)
@@ -3018,7 +3018,7 @@ object Misc {
                         if (SysCvar.ai_debugTrajectory.GetBool()) 1 else 0,
                         vel
                     )
-                    vel.oMulSet(speed)
+                    vel.timesAssign(speed)
                     entPhys.SetLinearVelocity(vel)
                     if (0 == end_time) {
                         targetTime.oSet(i, 0)
@@ -3039,7 +3039,7 @@ object Misc {
                         Game_local.gameLocal.random.CRandomFloat() * shake_ang.y,
                         Game_local.gameLocal.random.CRandomFloat() * shake_ang.z
                     )
-                    ang.oMulSet(1.0f - time / shake_time)
+                    ang.timesAssign(1.0f - time / shake_time)
                     entPhys.SetAngularVelocity(ang)
                 }
                 i++

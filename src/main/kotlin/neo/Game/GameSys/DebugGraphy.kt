@@ -38,7 +38,7 @@ class DebugGraphy {
             val axis = Game_local.gameLocal.GetLocalPlayer().viewAxis
             val pos = idVec3(
                 Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin()
-                    .oPlus(axis.oGet(1).oMultiply(samples.Num() * 0.5f))
+                    .oPlus(axis.oGet(1).times(samples.Num() * 0.5f))
             )
             value1 = samples.oGet(index) * scale
             i = 1
@@ -46,16 +46,16 @@ class DebugGraphy {
                 value2 = samples.oGet((i + index) % samples.Num()) * scale
                 vec1.oSet(
                     pos.oPlus(
-                        axis.oGet(2).oMultiply(value1).oMinus(
-                            axis.oGet(1).oMultiply((i - 1).toFloat())
-                                .oPlus(axis.oGet(0).oMultiply(samples.Num().toFloat()))
+                        axis.oGet(2).times(value1).oMinus(
+                            axis.oGet(1).times((i - 1).toFloat())
+                                .oPlus(axis.oGet(0).times(samples.Num().toFloat()))
                         )
                     )
                 )
                 vec2.oSet(
                     pos.oPlus(
-                        axis.oGet(2).oMultiply(value2).oMinus(
-                            axis.oGet(1).oMultiply(i.toFloat()).oPlus(axis.oGet(0).oMultiply(samples.Num().toFloat()))
+                        axis.oGet(2).times(value2).oMinus(
+                            axis.oGet(1).times(i.toFloat()).oPlus(axis.oGet(0).times(samples.Num().toFloat()))
                         )
                     )
                 )

@@ -332,7 +332,7 @@ class SimpleWindow {
             if (shear.x() != 0f || shear.y() != 0f) {
                 smat.oSet(0, 1, shear.x())
                 smat.oSet(1, 0, shear.y())
-                trans.oMulSet(smat)
+                trans.timesAssign(smat)
             }
             if (!trans.IsIdentity()) {
                 dc.SetTransformInfo(org, trans)

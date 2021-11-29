@@ -247,13 +247,13 @@ object PlayerView {
                 kickAngles.oSet(1, localKickDir.oGet(1) * 0.5f)
 
                 // up / down kick will pitch view
-                kickAngles.oPluSet(0, localKickDir.oGet(2))
+                kickAngles.plusAssign(0, localKickDir.oGet(2))
 
                 // roll will come from  side
                 kickAngles.oSet(2, localKickDir.oGet(1))
                 val kickAmplitude = damageDef.GetFloat("kick_amplitude")
                 if (kickAmplitude != 0f) {
-                    kickAngles.oMulSet(kickAmplitude)
+                    kickAngles.timesAssign(kickAmplitude)
                 }
             }
 
@@ -318,7 +318,7 @@ object PlayerView {
             ang.Zero()
             if (Game_local.gameLocal.time < kickFinishTime) {
                 val offset = (kickFinishTime - Game_local.gameLocal.time).toFloat()
-                ang = kickAngles.oMultiply(offset * offset * SysCvar.g_kickAmplitude.GetFloat())
+                ang = kickAngles.times(offset * offset * SysCvar.g_kickAmplitude.GetFloat())
                 for (i in 0..2) {
                     if (ang.oGet(i) > 70.0f) {
                         ang.oSet(i, 70.0f)
@@ -503,7 +503,7 @@ object PlayerView {
 
             // hack the shake in at the very last moment, so it can't cause any consistency problems
             val hackedView = renderView_s(view)
-            hackedView.viewaxis = hackedView.viewaxis.oMultiply(ShakeAxis())
+            hackedView.viewaxis = hackedView.viewaxis.times(ShakeAxis())
             //            hackedView.viewaxis = idMat3.getMat3_identity();//HACKME::10
 //            hackedView.viewaxis = new idMat3(-1.0f, -3.8941437E-7f, -0.0f, 3.8941437E-7f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
             Game_local.gameRenderWorld.RenderScene(hackedView)
@@ -748,7 +748,7 @@ object PlayerView {
                 }
             } else {
                 t = msec.toFloat() * fadeRate
-                fadeColor.oSet(fadeFromColor.oMultiply(t).oPlus(fadeToColor.oMultiply(1.0f - t)))
+                fadeColor.oSet(fadeFromColor.times(t).oPlus(fadeToColor.times(1.0f - t)))
             }
             if (fadeColor.oGet(3) != 0.0f) {
                 RenderSystem.renderSystem.SetColor4(

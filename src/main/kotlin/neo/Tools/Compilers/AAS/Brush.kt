@@ -263,7 +263,7 @@ object Brush {
                     i++
                     continue
                 }
-                d = -(corner.oMultiply(sides.oGet(i).plane.Normal()) - sides.oGet(i).plane.Dist())
+                d = -(corner.times(sides.oGet(i).plane.Normal()) - sides.oGet(i).plane.Dist())
                 area = w.GetArea()
                 volume += d * area
                 i++
@@ -790,7 +790,7 @@ object Brush {
                     }
                     j++
                 }
-                side.plane.SetDist(side.plane.Dist() + v.oMultiply(side.plane.Normal().oNegative()))
+                side.plane.SetDist(side.plane.Dist() + v.times(side.plane.Normal().oNegative()))
                 i++
             }
             if (!CreateWindings()) {
@@ -1174,7 +1174,7 @@ object Brush {
             bounds.Clear()
             b = Head()
             while (b != null) {
-                bounds.oPluSet(b.GetBounds())
+                bounds.timesAssign(b.GetBounds())
                 b = b.Next()
             }
             return bounds

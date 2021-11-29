@@ -200,7 +200,7 @@ object Interaction {
         front = false
         i = 0
         while (i < `in`.numVerts) {
-            dot = `in`.verts[i].oMultiply(plane.Normal()) + plane.oGet(3)
+            dot = `in`.verts[i].times(plane.Normal()) + plane.oGet(3)
             dists[i] = dot
             if (dot < Interaction.LIGHT_CLIP_EPSILON) {    // slop onto the back
                 sides[i] = Plane.SIDE_BACK

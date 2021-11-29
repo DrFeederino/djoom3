@@ -5,6 +5,7 @@ import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector.idVec3
+import kotlin.math.floor
 
 /**
  *
@@ -31,7 +32,7 @@ class Rotation {
             axisValid = false
         }
 
-        constructor(rotation: idRotation?) : this() {
+        constructor(rotation: idRotation) : this() {
             oSet(rotation)
         }
 
@@ -56,7 +57,7 @@ class Rotation {
         fun SetVec(x: Float, y: Float, z: Float) {
             vec.oSet(0, x)
             vec.oSet(1, y)
-            vec.oSet(2, x)
+            vec.oSet(2, z)
             axisValid = false
         }
 
@@ -89,25 +90,25 @@ class Rotation {
 
         //
         //	idRotation			operator-() const;										// flips rotation
-        fun oMultiply(s: Float): idRotation? { // scale rotation
+        fun times(s: Float): idRotation { // scale rotation
             return idRotation(origin, vec, angle * s)
         }
 
         //	idRotation			operator/( const float s ) const;						// scale rotation
         //	idRotation &		operator*=( const float s );							// scale rotation
         //	idRotation &		operator/=( const float s );							// scale rotation
-        fun oMultiply(v: idVec3): idVec3 { // rotate vector
+        operator fun times(v: idVec3): idVec3 { // rotate vector
             if (!axisValid) {
                 ToMat3()
             }
-            return axis.oMultiply(v.oMinus(origin)).oPlus(origin)
+            return (v - origin) * axis + origin
         }
 
         //
         //	friend idRotation	operator*( const float s, const idRotation &r );		// scale rotation
         //	friend idVec3		operator*( const idVec3 &v, const idRotation &r );		// rotate vector
         //	friend idVec3 &		operator*=( idVec3 &v, const idRotation &r );			// rotate vector
-        fun ToAngles(): idAngles? {
+        fun ToAngles(): idAngles {
             return ToMat3().ToAngles()
         }
 
@@ -136,9 +137,9 @@ class Rotation {
             }
             a = angle * (idMath.M_DEG2RAD * 0.5f)
             idMath.SinCos(a, s, c)
-            x = vec.oGet(0) * s.getVal()
-            y = vec.oGet(1) * s.getVal()
-            z = vec.oGet(2) * s.getVal()
+            x = vec.oGet(0) * s._val
+            y = vec.oGet(1) * s._val
+            z = vec.oGet(2) * s._val
             x2 = x + x
             y2 = y + y
             z2 = z + z
@@ -148,9 +149,9 @@ class Rotation {
             yy = y * y2
             yz = y * z2
             zz = z * z2
-            wx = c.getVal() * x2
-            wy = c.getVal() * y2
-            wz = c.getVal() * z2
+            wx = c._val * x2
+            wy = c._val * y2
+            wz = c._val * z2
             axis.oSet(0, 0, 1.0f - (yy + zz))
             axis.oSet(0, 1, xy - wz)
             axis.oSet(0, 2, xz + wy)
@@ -166,29 +167,28 @@ class Rotation {
 
         //	idMat4				ToMat4( void ) const;
         fun ToAngularVelocity(): idVec3 {
-            return vec.oMultiply(Math_h.DEG2RAD(angle))
+            return vec.times(Math_h.DEG2RAD(angle))
         }
 
         fun RotatePoint(point: idVec3) {
             if (!axisValid) {
                 ToMat3()
             }
-            point.oSet(point.oMinus(origin).oMultiply(axis).oPlus(origin))
+            point.oSet((point - origin) * axis + origin)
         }
 
         fun Normalize180() {
-            angle -= (Math.floor((angle / 360.0f).toDouble()) * 360.0f).toFloat()
+            angle -= (floor((angle / 360.0f).toDouble()) * 360.0f).toFloat()
             if (angle > 180.0f) {
                 angle -= 360.0f
             } else if (angle < -180.0f) {
                 angle += 360.0f
             }
-            val a = 0
         }
 
         //	void				Normalize360( void );
         //
-        fun oSet(other: idRotation?) {
+        fun oSet(other: idRotation) {
             origin.oSet(other.origin)
             vec.oSet(other.vec)
             angle = other.angle

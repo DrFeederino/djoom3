@@ -80,7 +80,7 @@ class Force_Spring {
             if (physics1 != null) {
                 axis = physics1.GetAxis(id1)
                 pos1.oSet(physics1.GetOrigin(id1))
-                pos1.oPluSet(p1.oMultiply(axis))
+                pos1.plusAssign(p1.times(axis))
                 if (damping > 0.0f) {
                     info = physics1.GetImpactInfo(id1, pos1)
                     velocity1.oSet(info.velocity)
@@ -89,7 +89,7 @@ class Force_Spring {
             if (physics2 != null) {
                 axis = physics2.GetAxis(id2)
                 pos2.oSet(physics2.GetOrigin(id2))
-                pos2.oPluSet(p2.oMultiply(axis))
+                pos2.plusAssign(p2.times(axis))
                 if (damping > 0.0f) {
                     info = physics2.GetImpactInfo(id2, pos2)
                     velocity2.oSet(info.velocity)
@@ -97,8 +97,8 @@ class Force_Spring {
             }
             force.oSet(pos2.oMinus(pos1))
             dampingForce.oSet(
-                force.oMultiply(
-                    damping * (velocity2.oMinus(velocity1).oMultiply(force) / force.oMultiply(
+                force.times(
+                    damping * (velocity2.oMinus(velocity1).oMultiply(force) / force.times(
                         force
                     ))
                 )
@@ -108,7 +108,7 @@ class Force_Spring {
             // if the spring is stretched
             if (length > restLength) {
                 if (Kstretch > 0.0f) {
-                    force.oSet(force.oMultiply(Math_h.Square(length - restLength) * Kstretch).oMinus(dampingForce))
+                    force.oSet(force.times(Math_h.Square(length - restLength) * Kstretch).oMinus(dampingForce))
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force)
                     }
@@ -118,7 +118,7 @@ class Force_Spring {
                 }
             } else {
                 if (Kcompress > 0.0f) {
-                    force.oSet(force.oMultiply(Math_h.Square(length - restLength) * Kcompress).oMinSet(dampingForce))
+                    force.oSet(force.times(Math_h.Square(length - restLength) * Kcompress).minusAssign(dampingForce))
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force.oNegative())
                     }

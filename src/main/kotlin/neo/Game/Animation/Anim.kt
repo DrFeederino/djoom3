@@ -628,7 +628,7 @@ object Anim {
             }
             Simd.SIMDProcessor.BlendJoints(joints, blendJoints, frame.backlerp, lerpIndex, numLerpJoints)
             if (frame.cycleCount != 0) {
-                joints.get(0).t.oPluSet(totaldelta.oMultiply(frame.cycleCount.toFloat()))
+                joints.get(0).t.plusAssign(totaldelta.times(frame.cycleCount.toFloat()))
             }
         }
 
@@ -787,7 +787,7 @@ object Anim {
                 offset.z = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp
             }
             if (frame.cycleCount != 0) {
-                offset.oPluSet(totaldelta.oMultiply(frame.cycleCount.toFloat()))
+                offset.plusAssign(totaldelta.times(frame.cycleCount.toFloat()))
             }
         }
 

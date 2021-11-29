@@ -891,7 +891,7 @@ class AAS_local {
                 if (curAreaNum == goalAreaNum) {
                     break
                 }
-                frontPlane.SetDist(frontPlane.Normal().oMultiply(endPos))
+                frontPlane.SetDist(frontPlane.Normal().times(endPos))
                 area = file.GetArea(curAreaNum)
                 reach = area.reach
                 while (reach != null) {
@@ -926,8 +926,8 @@ class AAS_local {
 
                     // direction parallel to gravity
                     dir.oSet(
-                        file.GetSettings().gravityDir.oMultiply(endPos.oMultiply(file.GetSettings().gravityDir))
-                            .oMinus(file.GetSettings().gravityDir.oMultiply(p.oMultiply(file.GetSettings().gravityDir)))
+                        file.GetSettings().gravityDir.times(endPos.times(file.GetSettings().gravityDir))
+                            .oMinus(file.GetSettings().gravityDir.times(p.times(file.GetSettings().gravityDir)))
                     )
                     if (dir.LengthSqr() > Math_h.Square(file.GetSettings().maxStepHeight.getVal())) {
                         reach = reach.next
@@ -1326,7 +1326,7 @@ class AAS_local {
                     v1.oSet(reach.end.oMinus(curUpdate.start))
                     v1.Normalize()
                     v2.oSet(target.oMinus(curUpdate.start))
-                    p.oSet(curUpdate.start.oPlus(v1.oMultiply(v2.oMultiply(v1))))
+                    p.oSet(curUpdate.start.oPlus(v1.times(v2.times(v1))))
 
                     // get the point on the path closest to the target
                     j = 0
@@ -2211,8 +2211,8 @@ class AAS_local {
             edge = file.GetEdge(edgeNum)
             v1.oSet(file.GetVertex(edge.vertexNum[0]))
             v2.oSet(file.GetVertex(edge.vertexNum[1]))
-            d1 = v1.oMultiply(plane.Normal()) - plane.Dist()
-            d2 = v2.oMultiply(plane.Normal()) - plane.Dist()
+            d1 = v1.times(plane.Normal()) - plane.Dist()
+            d2 = v2.times(plane.Normal()) - plane.Dist()
 
             //if ( (d1 < CM_CLIP_EPSILON && d2 < CM_CLIP_EPSILON) || (d1 > -CM_CLIP_EPSILON && d2 > -CM_CLIP_EPSILON) ) {
             if (Math_h.FLOATSIGNBITSET(d1) == Math_h.FLOATSIGNBITSET(d2)) {
@@ -2310,7 +2310,7 @@ class AAS_local {
             point.oSet(start)
             i = 1
             while (i < numSamples) {
-                nextPoint.oSet(start.oPlus(dir.oMultiply(i.toFloat() / numSamples)))
+                nextPoint.oSet(start.oPlus(dir.times(i.toFloat() / numSamples)))
                 if (point.oMinus(nextPoint).LengthSqr() > Math_h.Square(AAS_pathing.maxWalkPathDistance)) {
                     return point
                 }
@@ -2344,7 +2344,7 @@ class AAS_local {
             point.oSet(start)
             i = 1
             while (i < numSamples) {
-                nextPoint.oSet(start.oPlus(dir.oMultiply(i.toFloat() / numSamples)))
+                nextPoint.oSet(start.oPlus(dir.times(i.toFloat() / numSamples)))
                 if (point.oMinus(nextPoint).LengthSqr() > Math_h.Square(AAS_pathing.maxFlyPathDistance)) {
                     return point
                 }
@@ -2374,16 +2374,16 @@ class AAS_local {
             axis.oGet(2).NormalVectors(axis.oGet(0), axis.oGet(1))
             axis.oSet(1, axis.oGet(1).oNegative())
             center.oSet(origin.oPlus(dir))
-            top.oSet(center.oPlus(dir.oMultiply(3.0f * radius)))
-            lastp.oSet(center.oPlus(axis.oGet(1).oMultiply(radius)))
+            top.oSet(center.oPlus(dir.times(3.0f * radius)))
+            lastp.oSet(center.oPlus(axis.oGet(1).times(radius)))
             i = 20
             while (i <= 360) {
                 p.oSet(
                     center.oPlus(
-                        axis.oGet(0).oMultiply((Math.sin(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
+                        axis.oGet(0).times((Math.sin(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
                             .oPlus(
                                 axis.oGet(1)
-                                    .oMultiply((Math.cos(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
+                                    .times((Math.cos(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
                             )
                     )
                 )
@@ -2437,14 +2437,14 @@ class AAS_local {
             while (i < numEdges) {
                 DrawEdge(Math.abs(file.GetEdgeIndex(firstEdge + i)), face.flags and AASFile.FACE_FLOOR != 0)
                 j = file.GetEdgeIndex(firstEdge + i)
-                mid.oPluSet(file.GetVertex(file.GetEdge(Math.abs(j)).vertexNum[if (j < 0) 1 else 0]))
+                mid.plusAssign(file.GetVertex(file.GetEdge(Math.abs(j)).vertexNum[if (j < 0) 1 else 0]))
                 i++
             }
-            mid.oDivSet(numEdges.toFloat())
+            mid.divAssign(numEdges.toFloat())
             if (side) {
-                end.oSet(mid.oMinus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().oMultiply(5.0f)))
+                end.oSet(mid.oMinus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().times(5.0f)))
             } else {
-                end.oSet(mid.oPlus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().oMultiply(5.0f)))
+                end.oSet(mid.oPlus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().times(5.0f)))
             }
             Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorGreen, mid, end, 1)
         }
@@ -2660,14 +2660,14 @@ class AAS_local {
                 )
             ) {
                 dir.oSet(path.moveGoal.oMinus(origin))
-                dir.oMulSet(2, 0.5f)
+                dir.timesAssign(2, 0.5f)
                 dir.Normalize()
-                delta = dir.ToAngles().oMinus(player.cmdAngles.oMinus(player.GetDeltaViewAngles()))
+                delta = dir.ToAngles().minus(player.cmdAngles.minus(player.GetDeltaViewAngles()))
                 delta.Normalize180()
-                player.SetDeltaViewAngles(player.GetDeltaViewAngles().oPlus(delta.oMultiply(0.1f)))
+                player.SetDeltaViewAngles(player.GetDeltaViewAngles().plus(delta.times(0.1f)))
                 dir.oSet(2, 0.0f)
                 dir.Normalize()
-                dir.oMulSet(100.0f)
+                dir.timesAssign(100.0f)
                 vel.oSet(physics.GetLinearVelocity())
                 dir.oSet(2, vel.oGet(2))
                 physics.SetLinearVelocity(dir)

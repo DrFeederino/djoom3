@@ -348,7 +348,7 @@ object Image_program {
                 dir2.oSet(1, a1 * scale)
                 dir2.oSet(2, 1f)
                 dir2.NormalizeFast()
-                dir.oPluSet(dir2)
+                dir.plusAssign(dir2)
                 dir.NormalizeFast()
                 a1 = (i * width + j) * 4
                 data.put(a1 + 0, (dir.oGet(0) * 127 + 128).toByte())
@@ -400,9 +400,9 @@ object Image_program {
                             l++
                             continue
                         }
-                        normal.oPluSet(0, Image_program.factors[k + 1][l + 1] * (orig[`in` + 0] - 128))
-                        normal.oPluSet(1, Image_program.factors[k + 1][l + 1] * (orig[`in` + 1] - 128))
-                        normal.oPluSet(2, Image_program.factors[k + 1][l + 1] * (orig[`in` + 2] - 128))
+                        normal.plusAssign(0, Image_program.factors[k + 1][l + 1] * (orig[`in` + 0] - 128))
+                        normal.plusAssign(1, Image_program.factors[k + 1][l + 1] * (orig[`in` + 1] - 128))
+                        normal.plusAssign(2, Image_program.factors[k + 1][l + 1] * (orig[`in` + 2] - 128))
                         l++
                     }
                     k++
@@ -553,8 +553,8 @@ object Image_program {
                 if (len < 1.0f) {
                     n.oSet(2, idMath.Sqrt(1.0f - n.oGet(0) * n.oGet(0) - n.oGet(1) * n.oGet(1)))
                 }
-                n.oPluSet(0, (data2.get(d2 + 0) - 128) / 127.0f)
-                n.oPluSet(1, (data2.get(d2 + 1) - 128) / 127.0f)
+                n.plusAssign(0, (data2.get(d2 + 0) - 128) / 127.0f)
+                n.plusAssign(1, (data2.get(d2 + 1) - 128) / 127.0f)
                 n.Normalize()
                 data1.put(d1 + 0, (n.oGet(0) * 127 + 128).toByte())
                 data1.put(d1 + 1, (n.oGet(1) * 127 + 128).toByte())

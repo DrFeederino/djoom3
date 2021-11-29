@@ -19,46 +19,46 @@ object Lcp {
     const val LCP_BOUND_EPSILON = 1e-5f
     const val LCP_DELTA_ACCEL_EPSILON = 1e-9f
     const val LCP_DELTA_FORCE_EPSILON = 1e-9f
-    val lcp_showFailures: idCVar? =
+    val lcp_showFailures: idCVar =
         idCVar("lcp_showFailures", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "show LCP solver failures")
 
     /**
      *
      */
-    fun clam(src: idMatX?, numClamped: Int): FloatArray? {
+    fun clam(src: idMatX, numClamped: Int): FloatArray {
         return Lcp.clam(src.ToFloatPtr(), numClamped * src.GetNumColumns())
     }
 
-    fun clam(src: idVecX?, numClamped: Int): FloatArray? {
+    fun clam(src: idVecX, numClamped: Int): FloatArray {
         return Lcp.clam(src.ToFloatPtr(), numClamped)
     }
 
-    fun clam(src: FloatArray?, numClamped: Int): FloatArray? {
+    fun clam(src: FloatArray, numClamped: Int): FloatArray {
         val clamped = FloatArray(src.size - numClamped)
         System.arraycopy(src, numClamped, clamped, 0, clamped.size)
         return clamped
     }
 
-    fun unClam(dst: idMatX?, clamArray: FloatArray?): FloatArray? {
+    fun unClam(dst: idMatX, clamArray: FloatArray): FloatArray {
         return Lcp.unClam(dst.ToFloatPtr(), clamArray)
     }
 
-    fun unClam(dst: idVecX?, clamArray: FloatArray?): FloatArray? {
+    fun unClam(dst: idVecX, clamArray: FloatArray): FloatArray {
         return Lcp.unClam(dst.ToFloatPtr(), clamArray)
     }
 
-    fun unClam(dst: FloatArray?, clamArray: FloatArray?): FloatArray? {
+    fun unClam(dst: FloatArray, clamArray: FloatArray): FloatArray {
         System.arraycopy(clamArray, 0, dst, dst.size - clamArray.size, clamArray.size)
         return dst
     }
 
-    fun clam(src: CharArray?, numClamped: Int): CharArray? {
+    fun clam(src: CharArray, numClamped: Int): CharArray {
         val clamped = CharArray(src.size - numClamped)
         System.arraycopy(src, numClamped, clamped, 0, clamped.size)
         return clamped
     }
 
-    fun unClam(dst: CharArray?, clamArray: CharArray?): CharArray? {
+    fun unClam(dst: CharArray, clamArray: CharArray): CharArray {
         System.arraycopy(clamArray, 0, dst, dst.size - clamArray.size, clamArray.size)
         return dst
     }
@@ -96,18 +96,18 @@ object Lcp {
         protected var maxIterations = 0
 
         // A must be a square matrix
-        fun AllocSquare(): idLCP? {
+        fun AllocSquare(): idLCP {
             val lcp: idLCP = idLCP_Square()
             lcp.SetMaxIterations(32)
             return lcp
         }
 
         //public	virtual			~idLCP( void );
-        fun Solve(A: idMatX?, x: idVecX?, b: idVecX?, lo: idVecX?, hi: idVecX?): Boolean {
+        fun Solve(A: idMatX, x: idVecX, b: idVecX, lo: idVecX, hi: idVecX): Boolean {
             return Solve(A, x, b, lo, hi, null)
         }
 
-        abstract fun Solve(A: idMatX?, x: idVecX?, b: idVecX?, lo: idVecX?, hi: idVecX?, boxIndex: IntArray?): Boolean
+        abstract fun Solve(A: idMatX, x: idVecX, b: idVecX, lo: idVecX, hi: idVecX, boxIndex: IntArray?): Boolean
         fun SetMaxIterations(max: Int) {
             maxIterations = max
         }
@@ -118,7 +118,7 @@ object Lcp {
 
         companion object {
             // A must be a symmetric matrix
-            fun AllocSymmetric(): idLCP? {
+            fun AllocSymmetric(): idLCP {
                 val lcp: idLCP = idLCP_Symmetric()
                 lcp.SetMaxIterations(32)
                 return lcp
@@ -132,41 +132,41 @@ object Lcp {
     //                                                        E
     //===============================================================
     internal class idLCP_Square : idLCP() {
-        val b: idVecX? = idVecX() // right hand side
-        val clamped: idMatX? = idMatX() // LU factored sub matrix for clamped variables
-        val delta_f: idVecX? = idVecX()
-        val delta_a: idVecX? = idVecX() // delta force and delta acceleration
-        val diagonal: idVecX? =
+        val b: idVecX = idVecX() // right hand side
+        val clamped: idMatX = idMatX() // LU factored sub matrix for clamped variables
+        val delta_f: idVecX = idVecX()
+        val delta_a: idVecX = idVecX() // delta force and delta acceleration
+        val diagonal: idVecX =
             idVecX() // reciprocal of diagonal of U of the LU factored sub matrix for clamped variables
-        val f: idVecX? = idVecX()
-        val a: idVecX? = idVecX() // force and acceleration
-        val lo: idVecX? = idVecX()
-        val hi: idVecX? = idVecX() // low and high bounds
-        private val m: idMatX? = idMatX() // original matrix
+        val f: idVecX = idVecX()
+        val a: idVecX = idVecX() // force and acceleration
+        val lo: idVecX = idVecX()
+        val hi: idVecX = idVecX() // low and high bounds
+        private val m: idMatX = idMatX() // original matrix
         var numClamped // number of clamped variables
                 = 0
         var numUnbounded // number of unbounded variables
                 = 0
         private var boxIndex // box index
-                : IntArray?
+                : IntArray
         private var padded // set to true if the rows of the initial matrix are 16 byte padded
                 = false
         private var permuted // index to keep track of the permutation
-                : IntArray?
+                : IntArray
         private var rowPtrs // pointers to the rows of m
-                : Array<FloatBuffer?>?
+                : Array<FloatBuffer>
         private var side // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
-                : IntArray?
+                : IntArray
 
         //
         //
         override fun Solve(
-            o_m: idMatX?,
-            o_x: idVecX?,
-            o_b: idVecX?,
-            o_lo: idVecX?,
-            o_hi: idVecX?,
-            o_boxIndex: IntArray?
+            o_m: idMatX,
+            o_x: idVecX,
+            o_b: idVecX,
+            o_lo: idVecX,
+            o_hi: idVecX,
+            o_boxIndex: IntArray
         ): Boolean {
             var i: Int
             var j: Int
@@ -178,7 +178,7 @@ object Lcp {
             var s: Float
             val dot = CFloat()
             val maxStep = CFloat()
-            val failed: CharArray?
+            val failed: CharArray
 
             // true when the matrix rows are 16 byte padded
             padded = o_m.GetNumRows() + 3 and 3.inv() == o_m.GetNumColumns()
@@ -215,7 +215,7 @@ object Lcp {
 
             // pointers to the rows of m
             rowPtrs =
-                arrayOfNulls<FloatBuffer?>(m.GetNumRows()) //rowPtrs = (float **) _alloca16( m.GetNumRows() * sizeof( float * ) );
+                Array(m.GetNumRows()) { FloatBuffer() }//rowPtrs = (float **) _alloca16( m.GetNumRows() * sizeof( float * ) );
             i = 0
             while (i < m.GetNumRows()) {
                 rowPtrs.get(i) = m.GetRowPtr(i)
@@ -524,7 +524,7 @@ object Lcp {
                 while (j < numClamped) {
 
 //			clamped[j][i] *= d;
-                    clamped.oMulSet(j, i, d)
+                    clamped.timesAssign(j, i, d)
                     j++
                 }
                 j = i + 1
@@ -532,7 +532,7 @@ object Lcp {
                     d = clamped.oGet(j)[i]
                     k = i + 1
                     while (k < numClamped) {
-                        clamped.oMinSet(j, k, d * clamped.oGet(i)[k])
+                        clamped.minusAssign(j, k, d * clamped.oGet(i)[k])
                         k++
                     }
                     j++
@@ -542,7 +542,7 @@ object Lcp {
             return true
         }
 
-        fun SolveClamped(x: idVecX?, b: FloatArray?) {
+        fun SolveClamped(x: idVecX, b: FloatArray) {
             var i: Int
             var j: Int
             var sum: Float
@@ -702,7 +702,7 @@ object Lcp {
             while (i < r) {
                 p0 = y0[i]
                 beta1 = (z1[i] * diagonal.p[i]).toDouble()
-                clamped.oPluSet(i, r, p0)
+                clamped.plusAssign(i, r, p0)
                 j = i + 1
                 while (j < numClamped) {
                     z1[j] -= beta1 * clamped.oGet(i)[j]
@@ -713,7 +713,7 @@ object Lcp {
                     y0[j] -= p0 * clamped.oGet(j)[i]
                     j++
                 }
-                clamped.oPluSet(r, i, beta1)
+                clamped.plusAssign(r, i, beta1)
                 i++
             }
 
@@ -774,7 +774,7 @@ object Lcp {
          */
         private fun CalcForceDelta(d: Int, dir: Float) {
             var i: Int
-            var ptr: FloatArray?
+            var ptr: FloatArray
             delta_f.p[d] = dir
             if (numClamped == 0) {
                 return
@@ -855,7 +855,7 @@ object Lcp {
             Lcp.unClam(delta_a, clampedDeltaA)
         }
 
-        private fun GetMaxStep(d: Int, dir: Float, maxStep: CFloat?, limit: CInt?, limitSide: CInt?) {
+        private fun GetMaxStep(d: Int, dir: Float, maxStep: CFloat, limit: CInt, limitSide: CInt) {
             var i: Int
             var s: Float
 
@@ -954,28 +954,28 @@ object Lcp {
     //===============================================================
     internal class idLCP_Symmetric : idLCP() {
         private val a // force and acceleration
-                : idVecX?
+                : idVecX
         private val b // right hand side
-                : idVecX?
+                : idVecX
         private val clamped // LDLt factored sub matrix for clamped variables
-                : idMatX?
+                : idMatX
         private val delta_a // delta force and delta acceleration
-                : idVecX?
-        private val delta_f: idVecX?
+                : idVecX
+        private val delta_f: idVecX
         private val diagonal // reciprocal of diagonal of LDLt factored sub matrix for clamped variables
-                : idVecX?
-        private val f: idVecX?
+                : idVecX
+        private val f: idVecX
         private val hi // low and high bounds
-                : idVecX?
-        private val lo: idVecX?
+                : idVecX
+        private val lo: idVecX
         private val m // original matrix
-                : idMatX?
+                : idMatX
         private val solveCache1 // intermediate result cached in SolveClamped
-                : idVecX?
+                : idVecX
         private val solveCache2 // "
-                : idVecX?
+                : idVecX
         private var boxIndex // box index
-                : IntArray?
+                : IntArray
         private var clampedChangeStart // lowest row/column changed in the clamped matrix during an iteration
                 = 0
         private var numClamped // number of clamped variables
@@ -985,19 +985,19 @@ object Lcp {
         private var padded // set to true if the rows of the initial matrix are 16 byte padded
                 = false
         private var permuted // index to keep track of the permutation
-                : IntArray?
+                : IntArray
         private var rowPtrs // pointers to the rows of m
-                : Array<FloatBuffer?>?
+                : Array<FloatBuffer>
         private var side // tells if a variable is at the low boundary = -1, high boundary = 1 or inbetween = 0
-                : IntArray?
+                : IntArray
 
         override fun Solve(
-            o_m: idMatX?,
-            o_x: idVecX?,
-            o_b: idVecX?,
-            o_lo: idVecX?,
-            o_hi: idVecX?,
-            o_boxIndex: IntArray?
+            o_m: idMatX,
+            o_x: idVecX,
+            o_b: idVecX,
+            o_lo: idVecX,
+            o_hi: idVecX,
+            o_boxIndex: IntArray
         ): Boolean {
             var i: Int
             var j: Int
@@ -1009,7 +1009,7 @@ object Lcp {
             var s: Float
             val dot = CFloat()
             val maxStep = CFloat()
-            val failed: CharArray?
+            val failed: CharArray
 
             // true when the matrix rows are 16 byte padded
             padded = o_m.GetNumRows() + 3 and 3.inv() == o_m.GetNumColumns()
@@ -1044,7 +1044,7 @@ object Lcp {
 
             // pointers to the rows of m
             rowPtrs =
-                arrayOfNulls<FloatBuffer?>(m.GetNumRows()) //rowPtrs = (float **) _alloca16( m.GetNumRows() * sizeof( float * ) );
+                arrayOfNulls<FloatBuffer>(m.GetNumRows()) //rowPtrs = (float **) _alloca16( m.GetNumRows() * sizeof( float * ) );
             i = 0
             while (i < m.GetNumRows()) {
                 rowPtrs.get(i) = m.GetRowPtr(i)
@@ -1349,7 +1349,7 @@ object Lcp {
             return b
         }
 
-        private fun SolveClamped(x: idVecX?, b: FloatArray?) {
+        private fun SolveClamped(x: idVecX, b: FloatArray) {
 
             // solve L
             Simd.SIMDProcessor.MatX_LowerTriangularSolve(
@@ -1378,7 +1378,7 @@ object Lcp {
             clampedChangeStart = numClamped
         }
 
-        private fun SolveClamped(x: idVecX?, b: FloatBuffer?) {
+        private fun SolveClamped(x: idVecX, b: FloatBuffer) {
             SolveClamped(x, TempDump.fbtofa(b))
         }
 
@@ -1466,8 +1466,8 @@ object Lcp {
             var alpha2: Double
             var beta1: Double
             var beta2: Double
-            val original: FloatBuffer?
-            var ptr: FloatBuffer?
+            val original: FloatBuffer
+            var ptr: FloatBuffer
             assert(r < numClamped)
             if (r < clampedChangeStart) {
                 clampedChangeStart = r
@@ -1638,7 +1638,7 @@ object Lcp {
          */
         private fun CalcForceDelta(d: Int, dir: Float) {
             var i: Int
-            val ptr: FloatArray?
+            val ptr: FloatArray
             delta_f.p[d] = dir
             if (numClamped == 0) {
                 return
@@ -1714,7 +1714,7 @@ object Lcp {
             val a = 0
         }
 
-        private fun GetMaxStep(d: Int, dir: Float, maxStep: CFloat?, limit: CInt?, limitSide: CInt?) {
+        private fun GetMaxStep(d: Int, dir: Float, maxStep: CFloat, limit: CInt, limitSide: CInt) {
             var i: Int
             var s: Float
 

@@ -56,6 +56,9 @@ import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec6
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.atan
+import kotlin.math.sqrt
+import kotlin.math.tan
 
 object CollisionModel_local : AbstractCollisionModel_local() {
     /*
@@ -498,9 +501,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw.maxContacts = maxContacts
             tw.numContacts = 0
             tw.model = models?.get(model)
-            tw.start.oSet(start.oMinus(modelOrigin))
-            tw.end.oSet(end.oMinus(modelOrigin))
-            tw.dir.oSet(end.oMinus(start))
+            tw.start.oSet(start - modelOrigin)
+            tw.end.oSet(end - modelOrigin)
+            tw.dir.oSet(end - start)
             model_rotated = modelAxis.IsRotated()
             if (model_rotated) {
                 invModelAxis = modelAxis.Transpose()
@@ -514,9 +517,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             ) {
                 if (model_rotated) {
                     // rotate trace instead of model
-                    tw.start.oMulSet(invModelAxis)
-                    tw.end.oMulSet(invModelAxis)
-                    tw.dir.oMulSet(invModelAxis)
+                    tw.start.timesAssign(invModelAxis)
+                    tw.end.timesAssign(invModelAxis)
+                    tw.dir.timesAssign(invModelAxis)
                 }
 
                 // trace bounds
@@ -541,7 +544,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 // collision with single point
                 tw.numVerts = 1
                 tw.vertices[0].p.oSet(tw.start)
-                tw.vertices[0].endp.oSet(tw.vertices[0].p.oPlus(tw.dir))
+                tw.vertices[0].endp.oSet(tw.vertices[0].p + tw.dir)
                 tw.vertices[0].pl.FromRay(tw.vertices[0].p, tw.dir)
                 tw.numPolys = 0
                 tw.numEdges = tw.numPolys
@@ -550,16 +553,16 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 TraceThroughModel(tw)
                 // store results
                 results.oSet(tw.trace)
-                results.endpos.oSet(start.oPlus(end.oMinus(start).oMultiply(results.fraction)))
+                results.endpos.oSet(start + (end - start) * results.fraction)
                 results.endAxis.oSet(idMat3.getMat3_identity())
                 if (results.fraction < 1.0f) {
                     // rotate trace plane normal if there was a collision with a rotated model
                     if (model_rotated) {
-                        results.c.normal.oMulSet(modelAxis)
-                        results.c.point.oMulSet(modelAxis)
+                        results.c.normal.timesAssign(modelAxis)
+                        results.c.point.timesAssign(modelAxis)
                     }
-                    results.c.point.oPluSet(modelOrigin)
-                    results.c.dist += modelOrigin.oMultiply(results.c.normal)
+                    results.c.point.plusAssign(modelOrigin)
+                    results.c.dist += modelOrigin.times(results.c.normal)
                 }
                 numContacts = tw.numContacts
                 return
@@ -592,7 +595,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (i < tw.numVerts) {
 
                     // rotate trm around the start position
-                    tw.vertices[i].p.oMulSet(trmAxis)
+                    tw.vertices[i].p.timesAssign(trmAxis)
                     i++
                 }
             }
@@ -600,7 +603,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numVerts) {
 
                 // set trm at start position
-                tw.vertices[i].p.oPluSet(tw.start)
+                tw.vertices[i].p.plusAssign(tw.start)
                 i++
             }
             if (model_rotated) {
@@ -608,30 +611,30 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (i < tw.numVerts) {
 
                     // rotate trm around model instead of rotating the model
-                    tw.vertices[i].p.oMulSet(invModelAxis)
+                    tw.vertices[i].p.timesAssign(invModelAxis)
                     i++
                 }
             }
 
             // add offset to start point
             if (trm_rotated) {
-                dir.oSet(trm.offset.oMultiply(trmAxis))
-                tw.start.oPluSet(dir)
-                tw.end.oPluSet(dir)
+                dir.oSet(trm.offset.times(trmAxis))
+                tw.start.plusAssign(dir)
+                tw.end.plusAssign(dir)
             } else {
-                tw.start.oPluSet(trm.offset)
-                tw.end.oPluSet(trm.offset)
+                tw.start.plusAssign(trm.offset)
+                tw.end.plusAssign(trm.offset)
             }
             if (model_rotated) {
                 // rotate trace instead of model
-                tw.start.oMulSet(invModelAxis)
-                tw.end.oMulSet(invModelAxis)
-                tw.dir.oMulSet(invModelAxis)
+                tw.start.timesAssign(invModelAxis)
+                tw.end.timesAssign(invModelAxis)
+                tw.dir.timesAssign(invModelAxis)
             }
 
             // rotate trm polygon planes
             if (trm_rotated and model_rotated) {
-                val tmpAxis = trmAxis.oMultiply(invModelAxis)
+                val tmpAxis = trmAxis.times(invModelAxis)
                 i = 0
                 while (i < tw.numPolys) {
                     tw.polys[i].plane.oMulSet(tmpAxis)
@@ -656,13 +659,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numPolys) {
                 poly = tw.polys[i]
                 // if the trm poly plane is facing in the movement direction
-                dist = poly.plane.Normal().oMultiply(tw.dir)
+                dist = poly.plane.Normal().times(tw.dir)
                 if (dist > 0.0f || !trm.isConvex && dist == 0.0f) {
                     // this trm poly and it's edges and vertices need to be used for collision
                     poly.used = true
                     j = 0
                     while (j < poly.numEdges) {
-                        edge = tw.edges[Math.abs(poly.edges[j])]
+                        edge = tw.edges[abs(poly.edges[j])]
                         edge.used = true
                         tw.vertices[edge.vertexNum[0]].used = true //true;
                         tw.vertices[edge.vertexNum[1]].used = true //true;
@@ -681,9 +684,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     continue
                 }
                 // get axial trm size after rotations
-                tw.size.AddPoint(vert.p.oMinus(tw.start))
+                tw.size.AddPoint(vert.p - (tw.start))
                 // calculate the end position of each vertex for a full trace
-                vert.endp.oSet(vert.p.oPlus(tw.dir))
+                vert.endp.oSet(vert.p + (tw.dir))
                 // pluecker coordinate for vertex movement line
                 vert.pl.FromRay(vert.p, tw.dir)
                 i++
@@ -702,7 +705,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 edge.end.oSet(tw.vertices[edge.vertexNum[1]].p)
                 edge.pl.FromLine(edge.start, edge.end)
                 // calculate normal of plane through movement plane created by the edge
-                dir.oSet(edge.start.oMinus(edge.end))
+                dir.oSet(edge.start - (edge.end))
                 edge.cross.oSet(0, dir.oGet(0) * tw.dir.oGet(1) - dir.oGet(1) * tw.dir.oGet(0))
                 edge.cross.oSet(1, dir.oGet(0) * tw.dir.oGet(2) - dir.oGet(2) * tw.dir.oGet(0))
                 edge.cross.oSet(2, dir.oGet(1) * tw.dir.oGet(2) - dir.oGet(2) * tw.dir.oGet(1))
@@ -716,7 +719,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numPolys) {
                 poly = tw.polys[i]
                 if (!poly.used) {
-                    poly.plane.FitThroughPoint(tw.edges[Math.abs(poly.edges[0])].start)
+                    poly.plane.FitThroughPoint(tw.edges[abs(poly.edges[0])].start)
                 }
                 i++
             }
@@ -731,10 +734,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     tw.bounds.oSet(0, i, tw.end.oGet(i) + tw.size.oGet(0).oGet(i) - CollisionModel.CM_BOX_EPSILON)
                     tw.bounds.oSet(1, i, tw.start.oGet(i) + tw.size.oGet(1).oGet(i) + CollisionModel.CM_BOX_EPSILON)
                 }
-                if (Math.abs(tw.size.oGet(0).oGet(i)) > Math.abs(tw.size.oGet(1).oGet(i))) {
-                    tw.extents.oSet(i, Math.abs(tw.size.oGet(0).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
+                if (abs(tw.size.oGet(0).oGet(i)) > abs(tw.size.oGet(1).oGet(i))) {
+                    tw.extents.oSet(i, abs(tw.size.oGet(0).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
                 } else {
-                    tw.extents.oSet(i, Math.abs(tw.size.oGet(1).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
+                    tw.extents.oSet(i, abs(tw.size.oGet(1).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
                 }
                 i++
             }
@@ -751,11 +754,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     i++
                     continue
                 }
-                dist = Math.abs(tw.heartPlane1.Distance(vert.p))
+                dist = abs(tw.heartPlane1.Distance(vert.p))
                 if (dist > tw.maxDistFromHeartPlane1) {
                     tw.maxDistFromHeartPlane1 = dist
                 }
-                dist = Math.abs(tw.heartPlane2.Distance(vert.p))
+                dist = abs(tw.heartPlane2.Distance(vert.p))
                 if (dist > tw.maxDistFromHeartPlane2) {
                     tw.maxDistFromHeartPlane2 = dist
                 }
@@ -774,16 +777,16 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (model_rotated) {
                     i = 0
                     while (i < tw.numContacts) {
-                        tw.contacts!![i]!!.normal.oMulSet(modelAxis)
-                        tw.contacts!!.get(i)!!.point.oMulSet(modelAxis)
+                        tw.contacts!![i]!!.normal.timesAssign(modelAxis)
+                        tw.contacts!!.get(i)!!.point.timesAssign(modelAxis)
                         i++
                     }
                 }
                 if (modelOrigin != getVec3_origin()) {
                     i = 0
                     while (i < tw.numContacts) {
-                        tw.contacts!![i]!!.point.oPluSet(modelOrigin)
-                        tw.contacts!!.get(i)!!.dist += modelOrigin.oMultiply(tw.contacts!![i]!!.normal)
+                        tw.contacts!![i]!!.point.plusAssign(modelOrigin)
+                        tw.contacts!!.get(i)!!.dist += modelOrigin.times(tw.contacts!![i]!!.normal)
                         i++
                     }
                 }
@@ -791,7 +794,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             } else {
                 // store results
                 results.oSet(tw.trace)
-                results.endpos.oSet(start.oPlus(end.oMinus(start).oMultiply(results.fraction)))
+                results.endpos.oSet(start + (end - start) * results.fraction)
                 results.endAxis.oSet(trmAxis)
                 if (results.fraction < 1.0f) {
                     // if the fraction is tiny the actual movement could end up zero
@@ -800,11 +803,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     }
                     // rotate trace plane normal if there was a collision with a rotated model
                     if (model_rotated) {
-                        results.c.normal.oMulSet(modelAxis)
-                        results.c.point.oMulSet(modelAxis)
+                        results.c.normal.timesAssign(modelAxis)
+                        results.c.point.timesAssign(modelAxis)
                     }
-                    results.c.point.oPluSet(modelOrigin)
-                    results.c.dist += modelOrigin.oMultiply(results.c.normal)
+                    results.c.point.plusAssign(modelOrigin)
+                    results.c.dist += modelOrigin.times(results.c.normal)
                 }
             }
             if (_DEBUG) {
@@ -880,7 +883,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
                 lasta = 0.0f
                 a = stepa
-                while (Math.abs(a) < Math.abs(maxa) + 1.0f) {
+                while (abs(a) < abs(maxa) + 1.0f) {
 
                     // partial rotation
                     Rotation180(
@@ -989,7 +992,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             this.contacts = contacts
             this.maxContacts = maxContacts
             numContacts = 0
-            end.oSet(start.oPlus(dir.SubVec3(0).oMultiply(depth)))
+            end.oSet(start + (dir.SubVec3(0).times(depth)))
             Translation(results, start, end, trm, trmAxis, contentMask, model, modelOrigin, modelAxis)
             if (dir.SubVec3(1).LengthSqr() != 0.0f) {
                 // FIXME: rotational contacts
@@ -1045,8 +1048,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 CollisionModel_debug.start.Set(sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat())
             }
             sscanf = Scanner(CollisionModel_debug.cm_testBox.GetString())
-            bounds[sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat()] =
+            bounds.oSet(
+                sscanf.nextFloat(),
+                sscanf.nextFloat(),
+                sscanf.nextFloat(),
+                sscanf.nextFloat(),
+                sscanf.nextFloat(),
                 sscanf.nextFloat()
+            )
             //	sscanf( cm_testBox.GetString(), "%f %f %f %f %f %f", &bounds[0][0], &bounds[0][1], &bounds[0][2],
 //										&bounds[1][0], &bounds[1][1], &bounds[1][2] );
             sscanf = Scanner(CollisionModel_debug.cm_testBoxRotation.GetString())
@@ -1234,7 +1243,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 CollisionModel_debug.cm_drawColor.ClearModified()
             }
             model = models?.get(handle)
-            viewPos.oSet(viewOrigin.oMinus(modelOrigin).oMultiply(modelAxis.Transpose()))
+            viewPos.oSet(viewOrigin - (modelOrigin) * (modelAxis.Transpose()))
             checkCount++
             DrawNodePolygons(model!!, model.node!!, modelOrigin, modelAxis, viewPos, radius)
         }
@@ -1466,7 +1475,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < poly.numEdges) {
                 edgeNum = poly.edges[i]
-                edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                edge = tw.model!!.edges!![abs(edgeNum)]
                 // if this edge is already checked
                 if (edge.checkcount == checkCount) {
                     i++
@@ -1529,8 +1538,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
                 // pluecker coordinate for epsilon expanded edge
                 epsPl.FromLine(
-                    tw.model!!.vertices!![edge.vertexNum[0]].p.oPlus(edge.normal.oMultiply(CollisionModel.CM_CLIP_EPSILON)),
-                    tw.model!!.vertices!![edge.vertexNum[1]].p.oPlus(edge.normal.oMultiply(CollisionModel.CM_CLIP_EPSILON))
+                    tw.model!!.vertices!![edge.vertexNum[0]].p + (edge.normal.times(CollisionModel.CM_CLIP_EPSILON)),
+                    tw.model!!.vertices!![edge.vertexNum[1]].p + (edge.normal.times(CollisionModel.CM_CLIP_EPSILON))
                 )
                 // calculate collision fraction with epsilon expanded edge
                 if (!TranslateEdgeThroughEdge(trmEdge.cross, trmEdge.pl, epsPl, f2)) {
@@ -1550,13 +1559,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     // create plane with normal vector orthogonal to both the polygon edge and the trm edge
                     start.oSet(tw.model!!.vertices!![edge.vertexNum[0]].p)
                     end.oSet(tw.model!!.vertices!![edge.vertexNum[1]].p)
-                    tw.trace.c.normal.oSet(end.oMinus(start).Cross(trmEdge.end.oMinus(trmEdge.start)))
+                    tw.trace.c.normal.oSet(end - (start).Cross(trmEdge.end - (trmEdge.start)))
                     // FIXME: do this normalize when we know the first collision
                     tw.trace.c.normal.Normalize()
-                    tw.trace.c.dist = tw.trace.c.normal.oMultiply(start)
+                    tw.trace.c.dist = tw.trace.c.normal.times(start)
                     // make sure the collision plane faces the trace model
-                    if (tw.trace.c.normal.oMultiply(trmEdge.start) - tw.trace.c.dist < 0.0f) {
-                        tw.trace.c.normal.oSet(tw.trace.c.normal.oNegative())
+                    if (tw.trace.c.normal.times(trmEdge.start) - tw.trace.c.dist < 0.0f) {
+                        tw.trace.c.normal.oSet(-tw.trace.c.normal)
                         tw.trace.c.dist = -tw.trace.c.dist
                     }
                     tw.trace.c.contents = poly.contents
@@ -1568,12 +1577,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     normal.oSet(0, trmEdge.cross.oGet(2))
                     normal.oSet(1, -trmEdge.cross.oGet(1))
                     normal.oSet(2, trmEdge.cross.oGet(0))
-                    dist = normal.oMultiply(trmEdge.start)
-                    d1 = normal.oMultiply(start) - dist
-                    d2 = normal.oMultiply(end) - dist
+                    dist = normal.times(trmEdge.start)
+                    d1 = normal.times(start) - dist
+                    d2 = normal.times(end) - dist
                     f1._val = (d1 / (d1 - d2))
                     //assert( f1 >= 0.0f && f1 <= 1.0f );
-                    tw.trace.c.point.oSet(start.oPlus(end.oMinus(start).oMultiply(f1._val)))
+                    tw.trace.c.point.oSet(start + (end - (start) * (f1._val)))
                     // if retrieving contacts
                     if (tw.getContacts) {
                         CollisionModel_translate.CM_AddContact(tw)
@@ -1598,7 +1607,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < poly.numEdges) {
                     edgeNum = poly.edges[i]
-                    edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                    edge = tw.model!!.edges!![abs(edgeNum)]
                     CollisionModel_translate.CM_SetEdgeSidedness(edge, tw.polygonEdgePlueckerCache[i], v.pl, bitNum)
                     if (Math_h.INTSIGNBITSET(edgeNum) xor (edge.side shr bitNum and 1) != 0) {
                         return
@@ -1616,8 +1625,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 tw.trace.c.material = poly.material
                 tw.trace.c.type = contactType_t.CONTACT_TRMVERTEX
                 tw.trace.c.modelFeature = poly.hashCode()
-                tw.trace.c.trmFeature = Arrays.asList(*tw.vertices).indexOf(v)
-                tw.trace.c.point.oSet(v.p.oPlus(v.endp.oMinus(v.p).oMultiply(tw.trace.fraction)))
+                tw.trace.c.trmFeature = listOf(*tw.vertices).indexOf(v)
+                tw.trace.c.point.oSet(v.p + (v.endp - (v.p) * (tw.trace.fraction)))
                 // if retrieving contacts
                 if (tw.getContacts) {
                     CollisionModel_translate.CM_AddContact(tw)
@@ -1638,7 +1647,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < poly.numEdges) {
                     edgeNum = poly.edges[i]
-                    edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                    edge = tw.model!!.edges!![abs(edgeNum)]
                     // if we didn't yet calculate the sidedness for this edge
                     if (edge.checkcount != checkCount) {
                         var fl: Float
@@ -1668,8 +1677,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 tw.trace.c.material = poly.material
                 tw.trace.c.type = contactType_t.CONTACT_TRMVERTEX
                 tw.trace.c.modelFeature = poly.hashCode() // need to check
-                tw.trace.c.trmFeature = Arrays.asList(*tw.vertices).indexOf(v)
-                tw.trace.c.point.oSet(v.p.oPlus(v.endp.oMinus(v.p).oMultiply(tw.trace.fraction)))
+                tw.trace.c.trmFeature = listOf(*tw.vertices).indexOf(v)
+                tw.trace.c.point.oSet(v.p + (v.endp - (v.p) * (tw.trace.fraction)))
                 // if retrieving contacts
                 if (tw.getContacts) {
                     CollisionModel_translate.CM_AddContact(tw)
@@ -1696,7 +1705,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < trmpoly.numEdges) {
                     edgeNum = trmpoly.edges[i]
-                    edge = tw.edges[Math.abs(edgeNum)]
+                    edge = tw.edges[abs(edgeNum)]
                     CollisionModel_translate.CM_SetVertexSidedness(v, pl, edge.pl, edge.bitNum)
                     if (Math_h.INTSIGNBITSET(edgeNum) xor (v.side shr edge.bitNum and 1) != 0) {
                         return
@@ -1708,14 +1717,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
                 tw.trace.fraction = f
                 // collision plane is the inverse trm polygon plane
-                tw.trace.c.normal.oSet(trmpoly.plane.Normal().oNegative())
+                tw.trace.c.normal.oSet(-trmpoly.plane.Normal())
                 tw.trace.c.dist = -trmpoly.plane.Dist()
                 tw.trace.c.contents = poly.contents
                 tw.trace.c.material = poly.material
                 tw.trace.c.type = contactType_t.CONTACT_MODELVERTEX
                 tw.trace.c.modelFeature = poly.hashCode()
                 tw.trace.c.trmFeature = listOf(*tw.polys).indexOf(trmpoly)
-                tw.trace.c.point.oSet(v.p.oPlus(endp.oMinus(v.p).oMultiply(tw.trace.fraction)))
+                tw.trace.c.point.oSet(v.p + (endp - (v.p) * (tw.trace.fraction)))
                 // if retrieving contacts
                 if (tw.getContacts) {
                     CollisionModel_translate.CM_AddContact(tw)
@@ -1762,19 +1771,19 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // only collide with the polygon if approaching at the front
-            if (p.plane.Normal().oMultiply(tw.dir) > 0.0f) {
+            if (p.plane.Normal().times(tw.dir) > 0.0f) {
                 return false
             }
 
             // if the polygon is too far from the first heart plane
             d = p.bounds.PlaneDistance(tw.heartPlane1)
-            if (Math.abs(d) > tw.maxDistFromHeartPlane1) {
+            if (abs(d) > tw.maxDistFromHeartPlane1) {
                 return false
             }
 
             // if the polygon is too far from the second heart plane
             d = p.bounds.PlaneDistance(tw.heartPlane2)
-            if (Math.abs(d) > tw.maxDistFromHeartPlane2) {
+            if (abs(d) > tw.maxDistFromHeartPlane2) {
                 return false
             }
             fraction = tw.trace.fraction
@@ -1801,7 +1810,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]
-                    e = tw.model!!.edges!![Math.abs(edgeNum)]
+                    e = tw.model!!.edges!![abs(edgeNum)]
                     // reset sidedness cache if this is the first time we encounter this edge during this trace
                     if (e.checkcount != checkCount) {
                         e.sideSet = 0
@@ -1817,7 +1826,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         v.sideSet = 0
                     }
                     // pluecker coordinate for vertex movement vector
-                    tw.polygonVertexPlueckerCache[i].FromRay(v.p, tw.dir.oNegative())
+                    tw.polygonVertexPlueckerCache[i].FromRay(v.p, -tw.dir)
                     i++
                 }
                 // copy first to last so we can easily cycle through for the edges
@@ -1847,7 +1856,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]
-                    e = tw.model!!.edges!![Math.abs(edgeNum)]
+                    e = tw.model!!.edges!![abs(edgeNum)]
                     if (e.checkcount == checkCount) {
                         i++
                         continue
@@ -1878,7 +1887,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         }
 
                         // vertex end point after movement
-                        endp.oSet(v.p.oMinus(tw.dir))
+                        endp.oSet(v.p - (tw.dir))
                         // pluecker coordinate for vertex movement vector
                         pl = tw.polygonVertexPlueckerCache[i + k]
                         j = 0
@@ -1898,7 +1907,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             // if there was a collision with this polygon and we are not retrieving contacts
             if (tw.trace.fraction < fraction && !tw.getContacts) {
                 fraction = tw.trace.fraction
-                endp.oSet(tw.start.oPlus(tw.dir.oMultiply(fraction)))
+                endp.oSet(tw.start + (tw.dir.times(fraction)))
                 // decrease bounds
                 i = 0
                 while (i < 3) {
@@ -1991,15 +2000,15 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             if (tanHalfAngle._val != 0.0f) {
                 CollisionModel_rotate.CM_RotateEdge(at, bt, tw.origin, tw.axis, tanHalfAngle)
             }
-            dir1.oSet(at.oMinus(tw.origin).Cross(tw.axis))
-            dir2.oSet(bt.oMinus(tw.origin).Cross(tw.axis))
-            if (dir1.oMultiply(dir1) > dir2.oMultiply(dir2)) {
+            dir1.oSet(at - (tw.origin).Cross(tw.axis))
+            dir2.oSet(bt - (tw.origin).Cross(tw.axis))
+            if (dir1.times(dir1) > dir2.times(dir2)) {
                 dir.oSet(dir1)
             } else {
                 dir.oSet(dir2)
             }
             if (tw.angle < 0.0f) {
-                dir.oSet(dir.oNegative())
+                dir.oSet(-dir)
             }
             pl1.FromLine(at, bt)
             pl2.FromRay(vc, dir)
@@ -2019,17 +2028,17 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // collision point on the edge at-bt
-            dir1.oSet(vd.oMinus(vc).Cross(dir))
-            d = dir1.oMultiply(vc)
-            d1 = dir1.oMultiply(at) - d
-            d2 = dir1.oMultiply(bt) - d
+            dir1.oSet(vd - (vc).Cross(dir))
+            d = dir1.times(vc)
+            d1 = dir1.times(at) - d
+            d2 = dir1.times(bt) - d
             if (d1 == d2) {
                 return false
             }
-            collisionPoint.oSet(at.oPlus(bt.oMinus(at).oMultiply(d1 / (d1 - d2))))
+            collisionPoint.oSet(at + (bt - (at) * (d1 / (d1 - d2))))
 
             // normal is cross product of the rotated edge va-vb and the edge vc-vd
-            collisionNormal.Cross(bt.oMinus(at), vd.oMinus(vc))
+            collisionNormal.Cross(bt - (at), vd - (vc))
             return true
         }
 
@@ -2156,8 +2165,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              */tanHalfAngle._val = (tw.maxTan)
 
             // transform rotation axis to z-axis
-            ct.oSet(vc.oMinus(tw.origin).oMultiply(tw.matrix))
-            dt.oSet(vd.oMinus(tw.origin).oMultiply(tw.matrix))
+            ct.oSet(vc - (tw.origin) * (tw.matrix))
+            dt.oSet(vd - (tw.origin) * (tw.matrix))
             pl2.FromLine(ct, dt)
             v0 = (pl2.oGet(0) * pl1.oGet(4) + pl2.oGet(4) * pl1.oGet(0)).toDouble()
             v1 =
@@ -2182,7 +2191,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (d <= 0.0f) {
                     return false
                 }
-                sqrtd = Math.sqrt(d)
+                sqrtd = sqrt(d)
                 q = if (b > 0.0f) {
                     -b + sqrtd
                 } else {
@@ -2261,8 +2270,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              */tanHalfAngle._val = (0.0f)
 
             // transform rotation axis to z-axis
-            ct.oSet(vc.oMinus(tw.origin).oMultiply(tw.matrix))
-            dt.oSet(vd.oMinus(tw.origin).oMultiply(tw.matrix))
+            ct.oSet(vc - (tw.origin) * (tw.matrix))
+            dt.oSet(vd - (tw.origin) * (tw.matrix))
             pl2.FromLine(ct, dt)
             v0 = (pl2.oGet(0) * pl1.oGet(4) + pl2.oGet(4) * pl1.oGet(0)).toDouble()
             v1 =
@@ -2307,7 +2316,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (d <= 0.0f) {
                     return false
                 }
-                sqrtd = Math.sqrt(d)
+                sqrtd = sqrt(d)
                 q = if (b > 0.0f) {
                     -b + sqrtd
                 } else {
@@ -2375,7 +2384,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < poly.numEdges) {
                 edgeNum = poly.edges[i]
-                edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                edge = tw.model!!.edges!![abs(edgeNum)]
 
                 // if this edge is already checked
                 if (edge.checkcount == checkCount) {
@@ -2412,10 +2421,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 f1 = trmEdge.pl.PermutedInnerProduct(tw.polygonEdgePlueckerCache[i])
 
                 // pluecker coordinate for epsilon expanded edge
-                epsDir.oSet(edge.normal.oMultiply(CollisionModel.CM_CLIP_EPSILON + CM_PL_RANGE_EPSILON))
+                epsDir.oSet(edge.normal.times(CollisionModel.CM_CLIP_EPSILON + CM_PL_RANGE_EPSILON))
                 epsPl.FromLine(
-                    tw.model!!.vertices?.get(edge.vertexNum[0])!!.p.oPlus(epsDir),
-                    tw.model!!.vertices?.get(edge.vertexNum[1])!!.p.oPlus(epsDir)
+                    tw.model!!.vertices?.get(edge.vertexNum[0])!!.p + (epsDir),
+                    tw.model!!.vertices?.get(edge.vertexNum[1])!!.p + (epsDir)
                 )
                 f2 = trmEdge.pl.PermutedInnerProduct(epsPl)
 
@@ -2428,7 +2437,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     if (dir._val <= 0.0f) {
                         // moving towards the polygon edge so stop immediately
                         tanHalfAngle._val = (0.0f)
-                    } else if (Math.abs(startTan._val) >= tw.maxTan) {
+                    } else if (abs(startTan._val) >= tw.maxTan) {
                         // never going to get beyond the start tangent during the current rotation
                         i++
                         continue
@@ -2437,9 +2446,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         if (!RotateEdgeThroughEdge(
                                 tw,
                                 trmEdge.plzaxis,
-                                v1.p.oPlus(epsDir),
-                                v2.p.oPlus(epsDir),
-                                Math.abs(startTan._val),
+                                v1.p + (epsDir),
+                                v2.p + (epsDir),
+                                abs(startTan._val),
                                 tanHalfAngle
                             )
                         ) {
@@ -2448,12 +2457,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     }
                 } else {
                     // collide with the epsilon expanded edge
-                    epsDir.oSet(edge.normal.oMultiply(CollisionModel.CM_CLIP_EPSILON))
+                    epsDir.oSet(edge.normal.times(CollisionModel.CM_CLIP_EPSILON))
                     if (!RotateEdgeThroughEdge(
                             tw,
                             trmEdge.plzaxis,
-                            v1.p.oPlus(epsDir),
-                            v2.p.oPlus(epsDir),
+                            v1.p + (epsDir),
+                            v2.p + (epsDir),
                             0.0f,
                             tanHalfAngle
                         )
@@ -2462,7 +2471,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         continue
                     }
                 }
-                if (Math.abs(tanHalfAngle._val) >= tw.maxTan) {
+                if (abs(tanHalfAngle._val) >= tw.maxTan) {
                     i++
                     continue
                 }
@@ -2484,20 +2493,20 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
 
                 // allow rotation if the rotation axis goes through the collisionPoint
-                origin.oSet(tw.origin.oPlus(tw.axis.oMultiply(tw.axis.oMultiply(collisionPoint.oMinus(tw.origin)))))
-                if (collisionPoint.oMinus(origin).LengthSqr() < ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
+                origin.oSet(tw.origin + (tw.axis.times(tw.axis.times(collisionPoint - (tw.origin)))))
+                if ((collisionPoint - origin).LengthSqr() < ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
                     i++
                     continue
                 }
 
                 // fill in trace structure
-                tw.maxTan = Math.abs(tanHalfAngle._val)
+                tw.maxTan = abs(tanHalfAngle._val)
                 tw.trace.c.normal.oSet(collisionNormal)
                 tw.trace.c.normal.Normalize()
-                tw.trace.c.dist = tw.trace.c.normal.oMultiply(v1.p)
+                tw.trace.c.dist = tw.trace.c.normal.times(v1.p)
                 // make sure the collision plane faces the trace model
-                if (tw.trace.c.normal.oMultiply(trmEdge.start) - tw.trace.c.dist < 0) {
-                    tw.trace.c.normal.oSet(tw.trace.c.normal.oNegative())
+                if (tw.trace.c.normal.times(trmEdge.start) - tw.trace.c.dist < 0) {
+                    tw.trace.c.normal.oSet(-tw.trace.c.normal)
                     tw.trace.c.dist = -tw.trace.c.dist
                 }
                 tw.trace.c.contents = poly.contents
@@ -2574,9 +2583,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              */tanHalfAngle._val = (tw.maxTan)
 
             // transform rotation axis to z-axis
-            p.oSet(point.oMinus(tw.origin).oMultiply(tw.matrix))
-            d = (plane.oGet(3) + plane.Normal().oMultiply(tw.origin)).toDouble()
-            normal.oSet(plane.Normal().oMultiply(tw.matrix))
+            p.oSet(point - (tw.origin) * (tw.matrix))
+            d = (plane.oGet(3) + plane.Normal().times(tw.origin)).toDouble()
+            normal.oSet(plane.Normal().times(tw.matrix))
             v0 = normal.oGet(2) * p.oGet(2) + d
             v1 = (normal.oGet(0) * p.oGet(1) - normal.oGet(1) * p.oGet(0)).toDouble()
             v2 = (normal.oGet(0) * p.oGet(0) + normal.oGet(1) * p.oGet(1)).toDouble()
@@ -2594,7 +2603,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (d <= 0.0f) {
                     return false
                 }
-                sqrtd = Math.sqrt(d)
+                sqrtd = sqrt(d)
                 q = if (b > 0.0f) {
                     -b + sqrtd
                 } else {
@@ -2671,8 +2680,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              */tanHalfAngle._val = (0.0f)
 
             // transform rotation axis to z-axis
-            p.oSet(point.oMinus(tw.origin).oMultiply(tw.matrix))
-            normal.oSet(plane.Normal().oMultiply(tw.matrix))
+            p.oSet(point - (tw.origin) * (tw.matrix))
+            normal.oSet(plane.Normal().times(tw.matrix))
             v1 = (normal.oGet(0) * p.oGet(1) - normal.oGet(1) * p.oGet(0)).toDouble()
             v2 = (normal.oGet(0) * p.oGet(0) + normal.oGet(1) * p.oGet(1)).toDouble()
 
@@ -2700,7 +2709,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (d <= 0.0f) {
                     return false
                 }
-                sqrtd = Math.sqrt(d)
+                sqrtd = sqrt(d)
                 q = if (b > 0.0f) {
                     -b + sqrtd
                 } else {
@@ -2751,30 +2760,30 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // if the rotation sphere at the rotation origin is too far away from the polygon plane
             d = epsPlane.Distance(origin)
-            vec.oSet(point.oMinus(origin))
-            if (d * d > vec.oMultiply(vec)) {
+            vec.oSet(point - (origin))
+            if (d * d > vec.times(vec)) {
                 return false
             }
 
             // calculate direction of motion at vertex start position
-            startDir.oSet(point.oMinus(origin).Cross(tw.axis))
+            startDir.oSet(point - (origin).Cross(tw.axis))
             if (angle < 0.0f) {
-                startDir.oSet(startDir.oNegative())
+                startDir.oSet(-startDir)
             }
             // if moving away from plane at start position
-            if (startDir.oMultiply(epsPlane.Normal()) >= 0.0f) {
+            if (startDir.times(epsPlane.Normal()) >= 0.0f) {
                 // if end position is outside epsilon range
                 d = epsPlane.Distance(endPoint)
                 if (d >= 0.0f) {
                     return false // no collision
                 }
                 // calculate direction of motion at vertex end position
-                endDir.oSet(endPoint.oMinus(origin).Cross(tw.axis))
+                endDir.oSet(endPoint - (origin).Cross(tw.axis))
                 if (angle < 0.0f) {
-                    endDir.oSet(endDir.oNegative())
+                    endDir.oSet(-endDir)
                 }
                 // if also moving away from plane at end position
-                if (endDir.oMultiply(epsPlane.Normal()) > 0.0f) {
+                if (endDir.times(epsPlane.Normal()) > 0.0f) {
                     return false // no collision
                 }
             }
@@ -2790,7 +2799,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (dir._val <= 0.0f) {
                     // moving towards the polygon plane so stop immediately
                     tanHalfAngle._val = (0.0f)
-                } else if (Math.abs(startTan._val) >= tw.maxTan) {
+                } else if (abs(startTan._val) >= tw.maxTan) {
                     // never going to get beyond the start tangent during the current rotation
                     return false
                 } else {
@@ -2800,7 +2809,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                             point,
                             epsPlane,
                             angle,
-                            Math.abs(startTan._val),
+                            abs(startTan._val),
                             tanHalfAngle
                         )
                     ) {
@@ -2820,9 +2829,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 CollisionModel_rotate.CM_RotatePoint(collisionPoint, tw.origin, tw.axis, tanHalfAngle._val)
             }
             // calculate direction of motion at collision point
-            endDir.oSet(collisionPoint.oMinus(origin).Cross(tw.axis))
+            endDir.oSet(collisionPoint - (origin).Cross(tw.axis))
             if (angle < 0.0f) {
-                endDir.oSet(endDir.oNegative())
+                endDir.oSet(-endDir)
             }
             return true
         }
@@ -2861,7 +2870,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             ) {
                 return
             }
-            if (Math.abs(tanHalfAngle._val) < tw.maxTan) {
+            if (abs(tanHalfAngle._val) < tw.maxTan) {
                 // verify if 'collisionPoint' moving along 'endDir' moves between polygon edges
                 pl.FromRay(collisionPoint, endDir)
                 i = 0
@@ -2877,7 +2886,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     }
                     i++
                 }
-                tw.maxTan = Math.abs(tanHalfAngle._val)
+                tw.maxTan = abs(tanHalfAngle._val)
                 // collision plane is the polygon plane
                 tw.trace.c.normal.oSet(poly.plane.Normal())
                 tw.trace.c.dist = poly.plane.Dist()
@@ -2886,7 +2895,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 tw.trace.c.type = contactType_t.CONTACT_TRMVERTEX
                 tw.trace.c.modelFeature = poly.hashCode()
                 //tw.trace.c.modelFeature = vertexNum;
-                tw.trace.c.trmFeature = Arrays.asList(*tw.vertices).indexOf(v)
+                tw.trace.c.trmFeature = listOf(*tw.vertices).indexOf(v)
                 tw.trace.c.point.oSet(collisionPoint)
             }
         }
@@ -2919,8 +2928,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // if the rotation axis goes through the polygon vertex
-            dir.oSet(v.p.oMinus(rotationOrigin))
-            if (dir.oMultiply(dir) < ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
+            dir.oSet(v.p - (rotationOrigin))
+            if (dir.times(dir) < ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
                 return
             }
 
@@ -2936,13 +2945,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             ) {
                 return
             }
-            if (Math.abs(tanHalfAngle._val) < tw.maxTan) {
+            if (abs(tanHalfAngle._val) < tw.maxTan) {
                 // verify if 'collisionPoint' moving along 'endDir' moves between polygon edges
                 pl.FromRay(collisionPoint, endDir)
                 i = 0
                 while (i < trmpoly.numEdges) {
                     edgeNum = trmpoly.edges[i]
-                    edge = tw.edges[Math.abs(edgeNum)]
+                    edge = tw.edges[abs(edgeNum)]
                     if (edgeNum < 0) {
                         if (pl.PermutedInnerProduct(edge.pl) > 0.0f) {
                             return
@@ -2954,15 +2963,15 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     }
                     i++
                 }
-                tw.maxTan = Math.abs(tanHalfAngle._val)
+                tw.maxTan = abs(tanHalfAngle._val)
                 // collision plane is the flipped trm polygon plane
-                tw.trace.c.normal.oSet(trmpoly.plane.Normal().oNegative())
-                tw.trace.c.dist = tw.trace.c.normal.oMultiply(v.p)
+                tw.trace.c.normal.oSet(-trmpoly.plane.Normal())
+                tw.trace.c.dist = tw.trace.c.normal.times(v.p)
                 tw.trace.c.contents = poly.contents
                 tw.trace.c.material = poly.material
                 tw.trace.c.type = contactType_t.CONTACT_MODELVERTEX
                 tw.trace.c.modelFeature = listOf(*tw.model!!.vertices!!).indexOf(v)
-                tw.trace.c.trmFeature = Arrays.asList(*tw.polys).indexOf(trmpoly)
+                tw.trace.c.trmFeature = listOf(*tw.polys).indexOf(trmpoly)
                 tw.trace.c.point.oSet(v.p)
             }
         }
@@ -3021,7 +3030,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // if the polygon is too far from the first heart plane
             d = p.bounds.PlaneDistance(tw.heartPlane1)
-            if (Math.abs(d) > tw.maxDistFromHeartPlane1) {
+            if (abs(d) > tw.maxDistFromHeartPlane1) {
                 return false
             }
             when (tw.bounds.PlaneSide(p.plane)) {
@@ -3046,7 +3055,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < p.numEdges) {
                 edgeNum = p.edges[i]
-                e = tw.model!!.edges!![Math.abs(edgeNum)]
+                e = tw.model!!.edges!![abs(edgeNum)]
                 v = tw.model!!.vertices!![e.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]]
 
                 // pluecker coordinate for edge
@@ -3057,7 +3066,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
                 // calculate rotation origin projected into rotation plane through the vertex
                 tw.polygonRotationOriginCache[i] =
-                    tw.origin.oPlus(tw.axis.oMultiply(tw.axis.oMultiply(v.p.oMinus(tw.origin))))
+                    tw.origin + (tw.axis.times(tw.axis.times(v.p - (tw.origin))))
                 i++
             }
             // copy first to last so we can easily cycle through
@@ -3091,7 +3100,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]
-                    e = tw.model!!.edges!![Math.abs(edgeNum)]
+                    e = tw.model!!.edges!![abs(edgeNum)]
                     if (e.checkcount == checkCount) {
                         i++
                         continue
@@ -3148,9 +3157,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
         private fun BoundsForRotation(origin: idVec3, axis: idVec3, start: idVec3, end: idVec3, bounds: idBounds) {
             var i: Int
             val radiusSqr: Float
-            radiusSqr = start.oMinus(origin).LengthSqr()
-            val v1 = idVec3(start.oMinus(origin).Cross(axis))
-            val v2 = idVec3(end.oMinus(origin).Cross(axis))
+            radiusSqr = (start - origin).LengthSqr()
+            val v1 = idVec3(start - (origin).Cross(axis))
+            val v2 = idVec3(end - (origin).Cross(axis))
             i = 0
             while (i < 3) {
 
@@ -3179,8 +3188,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     bounds.oSet(1, i, end.oGet(i))
                 }
                 // expand for epsilons
-                bounds.oGet(0).oMinSet(i, CollisionModel.CM_BOX_EPSILON)
-                bounds.oGet(1).oPluSet(i, CollisionModel.CM_BOX_EPSILON)
+                bounds.oGet(0).minusAssign(i, CollisionModel.CM_BOX_EPSILON)
+                bounds.oGet(1).plusAssign(i, CollisionModel.CM_BOX_EPSILON)
                 i++
             }
         }
@@ -3229,10 +3238,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw.quickExit = false
             tw.angle = endAngle - startAngle
             assert(tw.angle > -180.0f && tw.angle < 180.0f)
-            initialTan = Math.abs(Math.tan((idMath.PI / 360.0f * tw.angle).toDouble()).toFloat())
+            initialTan = abs(tan((idMath.PI / 360.0f * tw.angle).toDouble()).toFloat())
             tw.maxTan = initialTan
             tw.model = models?.get(model)
-            tw.start.oSet(start.oMinus(modelOrigin))
+            tw.start.oSet(start - (modelOrigin))
             // rotation axis, axis is assumed to be normalized
             tw.axis.oSet(axis)
             assert(
@@ -3241,24 +3250,24 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 ) > 0.99f
             )
             // rotation origin projected into rotation plane through tw.start
-            tw.origin.oSet(rorg.oMinus(modelOrigin))
-            d = tw.axis.oMultiply(tw.origin) - tw.axis.oMultiply(tw.start)
-            tw.origin.oSet(tw.origin.oMinus(tw.axis.oMultiply(d)))
+            tw.origin.oSet(rorg - (modelOrigin))
+            d = tw.axis.times(tw.origin) - tw.axis.times(tw.start)
+            tw.origin.oSet(tw.origin - (tw.axis.times(d)))
             // radius of rotation
-            tw.radius = tw.start.oMinus(tw.origin).Length()
+            tw.radius = (tw.start - tw.origin).Length()
             // maximum error of the circle approximation traced through the axial BSP tree
             d =
                 tw.radius * tw.radius - CIRCLE_APPROXIMATION_LENGTH * CIRCLE_APPROXIMATION_LENGTH * 0.25f
             maxErr = if (d > 0.0f) {
-                (tw.radius - Math.sqrt(d.toDouble())).toFloat()
+                (tw.radius - sqrt(d.toDouble())).toFloat()
             } else {
                 tw.radius
             }
             model_rotated = modelAxis.IsRotated()
             if (model_rotated) {
                 invModelAxis = modelAxis.Transpose()
-                tw.axis.oMulSet(invModelAxis)
-                tw.origin.oMulSet(invModelAxis)
+                tw.axis.timesAssign(invModelAxis)
+                tw.origin.timesAssign(invModelAxis)
             }
             startRotation.Set(tw.origin, tw.axis, startAngle)
             endRotation.Set(tw.origin, tw.axis, endAngle)
@@ -3283,7 +3292,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             ) {
                 if (model_rotated) {
                     // rotate trace instead of model
-                    tw.start.oMulSet(invModelAxis)
+                    tw.start.timesAssign(invModelAxis)
                 }
                 tw.end.oSet(tw.start)
                 // if we start at a specific angle
@@ -3299,15 +3308,15 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 tw.vertices[0].endp.oSet(tw.end)
                 tw.vertices[0].used = true
                 tw.vertices[0].rotationOrigin.oSet(
-                    tw.origin.oPlus(
-                        tw.axis.oMultiply(
-                            tw.axis.oMultiply(
-                                tw.vertices[0].p.oMinus(
-                                    tw.origin
+                    tw.origin + (
+                            tw.axis.times(
+                                tw.axis.times(
+                                    tw.vertices[0].p - (
+                                            tw.origin
+                                            )
                                 )
                             )
-                        )
-                    )
+                            )
                 )
                 BoundsForRotation(
                     tw.vertices[0].rotationOrigin,
@@ -3342,7 +3351,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     results.fraction = 1.0f
                 } else {
                     results.fraction =
-                        Math.abs(Math.atan(tw.maxTan.toDouble()).toFloat() * (2.0f * 180.0f / idMath.PI) / tw.angle)
+                        abs(atan(tw.maxTan.toDouble()).toFloat() * (2.0f * 180.0f / idMath.PI) / tw.angle)
                 }
                 assert(results.fraction <= 1.0f)
                 endRotation.Set(rorg, axis, startAngle + (endAngle - startAngle) * results.fraction)
@@ -3351,11 +3360,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (results.fraction < 1.0f) {
                     // rotate trace plane normal if there was a collision with a rotated model
                     if (model_rotated) {
-                        results.c.normal.oMulSet(modelAxis)
-                        results.c.point.oMulSet(modelAxis)
+                        results.c.normal.timesAssign(modelAxis)
+                        results.c.point.timesAssign(modelAxis)
                     }
-                    results.c.point.oPluSet(modelOrigin)
-                    results.c.dist += modelOrigin.oMultiply(results.c.normal)
+                    results.c.point.plusAssign(modelOrigin)
+                    results.c.dist += modelOrigin.times(results.c.normal)
                 }
                 return
             }
@@ -3371,7 +3380,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (i < tw.numVerts) {
 
                     // rotate trm around the start position
-                    tw.vertices[i].p.oMulSet(trmAxis)
+                    tw.vertices[i].p.timesAssign(trmAxis)
                     i++
                 }
             }
@@ -3379,13 +3388,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numVerts) {
 
                 // set trm at start position
-                tw.vertices[i].p.oPluSet(tw.start)
+                tw.vertices[i].p.plusAssign(tw.start)
                 i++
             }
             if (model_rotated) {
                 i = 0
                 while (i < tw.numVerts) {
-                    tw.vertices[i].p.oMulSet(invModelAxis)
+                    tw.vertices[i].p.timesAssign(invModelAxis)
                     i++
                 }
             }
@@ -3412,14 +3421,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // add offset to start point
             if (trm_rotated) {
-                tw.start.oPluSet(trm.offset.oMultiply(trmAxis))
+                tw.start.plusAssign(trm.offset.times(trmAxis))
             } else {
-                tw.start.oPluSet(trm.offset)
+                tw.start.plusAssign(trm.offset)
             }
             // if the model is rotated
             if (model_rotated) {
                 // rotate trace instead of model
-                tw.start.oMulSet(invModelAxis)
+                tw.start.timesAssign(invModelAxis)
             }
             tw.end.oSet(tw.start)
             // if we start at a specific angle
@@ -3434,11 +3443,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numVerts) {
                 vert = tw.vertices[i]
                 // calculate rotation origin projected into rotation plane through the vertex
-                vert.rotationOrigin.oSet(tw.origin.oPlus(tw.axis.oMultiply(tw.axis.oMultiply(vert.p.oMinus(tw.origin)))))
+                vert.rotationOrigin.oSet(tw.origin + (tw.axis.times(tw.axis.times(vert.p - (tw.origin)))))
                 // calculate rotation bounds for this vertex
                 BoundsForRotation(vert.rotationOrigin, tw.axis, vert.p, vert.endp, vert.rotationBounds)
                 // if the rotation axis goes through the vertex then the vertex is not used
-                d = vert.p.oMinus(vert.rotationOrigin).LengthSqr()
+                d = (vert.p - vert.rotationOrigin).LengthSqr()
                 if (d > ROTATION_AXIS_EPSILON * ROTATION_AXIS_EPSILON) {
                     vert.used = true
                 }
@@ -3458,8 +3467,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 edge.end.oSet(tw.vertices[edge.vertexNum[1]].p)
                 edge.pl.FromLine(edge.start, edge.end)
                 // pluecker coordinate for edge being rotated about the z-axis
-                val at = idVec3(edge.start.oMinus(tw.origin).oMultiply(tw.matrix))
-                val bt = idVec3(edge.end.oMinus(tw.origin).oMultiply(tw.matrix))
+                val at = idVec3(edge.start - (tw.origin) * (tw.matrix))
+                val bt = idVec3(edge.end - (tw.origin) * (tw.matrix))
                 edge.plzaxis.FromLine(at, bt)
                 // get edge rotation bounds from the rotation bounds of both vertices
                 edge.rotationBounds.oSet(tw.vertices[edge.vertexNum[0]].rotationBounds)
@@ -3472,7 +3481,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // rotate trm polygon planes
             if (trm_rotated && model_rotated) {
-                tmpAxis = trmAxis.oMultiply(invModelAxis)
+                tmpAxis = trmAxis.times(invModelAxis)
                 i = 0
                 while (i < tw.numPolys) {
                     tw.polys[i].plane.oMulSet(tmpAxis)
@@ -3498,14 +3507,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 poly = tw.polys[i]
                 poly.used = true
                 // set trm polygon plane distance
-                poly.plane.FitThroughPoint(tw.edges[Math.abs(poly.edges[0])].start)
+                poly.plane.FitThroughPoint(tw.edges[abs(poly.edges[0])].start)
                 // get polygon bounds from edge bounds
                 poly.rotationBounds.Clear()
                 j = 0
                 while (j < poly.numEdges) {
 
                     // add edge rotation bounds to polygon rotation bounds
-                    edge = tw.edges[Math.abs(poly.edges[j])]
+                    edge = tw.edges[abs(poly.edges[j])]
                     poly.rotationBounds.AddBounds(edge.rotationBounds)
                     j++
                 }
@@ -3519,10 +3528,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < 3) {
                 tw.size.oSet(0, i, tw.bounds.oGet(0).oGet(i) - tw.start.oGet(i))
                 tw.size.oSet(1, i, tw.bounds.oGet(1).oGet(i) - tw.start.oGet(i))
-                if (Math.abs(tw.size.oGet(0).oGet(i)) > Math.abs(tw.size.oGet(1).oGet(i))) {
-                    tw.extents.oSet(i, Math.abs(tw.size.oGet(0).oGet(i)) + maxErr + CollisionModel.CM_BOX_EPSILON)
+                if (abs(tw.size.oGet(0).oGet(i)) > abs(tw.size.oGet(1).oGet(i))) {
+                    tw.extents.oSet(i, abs(tw.size.oGet(0).oGet(i)) + maxErr + CollisionModel.CM_BOX_EPSILON)
                 } else {
-                    tw.extents.oSet(i, Math.abs(tw.size.oGet(1).oGet(i)) + maxErr + CollisionModel.CM_BOX_EPSILON)
+                    tw.extents.oSet(i, abs(tw.size.oGet(1).oGet(i)) + maxErr + CollisionModel.CM_BOX_EPSILON)
                 }
                 i++
             }
@@ -3539,7 +3548,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     while (i < tw.numPolys) {
 
                         // back face cull polygons
-                        if (poly.plane.Normal().oMultiply(tw.axis) > 0.0f) {
+                        if (poly.plane.Normal().times(tw.axis) > 0.0f) {
                             i++
                             poly = tw.polys[i]
                             continue
@@ -3548,7 +3557,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         j = 0
                         while (j < poly.numEdges) {
                             edgeNum = poly.edges[j]
-                            edge = tw.edges[Math.abs(edgeNum)]
+                            edge = tw.edges[abs(edgeNum)]
                             if (0 == edge.bitNum and 2) {
                                 d = plaxis.PermutedInnerProduct(edge.pl)
                                 edge.bitNum = (Math_h.FLOATSIGNBITSET(d) or 2)
@@ -3574,7 +3583,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw.maxDistFromHeartPlane1 = 0.0f
             i = 0
             while (i < tw.numVerts) {
-                d = Math.abs(tw.heartPlane1.Distance(tw.vertices[i].p))
+                d = abs(tw.heartPlane1.Distance(tw.vertices[i].p))
                 if (d > tw.maxDistFromHeartPlane1) {
                     tw.maxDistFromHeartPlane1 = d
                 }
@@ -3595,20 +3604,20 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 results.fraction = 1.0f
             } else {
                 results.fraction =
-                    Math.abs(Math.atan(tw.maxTan.toDouble()).toFloat() * (2.0f * 180.0f / idMath.PI) / tw.angle)
+                    abs(atan(tw.maxTan.toDouble()).toFloat() * (2.0f * 180.0f / idMath.PI) / tw.angle)
             }
             assert(results.fraction <= 1.0f)
             endRotation.Set(rorg, axis, startAngle + (endAngle - startAngle) * results.fraction)
             endRotation.RotatePoint(results.endpos)
-            results.endAxis.oSet(trmAxis.oMultiply(endRotation.ToMat3()))
+            results.endAxis.oSet(trmAxis.times(endRotation.ToMat3()))
             if (results.fraction < 1.0f) {
                 // rotate trace plane normal if there was a collision with a rotated model
                 if (model_rotated) {
-                    results.c.normal.oMulSet(modelAxis)
-                    results.c.point.oMulSet(modelAxis)
+                    results.c.normal.timesAssign(modelAxis)
+                    results.c.point.timesAssign(modelAxis)
                 }
-                results.c.point.oPluSet(modelOrigin)
-                results.c.dist += modelOrigin.oMultiply(results.c.normal)
+                results.c.point.plusAssign(modelOrigin)
+                results.c.dist += modelOrigin.times(results.c.normal)
             }
         }
 
@@ -3738,7 +3747,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]
-                    edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                    edge = tw.model!!.edges!![abs(edgeNum)]
                     // if this edge is already tested
                     if (edge.checkcount == checkCount) {
                         i++
@@ -3769,7 +3778,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         if (k >= tw.numPolys) {
                             tw.trace.fraction = 0.0f
                             tw.trace.c.type = contactType_t.CONTACT_MODELVERTEX
-                            tw.trace.c.normal.oSet(tw.polys[bestPlane].plane.Normal().oNegative())
+                            tw.trace.c.normal.oSet(-tw.polys[bestPlane].plane.Normal())
                             tw.trace.c.dist = -tw.polys[bestPlane].plane.Dist()
                             tw.trace.c.contents = p.contents
                             tw.trace.c.material = p.material
@@ -3786,7 +3795,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < p.numEdges) {
                 edgeNum = p.edges[i]
-                edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                edge = tw.model!!.edges!![abs(edgeNum)]
                 // reset sidedness cache if this is the first time we encounter this edge
                 if (edge.checkcount != checkCount) {
                     edge.sideSet = 0
@@ -3828,7 +3837,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 j = 0
                 while (j < p.numEdges) {
                     edgeNum = p.edges[j]
-                    edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                    edge = tw.model!!.edges!![abs(edgeNum)]
                     CollisionModel_contents.CM_SetTrmEdgeSidedness(
                         edge,
                         tw.edges[i].pl,
@@ -3859,7 +3868,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < p.numEdges) {
                 edgeNum = p.edges[i]
-                edge = tw.model!!.edges!![Math.abs(edgeNum)]
+                edge = tw.model!!.edges!![abs(edgeNum)]
                 if (edge.checkcount == checkCount) {
                     i++
                     continue
@@ -3881,8 +3890,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     k = 0
                     while (k < tw.polys[j].numEdges) {
                         trmEdgeNum = tw.polys[j].edges[k]
-                        trmEdge = tw.edges[Math.abs(trmEdgeNum)]
-                        bitNum = Math.abs(trmEdgeNum)
+                        trmEdge = tw.edges[abs(trmEdgeNum)]
+                        bitNum = abs(trmEdgeNum)
                         CollisionModel_contents.CM_SetTrmEdgeSidedness(
                             edge,
                             trmEdge.pl,
@@ -3897,7 +3906,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     if (k >= tw.polys[j].numEdges) {
                         tw.trace.fraction = 0.0f
                         tw.trace.c.type = contactType_t.CONTACT_EDGE
-                        tw.trace.c.normal.oSet(tw.polys[j].plane.Normal().oNegative())
+                        tw.trace.c.normal.oSet(-tw.polys[j].plane.Normal())
                         tw.trace.c.dist = -tw.polys[j].plane.Dist()
                         tw.trace.c.contents = p.contents
                         tw.trace.c.material = p.material
@@ -3977,9 +3986,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             model: Int, origin: idVec3, modelAxis: idMat3
         ): Int {
             // subtract origin offset
-            val p_l = idVec3(p.oMinus(origin))
+            val p_l = idVec3(p - (origin))
             if (modelAxis.IsRotated()) {
-                p_l.oMulSet(modelAxis)
+                p_l.timesAssign(modelAxis)
             }
             return PointContents(p_l, model)
         }
@@ -4019,7 +4028,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw.quickExit = false
             tw.numContacts = 0
             tw.model = models?.get(model)
-            tw.start.oSet(start.oMinus(modelOrigin))
+            tw.start.oSet(start - (modelOrigin))
             tw.end.oSet(tw.start)
             model_rotated = modelAxis.IsRotated()
             if (model_rotated) {
@@ -4036,7 +4045,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (i < tw.numVerts) {
 
                     // rotate trm around the start position
-                    tw.vertices[i].p.oMulSet(trmAxis)
+                    tw.vertices[i].p.timesAssign(trmAxis)
                     i++
                 }
             }
@@ -4044,7 +4053,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numVerts) {
 
                 // set trm at start position
-                tw.vertices[i].p.oPluSet(tw.start)
+                tw.vertices[i].p.plusAssign(tw.start)
                 i++
             }
             if (model_rotated) {
@@ -4052,24 +4061,24 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (i < tw.numVerts) {
 
                     // rotate trm around model instead of rotating the model
-                    tw.vertices[i].p.oMulSet(invModelAxis)
+                    tw.vertices[i].p.timesAssign(invModelAxis)
                     i++
                 }
             }
 
             // add offset to start point
             if (trm_rotated) {
-                val dir = idVec3(trm.offset.oMultiply(trmAxis))
-                tw.start.oPluSet(dir)
-                tw.end.oPluSet(dir)
+                val dir = idVec3(trm.offset.times(trmAxis))
+                tw.start.plusAssign(dir)
+                tw.end.plusAssign(dir)
             } else {
-                tw.start.oPluSet(trm.offset)
-                tw.end.oPluSet(trm.offset)
+                tw.start.plusAssign(trm.offset)
+                tw.end.plusAssign(trm.offset)
             }
             if (model_rotated) {
                 // rotate trace instead of model
-                tw.start.oMulSet(invModelAxis)
-                tw.end.oMulSet(invModelAxis)
+                tw.start.timesAssign(invModelAxis)
+                tw.end.timesAssign(invModelAxis)
             }
 
             // setup trm vertices
@@ -4078,7 +4087,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < tw.numVerts) {
 
                 // get axial trm size after rotations
-                tw.size.AddPoint(tw.vertices[i].p.oMinus(tw.start))
+                tw.size.AddPoint(tw.vertices[i].p - (tw.start))
                 i++
             }
 
@@ -4095,7 +4104,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // setup trm polygons
             if (trm_rotated && model_rotated) {
-                tmpAxis = trmAxis.oMultiply(invModelAxis)
+                tmpAxis = trmAxis.times(invModelAxis)
                 i = 0
                 while (i < tw.numPolys) {
                     tw.polys[i].plane.oMulSet(tmpAxis)
@@ -4116,7 +4125,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
             i = 0
             while (i < tw.numPolys) {
-                tw.polys[i].plane.FitThroughPoint(tw.edges[Math.abs(tw.polys[i].edges[0])].start)
+                tw.polys[i].plane.FitThroughPoint(tw.edges[abs(tw.polys[i].edges[0])].start)
                 i++
             }
 
@@ -4130,10 +4139,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     tw.bounds.oSet(0, i, tw.end.oGet(i) + tw.size.oGet(0).oGet(i) - CollisionModel.CM_BOX_EPSILON)
                     tw.bounds.oSet(1, i, tw.start.oGet(i) + tw.size.oGet(1).oGet(i) + CollisionModel.CM_BOX_EPSILON)
                 }
-                if (Math.abs(tw.size.oGet(0).oGet(i)) > Math.abs(tw.size.oGet(1).oGet(i))) {
-                    tw.extents.oSet(i, Math.abs(tw.size.oGet(0).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
+                if (abs(tw.size.oGet(0).oGet(i)) > abs(tw.size.oGet(1).oGet(i))) {
+                    tw.extents.oSet(i, abs(tw.size.oGet(0).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
                 } else {
-                    tw.extents.oSet(i, Math.abs(tw.size.oGet(1).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
+                    tw.extents.oSet(i, abs(tw.size.oGet(1).oGet(i)) + CollisionModel.CM_BOX_EPSILON)
                 }
                 i++
             }
@@ -4333,7 +4342,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
                         // calculate next point on approximated circle
                         rot.Set(tw.origin, tw.axis, tw.angle * ((i + 1).toFloat() / numSteps))
-                        end.oSet(rot.oMultiply(start))
+                        end.oSet(rot.times(start))
                         // trace through spatial subdivision and then through leafs
                         TraceThroughAxialBSPTree_r(tw, tw.model!!.node, 0f, 1f, start, end)
                         // no need to continue if something was hit already
@@ -4642,12 +4651,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             if (p1.material !== p2.material) {
                 return null
             }
-            if (Math.abs(p1.plane.Dist() - p2.plane.Dist()) > NORMAL_EPSILON) {
+            if (abs(p1.plane.Dist() - p2.plane.Dist()) > NORMAL_EPSILON) {
                 return null
             }
             i = 0
             while (i < 3) {
-                if (Math.abs(p1.plane.Normal().oGet(i) - p2.plane.Normal().oGet(i)) > NORMAL_EPSILON) {
+                if (abs(p1.plane.Normal().oGet(i) - p2.plane.Normal().oGet(i)) > NORMAL_EPSILON) {
                     return null
                 }
                 if (p1.bounds.oGet(0).oGet(i) > p2.bounds.oGet(1).oGet(i)) {
@@ -4671,9 +4680,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (j < p2.numEdges) {
                     prevj = (j + p2.numEdges - 1) % p2.numEdges
                     //
-                    if (Math.abs(p1.edges[i]) != Math.abs(p2.edges[j])) {
+                    if (abs(p1.edges[i]) != abs(p2.edges[j])) {
                         // if the next edge of p1 and the previous edge of p2 are the same
-                        if (Math.abs(p1.edges[nexti]) == Math.abs(p2.edges[prevj])) {
+                        if (abs(p1.edges[nexti]) == abs(p2.edges[prevj])) {
                             // if both polygons don't use the edge in the same direction
                             if (p1.edges[nexti] != p2.edges[prevj]) {
                                 p1BeforeShare = i
@@ -4684,7 +4693,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     } // if both polygons don't use the edge in the same direction
                     else if (p1.edges[i] != p2.edges[j]) {
                         // if the next edge of p1 and the previous edge of p2 are not the same
-                        if (Math.abs(p1.edges[nexti]) != Math.abs(p2.edges[prevj])) {
+                        if (abs(p1.edges[nexti]) != abs(p2.edges[prevj])) {
                             p1AfterShare = nexti
                             p2BeforeShare = prevj
                             break
@@ -4700,43 +4709,43 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // check if the new polygon would still be convex
             edgeNum = p1.edges[p1BeforeShare]
-            edge = model.edges!![Math.abs(edgeNum)]
+            edge = model.edges!![abs(edgeNum)]
             delta.oSet(
-                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p.oMinus(
-                    model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
-                )
+                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p - (
+                        model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
+                        )
             )
             normal.oSet(p1.plane.Normal().Cross(delta))
             normal.Normalize()
             edgeNum = p2.edges[p2AfterShare]
             edge = model.edges!![abs(edgeNum)]
             delta.oSet(
-                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p.oMinus(
-                    model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
-                )
+                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p - (
+                        model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
+                        )
             )
-            dot = delta.oMultiply(normal)
+            dot = delta.times(normal)
             if (dot < -CONTINUOUS_EPSILON) {
                 return null // not a convex polygon
             }
             keep1 = dot > CONTINUOUS_EPSILON
             edgeNum = p2.edges[p2BeforeShare]
-            edge = model.edges!![Math.abs(edgeNum)]
+            edge = model.edges!![abs(edgeNum)]
             delta.oSet(
-                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p.oMinus(
-                    model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
-                )
+                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p - (
+                        model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
+                        )
             )
             normal.oSet(p1.plane.Normal().Cross(delta))
             normal.Normalize()
             edgeNum = p1.edges[p1AfterShare]
-            edge = model.edges!![Math.abs(edgeNum)]
+            edge = model.edges!![abs(edgeNum)]
             delta.oSet(
-                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p.oMinus(
-                    model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
-                )
+                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p - (
+                        model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p
+                        )
             )
-            dot = delta.oMultiply(normal)
+            dot = delta.times(normal)
             if (dot < -CONTINUOUS_EPSILON) {
                 return null // not a convex polygon
             }
@@ -4748,8 +4757,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 edgeNum2 = p2.edges[p2AfterShare]
                 GetEdge(
                     model,
-                    model.vertices!![model.edges!![Math.abs(edgeNum1)].vertexNum[Math_h.INTSIGNBITSET(edgeNum1)]].p,
-                    model.vertices!![model.edges!![Math.abs(edgeNum2)].vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum2)]].p,
+                    model.vertices!![model.edges!![abs(edgeNum1)].vertexNum[Math_h.INTSIGNBITSET(edgeNum1)]].p,
+                    model.vertices!![model.edges!![abs(edgeNum2)].vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum2)]].p,
                     newEdgeNum1,
                     CInt(-1)
                 )
@@ -4762,8 +4771,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 edgeNum2 = p1.edges[p1AfterShare]
                 GetEdge(
                     model,
-                    model.vertices!![model.edges!![Math.abs(edgeNum1)].vertexNum[Math_h.INTSIGNBITSET(edgeNum1)]].p,
-                    model.vertices!![model.edges!![Math.abs(edgeNum2)].vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum2)]].p,
+                    model.vertices!![model.edges!![abs(edgeNum1)].vertexNum[Math_h.INTSIGNBITSET(edgeNum1)]].p,
+                    model.vertices!![model.edges!![abs(edgeNum2)].vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum2)]].p,
                     newEdgeNum2,
                     CInt(-1)
                 )
@@ -4837,11 +4846,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     i++
                     continue
                 }
-                model.edges!![Math.abs(newp.edges[i])].numUsers++
+                model.edges!![abs(newp.edges[i])].numUsers++
                 i++
             }
             // create new bounds from the merged polygons
-            newp.bounds.oSet(p1.bounds.oPlus(p2.bounds))
+            newp.bounds.oSet(p1.bounds + p2.bounds)
             return newp
         }
 
@@ -4981,14 +4990,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < p.numEdges) {
                 edgeNum = p.edges[i]
-                edge = model.edges!![Math.abs(edgeNum)]
+                edge = model.edges!![abs(edgeNum)]
                 //
                 v1.oSet(model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p)
                 v2.oSet(model.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]].p)
-                dir1.oSet(v2.oMinus(v1))
-                vec.oSet(v.oMinus(v1))
+                dir1.oSet(v2 - (v1))
+                vec.oSet(v - (v1))
                 dir2.oSet(dir1.Cross(p.plane.Normal()))
-                if (vec.oMultiply(dir2) > VERTEX_EPSILON) {
+                if (vec.times(dir2) > VERTEX_EPSILON) {
                     return false
                 }
                 i++
@@ -5025,7 +5034,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < p1.numEdges) {
                 edgeNum = p1.edges[i]
-                edge = model.edges!![Math.abs(edgeNum)]
+                edge = model.edges!![abs(edgeNum)]
                 // if already an internal edge
                 if (edge.internal) {
                     i++
@@ -5052,10 +5061,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     continue
                 }
                 //
-                k = Math.abs(edgeNum)
+                k = abs(edgeNum)
                 j = 0
                 while (j < p2.numEdges) {
-                    if (k == Math.abs(p2.edges[j])) {
+                    if (k == abs(p2.edges[j])) {
                         break
                     }
                     j++
@@ -5078,20 +5087,20 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 else {
                     // both vertices should be on the plane of the other polygon
                     d = p2.plane.Distance(v1)
-                    if (Math.abs(d) > VERTEX_EPSILON) {
+                    if (abs(d) > VERTEX_EPSILON) {
                         i++
                         continue
                     }
                     d = p2.plane.Distance(v2)
-                    if (Math.abs(d) > VERTEX_EPSILON) {
+                    if (abs(d) > VERTEX_EPSILON) {
                         i++
                         continue
                     }
                 }
                 // the two polygon plane normals should face towards each other
-                dir1.oSet(v2.oMinus(v1))
+                dir1.oSet(v2 - (v1))
                 dir2.oSet(p1.plane.Normal().Cross(dir1))
-                if (p2.plane.Normal().oMultiply(dir2) < 0) {
+                if (p2.plane.Normal().times(dir2) < 0) {
                     //continue;
                     break
                 }
@@ -5289,7 +5298,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             var dist: Float
             do {
                 node = procNodes?.get(curretnNodenUm)!!
-                dist = node.plane.Normal().oMultiply(origin) + node.plane.oGet(3)
+                dist = node.plane.Normal().times(origin) + node.plane.oGet(3)
                 res = if (dist > radius) {
                     Plane.SIDE_FRONT
                 } else if (dist < -radius) {
@@ -5303,7 +5312,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     node.children[1]
                 } else if (res == Plane.SIDE_ON) {
                     // continue with the side the winding faces
-                    if (node.plane.Normal().oMultiply(normal) > 0.0f) {
+                    if (node.plane.Normal().times(normal) > 0.0f) {
                         node.children[0]
                     } else {
                         node.children[1]
@@ -5342,9 +5351,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             // make a local copy of the winding
             neww = idFixedWinding(w)
             neww.GetBounds(bounds)
-            origin.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f))
+            origin.oSet(bounds.oGet(1) - (bounds.oGet(0)) * (0.5f))
             radius = origin.Length() + CHOP_EPSILON
-            origin.oSet(bounds.oGet(0).oPlus(origin))
+            origin.oSet(bounds.oGet(0) + (origin))
             //
             return R_ChoppedAwayByProcBSP(0, neww, plane.Normal(), origin, radius)
         }
@@ -5421,7 +5430,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         //			Z-fighting should not occur but what if there is a decal brush side
                         //			with exactly the same size as another brush side ?
                         // only leave windings on a brush if the winding plane and brush side plane face the same direction
-                        if (res == Plane.SIDE_ON && list.primitiveNum >= 0 && list.normal.oMultiply(b.planes[planeNum].Normal()) > 0) {
+                        if (res == Plane.SIDE_ON && list.primitiveNum >= 0 && list.normal.times(b.planes[planeNum].Normal()) > 0) {
                             // return because all windings in the list will be on this brush side plane
                             return
                         }
@@ -5595,19 +5604,19 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i++
             }
             cm_windingList!!.origin.oSet(
-                cm_windingList!!.bounds.oGet(1).oMinus(cm_windingList!!.bounds.oGet(0)).oMultiply(0.5f)
+                cm_windingList!!.bounds.oGet(1) - (cm_windingList!!.bounds.oGet(0)) * (0.5f)
             )
             cm_windingList!!.radius =
                 cm_windingList!!.origin.Length() + CHOP_EPSILON
-            cm_windingList!!.origin.oSet(cm_windingList!!.bounds.oGet(0).oPlus(cm_windingList!!.origin))
-            cm_windingList!!.bounds.oGet(0).oMinSet(
+            cm_windingList!!.origin.oSet(cm_windingList!!.bounds.oGet(0) + (cm_windingList!!.origin))
+            cm_windingList!!.bounds.oGet(0).minusAssign(
                 idVec3(
                     CHOP_EPSILON,
                     CHOP_EPSILON,
                     CHOP_EPSILON
                 )
             )
-            cm_windingList!!.bounds.oGet(1).oPluSet(
+            cm_windingList!!.bounds.oGet(1).plusAssign(
                 idVec3(
                     CHOP_EPSILON,
                     CHOP_EPSILON,
@@ -6017,12 +6026,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             bounds.Clear()
             pref = currentNode.polygons
             while (pref != null) {
-                bounds.oPluSet(pref.p!!.bounds)
+                bounds.timesAssign(pref.p!!.bounds)
                 pref = pref.next
             }
             bref = currentNode.brushes
             while (bref != null) {
-                bounds.oPluSet(bref.b!!.bounds)
+                bounds.timesAssign(bref.b!!.bounds)
                 bref = bref.next
             }
 
@@ -6115,7 +6124,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val p = idVec3()
             i = 0
             while (i < 3) {
-                if (Math.abs(v.oGet(i) - idMath.Rint(v.oGet(i))) < INTEGRAL_EPSILON) {
+                if (abs(v.oGet(i) - idMath.Rint(v.oGet(i))) < INTEGRAL_EPSILON) {
                     vert.oSet(i, idMath.Rint(v.oGet(i)))
                 } else {
                     vert.oSet(i, v.oGet(i))
@@ -6127,9 +6136,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (vn >= 0) {
                 p.oSet(model.vertices!![vn].p)
                 // first compare z-axis because hash is based on x-y plane
-                if (Math.abs(vert.oGet(2) - p.oGet(2)) < VERTEX_EPSILON && Math.abs(
+                if (abs(vert.oGet(2) - p.oGet(2)) < VERTEX_EPSILON && abs(
                         vert.oGet(0) - p.oGet(0)
-                    ) < VERTEX_EPSILON && Math.abs(vert.oGet(1) - p.oGet(1)) < VERTEX_EPSILON
+                    ) < VERTEX_EPSILON && abs(vert.oGet(1) - p.oGet(1)) < VERTEX_EPSILON
                 ) {
                     vertexNum._val = (vn)
                     return true
@@ -6272,7 +6281,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (polyEdges[numPolyEdges] != 0) {
                     // last vertex of this edge is the first vertex of the next edge
                     v1num._val = (
-                            model.edges!![Math.abs(polyEdges[numPolyEdges])].vertexNum[Math_h.INTSIGNBITNOTSET(
+                            model.edges!![abs(polyEdges[numPolyEdges])].vertexNum[Math_h.INTSIGNBITNOTSET(
                                 polyEdges[numPolyEdges]
                             )]
                             )
@@ -6291,7 +6300,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < numPolyEdges) {
                 j = i + 1
                 while (j < numPolyEdges) {
-                    if (Math.abs(polyEdges[i]) == Math.abs(polyEdges[j])) {
+                    if (abs(polyEdges[i]) == abs(polyEdges[j])) {
                         return
                     }
                     j++
@@ -6362,7 +6371,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 Common.common.Warning(
                     "idCollisionModelManagerLocal::PolygonFromWinding: model %s primitive %d is degenerate",
                     model.name,
-                    Math.abs(primitiveNum)
+                    abs(primitiveNum)
                 )
                 return
             }
@@ -6396,11 +6405,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     i = 0
                     while (i < p.numEdges) {
                         edgeNum = p.edges[i]
-                        edge = model.edges!![Math.abs(edgeNum)]
+                        edge = model.edges!![abs(edgeNum)]
                         if (edge.normal.oGet(0) == 0.0f && edge.normal.oGet(1) == 0.0f && edge.normal.oGet(2) == 0.0f) {
                             // if the edge is only used by this polygon
                             if (edge.numUsers.toInt() == 1) {
-                                dir.oSet(model.vertices!![edge.vertexNum[if (edgeNum < 0) 1 else 0]].p.oMinus(model.vertices!![edge.vertexNum[if (edgeNum > 0) 1 else 0]].p))
+                                dir.oSet(model.vertices!![edge.vertexNum[if (edgeNum < 0) 1 else 0]].p - (model.vertices!![edge.vertexNum[if (edgeNum > 0) 1 else 0]].p))
                                 edge.normal.oSet(p.plane.Normal().Cross(dir))
                                 edge.normal.Normalize()
                             } else {
@@ -6408,17 +6417,17 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                                 edge.normal.oSet(p.plane.Normal())
                             }
                         } else {
-                            dot = edge.normal.oMultiply(p.plane.Normal())
+                            dot = edge.normal.times(p.plane.Normal())
                             // if the two planes make a very sharp edge
                             if (dot < SHARP_EDGE_DOT) {
                                 // max length normal pointing outside both polygons
-                                dir.oSet(model.vertices!![edge.vertexNum[if (edgeNum > 0) 1 else 0]].p.oMinus(model.vertices!![edge.vertexNum[if (edgeNum < 0) 1 else 0]].p))
-                                edge.normal.oSet(edge.normal.Cross(dir).oPlus(p.plane.Normal().Cross(dir.oNegative())))
-                                edge.normal.oMulSet(0.5f / (0.5f + 0.5f * SHARP_EDGE_DOT) / edge.normal.Length())
+                                dir.oSet(model.vertices!![edge.vertexNum[if (edgeNum > 0) 1 else 0]].p - (model.vertices!![edge.vertexNum[if (edgeNum < 0) 1 else 0]].p))
+                                edge.normal.oSet(edge.normal.Cross(dir) + (p.plane.Normal().Cross(dir.oNegative())))
+                                edge.normal.timesAssign(0.5f / (0.5f + 0.5f * SHARP_EDGE_DOT) / edge.normal.Length())
                                 model.numSharpEdges++
                             } else {
                                 s = 0.5f / (0.5f + 0.5f * dot)
-                                edge.normal.oSet(edge.normal.oPlus(p.plane.Normal()).oMultiply(s))
+                                edge.normal.oSet(edge.normal + (p.plane.Normal()) * (s))
                             }
                         }
                         i++
@@ -6459,14 +6468,14 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     v2 = v1 + 1
                     v3 = v1 + mesh.GetWidth() + 1
                     v4 = v1 + mesh.GetWidth()
-                    d1.oSet(mesh.oGet(v2).xyz.oMinus(mesh.oGet(v1).xyz))
-                    d2.oSet(mesh.oGet(v3).xyz.oMinus(mesh.oGet(v1).xyz))
+                    d1.oSet(mesh.oGet(v2).xyz - (mesh.oGet(v1).xyz))
+                    d2.oSet(mesh.oGet(v3).xyz - (mesh.oGet(v1).xyz))
                     plane.SetNormal(d1.Cross(d2))
                     if (plane.Normalize() != 0.0f) {
                         plane.FitThroughPoint(mesh.oGet(v1).xyz)
                         dot = plane.Distance(mesh.oGet(v4).xyz)
                         // if we can turn it into a quad
-                        if (Math.abs(dot) < 0.1f) {
+                        if (abs(dot) < 0.1f) {
                             w.Clear()
                             w.oPluSet(mesh.oGet(v1).xyz)
                             w.oPluSet(mesh.oGet(v2).xyz)
@@ -6485,8 +6494,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         }
                     }
                     // create the other triangle
-                    d1.oSet(mesh.oGet(v3).xyz.oMinus(mesh.oGet(v1).xyz))
-                    d2.oSet(mesh.oGet(v4).xyz.oMinus(mesh.oGet(v1).xyz))
+                    d1.oSet(mesh.oGet(v3).xyz - (mesh.oGet(v1).xyz))
+                    d2.oSet(mesh.oGet(v4).xyz - (mesh.oGet(v1).xyz))
                     plane.SetNormal(d1.Cross(d2))
                     if (plane.Normalize() != 0.0f) {
                         plane.FitThroughPoint(mesh.oGet(v1).xyz)
@@ -6701,7 +6710,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     i = 0
                     while (i < p.numEdges) {
                         if (p.edges[i] < 0) {
-                            p.edges[i] = -edgeRemap.get(Math.abs(p.edges[i]))
+                            p.edges[i] = -edgeRemap.get(abs(p.edges[i]))
                         } else {
                             p.edges[i] = edgeRemap.get(p.edges[i])
                         }
@@ -7233,7 +7242,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 // to be convex no vertices should be in front of any polygon plane
                 j = 0
                 while (j < trm.numVerts) {
-                    if (trm.polys[i].normal.oMultiply(trm.verts[j]) - trm.polys[i].dist > 0.01f) {
+                    if (trm.polys[i].normal.times(trm.verts[j]) - trm.polys[i].dist > 0.01f) {
                         trm.isConvex = false
                         break
                     }
@@ -7810,16 +7819,16 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val mid = idVec3()
             val isRotated: Boolean
             isRotated = axis.IsRotated()
-            edge = model.edges!![Math.abs(edgeNum)]
+            edge = model.edges!![abs(edgeNum)]
             side = edgeNum < 0
             start.oSet(model.vertices!![edge.vertexNum[if (side) 1 else 0]].p)
             end.oSet(model.vertices!![edge.vertexNum[if (side) 0 else 1]].p)
             if (isRotated) {
-                start.oMulSet(axis)
-                end.oMulSet(axis)
+                start.timesAssign(axis)
+                end.timesAssign(axis)
             }
-            start.oPluSet(origin)
-            end.oPluSet(origin)
+            start.plusAssign(origin)
+            end.plusAssign(origin)
             if (edge.internal) {
                 if (CollisionModel_debug.cm_drawInternal.GetBool()) {
                     Session.session.rw!!.DebugArrow(Lib.colorGreen, start, end, 1)
@@ -7832,11 +7841,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
             }
             if (CollisionModel_debug.cm_drawNormals.GetBool()) {
-                mid.oSet(start.oPlus(end).oMultiply(0.5f))
+                mid.oSet(start + (end) * (0.5f))
                 if (isRotated) {
-                    end.oSet(mid.oPlus(axis.oMultiply(edge.normal)).oMultiply(5f))
+                    end.oSet(mid + (axis.times(edge.normal)) * (5f))
                 } else {
-                    end.oSet(mid.oPlus(edge.normal.oMultiply(5f)))
+                    end.oSet(mid + (edge.normal.times(5f)))
                 }
                 Session.session.rw!!.DebugArrow(Lib.colorCyan, mid, end, 1)
             }
@@ -7857,9 +7866,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val dir = idVec3()
             if (CollisionModel_debug.cm_backFaceCull.GetBool()) {
                 edgeNum = p.edges[0]
-                edge = model.edges!![Math.abs(edgeNum)]
-                dir.oSet(model.vertices!![edge.vertexNum[0]].p.oMinus(viewOrigin))
-                if (dir.oMultiply(p.plane.Normal()) > 0.0f) {
+                edge = model.edges!![abs(edgeNum)]
+                dir.oSet(model.vertices!![edge.vertexNum[0]].p - (viewOrigin))
+                if (dir.times(p.plane.Normal()) > 0.0f) {
                     return
                 }
             }
@@ -7868,21 +7877,21 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]
-                    edge = model.edges!![Math.abs(edgeNum)]
-                    center.oPluSet(model.vertices!![edge.vertexNum[if (edgeNum < 0) 1 else 0]].p)
+                    edge = model.edges!![abs(edgeNum)]
+                    center.plusAssign(model.vertices!![edge.vertexNum[if (edgeNum < 0) 1 else 0]].p)
                     i++
                 }
-                center.oMulSet(1.0f / p.numEdges)
+                center.timesAssign(1.0f / p.numEdges)
                 if (axis.IsRotated()) {
-                    center.oSet(center.oMultiply(axis).oPluSet(origin))
+                    center.oSet(center.times(axis).plusAssign(origin))
                     end.oSet(
-                        center.oPlus( // center +
-                            axis.oMultiply(p.plane.Normal()).oMultiply(5f)
-                        ) // axis * p.planeNormal * 5
+                        center + ( // center +
+                                axis.times(p.plane.Normal()).times(5f)
+                                ) // axis * p.planeNormal * 5
                     )
                 } else {
-                    center.oPluSet(origin)
-                    end.oSet(center.oPlus(p.plane.Normal().oMultiply(5f)))
+                    center.plusAssign(origin)
+                    end.oSet(center + (p.plane.Normal().times(5f)))
                 }
                 Session.session.rw!!.DebugArrow(Lib.colorMagenta, center, end, 1)
             }
@@ -7891,13 +7900,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = p.numEdges - 1
                 while (i >= 0) {
                     edgeNum = p.edges[i]
-                    edge = model.edges!![Math.abs(edgeNum)]
+                    edge = model.edges!![abs(edgeNum)]
                     winding.oPluSet(
-                        origin.oPlus(
-                            model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p.oMultiply(
-                                axis
-                            )
-                        )
+                        origin + (
+                                model.vertices!![edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]].p.times(
+                                    axis
+                                )
+                                )
                     )
                     i--
                 }
@@ -7906,7 +7915,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]
-                    edge = model.edges!![Math.abs(edgeNum)]
+                    edge = model.edges!![abs(edgeNum)]
                     if (edge.checkcount == checkCount) {
                         i++
                         continue

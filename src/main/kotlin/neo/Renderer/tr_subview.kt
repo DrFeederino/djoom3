@@ -34,8 +34,8 @@ object tr_subview {
         transformed.oSet(Vector.getVec3_origin())
         i = 0
         while (i < 3) {
-            d = local.oMultiply(surface.axis.oGet(i))
-            transformed.oPluSet(camera.axis.oGet(i).oMultiply(d))
+            d = local.times(surface.axis.oGet(i))
+            transformed.plusAssign(camera.axis.oGet(i).times(d))
             i++
         }
         out.oSet(transformed.oPlus(camera.origin))
@@ -52,8 +52,8 @@ object tr_subview {
         out.oSet(Vector.getVec3_origin())
         i = 0
         while (i < 3) {
-            d = `in`.oMultiply(surface.axis.oGet(i))
-            out.oPluSet(camera.axis.oGet(i).oMultiply(d))
+            d = `in`.times(surface.axis.oGet(i))
+            out.plusAssign(camera.axis.oGet(i).times(d))
             i++
         }
     }
@@ -159,7 +159,7 @@ object tr_subview {
                 d2.oSet(v3.oMinus(v1))
                 normal.oSet(d2.Cross(d1))
                 dir.oSet(v1.oMinus(localView))
-                dot = normal.oMultiply(dir)
+                dot = normal.times(dir)
                 if (dot >= 0.0f) {
                     return true
                 }
@@ -218,7 +218,7 @@ object tr_subview {
         // create plane axis for the portal we are seeing
         tr_subview.R_PlaneForSurface(drawSurf.geo, originalPlane)
         tr_main.R_LocalPlaneToGlobal(drawSurf.space.modelMatrix, originalPlane, plane)
-        surface.origin.oSet(plane.Normal().oMultiply(-plane.oGet(3)))
+        surface.origin.oSet(plane.Normal().times(-plane.oGet(3)))
         surface.axis.oSet(0, plane.Normal())
         surface.axis.oGet(0).NormalVectors(surface.axis.oGet(1), surface.axis.oGet(2))
         surface.axis.oSet(2, surface.axis.oGet(2).oNegative())
@@ -250,14 +250,14 @@ object tr_subview {
 
         // make the view origin 16 units away from the center of the surface
         val viewOrigin = idVec3(drawSurf.geo.bounds.oGet(0).oPlus(drawSurf.geo.bounds.oGet(1)).oMultiply(0.5f))
-        viewOrigin.oPluSet(originalPlane.Normal().oMultiply(16f))
+        viewOrigin.oPluSet(originalPlane.Normal().times(16f))
         parms.initialViewAreaOrigin.oSet(tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin))
 
         // set the mirror clip plane
         parms.numClipPlanes = 1
         parms.clipPlanes[0] = idPlane()
         parms.clipPlanes[0].oSet(camera.axis.oGet(0).oNegative())
-        parms.clipPlanes[0].oSet(3, -camera.origin.oMultiply(parms.clipPlanes[0].Normal()))
+        parms.clipPlanes[0].oSet(3, -camera.origin.times(parms.clipPlanes[0].Normal()))
         return parms
     }
 

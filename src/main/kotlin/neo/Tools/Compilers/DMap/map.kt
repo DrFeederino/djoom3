@@ -217,10 +217,10 @@ object map {
                 val plane = idPlane()
                 s = b.sides[i]
                 plane.oSet(dmap.dmapGlobals.mapPlanes.oGet(s.planenum))
-                plane.oPluSet(3, plane.Normal().oMultiply(ent.origin))
+                plane.oPluSet(3, plane.Normal().times(ent.origin))
                 s.planenum = FindFloatPlane(plane)
-                s.texVec.v[0].oPluSet(3, Vector.DotProduct(ent.origin, s.texVec.v[0]))
-                s.texVec.v[1].oPluSet(3, Vector.DotProduct(ent.origin, s.texVec.v[1]))
+                s.texVec.v[0].plusAssign(3, Vector.DotProduct(ent.origin, s.texVec.v[0]))
+                s.texVec.v[1].plusAssign(3, Vector.DotProduct(ent.origin, s.texVec.v[1]))
 
                 // remove any integral shift
                 s.texVec.v[0].oMinSet(3, Math.floor(s.texVec.v[0].oGet(3).toDouble()).toFloat())

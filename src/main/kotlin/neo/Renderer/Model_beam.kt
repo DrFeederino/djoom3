@@ -106,12 +106,12 @@ object Model_beam {
             tr_main.R_GlobalPointToLocal(modelMatrix, target, localTarget)
             val major = idVec3(localTarget)
             val minor = idVec3()
-            val mid = idVec3(localTarget.oMultiply(0.5f))
+            val mid = idVec3(localTarget.times(0.5f))
             val dir = idVec3(mid.oMinus(localView))
             minor.Cross(major, dir)
             minor.Normalize()
             if (renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] != 0.0f) {
-                minor.oMulSet(renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] * 0.5f)
+                minor.timesAssign(renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] * 0.5f)
             }
             val red = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] * 255.0f).toByte()
             val green = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] * 255.0f).toByte()

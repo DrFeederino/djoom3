@@ -428,10 +428,10 @@ object Physics_RigidBody {
                     (minIndex + 2) % 3,
                     min / inertiaTensor.oGet((minIndex + 2) % 3, (minIndex + 2) % 3)
                 )
-                inertiaTensor.oMulSet(inertiaScale)
+                inertiaTensor.timesAssign(inertiaScale)
             }
             inverseMass = 1.0f / mass.getVal()
-            inverseInertiaTensor = inertiaTensor.Inverse().oMultiply(1.0f / 6.0f)
+            inverseInertiaTensor = inertiaTensor.Inverse().times(1.0f / 6.0f)
             current.i.linearMomentum.Zero()
             current.i.angularMomentum.Zero()
         }
@@ -446,8 +446,8 @@ object Physics_RigidBody {
 
         override fun SetMass(mass: Float, id: Int /*= -1*/) {
             assert(mass > 0.0f)
-            inertiaTensor.oMulSet(mass / this.mass)
-            inverseInertiaTensor = inertiaTensor.Inverse().oMultiply(1.0f / 6.0f)
+            inertiaTensor.timesAssign(mass / this.mass)
+            inverseInertiaTensor = inertiaTensor.Inverse().times(1.0f / 6.0f)
             this.mass = mass
             inverseMass = 1.0f / mass
         }
@@ -498,9 +498,9 @@ object Physics_RigidBody {
             if (hasMaster) {
                 oldAxis = idMat3(current.i.orientation)
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.i.position.oSet(masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis)))
+                current.i.position.oSet(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
                 if (isOrientated) {
-                    current.i.orientation.oSet(current.localAxis.oMultiply(masterAxis))
+                    current.i.orientation.oSet(current.localAxis.times(masterAxis))
                 } else {
                     current.i.orientation.oSet(current.localAxis)
                 }
@@ -513,8 +513,8 @@ object Physics_RigidBody {
                 )
                 current.i.linearMomentum.oSet(current.i.position.oMinus(oldOrigin).oDivide(timeStep).oMultiply(mass))
                 current.i.angularMomentum.oSet(
-                    inertiaTensor.oMultiply(
-                        current.i.orientation.oMultiply(oldAxis.Transpose()).ToAngularVelocity().oDivide(timeStep)
+                    inertiaTensor.times(
+                        current.i.orientation.times(oldAxis.Transpose()).ToAngularVelocity().div(timeStep)
                     )
                 )
                 current.externalForce.Zero()
@@ -661,13 +661,13 @@ object Physics_RigidBody {
             val angularVelocity = idVec3()
             val inverseWorldInertiaTensor: idMat3?
             val info = impactInfo_s()
-            linearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass))
+            linearVelocity.oSet(current.i.linearMomentum.times(inverseMass))
             inverseWorldInertiaTensor =
-                current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation))
-            angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum))
+                current.i.orientation.Transpose().times(inverseInertiaTensor.times(current.i.orientation))
+            angularVelocity.oSet(inverseWorldInertiaTensor.times(current.i.angularMomentum))
             info.invMass = inverseMass
             info.invInertiaTensor.oSet(inverseWorldInertiaTensor)
-            info.position.oSet(point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation))))
+            info.position.oSet(point.oMinus(current.i.position.oPlus(centerOfMass.times(current.i.orientation))))
             info.velocity.oSet(linearVelocity.oPlus(angularVelocity.Cross(info.position)))
             return info
         }
@@ -676,9 +676,9 @@ object Physics_RigidBody {
             if (noImpact) {
                 return
             }
-            current.i.linearMomentum.oPluSet(impulse)
-            current.i.angularMomentum.oPluSet(
-                point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation))).Cross(impulse)
+            current.i.linearMomentum.plusAssign(impulse)
+            current.i.angularMomentum.plusAssign(
+                point.oMinus(current.i.position.oPlus(centerOfMass.times(current.i.orientation))).Cross(impulse)
             )
             Activate()
         }
@@ -687,9 +687,9 @@ object Physics_RigidBody {
             if (noImpact) {
                 return
             }
-            current.externalForce.oPluSet(force)
-            current.externalTorque.oPluSet(
-                point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation))).Cross(force)
+            current.externalForce.plusAssign(force)
+            current.externalTorque.plusAssign(
+                point.oMinus(current.i.position.oPlus(centerOfMass.times(current.i.orientation))).Cross(force)
             )
             Activate()
         }
@@ -744,7 +744,7 @@ object Physics_RigidBody {
             current.localOrigin.oSet(newOrigin)
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.i.position.oSet(masterOrigin.oPlus(newOrigin.oMultiply(masterAxis)))
+                current.i.position.oSet(masterOrigin.oPlus(newOrigin.times(masterAxis)))
             } else {
                 current.i.position.oSet(newOrigin)
             }
@@ -758,7 +758,7 @@ object Physics_RigidBody {
             current.localAxis.oSet(newAxis)
             if (hasMaster && isOrientated) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.i.orientation.oSet(newAxis.oMultiply(masterAxis))
+                current.i.orientation.oSet(newAxis.times(masterAxis))
             } else {
                 current.i.orientation.oSet(newAxis)
             }
@@ -773,8 +773,8 @@ object Physics_RigidBody {
         }
 
         override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
-            current.localOrigin.oPluSet(translation)
-            current.i.position.oPluSet(translation)
+            current.localOrigin.plusAssign(translation)
+            current.i.position.plusAssign(translation)
             clipModel.Link(Game_local.gameLocal.clip, self, clipModel.GetId(), current.i.position, clipModel.GetAxis())
             Activate()
         }
@@ -782,11 +782,11 @@ object Physics_RigidBody {
         override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
-            current.i.orientation.oMulSet(rotation.ToMat3())
-            current.i.position.oMulSet(rotation)
+            current.i.orientation.timesAssign(rotation.ToMat3())
+            current.i.position.timesAssign(rotation)
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.localAxis.oMulSet(rotation.ToMat3())
+                current.localAxis.timesAssign(rotation.ToMat3())
                 current.localOrigin.oSet(current.i.position.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
             } else {
                 current.localAxis.oSet(current.i.orientation)
@@ -811,25 +811,25 @@ object Physics_RigidBody {
         }
 
         override fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/) {
-            current.i.linearMomentum.oSet(newLinearVelocity.oMultiply(mass))
+            current.i.linearMomentum.oSet(newLinearVelocity.times(mass))
             Activate()
         }
 
         override fun SetAngularVelocity(newAngularVelocity: idVec3?, id: Int /*= 0*/) {
-            current.i.angularMomentum.oSet(newAngularVelocity.oMultiply(inertiaTensor))
+            current.i.angularMomentum.oSet(newAngularVelocity.times(inertiaTensor))
             Activate()
         }
 
         override fun GetLinearVelocity(id: Int /*= 0*/): idVec3? {
-            curLinearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass))
+            curLinearVelocity.oSet(current.i.linearMomentum.times(inverseMass))
             return curLinearVelocity
         }
 
         override fun GetAngularVelocity(id: Int /*= 0*/): idVec3? {
             val inverseWorldInertiaTensor: idMat3?
             inverseWorldInertiaTensor =
-                current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation))
-            curAngularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum))
+                current.i.orientation.Transpose().times(inverseInertiaTensor.times(current.i.orientation))
+            curAngularVelocity.oSet(inverseWorldInertiaTensor.times(current.i.angularMomentum))
             return curAngularVelocity
         }
 
@@ -899,7 +899,7 @@ object Physics_RigidBody {
             val num: Int
             ClearContacts()
             contacts.SetNum(10, false)
-            dir.SubVec3_oSet(0, current.i.linearMomentum.oPlus(gravityVector.oMultiply(current.lastTimeStep * mass)))
+            dir.SubVec3_oSet(0, current.i.linearMomentum.oPlus(gravityVector.times(current.lastTimeStep * mass)))
             dir.SubVec3_oSet(1, current.i.angularMomentum)
             dir.SubVec3_Normalize(0)
             dir.SubVec3_Normalize(1)
@@ -918,7 +918,7 @@ object Physics_RigidBody {
 
         override fun SetPushed(deltaTime: Int) {
             val rotation: idRotation?
-            rotation = saved.i.orientation.oMultiply(current.i.orientation).ToRotation()
+            rotation = saved.i.orientation.times(current.i.orientation).ToRotation()
 
             // velocity with which the af is pushed
             current.pushVelocity.SubVec3_oPluSet(
@@ -927,7 +927,7 @@ object Physics_RigidBody {
             )
             current.pushVelocity.SubVec3_oPluSet(
                 1,
-                rotation.GetVec().oMultiply(-Math_h.DEG2RAD(rotation.GetAngle())).oDivide(deltaTime * idMath.M_MS2SEC)
+                rotation.GetVec().times(-Math_h.DEG2RAD(rotation.GetAngle())).div(deltaTime * idMath.M_MS2SEC)
             )
         }
 
@@ -948,7 +948,7 @@ object Physics_RigidBody {
                     self.GetMasterPosition(masterOrigin, masterAxis)
                     current.localOrigin.oSet(current.i.position.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
                     if (orientated) {
-                        current.localAxis.oSet(current.i.orientation.oMultiply(masterAxis.Transpose()))
+                        current.localAxis.oSet(current.i.orientation.times(masterAxis.Transpose()))
                     } else {
                         current.localAxis.oSet(current.i.orientation)
                     }
@@ -1202,7 +1202,7 @@ object Physics_RigidBody {
          */
         private fun Integrate(deltaTime: Float, next: rigidBodyPState_s?) {
             val position = idVec3(current.i.position)
-            current.i.position.oPluSet(centerOfMass.oMultiply(current.i.orientation))
+            current.i.position.plusAssign(centerOfMass.times(current.i.orientation))
             current.i.orientation.TransposeSelf()
             val newState = next.i.toFloats()
             integrator.Evaluate(current.i.toFloats(), newState, 0f, deltaTime)
@@ -1210,11 +1210,11 @@ object Physics_RigidBody {
             next.i.orientation.OrthoNormalizeSelf()
 
             // apply gravity
-            next.i.linearMomentum.oPluSet(gravityVector.oMultiply(mass * deltaTime))
+            next.i.linearMomentum.plusAssign(gravityVector.times(mass * deltaTime))
             current.i.orientation.TransposeSelf()
             next.i.orientation.TransposeSelf()
             current.i.position.oSet(position)
-            next.i.position.oMinSet(centerOfMass.oMultiply(next.i.orientation))
+            next.i.position.minusAssign(centerOfMass.times(next.i.orientation))
             next.atRest = current.atRest
         }
 
@@ -1312,39 +1312,39 @@ object Physics_RigidBody {
             info = ent.GetImpactInfo(self, collision.c.id, collision.c.point)
 
             // collision point relative to the body center of mass
-            r.oSet(collision.c.point.oMinus(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation))))
+            r.oSet(collision.c.point.oMinus(current.i.position.oPlus(centerOfMass.times(current.i.orientation))))
             // the velocity at the collision point
-            linearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass))
+            linearVelocity.oSet(current.i.linearMomentum.times(inverseMass))
             inverseWorldInertiaTensor =
-                current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation))
-            angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum))
+                current.i.orientation.Transpose().times(inverseInertiaTensor.times(current.i.orientation))
+            angularVelocity.oSet(inverseWorldInertiaTensor.times(current.i.angularMomentum))
             velocity.oSet(linearVelocity.oPlus(angularVelocity.Cross(r)))
             // subtract velocity of other entity
-            velocity.oMinSet(info.velocity)
+            velocity.minusAssign(info.velocity)
 
             // velocity in normal direction
-            vel = velocity.oMultiply(collision.c.normal)
+            vel = velocity.times(collision.c.normal)
             impulseNumerator = if (vel > -Physics_RigidBody.STOP_SPEED) {
                 Physics_RigidBody.STOP_SPEED
             } else {
                 -(1.0f + bouncyness) * vel
             }
-            impulseDenominator = inverseMass + inverseWorldInertiaTensor.oMultiply(r.Cross(collision.c.normal)).Cross(r)
-                .oMultiply(collision.c.normal)
+            impulseDenominator = inverseMass + inverseWorldInertiaTensor.times(r.Cross(collision.c.normal)).Cross(r)
+                .times(collision.c.normal)
             if (info.invMass != 0f) {
-                impulseDenominator += info.invMass + info.invInertiaTensor.oMultiply(info.position.Cross(collision.c.normal))
-                    .Cross(info.position).oMultiply(collision.c.normal)
+                impulseDenominator += info.invMass + info.invInertiaTensor.times(info.position.Cross(collision.c.normal))
+                    .Cross(info.position).times(collision.c.normal)
             }
-            impulse.oSet(collision.c.normal.oMultiply(impulseNumerator / impulseDenominator))
+            impulse.oSet(collision.c.normal.times(impulseNumerator / impulseDenominator))
 
             // update linear and angular momentum with impulse
-            current.i.linearMomentum.oPluSet(impulse)
-            current.i.angularMomentum.oPluSet(r.Cross(impulse))
+            current.i.linearMomentum.plusAssign(impulse)
+            current.i.angularMomentum.plusAssign(r.Cross(impulse))
 
             // if no movement at all don't blow up
             if (collision.fraction < 0.0001f) {
-                current.i.linearMomentum.oMulSet(0.5f)
-                current.i.angularMomentum.oMulSet(0.5f)
+                current.i.linearMomentum.timesAssign(0.5f)
+                current.i.angularMomentum.timesAssign(0.5f)
             }
 
             // callback to self to let the entity know about the collision
@@ -1374,44 +1374,44 @@ object Physics_RigidBody {
             val impulse = idVec3()
             val normalVelocity = idVec3()
             inverseWorldInertiaTensor =
-                current.i.orientation.Transpose().oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation))
-            massCenter.oSet(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation)))
+                current.i.orientation.Transpose().times(inverseInertiaTensor.times(current.i.orientation))
+            massCenter.oSet(current.i.position.oPlus(centerOfMass.times(current.i.orientation)))
             i = 0
             while (i < contacts.Num()) {
                 r.oSet(contacts.oGet(i).point.oMinus(massCenter))
 
                 // calculate velocity at contact point
-                linearVelocity.oSet(current.i.linearMomentum.oMultiply(inverseMass))
-                angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum))
+                linearVelocity.oSet(current.i.linearMomentum.times(inverseMass))
+                angularVelocity.oSet(inverseWorldInertiaTensor.times(current.i.angularMomentum))
                 velocity.oSet(linearVelocity.oPlus(angularVelocity.Cross(r)))
 
                 // velocity along normal vector
-                normalVelocity.oSet(contacts.oGet(i).normal.oMultiply(velocity.oMultiply(contacts.oGet(i).normal)))
+                normalVelocity.oSet(contacts.oGet(i).normal.times(velocity.times(contacts.oGet(i).normal)))
 
                 // calculate friction impulse
                 normal.oSet(velocity.oMinus(normalVelocity).oNegative())
                 magnitude = normal.Normalize()
                 impulseNumerator = contactFriction * magnitude
                 impulseDenominator =
-                    inverseMass + inverseWorldInertiaTensor.oMultiply(r.Cross(normal)).Cross(r).oMultiply(normal)
-                impulse.oSet(normal.oMultiply(impulseNumerator / impulseDenominator))
+                    inverseMass + inverseWorldInertiaTensor.times(r.Cross(normal)).Cross(r).times(normal)
+                impulse.oSet(normal.times(impulseNumerator / impulseDenominator))
 
                 // apply friction impulse
-                current.i.linearMomentum.oPluSet(impulse)
-                current.i.angularMomentum.oPluSet(r.Cross(impulse))
+                current.i.linearMomentum.plusAssign(impulse)
+                current.i.angularMomentum.plusAssign(r.Cross(impulse))
 
                 // if moving towards the surface at the contact point
-                if (normalVelocity.oMultiply(contacts.oGet(i).normal) < 0.0f) {
+                if (normalVelocity.times(contacts.oGet(i).normal) < 0.0f) {
                     // calculate impulse
                     normal.oSet(normalVelocity.oNegative())
                     impulseNumerator = normal.Normalize()
                     impulseDenominator =
-                        inverseMass + inverseWorldInertiaTensor.oMultiply(r.Cross(normal)).Cross(r).oMultiply(normal)
-                    impulse.oSet(normal.oMultiply(impulseNumerator / impulseDenominator))
+                        inverseMass + inverseWorldInertiaTensor.times(r.Cross(normal)).Cross(r).times(normal)
+                    impulse.oSet(normal.times(impulseNumerator / impulseDenominator))
 
                     // apply impulse
-                    current.i.linearMomentum.oPluSet(impulse)
-                    current.i.angularMomentum.oPluSet(r.Cross(impulse))
+                    current.i.linearMomentum.plusAssign(impulse)
+                    current.i.angularMomentum.plusAssign(r.Cross(impulse))
                 }
                 i++
             }
@@ -1442,7 +1442,7 @@ object Physics_RigidBody {
 
 
             // put the body on the floor
-            down.oSet(current.i.position.oPlus(gravityNormal.oMultiply(128.0f)))
+            down.oSet(current.i.position.oPlus(gravityNormal.times(128.0f)))
             Game_local.gameLocal.clip.Translation(
                 tr,
                 current.i.position,
@@ -1507,14 +1507,14 @@ object Physics_RigidBody {
             normal.Zero()
             i = 0
             while (i < contacts.Num()) {
-                normal.oPluSet(contacts.oGet(i).normal)
+                normal.plusAssign(contacts.oGet(i).normal)
                 i++
             }
-            normal.oDivSet(contacts.Num().toFloat())
+            normal.divAssign(contacts.Num().toFloat())
             normal.Normalize()
 
             // if on a too steep surface
-            if (normal.oMultiply(gravityNormal) > -0.7f) {
+            if (normal.times(gravityNormal) > -0.7f) {
                 return false
             }
 
@@ -1526,8 +1526,8 @@ object Physics_RigidBody {
                 // project point onto plane through origin orthogonal to the gravity
                 point.oSet(
                     contacts.oGet(i).point.oMinus(
-                        gravityNormal.oMultiply(
-                            contacts.oGet(i).point.oMultiply(
+                        gravityNormal.times(
+                            contacts.oGet(i).point.times(
                                 gravityNormal
                             )
                         )
@@ -1543,8 +1543,8 @@ object Physics_RigidBody {
             }
 
             // center of mass in world space
-            point.oSet(current.i.position.oPlus(centerOfMass.oMultiply(current.i.orientation)))
-            point.oMinSet(gravityNormal.oMultiply(point.oMultiply(gravityNormal)))
+            point.oSet(current.i.position.oPlus(centerOfMass.times(current.i.orientation)))
+            point.minusAssign(gravityNormal.times(point.times(gravityNormal)))
 
             // if the point is not inside the winding
             if (!contactWinding.PointInside(gravityNormal, point, 0f)) {
@@ -1552,11 +1552,11 @@ object Physics_RigidBody {
             }
 
             // linear velocity of body
-            v.oSet(current.i.linearMomentum.oMultiply(inverseMass))
+            v.oSet(current.i.linearMomentum.times(inverseMass))
             // linear velocity in gravity direction
-            gv = v.oMultiply(gravityNormal)
+            gv = v.times(gravityNormal)
             // linear velocity orthogonal to gravity direction
-            v.oMinSet(gravityNormal.oMultiply(gv))
+            v.minusAssign(gravityNormal.times(gv))
 
             // if too much velocity orthogonal to gravity direction
             if (v.Length() > Physics_RigidBody.STOP_SPEED) {
@@ -1569,8 +1569,8 @@ object Physics_RigidBody {
 
             // calculate rotational velocity
             inverseWorldInertiaTensor =
-                current.i.orientation.oMultiply(inverseInertiaTensor.oMultiply(current.i.orientation.Transpose()))
-            av.oSet(inverseWorldInertiaTensor.oMultiply(current.i.angularMomentum))
+                current.i.orientation.times(inverseInertiaTensor.times(current.i.orientation.Transpose()))
+            av.oSet(inverseWorldInertiaTensor.times(current.i.angularMomentum))
 
             // if too much rotational velocity
             return av.LengthSqr() <= Physics_RigidBody.STOP_SPEED
@@ -1675,13 +1675,13 @@ object Physics_RigidBody {
                 val angularVelocity = idVec3()
                 val inverseWorldInertiaTensor: idMat3?
                 inverseWorldInertiaTensor =
-                    s.orientation.oMultiply(p.inverseInertiaTensor.oMultiply(s.orientation.Transpose()))
-                angularVelocity.oSet(inverseWorldInertiaTensor.oMultiply(s.angularMomentum))
+                    s.orientation.times(p.inverseInertiaTensor.times(s.orientation.Transpose()))
+                angularVelocity.oSet(inverseWorldInertiaTensor.times(s.angularMomentum))
                 // derivatives
-                d.linearVelocity.oSet(s.linearMomentum.oMultiply(p.inverseMass))
-                d.angularMatrix = idMat3.Companion.SkewSymmetric(angularVelocity).oMultiply(s.orientation)
-                d.force.oSet(s.linearMomentum.oMultiply(-p.linearFriction).oPlus(p.current.externalForce))
-                d.torque.oSet(s.angularMomentum.oMultiply(-p.angularFriction).oPlus(p.current.externalTorque))
+                d.linearVelocity.oSet(s.linearMomentum.times(p.inverseMass))
+                d.angularMatrix = idMat3.Companion.SkewSymmetric(angularVelocity).times(s.orientation)
+                d.force.oSet(s.linearMomentum.times(-p.linearFriction).oPlus(p.current.externalForce))
+                d.torque.oSet(s.angularMomentum.times(-p.angularFriction).oPlus(p.current.externalTorque))
                 System.arraycopy(d.toFloats(), 0, derivatives, 0, derivatives.size)
             }
 

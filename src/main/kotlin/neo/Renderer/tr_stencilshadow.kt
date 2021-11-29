@@ -284,7 +284,7 @@ object tr_stencilshadow {
         lv.y = origin.y
         lv.z = origin.z
         lv.w = 1f
-        lg = rearPlane.ToVec4().oMultiply(lv)
+        lg = rearPlane.ToVec4().times(lv)
 
         // outer product
         mat.get(0).oSet(0, lg - rearPlane.oGet(0) * lv.oGet(0))
@@ -332,7 +332,7 @@ object tr_stencilshadow {
                 var w: Float
                 var oow: Float
                 tr_stencilshadow.shadowVerts[`in` + 0].w = 1f
-                w = tr_stencilshadow.shadowVerts[`in`].ToVec3().oMultiply(mat[3].ToVec3()) + mat[3].oGet(3)
+                w = tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[3].ToVec3()) + mat[3].oGet(3)
                 if (w == 0f) {
                     tr_stencilshadow.shadowVerts[`in` + 1] = tr_stencilshadow.shadowVerts[`in` + 0]
                     i += 2
@@ -341,11 +341,11 @@ object tr_stencilshadow {
                 }
                 oow = 1.0f / w
                 tr_stencilshadow.shadowVerts[`in` + 1].x =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().oMultiply(mat[0].ToVec3()) + mat[0].oGet(3)) * oow
+                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[0].ToVec3()) + mat[0].oGet(3)) * oow
                 tr_stencilshadow.shadowVerts[`in` + 1].y =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().oMultiply(mat[1].ToVec3()) + mat[1].oGet(3)) * oow
+                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[1].ToVec3()) + mat[1].oGet(3)) * oow
                 tr_stencilshadow.shadowVerts[`in` + 1].z =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().oMultiply(mat[2].ToVec3()) + mat[2].oGet(3)) * oow
+                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[2].ToVec3()) + mat[2].oGet(3)) * oow
                 tr_stencilshadow.shadowVerts[`in` + 1].w = 1f
                 i += 2
                 `in` += 2
@@ -1138,7 +1138,7 @@ object tr_stencilshadow {
                 }
 
                 // transform to global space
-                corners[i].oSet(light.parms.origin.oPlus(light.parms.axis.oMultiply(temp)))
+                corners[i].oSet(light.parms.origin.oPlus(light.parms.axis.times(temp)))
                 i++
             }
             light.numShadowFrustums = 0

@@ -230,7 +230,7 @@ object Box {
         constructor(bounds: idBounds, origin: idVec3, axis: idMat3) {
             center.oSet(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f))
             extents.oSet(bounds.oGet(1).oMinus(center))
-            center.oSet(origin.oPlus(center.oMultiply(axis)))
+            center.oSet(origin.oPlus(center.times(axis)))
             this.axis.oSet(axis)
         }
 
@@ -246,17 +246,17 @@ object Box {
         }
 
         fun oPluSet(t: idVec3): idBox {                    // translate the box
-            center.oPluSet(t)
+            center.plusAssign(t)
             return this
         }
 
         fun oMultiply(r: idMat3): idBox {                // returns rotated box
-            return idBox(center.oMultiply(r), extents, axis.oMultiply(r))
+            return idBox(center.times(r), extents, axis.times(r))
         }
 
         fun oMulSet(r: idMat3): idBox {                    // rotate the box
-            center.oMulSet(r)
-            axis.oMulSet(r)
+            center.timesAssign(r)
+            axis.timesAssign(r)
             return this
         }
 
@@ -277,7 +277,7 @@ object Box {
         }
 
         fun oMinSet(a: idBox): idBox {
-            extents.oMinSet(a.extents)
+            extents.minusAssign(a.extents)
             return this
         }
 
@@ -349,7 +349,7 @@ object Box {
         }
 
         fun GetVolume(): Float {                        // returns the volume of the box
-            return extents.oMultiply(2.0f).LengthSqr()
+            return extents.times(2.0f).LengthSqr()
         }
 
         fun IsCleared(): Boolean {                        // returns true if box are inside out
@@ -367,16 +367,16 @@ object Box {
                 axis.Identity()
                 return true
             }
-            bounds1.oSet(0, 0, bounds1.oSet(1, 0, center.oMultiply(axis.oGet(0))))
-            bounds1.oSet(0, 1, bounds1.oSet(1, 1, center.oMultiply(axis.oGet(1))))
-            bounds1.oSet(0, 2, bounds1.oSet(1, 2, center.oMultiply(axis.oGet(2))))
-            bounds1.oGet(0).oMinSet(extents)
-            bounds1.oGet(1).oPluSet(extents)
+            bounds1.oSet(0, 0, bounds1.oSet(1, 0, center.times(axis.oGet(0))))
+            bounds1.oSet(0, 1, bounds1.oSet(1, 1, center.times(axis.oGet(1))))
+            bounds1.oSet(0, 2, bounds1.oSet(1, 2, center.times(axis.oGet(2))))
+            bounds1.oGet(0).minusAssign(extents)
+            bounds1.oGet(1).plusAssign(extents)
             if (!bounds1.AddPoint(
                     idVec3(
-                        v.oMultiply(axis.oGet(0)),
-                        v.oMultiply(axis.oGet(1)),
-                        v.oMultiply(axis.oGet(2))
+                        v.times(axis.oGet(0)),
+                        v.times(axis.oGet(1)),
+                        v.times(axis.oGet(2))
                     )
                 )
             ) {
@@ -389,27 +389,27 @@ object Box {
                 1,
                 axis.oGet(
                     Math_h.Min3Index(
-                        axis2.oGet(0).oMultiply(axis.oGet(0)),
-                        axis2.oGet(0).oMultiply(axis.oGet(1)),
-                        axis2.oGet(0).oMultiply(axis.oGet(2))
+                        axis2.oGet(0).times(axis.oGet(0)),
+                        axis2.oGet(0).times(axis.oGet(1)),
+                        axis2.oGet(0).times(axis.oGet(2))
                     )
                 )
             )
-            axis2.oSet(1, axis2.oGet(1).oMinus(axis2.oGet(0).oMultiply(axis2.oGet(1).oMultiply(axis2.oGet(0)))))
+            axis2.oSet(1, axis2.oGet(1).oMinus(axis2.oGet(0).times(axis2.oGet(1).times(axis2.oGet(0)))))
             axis2.oGet(1).Normalize()
             axis2.oGet(2).Cross(axis2.oGet(0), axis2.oGet(1))
             AxisProjection(axis2, bounds2)
-            bounds2.AddPoint(idVec3(v.oMultiply(axis2.oGet(0)), v.oMultiply(axis2.oGet(1)), v.oMultiply(axis2.oGet(2))))
+            bounds2.AddPoint(idVec3(v.times(axis2.oGet(0)), v.times(axis2.oGet(1)), v.times(axis2.oGet(2))))
 
             // create new box based on the smallest bounds
             if (bounds1.GetVolume() < bounds2.GetVolume()) {
                 center.oSet(bounds1.oGet(0).oPlus(bounds1.oGet(1)).oMultiply(0.5f))
                 extents.oSet(bounds1.oGet(1).oMinus(center))
-                center.oMulSet(axis)
+                center.timesAssign(axis)
             } else {
                 center.oSet(bounds2.oGet(0).oPlus(bounds2.oGet(1)).oMultiply(0.5f))
                 extents.oSet(bounds2.oGet(1).oMinus(center))
-                center.oMulSet(axis2)
+                center.timesAssign(axis2)
                 axis.oSet(axis2) //TODO: new axis 2?
             }
             return true
@@ -437,11 +437,11 @@ object Box {
 
             // test axis of this box
             ax[0].oSet(axis)
-            bounds[0].oSet(0, 0, bounds[0].oSet(1, 0, center.oMultiply(ax[0].oGet(0))))
-            bounds[0].oSet(0, 1, bounds[0].oSet(1, 1, center.oMultiply(ax[0].oGet(1))))
-            bounds[0].oSet(0, 2, bounds[0].oSet(1, 2, center.oMultiply(ax[0].oGet(2))))
-            bounds[0].oGet(0).oMinSet(extents)
-            bounds[0].oGet(1).oPluSet(extents)
+            bounds[0].oSet(0, 0, bounds[0].oSet(1, 0, center.times(ax[0].oGet(0))))
+            bounds[0].oSet(0, 1, bounds[0].oSet(1, 1, center.times(ax[0].oGet(1))))
+            bounds[0].oSet(0, 2, bounds[0].oSet(1, 2, center.times(ax[0].oGet(2))))
+            bounds[0].oGet(0).minusAssign(extents)
+            bounds[0].oGet(1).plusAssign(extents)
             a.AxisProjection(ax[0], b)
             if (!bounds[0].AddBounds(b)) {
                 // the other box is contained in this box
@@ -450,11 +450,11 @@ object Box {
 
             // test axis of other box
             ax[1].oSet(a.axis)
-            bounds[0].oSet(0, 0, bounds[0].oSet(1, 0, a.center.oMultiply(ax[0].oGet(0))))
-            bounds[0].oSet(0, 1, bounds[0].oSet(1, 1, a.center.oMultiply(ax[0].oGet(1))))
-            bounds[0].oSet(0, 2, bounds[0].oSet(1, 2, a.center.oMultiply(ax[0].oGet(2))))
-            bounds[0].oGet(0).oMinSet(a.extents)
-            bounds[0].oGet(1).oPluSet(a.extents)
+            bounds[0].oSet(0, 0, bounds[0].oSet(1, 0, a.center.times(ax[0].oGet(0))))
+            bounds[0].oSet(0, 1, bounds[0].oSet(1, 1, a.center.times(ax[0].oGet(1))))
+            bounds[0].oSet(0, 2, bounds[0].oSet(1, 2, a.center.times(ax[0].oGet(2))))
+            bounds[0].oGet(0).minusAssign(a.extents)
+            bounds[0].oGet(1).plusAssign(a.extents)
             AxisProjection(ax[1], b)
             if (!bounds[1].AddBounds(b)) {
                 // this box is contained in the other box
@@ -474,13 +474,13 @@ object Box {
                     1,
                     ax[i - 2].oGet(
                         Math_h.Min3Index(
-                            dir.oMultiply(ax[i - 2].oGet(0)),
-                            dir.oMultiply(ax[i - 2].oGet(1)),
-                            dir.oMultiply(ax[i - 2].oGet(2))
+                            dir.times(ax[i - 2].oGet(0)),
+                            dir.times(ax[i - 2].oGet(1)),
+                            dir.times(ax[i - 2].oGet(2))
                         )
                     )
                 )
-                ax[i].oSet(1, ax[i].oGet(1).oMinus(dir.oMultiply(ax[i].oGet(1).oMultiply(dir))))
+                ax[i].oSet(1, ax[i].oGet(1).oMinus(dir.times(ax[i].oGet(1).times(dir))))
                 ax[i].oGet(1).Normalize()
                 ax[i].oGet(2).Cross(dir, ax[i].oGet(1))
                 AxisProjection(ax[i], bounds[i])
@@ -505,7 +505,7 @@ object Box {
             // create a box from the smallest bounds axis pair
             center.oSet(bounds[besti].oGet(0).oPlus(bounds[besti].oGet(1)).oMultiply(0.5f))
             extents.oSet(bounds[besti].oGet(1).oMinus(center))
-            center.oMulSet(ax[besti])
+            center.timesAssign(ax[besti])
             axis.oSet(ax[besti])
             return false
         }
@@ -515,9 +515,9 @@ object Box {
         }
 
         fun ExpandSelf(d: Float): idBox {                    // expand box in all directions with the given value
-            extents.oPluSet(0, d)
-            extents.oPluSet(1, d)
-            extents.oPluSet(2, d)
+            extents.plusAssign(0, d)
+            extents.plusAssign(1, d)
+            extents.plusAssign(2, d)
             return this
         }
 
@@ -526,17 +526,17 @@ object Box {
         }
 
         fun TranslateSelf(translation: idVec3): idBox {        // translate this box
-            center.oPluSet(translation)
+            center.plusAssign(translation)
             return this
         }
 
         fun Rotate(rotation: idMat3): idBox {            // return rotated box
-            return idBox(center.oMultiply(rotation), extents, axis.oMultiply(rotation))
+            return idBox(center.times(rotation), extents, axis.times(rotation))
         }
 
         fun RotateSelf(rotation: idMat3): idBox {            // rotate this box
-            center.oMulSet(rotation)
-            axis.oMulSet(rotation)
+            center.timesAssign(rotation)
+            axis.timesAssign(rotation)
             return this
         }
 
@@ -591,10 +591,10 @@ object Box {
             dir.oSet(a.center.oMinus(center))
 
             // axis C0 + t * A0
-            c[0][0] = axis.oGet(0).oMultiply(a.axis.oGet(0))
-            c[0][1] = axis.oGet(0).oMultiply(a.axis.oGet(1))
-            c[0][2] = axis.oGet(0).oMultiply(a.axis.oGet(2))
-            axisdir[0] = axis.oGet(0).oMultiply(dir)
+            c[0][0] = axis.oGet(0).times(a.axis.oGet(0))
+            c[0][1] = axis.oGet(0).times(a.axis.oGet(1))
+            c[0][2] = axis.oGet(0).times(a.axis.oGet(2))
+            axisdir[0] = axis.oGet(0).times(dir)
             ac[0][0] = abs(c[0][0])
             ac[0][1] = abs(c[0][1])
             ac[0][2] = abs(c[0][2])
@@ -606,10 +606,10 @@ object Box {
             }
 
             // axis C0 + t * A1
-            c[1][0] = axis.oGet(1).oMultiply(a.axis.oGet(0))
-            c[1][1] = axis.oGet(1).oMultiply(a.axis.oGet(1))
-            c[1][2] = axis.oGet(1).oMultiply(a.axis.oGet(2))
-            axisdir[1] = axis.oGet(1).oMultiply(dir)
+            c[1][0] = axis.oGet(1).times(a.axis.oGet(0))
+            c[1][1] = axis.oGet(1).times(a.axis.oGet(1))
+            c[1][2] = axis.oGet(1).times(a.axis.oGet(2))
+            axisdir[1] = axis.oGet(1).times(dir)
             ac[1][0] = abs(c[1][0])
             ac[1][1] = abs(c[1][1])
             ac[1][2] = abs(c[1][2])
@@ -621,10 +621,10 @@ object Box {
             }
 
             // axis C0 + t * A2
-            c[2][0] = axis.oGet(2).oMultiply(a.axis.oGet(0))
-            c[2][1] = axis.oGet(2).oMultiply(a.axis.oGet(1))
-            c[2][2] = axis.oGet(2).oMultiply(a.axis.oGet(2))
-            axisdir[2] = axis.oGet(2).oMultiply(dir)
+            c[2][0] = axis.oGet(2).times(a.axis.oGet(0))
+            c[2][1] = axis.oGet(2).times(a.axis.oGet(1))
+            c[2][2] = axis.oGet(2).times(a.axis.oGet(2))
+            axisdir[2] = axis.oGet(2).times(dir)
             ac[2][0] = abs(c[2][0])
             ac[2][1] = abs(c[2][1])
             ac[2][2] = abs(c[2][2])
@@ -636,7 +636,7 @@ object Box {
             }
 
             // axis C0 + t * B0
-            d = abs(a.axis.oGet(0).oMultiply(dir))
+            d = abs(a.axis.oGet(0).times(dir))
             e0 = extents.oGet(0) * ac[0][0] + extents.oGet(1) * ac[1][0] + extents.oGet(2) * ac[2][0]
             e1 = a.extents.oGet(0)
             if (d > e0 + e1) {
@@ -644,7 +644,7 @@ object Box {
             }
 
             // axis C0 + t * B1
-            d = abs(a.axis.oGet(1).oMultiply(dir))
+            d = abs(a.axis.oGet(1).times(dir))
             e0 = extents.oGet(0) * ac[0][1] + extents.oGet(1) * ac[1][1] + extents.oGet(2) * ac[2][1]
             e1 = a.extents.oGet(1)
             if (d > e0 + e1) {
@@ -652,7 +652,7 @@ object Box {
             }
 
             // axis C0 + t * B2
-            d = abs(a.axis.oGet(2).oMultiply(dir))
+            d = abs(a.axis.oGet(2).times(dir))
             e0 = extents.oGet(0) * ac[0][2] + extents.oGet(1) * ac[1][2] + extents.oGet(2) * ac[2][2]
             e1 = a.extents.oGet(2)
             if (d > e0 + e1) {
@@ -777,7 +777,7 @@ object Box {
             val localStart = idVec3()
             val localDir = idVec3()
             localStart.oSet(start.oMinus(center).oMultiply(axis.Transpose()))
-            localDir.oSet(dir.oMultiply(axis.Transpose()))
+            localDir.oSet(dir.times(axis.Transpose()))
             scale1._val = (-idMath.INFINITY)
             scale2._val = (idMath.INFINITY)
             return (BoxPlaneClip(localDir.x, -localStart.x - extents.oGet(0), scale1, scale2)
@@ -815,11 +815,11 @@ object Box {
             center.oSet(points[0])
             i = 1
             while (i < numPoints) {
-                center.oPluSet(points[i])
+                center.plusAssign(points[i])
                 i++
             }
             invNumPoints = 1.0f / numPoints
-            center.oMulSet(invNumPoints)
+            center.timesAssign(invNumPoints)
 
             // compute covariances of points
             sumXX = 0.0f
@@ -879,16 +879,16 @@ object Box {
             while (i < numPoints) {
                 bounds.AddPoint(
                     idVec3(
-                        points[i].oMultiply(axis.oGet(0)),
-                        points[i].oMultiply(axis.oGet(1)),
-                        points[i].oMultiply(axis.oGet(2))
+                        points[i].times(axis.oGet(0)),
+                        points[i].times(axis.oGet(1)),
+                        points[i].times(axis.oGet(2))
                     )
                 )
                 i++
             }
             center.oSet(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f))
             extents.oSet(bounds.oGet(1).oMinus(center))
-            center.oMulSet(axis)
+            center.timesAssign(axis)
         }
 
         //					// most tight box for a translation
@@ -901,9 +901,9 @@ object Box {
         fun ToPoints(points: Array<idVec3>) {
             val ax = idMat3()
             val temp: Array<idVec3> = idVec3.generateArray(4)
-            ax.oSet(0, axis.oGet(0).oMultiply(extents.oGet(0)))
-            ax.oSet(1, axis.oGet(1).oMultiply(extents.oGet(1)))
-            ax.oSet(2, axis.oGet(2).oMultiply(extents.oGet(2)))
+            ax.oSet(0, axis.oGet(0).times(extents.oGet(0)))
+            ax.oSet(1, axis.oGet(1).times(extents.oGet(1)))
+            ax.oSet(2, axis.oGet(2).times(extents.oGet(2)))
             temp[0].oSet(center.oMinus(ax.oGet(0)))
             temp[1].oSet(center.oPlus(ax.oGet(0)))
             temp[2].oSet(ax.oGet(1).oMinus(ax.oGet(2)))
@@ -925,20 +925,20 @@ object Box {
         //
         //					// calculates the projection of this box onto the given axis
         fun AxisProjection(dir: idVec3, min: CFloat, max: CFloat) {
-            val d1 = dir.oMultiply(center)
-            val d2 = (abs(extents.oGet(0) * dir.oMultiply(axis.oGet(0)))
-                    + abs(extents.oGet(1) * dir.oMultiply(axis.oGet(1)))
-                    + abs(extents.oGet(2) * dir.oMultiply(axis.oGet(2))))
+            val d1 = dir.times(center)
+            val d2 = (abs(extents.oGet(0) * dir.times(axis.oGet(0)))
+                    + abs(extents.oGet(1) * dir.times(axis.oGet(1)))
+                    + abs(extents.oGet(2) * dir.times(axis.oGet(2))))
             min._val = (d1 - d2)
             max._val = (d1 + d2)
         }
 
         fun AxisProjection(ax: idMat3, bounds: idBounds) {
             for (i in 0..2) {
-                val d1 = ax.oGet(i).oMultiply(center)
-                val d2 = (abs(extents.oGet(0) * ax.oGet(i).oMultiply(axis.oGet(0)))
-                        + abs(extents.oGet(1) * ax.oGet(i).oMultiply(axis.oGet(1)))
-                        + abs(extents.oGet(2) * ax.oGet(i).oMultiply(axis.oGet(2))))
+                val d1 = ax.oGet(i).times(center)
+                val d2 = (abs(extents.oGet(0) * ax.oGet(i).times(axis.oGet(0)))
+                        + abs(extents.oGet(1) * ax.oGet(i).times(axis.oGet(1)))
+                        + abs(extents.oGet(2) * ax.oGet(i).times(axis.oGet(2))))
                 bounds.oSet(0, i, d1 - d2)
                 bounds.oSet(1, i, d1 + d2)
             }
@@ -957,17 +957,17 @@ object Box {
             ToPoints(points)
             dir1.oSet(points[0].oMinus(projectionOrigin))
             dir2.oSet(points[6].oMinus(projectionOrigin))
-            f = dir1.oMultiply(axis.oGet(0))
+            f = dir1.times(axis.oGet(0))
             planeBits = Math_h.FLOATSIGNBITNOTSET(f)
-            f = dir2.oMultiply(axis.oGet(0))
+            f = dir2.times(axis.oGet(0))
             planeBits = planeBits or (Math_h.FLOATSIGNBITSET(f) shl 1)
-            f = dir1.oMultiply(axis.oGet(1))
+            f = dir1.times(axis.oGet(1))
             planeBits = planeBits or (Math_h.FLOATSIGNBITNOTSET(f) shl 2)
-            f = dir2.oMultiply(axis.oGet(1))
+            f = dir2.times(axis.oGet(1))
             planeBits = planeBits or (Math_h.FLOATSIGNBITSET(f) shl 3)
-            f = dir1.oMultiply(axis.oGet(2))
+            f = dir1.times(axis.oGet(2))
             planeBits = planeBits or (Math_h.FLOATSIGNBITNOTSET(f) shl 4)
-            f = dir2.oMultiply(axis.oGet(2))
+            f = dir2.times(axis.oGet(2))
             planeBits = planeBits or (Math_h.FLOATSIGNBITSET(f) shl 5)
             index = boxPlaneBitsSilVerts[planeBits]
             i = 0
@@ -986,15 +986,15 @@ object Box {
             val points: Array<idVec3> = idVec3.generateArray(8)
             ToPoints(points)
             planeBits = 0
-            f = projectionDir.oMultiply(axis.oGet(0))
+            f = projectionDir.times(axis.oGet(0))
             if (Math_h.FLOATNOTZERO(f)) {
                 planeBits = 1 shl Math_h.FLOATSIGNBITSET(f)
             }
-            f = projectionDir.oMultiply(axis.oGet(1))
+            f = projectionDir.times(axis.oGet(1))
             if (Math_h.FLOATNOTZERO(f)) {
                 planeBits = planeBits or (4 shl Math_h.FLOATSIGNBITSET(f))
             }
-            f = projectionDir.oMultiply(axis.oGet(2))
+            f = projectionDir.times(axis.oGet(2))
             if (Math_h.FLOATNOTZERO(f)) {
                 planeBits = planeBits or (16 shl Math_h.FLOATSIGNBITSET(f))
             }

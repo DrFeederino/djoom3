@@ -386,7 +386,7 @@ object Camera {
                 q3.Slerp(q1, q2, lerp)
                 view.viewaxis = q3.ToMat3()
                 view.vieworg.oSet(
-                    camFrame /*[ 0 ]*/.t.oMultiply(invlerp).oPlus(nextFrame.t.oMultiply(lerp).oPlus(offset))
+                    camFrame /*[ 0 ]*/.t.times(invlerp).oPlus(nextFrame.t.times(lerp).oPlus(offset))
                 )
                 view.fov_x = camFrame /*[ 0 ]*/.fov * invlerp + nextFrame.fov * lerp
             }

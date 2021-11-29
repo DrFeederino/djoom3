@@ -5,7 +5,6 @@ import neo.Sound.snd_cache.idSoundSample
 import neo.Sound.snd_local.idSampleDecoder
 import neo.Sound.snd_local.soundDemoCommand_t
 import neo.Sound.snd_shader.idSoundShader
-import neo.Sound.snd_system
 import neo.Sound.snd_system.idSoundSystemLocal
 import neo.Sound.snd_world.idSoundWorldLocal
 import neo.Sound.sound.idSoundEmitter
@@ -1271,7 +1270,7 @@ object snd_emitter {
             //
             // work out where the sound comes from
             //
-            val realOrigin = idVec3(origin.oMultiply(snd_shader.DOOM_TO_METERS))
+            val realOrigin = idVec3(origin.times(snd_shader.DOOM_TO_METERS))
             val len = idVec3(listenerPos.oMinus(realOrigin))
             realDistance = len.LengthFast()
             if (realDistance >= maxDistance) {

@@ -1703,8 +1703,8 @@ object Entity {
             val origin = idVec3()
             val axis = idMat3()
             if (GetPhysicsToVisualTransform(origin, axis)) {
-                renderEntity.axis.oSet(axis.oMultiply(GetPhysics().GetAxis()))
-                renderEntity.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.oMultiply(renderEntity.axis)))
+                renderEntity.axis.oSet(axis.times(GetPhysics().GetAxis()))
+                renderEntity.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.times(renderEntity.axis)))
             } else {
                 renderEntity.axis.oSet(GetPhysics().GetAxis())
                 renderEntity.origin.oSet(GetPhysics().GetOrigin())
@@ -1733,18 +1733,18 @@ object Entity {
             idMath.SinCos16(Game_local.gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c)
             axis.oSet(2, dir.oNegative())
             axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1))
-            axis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())))
-            axis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())))
+            axis.oSet(0, axistemp.oGet(0).times(c.getVal()).oPlus(axistemp.oGet(1).times(-s.getVal())))
+            axis.oSet(1, axistemp.oGet(0).times(-s.getVal()).oPlus(axistemp.oGet(1).times(-c.getVal())))
             renderEntity.axis.ProjectVector(origin.oMinus(renderEntity.origin), localOrigin)
             renderEntity.axis.ProjectVector(axis.oGet(0), localAxis[0])
             renderEntity.axis.ProjectVector(axis.oGet(1), localAxis[1])
             size = 1.0f / size
-            localAxis[0].oMulSet(size)
-            localAxis[1].oMulSet(size)
+            localAxis[0].timesAssign(size)
+            localAxis[1].timesAssign(size)
             localPlane[0].oSet(localAxis[0])
-            localPlane[0].oSet(3, -localOrigin.oMultiply(localAxis[0]) + 0.5f)
+            localPlane[0].oSet(3, -localOrigin.times(localAxis[0]) + 0.5f)
             localPlane[1].oSet(localAxis[1])
-            localPlane[1].oSet(3, -localOrigin.oMultiply(localAxis[1]) + 0.5f)
+            localPlane[1].oSet(3, -localOrigin.times(localAxis[1]) + 0.5f)
             val mtr: idMaterial? = DeclManager.declManager.FindMaterial(material)
 
             // project an overlay onto the model
@@ -1963,7 +1963,7 @@ object Entity {
                 val origin = idVec3()
                 val axis = idMat3()
                 if (GetPhysicsToSoundTransform(origin, axis)) {
-                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.oMultiply(axis)))
+                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.times(axis)))
                 } else {
                     refSound.origin.oSet(GetPhysics().GetOrigin())
                 }
@@ -2289,8 +2289,8 @@ object Entity {
 
         fun ConvertLocalToWorldTransform(offset: idVec3?, axis: idMat3?) {
             UpdateModelTransform()
-            offset.oSet(renderEntity.origin.oPlus(offset.oMultiply(renderEntity.axis)))
-            axis.oMulSet(renderEntity.axis)
+            offset.oSet(renderEntity.origin.oPlus(offset.times(renderEntity.axis)))
+            axis.timesAssign(renderEntity.axis)
         }
 
         /*
@@ -2376,7 +2376,7 @@ object Entity {
             val masterAxis = idMat3()
             GetMasterPosition(masterOrigin, masterAxis)
             masterAxis.UnprojectVector(vec, pos)
-            pos.oPluSet(masterOrigin)
+            pos.plusAssign(masterOrigin)
             return pos
         }
 
@@ -2394,8 +2394,8 @@ object Entity {
                         return false
                     } else {
                         masterAnimator.GetJointTransform(bindJoint, Game_local.gameLocal.time, masterOrigin, masterAxis)
-                        masterAxis.oMulSet(bindMaster.renderEntity.axis)
-                        masterOrigin.oSet(bindMaster.renderEntity.origin.oPlus(masterOrigin.oMultiply(bindMaster.renderEntity.axis)))
+                        masterAxis.timesAssign(bindMaster.renderEntity.axis)
+                        masterOrigin.oSet(bindMaster.renderEntity.origin.oPlus(masterOrigin.times(bindMaster.renderEntity.axis)))
                     }
                 } else if (bindBody >= 0 && bindMaster.GetPhysics() != null) {
                     masterOrigin.oSet(bindMaster.GetPhysics().GetOrigin(bindBody))
@@ -2429,7 +2429,7 @@ object Entity {
 
                 // linear velocity relative to master plus master linear and angular velocity
                 linearVelocity.oSet(
-                    linearVelocity.oMultiply(masterAxis).oPlus(
+                    linearVelocity.times(masterAxis).oPlus(
                         masterLinearVelocity.oPlus(
                             masterAngularVelocity.Cross(
                                 GetPhysics().GetOrigin().oMinus(masterOrigin)
@@ -2654,7 +2654,7 @@ object Entity {
         fun GetFloorPos(max_dist: Float, floorpos: idVec3?): Boolean {
             val result = trace_s()
             return if (!GetPhysics().HasGroundContacts()) {
-                GetPhysics().ClipTranslation(result, GetPhysics().GetGravityNormal().oMultiply(max_dist), null)
+                GetPhysics().ClipTranslation(result, GetPhysics().GetGravityNormal().times(max_dist), null)
                 if (result.fraction < 1.0f) {
                     floorpos.oSet(result.endpos)
                     true
@@ -2766,46 +2766,46 @@ object Entity {
 
             // this should probably check in the plane of projection, rather than in world coordinate
             dest.oSet(midpoint)
-            dest.oPluSet(0, 15.0f)
-            dest.oPluSet(1, 15.0f)
+            dest.plusAssign(0, 15.0f)
+            dest.plusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
                 damagePoint.oSet(tr.endpos)
                 return true
             }
             dest.oSet(midpoint)
-            dest.oPluSet(0, 15.0f)
-            dest.oMinSet(1, 15.0f)
+            dest.plusAssign(0, 15.0f)
+            dest.minusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
                 damagePoint.oSet(tr.endpos)
                 return true
             }
             dest.oSet(midpoint)
-            dest.oMinSet(0, 15.0f)
-            dest.oPluSet(1, 15.0f)
+            dest.minusAssign(0, 15.0f)
+            dest.plusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
                 damagePoint.oSet(tr.endpos)
                 return true
             }
             dest.oSet(midpoint)
-            dest.oMinSet(0, 15.0f)
-            dest.oMinSet(1, 15.0f)
+            dest.minusAssign(0, 15.0f)
+            dest.minusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
                 damagePoint.oSet(tr.endpos)
                 return true
             }
             dest.oSet(midpoint)
-            dest.oPluSet(2, 15.0f)
+            dest.plusAssign(2, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
                 damagePoint.oSet(tr.endpos)
                 return true
             }
             dest.oSet(midpoint)
-            dest.oMinSet(2, 15.0f)
+            dest.minusAssign(2, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
                 damagePoint.oSet(tr.endpos)
@@ -4792,10 +4792,10 @@ object Entity {
             val origin = idVec3()
             val dir = idVec3()
             val axis: idMat3?
-            axis = renderEntity.joints[jointNum].ToMat3().oMultiply(renderEntity.axis)
-            origin.oSet(renderEntity.origin.oPlus(renderEntity.joints[jointNum].ToVec3().oMultiply(renderEntity.axis)))
-            origin.oSet(origin.oPlus(localOrigin.oMultiply(axis)))
-            dir.oSet(localDir.oMultiply(axis))
+            axis = renderEntity.joints[jointNum].ToMat3().times(renderEntity.axis)
+            origin.oSet(renderEntity.origin.oPlus(renderEntity.joints[jointNum].ToVec3().times(renderEntity.axis)))
+            origin.oSet(origin.oPlus(localOrigin.times(axis)))
+            dir.oSet(localDir.times(axis))
             var type: Int = collisionMaterial.GetSurfaceType().ordinal
             if (type == surfTypes_t.SURFTYPE_NONE.ordinal) {
                 type = GetDefaultSurfaceType()
@@ -4886,9 +4886,9 @@ object Entity {
                 val start = idVec3()
                 val axis = idMat3()
                 animator.GetJointTransform(de.jointNum, Game_local.gameLocal.time, origin, axis)
-                axis.oMulSet(renderEntity.axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)))
-                start.oSet(origin.oPlus(de.localOrigin.oMultiply(axis)))
+                axis.timesAssign(renderEntity.axis)
+                origin.oSet(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
+                start.oSet(origin.oPlus(de.localOrigin.times(axis)))
                 if (!Game_local.gameLocal.smokeParticles.EmitSmoke(
                         de.type,
                         de.time,

@@ -130,13 +130,13 @@ object usurface {
         temp.oSet(2, (d0.oGet(2) * d1.oGet(4) - d0.oGet(4) * d1.oGet(2)) * inva)
         temp.Normalize()
         texVec.v[0].oSet(temp)
-        texVec.v[0].oSet(3, tri.v[0].xyz.oMultiply(texVec.v[0].ToVec3()) - tri.v[0].st.oGet(0))
+        texVec.v[0].oSet(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.oGet(0))
         temp.oSet(0, (d0.oGet(3) * d1.oGet(0) - d0.oGet(0) * d1.oGet(3)) * inva)
         temp.oSet(1, (d0.oGet(3) * d1.oGet(1) - d0.oGet(1) * d1.oGet(3)) * inva)
         temp.oSet(2, (d0.oGet(3) * d1.oGet(2) - d0.oGet(2) * d1.oGet(3)) * inva)
         temp.Normalize()
         texVec.v[1].oSet(temp)
-        texVec.v[1].oSet(3, tri.v[0].xyz.oMultiply(texVec.v[0].ToVec3()) - tri.v[0].st.oGet(1))
+        texVec.v[1].oSet(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.oGet(1))
     }
 
     /*
@@ -637,8 +637,8 @@ object usurface {
                     while (j < tri2.numIndexes) {
                         for (k in 0..2) {
                             val v = idVec3(tri2.verts[tri2.indexes[j + k]].xyz)
-                            mapTri.v[k].xyz.oSet(v.oMultiply(axis).oPlus(origin))
-                            mapTri.v[k].normal.oSet(tri2.verts[tri2.indexes[j + k]].normal.oMultiply(axis))
+                            mapTri.v[k].xyz.oSet(v.times(axis).oPlus(origin))
+                            mapTri.v[k].normal.oSet(tri2.verts[tri2.indexes[j + k]].normal.times(axis))
                             mapTri.v[k].st = tri2.verts[tri2.indexes[j + k]].st
                         }
                         usurface.AddMapTriToAreas(mapTri, e)

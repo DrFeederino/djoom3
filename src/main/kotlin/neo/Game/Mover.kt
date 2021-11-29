@@ -752,7 +752,7 @@ object Mover {
                 at = idPhysics.Companion.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
                 dt = move_time - at
             }
-            move_delta.oSet(move_delta.oMultiply(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f)))
+            move_delta.oSet(move_delta.times(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f)))
             move.stage = stage
             move.acceleration = at
             move.movetime = move_time - at - dt
@@ -776,7 +776,7 @@ object Mover {
                 move_time = 1
             }
             physicsObj.GetLocalAngles(ang)
-            angle_delta = dest_angles.oMinus(ang)
+            angle_delta = dest_angles.minus(ang)
             if (angle_delta == Angles.getAng_zero()) {
                 // set our final angles so that we get rid of any numerical inaccuracy
                 dest_angles.Normalize360()
@@ -816,7 +816,7 @@ object Mover {
                 at = idPhysics.Companion.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
                 dt = move_time - at
             }
-            angle_delta = angle_delta.oMultiply(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f))
+            angle_delta = angle_delta.times(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f))
             stopRotation = stopwhendone || dt != 0
             rot.stage = stage
             rot.acceleration = at
@@ -863,7 +863,7 @@ object Mover {
                 DIR_REL_LEFT -> {
                     physicsObj.GetLocalAngles(ang)
                     ang.ToVectors(null, vec)
-                    vec.oMulSet(-1f)
+                    vec.timesAssign(-1f)
                 }
                 DIR_REL_RIGHT -> {
                     physicsObj.GetLocalAngles(ang)
@@ -875,7 +875,7 @@ object Mover {
                 }
                 DIR_REL_BACK -> {
                     physicsObj.GetLocalAngles(ang)
-                    vec.oSet(ang.ToForward().oMultiply(-1f))
+                    vec.oSet(ang.ToForward().times(-1f))
                 }
                 else -> {
                     ang.Set(0f, dir, 0f)
@@ -1126,7 +1126,7 @@ object Mover {
             val org = idVec3()
             physicsObj.GetLocalOrigin(org)
             VectorForDir(angle.value, dir)
-            dest_position.oSet(org.oPlus(dir.oMultiply(distance.value)))
+            dest_position.oSet(org.oPlus(dir.times(distance.value)))
             BeginMove(idThread.Companion.CurrentThread())
         }
 
@@ -1164,8 +1164,8 @@ object Mover {
                 Game_local.gameLocal.time,
                 move.acceleration,
                 org,
-                dir.oMultiply(speed.value - v),
-                dir.oMultiply(v)
+                dir.times(speed.value - v),
+                dir.times(v)
             )
         }
 
@@ -1203,8 +1203,8 @@ object Mover {
                 Game_local.gameLocal.time,
                 move.deceleration,
                 org,
-                dir.oMultiply(v - speed.value),
-                dir.oMultiply(speed.value)
+                dir.times(v - speed.value),
+                dir.times(speed.value)
             )
         }
 
@@ -1217,7 +1217,7 @@ object Mover {
             physicsObj.GetLocalAngles(ang)
             dest_angles.oSet(axis, angle.value)
             if (dest_angles.oGet(axis) > ang.oGet(axis)) {
-                dest_angles.oMinSet(axis, 360f)
+                dest_angles.minusAssign(axis, 360f)
             }
             BeginRotation(idThread.Companion.CurrentThread(), true)
         }
@@ -1231,7 +1231,7 @@ object Mover {
             physicsObj.GetLocalAngles(ang)
             dest_angles.oSet(axis, angle.value)
             if (dest_angles.oGet(axis) < ang.oGet(axis)) {
-                dest_angles.oPluSet(axis, 360f)
+                dest_angles.plusAssign(axis, 360f)
             }
             BeginRotation(idThread.Companion.CurrentThread(), true)
         }
@@ -1248,7 +1248,7 @@ object Mover {
             }
             physicsObj.GetLocalAngles(ang)
             dest_angles =
-                ang.oPlus(angles.value.oMultiply((move_time - (acceltime + deceltime) / 2).toFloat()).oMultiply(0.001f))
+                ang.plus(angles.value.times((move_time - (acceltime + deceltime) / 2).toFloat()).oMultiply(0.001f))
             BeginRotation(idThread.Companion.CurrentThread(), false)
         }
 
@@ -1258,7 +1258,7 @@ object Mover {
                 DoneRotating()
             }
             physicsObj.GetLocalAngles(ang)
-            dest_angles = ang.oPlus(angles.value)
+            dest_angles = ang.plus(angles.value)
             BeginRotation(idThread.Companion.CurrentThread(), true)
         }
 
@@ -1270,7 +1270,7 @@ object Mover {
                 (speed.value * 1000 * phase.value).toInt(),
                 (speed.value * 500).toInt(),
                 org,
-                depth.value.oMultiply(2.0f),
+                depth.value.times(2.0f),
                 Vector.getVec3_origin()
             )
         }
@@ -1284,7 +1284,7 @@ object Mover {
             assert(speed.value > 0.0f)
             duration =
                 idMath.Sqrt(depth.oGet(0) * depth.oGet(0) + depth.oGet(1) * depth.oGet(1) + depth.oGet(2) * depth.oGet(2)) / speed.value
-            angSpeed = depth.oDivide(duration * idMath.SQRT_1OVER2)
+            angSpeed = depth.div(duration * idMath.SQRT_1OVER2)
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_DECELSINE or Extrapolate.EXTRAPOLATION_NOSTOP,
                 (duration * 1000.0f * phase.value).toInt(),
@@ -1335,7 +1335,7 @@ object Mover {
                 Extrapolate.EXTRAPOLATION_NONE,
                 0,
                 0,
-                ang.oNegative(),
+                ang.unaryMinus(),
                 Angles.getAng_zero(),
                 Angles.getAng_zero()
             )
@@ -2094,7 +2094,7 @@ object Mover {
             soundOrigin.Clear()
             slave = moveMaster
             while (slave != null) {
-                soundOrigin.oPluSet(slave.GetPhysics().GetAbsBounds())
+                soundOrigin.timesAssign(slave.GetPhysics().GetAbsBounds())
                 slave = slave.activateChain
             }
             moveMaster.refSound.origin.oSet(soundOrigin.GetCenter())
@@ -2980,8 +2980,8 @@ object Mover {
             abs_movedir.oSet(1, Math.abs(moveDir.oGet(1)))
             abs_movedir.oSet(2, Math.abs(moveDir.oGet(2)))
             size.oSet(GetPhysics().GetAbsBounds().oGet(1).oMinus(GetPhysics().GetAbsBounds().oGet(0)))
-            distance = abs_movedir.oMultiply(size) - lip.getVal()
-            pos2.oSet(pos1.oPlus(moveDir.oMultiply(distance)))
+            distance = abs_movedir.times(size) - lip.getVal()
+            pos2.oSet(pos1.oPlus(moveDir.times(distance)))
 
             // if "start_open", reverse position 1 and 2
             if (start_open.isVal) {
@@ -3081,8 +3081,8 @@ object Mover {
                             Game_local.gameLocal.clip,
                             this,
                             0,
-                            masterOrigin.oPlus(localTriggerOrigin.oMultiply(masterAxis)),
-                            localTriggerAxis.oMultiply(masterAxis)
+                            masterOrigin.oPlus(localTriggerOrigin.times(masterAxis)),
+                            localTriggerAxis.times(masterAxis)
                         )
                     }
                     if (sndTrigger != null) {
@@ -3090,8 +3090,8 @@ object Mover {
                             Game_local.gameLocal.clip,
                             this,
                             0,
-                            masterOrigin.oPlus(localTriggerOrigin.oMultiply(masterAxis)),
-                            localTriggerAxis.oMultiply(masterAxis)
+                            masterOrigin.oPlus(localTriggerOrigin.times(masterAxis)),
+                            localTriggerAxis.times(masterAxis)
                         )
                     }
                 }
@@ -3261,7 +3261,7 @@ object Mover {
             }
             GetMasterPosition(origin, axis)
             localTriggerOrigin.oSet(trigger.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
-            localTriggerAxis = trigger.GetAxis().oMultiply(axis.Transpose())
+            localTriggerAxis = trigger.GetAxis().times(axis.Transpose())
         }
 
         /*
@@ -3301,8 +3301,8 @@ object Mover {
                 i++
             }
             normalAxisIndex = best
-            bounds.oGet(0).oMinSet(best, size)
-            bounds.oGet(1).oPluSet(best, size)
+            bounds.oGet(0).minusAssign(best, size)
+            bounds.oGet(1).plusAssign(best, size)
             bounds.oMinSet(GetPhysics().GetOrigin())
         }
 
@@ -3554,13 +3554,13 @@ object Mover {
                 translate.oSet(bounds.GetCenter())
                 normal.Zero()
                 normal.oSet(normalAxisIndex, 1.0f)
-                if (normal.oMultiply(contact) > 0) {
-                    translate.oPluSet(
+                if (normal.times(contact) > 0) {
+                    translate.plusAssign(
                         normalAxisIndex,
                         (bounds.oGet(0, normalAxisIndex) - translate.oGet(normalAxisIndex)) * 0.5f
                     )
                 } else {
-                    translate.oPluSet(
+                    translate.plusAssign(
                         normalAxisIndex,
                         (bounds.oGet(1, normalAxisIndex) - translate.oGet(normalAxisIndex)) * 0.5f
                     )
@@ -3701,7 +3701,7 @@ object Mover {
             // pos1 is the rest (bottom) position, pos2 is the top
             pos2.oSet(GetPhysics().GetOrigin())
             pos1.oSet(pos2)
-            pos1.oMinSet(2, height.getVal())
+            pos1.minusAssign(2, height.getVal())
             if (spawnArgs.GetFloat("time", "1", time)) {
                 InitTime(pos1, pos2, time.getVal(), accel.getVal(), decel.getVal())
             } else {
@@ -3741,8 +3741,8 @@ object Mover {
                             Game_local.gameLocal.clip,
                             this,
                             0,
-                            masterOrigin.oPlus(localTriggerOrigin.oMultiply(masterAxis)),
-                            localTriggerAxis.oMultiply(masterAxis)
+                            masterOrigin.oPlus(localTriggerOrigin.times(masterAxis)),
+                            localTriggerAxis.times(masterAxis)
                         )
                     }
                 }
@@ -3762,7 +3762,7 @@ object Mover {
             }
             GetMasterPosition(origin, axis)
             localTriggerOrigin.oSet(trigger.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
-            localTriggerAxis = trigger.GetAxis().oMultiply(axis.Transpose())
+            localTriggerAxis = trigger.GetAxis().times(axis.Transpose())
         }
 
         private fun SpawnPlatTrigger(pos: idVec3?) {
@@ -4104,7 +4104,7 @@ object Mover {
                 (phase.getVal() * 1000).toInt(),
                 (speed.getVal() * 500).toInt(),
                 GetPhysics().GetOrigin(),
-                delta.oMultiply(2.0f),
+                delta.times(2.0f),
                 Vector.getVec3_origin()
             )
             SetPhysics(physicsObj)

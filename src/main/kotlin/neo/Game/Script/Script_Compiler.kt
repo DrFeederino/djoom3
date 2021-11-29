@@ -341,15 +341,15 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 Script_Compiler.OP_MUL_V -> {
-                    float_c = vectorPtr.oMultiply(var_b.value.getVectorPtr())
+                    float_c = vectorPtr.times(var_b.value.getVectorPtr())
                     type = Script_Program.type_float
                 }
                 Script_Compiler.OP_MUL_FV -> {
-                    vec_c.oSet(var_b.value.getVectorPtr().oMultiply(var_a.value.getFloatPtr()))
+                    vec_c.oSet(var_b.value.getVectorPtr().times(var_a.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_MUL_VF -> {
-                    vec_c.oSet(vectorPtr.oMultiply(var_b.value.getFloatPtr()))
+                    vec_c.oSet(vectorPtr.times(var_b.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_DIV_F -> {

@@ -164,9 +164,9 @@ object AI {
         val seekVel = idVec3()
 
         // predict our position
-        predictedPos.oSet(org.oPlus(vel.oMultiply(prediction)))
+        predictedPos.oSet(org.oPlus(vel.times(prediction)))
         goalDelta.oSet(goal.oMinus(predictedPos))
-        seekVel.oSet(goalDelta.oMultiply(Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
+        seekVel.oSet(goalDelta.times(Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
         return seekVel
     }
 
@@ -344,7 +344,7 @@ object AI {
             val numPVSAreas: Int
             val PVSAreas = IntArray(idEntity.Companion.MAX_PVS_AREAS)
             areaCenter.oSet(aas.AreaCenter(areaNum))
-            areaCenter.oPluSet(2, 1.0f)
+            areaCenter.plusAssign(2, 1.0f)
             numPVSAreas = Game_local.gameLocal.pvs.GetPVSAreas(
                 idBounds(areaCenter).Expand(16.0f),
                 PVSAreas,
@@ -420,7 +420,7 @@ object AI {
             val numPVSAreas: Int
             val PVSAreas = IntArray(idEntity.Companion.MAX_PVS_AREAS)
             areaCenter.oSet(aas.AreaCenter(areaNum))
-            areaCenter.oPluSet(2, 1.0f)
+            areaCenter.plusAssign(2, 1.0f)
             if (excludeBounds.ContainsPoint(areaCenter)) {
                 // too close to where we already are
                 return false
@@ -440,7 +440,7 @@ object AI {
             local_dir.z = 0.0f
             local_dir.ToVec2_Normalize()
             axis = local_dir.ToMat3()
-            fromPos.oSet(areaCenter.oPlus(fireOffset.oMultiply(axis)))
+            fromPos.oSet(areaCenter.oPlus(fireOffset.times(axis)))
             return self.GetAimDir(fromPos, target, self, dir)
         }
 
@@ -662,7 +662,7 @@ object AI {
                     if (i == numFrames - 1) {
                         curFrameTime = totalTime - i * curFrameTime
                     }
-                    delta.oSet(curVelocity.oMultiply(curFrameTime.toFloat()).oMultiply(0.001f))
+                    delta.oSet(curVelocity.times(curFrameTime.toFloat()).oMultiply(0.001f))
                     path.endVelocity.oSet(curVelocity)
                     path.endTime = i * frameTime
 
@@ -689,7 +689,7 @@ object AI {
 
                                 // if not moved any further than without stepping up, or if not on a floor surface
                                 if (lastEnd.oMinus(start).LengthSqr() > trace.endPos.oMinus(start).LengthSqr() - 0.1f
-                                    || trace.normal.oMultiply(invGravityDir) < minFloorCos
+                                    || trace.normal.times(invGravityDir) < minFloorCos
                                 ) {
                                     if (stopEvent and SE_BLOCKED != 0) {
                                         path.endPos.oSet(lastEnd)
@@ -711,7 +711,7 @@ object AI {
                             path.blockingEntity = trace.blockingEntity
 
                             // if the trace is not blocked or blocked by a floor surface
-                            if (trace.fraction >= 1.0f || trace.normal.oMultiply(invGravityDir) > minFloorCos) {
+                            if (trace.fraction >= 1.0f || trace.normal.times(invGravityDir) > minFloorCos) {
                                 curStart.oSet(trace.endPos)
                                 break
                             }
@@ -720,7 +720,7 @@ object AI {
                             lastEnd.oSet(trace.endPos)
 
                             // step up
-                            stepUp.oSet(invGravityDir.oMultiply(maxStepHeight))
+                            stepUp.oSet(invGravityDir.times(maxStepHeight))
                             if (AI_pathing.PathTrace(
                                     ent,
                                     aas,
@@ -733,7 +733,7 @@ object AI {
                             ) {
                                 return true
                             }
-                            stepUp.oMulSet(trace.fraction)
+                            stepUp.timesAssign(trace.fraction)
                             curStart.oSet(trace.endPos)
                             step++
                         }
@@ -747,8 +747,8 @@ object AI {
                         curVelocity.ProjectOntoPlane(trace.normal, AI_pathing.OVERCLIP)
                         if (stopEvent and SE_BLOCKED != 0) {
                             // if going backwards
-                            if (curVelocity.oMinus(gravityDir.oMultiply(curVelocity.oMultiply(gravityDir)))
-                                    .oMultiply(velocity.oMinus(gravityDir.oMultiply(velocity.oMultiply(gravityDir)))) < 0.0f
+                            if (curVelocity.oMinus(gravityDir.times(curVelocity.times(gravityDir)))
+                                    .oMultiply(velocity.oMinus(gravityDir.times(velocity.times(gravityDir)))) < 0.0f
                             ) {
                                 path.endPos.oSet(curStart)
                                 path.endEvent = SE_BLOCKED
@@ -766,7 +766,7 @@ object AI {
                     }
 
                     // add gravity
-                    curVelocity.oPluSet(gravity.oMultiply(frameTime.toFloat()).oMultiply(0.001f))
+                    curVelocity.plusAssign(gravity.times(frameTime.toFloat()).oMultiply(0.001f))
                     i++
                 }
                 path.endTime = totalTime
@@ -1003,18 +1003,18 @@ object AI {
                     idMath.SinCos(pitch, s, c)
                     dir[i].oSet(target.oMinus(firePos))
                     dir[i].z = 0.0f
-                    dir[i].oMulSet(c.getVal() * idMath.InvSqrt(dir[i].LengthSqr()))
+                    dir[i].timesAssign(c.getVal() * idMath.InvSqrt(dir[i].LengthSqr()))
                     dir[i].z = s.getVal()
                     zVel = projectileSpeed * dir[i].z
                     if (SysCvar.ai_debugTrajectory.GetBool()) {
                         t = ballistics[i].time / 100.0f
-                        velocity.oSet(dir[i].oMultiply(projectileSpeed))
+                        velocity.oSet(dir[i].times(projectileSpeed))
                         lastPos.oSet(firePos)
                         pos.oSet(firePos)
                         j = 1
                         while (j < 100) {
-                            pos.oPluSet(velocity.oMultiply(t))
-                            velocity.oPluSet(projGravity.oMultiply(t))
+                            pos.plusAssign(velocity.times(t))
+                            velocity.plusAssign(projGravity.times(t))
                             Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorCyan, lastPos, pos)
                             lastPos.oSet(pos)
                             j++
@@ -1797,7 +1797,7 @@ object AI {
 
             // Set the AAS if the character has the correct gravity vector
             val gravity = idVec3(spawnArgs.GetVector("gravityDir", "0 0 -1"))
-            gravity.oMulSet(SysCvar.g_gravity.GetFloat())
+            gravity.timesAssign(SysCvar.g_gravity.GetFloat())
             if (gravity === Game_local.gameLocal.GetGravity()) {
                 SetAAS()
             }
@@ -1956,7 +1956,7 @@ object AI {
                 physicsObj.SetGravity(Vector.getVec3_origin())
             } else {
                 val gravity = idVec3(spawnArgs.GetVector("gravityDir", "0 0 -1"))
-                gravity.oMulSet(SysCvar.g_gravity.GetFloat())
+                gravity.timesAssign(SysCvar.g_gravity.GetFloat())
                 physicsObj.SetGravity(gravity)
             }
             SetPhysics(physicsObj)
@@ -2039,7 +2039,7 @@ object AI {
 
             // if no aimAtEnt or projectile set
             if (null == aimAtEnt || null == projectileDef) {
-                aimDir.oSet(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis()))
+                aimDir.oSet(viewAxis.oGet(0).times(physicsObj.GetGravityAxis()))
                 return false
             }
             if (projectileClipModel == null) {
@@ -2607,16 +2607,16 @@ object AI {
             val oldModelOrigin = idVec3()
             val modelOrigin = idVec3()
             animator.GetDelta(Game_local.gameLocal.time - idGameLocal.Companion.msec, Game_local.gameLocal.time, delta)
-            delta.oSet(axis.oMultiply(delta))
+            delta.oSet(axis.times(delta))
             if (modelOffset != Vector.getVec3_zero()) {
                 // the pivot of the monster's model is around its origin, and not around the bounding
                 // box's origin, so we have to compensate for this when the model is offset so that
                 // the monster still appears to rotate around it's origin.
-                oldModelOrigin.oSet(modelOffset.oMultiply(oldaxis))
-                modelOrigin.oSet(modelOffset.oMultiply(axis))
-                delta.oPluSet(oldModelOrigin.oMinus(modelOrigin))
+                oldModelOrigin.oSet(modelOffset.times(oldaxis))
+                modelOrigin.oSet(modelOffset.times(axis))
+                delta.plusAssign(oldModelOrigin.oMinus(modelOrigin))
             }
-            delta.oMulSet(physicsObj.GetGravityAxis())
+            delta.timesAssign(physicsObj.GetGravityAxis())
         }
 
         protected fun CheckObstacleAvoidance(goalPos: idVec3?, newPos: idVec3?) {
@@ -2758,7 +2758,7 @@ object AI {
             Turn()
             if (move.moveCommand == moveCommand_t.MOVE_SLIDE_TO_POSITION) {
                 if (Game_local.gameLocal.time < move.startTime + move.duration) {
-                    goalPos.oSet(move.moveDest.oMinus(move.moveDir.oMultiply(Math_h.MS2SEC((move.startTime + move.duration - Game_local.gameLocal.time).toFloat()))))
+                    goalPos.oSet(move.moveDest.oMinus(move.moveDir.times(Math_h.MS2SEC((move.startTime + move.duration - Game_local.gameLocal.time).toFloat()))))
                     delta.oSet(goalPos.oMinus(oldOrigin))
                     delta.z = 0.0f
                 } else {
@@ -2817,7 +2817,7 @@ object AI {
                     org.oPlus(EyeOffset()),
                     org.oPlus(
                         EyeOffset().oPlus(
-                            viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(16.0f))
+                            viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(16.0f))
                         )
                     ),
                     idGameLocal.Companion.msec,
@@ -2855,7 +2855,7 @@ object AI {
             }
             if (move.moveCommand == moveCommand_t.MOVE_SLIDE_TO_POSITION) {
                 if (Game_local.gameLocal.time < move.startTime + move.duration) {
-                    goalPos.oSet(move.moveDest.oMinus(move.moveDir.oMultiply(Math_h.MS2SEC((move.startTime + move.duration - Game_local.gameLocal.time).toFloat()))))
+                    goalPos.oSet(move.moveDest.oMinus(move.moveDir.times(Math_h.MS2SEC((move.startTime + move.duration - Game_local.gameLocal.time).toFloat()))))
                 } else {
                     goalPos.oSet(move.moveDest)
                     StopMove(moveStatus_t.MOVE_STATUS_DONE)
@@ -2870,12 +2870,12 @@ object AI {
             }
             val vel = idVec3(physicsObj.GetLinearVelocity())
             val z = vel.z
-            val predictedPos = idVec3(oldOrigin.oPlus(vel.oMultiply(AI_SEEK_PREDICTION)))
+            val predictedPos = idVec3(oldOrigin.oPlus(vel.times(AI_SEEK_PREDICTION)))
 
             // seek the goal position
             goalDelta.oSet(goalPos.oMinus(predictedPos))
-            vel.oMinSet(vel.oMultiply(AI_FLY_DAMPENING * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
-            vel.oPluSet(goalDelta.oMultiply(Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
+            vel.minusAssign(vel.times(AI_FLY_DAMPENING * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
+            vel.plusAssign(goalDelta.times(Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
 
             // cap our speed
             vel.Truncate(fly_speed)
@@ -2929,7 +2929,7 @@ object AI {
                     org.oPlus(EyeOffset()),
                     org.oPlus(
                         EyeOffset().oPlus(
-                            viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(16.0f))
+                            viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(16.0f))
                         )
                     ),
                     idGameLocal.Companion.msec,
@@ -2950,13 +2950,13 @@ object AI {
                 roll = 0.0f
                 pitch = 0.0f
             } else {
-                roll = vel.oMultiply(viewAxis.oGet(1).oMultiply(-fly_roll_scale / fly_speed))
+                roll = vel.times(viewAxis.oGet(1).times(-fly_roll_scale / fly_speed))
                 if (roll > fly_roll_max) {
                     roll = fly_roll_max
                 } else if (roll < -fly_roll_max) {
                     roll = -fly_roll_max
                 }
-                pitch = vel.oMultiply(viewAxis.oGet(2).oMultiply(-fly_pitch_scale / fly_speed))
+                pitch = vel.times(viewAxis.oGet(2).times(-fly_pitch_scale / fly_speed))
                 if (pitch > fly_pitch_max) {
                     pitch = fly_pitch_max
                 } else if (pitch < -fly_pitch_max) {
@@ -2982,10 +2982,10 @@ object AI {
             if (fly_bob_strength != 0f) {
                 t = Math_h.MS2SEC((Game_local.gameLocal.time + entityNumber * 497).toFloat())
                 fly_bob_add.oSet(
-                    viewAxis.oGet(1).oMultiply(idMath.Sin16(t * fly_bob_horz))
-                        .oPlus(viewAxis.oGet(2).oMultiply(idMath.Sin16(t * fly_bob_vert))).oMultiply(fly_bob_strength)
+                    viewAxis.oGet(1).times(idMath.Sin16(t * fly_bob_horz))
+                        .oPlus(viewAxis.oGet(2).times(idMath.Sin16(t * fly_bob_vert))).oMultiply(fly_bob_strength)
                 )
-                vel.oPluSet(fly_bob_add.oMultiply(Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
+                vel.plusAssign(fly_bob_add.times(Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
                 if (SysCvar.ai_debugMove.GetBool()) {
                     val origin = physicsObj.GetOrigin()
                     Game_local.gameRenderWorld.DebugArrow(
@@ -3046,7 +3046,7 @@ object AI {
                     Game_local.MASK_MONSTERSOLID,
                     this
                 )
-                vel.oPluSet(Seek(vel, origin, trace.endpos, AI_SEEK_PREDICTION))
+                vel.plusAssign(Seek(vel, origin, trace.endpos, AI_SEEK_PREDICTION))
             }
         }
 
@@ -3055,15 +3055,15 @@ object AI {
 
             // seek the goal position
             seekVel.oSet(Seek(vel, physicsObj.GetOrigin(), goalPos, AI_SEEK_PREDICTION))
-            seekVel.oMulSet(fly_seek_scale)
-            vel.oPluSet(seekVel)
+            seekVel.timesAssign(fly_seek_scale)
+            vel.plusAssign(seekVel)
         }
 
         protected fun AdjustFlySpeed(vel: idVec3?) {
             var speed: Float
 
             // apply dampening
-            vel.oMinSet(vel.oMultiply(AI_FLY_DAMPENING * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
+            vel.minusAssign(vel.times(AI_FLY_DAMPENING * Math_h.MS2SEC(idGameLocal.Companion.msec.toFloat())))
 
             // gradually speed up/slow down to desired speed
             speed = vel.Normalize()
@@ -3073,7 +3073,7 @@ object AI {
             } else if (move.speed != 0f && speed > move.speed) {
                 speed = move.speed
             }
-            vel.oMulSet(speed)
+            vel.timesAssign(speed)
         }
 
         protected fun FlyTurn() {
@@ -3187,7 +3187,7 @@ object AI {
                     org.oPlus(EyeOffset()),
                     org.oPlus(
                         EyeOffset().oPlus(
-                            viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(16.0f))
+                            viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(16.0f))
                         )
                     ),
                     idGameLocal.Companion.msec,
@@ -3236,7 +3236,7 @@ object AI {
                     org.oPlus(EyeOffset()),
                     org.oPlus(
                         EyeOffset().oPlus(
-                            viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(16.0f))
+                            viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(16.0f))
                         )
                     ),
                     idGameLocal.Companion.msec,
@@ -3378,7 +3378,7 @@ object AI {
 
             // find all possible obstacles
             clipBounds = physicsObj.GetAbsBounds()
-            clipBounds.TranslateSelf(dir.oMultiply(32.0f))
+            clipBounds.TranslateSelf(dir.times(32.0f))
             clipBounds.ExpandSelf(8.0f)
             clipBounds.AddPoint(org)
             clipmask = physicsObj.GetClipMask()
@@ -3408,7 +3408,7 @@ object AI {
                     perpendicular.y = delta.x
                     delta.z += 0.5f
                     delta.ToVec2_oPluSet(perpendicular.oMultiply(Game_local.gameLocal.random.CRandomFloat() * 0.5f))
-                    forceVec.oSet(delta.oMultiply(force * obEnt.GetPhysics().GetMass()))
+                    forceVec.oSet(delta.times(force * obEnt.GetPhysics().GetMass()))
                     obEnt.ApplyImpulse(this, 0, obEnt.GetPhysics().GetOrigin(), forceVec)
                 }
                 i++
@@ -3420,7 +3420,7 @@ object AI {
                 perpendicular.y = delta.x
                 delta.z += 0.5f
                 delta.ToVec2_oPluSet(perpendicular.oMultiply(Game_local.gameLocal.random.CRandomFloat() * 0.5f))
-                forceVec.oSet(delta.oMultiply(force * alwaysKick.GetPhysics().GetMass()))
+                forceVec.oSet(delta.times(force * alwaysKick.GetPhysics().GetMass()))
                 alwaysKick.ApplyImpulse(this, 0, alwaysKick.GetPhysics().GetOrigin(), forceVec)
             }
         }
@@ -3529,7 +3529,7 @@ object AI {
             if (TempDump.NOT(aas)) {
                 return 0
             }
-            size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1).oMultiply(boundsScale))
+            size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1).times(boundsScale))
             bounds.oSet(0, size.oNegative())
             size.z = 32.0f
             bounds.oSet(1, size)
@@ -3617,7 +3617,7 @@ object AI {
                 if (move.moveCommand == moveCommand_t.MOVE_WANDER) {
                     move.moveDest.oSet(
                         org.oPlus(
-                            viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(256.0f))
+                            viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(256.0f))
                         )
                     )
                 } else {
@@ -3651,7 +3651,7 @@ object AI {
                 } else {
                     result = true
                 }
-                seekPos.oSet(org.oPlus(move.moveDir.oMultiply(2048.0f)))
+                seekPos.oSet(org.oPlus(move.moveDir.times(2048.0f)))
                 if (SysCvar.ai_debugMove.GetBool()) {
                     Game_local.gameRenderWorld.DebugLine(
                         Lib.Companion.colorYellow,
@@ -3687,7 +3687,7 @@ object AI {
             Game_local.gameLocal.pvs.FreeCurrentPVS(handle)
             eye.oSet(actorOrigin.oPlus(actor.EyeOffset()))
             point.oSet(pos)
-            point.oPluSet(2, 1.0f)
+            point.plusAssign(2, 1.0f)
             physicsObj.DisableClip()
             Game_local.gameLocal.clip.TracePoint(results, eye, point, Game_local.MASK_SOLID, actor)
             if (results.fraction >= 1.0f || Game_local.gameLocal.GetTraceEntity(results) === this) {
@@ -3695,7 +3695,7 @@ object AI {
                 return true
             }
             val bounds = physicsObj.GetBounds()
-            point.oPluSet(2, bounds.oGet(1, 2) - bounds.oGet(0, 2))
+            point.plusAssign(2, bounds.oGet(1, 2) - bounds.oGet(0, 2))
             Game_local.gameLocal.clip.TracePoint(results, eye, point, Game_local.MASK_SOLID, actor)
             physicsObj.EnableClip()
             return results.fraction >= 1.0f || Game_local.gameLocal.GetTraceEntity(results) === this
@@ -4137,7 +4137,7 @@ object AI {
         protected fun WanderAround(): Boolean {
             StopMove(moveStatus_t.MOVE_STATUS_DONE)
             move.moveDest.oSet(
-                physicsObj.GetOrigin().oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(256.0f)))
+                physicsObj.GetOrigin().oPlus(viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(256.0f)))
             )
             if (!NewWanderDir(move.moveDest)) {
                 StopMove(moveStatus_t.MOVE_STATUS_DEST_UNREACHABLE)
@@ -4163,7 +4163,7 @@ object AI {
                 this,
                 aas,
                 org,
-                move.moveDir.oMultiply(48.0f),
+                move.moveDir.times(48.0f),
                 1000,
                 1000,
                 if (move.moveType == moveType_t.MOVETYPE_FLY) SE_BLOCKED else SE_ENTER_OBSTACLE or SE_BLOCKED or SE_ENTER_LEDGE_AREA,
@@ -4175,12 +4175,12 @@ object AI {
             }
             if (move.moveType == moveType_t.MOVETYPE_FLY && path.endEvent == SE_BLOCKED) {
                 var z: Float
-                move.moveDir.oSet(path.endVelocity.oMultiply(1.0f / 48.0f))
+                move.moveDir.oSet(path.endVelocity.times(1.0f / 48.0f))
 
                 // trace down to the floor and see if we can go forward
                 PredictPath(this, aas, org, idVec3(0.0f, 0.0f, -1024.0f), 1000, 1000, SE_BLOCKED, path)
                 val floorPos = idVec3(path.endPos)
-                PredictPath(this, aas, floorPos, move.moveDir.oMultiply(48.0f), 1000, 1000, SE_BLOCKED, path)
+                PredictPath(this, aas, floorPos, move.moveDir.times(48.0f), 1000, 1000, SE_BLOCKED, path)
                 if (0 == path.endEvent) {
                     move.moveDir.z = -1.0f
                     return true
@@ -4199,7 +4199,7 @@ object AI {
                     } else {
                         start.oSet(ceilingPos)
                     }
-                    PredictPath(this, aas, start, move.moveDir.oMultiply(48.0f), 1000, 1000, SE_BLOCKED, path)
+                    PredictPath(this, aas, start, move.moveDir.times(48.0f), 1000, 1000, SE_BLOCKED, path)
                     if (0 == path.endEvent) {
                         move.moveDir.z = 1.0f
                         return true
@@ -4316,7 +4316,7 @@ object AI {
                 pe.particle = null
             } else {
                 animator.GetJointTransform(pe.joint, Game_local.gameLocal.time, origin, axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.oMultiply(renderEntity.axis)))
+                origin.oSet(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
                 BecomeActive(Entity.TH_UPDATEPARTICLES)
                 if (0 == Game_local.gameLocal.time) {
                     // particles with time of 0 don't show, so set the time differently on the first frame
@@ -4433,19 +4433,19 @@ object AI {
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorRed,
                     org,
-                    org.oPlus(idAngles(0, ideal_yaw, 0).ToForward().oMultiply(64f)),
+                    org.oPlus(idAngles(0, ideal_yaw, 0).ToForward().times(64f)),
                     idGameLocal.Companion.msec
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorGreen,
                     org,
-                    org.oPlus(idAngles(0, current_yaw, 0).ToForward().oMultiply(48f)),
+                    org.oPlus(idAngles(0, current_yaw, 0).ToForward().times(48f)),
                     idGameLocal.Companion.msec
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorYellow,
                     org,
-                    org.oPlus(idAngles(0, current_yaw + turnVel, 0).ToForward().oMultiply(32f)),
+                    org.oPlus(idAngles(0, current_yaw + turnVel, 0).ToForward().times(32f)),
                     idGameLocal.Companion.msec
                 )
             }
@@ -4784,7 +4784,7 @@ object AI {
                 && ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2) > projBounds.oGet(1, 2) - projBounds.oGet(0, 2)
             ) {
                 if (ownerBounds.oMinus(projBounds).RayIntersection(muzzle, viewAxis.oGet(0), distance)) {
-                    start.oSet(muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())))
+                    start.oSet(muzzle.oPlus(viewAxis.oGet(0).times(distance.getVal())))
                 } else {
                     start.oSet(ownerBounds.GetCenter())
                 }
@@ -4831,8 +4831,8 @@ object AI {
                 spin = Math_h.DEG2RAD(360.0f) * Game_local.gameLocal.random.RandomFloat()
                 dir.oSet(
                     axis.oGet(0).oPlus(
-                        axis.oGet(2).oMultiply(angle * idMath.Sin(spin))
-                            .oMinus(axis.oGet(1).oMultiply(angle * idMath.Cos(spin)))
+                        axis.oGet(2).times(angle * idMath.Sin(spin))
+                            .oMinus(axis.oGet(1).times(angle * idMath.Cos(spin)))
                     )
                 )
                 dir.Normalize()
@@ -4905,7 +4905,7 @@ object AI {
             val kickDir = idVec3()
             meleeDef.GetVector("kickDir", "0 0 0", kickDir)
             val globalKickDir = idVec3()
-            globalKickDir.oSet(viewAxis.oMultiply(physicsObj.GetGravityAxis()).oMultiply(kickDir))
+            globalKickDir.oSet(viewAxis.times(physicsObj.GetGravityAxis()).times(kickDir))
             ent.Damage(this, this, globalKickDir, meleeDefName, 1.0f, Model.INVALID_JOINT)
 
             // end the attack if we're a multiframe attack
@@ -5029,7 +5029,7 @@ object AI {
             val kickDir = idVec3()
             meleeDef.GetVector("kickDir", "0 0 0", kickDir)
             val globalKickDir = idVec3()
-            globalKickDir.oSet(viewAxis.oMultiply(physicsObj.GetGravityAxis()).oMultiply(kickDir))
+            globalKickDir.oSet(viewAxis.times(physicsObj.GetGravityAxis()).times(kickDir))
             enemyEnt.Damage(this, this, globalKickDir, meleeDefName, 1.0f, Model.INVALID_JOINT)
             lastAttackTime = Game_local.gameLocal.time
             return true
@@ -5081,7 +5081,7 @@ object AI {
                     if (attack.Length() != 0 && ent is idActor) {
                         ent.Damage(this, this, vel, attack.toString(), 1.0f, Model.INVALID_JOINT)
                     } else {
-                        ent.GetPhysics().SetLinearVelocity(vel.oMultiply(100.0f), touchList[i].touchedClipModel.GetId())
+                        ent.GetPhysics().SetLinearVelocity(vel.times(100.0f), touchList[i].touchedClipModel.GetId())
                     }
                 }
                 i++
@@ -5093,9 +5093,9 @@ object AI {
             val   /*jointHandle_t*/joint: Int
             if (!TempDump.isNotNullOrEmpty(jointname)) {
                 muzzle.oSet(
-                    physicsObj.GetOrigin().oPlus(viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis().oMultiply(14f)))
+                    physicsObj.GetOrigin().oPlus(viewAxis.oGet(0).times(physicsObj.GetGravityAxis().times(14f)))
                 )
-                muzzle.oMinSet(physicsObj.GetGravityNormal().oMultiply(physicsObj.GetBounds().oGet(1).z * 0.5f))
+                muzzle.minusAssign(physicsObj.GetGravityNormal().times(physicsObj.GetBounds().oGet(1).z * 0.5f))
             } else {
                 joint = animator.GetJointHandle(jointname)
                 if (joint == Model.INVALID_JOINT) {
@@ -5178,7 +5178,7 @@ object AI {
                     )
                     muzzle.oSet(
                         physicsObj.GetOrigin()
-                            .oPlus(muzzle.oPlus(modelOffset).oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis())))
+                            .oPlus(muzzle.oPlus(modelOffset).oMultiply(viewAxis.times(physicsObj.GetGravityAxis())))
                     )
                     worldMuzzleFlash.origin.oSet(muzzle)
                     Game_local.gameRenderWorld.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
@@ -5230,7 +5230,7 @@ object AI {
                     Game_local.gameRenderWorld.DebugLine(
                         Lib.Companion.colorRed,
                         eyepos,
-                        eyepos.oPlus(orientationJointAxis.oGet(0).oMultiply(32.0f)),
+                        eyepos.oPlus(orientationJointAxis.oGet(0).times(32.0f)),
                         idGameLocal.Companion.msec
                     )
                 }
@@ -5251,19 +5251,19 @@ object AI {
             super.UpdateAnimationControllers()
             val focusEnt = focusEntity.GetEntity()
             if (!allowJointMod || !allowEyeFocus || Game_local.gameLocal.time >= focusTime) {
-                focusPos.oSet(GetEyePosition().oPlus(orientationJointAxis.oGet(0).oMultiply(512.0f)))
+                focusPos.oSet(GetEyePosition().oPlus(orientationJointAxis.oGet(0).times(512.0f)))
             } else if (focusEnt == null) {
                 // keep looking at last position until focusTime is up
                 focusPos.oSet(currentFocusPos)
             } else if (focusEnt == enemy.GetEntity()) {
                 focusPos.oSet(
                     lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset)
-                        .oMinus(enemy.GetEntity().GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset))
+                        .oMinus(enemy.GetEntity().GetPhysics().GetGravityNormal().times(eyeVerticalOffset))
                 )
             } else if (focusEnt is idActor) {
                 focusPos.oSet(
                     (focusEnt as idActor?).GetEyePosition()
-                        .oMinus(focusEnt.GetPhysics().GetGravityNormal().oMultiply(eyeVerticalOffset))
+                        .oMinus(focusEnt.GetPhysics().GetGravityNormal().times(eyeVerticalOffset))
                 )
             } else {
                 focusPos.oSet(focusEnt.GetPhysics().GetOrigin())
@@ -5285,11 +5285,11 @@ object AI {
             orientationJointAxis.ProjectVector(dir, localDir)
             newLookAng.pitch = -idMath.AngleNormalize180(localDir.ToPitch())
             newLookAng.roll = 0.0f
-            diff = newLookAng.oMinus(lookAng)
+            diff = newLookAng.minus(lookAng)
             if (eyeAng != diff) {
                 eyeAng = diff
                 eyeAng.Clamp(eyeMin, eyeMax)
-                val angDelta = diff.oMinus(eyeAng)
+                val angDelta = diff.minus(eyeAng)
                 alignHeadTime = if (!angDelta.Compare(Angles.getAng_zero(), 0.1f)) {
                     Game_local.gameLocal.time
                 } else {
@@ -5305,7 +5305,7 @@ object AI {
                 destLookAng = newLookAng
                 destLookAng.Clamp(lookMin, lookMax)
             }
-            diff = destLookAng.oMinus(lookAng)
+            diff = destLookAng.minus(lookAng)
             if (lookMin.pitch == -180.0f && lookMax.pitch == 180.0f) {
                 if (diff.pitch > 180.0f || diff.pitch <= -180.0f) {
                     diff.pitch = 360.0f - diff.pitch
@@ -5318,7 +5318,7 @@ object AI {
                     diff.yaw += 360.0f
                 }
             }
-            lookAng = lookAng.oPlus(diff.oMultiply(headFocusRate))
+            lookAng = lookAng.plus(diff.times(headFocusRate))
             lookAng.Normalize180()
             jointAng.roll = 0.0f
             i = 0
@@ -5335,20 +5335,20 @@ object AI {
             if (headEnt != null) {
                 val headAnimator = headEnt.GetAnimator()
                 if (allowEyeFocus) {
-                    val eyeAxis = lookAng.oPlus(eyeAng).ToMat3()
+                    val eyeAxis = lookAng.plus(eyeAng).ToMat3()
                     val headTranspose = headEnt.GetPhysics().GetAxis().Transpose()
-                    axis = eyeAxis.oMultiply(orientationJointAxis)
-                    left.oSet(axis.oGet(1).oMultiply(eyeHorizontalOffset))
-                    eyepos.oMinSet(headEnt.GetPhysics().GetOrigin())
+                    axis = eyeAxis.times(orientationJointAxis)
+                    left.oSet(axis.oGet(1).times(eyeHorizontalOffset))
+                    eyepos.minusAssign(headEnt.GetPhysics().GetOrigin())
                     headAnimator.SetJointPos(
                         leftEyeJoint,
                         jointModTransform_t.JOINTMOD_WORLD_OVERRIDE,
-                        eyepos.oPlus(axis.oGet(0).oMultiply(64.0f).oPlus(left).oMultiply(headTranspose))
+                        eyepos.oPlus(axis.oGet(0).times(64.0f).oPlus(left).oMultiply(headTranspose))
                     )
                     headAnimator.SetJointPos(
                         rightEyeJoint,
                         jointModTransform_t.JOINTMOD_WORLD_OVERRIDE,
-                        eyepos.oPlus(axis.oGet(0).oMultiply(64.0f).oMinus(left).oMultiply(headTranspose))
+                        eyepos.oPlus(axis.oGet(0).times(64.0f).oMinus(left).oMultiply(headTranspose))
                     )
                 } else {
                     headAnimator.ClearJoint(leftEyeJoint)
@@ -5356,10 +5356,10 @@ object AI {
                 }
             } else {
                 if (allowEyeFocus) {
-                    val eyeAxis = lookAng.oPlus(eyeAng).ToMat3()
-                    axis = eyeAxis.oMultiply(orientationJointAxis)
-                    left.oSet(axis.oGet(1).oMultiply(eyeHorizontalOffset))
-                    eyepos.oPluSet(axis.oGet(0).oMultiply(64.0f).oMinus(physicsObj.GetOrigin()))
+                    val eyeAxis = lookAng.plus(eyeAng).ToMat3()
+                    axis = eyeAxis.times(orientationJointAxis)
+                    left.oSet(axis.oGet(1).times(eyeHorizontalOffset))
+                    eyepos.plusAssign(axis.oGet(0).times(64.0f).oMinus(physicsObj.GetOrigin()))
                     animator.SetJointPos(leftEyeJoint, jointModTransform_t.JOINTMOD_WORLD_OVERRIDE, eyepos.oPlus(left))
                     animator.SetJointPos(
                         rightEyeJoint,
@@ -5392,11 +5392,11 @@ object AI {
                                 realVector,
                                 realAxis
                             )
-                            realAxis.oMulSet(renderEntity.axis)
+                            realAxis.timesAssign(renderEntity.axis)
                             realVector.oSet(
                                 physicsObj.GetOrigin().oPlus(
                                     realVector.oPlus(modelOffset)
-                                        .oMultiply(viewAxis.oMultiply(physicsObj.GetGravityAxis()))
+                                        .oMultiply(viewAxis.times(physicsObj.GetGravityAxis()))
                                 )
                             )
                         }
@@ -5679,7 +5679,7 @@ object AI {
                 idThread.Companion.ReturnEntity(null)
             }
             GetMuzzle(jointname, muzzle, axis)
-            CreateProjectile(muzzle, viewAxis.oGet(0).oMultiply(physicsObj.GetGravityAxis()))
+            CreateProjectile(muzzle, viewAxis.oGet(0).times(physicsObj.GetGravityAxis()))
             if (projectile.GetEntity() != null) {
                 if (!TempDump.isNotNullOrEmpty(jointname)) {
                     projectile.GetEntity().Bind(this, true)
@@ -5737,7 +5737,7 @@ object AI {
                 && ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2) > projBounds.oGet(1, 2) - projBounds.oGet(0, 2)
             ) {
                 if (ownerBounds.oMinus(projBounds).RayIntersection(muzzle, viewAxis.oGet(0), distance)) {
-                    start.oSet(muzzle.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())))
+                    start.oSet(muzzle.oPlus(viewAxis.oGet(0).times(distance.getVal())))
                 } else {
                     start.oSet(ownerBounds.GetCenter())
                 }
@@ -6149,7 +6149,7 @@ object AI {
             dist = dir.Normalize()
             if (dist > 16.0f) {
                 dist -= 16.0f
-                end.oMinus(dir.oMultiply(16.0f))
+                end.oMinus(dir.times(16.0f))
             }
             result = PredictTrajectory(
                 start,
@@ -6165,7 +6165,7 @@ object AI {
                 dir
             )
             if (result) {
-                idThread.Companion.ReturnVector(dir.oMultiply(speed))
+                idThread.Companion.ReturnVector(dir.times(speed))
             } else {
                 idThread.Companion.ReturnVector(Vector.getVec3_zero())
             }
@@ -6186,7 +6186,7 @@ object AI {
             val gravityDir = GetPhysics().GetGravityNormal()
 
             // infinite vertical vision, so project it onto our orientation plane
-            delta.oMinSet(gravityDir.oMultiply(gravityDir.oMultiply(delta)))
+            delta.minusAssign(gravityDir.times(gravityDir.times(delta)))
             delta.Normalize()
             yaw = delta.ToYaw()
             attack_cone = spawnArgs.GetFloat("attack_cone", "70")
@@ -6307,7 +6307,7 @@ object AI {
             // expand the ray out as far as possible so we can detect anything behind the enemy
             dir.oSet(toPos.oMinus(eye))
             dir.Normalize()
-            toPos.oSet(eye.oPlus(dir.oMultiply(Lib.Companion.MAX_WORLD_SIZE.toFloat())))
+            toPos.oSet(eye.oPlus(dir.times(Lib.Companion.MAX_WORLD_SIZE.toFloat())))
             Game_local.gameLocal.clip.TracePoint(tr, eye, toPos, Game_local.MASK_SHOT_BOUNDINGBOX, this)
             hit = Game_local.gameLocal.GetTraceEntity(tr)
             lastHitCheckResult = if (tr.fraction >= 1.0f || hit == enemyEnt) {
@@ -6350,7 +6350,7 @@ object AI {
             local_dir.z = 0.0f
             local_dir.ToVec2_Normalize()
             axis = local_dir.ToMat3()
-            fromPos.oSet(physicsObj.GetOrigin().oPlus(missileLaunchOffset.oGet(anim).oMultiply(axis)))
+            fromPos.oSet(physicsObj.GetOrigin().oPlus(missileLaunchOffset.oGet(anim).times(axis)))
             if (projectileClipModel == null) {
                 CreateProjectileClipModel()
             }
@@ -6363,7 +6363,7 @@ object AI {
                 && ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2) > projBounds.oGet(1, 2) - projBounds.oGet(0, 2)
             ) {
                 if (ownerBounds.oMinus(projBounds).RayIntersection(org, viewAxis.oGet(0), distance)) {
-                    start.oSet(org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())))
+                    start.oSet(org.oPlus(viewAxis.oGet(0).times(distance.getVal())))
                 } else {
                     start.oSet(ownerBounds.GetCenter())
                 }
@@ -6422,7 +6422,7 @@ object AI {
                 && ownerBounds.oGet(1, 2) - ownerBounds.oGet(0, 2) > projBounds.oGet(1, 2) - projBounds.oGet(0, 2)
             ) {
                 if (ownerBounds.oMinus(projBounds).RayIntersection(org, viewAxis.oGet(0), distance)) {
-                    start.oSet(org.oPlus(viewAxis.oGet(0).oMultiply(distance.getVal())))
+                    start.oSet(org.oPlus(viewAxis.oGet(0).times(distance.getVal())))
                 } else {
                     start.oSet(ownerBounds.GetCenter())
                 }
@@ -6467,7 +6467,7 @@ object AI {
                 if (move.moveType == moveType_t.MOVETYPE_FLY) {
                     // position destination so that we're in the enemy's view
                     enemyOrg.oSet(enemyEnt.GetEyePosition())
-                    enemyOrg.oMinSet(enemyEnt.GetPhysics().GetGravityNormal().oMultiply(fly_offset.toFloat()))
+                    enemyOrg.minusAssign(enemyEnt.GetPhysics().GetGravityNormal().times(fly_offset.toFloat()))
                 } else {
                     enemyOrg.oSet(enemyEnt.GetPhysics().GetOrigin())
                 }
@@ -6489,7 +6489,7 @@ object AI {
             if (move.moveType == moveType_t.MOVETYPE_FLY) {
                 // position destination so that we're in the enemy's view
                 end.oSet(enemyEnt.GetEyePosition())
-                end.oMinSet(enemyEnt.GetPhysics().GetGravityNormal().oMultiply(fly_offset.toFloat()))
+                end.minusAssign(enemyEnt.GetPhysics().GetGravityNormal().times(fly_offset.toFloat()))
             } else {
                 end.oSet(enemyEnt.GetPhysics().GetOrigin())
             }
@@ -6553,7 +6553,7 @@ object AI {
             yaw = delta.ToYaw()
             moveVec.oSet(
                 animator.TotalMovementDelta(anim)
-                    .oMultiply(idAngles(0.0f, yaw, 0.0f).ToMat3().oMultiply(physicsObj.GetGravityAxis()))
+                    .times(idAngles(0.0f, yaw, 0.0f).ToMat3().times(physicsObj.GetGravityAxis()))
             )
             PredictPath(
                 this,
@@ -6599,7 +6599,7 @@ object AI {
             }
             moveVec.oSet(
                 animator.TotalMovementDelta(anim)
-                    .oMultiply(idAngles(0.0f, ideal_yaw, 0.0f).ToMat3().oMultiply(physicsObj.GetGravityAxis()))
+                    .times(idAngles(0.0f, ideal_yaw, 0.0f).ToMat3().times(physicsObj.GetGravityAxis()))
             )
             PredictPath(
                 this,
@@ -7501,13 +7501,13 @@ object AI {
                     leftDir.NormalizeFast()
                     rightDir.NormalizeFast()
                     val axis = node.GetPhysics().GetAxis()
-                    val cone_dot = node.cone_right.oMultiply(axis.oGet(1))
+                    val cone_dot = node.cone_right.times(axis.oGet(1))
                     if (Math.abs(cone_dot) > 0.1) {
                         val cone_dist = node.max_dist / cone_dot
-                        val pos1 = idVec3(org.oPlus(leftDir.oMultiply(node.min_dist)))
-                        val pos2 = idVec3(org.oPlus(leftDir.oMultiply(cone_dist)))
-                        val pos3 = idVec3(org.oPlus(rightDir.oMultiply(node.min_dist)))
-                        val pos4 = idVec3(org.oPlus(rightDir.oMultiply(cone_dist)))
+                        val pos1 = idVec3(org.oPlus(leftDir.times(node.min_dist)))
+                        val pos2 = idVec3(org.oPlus(leftDir.times(cone_dist)))
+                        val pos3 = idVec3(org.oPlus(rightDir.times(node.min_dist)))
+                        val pos4 = idVec3(org.oPlus(rightDir.times(cone_dist)))
                         Game_local.gameRenderWorld.DebugLine(
                             color,
                             node.GetPhysics().GetOrigin(),

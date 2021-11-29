@@ -938,7 +938,7 @@ object Actor {
                         headEnt.GetAnimator().GetJointTransform(leftEyeJoint, Game_local.gameLocal.time, pos, axis)
                         headEnt.GetAnimator().ClearAllAnims(Game_local.gameLocal.time, 0)
                         headEnt.GetAnimator().ForceUpdate()
-                        pos.oPluSet(headEnt.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()))
+                        pos.plusAssign(headEnt.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()))
                         eyeOffset.oSet(pos.oPlus(modelOffset))
                     } else {
                         // just base it off the bounding box size
@@ -1006,10 +1006,10 @@ object Actor {
         override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
             if (soundJoint != Model.INVALID_JOINT) {
                 animator.GetJointTransform(soundJoint, Game_local.gameLocal.time, origin, axis)
-                origin.oPluSet(modelOffset)
+                origin.plusAssign(modelOffset)
                 axis.oSet(viewAxis)
             } else {
-                origin.oSet(GetPhysics().GetGravityNormal().oMultiply(-eyeOffset.z))
+                origin.oSet(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
                 axis.Identity()
             }
             return true
@@ -1165,11 +1165,11 @@ object Actor {
         }
 
         fun EyeOffset(): idVec3? {
-            return GetPhysics().GetGravityNormal().oMultiply(-eyeOffset.z)
+            return GetPhysics().GetGravityNormal().times(-eyeOffset.z)
         }
 
         open fun GetEyePosition(): idVec3? {
-            return GetPhysics().GetOrigin().oPlus(GetPhysics().GetGravityNormal().oMultiply(-eyeOffset.z))
+            return GetPhysics().GetOrigin().oPlus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
         }
 
         open fun GetViewPos(origin: idVec3?, axis: idMat3?) {
@@ -1193,9 +1193,9 @@ object Actor {
             val gravityDir = GetPhysics().GetGravityNormal()
 
             // infinite vertical vision, so project it onto our orientation plane
-            delta.oMinSet(gravityDir.oMultiply(gravityDir.oMultiply(delta)))
+            delta.minusAssign(gravityDir.times(gravityDir.times(delta)))
             delta.Normalize()
-            dot = viewAxis.oGet(0).oMultiply(delta)
+            dot = viewAxis.oGet(0).times(delta)
             return dot >= fovDot
         }
 
@@ -1225,7 +1225,7 @@ object Actor {
             val end = idVec3()
             start.oSet(GetEyePosition())
             end.oSet(point)
-            end.oPluSet(2, 1.0f)
+            end.plusAssign(2, 1.0f)
             Game_local.gameLocal.clip.TracePoint(results, start, end, Game_local.MASK_OPAQUE, this)
             return results.fraction >= 1.0f
         }
@@ -1719,9 +1719,9 @@ object Actor {
             attach.channel = animator.GetChannelForJoint(joint)
             GetJointWorldTransform(joint, Game_local.gameLocal.time, origin, axis)
             attach.ent.oSet(ent)
-            ent.SetOrigin(origin.oPlus(originOffset.oMultiply(renderEntity.axis)))
+            ent.SetOrigin(origin.oPlus(originOffset.times(renderEntity.axis)))
             val rotate = angleOffset.ToMat3()
-            val newAxis = rotate.oMultiply(axis)
+            val newAxis = rotate.times(axis)
             ent.SetAxis(newAxis)
             ent.BindToJoint(this, joint, true)
             ent.cinematic = cinematic
@@ -1917,12 +1917,12 @@ object Actor {
                 if (copyJoints.oGet(i).mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                     mat = headEnt.GetPhysics().GetAxis().Transpose()
                     GetJointWorldTransform(copyJoints.oGet(i).from.getVal(), Game_local.gameLocal.time, pos, axis)
-                    pos.oMinSet(headEnt.GetPhysics().GetOrigin())
-                    headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos.oMultiply(mat))
+                    pos.minusAssign(headEnt.GetPhysics().GetOrigin())
+                    headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos.times(mat))
                     headAnimator.SetJointAxis(
                         copyJoints.oGet(i).to.getVal(),
                         copyJoints.oGet(i).mod,
-                        axis.oMultiply(mat)
+                        axis.times(mat)
                     )
                 } else {
                     animator.GetJointLocalTransform(

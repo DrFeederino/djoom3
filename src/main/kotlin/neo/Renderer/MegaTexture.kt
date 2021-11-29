@@ -604,7 +604,7 @@ object MegaTexture {
                 val spaceLen = axis[i].xyz.oMinus(origin.xyz).Length()
                 val scale = texLen / (spaceLen * spaceLen)
                 dir.oMulSet(scale)
-                val c = origin.xyz.oMultiply(dir) - origin.st.oGet(i)
+                val c = origin.xyz.times(dir) - origin.st.oGet(i)
                 localViewToTextureCenter.get(i).get(0) = dir.oGet(0)
                 localViewToTextureCenter.get(i).get(1) = dir.oGet(1)
                 localViewToTextureCenter.get(i).get(2) = dir.oGet(2)

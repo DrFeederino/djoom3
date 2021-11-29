@@ -428,8 +428,8 @@ object GameSSDWindow {
             super.EntityUpdate()
 
             //Move forward based on speed (units per second)
-            val moved = idVec3(speed.oMultiply(elapsed.toFloat() / 1000.0f))
-            position.oPluSet(moved)
+            val moved = idVec3(speed.times(elapsed.toFloat() / 1000.0f))
+            position.plusAssign(moved)
             val rotated = elapsed.toFloat() / 1000.0f * rotationSpeed * 360.0f
             rotation += rotated
             if (rotation >= 360) {
@@ -967,8 +967,8 @@ object GameSSDWindow {
             super.EntityUpdate()
 
             //Move forward based on speed (units per second)
-            val moved = idVec3(dir.oMultiply(elapsed.toFloat() / 1000.0f * speed.z))
-            position.oPluSet(moved)
+            val moved = idVec3(dir.times(elapsed.toFloat() / 1000.0f * speed.z))
+            position.plusAssign(moved)
             if (position.z > endPosition.z) {
                 //We have reached our position
                 destroyed = true
@@ -2149,7 +2149,7 @@ object GameSSDWindow {
 
                     //Aim the projectile so it crosses the cursor 1/4 of screen
                     val vec = idVec3(cursorWorld.x, cursorWorld.y, (Z_FAR - Z_NEAR) / 8.0f)
-                    vec.oMulSet(8f)
+                    vec.timesAssign(8f)
                     val newProj = SSDProjectile.GetNewProjectile(
                         this,
                         idVec3(0, -180, 0),

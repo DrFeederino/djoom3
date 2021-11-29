@@ -356,7 +356,7 @@ object SecurityCamera {
                     i++
                     continue
                 }
-                if (dir.oMultiply(GetAxis()) < scanFovCos) {
+                if (dir.times(GetAxis()) < scanFovCos) {
                     i++
                     continue
                 }
@@ -407,30 +407,30 @@ object SecurityCamera {
             dir.NormalVectors(right, up)
             radius = Math.tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
             halfRadius = radius * 0.5f
-            lastPoint.oSet(dir.oPlus(up.oMultiply(radius)))
+            lastPoint.oSet(dir.oPlus(up.times(radius)))
             lastPoint.Normalize()
-            lastPoint.oSet(GetPhysics().GetOrigin().oPlus(lastPoint.oMultiply(scanDist)))
-            lastHalfPoint.oSet(dir.oPlus(up.oMultiply(halfRadius)))
+            lastPoint.oSet(GetPhysics().GetOrigin().oPlus(lastPoint.times(scanDist)))
+            lastHalfPoint.oSet(dir.oPlus(up.times(halfRadius)))
             lastHalfPoint.Normalize()
-            lastHalfPoint.oSet(GetPhysics().GetOrigin().oPlus(lastHalfPoint.oMultiply(scanDist)))
-            center.oSet(GetPhysics().GetOrigin().oPlus(dir.oMultiply(scanDist)))
+            lastHalfPoint.oSet(GetPhysics().GetOrigin().oPlus(lastHalfPoint.times(scanDist)))
+            center.oSet(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
             i = 1
             while (i < 12) {
                 a = idMath.TWO_PI * i / 12.0f
                 idMath.SinCos(a, s, c)
-                point.oSet(dir.oPlus(right.oMultiply(s.getVal() * radius).oPlus(up.oMultiply(c.getVal() * radius))))
+                point.oSet(dir.oPlus(right.times(s.getVal() * radius).oPlus(up.times(c.getVal() * radius))))
                 point.Normalize()
-                point.oSet(GetPhysics().GetOrigin().oPlus(point.oMultiply(scanDist)))
+                point.oSet(GetPhysics().GetOrigin().oPlus(point.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color, lastPoint, point)
                 Game_local.gameRenderWorld.DebugLine(color, GetPhysics().GetOrigin(), point)
                 lastPoint.oSet(point)
                 halfPoint.oSet(
                     dir.oPlus(
-                        right.oMultiply(s.getVal() * halfRadius).oPlus(up.oMultiply(c.getVal() * halfRadius))
+                        right.times(s.getVal() * halfRadius).oPlus(up.times(c.getVal() * halfRadius))
                     )
                 )
                 halfPoint.Normalize()
-                halfPoint.oSet(GetPhysics().GetOrigin().oPlus(halfPoint.oMultiply(scanDist)))
+                halfPoint.oSet(GetPhysics().GetOrigin().oPlus(halfPoint.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color2, point, halfPoint)
                 Game_local.gameRenderWorld.DebugLine(color2, lastHalfPoint, halfPoint)
                 lastHalfPoint.oSet(halfPoint)
@@ -499,16 +499,16 @@ object SecurityCamera {
             val spotLight: idLight
             dir.oSet(GetAxis())
             dir.NormalVectors(right, up)
-            target.oSet(GetPhysics().GetOrigin().oPlus(dir.oMultiply(scanDist)))
+            target.oSet(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
             radius = Math.tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
-            up.oSet(dir.oPlus(up.oMultiply(radius)))
+            up.oSet(dir.oPlus(up.times(radius)))
             up.Normalize()
-            up.oSet(GetPhysics().GetOrigin().oPlus(up.oMultiply(scanDist)))
-            up.oMinSet(target)
-            right.oSet(dir.oPlus(right.oMultiply(radius)))
+            up.oSet(GetPhysics().GetOrigin().oPlus(up.times(scanDist)))
+            up.minusAssign(target)
+            right.oSet(dir.oPlus(right.times(radius)))
             right.Normalize()
-            right.oSet(GetPhysics().GetOrigin().oPlus(right.oMultiply(scanDist)))
-            right.oMinSet(target)
+            right.oSet(GetPhysics().GetOrigin().oPlus(right.times(scanDist)))
+            right.minusAssign(target)
             spawnArgs.GetVector("lightOffset", "0 0 0", lightOffset)
             args.Set("origin", GetPhysics().GetOrigin().oPlus(lightOffset).ToString())
             args.Set("light_target", target.ToString())

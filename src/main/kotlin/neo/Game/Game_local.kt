@@ -3790,7 +3790,7 @@ object Game_local {
                     // push the center of mass higher than the origin so players
                     // get knocked into the air more
                     dir.oSet(ent.GetPhysics().GetOrigin().oMinus(origin))
-                    dir.oPluSet(2, 24f)
+                    dir.plusAssign(2, 24f)
 
                     // get the damage scale
                     damageScale = dmgPower * (1.0f - dist / radius.getVal())
@@ -3889,7 +3889,7 @@ object Game_local {
                     }
                 if (quake) {
                     clipModel.GetEntity()
-                        .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), dir.oMultiply(scale * push))
+                        .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), dir.times(scale * push))
                 } else {
                     RadiusPushClipModel(origin, scale * push, clipModel)
                 }
@@ -3916,7 +3916,7 @@ object Game_local {
                 impulse.Normalize()
                 impulse.z += 1.0f
                 clipModel.GetEntity()
-                    .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), impulse.oMultiply(push))
+                    .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), impulse.times(push))
                 return
             }
             localOrigin.oSet(origin.oMinus(clipModel.GetOrigin()).oMultiply(clipModel.GetAxis().Transpose()))
@@ -3927,31 +3927,31 @@ object Game_local {
                 j = 0
                 while (j < poly.numEdges) {
                     v.oSet(trm.verts[trm.edges[Math.abs(poly.edges[j])].v[Math_h.INTSIGNBITSET(poly.edges[j])]])
-                    center.oPluSet(v)
-                    v.oMinSet(localOrigin)
+                    center.plusAssign(v)
+                    v.minusAssign(localOrigin)
                     v.NormalizeFast() // project point on a unit sphere
                     w.AddPoint(v)
                     j++
                 }
-                center.oDivSet(poly.numEdges.toFloat())
+                center.divAssign(poly.numEdges.toFloat())
                 v.oSet(center.oMinus(localOrigin))
                 dist = v.NormalizeFast()
-                dot = v.oMultiply(poly.normal)
+                dot = v.times(poly.normal)
                 if (dot > 0.0f) {
                     i++
                     continue
                 }
                 area = w.GetArea()
                 // impulse in polygon normal direction
-                impulse.oSet(poly.normal.oMultiply(clipModel.GetAxis()))
+                impulse.oSet(poly.normal.times(clipModel.GetAxis()))
                 // always push up for nicer effect
                 impulse.z -= 1.0f
                 // scale impulse based on visible surface area and polygon angle
-                impulse.oMulSet(push * (dot * area * (1.0f / (4.0f * idMath.PI))))
+                impulse.timesAssign(push * (dot * area * (1.0f / (4.0f * idMath.PI))))
                 // scale away distance for nicer effect
-                impulse.oMulSet(dist * 2.0f)
+                impulse.timesAssign(dist * 2.0f)
                 // impulse is applied to the center of the polygon
-                center.oSet(clipModel.GetOrigin().oPlus(center.oMultiply(clipModel.GetAxis())))
+                center.oSet(clipModel.GetOrigin().oPlus(center.times(clipModel.GetAxis())))
                 clipModel.GetEntity().ApplyImpulse(world, clipModel.GetId(), center, impulse)
                 i++
             }
@@ -3986,11 +3986,11 @@ object Game_local {
             axis.oSet(2, dir)
             axis.oGet(2).Normalize()
             axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1))
-            axis.oSet(0, axistemp.oGet(0).oMultiply(c.getVal()).oPlus(axistemp.oGet(1).oMultiply(-s.getVal())))
-            axis.oSet(1, axistemp.oGet(0).oMultiply(-s.getVal()).oPlus(axistemp.oGet(1).oMultiply(-c.getVal())))
-            windingOrigin.oSet(origin.oPlus(axis.oGet(2).oMultiply(depth)))
+            axis.oSet(0, axistemp.oGet(0).times(c.getVal()).oPlus(axistemp.oGet(1).times(-s.getVal())))
+            axis.oSet(1, axistemp.oGet(0).times(-s.getVal()).oPlus(axistemp.oGet(1).times(-c.getVal())))
+            windingOrigin.oSet(origin.oPlus(axis.oGet(2).times(depth)))
             if (parallel) {
-                projectionOrigin.oSet(origin.oMinus(axis.oGet(2).oMultiply(depth)))
+                projectionOrigin.oSet(origin.oMinus(axis.oGet(2).times(depth)))
             } else {
                 projectionOrigin.oSet(origin)
             }
@@ -3998,25 +3998,25 @@ object Game_local {
             winding.Clear()
             winding.oPluSet(
                 idVec5(
-                    windingOrigin.oPlus(axis.oMultiply(decalWinding.get(0)).oMultiply(size)),
+                    windingOrigin.oPlus(axis.times(decalWinding.get(0)).times(size)),
                     idVec2(1, 1)
                 )
             )
             winding.oPluSet(
                 idVec5(
-                    windingOrigin.oPlus(axis.oMultiply(decalWinding.get(1)).oMultiply(size)),
+                    windingOrigin.oPlus(axis.times(decalWinding.get(1)).times(size)),
                     idVec2(0, 1)
                 )
             )
             winding.oPluSet(
                 idVec5(
-                    windingOrigin.oPlus(axis.oMultiply(decalWinding.get(2)).oMultiply(size)),
+                    windingOrigin.oPlus(axis.times(decalWinding.get(2)).times(size)),
                     idVec2(0, 0)
                 )
             )
             winding.oPluSet(
                 idVec5(
-                    windingOrigin.oPlus(axis.oMultiply(decalWinding.get(3)).oMultiply(size)),
+                    windingOrigin.oPlus(axis.times(decalWinding.get(3)).times(size)),
                     idVec2(1, 0)
                 )
             )
@@ -4053,7 +4053,7 @@ object Game_local {
             clip.Translation(
                 results,
                 origin,
-                origin.oPlus(dir.oMultiply(64.0f)),
+                origin.oPlus(dir.times(64.0f)),
                 mdl,
                 idMat3.Companion.getMat3_identity(),
                 Material.CONTENTS_SOLID,
@@ -4881,7 +4881,7 @@ object Game_local {
 
         private fun ShowTargets() {
             val axis = GetLocalPlayer().viewAngles.ToMat3()
-            val up = idVec3(axis.oGet(2).oMultiply(5.0f))
+            val up = idVec3(axis.oGet(2).times(5.0f))
             val viewPos = GetLocalPlayer().GetPhysics().GetOrigin()
             val viewTextBounds = idBounds(viewPos)
             val viewBounds = idBounds(viewPos)
@@ -4917,7 +4917,7 @@ object Game_local {
                     continue
                 }
                 gameRenderWorld.DebugBounds(
-                    (if (ent.IsHidden()) Lib.Companion.colorLtGrey else Lib.Companion.colorOrange).oMultiply(
+                    (if (ent.IsHidden()) Lib.Companion.colorLtGrey else Lib.Companion.colorOrange).times(
                         frac
                     ), ent.GetPhysics().GetAbsBounds()
                 )
@@ -4927,7 +4927,7 @@ object Game_local {
                         ent.name.toString(),
                         center.oMinus(up),
                         0.1f,
-                        Lib.Companion.colorWhite.oMultiply(frac),
+                        Lib.Companion.colorWhite.times(frac),
                         axis,
                         1
                     )
@@ -4935,7 +4935,7 @@ object Game_local {
                         ent.GetEntityDefName(),
                         center,
                         0.1f,
-                        Lib.Companion.colorWhite.oMultiply(frac),
+                        Lib.Companion.colorWhite.times(frac),
                         axis,
                         1
                     )
@@ -4943,7 +4943,7 @@ object Game_local {
                         Str.va("#%d", ent.entityNumber),
                         center.oPlus(up),
                         0.1f,
-                        Lib.Companion.colorWhite.oMultiply(frac),
+                        Lib.Companion.colorWhite.times(frac),
                         axis,
                         1
                     )
@@ -4953,14 +4953,14 @@ object Game_local {
                     target = ent.targets.oGet(i).GetEntity()
                     if (target != null) {
                         gameRenderWorld.DebugArrow(
-                            Lib.Companion.colorYellow.oMultiply(frac),
+                            Lib.Companion.colorYellow.times(frac),
                             ent.GetPhysics().GetAbsBounds().GetCenter(),
                             target.GetPhysics().GetOrigin(),
                             10,
                             0
                         )
                         gameRenderWorld.DebugBounds(
-                            Lib.Companion.colorGreen.oMultiply(frac),
+                            Lib.Companion.colorGreen.times(frac),
                             box,
                             target.GetPhysics().GetOrigin()
                         )
@@ -4981,7 +4981,7 @@ object Game_local {
             val origin = player.GetPhysics().GetOrigin()
             if (SysCvar.g_showEntityInfo.GetBool()) {
                 val axis = player.viewAngles.ToMat3()
-                val up = idVec3(axis.oGet(2).oMultiply(5.0f))
+                val up = idVec3(axis.oGet(2).times(5.0f))
                 val viewTextBounds = idBounds(origin)
                 val viewBounds = idBounds(origin)
                 viewTextBounds.ExpandSelf(128.0f)
@@ -5130,7 +5130,7 @@ object Game_local {
                 if (aas != null) {
                     val seekPos = idVec3()
                     val path = obstaclePath_s()
-                    seekPos.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAxis.oGet(0).oMultiply(200.0f)))
+                    seekPos.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAxis.oGet(0).times(200.0f)))
                     idAI.Companion.FindPathAroundObstacles(
                         player.GetPhysics(),
                         aas,

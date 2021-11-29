@@ -312,7 +312,7 @@ object Moveable {
             var f: Float
             val dir = idVec3()
             val ent: idEntity?
-            v = -velocity.oMultiply(collision.c.normal)
+            v = -velocity.times(collision.c.normal)
             if (v > Moveable.BOUNCE_SOUND_MIN_VELOCITY && Game_local.gameLocal.time > nextSoundTime) {
                 f =
                     if (v > Moveable.BOUNCE_SOUND_MAX_VELOCITY) 1.0f else idMath.Sqrt(v - Moveable.BOUNCE_SOUND_MIN_VELOCITY) * (1.0f / idMath.Sqrt(
@@ -404,7 +404,7 @@ object Moveable {
                 initialSpline.MakeUniform(initialSplineTime.toFloat())
                 initialSpline.ShiftTime(startTime - initialSpline.GetTime(0))
                 initialSplineDir.oSet(initialSpline.GetCurrentFirstDerivative(startTime.toFloat()))
-                initialSplineDir.oMulSet(physicsObj.GetAxis().Transpose())
+                initialSplineDir.timesAssign(physicsObj.GetAxis().Transpose())
                 initialSplineDir.Normalize()
                 BecomeActive(Entity.TH_THINK)
             }
@@ -420,10 +420,10 @@ object Moveable {
                         physicsObj.SetLinearVelocity(linearVelocity)
                         val splineDir =
                             idVec3(initialSpline.GetCurrentFirstDerivative(Game_local.gameLocal.time.toFloat()))
-                        val dir = idVec3(initialSplineDir.oMultiply(physicsObj.GetAxis()))
+                        val dir = idVec3(initialSplineDir.times(physicsObj.GetAxis()))
                         val angularVelocity = idVec3(dir.Cross(splineDir))
                         angularVelocity.Normalize()
-                        angularVelocity.oMulSet(idMath.ACos16(dir.oMultiply(splineDir) / splineDir.Length()) * UsercmdGen.USERCMD_HZ) //TODO:back reference from ACos16
+                        angularVelocity.timesAssign(idMath.ACos16(dir.times(splineDir) / splineDir.Length()) * UsercmdGen.USERCMD_HZ) //TODO:back reference from ACos16
                         physicsObj.SetAngularVelocity(angularVelocity)
                         return true
                     } else {
@@ -610,19 +610,19 @@ object Moveable {
                 if (onGround) {
                     gravityNormal.oSet(GetPhysics().GetGravityNormal())
                     dir.oSet(curOrigin.oMinus(lastOrigin))
-                    dir.oMinSet(gravityNormal.oMultiply(dir.oMultiply(gravityNormal)))
+                    dir.minusAssign(gravityNormal.times(dir.times(gravityNormal)))
                     movedDistance = dir.LengthSqr()
 
                     // if the barrel moved and the barrel is not aligned with the gravity direction
-                    if (movedDistance > 0.0f && Math.abs(gravityNormal.oMultiply(curAxis.oGet(barrelAxis))) < 0.7f) {
+                    if (movedDistance > 0.0f && Math.abs(gravityNormal.times(curAxis.oGet(barrelAxis))) < 0.7f) {
 
                         // barrel movement since last think frame orthogonal to the barrel axis
                         movedDistance = idMath.Sqrt(movedDistance)
-                        dir.oMulSet(1.0f / movedDistance)
-                        movedDistance = (1.0f - Math.abs(dir.oMultiply(curAxis.oGet(barrelAxis)))) * movedDistance
+                        dir.timesAssign(1.0f / movedDistance)
+                        movedDistance = (1.0f - Math.abs(dir.times(curAxis.oGet(barrelAxis)))) * movedDistance
 
                         // get rotation about barrel axis since last think frame
-                        angle = lastAxis.oGet((barrelAxis + 1) % 3).oMultiply(curAxis.oGet((barrelAxis + 1) % 3))
+                        angle = lastAxis.oGet((barrelAxis + 1) % 3).times(curAxis.oGet((barrelAxis + 1) % 3))
                         angle = idMath.ACos(angle)
                         // distance along cylinder hull
                         rotatedDistance = angle * radius
@@ -633,7 +633,7 @@ object Moveable {
                             // additional rotation of the visual model to make it look
                             // like the barrel rolls instead of slides
                             angle = 180.0f * (movedDistance - rotatedDistance) / (radius * idMath.PI)
-                            if (gravityNormal.Cross(curAxis.oGet(barrelAxis)).oMultiply(dir) < 0.0f) {
+                            if (gravityNormal.Cross(curAxis.oGet(barrelAxis)).times(dir) < 0.0f) {
                                 additionalRotation += angle
                             } else {
                                 additionalRotation -= angle

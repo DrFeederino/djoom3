@@ -67,10 +67,10 @@ object AASFile_local {
                 while (i < face.numEdges) {
                     edgeNum = edgeIndex.oGet(face.firstEdge + i)
                     edge = edges.oGet(Math.abs(edgeNum))
-                    center.oPluSet(vertices.oGet(edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]))
+                    center.plusAssign(vertices.oGet(edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]))
                     i++
                 }
-                center.oDivSet(face.numEdges.toFloat())
+                center.divAssign(face.numEdges.toFloat())
             }
             return center
         }
@@ -85,10 +85,10 @@ object AASFile_local {
                 i = 0
                 while (i < area.numFaces) {
                     faceNum = faceIndex.oGet(area.firstFace + i)
-                    center.oPluSet(FaceCenter(Math.abs(faceNum)))
+                    center.plusAssign(FaceCenter(Math.abs(faceNum)))
                     i++
                 }
-                center.oDivSet(area.numFaces.toFloat())
+                center.divAssign(area.numFaces.toFloat())
             }
             return center
         }
@@ -98,7 +98,7 @@ object AASFile_local {
             val bounds = idBounds()
             edge = edges.oGet(Math.abs(edgeNum))
             bounds.oSet(0, bounds.oSet(1, vertices.oGet(edge.vertexNum[0])))
-            bounds.oPluSet(vertices.oGet(edge.vertexNum[1]))
+            bounds.timesAssign(vertices.oGet(edge.vertexNum[1]))
             return bounds
         }
 
@@ -130,7 +130,7 @@ object AASFile_local {
             i = 0
             while (i < area.numFaces) {
                 faceNum = faceIndex.oGet(area.firstFace + i)
-                bounds.oPluSet(FaceBounds(Math.abs(faceNum)))
+                bounds.timesAssign(FaceBounds(Math.abs(faceNum)))
                 i++
             }
             return bounds
@@ -181,20 +181,20 @@ object AASFile_local {
             } else {
                 // trace up
                 end.oSet(start)
-                end.oPluSet(2, 32.0f)
+                end.plusAssign(2, 32.0f)
                 Trace(trace, start, end)
                 if (trace.numAreas >= 1) {
                     if (areas.oGet(0).flags and areaFlags != 0 && areas.oGet(0).travelFlags and excludeTravelFlags == 0) {
                         return areaList[0]
                     }
                     start.oSet(pointList[0])
-                    start.oPluSet(2, 1.0f)
+                    start.plusAssign(2, 1.0f)
                 }
             }
 
             // trace down
             end.oSet(start)
-            end.oMinSet(2, 32.0f)
+            end.minusAssign(2, 32.0f)
             Trace(trace, start, end)
             if (trace.lastAreaNum != 0) {
                 if (areas.oGet(trace.lastAreaNum).flags and areaFlags != 0 && areas.oGet(trace.lastAreaNum).travelFlags and excludeTravelFlags == 0) {
@@ -207,8 +207,8 @@ object AASFile_local {
             i = 1
             while (i <= 12) {
                 frak = i * (1.0f / 12.0f)
-                bounds.oSet(0, origin.oPlus(searchBounds.oGet(0).oMultiply(frak)))
-                bounds.oSet(1, origin.oPlus(searchBounds.oGet(1).oMultiply(frak)))
+                bounds.oSet(0, origin.oPlus(searchBounds.oGet(0).times(frak)))
+                bounds.oSet(1, origin.oPlus(searchBounds.oGet(1).times(frak)))
                 areaNum = BoundsReachableAreaNum(bounds, areaFlags, excludeTravelFlags)
                 if (areaNum != 0 && areas.oGet(areaNum).flags and areaFlags != 0 && areas.oGet(areaNum).travelFlags and excludeTravelFlags == 0) {
                     return areaNum
@@ -239,7 +239,7 @@ object AASFile_local {
 
                 // project the point onto the face plane if it is on the wrong side
                 if (dist < 0.0f) {
-                    point.oMinSet(plane.Normal().oMultiply(dist))
+                    point.minusAssign(plane.Normal().times(dist))
                 }
                 i++
             }
@@ -307,7 +307,7 @@ object AASFile_local {
                         trace.planeNum = tracestack[tstack_p].planeNum
                         // always take the plane with normal facing towards the trace start
                         plane = planeList.oGet(trace.planeNum)
-                        if (v1.oMultiply(plane.Normal()) > 0.0f) {
+                        if (v1.times(plane.Normal()) > 0.0f) {
                             trace.planeNum = trace.planeNum xor 1
                         }
                         return true
@@ -340,7 +340,7 @@ object AASFile_local {
                     trace.planeNum = tracestack[tstack_p].planeNum
                     // always take the plane with normal facing towards the trace start
                     plane = planeList.oGet(trace.planeNum)
-                    if (v1.oMultiply(plane.Normal()) > 0.0f) {
+                    if (v1.times(plane.Normal()) > 0.0f) {
                         trace.planeNum = trace.planeNum xor 1
                     }
                     return if (0 == trace.lastAreaNum && trace.getOutOfSolid != 0) {
@@ -1250,16 +1250,16 @@ object AASFile_local {
                     i++
                     continue
                 }
-                center.oPluSet(FaceCenter(Math.abs(faceNum)))
+                center.plusAssign(FaceCenter(Math.abs(faceNum)))
                 numFaces++
                 i++
             }
             if (numFaces > 0) {
-                center.oDivSet(numFaces.toFloat())
+                center.divAssign(numFaces.toFloat())
             }
-            center.oPluSet(2, 1.0f)
+            center.plusAssign(2, 1.0f)
             end.oSet(center)
-            end.oMinSet(2, 1024f)
+            end.minusAssign(2, 1024f)
             Trace(trace, center, end)
             return trace.endpos
         }

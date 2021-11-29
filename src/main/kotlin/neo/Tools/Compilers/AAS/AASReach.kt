@@ -204,13 +204,13 @@ object AASReach {
                 if (faceNum < 0) {
                     reach.end.oSet(
                         reach.start.oPlus(
-                            file.planeList.oGet(face.planeNum).Normal().oMultiply(AASReach.INSIDEUNITS_FLYEND)
+                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_FLYEND)
                         )
                     )
                 } else {
                     reach.end.oSet(
                         reach.start.oMinus(
-                            file.planeList.oGet(face.planeNum).Normal().oMultiply(AASReach.INSIDEUNITS_FLYEND)
+                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_FLYEND)
                         )
                     )
                 }
@@ -259,13 +259,13 @@ object AASReach {
                 if (faceNum < 0) {
                     reach.end.oSet(
                         reach.start.oPlus(
-                            file.planeList.oGet(face.planeNum).Normal().oMultiply(AASReach.INSIDEUNITS_SWIMEND)
+                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
                         )
                     )
                 } else {
                     reach.end.oSet(
                         reach.start.oMinus(
-                            file.planeList.oGet(face.planeNum).Normal().oMultiply(AASReach.INSIDEUNITS_SWIMEND)
+                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
                         )
                     )
                 }
@@ -360,13 +360,13 @@ object AASReach {
                     if (faceNum < 0) {
                         reach.end.oSet(
                             reach.start.oPlus(
-                                file.planeList.oGet(face.planeNum).Normal().oMultiply(AASReach.INSIDEUNITS_WALKEND)
+                                file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_WALKEND)
                             )
                         )
                     } else {
                         reach.end.oSet(
                             reach.start.oMinus(
-                                file.planeList.oGet(face.planeNum).Normal().oMultiply(AASReach.INSIDEUNITS_SWIMEND)
+                                file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
                             )
                         )
                     }
@@ -494,7 +494,7 @@ object AASReach {
                         // face plane must be more or less horizontal
                         plane = file.planeList.oGet(floorFace1.planeNum xor if (!faceSide1) 1 else 0)
                         if (plane.Normal()
-                                .oMultiply(file.settings.invGravityDir) < file.settings.minFloorCos.getVal()
+                                .times(file.settings.invGravityDir) < file.settings.minFloorCos.getVal()
                         ) {
                             i++
                             continue
@@ -524,7 +524,7 @@ object AASReach {
                     edgeVec.oSet(v2.oMinus(v1))
                     normal.oSet(edgeVec.Cross(file.settings.invGravityDir))
                     normal.Normalize()
-                    dist = normal.oMultiply(v1)
+                    dist = normal.times(v1)
 
                     // check the faces from the second area
                     j = 0
@@ -544,12 +544,12 @@ object AASReach {
                             v3.oSet(file.vertices.oGet(edge2.vertexNum[0]))
                             v4.oSet(file.vertices.oGet(edge2.vertexNum[1]))
                             // check the distance between the two points and the vertical plane through the edge of area1
-                            diff = normal.oMultiply(v3) - dist
+                            diff = normal.times(v3) - dist
                             if (diff < -0.2f || diff > 0.2f) {
                                 l++
                                 continue
                             }
-                            diff = normal.oMultiply(v4) - dist
+                            diff = normal.times(v4) - dist
                             if (diff < -0.2f || diff > 0.2f) {
                                 l++
                                 continue
@@ -560,18 +560,18 @@ object AASReach {
                             // edges if they overlap in the direction orthogonal to
                             // the gravity direction
                             orthogonal.oSet(file.settings.invGravityDir.Cross(normal))
-                            invGravityDot = file.settings.invGravityDir.oMultiply(file.settings.invGravityDir)
-                            orthogonalDot = orthogonal.oMultiply(orthogonal)
+                            invGravityDot = file.settings.invGravityDir.times(file.settings.invGravityDir)
+                            orthogonalDot = orthogonal.times(orthogonal)
                             // projection into the step plane
                             // NOTE: since gravity is vertical this is just the z coordinate
                             y1 = v1.oGet(2) //(v1 * file->settings.invGravity) / invGravityDot;
                             y2 = v2.oGet(2) //(v2 * file->settings.invGravity) / invGravityDot;
                             y3 = v3.oGet(2) //(v3 * file->settings.invGravity) / invGravityDot;
                             y4 = v4.oGet(2) //(v4 * file->settings.invGravity) / invGravityDot;
-                            x1 = v1.oMultiply(orthogonal) / orthogonalDot
-                            x2 = v2.oMultiply(orthogonal) / orthogonalDot
-                            x3 = v3.oMultiply(orthogonal) / orthogonalDot
-                            x4 = v4.oMultiply(orthogonal) / orthogonalDot
+                            x1 = v1.times(orthogonal) / orthogonalDot
+                            x2 = v2.times(orthogonal) / orthogonalDot
+                            x3 = v3.times(orthogonal) / orthogonalDot
+                            x4 = v4.times(orthogonal) / orthogonalDot
                             if (x1 > x2) {
                                 tmp = x1
                                 x1 = x2
@@ -734,8 +734,8 @@ object AASReach {
                     walkReach.travelType = AASFile.TFL_WALK
                     walkReach.toAreaNum = toAreaNum.toShort()
                     walkReach.fromAreaNum = fromAreaNum.toShort()
-                    walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS_WALKSTART)))
-                    walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS_WALKEND)))
+                    walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
+                    walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
                     walkReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                     walkReach.travelTime = 0
                     if (area2.flags and AASFile.AREA_CROUCH != 0) {
@@ -766,9 +766,9 @@ object AASReach {
             // check for a waterjump reachability
             if (water_foundReach != 0) {
                 // get a test point a little bit towards area1
-                testPoint.oSet(water_bestEnd.oMinus(water_bestNormal.oMultiply(AASReach.INSIDEUNITS)))
+                testPoint.oSet(water_bestEnd.oMinus(water_bestNormal.times(AASReach.INSIDEUNITS)))
                 // go down the maximum waterjump height
-                testPoint.oMinSet(2, file.settings.maxWaterJumpHeight.getVal())
+                testPoint.minusAssign(2, file.settings.maxWaterJumpHeight.getVal())
                 // if there IS water the sv_maxwaterjump height below the bestend point
                 if (area1.flags and AASFile.AREA_LIQUID != 0) {
                     // don't create rediculous water jump reachabilities from areas very far below the water surface
@@ -781,7 +781,7 @@ object AASReach {
                             waterJumpReach.toAreaNum = toAreaNum.toShort()
                             waterJumpReach.fromAreaNum = fromAreaNum.toShort()
                             waterJumpReach.start.oSet(water_bestStart)
-                            waterJumpReach.end.oSet(water_bestEnd.oPlus(water_bestNormal.oMultiply(AASReach.INSIDEUNITS_WATERJUMP)))
+                            waterJumpReach.end.oSet(water_bestEnd.oPlus(water_bestNormal.times(AASReach.INSIDEUNITS_WATERJUMP)))
                             waterJumpReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                             waterJumpReach.travelTime = file.settings.tt_waterJump.getVal()
                             AddReachabilityToArea(waterJumpReach, fromAreaNum)
@@ -820,8 +820,8 @@ object AASReach {
                             barrierJumpReach.travelType = AASFile.TFL_BARRIERJUMP
                             barrierJumpReach.toAreaNum = toAreaNum.toShort()
                             barrierJumpReach.fromAreaNum = fromAreaNum.toShort()
-                            barrierJumpReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS_WALKSTART)))
-                            barrierJumpReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS_WALKEND)))
+                            barrierJumpReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
+                            barrierJumpReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
                             barrierJumpReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                             barrierJumpReach.travelTime = file.settings.tt_barrierJump.getVal()
                             AddReachabilityToArea(barrierJumpReach, fromAreaNum)
@@ -860,8 +860,8 @@ object AASReach {
                         walkReach.travelType = AASFile.TFL_WALK
                         walkReach.toAreaNum = toAreaNum.toShort()
                         walkReach.fromAreaNum = fromAreaNum.toShort()
-                        walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS_WALKSTART)))
-                        walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS_WALKEND)))
+                        walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
+                        walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
                         walkReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                         walkReach.travelTime = 1
                         AddReachabilityToArea(walkReach, fromAreaNum)
@@ -870,11 +870,11 @@ object AASReach {
                     // if no maximum fall height set or less than the max
                     if (0f == file.settings.maxFallHeight.getVal() || Math.abs(floor_bestDist) < file.settings.maxFallHeight.getVal()) {
                         // trace a bounding box vertically to check for solids
-                        floor_bestEnd.oPluSet(floor_bestNormal.oMultiply(AASReach.INSIDEUNITS))
+                        floor_bestEnd.plusAssign(floor_bestNormal.times(AASReach.INSIDEUNITS))
                         start.oSet(floor_bestEnd)
                         start.oSet(2, floor_bestStart.oGet(2))
                         end.oSet(floor_bestEnd)
-                        end.oPluSet(2, 4f)
+                        end.plusAssign(2, 4f)
                         trace.areas = areas
                         trace.maxAreas = areas.size
                         file.Trace(trace, start, end)
@@ -963,8 +963,8 @@ object AASReach {
                     dir.oSet(plane.Normal().Cross(v2.oMinus(v1)))
                     dir.Normalize()
                     mid.oSet(v1.oPlus(v2).oMultiply(0.5f))
-                    testEnd.oSet(mid.oPlus(dir.oMultiply(AASReach.INSIDEUNITS_WALKEND)))
-                    testEnd.oMinSet(2, file.settings.maxFallHeight.getVal() + 1.0f)
+                    testEnd.oSet(mid.oPlus(dir.times(AASReach.INSIDEUNITS_WALKEND)))
+                    testEnd.minusAssign(2, file.settings.maxFallHeight.getVal() + 1.0f)
                     trace.areas = areas
                     trace.maxAreas = areas.size
                     file.Trace(trace, mid, testEnd)

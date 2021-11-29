@@ -110,7 +110,7 @@ object ModelDecal {
 
                     // skip back facing triangles
                     if (stri.facePlanes != null && stri.facePlanesCalculated
-                        && stri.facePlanes[triNum].Normal().oMultiply(
+                        && stri.facePlanes[triNum].Normal().times(
                             localInfo.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 2).Normal()
                         ) < -0.1f
                     ) {
@@ -136,7 +136,7 @@ object ModelDecal {
                             dir.oSet(fw.oGet(j).ToVec3().oMinus(localInfo.projectionOrigin))
                             localInfo.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 1)
                                 .RayIntersection(fw.oGet(j).ToVec3(), dir, scale)
-                            dir.oSet(fw.oGet(j).ToVec3().oPlus(dir.oMultiply(scale.getVal())))
+                            dir.oSet(fw.oGet(j).ToVec3().oPlus(dir.times(scale.getVal())))
                             fw.oGet(j).s = localInfo.textureAxis.get(0).Distance(dir)
                             fw.oGet(j).t = localInfo.textureAxis.get(1).Distance(dir)
                         }
@@ -441,16 +441,16 @@ object ModelDecal {
                 temp.oSet(1, (d0.oGet(1) * d1.oGet(4) - d0.oGet(4) * d1.oGet(1)) * inva)
                 temp.oSet(2, (d0.oGet(2) * d1.oGet(4) - d0.oGet(4) * d1.oGet(2)) * inva)
                 len = temp.Normalize()
-                info.textureAxis.get(0).SetNormal(temp.oMultiply(1.0f / len))
+                info.textureAxis.get(0).SetNormal(temp.times(1.0f / len))
                 info.textureAxis.get(0)
-                    .oSet(3, winding.oGet(0).s - winding.oGet(0).ToVec3().oMultiply(info.textureAxis.get(0).Normal()))
+                    .oSet(3, winding.oGet(0).s - winding.oGet(0).ToVec3().times(info.textureAxis.get(0).Normal()))
                 temp.oSet(0, (d0.oGet(3) * d1.oGet(0) - d0.oGet(0) * d1.oGet(3)) * inva)
                 temp.oSet(1, (d0.oGet(3) * d1.oGet(1) - d0.oGet(1) * d1.oGet(3)) * inva)
                 temp.oSet(2, (d0.oGet(3) * d1.oGet(2) - d0.oGet(2) * d1.oGet(3)) * inva)
                 len = temp.Normalize()
-                info.textureAxis.get(1).SetNormal(temp.oMultiply(1.0f / len))
+                info.textureAxis.get(1).SetNormal(temp.times(1.0f / len))
                 info.textureAxis.get(1)
-                    .oSet(3, winding.oGet(0).s - winding.oGet(0).ToVec3().oMultiply(info.textureAxis.get(1).Normal()))
+                    .oSet(3, winding.oGet(0).s - winding.oGet(0).ToVec3().times(info.textureAxis.get(1).Normal()))
                 return true
             }
 

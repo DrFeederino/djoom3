@@ -216,24 +216,24 @@ class Force_Field {
                             entity.AddForce(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
-                                cm.GetOrigin().oPlus(torque.Cross(dir).oMultiply(randomTorque)),
-                                dir.oMultiply(magnitude)
+                                cm.GetOrigin().oPlus(torque.Cross(dir).times(randomTorque)),
+                                dir.times(magnitude)
                             )
                         } else {
                             entity.AddForce(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
                                 cm.GetOrigin(),
-                                force.oMultiply(magnitude)
+                                force.times(magnitude)
                             )
                         }
                     }
                     forceFieldApplyType.FORCEFIELD_APPLY_VELOCITY -> {
-                        physics.SetLinearVelocity(force.oMultiply(magnitude), cm.GetId())
+                        physics.SetLinearVelocity(force.times(magnitude), cm.GetId())
                         if (randomTorque != 0.0f) {
                             angularVelocity.oSet(physics.GetAngularVelocity(cm.GetId()))
                             physics.SetAngularVelocity(
-                                angularVelocity.oPlus(torque.oMultiply(randomTorque)).oMultiply(0.5f), cm.GetId()
+                                angularVelocity.oPlus(torque.times(randomTorque)).oMultiply(0.5f), cm.GetId()
                             )
                         }
                     }
@@ -242,15 +242,15 @@ class Force_Field {
                             entity.ApplyImpulse(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
-                                cm.GetOrigin().oPlus(torque.Cross(dir).oMultiply(randomTorque)),
-                                dir.oMultiply(magnitude)
+                                cm.GetOrigin().oPlus(torque.Cross(dir).times(randomTorque)),
+                                dir.times(magnitude)
                             )
                         } else {
                             entity.ApplyImpulse(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
                                 cm.GetOrigin(),
-                                force.oMultiply(magnitude)
+                                force.times(magnitude)
                             )
                         }
                     }

@@ -151,7 +151,7 @@ object Light {
             localLightOrigin.oSet(
                 renderLight.origin.oMinus(GetPhysics().GetOrigin()).oMultiply(GetPhysics().GetAxis().Transpose())
             )
-            localLightAxis = renderLight.axis.oMultiply(GetPhysics().GetAxis().Transpose())
+            localLightAxis = renderLight.axis.times(GetPhysics().GetAxis().Transpose())
 
             // set the base color from the shader parms
             baseColor.Set(
@@ -365,7 +365,7 @@ object Light {
 
         override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
             origin.oSet(localLightOrigin.oPlus(renderLight.lightCenter))
-            axis.oSet(localLightAxis.oMultiply(GetPhysics().GetAxis()))
+            axis.oSet(localLightAxis.times(GetPhysics().GetAxis()))
             return true
         }
 
@@ -379,8 +379,8 @@ object Light {
             super.Present()
 
             // current transformation
-            renderLight.axis.oSet(localLightAxis.oMultiply(GetPhysics().GetAxis()))
-            renderLight.origin.oSet(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().oMultiply(localLightOrigin)))
+            renderLight.axis.oSet(localLightAxis.times(GetPhysics().GetAxis()))
+            renderLight.origin.oSet(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().times(localLightOrigin)))
 
             // reference the sound for shader synced effects
             if (lightParent != null) {
@@ -545,7 +545,7 @@ object Light {
                 ServerSendEvent(EVENT_BECOMEBROKEN, null, true, -1)
                 if (spawnArgs.GetString("def_damage", "", damageDefName)) {
                     val origin =
-                        idVec3(renderEntity.origin.oPlus(renderEntity.bounds.GetCenter().oMultiply(renderEntity.axis)))
+                        idVec3(renderEntity.origin.oPlus(renderEntity.bounds.GetCenter().times(renderEntity.axis)))
                     Game_local.gameLocal.RadiusDamage(origin, activator, activator, this, this, damageDefName[0])
                 }
             }
@@ -598,7 +598,7 @@ object Light {
             val color = idVec3()
             val intensity: Float
             intensity = currentLevel.toFloat() / levels.getVal().toFloat()
-            color.oSet(baseColor.oMultiply(intensity))
+            color.oSet(baseColor.times(intensity))
             renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
             renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
             renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)

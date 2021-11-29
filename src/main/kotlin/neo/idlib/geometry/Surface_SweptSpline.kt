@@ -127,10 +127,10 @@ class Surface_SweptSpline {
                 j = 0
                 while (j < sweptSplineSubdivisions) {
                     val v = verts.oGet(offset + j)
-                    v.xyz.oSet(splinePos.ToVec3().oPlus(verts.oGet(baseOffset + j).xyz.oMultiply(splineMat)))
+                    v.xyz.oSet(splinePos.ToVec3().oPlus(verts.oGet(baseOffset + j).xyz.times(splineMat)))
                     v.st.oSet(0, verts.oGet(baseOffset + j).st.oGet(0))
                     v.st.oSet(1, splinePos.w)
-                    v.tangents[0] = verts.oGet(baseOffset + j).tangents[0].oMultiply(splineMat)
+                    v.tangents[0] = verts.oGet(baseOffset + j).tangents[0].times(splineMat)
                     v.tangents[1] = splineD1.ToVec3()
                     v.normal.oSet(v.tangents[1].Cross(v.tangents[0]))
                     v.normal.Normalize()
@@ -204,7 +204,7 @@ class Surface_SweptSpline {
             d.Normalize()
             v.oSet(d.Cross(previousFrame.oGet(2)))
             v.Normalize()
-            a = idMath.ACos(previousFrame.oGet(2).oMultiply(d)) * 0.5f
+            a = idMath.ACos(previousFrame.oGet(2).times(d)) * 0.5f
             c = idMath.Cos(a)
             s = idMath.Sqrt(1.0f - c * c)
             x = v.oGet(0) * s
@@ -231,7 +231,7 @@ class Surface_SweptSpline {
             axis.oSet(2, 0, xz - wy)
             axis.oSet(2, 1, yz + wx)
             axis.oSet(2, 2, 1.0f - (xx + yy))
-            newFrame.oSet(previousFrame.oMultiply(axis))
+            newFrame.oSet(previousFrame.times(axis))
             newFrame.setRow(2, dir)
             newFrame.oGet(2).Normalize() //TODO:check if this normalizes back ref
             newFrame.setRow(1, newFrame.oGet(1).Cross(newFrame.oGet(2), newFrame.oGet(0)))

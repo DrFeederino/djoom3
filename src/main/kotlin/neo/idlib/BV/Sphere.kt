@@ -54,7 +54,7 @@ class Sphere {
         }
 
         fun oPluSet(t: idVec3): idSphere {                    // translate the sphere
-            origin.oPluSet(t)
+            origin.plusAssign(t)
             return this
         }
 
@@ -130,7 +130,7 @@ class Sphere {
                 var r = p.oMinus(origin).LengthSqr()
                 if (r > radius * radius) {
                     r = idMath.Sqrt(r)
-                    origin.oPluSet(p.oMinus(origin).oMultiply(0.5f).oMultiply(1.0f - radius / r))
+                    origin.plusAssign(p.oMinus(origin).oMultiply(0.5f).oMultiply(1.0f - radius / r))
                     radius += 0.5f * (r - radius)
                     return true
                 }
@@ -147,7 +147,7 @@ class Sphere {
                 var r = s.origin.oMinus(origin).LengthSqr()
                 if (r > (radius + s.radius) * (radius + s.radius)) {
                     r = idMath.Sqrt(r)
-                    origin.oPluSet(s.origin.oPlus(origin).oMultiply(0.5f).oMultiply(1.0f - radius / (r + s.radius)))
+                    origin.plusAssign(s.origin.oPlus(origin).oMultiply(0.5f).oMultiply(1.0f - radius / (r + s.radius)))
                     radius += 0.5f * (r + s.radius - radius)
                     return true
                 }
@@ -169,7 +169,7 @@ class Sphere {
         }
 
         fun TranslateSelf(translation: idVec3): idSphere {
-            origin.oPluSet(translation)
+            origin.plusAssign(translation)
             return this
         }
 
@@ -222,12 +222,12 @@ class Sphere {
             r.oSet(e.oMinus(s))
             a = s.oNegative().oMultiply(r)
             return if (a <= 0) {
-                s.oMultiply(s) < radius * radius
-            } else if (a >= r.oMultiply(r)) {
-                e.oMultiply(e) < radius * radius
+                s.times(s) < radius * radius
+            } else if (a >= r.times(r)) {
+                e.times(e) < radius * radius
             } else {
-                r.oSet(s.oPlus(r.oMultiply(a / r.oMultiply(r))))
-                r.oMultiply(r) < radius * radius
+                r.oSet(s.oPlus(r.times(a / r.times(r))))
+                r.times(r) < radius * radius
             }
         }
 
@@ -249,9 +249,9 @@ class Sphere {
             val sqrtd: Float
             val p = idVec3()
             p.oSet(start.oMinus(origin))
-            a = dir.oMultiply(dir)
-            b = dir.oMultiply(p)
-            c = p.oMultiply(p) - radius * radius
+            a = dir.times(dir)
+            b = dir.times(p)
+            c = p.times(p) - radius * radius
             d = b * b - c * a
             if (d < 0.0f) {
                 return false
@@ -293,31 +293,31 @@ class Sphere {
 
         // Most tight sphere for a translation.
         fun FromPointTranslation(point: idVec3, translation: idVec3) {
-            origin.oSet(point.oPlus(translation.oMultiply(0.5f)))
+            origin.oSet(point.oPlus(translation.times(0.5f)))
             radius = idMath.Sqrt(0.5f * translation.LengthSqr())
         }
 
         fun FromSphereTranslation(sphere: idSphere, start: idVec3, translation: idVec3) {
-            origin.oSet(start.oPlus(sphere.origin).oPlus(translation.oMultiply(0.5f)))
+            origin.oSet(start.oPlus(sphere.origin).oPlus(translation.times(0.5f)))
             radius = idMath.Sqrt(0.5f * translation.LengthSqr()) + sphere.radius
         }
 
         // Most tight sphere for a rotation.
         fun FromPointRotation(point: idVec3, rotation: idRotation) {
-            val end = idVec3(rotation.oMultiply(point))
+            val end = idVec3(rotation.times(point))
             origin.oSet(point.oPlus(end).oMultiply(0.5f))
             radius = idMath.Sqrt(0.5f * end.oMinus(point).LengthSqr())
         }
 
         fun FromSphereRotation(sphere: idSphere, start: idVec3, rotation: idRotation) {
-            val end = idVec3(rotation.oMultiply(sphere.origin))
+            val end = idVec3(rotation.times(sphere.origin))
             origin.oSet(start.oPlus(sphere.origin.oPlus(end)).oMultiply(0.5f))
             radius = idMath.Sqrt(0.5f * end.oMinus(sphere.origin).LengthSqr()) + sphere.radius
         }
 
         fun AxisProjection(dir: idVec3, min: CFloat, max: CFloat) {
             val d: Float
-            d = dir.oMultiply(origin)
+            d = dir.times(origin)
             min._val = (d - radius)
             max._val = (d + radius)
         }

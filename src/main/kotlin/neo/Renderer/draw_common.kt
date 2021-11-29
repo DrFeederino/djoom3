@@ -1103,7 +1103,7 @@ object draw_common {
 
         // S is based on the view origin
         val s =
-            tr_local.backEnd.viewDef.renderView.vieworg.oMultiply(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2].oGet(
+            tr_local.backEnd.viewDef.renderView.vieworg.times(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2].oGet(
                 3
             )
         draw_common.fogPlanes[3].oSet(0, 0f)

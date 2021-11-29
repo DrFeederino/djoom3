@@ -224,10 +224,10 @@ object SysCmds {
                         if (l > 3.0f) {
                             l = 3.0f
                         }
-                        p1.oSet(SysCmds.debugLines[i].end.oMinus(forward.oMultiply(l).oPlus(right.oMultiply(l * 0.4f))))
+                        p1.oSet(SysCmds.debugLines[i].end.oMinus(forward.times(l).oPlus(right.times(l * 0.4f))))
                         p2.oSet(
                             SysCmds.debugLines[i].end.oMinus(
-                                forward.oMultiply(l).oMinus(right.oMultiply(l * 0.4f))
+                                forward.times(l).oMinus(right.times(l * 0.4f))
                             )
                         )
                         Game_local.gameRenderWorld.DebugLine(color, SysCmds.debugLines[i].end, p1)
@@ -1083,7 +1083,7 @@ object SysCmds {
             dict.Set("angle", Str.va("%f", yaw + 180))
             org.oSet(
                 player.GetPhysics().GetOrigin()
-                    .oPlus(idAngles(0, yaw, 0).ToForward().oMultiply(80f).oPlus(idVec3(0, 0, 1)))
+                    .oPlus(idAngles(0, yaw, 0).ToForward().times(80f).oPlus(idVec3(0, 0, 1)))
             )
             dict.Set("origin", org.ToString())
             i = 2
@@ -1199,10 +1199,10 @@ object SysCmds {
             dict.SetMatrix("rotation", idMat3.Companion.getMat3_default())
             dict.SetVector("origin", rv.vieworg)
             dict.SetVector("light_target", rv.viewaxis.oGet(0))
-            dict.SetVector("light_right", rv.viewaxis.oGet(1).oMultiply(-fov))
-            dict.SetVector("light_up", rv.viewaxis.oGet(2).oMultiply(fov))
-            dict.SetVector("light_start", rv.viewaxis.oGet(0).oMultiply(16f))
-            dict.SetVector("light_end", rv.viewaxis.oGet(0).oMultiply(1000f))
+            dict.SetVector("light_right", rv.viewaxis.oGet(1).times(-fov))
+            dict.SetVector("light_up", rv.viewaxis.oGet(2).times(fov))
+            dict.SetVector("light_start", rv.viewaxis.oGet(0).times(16f))
+            dict.SetVector("light_end", rv.viewaxis.oGet(0).times(1000f))
             if (args.Argc() >= 2) {
                 value = args.Argv(1)
                 filename.oSet(args.Argv(1))
@@ -1405,7 +1405,7 @@ object SysCmds {
                 return
             }
             name = args.Argv(1)
-            offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().oMultiply(100.0f)))
+            offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
             dict.Set("origin", offset.ToString())
             dict.Set("test", "1")
             dict.Set("fx", name)
@@ -2709,11 +2709,11 @@ object SysCmds {
             }
             assert(geom.facePlanes != null)
             modelMatrix = idMat4(renderEnt.axis, renderEnt.origin)
-            normal.oSet(geom.facePlanes[0].Normal().oMultiply(renderEnt.axis))
-            center.oSet(geom.bounds.GetCenter().oMultiply(modelMatrix))
-            origin.oSet(center.oPlus(normal.oMultiply(32.0f)))
+            normal.oSet(geom.facePlanes[0].Normal().times(renderEnt.axis))
+            center.oSet(geom.bounds.GetCenter().times(modelMatrix))
+            origin.oSet(center.oPlus(normal.times(32.0f)))
             origin.z -= player.EyeHeight()
-            normal.oMulSet(-1.0f)
+            normal.timesAssign(-1.0f)
             angles = normal.ToAngles()
 
             //	make sure the player is in noclip

@@ -61,7 +61,7 @@ class idMatXTest {
     fun Inverse_GaussJordanTest() {
         m1.oSet(original)
         m1.Inverse_GaussJordan()
-        m1.oMulSet(original)
+        m1.timesAssign(original)
         Assert.assertTrue("idMatX::Inverse_GaussJordan failed", m1.IsIdentity(1e-4f))
     }
 
@@ -298,7 +298,7 @@ class idMatXTest {
         m2.oSet(original)
         m2.LU_Factor(null)
         m2.LU_Inverse(m1, null)
-        m1.oMulSet(original)
+        m1.timesAssign(original)
         Assert.assertTrue("idMatX::LU_Inverse failed", m1.IsIdentity(1e-4f))
     }
 
@@ -445,7 +445,7 @@ class idMatXTest {
         m2.oSet(original)
         m2.QR_Factor(c, d)
         m2.QR_Inverse(m1, c, d)
-        m1.oMulSet(original)
+        m1.timesAssign(original)
         Assert.assertTrue("idMatX::QR_Inverse failed", m1.IsIdentity(1e-4f))
     }
 
@@ -471,7 +471,7 @@ class idMatXTest {
         m2.oSet(original)
         m2.SVD_Factor(w, m3)
         m2.SVD_Inverse(m1, w, m3)
-        m1.oMulSet(original)
+        m1.timesAssign(original)
         Assert.assertTrue("idMatX::SVD_Inverse failed", m1.IsIdentity(1e-4f))
     }
 
@@ -517,7 +517,7 @@ class idMatXTest {
             m1.ClearUpperTriangle()
             val pdtable = intArrayOf(1, 0, 1, 0, 0, 0)
             w.Random(size, pdtable[offset])
-            w.oMulSet(0.1f)
+            w.timesAssign(0.1f)
 
             // modify and factor m2
             m2.Update_RowColumnSymmetric(w, offset)
@@ -592,7 +592,7 @@ class idMatXTest {
         m2.oSet(original)
         m2.Cholesky_Factor()
         m2.Cholesky_Inverse(m1)
-        m1.oMulSet(original)
+        m1.timesAssign(original)
         Assert.assertTrue("idMatX::Cholesky_Inverse failed", m1.IsIdentity(1e-4f))
     }
 
@@ -719,7 +719,7 @@ class idMatXTest {
         m2.oSet(original)
         m2.LDLT_Factor()
         m2.LDLT_Inverse(m1)
-        m1.oMulSet(original)
+        m1.timesAssign(original)
     }
 
     @Test
@@ -733,7 +733,7 @@ class idMatXTest {
         m3.TransposeMultiply(m2, m1)
         for (i in 0 until size) {
             for (j in 0 until size) {
-                m1.oMulSet(i, j, v.p[j])
+                m1.timesAssign(i, j, v.p[j])
             }
         }
         Assert.assertTrue("idMatX::Eigen_SolveSymmetricTriDiagonal failed", m1.Compare(m2, 1e-4f))
@@ -749,7 +749,7 @@ class idMatXTest {
         m3.TransposeMultiply(m2, m1)
         for (i in 0 until size) {
             for (j in 0 until size) {
-                m1.oMulSet(i, j, v.p[j])
+                m1.timesAssign(i, j, v.p[j])
             }
         }
         Assert.assertTrue("idMatX::Eigen_SolveSymmetric failed", m1.Compare(m2, 1e-4f))
@@ -766,7 +766,7 @@ class idMatXTest {
         m3.TransposeMultiply(m2, m1)
         for (i in 0 until size) {
             for (j in 0 until size) {
-                m1.oMulSet(i, j, v.p[j])
+                m1.timesAssign(i, j, v.p[j])
             }
         }
         Assert.assertTrue("idMatX::Eigen_Solve failed", m1.Compare(m2, 1e-4f))

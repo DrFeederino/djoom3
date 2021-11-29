@@ -453,13 +453,13 @@ object DeclParticle {
                                 val invf = 1.0f / f
                                 val newRadius = distributionParms.get(3) + f * (1.0f - distributionParms.get(3))
                                 val rescale = invf * newRadius
-                                origin.oMulSet(0, rescale)
-                                origin.oMulSet(1, rescale)
+                                origin.timesAssign(0, rescale)
+                                origin.timesAssign(1, rescale)
                             }
                         }
-                        origin.oMulSet(0, distributionParms.get(0))
-                        origin.oMulSet(1, distributionParms.get(1))
-                        origin.oMulSet(2, distributionParms.get(2))
+                        origin.timesAssign(0, distributionParms.get(0))
+                        origin.timesAssign(1, distributionParms.get(1))
+                        origin.timesAssign(2, distributionParms.get(2))
                     }
                     prtDistribution_t.PDIST_SPHERE -> {
                         // ( sizeX sizeY sizeZ ringFraction )
@@ -487,18 +487,18 @@ object DeclParticle {
                                 val invf = 1.0f / f
                                 val newRadius = distributionParms.get(3) + f * (1.0f - distributionParms.get(3))
                                 val rescale = invf * newRadius
-                                origin.oMulSet(rescale)
+                                origin.timesAssign(rescale)
                             }
                         }
-                        origin.oMulSet(0, distributionParms.get(0))
-                        origin.oMulSet(1, distributionParms.get(1))
-                        origin.oMulSet(2, distributionParms.get(2))
+                        origin.timesAssign(0, distributionParms.get(0))
+                        origin.timesAssign(1, distributionParms.get(1))
+                        origin.timesAssign(2, distributionParms.get(2))
                     }
                 }
 
                 // offset will effect all particle origin types
                 // add this before the velocity and gravity additions
-                origin.oPluSet(offset)
+                origin.plusAssign(offset)
 
                 //
                 // add the velocity over time
@@ -523,13 +523,13 @@ object DeclParticle {
                     prtDirection_t.PDIR_OUTWARD -> {
                         dir.oSet(origin)
                         dir.Normalize()
-                        dir.oPluSet(2, directionParms.get(0))
+                        dir.plusAssign(2, directionParms.get(0))
                     }
                 }
 
                 // add speed
                 val iSpeed = speed.Integrate(g.frac, g.random)
-                origin.oPluSet(dir.oMultiply(iSpeed).oMultiply(particleLife))
+                origin.plusAssign(dir.times(iSpeed).oMultiply(particleLife))
             } else {
                 //
                 // custom paths completely override both the origin and velocity calculations, but still
@@ -570,7 +570,7 @@ object DeclParticle {
                         origin.oSet(0, c1.getVal() * c2.getVal())
                         origin.oSet(1, s1.getVal() * c2.getVal())
                         origin.oSet(2, -s2.getVal())
-                        origin.oMultiply(customPathParms.get(2))
+                        origin.times(customPathParms.get(2))
                     }
                     prtCustomPth_t.PPATH_ORBIT -> {
                         // ( radius speed axis )
@@ -592,20 +592,20 @@ object DeclParticle {
                         Common.common.Error("idParticleStage.ParticleOrigin: bad customPathType")
                     }
                 }
-                origin.oPluSet(offset)
+                origin.plusAssign(offset)
             }
 
             // adjust for the per-particle smoke offset
-            origin.oMulSet(g.axis)
-            origin.oPluSet(g.origin)
+            origin.timesAssign(g.axis)
+            origin.plusAssign(g.origin)
 
             // add gravity after adjusting for axis
             if (worldGravity) {
                 val gra = idVec3(0, 0, -gravity)
-                gra.oMulSet(g.renderEnt.axis.Transpose())
-                origin.oPluSet(gra.oMultiply(g.age * g.age))
+                gra.timesAssign(g.renderEnt.axis.Transpose())
+                origin.plusAssign(gra.times(g.age * g.age))
             } else {
-                origin.oMinSet(2, gravity * g.age * g.age)
+                origin.minusAssign(2, gravity * g.age * g.age)
             }
         }
 
@@ -641,10 +641,10 @@ object DeclParticle {
                     up.oSet(stepOrigin.oMinus(oldOrigin)) // along the direction of travel
                     val forwardDir = idVec3()
                     g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(0), forwardDir)
-                    up.oMinSet(forwardDir.oMultiply(up.oMultiply(forwardDir)))
+                    up.minusAssign(forwardDir.times(up.times(forwardDir)))
                     up.Normalize()
                     left.oSet(up.Cross(forwardDir))
-                    left.oMulSet(psize)
+                    left.timesAssign(psize)
                     verts.get(verts_p + 0).oSet(verts.get(0))
                     verts.get(verts_p + 1).oSet(verts.get(1))
                     verts.get(verts_p + 2).oSet(verts.get(2))
@@ -724,11 +724,11 @@ object DeclParticle {
                 val entityUp = idVec3()
                 g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(1), entityLeft)
                 g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(2), entityUp)
-                left.oSet(entityLeft.oMultiply(c).oPlus(entityUp.oMultiply(s)))
-                up.oSet(entityUp.oMultiply(c).oMinus(entityLeft.oMultiply(s)))
+                left.oSet(entityLeft.times(c).oPlus(entityUp.times(s)))
+                up.oSet(entityUp.times(c).oMinus(entityLeft.times(s)))
             }
-            left.oMulSet(psize)
-            up.oMulSet(height)
+            left.timesAssign(psize)
+            up.timesAssign(height)
             verts.get(0).xyz.oSet(origin.oMinus(left).oPlus(up))
             verts.get(1).xyz.oSet(origin.oPlus(left).oPlus(up))
             verts.get(2).xyz.oSet(origin.oMinus(left).oMinus(up))

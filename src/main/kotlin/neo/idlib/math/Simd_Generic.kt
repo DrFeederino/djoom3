@@ -14,8 +14,11 @@ import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.idlib.math.Vector.idVecX
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
 import java.util.*
+import kotlin.experimental.or
 
 /**
  *
@@ -76,7 +79,7 @@ object Simd_Generic {
         private val NSKIP7_4 = 7 shl 3 or (4 and 7)
         private val NSKIP7_5 = 7 shl 3 or (5 and 7)
         private val NSKIP7_6 = 7 shl 3 or (6 and 7)
-        override fun GetName(): String? {
+        override fun GetName(): String {
             return "generic code"
         }
 
@@ -87,22 +90,21 @@ object Simd_Generic {
          dst[i] = constant + src[i];
          ============
          */
-        override fun Add(dst: FloatArray?, constant: Float, src: FloatArray?, count: Int) {
+        override fun Add(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
 //#define OPER(X) dst[(X)] = src[(X)] + constant;
 //	UNROLL4(OPER)
 //#undef OPER
-            var _IX: Int
             val _NM = count and -0x4
-            _IX = 0
+            var _IX = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src.get(_IX + 0) + constant
-                dst.get(_IX + 1) = src.get(_IX + 1) + constant
-                dst.get(_IX + 2) = src.get(_IX + 2) + constant
-                dst.get(_IX + 3) = src.get(_IX + 3) + constant
+                dst[_IX + 0] = src[_IX + 0] + constant
+                dst[_IX + 1] = src[_IX + 1] + constant
+                dst[_IX + 2] = src[_IX + 2] + constant
+                dst[_IX + 3] = src[_IX + 3] + constant
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src.get(_IX) + constant
+                dst[_IX] = src[_IX] + constant
                 _IX++
             }
         }
@@ -114,19 +116,18 @@ object Simd_Generic {
          dst[i] = src0[i] + src1[i];
          ============
          */
-        override fun Add(dst: FloatArray?, src0: FloatArray?, src1: FloatArray?, count: Int) {
-            var _IX: Int
+        override fun Add(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) + src1.get(_IX + 0)
-                dst.get(_IX + 1) = src0.get(_IX + 1) + src1.get(_IX + 1)
-                dst.get(_IX + 2) = src0.get(_IX + 2) + src1.get(_IX + 2)
-                dst.get(_IX + 3) = src0.get(_IX + 3) + src1.get(_IX + 3)
+                dst[_IX + 0] = src0[_IX + 0] + src1[_IX + 0]
+                dst[_IX + 1] = src0[_IX + 1] + src1[_IX + 1]
+                dst[_IX + 2] = src0[_IX + 2] + src1[_IX + 2]
+                dst[_IX + 3] = src0[_IX + 3] + src1[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) + src1.get(_IX)
+                dst[_IX] = src0[_IX] + src1[_IX]
                 _IX++
             }
         }
@@ -138,20 +139,19 @@ object Simd_Generic {
          dst[i] = constant - src[i];
          ============
          */
-        override fun Sub(dst: FloatArray?, constant: Float, src: FloatArray?, count: Int) {
-            val c = constant.toDouble()
-            var _IX: Int
+        override fun Sub(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
+            val c = constant
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = (c - src.get(_IX + 0)).toFloat()
-                dst.get(_IX + 1) = (c - src.get(_IX + 1)).toFloat()
-                dst.get(_IX + 2) = (c - src.get(_IX + 2)).toFloat()
-                dst.get(_IX + 3) = (c - src.get(_IX + 3)).toFloat()
+                dst[_IX + 0] = (c - src[_IX + 0])
+                dst[_IX + 1] = (c - src[_IX + 1])
+                dst[_IX + 2] = (c - src[_IX + 2])
+                dst[_IX + 3] = (c - src[_IX + 3])
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = (c - src.get(_IX)).toFloat()
+                dst[_IX] = (c - src[_IX])
                 _IX++
             }
         }
@@ -163,19 +163,18 @@ object Simd_Generic {
          dst[i] = src0[i] - src1[i];
          ============
          */
-        override fun Sub(dst: FloatArray?, src0: FloatArray?, src1: FloatArray?, count: Int) {
-            var _IX: Int
+        override fun Sub(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) - src1.get(_IX + 0)
-                dst.get(_IX + 1) = src0.get(_IX + 1) - src1.get(_IX + 1)
-                dst.get(_IX + 2) = src0.get(_IX + 2) - src1.get(_IX + 2)
-                dst.get(_IX + 3) = src0.get(_IX + 3) - src1.get(_IX + 3)
+                dst[_IX + 0] = src0[_IX + 0] - src1[_IX + 0]
+                dst[_IX + 1] = src0[_IX + 1] - src1[_IX + 1]
+                dst[_IX + 2] = src0[_IX + 2] - src1[_IX + 2]
+                dst[_IX + 3] = src0[_IX + 3] - src1[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) - src1.get(_IX)
+                dst[_IX] = src0[_IX] - src1[_IX]
                 _IX++
             }
         }
@@ -187,20 +186,19 @@ object Simd_Generic {
          dst[i] = constant * src[i];
          ============
          */
-        override fun Mul(dst: FloatArray?, constant: Float, src: FloatArray?, count: Int) {
-            val c = constant.toDouble()
-            var _IX: Int
+        override fun Mul(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
+            val c = constant
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = (c * src.get(_IX + 0)).toFloat()
-                dst.get(_IX + 1) = (c * src.get(_IX + 1)).toFloat()
-                dst.get(_IX + 2) = (c * src.get(_IX + 2)).toFloat()
-                dst.get(_IX + 3) = (c * src.get(_IX + 3)).toFloat()
+                dst[_IX + 0] = (c * src[_IX + 0])
+                dst[_IX + 1] = (c * src[_IX + 1])
+                dst[_IX + 2] = (c * src[_IX + 2])
+                dst[_IX + 3] = (c * src[_IX + 3])
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = (c * src.get(_IX)).toFloat()
+                dst[_IX] = (c * src[_IX])
                 _IX++
             }
         }
@@ -212,19 +210,18 @@ object Simd_Generic {
          dst[i] = src0[i] * src1[i];
          ============
          */
-        override fun Mul(dst: FloatArray?, src0: FloatArray?, src1: FloatArray?, count: Int) {
-            var _IX: Int
+        override fun Mul(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) * src1.get(_IX + 0)
-                dst.get(_IX + 1) = src0.get(_IX + 1) * src1.get(_IX + 1)
-                dst.get(_IX + 2) = src0.get(_IX + 2) * src1.get(_IX + 2)
-                dst.get(_IX + 3) = src0.get(_IX + 3) * src1.get(_IX + 3)
+                dst[_IX + 0] = src0[_IX + 0] * src1[_IX + 0]
+                dst[_IX + 1] = src0[_IX + 1] * src1[_IX + 1]
+                dst[_IX + 2] = src0[_IX + 2] * src1[_IX + 2]
+                dst[_IX + 3] = src0[_IX + 3] * src1[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) * src1.get(_IX)
+                dst[_IX] = src0[_IX] * src1[_IX]
                 _IX++
             }
         }
@@ -236,20 +233,19 @@ object Simd_Generic {
          dst[i] = constant / divisor[i];
          ============
          */
-        override fun Div(dst: FloatArray?, constant: Float, src: FloatArray?, count: Int) {
-            val c = constant.toDouble()
-            var _IX: Int
+        override fun Div(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
+            val c = constant
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = (c / src.get(_IX + 0)).toFloat()
-                dst.get(_IX + 1) = (c / src.get(_IX + 1)).toFloat()
-                dst.get(_IX + 2) = (c / src.get(_IX + 2)).toFloat()
-                dst.get(_IX + 3) = (c / src.get(_IX + 3)).toFloat()
+                dst[_IX + 0] = (c / src[_IX + 0])
+                dst[_IX + 1] = (c / src[_IX + 1])
+                dst[_IX + 2] = (c / src[_IX + 2])
+                dst[_IX + 3] = (c / src[_IX + 3])
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = (c / src.get(_IX)).toFloat()
+                dst[_IX] = (c / src[_IX])
                 _IX++
             }
         }
@@ -261,19 +257,18 @@ object Simd_Generic {
          dst[i] = src0[i] / src1[i];
          ============
          */
-        override fun Div(dst: FloatArray?, src0: FloatArray?, src1: FloatArray?, count: Int) {
-            var _IX: Int
+        override fun Div(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) / src1.get(_IX + 0)
-                dst.get(_IX + 1) = src0.get(_IX + 1) / src1.get(_IX + 1)
-                dst.get(_IX + 2) = src0.get(_IX + 2) / src1.get(_IX + 2)
-                dst.get(_IX + 3) = src0.get(_IX + 3) / src1.get(_IX + 3)
+                dst[_IX + 0] = src0[_IX + 0] / src1[_IX + 0]
+                dst[_IX + 1] = src0[_IX + 1] / src1[_IX + 1]
+                dst[_IX + 2] = src0[_IX + 2] / src1[_IX + 2]
+                dst[_IX + 3] = src0[_IX + 3] / src1[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) / src1.get(_IX)
+                dst[_IX] = src0[_IX] / src1[_IX]
                 _IX++
             }
         }
@@ -285,20 +280,19 @@ object Simd_Generic {
          dst[i] += constant * src[i];
          ============
          */
-        override fun MulAdd(dst: FloatArray?, constant: Float, src: FloatArray?, count: Int) {
-            val c = constant.toDouble()
-            var _IX: Int
+        override fun MulAdd(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
+            val c = constant
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) += c * src.get(_IX + 0)
-                dst.get(_IX + 1) += c * src.get(_IX + 1)
-                dst.get(_IX + 2) += c * src.get(_IX + 2)
-                dst.get(_IX + 3) += c * src.get(_IX + 3)
+                dst[_IX + 0] += c * src[_IX + 0]
+                dst[_IX + 1] += c * src[_IX + 1]
+                dst[_IX + 2] += c * src[_IX + 2]
+                dst[_IX + 3] += c * src[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) += c * src.get(_IX)
+                dst[_IX] += c * src[_IX]
                 _IX++
             }
         }
@@ -310,19 +304,18 @@ object Simd_Generic {
          dst[i] += src0[i] * src1[i];
          ============
          */
-        override fun MulAdd(dst: FloatArray?, src0: FloatArray?, src1: FloatArray?, count: Int) {
-            var _IX: Int
+        override fun MulAdd(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) += src0.get(_IX + 0) * src1.get(_IX + 0)
-                dst.get(_IX + 1) += src0.get(_IX + 1) * src1.get(_IX + 1)
-                dst.get(_IX + 2) += src0.get(_IX + 2) * src1.get(_IX + 2)
-                dst.get(_IX + 3) += src0.get(_IX + 3) * src1.get(_IX + 3)
+                dst[_IX + 0] += src0[_IX + 0] * src1[_IX + 0]
+                dst[_IX + 1] += src0[_IX + 1] * src1[_IX + 1]
+                dst[_IX + 2] += src0[_IX + 2] * src1[_IX + 2]
+                dst[_IX + 3] += src0[_IX + 3] * src1[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) += src0.get(_IX) * src1.get(_IX)
+                dst[_IX] += src0[_IX] * src1[_IX]
                 _IX++
             }
         }
@@ -334,20 +327,19 @@ object Simd_Generic {
          dst[i] -= constant * src[i];
          ============
          */
-        override fun MulSub(dst: FloatArray?, constant: Float, src: FloatArray?, count: Int) {
-            val c = constant.toDouble()
-            var _IX: Int
+        override fun MulSub(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
+            val c = constant
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) -= c * src.get(_IX + 0)
-                dst.get(_IX + 1) -= c * src.get(_IX + 1)
-                dst.get(_IX + 2) -= c * src.get(_IX + 2)
-                dst.get(_IX + 3) -= c * src.get(_IX + 3)
+                dst[_IX + 0] -= c * src[_IX + 0]
+                dst[_IX + 1] -= c * src[_IX + 1]
+                dst[_IX + 2] -= c * src[_IX + 2]
+                dst[_IX + 3] -= c * src[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) -= c * src.get(_IX)
+                dst[_IX] -= c * src[_IX]
                 _IX++
             }
         }
@@ -359,19 +351,18 @@ object Simd_Generic {
          dst[i] -= src0[i] * src1[i];
          ============
          */
-        override fun MulSub(dst: FloatArray?, src0: FloatArray?, src1: FloatArray?, count: Int) {
-            var _IX: Int
+        override fun MulSub(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) -= src0.get(_IX + 0) * src1.get(_IX + 0)
-                dst.get(_IX + 1) -= src0.get(_IX + 1) * src1.get(_IX + 1)
-                dst.get(_IX + 2) -= src0.get(_IX + 2) * src1.get(_IX + 2)
-                dst.get(_IX + 3) -= src0.get(_IX + 3) * src1.get(_IX + 3)
+                dst[_IX + 0] -= src0[_IX + 0] * src1[_IX + 0]
+                dst[_IX + 1] -= src0[_IX + 1] * src1[_IX + 1]
+                dst[_IX + 2] -= src0[_IX + 2] * src1[_IX + 2]
+                dst[_IX + 3] -= src0[_IX + 3] * src1[_IX + 3]
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) -= src0.get(_IX) * src1.get(_IX)
+                dst[_IX] -= src0[_IX] * src1[_IX]
                 _IX++
             }
         }
@@ -383,11 +374,10 @@ object Simd_Generic {
          dst[i] = constant * src[i];
          ============
          */
-        override fun Dot(dst: FloatArray?, constant: idVec3?, src: Array<idVec3?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, constant: idVec3, src: Array<idVec3>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX) = src.get(_IX).oMultiply(constant)
+                dst[_IX] = src[_IX].times(constant)
                 _IX++
             }
         }
@@ -399,11 +389,10 @@ object Simd_Generic {
          dst[i] = constant * src[i].Normal() + src[i][3];
          ============
          */
-        override fun Dot(dst: FloatArray?, constant: idVec3?, src: Array<idPlane?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, constant: idVec3, src: Array<idPlane>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX) = constant.oMultiply(src.get(_IX).Normal()) + src.get(_IX)
+                dst[_IX] = constant.times(src[_IX].Normal()) + src[_IX]
                     .oGet(3) //NB I'm not saying operator overloading would have prevented this bug, but....!@#$%$@#^&#$^%^#%^&#$*^&
                 _IX++
             }
@@ -416,11 +405,10 @@ object Simd_Generic {
          dst[i] = constant * src[i].xyz;
          ============
          */
-        override fun Dot(dst: FloatArray?, constant: idVec3?, src: Array<idDrawVert?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, constant: idVec3, src: Array<idDrawVert>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX + 0) = src.get(_IX).xyz.oMultiply(constant)
+                dst[_IX + 0] = src[_IX].xyz.times(constant)
                 _IX++
             }
         }
@@ -432,11 +420,10 @@ object Simd_Generic {
          dst[i] = constant.Normal() * src[i] + constant[3];
          ============
          */
-        override fun Dot(dst: FloatArray?, constant: idPlane?, src: Array<idVec3?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, constant: idPlane, src: Array<idVec3>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX) = constant.Normal().oMultiply(src.get(_IX)) + constant.oGet(3)
+                dst[_IX] = constant.Normal().times(src[_IX]) + constant.oGet(3)
                 _IX++
             }
         }
@@ -448,12 +435,11 @@ object Simd_Generic {
          dst[i] = constant.Normal() * src[i].Normal() + constant[3] * src[i][3];
          ============
          */
-        override fun Dot(dst: FloatArray?, constant: idPlane?, src: Array<idPlane?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, constant: idPlane, src: Array<idPlane>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX) =
-                    constant.Normal().oMultiply(src.get(_IX).Normal()) + src.get(_IX).oGet(3) * constant.oGet(3)
+                dst[_IX] =
+                    constant.Normal().times(src[_IX].Normal()) + src[_IX].oGet(3) * constant.oGet(3)
                 _IX++
             }
         }
@@ -465,11 +451,10 @@ object Simd_Generic {
          dst[i] = constant.Normal() * src[i].xyz + constant[3];
          ============
          */
-        override fun Dot(dst: FloatArray?, constant: idPlane?, src: Array<idDrawVert?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, constant: idPlane, src: Array<idDrawVert>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX) = constant.Normal().oMultiply(src.get(_IX).xyz) + constant.oGet(3)
+                dst[_IX] = constant.Normal().times(src[_IX].xyz) + constant.oGet(3)
                 _IX++
             }
         }
@@ -481,11 +466,10 @@ object Simd_Generic {
          dst[i] = src0[i] * src1[i];
          ============
          */
-        override fun Dot(dst: FloatArray?, src0: Array<idVec3?>?, src1: Array<idVec3?>?, count: Int) {
-            var _IX: Int
-            _IX = 0
+        override fun Dot(dst: FloatArray, src0: Array<idVec3>, src1: Array<idVec3>, count: Int) {
+            var _IX: Int = 0
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX).oMultiply(src1.get(_IX))
+                dst[_IX] = src0[_IX].times(src1[_IX])
                 _IX++
             }
         }
@@ -497,95 +481,89 @@ object Simd_Generic {
          dot = src1[0] * src2[0] + src1[1] * src2[1] + src1[2] * src2[2] + ...
          ============
          */
-        override fun Dot(dot: CFloat?, src1: FloatArray?, src2: FloatArray?, count: Int) {
+        override fun Dot(dot: CFloat, src1: FloatArray, src2: FloatArray, count: Int) {
             when (count) {
                 0 -> {
-                    dot.setVal(0.0f)
+                    dot._val = (0.0f)
                     return
                 }
                 1 -> {
-                    dot.setVal(src1.get(0) * src2.get(0))
+                    dot._val = (src1[0] * src2[0])
                     return
                 }
                 2 -> {
-                    dot.setVal(src1.get(0) * src2.get(0) + src1.get(1) * src2.get(1))
+                    dot._val = (src1[0] * src2[0] + src1[1] * src2[1])
                     return
                 }
                 3 -> {
-                    dot.setVal(src1.get(0) * src2.get(0) + src1.get(1) * src2.get(1) + src1.get(2) * src2.get(2))
+                    dot._val = (src1[0] * src2[0] + src1[1] * src2[1] + src1[2] * src2[2])
                     return
                 }
                 else -> {
-                    var i: Int
-                    var s0: Double
-                    var s1: Double
-                    var s2: Double
-                    var s3: Double
-                    s0 = (src1.get(0) * src2.get(0)).toDouble()
-                    s1 = (src1.get(1) * src2.get(1)).toDouble()
-                    s2 = (src1.get(2) * src2.get(2)).toDouble()
-                    s3 = (src1.get(3) * src2.get(3)).toDouble()
-                    i = 4
+                    var s0: Double = (src1[0] * src2[0]).toDouble()
+                    var s1: Double = (src1[1] * src2[1]).toDouble()
+                    var s2: Double = (src1[2] * src2[2]).toDouble()
+                    var s3: Double = (src1[3] * src2[3]).toDouble()
+                    var i: Int = 4
                     while (i < count - 7) {
-                        s0 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
-                        s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                        s2 += (src1.get(i + 2) * src2.get(i + 2)).toDouble()
-                        s3 += (src1.get(i + 3) * src2.get(i + 3)).toDouble()
-                        s0 += (src1.get(i + 4) * src2.get(i + 4)).toDouble()
-                        s1 += (src1.get(i + 5) * src2.get(i + 5)).toDouble()
-                        s2 += (src1.get(i + 6) * src2.get(i + 6)).toDouble()
-                        s3 += (src1.get(i + 7) * src2.get(i + 7)).toDouble()
+                        s0 += (src1[i + 0] * src2[i + 0]).toDouble()
+                        s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                        s2 += (src1[i + 2] * src2[i + 2]).toDouble()
+                        s3 += (src1[i + 3] * src2[i + 3]).toDouble()
+                        s0 += (src1[i + 4] * src2[i + 4]).toDouble()
+                        s1 += (src1[i + 5] * src2[i + 5]).toDouble()
+                        s2 += (src1[i + 6] * src2[i + 6]).toDouble()
+                        s3 += (src1[i + 7] * src2[i + 7]).toDouble()
                         i += 8
                     }
                     when (count - i) {
                         7 -> {
-                            s0 += (src1.get(i + 6) * src2.get(i + 6)).toDouble()
-                            s1 += (src1.get(i + 5) * src2.get(i + 5)).toDouble()
-                            s2 += (src1.get(i + 4) * src2.get(i + 4)).toDouble()
-                            s3 += (src1.get(i + 3) * src2.get(i + 3)).toDouble()
-                            s0 += (src1.get(i + 2) * src2.get(i + 2)).toDouble()
-                            s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                            s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                            s0 += (src1[i + 6] * src2[i + 6]).toDouble()
+                            s1 += (src1[i + 5] * src2[i + 5]).toDouble()
+                            s2 += (src1[i + 4] * src2[i + 4]).toDouble()
+                            s3 += (src1[i + 3] * src2[i + 3]).toDouble()
+                            s0 += (src1[i + 2] * src2[i + 2]).toDouble()
+                            s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                            s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
                         6 -> {
-                            s1 += (src1.get(i + 5) * src2.get(i + 5)).toDouble()
-                            s2 += (src1.get(i + 4) * src2.get(i + 4)).toDouble()
-                            s3 += (src1.get(i + 3) * src2.get(i + 3)).toDouble()
-                            s0 += (src1.get(i + 2) * src2.get(i + 2)).toDouble()
-                            s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                            s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                            s1 += (src1[i + 5] * src2[i + 5]).toDouble()
+                            s2 += (src1[i + 4] * src2[i + 4]).toDouble()
+                            s3 += (src1[i + 3] * src2[i + 3]).toDouble()
+                            s0 += (src1[i + 2] * src2[i + 2]).toDouble()
+                            s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                            s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
                         5 -> {
-                            s2 += (src1.get(i + 4) * src2.get(i + 4)).toDouble()
-                            s3 += (src1.get(i + 3) * src2.get(i + 3)).toDouble()
-                            s0 += (src1.get(i + 2) * src2.get(i + 2)).toDouble()
-                            s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                            s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                            s2 += (src1[i + 4] * src2[i + 4]).toDouble()
+                            s3 += (src1[i + 3] * src2[i + 3]).toDouble()
+                            s0 += (src1[i + 2] * src2[i + 2]).toDouble()
+                            s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                            s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
                         4 -> {
-                            s3 += (src1.get(i + 3) * src2.get(i + 3)).toDouble()
-                            s0 += (src1.get(i + 2) * src2.get(i + 2)).toDouble()
-                            s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                            s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                            s3 += (src1[i + 3] * src2[i + 3]).toDouble()
+                            s0 += (src1[i + 2] * src2[i + 2]).toDouble()
+                            s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                            s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
                         3 -> {
-                            s0 += (src1.get(i + 2) * src2.get(i + 2)).toDouble()
-                            s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                            s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                            s0 += (src1[i + 2] * src2[i + 2]).toDouble()
+                            s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                            s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
                         2 -> {
-                            s1 += (src1.get(i + 1) * src2.get(i + 1)).toDouble()
-                            s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                            s1 += (src1[i + 1] * src2[i + 1]).toDouble()
+                            s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
-                        1 -> s2 += (src1.get(i + 0) * src2.get(i + 0)).toDouble()
+                        1 -> s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         0 -> {}
                     }
-                    var sum: Double
-                    sum = s3
+                    var sum: Double = s3
                     sum += s2
                     sum += s1
                     sum += s0
-                    dot.setVal(sum.toFloat())
+                    dot._val = (sum.toFloat())
                 }
             }
         }
@@ -597,19 +575,18 @@ object Simd_Generic {
          dst[i] = src0[i] > constant;
          ============
          */
-        override fun CmpGT(dst: BooleanArray?, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpGT(dst: BooleanArray, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) > constant
-                dst.get(_IX + 1) = src0.get(_IX + 1) > constant
-                dst.get(_IX + 2) = src0.get(_IX + 2) > constant
-                dst.get(_IX + 3) = src0.get(_IX + 3) > constant
+                dst[_IX + 0] = src0[_IX + 0] > constant
+                dst[_IX + 1] = src0[_IX + 1] > constant
+                dst[_IX + 2] = src0[_IX + 2] > constant
+                dst[_IX + 3] = src0[_IX + 3] > constant
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) > constant
+                dst[_IX] = src0[_IX] > constant
                 _IX++
             }
         }
@@ -621,20 +598,19 @@ object Simd_Generic {
          dst[i] |= ( src0[i] > constant ) << bitNum;
          ============
          */
-        override fun CmpGT(dst: ByteArray?, bitNum: Byte, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpGT(dst: ByteArray, bitNum: Byte, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            val _bitNum = (1 shl bitNum).toByte() //TODO:check byte signage
-            _IX = 0
+            val _bitNum = (1 shl bitNum.toInt()) //TODO:check byte signage
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = dst.get(_IX + 0) or if (src0.get(_IX + 0) > constant) _bitNum else 0
-                dst.get(_IX + 1) = dst.get(_IX + 1) or if (src0.get(_IX + 1) > constant) _bitNum else 0
-                dst.get(_IX + 2) = dst.get(_IX + 2) or if (src0.get(_IX + 2) > constant) _bitNum else 0
-                dst.get(_IX + 3) = dst.get(_IX + 3) or if (src0.get(_IX + 3) > constant) _bitNum else 0
+                dst[_IX + 0] = dst[_IX + 0] or (if (src0[_IX + 0] > constant) _bitNum else 0).toByte()
+                dst[_IX + 1] = dst[_IX + 1] or (if (src0[_IX + 1] > constant) _bitNum else 0).toByte()
+                dst[_IX + 2] = dst[_IX + 2] or (if (src0[_IX + 2] > constant) _bitNum else 0).toByte()
+                dst[_IX + 3] = dst[_IX + 3] or (if (src0[_IX + 3] > constant) _bitNum else 0).toByte()
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = dst.get(_IX) or if (src0.get(_IX) > constant) _bitNum else 0
+                dst[_IX] = dst[_IX] or (if (src0[_IX] > constant) _bitNum else 0).toByte()
                 _IX++
             }
         }
@@ -646,19 +622,18 @@ object Simd_Generic {
          dst[i] = src0[i] >= constant;
          ============
          */
-        override fun CmpGE(dst: BooleanArray?, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpGE(dst: BooleanArray, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) >= constant
-                dst.get(_IX + 1) = src0.get(_IX + 1) >= constant
-                dst.get(_IX + 2) = src0.get(_IX + 2) >= constant
-                dst.get(_IX + 3) = src0.get(_IX + 3) >= constant
+                dst[_IX + 0] = src0[_IX + 0] >= constant
+                dst[_IX + 1] = src0[_IX + 1] >= constant
+                dst[_IX + 2] = src0[_IX + 2] >= constant
+                dst[_IX + 3] = src0[_IX + 3] >= constant
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) >= constant
+                dst[_IX] = src0[_IX] >= constant
                 _IX++
             }
         }
@@ -670,20 +645,19 @@ object Simd_Generic {
          dst[i] |= ( src0[i] >= constant ) << bitNum;
          ============
          */
-        override fun CmpGE(dst: ByteArray?, bitNum: Byte, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpGE(dst: ByteArray, bitNum: Byte, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            val _bitNum = (1 shl bitNum).toByte() //TODO:check byte signage
-            _IX = 0
+            val _bitNum = (1 shl bitNum.toInt()).toByte() //TODO:check byte signage
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = dst.get(_IX + 0) or if (src0.get(_IX + 0) >= constant) _bitNum else 0
-                dst.get(_IX + 1) = dst.get(_IX + 1) or if (src0.get(_IX + 1) >= constant) _bitNum else 0
-                dst.get(_IX + 2) = dst.get(_IX + 2) or if (src0.get(_IX + 2) >= constant) _bitNum else 0
-                dst.get(_IX + 3) = dst.get(_IX + 3) or if (src0.get(_IX + 3) >= constant) _bitNum else 0
+                dst[_IX + 0] = dst[_IX + 0] or if (src0[_IX + 0] >= constant) _bitNum else 0
+                dst[_IX + 1] = dst[_IX + 1] or if (src0[_IX + 1] >= constant) _bitNum else 0
+                dst[_IX + 2] = dst[_IX + 2] or if (src0[_IX + 2] >= constant) _bitNum else 0
+                dst[_IX + 3] = dst[_IX + 3] or if (src0[_IX + 3] >= constant) _bitNum else 0
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = dst.get(_IX) or if (src0.get(_IX) >= constant) _bitNum else 0
+                dst[_IX] = dst[_IX] or if (src0[_IX] >= constant) _bitNum else 0
                 _IX++
             }
         }
@@ -695,19 +669,18 @@ object Simd_Generic {
          dst[i] = src0[i] < constant;
          ============
          */
-        override fun CmpLT(dst: BooleanArray?, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpLT(dst: BooleanArray, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) < constant
-                dst.get(_IX + 1) = src0.get(_IX + 1) < constant
-                dst.get(_IX + 2) = src0.get(_IX + 2) < constant
-                dst.get(_IX + 3) = src0.get(_IX + 3) < constant
+                dst[_IX + 0] = src0[_IX + 0] < constant
+                dst[_IX + 1] = src0[_IX + 1] < constant
+                dst[_IX + 2] = src0[_IX + 2] < constant
+                dst[_IX + 3] = src0[_IX + 3] < constant
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) < constant
+                dst[_IX] = src0[_IX] < constant
                 _IX++
             }
         }
@@ -719,20 +692,19 @@ object Simd_Generic {
          dst[i] |= ( src0[i] < constant ) << bitNum;
          ============
          */
-        override fun CmpLT(dst: ByteArray?, bitNum: Byte, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpLT(dst: ByteArray, bitNum: Byte, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            val _bitNum = (1 shl bitNum).toByte() //TODO:check byte signage
-            _IX = 0
+            val _bitNum = (1 shl bitNum.toInt()).toByte() //TODO:check byte signage
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = dst.get(_IX + 0) or if (src0.get(_IX + 0) < constant) _bitNum else 0
-                dst.get(_IX + 1) = dst.get(_IX + 1) or if (src0.get(_IX + 1) < constant) _bitNum else 0
-                dst.get(_IX + 2) = dst.get(_IX + 2) or if (src0.get(_IX + 2) < constant) _bitNum else 0
-                dst.get(_IX + 3) = dst.get(_IX + 3) or if (src0.get(_IX + 3) < constant) _bitNum else 0
+                dst[_IX + 0] = dst[_IX + 0] or if (src0[_IX + 0] < constant) _bitNum else 0
+                dst[_IX + 1] = dst[_IX + 1] or if (src0[_IX + 1] < constant) _bitNum else 0
+                dst[_IX + 2] = dst[_IX + 2] or if (src0[_IX + 2] < constant) _bitNum else 0
+                dst[_IX + 3] = dst[_IX + 3] or if (src0[_IX + 3] < constant) _bitNum else 0
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = dst.get(_IX) or if (src0.get(_IX) < constant) _bitNum else 0
+                dst[_IX] = dst[_IX] or if (src0[_IX] < constant) _bitNum else 0
                 _IX++
             }
         }
@@ -744,57 +716,55 @@ object Simd_Generic {
          dst[i] = src0[i] <= constant;
          ============
          */
-        override fun CmpLE(dst: BooleanArray?, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpLE(dst: BooleanArray, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            _IX = 0
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = src0.get(_IX + 0) <= constant
-                dst.get(_IX + 1) = src0.get(_IX + 1) <= constant
-                dst.get(_IX + 2) = src0.get(_IX + 2) <= constant
-                dst.get(_IX + 3) = src0.get(_IX + 3) <= constant
+                dst[_IX + 0] = src0[_IX + 0] <= constant
+                dst[_IX + 1] = src0[_IX + 1] <= constant
+                dst[_IX + 2] = src0[_IX + 2] <= constant
+                dst[_IX + 3] = src0[_IX + 3] <= constant
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = src0.get(_IX) <= constant
+                dst[_IX] = src0[_IX] <= constant
                 _IX++
             }
         }
 
-        override fun CmpLE(dst: ByteArray?, bitNum: Byte, src0: FloatArray?, constant: Float, count: Int) {
-            var _IX: Int
+        override fun CmpLE(dst: ByteArray, bitNum: Byte, src0: FloatArray, constant: Float, count: Int) {
             val _NM = count and -0x4
-            val _bitNum = (1 shl bitNum).toByte() //TODO:check byte signage
-            _IX = 0
+            val _bitNum = (1 shl bitNum.toInt()).toByte() //TODO:check byte signage
+            var _IX: Int = 0
             while (_IX < _NM) {
-                dst.get(_IX + 0) = (if (src0.get(_IX + 0) <= constant) _bitNum else 0)
-                dst.get(_IX + 1) = (if (src0.get(_IX + 1) <= constant) _bitNum else 0)
-                dst.get(_IX + 2) = (if (src0.get(_IX + 2) <= constant) _bitNum else 0)
-                dst.get(_IX + 3) = (if (src0.get(_IX + 3) <= constant) _bitNum else 0)
+                dst[_IX + 0] = (if (src0[_IX + 0] <= constant) _bitNum else 0)
+                dst[_IX + 1] = (if (src0[_IX + 1] <= constant) _bitNum else 0)
+                dst[_IX + 2] = (if (src0[_IX + 2] <= constant) _bitNum else 0)
+                dst[_IX + 3] = (if (src0[_IX + 3] <= constant) _bitNum else 0)
                 _IX += 4
             }
             while (_IX < count) {
-                dst.get(_IX) = (if (src0.get(_IX) <= constant) _bitNum else 0)
+                dst[_IX] = (if (src0[_IX] <= constant) _bitNum else 0)
                 _IX++
             }
         }
 
-        override fun MinMax(min: CFloat?, max: CFloat?, src: FloatArray?, count: Int) {
-            min.setVal(idMath.INFINITY)
-            max.setVal(-idMath.INFINITY)
+        override fun MinMax(min: CFloat, max: CFloat, src: FloatArray, count: Int) {
+            min._val = (idMath.INFINITY)
+            max._val = (-idMath.INFINITY)
             for (_IX in 0 until count) {
-                if (src.get(_IX) < min.getVal()) min.setVal(src.get(_IX))
-                if (src.get(_IX) > max.getVal()) max.setVal(src.get(_IX))
+                if (src[_IX] < min._val) min._val = (src[_IX])
+                if (src[_IX] > max._val) max._val = (src[_IX])
             }
         }
 
-        override fun MinMax(min: idVec2?, max: idVec2?, src: Array<idVec2?>?, count: Int) {
+        override fun MinMax(min: idVec2, max: idVec2, src: Array<idVec2>, count: Int) {
             min.y = idMath.INFINITY
             min.x = min.y
             max.y = -idMath.INFINITY
             max.x = max.y
             for (_IX in 0 until count) {
-                val v = src.get(_IX)
+                val v = src[_IX]
                 if (v.x < min.x) min.x = v.x
                 if (v.x > max.x) max.x = v.x
                 if (v.y < min.y) min.y = v.y
@@ -802,7 +772,7 @@ object Simd_Generic {
             }
         }
 
-        override fun MinMax(min: idVec3?, max: idVec3?, src: Array<idVec3?>?, count: Int) {
+        override fun MinMax(min: idVec3, max: idVec3, src: Array<idVec3>, count: Int) {
             min.z = idMath.INFINITY
             min.y = min.z
             min.x = min.y
@@ -810,7 +780,7 @@ object Simd_Generic {
             max.y = max.z
             max.x = max.y
             for (_IX in 0 until count) {
-                val v = src.get(_IX)
+                val v = src[_IX]
                 if (v.x < min.x) min.x = v.x
                 if (v.x > max.x) max.x = v.x
                 if (v.y < min.y) min.y = v.y
@@ -820,7 +790,7 @@ object Simd_Generic {
             }
         }
 
-        override fun MinMax(min: idVec3?, max: idVec3?, src: Array<idDrawVert?>?, count: Int) {
+        override fun MinMax(min: idVec3, max: idVec3, src: Array<idDrawVert>, count: Int) {
             min.z = idMath.INFINITY
             min.y = min.z
             min.x = min.y
@@ -828,7 +798,7 @@ object Simd_Generic {
             max.y = max.z
             max.x = max.y
             for (_IX in 0 until count) {
-                val v = src.get(_IX).xyz
+                val v = src[_IX].xyz
                 if (v.oGet(0) < min.x) min.x = v.oGet(0)
                 if (v.oGet(0) > max.x) max.x = v.oGet(0)
                 if (v.oGet(1) < min.y) min.y = v.oGet(1)
@@ -838,7 +808,7 @@ object Simd_Generic {
             }
         }
 
-        override fun MinMax(min: idVec3?, max: idVec3?, src: Array<idDrawVert?>?, indexes: IntArray?, count: Int) {
+        override fun MinMax(min: idVec3, max: idVec3, src: Array<idDrawVert>, indexes: IntArray, count: Int) {
             min.z = idMath.INFINITY
             min.y = min.z
             min.x = min.y
@@ -846,7 +816,7 @@ object Simd_Generic {
             max.y = max.z
             max.x = max.y
             for (_IX in 0 until count) {
-                val v = src.get(indexes.get(_IX)).xyz
+                val v = src[indexes[_IX]].xyz
                 if (v.oGet(0) < min.x) min.x = v.oGet(0)
                 if (v.oGet(0) > max.x) max.x = v.oGet(0)
                 if (v.oGet(1) < min.y) min.y = v.oGet(1)
@@ -856,106 +826,102 @@ object Simd_Generic {
             }
         }
 
-        override fun Clamp(dst: FloatArray?, src: FloatArray?, min: Float, max: Float, count: Int) {
+        override fun Clamp(dst: FloatArray, src: FloatArray, min: Float, max: Float, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) = if (src.get(_IX) < min) min else if (src.get(_IX) > max) max else src.get(_IX)
+                dst[_IX] = if (src[_IX] < min) min else if (src[_IX] > max) max else src[_IX]
             }
         }
 
-        override fun ClampMin(dst: FloatArray?, src: FloatArray?, min: Float, count: Int) {
+        override fun ClampMin(dst: FloatArray, src: FloatArray, min: Float, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) = if (src.get(_IX) < min) min else src.get(_IX)
+                dst[_IX] = if (src[_IX] < min) min else src[_IX]
             }
         }
 
-        override fun ClampMax(dst: FloatArray?, src: FloatArray?, max: Float, count: Int) {
+        override fun ClampMax(dst: FloatArray, src: FloatArray, max: Float, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) = if (src.get(_IX) > max) max else src.get(_IX)
+                dst[_IX] = if (src[_IX] > max) max else src[_IX]
             }
         }
 
-        override fun Memcpy(dst: Array<Any?>?, src: Array<Any?>?, count: Int) {
+        override fun Memcpy(dst: Array<Any>, src: Array<Any>, count: Int) {
 //            memcpy( dst, src, count );
 //            System.arraycopy(src, 0, dst, 0, count);
             throw Deprecation_Exception()
         }
 
-        override fun Memset(dst: Array<Any?>?, `val`: Int, count: Int) {
+        override fun Memset(dst: Array<Any>, `val`: Int, count: Int) {
 //            memset( dst, val, count );
             Arrays.fill(dst, 0, count, `val`)
         }
 
-        override fun Zero16(dst: FloatArray?, count: Int) {
+        override fun Zero16(dst: FloatArray, count: Int) {
 //            memset( dst, 0, count * sizeof( float ) );
             Arrays.fill(dst, 0, count, 0f)
         }
 
-        override fun Negate16(dst: FloatArray?, count: Int) {
+        override fun Negate16(dst: FloatArray, count: Int) {
 //            unsigned int *ptr = reinterpret_cast<unsigned int *>(dst);
             for (_IX in 0 until count) {
-                var _dst = java.lang.Float.floatToIntBits(dst.get(_IX))
+                var _dst = java.lang.Float.floatToIntBits(dst[_IX])
                 _dst = _dst xor (1 shl 31) // IEEE 32 bits float sign bit
-                dst.get(_IX) = java.lang.Float.intBitsToFloat(_dst)
+                dst[_IX] = java.lang.Float.intBitsToFloat(_dst)
             }
         }
 
-        override fun Copy16(dst: FloatArray?, src: FloatArray?, count: Int) {
+        override fun Copy16(dst: FloatArray, src: FloatArray, count: Int) {
 //            for (int _IX = 0; _IX < count; _IX++) {
 //                dst[_IX] = src[_IX];
 //            }
             System.arraycopy(src, 0, dst, 0, count)
         }
 
-        override fun Add16(dst: FloatArray?, src1: FloatArray?, src2: FloatArray?, count: Int) {
+        override fun Add16(dst: FloatArray, src1: FloatArray, src2: FloatArray, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) = src1.get(_IX) + src2.get(_IX)
+                dst[_IX] = src1[_IX] + src2[_IX]
             }
         }
 
-        override fun Sub16(dst: FloatArray?, src1: FloatArray?, src2: FloatArray?, count: Int) {
+        override fun Sub16(dst: FloatArray, src1: FloatArray, src2: FloatArray, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) = src1.get(_IX) - src2.get(_IX)
+                dst[_IX] = src1[_IX] - src2[_IX]
             }
         }
 
-        override fun Mul16(dst: FloatArray?, src1: FloatArray?, constant: Float, count: Int) {
+        override fun Mul16(dst: FloatArray, src1: FloatArray, constant: Float, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) = src1.get(_IX) * constant
+                dst[_IX] = src1[_IX] * constant
             }
         }
 
-        override fun AddAssign16(dst: FloatArray?, src: FloatArray?, count: Int) {
+        override fun AddAssign16(dst: FloatArray, src: FloatArray, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) += src.get(_IX)
+                dst[_IX] += src[_IX]
             }
         }
 
-        override fun SubAssign16(dst: FloatArray?, src: FloatArray?, count: Int) {
+        override fun SubAssign16(dst: FloatArray, src: FloatArray, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) -= src.get(_IX)
+                dst[_IX] -= src[_IX]
             }
         }
 
-        override fun MulAssign16(dst: FloatArray?, constant: Float, count: Int) {
+        override fun MulAssign16(dst: FloatArray, constant: Float, count: Int) {
             for (_IX in 0 until count) {
-                dst.get(_IX) *= constant
+                dst[_IX] *= constant
             }
         }
 
-        override fun MatX_MultiplyVecX(dst: idVecX?, mat: idMatX?, vec: idVecX?) {
+        override fun MatX_MultiplyVecX(dst: idVecX, mat: idMatX, vec: idVecX) {
             var i: Int
             var j: Int
-            val numRows: Int
             var mIndex = 0
-            val mPtr: FloatArray?
-            val vPtr: FloatArray?
-            val dstPtr: FloatArray?
             assert(vec.GetSize() >= mat.GetNumColumns())
             assert(dst.GetSize() >= mat.GetNumRows())
-            mPtr = mat.ToFloatPtr()
-            vPtr = vec.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            numRows = mat.GetNumRows()
+            val mPtr: FloatArray = mat.ToFloatPtr()
+            val vPtr: FloatArray = vec.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val numRows: Int = mat.GetNumRows()
             when (mat.GetNumColumns()) {
                 1 -> {
                     i = 0
@@ -1026,20 +992,16 @@ object Simd_Generic {
             }
         }
 
-        override fun MatX_MultiplyAddVecX(dst: idVecX?, mat: idMatX?, vec: idVecX?) {
+        override fun MatX_MultiplyAddVecX(dst: idVecX, mat: idMatX, vec: idVecX) {
             var i: Int
             var j: Int
-            val numRows: Int
             var mIndex = 0
-            val mPtr: FloatArray?
-            val vPtr: FloatArray?
-            val dstPtr: FloatArray?
             assert(vec.GetSize() >= mat.GetNumColumns())
             assert(dst.GetSize() >= mat.GetNumRows())
-            mPtr = mat.ToFloatPtr()
-            vPtr = vec.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            numRows = mat.GetNumRows()
+            val mPtr: FloatArray = mat.ToFloatPtr()
+            val vPtr: FloatArray = vec.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val numRows: Int = mat.GetNumRows()
             when (mat.GetNumColumns()) {
                 1 -> {
                     i = 0
@@ -1107,20 +1069,16 @@ object Simd_Generic {
             }
         }
 
-        override fun MatX_MultiplySubVecX(dst: idVecX?, mat: idMatX?, vec: idVecX?) {
+        override fun MatX_MultiplySubVecX(dst: idVecX, mat: idMatX, vec: idVecX) {
             var i: Int
             var j: Int
-            val numRows: Int
             var mIndex = 0
-            val mPtr: FloatArray?
-            val vPtr: FloatArray?
-            val dstPtr: FloatArray?
             assert(vec.GetSize() >= mat.GetNumColumns())
             assert(dst.GetSize() >= mat.GetNumRows())
-            mPtr = mat.ToFloatPtr()
-            vPtr = vec.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            numRows = mat.GetNumRows()
+            val mPtr: FloatArray = mat.ToFloatPtr()
+            val vPtr: FloatArray = vec.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val numRows: Int = mat.GetNumRows()
             when (mat.GetNumColumns()) {
                 1 -> {
                     i = 0
@@ -1188,20 +1146,16 @@ object Simd_Generic {
             }
         }
 
-        override fun MatX_TransposeMultiplyVecX(dst: idVecX?, mat: idMatX?, vec: idVecX?) {
+        override fun MatX_TransposeMultiplyVecX(dst: idVecX, mat: idMatX, vec: idVecX) {
             var i: Int
             var j: Int
-            val numColumns: Int
             var mIndex = 0
-            val mPtr: FloatArray?
-            val vPtr: FloatArray?
-            val dstPtr: FloatArray?
             assert(vec.GetSize() >= mat.GetNumRows())
             assert(dst.GetSize() >= mat.GetNumColumns())
-            mPtr = mat.ToFloatPtr()
-            vPtr = vec.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            numColumns = mat.GetNumColumns()
+            val mPtr: FloatArray = mat.ToFloatPtr()
+            val vPtr: FloatArray = vec.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val numColumns: Int = mat.GetNumColumns()
             when (mat.GetNumRows()) {
                 1 -> {
                     i = 0
@@ -1275,20 +1229,16 @@ object Simd_Generic {
             }
         }
 
-        override fun MatX_TransposeMultiplyAddVecX(dst: idVecX?, mat: idMatX?, vec: idVecX?) {
+        override fun MatX_TransposeMultiplyAddVecX(dst: idVecX, mat: idMatX, vec: idVecX) {
             var i: Int
             var j: Int
-            val numColumns: Int
             var mIndex = 0
-            val mPtr: FloatArray?
-            val vPtr: FloatArray?
-            val dstPtr: FloatArray?
             assert(vec.GetSize() >= mat.GetNumRows())
             assert(dst.GetSize() >= mat.GetNumColumns())
-            mPtr = mat.ToFloatPtr()
-            vPtr = vec.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            numColumns = mat.GetNumColumns()
+            val mPtr: FloatArray = mat.ToFloatPtr()
+            val vPtr: FloatArray = vec.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val numColumns: Int = mat.GetNumColumns()
             when (mat.GetNumRows()) {
                 1 -> {
                     i = 0
@@ -1357,19 +1307,15 @@ object Simd_Generic {
             }
         }
 
-        override fun MatX_TransposeMultiplySubVecX(dst: idVecX?, mat: idMatX?, vec: idVecX?) {
+        override fun MatX_TransposeMultiplySubVecX(dst: idVecX, mat: idMatX, vec: idVecX) {
             var i: Int
-            val numColumns: Int
             var mIndex = 0
-            val mPtr: FloatArray?
-            val vPtr: FloatArray?
-            val dstPtr: FloatArray?
             assert(vec.GetSize() >= mat.GetNumRows())
             assert(dst.GetSize() >= mat.GetNumColumns())
-            mPtr = mat.ToFloatPtr()
-            vPtr = vec.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            numColumns = mat.GetNumColumns()
+            val mPtr: FloatArray = mat.ToFloatPtr()
+            val vPtr: FloatArray = vec.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val numColumns: Int = mat.GetNumColumns()
             when (mat.GetNumRows()) {
                 1 -> {
                     i = 0
@@ -1452,25 +1398,20 @@ object Simd_Generic {
          with N in the range [1-6].
          ============
          */
-        override fun MatX_MultiplyMatX(dst: idMatX?, m1: idMatX?, m2: idMatX?) {
+        override fun MatX_MultiplyMatX(dst: idMatX, m1: idMatX, m2: idMatX) {
             var i: Int
             var j: Int
-            val k: Int
-            val l: Int
             var n: Int
             var m1Index = 0
             var m2Index = 0
             var dIndex = 0
-            val dstPtr: FloatArray?
-            val m1Ptr: FloatArray?
-            val m2Ptr: FloatArray?
             var sum: Double
             assert(m1.GetNumColumns() == m2.GetNumRows())
-            dstPtr = dst.ToFloatPtr() //TODO:check floatptr back reference
-            m1Ptr = m1.ToFloatPtr()
-            m2Ptr = m2.ToFloatPtr()
-            k = m1.GetNumRows()
-            l = m2.GetNumColumns()
+            val dstPtr: FloatArray = dst.ToFloatPtr() //TODO:check floatptr back reference
+            val m1Ptr: FloatArray = m1.ToFloatPtr()
+            val m2Ptr: FloatArray = m2.ToFloatPtr()
+            val k: Int = m1.GetNumRows()
+            val l: Int = m2.GetNumColumns()
             when (m1.GetNumColumns()) {
                 1 -> {
                     if (l == 6) {
@@ -1816,6 +1757,9 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+                                    else -> {
+                                        return
+                                    }
                                 }
                             }
                         }
@@ -1925,6 +1869,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+                                    else -> return
                                 }
                             }
                         }
@@ -2068,25 +2013,20 @@ object Simd_Generic {
          with N in the range [1-6].
          ============
          */
-        override fun MatX_TransposeMultiplyMatX(dst: idMatX?, m1: idMatX?, m2: idMatX?) {
+        override fun MatX_TransposeMultiplyMatX(dst: idMatX, m1: idMatX, m2: idMatX) {
             var i: Int
             var j: Int
-            val k: Int
-            val l: Int
             var n: Int
             var m1Index = 0
             var m2Index = 0
             var dIndex = 0
-            val dstPtr: FloatArray?
-            val m1Ptr: FloatArray?
-            val m2Ptr: FloatArray?
             var sum: Double
             assert(m1.GetNumRows() == m2.GetNumRows())
-            m1Ptr = m1.ToFloatPtr()
-            m2Ptr = m2.ToFloatPtr()
-            dstPtr = dst.ToFloatPtr()
-            k = m1.GetNumColumns()
-            l = m2.GetNumColumns()
+            val m1Ptr: FloatArray = m1.ToFloatPtr()
+            val m2Ptr: FloatArray = m2.ToFloatPtr()
+            val dstPtr: FloatArray = dst.ToFloatPtr()
+            val k: Int = m1.GetNumColumns()
+            val l: Int = m2.GetNumColumns()
             when (m1.GetNumRows()) {
                 1 -> {
                     if (k == 6 && l == 1) {            // 1x6 * 1x1
@@ -2369,7 +2309,7 @@ object Simd_Generic {
             return n shl 3 or (s and 7)
         }
 
-        override fun MatX_LowerTriangularSolve(L: idMatX?, x: FloatArray?, b: FloatArray?, n: Int) {
+        override fun MatX_LowerTriangularSolve(L: idMatX, x: FloatArray, b: FloatArray, n: Int) {
             MatX_LowerTriangularSolve(L, x, b, n, 0)
         }
 
@@ -2383,338 +2323,236 @@ object Simd_Generic {
          x == b is allowed
          ============
          */
-        override fun MatX_LowerTriangularSolve(L: idMatX?, x: FloatArray?, b: FloatArray?, n: Int, skip: Int) {
+        override fun MatX_LowerTriangularSolve(L: idMatX, x: FloatArray, b: FloatArray, n: Int, skip: Int) {
 //#if 1
             var skip = skip
-            val nc: Int
-            var lptr: FloatArray?
             var lIndex = 0
             if (skip >= n) {
                 return
             }
-            lptr = L.ToFloatPtr()
-            nc = L.GetNumColumns()
+            var lptr: FloatArray = L.ToFloatPtr()
+            val nc: Int = L.GetNumColumns()
 
             // unrolled cases for n < 8
             if (n < 8) {
 //		#define NSKIP( n, s )	((n<<3)|(s&7))
                 when (NSKIP(n, skip)) {
                     NSKIP1_0 -> {
-                        x.get(0) = b.get(0)
+                        x[0] = b[0]
                         return
                     }
                     NSKIP2_0 -> {
-                        x.get(0) = b.get(0)
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
+                        x[0] = b[0]
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         return
                     }
                     NSKIP2_1 -> {
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         return
                     }
                     NSKIP3_0 -> {
-                        x.get(0) = b.get(0)
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
+                        x[0] = b[0]
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         return
                     }
                     NSKIP3_1 -> {
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         return
                     }
                     NSKIP3_2 -> {
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         return
                     }
                     NSKIP4_0 -> {
-                        x.get(0) = b.get(0)
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
+                        x[0] = b[0]
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
                     NSKIP4_1 -> {
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
                     NSKIP4_2 -> {
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
                     NSKIP4_3 -> {
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
                     NSKIP5_0 -> {
-                        x.get(0) = b.get(0)
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
+                        x[0] = b[0]
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
                     NSKIP5_1 -> {
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
                     NSKIP5_2 -> {
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
                     NSKIP5_3 -> {
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
                     NSKIP5_4 -> {
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
                     NSKIP6_0 -> {
-                        x.get(0) = b.get(0)
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
+                        x[0] = b[0]
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
                     NSKIP6_1 -> {
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
                     NSKIP6_2 -> {
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
                     NSKIP6_3 -> {
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
                     NSKIP6_4 -> {
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
                     NSKIP6_5 -> {
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
                     NSKIP7_0 -> {
-                        x.get(0) = b.get(0)
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[0] = b[0]
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                     NSKIP7_1 -> {
-                        x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                     NSKIP7_2 -> {
-                        x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                     NSKIP7_3 -> {
-                        x.get(3) =
-                            b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                                2
-                            )
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[3] =
+                            b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                     NSKIP7_4 -> {
-                        x.get(4) =
-                            b.get(4) - lptr[4 * nc + 0] * x.get(0) - lptr[4 * nc + 1] * x.get(1) - lptr[4 * nc + 2] * x.get(
-                                2
-                            ) - lptr[4 * nc + 3] * x.get(3)
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[4] =
+                            b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                     NSKIP7_5 -> {
-                        x.get(5) =
-                            b.get(5) - lptr[5 * nc + 0] * x.get(0) - lptr[5 * nc + 1] * x.get(1) - lptr[5 * nc + 2] * x.get(
-                                2
-                            ) - lptr[5 * nc + 3] * x.get(3) - lptr[5 * nc + 4] * x.get(4)
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[5] =
+                            b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                     NSKIP7_6 -> {
-                        x.get(6) =
-                            b.get(6) - lptr[6 * nc + 0] * x.get(0) - lptr[6 * nc + 1] * x.get(1) - lptr[6 * nc + 2] * x.get(
-                                2
-                            ) - lptr[6 * nc + 3] * x.get(3) - lptr[6 * nc + 4] * x.get(4) - lptr[6 * nc + 5] * x.get(5)
+                        x[6] =
+                            b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
                 }
@@ -2722,117 +2560,107 @@ object Simd_Generic {
             }
             when (skip) {
                 0 -> {
-                    x.get(0) = b.get(0)
-                    x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                    x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                    x.get(3) =
-                        b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                            2
-                        )
+                    x[0] = b[0]
+                    x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                    x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                    x[3] =
+                        b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
                 1 -> {
-                    x.get(1) = b.get(1) - lptr[1 * nc + 0] * x.get(0)
-                    x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                    x.get(3) =
-                        b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                            2
-                        )
+                    x[1] = b[1] - lptr[1 * nc + 0] * x[0]
+                    x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                    x[3] =
+                        b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
                 2 -> {
-                    x.get(2) = b.get(2) - lptr[2 * nc + 0] * x.get(0) - lptr[2 * nc + 1] * x.get(1)
-                    x.get(3) =
-                        b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                            2
-                        )
+                    x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
+                    x[3] =
+                        b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
                 3 -> {
-                    x.get(3) =
-                        b.get(3) - lptr[3 * nc + 0] * x.get(0) - lptr[3 * nc + 1] * x.get(1) - lptr[3 * nc + 2] * x.get(
-                            2
-                        )
+                    x[3] =
+                        b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
             }
 
 //	lptr = L[skip];
             lptr = L.oGet(skip)
-            var i: Int
             var j: Int
             var s0: Double
             var s1: Double
             var s2: Double
             var s3: Double
-            i = skip
+            var i: Int = skip
             while (i < n) {
-                s0 = (lptr[lIndex + 0] * x.get(0)).toDouble()
-                s1 = (lptr[lIndex + 1] * x.get(1)).toDouble()
-                s2 = (lptr[lIndex + 2] * x.get(2)).toDouble()
-                s3 = (lptr[lIndex + 3] * x.get(3)).toDouble()
+                s0 = (lptr[lIndex + 0] * x[0]).toDouble()
+                s1 = (lptr[lIndex + 1] * x[1]).toDouble()
+                s2 = (lptr[lIndex + 2] * x[2]).toDouble()
+                s3 = (lptr[lIndex + 3] * x[3]).toDouble()
                 j = 4
                 while (j < i - 7) {
-                    s0 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
-                    s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                    s2 += (lptr[lIndex + j + 2] * x.get(j + 2)).toDouble()
-                    s3 += (lptr[lIndex + j + 3] * x.get(j + 3)).toDouble()
-                    s0 += (lptr[lIndex + j + 4] * x.get(j + 4)).toDouble()
-                    s1 += (lptr[lIndex + j + 5] * x.get(j + 5)).toDouble()
-                    s2 += (lptr[lIndex + j + 6] * x.get(j + 6)).toDouble()
-                    s3 += (lptr[lIndex + j + 7] * x.get(j + 7)).toDouble()
+                    s0 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
+                    s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                    s2 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
+                    s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
+                    s0 += (lptr[lIndex + j + 4] * x[j + 4]).toDouble()
+                    s1 += (lptr[lIndex + j + 5] * x[j + 5]).toDouble()
+                    s2 += (lptr[lIndex + j + 6] * x[j + 6]).toDouble()
+                    s3 += (lptr[lIndex + j + 7] * x[j + 7]).toDouble()
                     j += 8
                 }
                 when (i - j) {
                     7 -> {
-                        s0 += (lptr[lIndex + j + 6] * x.get(j + 6)).toDouble()
-                        s1 += (lptr[lIndex + j + 5] * x.get(j + 5)).toDouble()
-                        s2 += (lptr[lIndex + j + 4] * x.get(j + 4)).toDouble()
-                        s3 += (lptr[lIndex + j + 3] * x.get(j + 3)).toDouble()
-                        s0 += (lptr[lIndex + j + 2] * x.get(j + 2)).toDouble()
-                        s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                        s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                        s0 += (lptr[lIndex + j + 6] * x[j + 6]).toDouble()
+                        s1 += (lptr[lIndex + j + 5] * x[j + 5]).toDouble()
+                        s2 += (lptr[lIndex + j + 4] * x[j + 4]).toDouble()
+                        s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
+                        s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
+                        s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                        s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
                     6 -> {
-                        s1 += (lptr[lIndex + j + 5] * x.get(j + 5)).toDouble()
-                        s2 += (lptr[lIndex + j + 4] * x.get(j + 4)).toDouble()
-                        s3 += (lptr[lIndex + j + 3] * x.get(j + 3)).toDouble()
-                        s0 += (lptr[lIndex + j + 2] * x.get(j + 2)).toDouble()
-                        s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                        s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                        s1 += (lptr[lIndex + j + 5] * x[j + 5]).toDouble()
+                        s2 += (lptr[lIndex + j + 4] * x[j + 4]).toDouble()
+                        s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
+                        s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
+                        s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                        s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
                     5 -> {
-                        s2 += (lptr[lIndex + j + 4] * x.get(j + 4)).toDouble()
-                        s3 += (lptr[lIndex + j + 3] * x.get(j + 3)).toDouble()
-                        s0 += (lptr[lIndex + j + 2] * x.get(j + 2)).toDouble()
-                        s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                        s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                        s2 += (lptr[lIndex + j + 4] * x[j + 4]).toDouble()
+                        s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
+                        s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
+                        s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                        s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
                     4 -> {
-                        s3 += (lptr[lIndex + j + 3] * x.get(j + 3)).toDouble()
-                        s0 += (lptr[lIndex + j + 2] * x.get(j + 2)).toDouble()
-                        s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                        s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                        s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
+                        s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
+                        s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                        s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
                     3 -> {
-                        s0 += (lptr[lIndex + j + 2] * x.get(j + 2)).toDouble()
-                        s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                        s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                        s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
+                        s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                        s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
                     2 -> {
-                        s1 += (lptr[lIndex + j + 1] * x.get(j + 1)).toDouble()
-                        s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                        s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
+                        s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
-                    1 -> s2 += (lptr[lIndex + j + 0] * x.get(j + 0)).toDouble()
+                    1 -> s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     0 -> {}
                 }
-                var sum: Double
-                sum = s3
+                var sum: Double = s3
                 sum += s2
                 sum += s1
                 sum += s0
-                sum -= b.get(i)
-                x.get(i) = -sum.toFloat()
+                sum -= b[i]
+                x[i] = -sum.toFloat()
                 lIndex += nc
                 i++
             }
@@ -2864,139 +2692,115 @@ object Simd_Generic {
          x == b is allowed
          ============
          */
-        override fun MatX_LowerTriangularSolveTranspose(L: idMatX?, x: FloatArray?, b: FloatArray?, n: Int) {
+        override fun MatX_LowerTriangularSolveTranspose(L: idMatX, x: FloatArray, b: FloatArray, n: Int) {
 //#if 1
-            val nc: Int
-            var lptr: FloatArray?
+            var lptr: FloatArray
             lptr = L.ToFloatPtr()
-            nc = L.GetNumColumns()
+            val nc: Int = L.GetNumColumns()
 
             // unrolled cases for n < 8
             if (n < 8) {
                 when (n) {
                     0 -> return
                     1 -> {
-                        x.get(0) = b.get(0)
+                        x[0] = b[0]
                         return
                     }
                     2 -> {
-                        x.get(1) = b.get(1)
-                        x.get(0) = b.get(0) - lptr[1 * nc + 0] * x.get(1)
+                        x[1] = b[1]
+                        x[0] = b[0] - lptr[1 * nc + 0] * x[1]
                         return
                     }
                     3 -> {
-                        x.get(2) = b.get(2)
-                        x.get(1) = b.get(1) - lptr[2 * nc + 1] * x.get(2)
-                        x.get(0) = b.get(0) - lptr[2 * nc + 0] * x.get(2) - lptr[1 * nc + 0] * x.get(1)
+                        x[2] = b[2]
+                        x[1] = b[1] - lptr[2 * nc + 1] * x[2]
+                        x[0] = b[0] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
                     4 -> {
-                        x.get(3) = b.get(3)
-                        x.get(2) = b.get(2) - lptr[3 * nc + 2] * x.get(3)
-                        x.get(1) = b.get(1) - lptr[3 * nc + 1] * x.get(3) - lptr[2 * nc + 1] * x.get(2)
-                        x.get(0) =
-                            b.get(0) - lptr[3 * nc + 0] * x.get(3) - lptr[2 * nc + 0] * x.get(2) - lptr[1 * nc + 0] * x.get(
-                                1
-                            )
+                        x[3] = b[3]
+                        x[2] = b[2] - lptr[3 * nc + 2] * x[3]
+                        x[1] = b[1] - lptr[3 * nc + 1] * x[3] - lptr[2 * nc + 1] * x[2]
+                        x[0] =
+                            b[0] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
                     5 -> {
-                        x.get(4) = b.get(4)
-                        x.get(3) = b.get(3) - lptr[4 * nc + 3] * x.get(4)
-                        x.get(2) = b.get(2) - lptr[4 * nc + 2] * x.get(4) - lptr[3 * nc + 2] * x.get(3)
-                        x.get(1) =
-                            b.get(1) - lptr[4 * nc + 1] * x.get(4) - lptr[3 * nc + 1] * x.get(3) - lptr[2 * nc + 1] * x.get(
-                                2
-                            )
-                        x.get(0) =
-                            b.get(0) - lptr[4 * nc + 0] * x.get(4) - lptr[3 * nc + 0] * x.get(3) - lptr[2 * nc + 0] * x.get(
-                                2
-                            ) - lptr[1 * nc + 0] * x.get(1)
+                        x[4] = b[4]
+                        x[3] = b[3] - lptr[4 * nc + 3] * x[4]
+                        x[2] = b[2] - lptr[4 * nc + 2] * x[4] - lptr[3 * nc + 2] * x[3]
+                        x[1] =
+                            b[1] - lptr[4 * nc + 1] * x[4] - lptr[3 * nc + 1] * x[3] - lptr[2 * nc + 1] * x[2]
+                        x[0] =
+                            b[0] - lptr[4 * nc + 0] * x[4] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
                     6 -> {
-                        x.get(5) = b.get(5)
-                        x.get(4) = b.get(4) - lptr[5 * nc + 4] * x.get(5)
-                        x.get(3) = b.get(3) - lptr[5 * nc + 3] * x.get(5) - lptr[4 * nc + 3] * x.get(4)
-                        x.get(2) =
-                            b.get(2) - lptr[5 * nc + 2] * x.get(5) - lptr[4 * nc + 2] * x.get(4) - lptr[3 * nc + 2] * x.get(
-                                3
-                            )
-                        x.get(1) =
-                            b.get(1) - lptr[5 * nc + 1] * x.get(5) - lptr[4 * nc + 1] * x.get(4) - lptr[3 * nc + 1] * x.get(
-                                3
-                            ) - lptr[2 * nc + 1] * x.get(2)
-                        x.get(0) =
-                            b.get(0) - lptr[5 * nc + 0] * x.get(5) - lptr[4 * nc + 0] * x.get(4) - lptr[3 * nc + 0] * x.get(
-                                3
-                            ) - lptr[2 * nc + 0] * x.get(2) - lptr[1 * nc + 0] * x.get(1)
+                        x[5] = b[5]
+                        x[4] = b[4] - lptr[5 * nc + 4] * x[5]
+                        x[3] = b[3] - lptr[5 * nc + 3] * x[5] - lptr[4 * nc + 3] * x[4]
+                        x[2] =
+                            b[2] - lptr[5 * nc + 2] * x[5] - lptr[4 * nc + 2] * x[4] - lptr[3 * nc + 2] * x[3]
+                        x[1] =
+                            b[1] - lptr[5 * nc + 1] * x[5] - lptr[4 * nc + 1] * x[4] - lptr[3 * nc + 1] * x[3] - lptr[2 * nc + 1] * x[2]
+                        x[0] =
+                            b[0] - lptr[5 * nc + 0] * x[5] - lptr[4 * nc + 0] * x[4] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
                     7 -> {
-                        x.get(6) = b.get(6)
-                        x.get(5) = b.get(5) - lptr[6 * nc + 5] * x.get(6)
-                        x.get(4) = b.get(4) - lptr[6 * nc + 4] * x.get(6) - lptr[5 * nc + 4] * x.get(5)
-                        x.get(3) =
-                            b.get(3) - lptr[6 * nc + 3] * x.get(6) - lptr[5 * nc + 3] * x.get(5) - lptr[4 * nc + 3] * x.get(
-                                4
-                            )
-                        x.get(2) =
-                            b.get(2) - lptr[6 * nc + 2] * x.get(6) - lptr[5 * nc + 2] * x.get(5) - lptr[4 * nc + 2] * x.get(
-                                4
-                            ) - lptr[3 * nc + 2] * x.get(3)
-                        x.get(1) =
-                            b.get(1) - lptr[6 * nc + 1] * x.get(6) - lptr[5 * nc + 1] * x.get(5) - lptr[4 * nc + 1] * x.get(
-                                4
-                            ) - lptr[3 * nc + 1] * x.get(3) - lptr[2 * nc + 1] * x.get(2)
-                        x.get(0) =
-                            b.get(0) - lptr[6 * nc + 0] * x.get(6) - lptr[5 * nc + 0] * x.get(5) - lptr[4 * nc + 0] * x.get(
-                                4
-                            ) - lptr[3 * nc + 0] * x.get(3) - lptr[2 * nc + 0] * x.get(2) - lptr[1 * nc + 0] * x.get(1)
+                        x[6] = b[6]
+                        x[5] = b[5] - lptr[6 * nc + 5] * x[6]
+                        x[4] = b[4] - lptr[6 * nc + 4] * x[6] - lptr[5 * nc + 4] * x[5]
+                        x[3] =
+                            b[3] - lptr[6 * nc + 3] * x[6] - lptr[5 * nc + 3] * x[5] - lptr[4 * nc + 3] * x[4]
+                        x[2] =
+                            b[2] - lptr[6 * nc + 2] * x[6] - lptr[5 * nc + 2] * x[5] - lptr[4 * nc + 2] * x[4] - lptr[3 * nc + 2] * x[3]
+                        x[1] =
+                            b[1] - lptr[6 * nc + 1] * x[6] - lptr[5 * nc + 1] * x[5] - lptr[4 * nc + 1] * x[4] - lptr[3 * nc + 1] * x[3] - lptr[2 * nc + 1] * x[2]
+                        x[0] =
+                            b[0] - lptr[6 * nc + 0] * x[6] - lptr[5 * nc + 0] * x[5] - lptr[4 * nc + 0] * x[4] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
                 }
                 return
             }
-            var i: Int
             var j: Int
-            var s0: Double
-            var s1: Double
-            var s2: Double
-            var s3: Double
-            val xptr: FloatArray?
+            var s0: Float
+            var s1: Float
+            var s2: Float
+            var s3: Float
             var lIndex: Int
-            var xIndex: Int
             lptr = L.ToFloatPtr()
             lIndex = n * nc + n - 4
-            xptr = x
-            xIndex = n
+            val xptr: FloatArray = x
+            var xIndex: Int = n
 
             // process 4 rows at a time
-            i = n
+            var i: Int = n
             while (i >= 4) {
-                s0 = b.get(i - 4)
-                s1 = b.get(i - 3)
-                s2 = b.get(i - 2)
-                s3 = b.get(i - 1)
+                s0 = b[i - 4]
+                s1 = b[i - 3]
+                s2 = b[i - 2]
+                s3 = b[i - 1]
                 // process 4x4 blocks
                 j = 0
                 while (j < n - i) {
-                    s0 -= (lptr[lIndex + (j + 0) * nc + 0] * xptr.get(xIndex + j + 0)).toDouble()
-                    s1 -= (lptr[lIndex + (j + 0) * nc + 1] * xptr.get(xIndex + j + 0)).toDouble()
-                    s2 -= (lptr[lIndex + (j + 0) * nc + 2] * xptr.get(xIndex + j + 0)).toDouble()
-                    s3 -= (lptr[lIndex + (j + 0) * nc + 3] * xptr.get(xIndex + j + 0)).toDouble()
-                    s0 -= (lptr[lIndex + (j + 1) * nc + 0] * xptr.get(xIndex + j + 1)).toDouble()
-                    s1 -= (lptr[lIndex + (j + 1) * nc + 1] * xptr.get(xIndex + j + 1)).toDouble()
-                    s2 -= (lptr[lIndex + (j + 1) * nc + 2] * xptr.get(xIndex + j + 1)).toDouble()
-                    s3 -= (lptr[lIndex + (j + 1) * nc + 3] * xptr.get(xIndex + j + 1)).toDouble()
-                    s0 -= (lptr[lIndex + (j + 2) * nc + 0] * xptr.get(xIndex + j + 2)).toDouble()
-                    s1 -= (lptr[lIndex + (j + 2) * nc + 1] * xptr.get(xIndex + j + 2)).toDouble()
-                    s2 -= (lptr[lIndex + (j + 2) * nc + 2] * xptr.get(xIndex + j + 2)).toDouble()
-                    s3 -= (lptr[lIndex + (j + 2) * nc + 3] * xptr.get(xIndex + j + 2)).toDouble()
-                    s0 -= (lptr[lIndex + (j + 3) * nc + 0] * xptr.get(xIndex + j + 3)).toDouble()
-                    s1 -= (lptr[lIndex + (j + 3) * nc + 1] * xptr.get(xIndex + j + 3)).toDouble()
-                    s2 -= (lptr[lIndex + (j + 3) * nc + 2] * xptr.get(xIndex + j + 3)).toDouble()
-                    s3 -= (lptr[lIndex + (j + 3) * nc + 3] * xptr.get(xIndex + j + 3)).toDouble()
+                    s0 -= (lptr[lIndex + (j + 0) * nc + 0] * xptr[xIndex + j + 0])
+                    s1 -= (lptr[lIndex + (j + 0) * nc + 1] * xptr[xIndex + j + 0])
+                    s2 -= (lptr[lIndex + (j + 0) * nc + 2] * xptr[xIndex + j + 0])
+                    s3 -= (lptr[lIndex + (j + 0) * nc + 3] * xptr[xIndex + j + 0])
+                    s0 -= (lptr[lIndex + (j + 1) * nc + 0] * xptr[xIndex + j + 1])
+                    s1 -= (lptr[lIndex + (j + 1) * nc + 1] * xptr[xIndex + j + 1])
+                    s2 -= (lptr[lIndex + (j + 1) * nc + 2] * xptr[xIndex + j + 1])
+                    s3 -= (lptr[lIndex + (j + 1) * nc + 3] * xptr[xIndex + j + 1])
+                    s0 -= (lptr[lIndex + (j + 2) * nc + 0] * xptr[xIndex + j + 2])
+                    s1 -= (lptr[lIndex + (j + 2) * nc + 1] * xptr[xIndex + j + 2])
+                    s2 -= (lptr[lIndex + (j + 2) * nc + 2] * xptr[xIndex + j + 2])
+                    s3 -= (lptr[lIndex + (j + 2) * nc + 3] * xptr[xIndex + j + 2])
+                    s0 -= (lptr[lIndex + (j + 3) * nc + 0] * xptr[xIndex + j + 3])
+                    s1 -= (lptr[lIndex + (j + 3) * nc + 1] * xptr[xIndex + j + 3])
+                    s2 -= (lptr[lIndex + (j + 3) * nc + 2] * xptr[xIndex + j + 3])
+                    s3 -= (lptr[lIndex + (j + 3) * nc + 3] * xptr[xIndex + j + 3])
                     j += 4
                 }
                 // process left over of the 4 rows
@@ -3007,10 +2811,10 @@ object Simd_Generic {
                 s1 -= lptr[lIndex + 1 - 2 * nc] * s2
                 s0 -= lptr[lIndex + 0 - 3 * nc] * s1
                 // store result
-                xptr.get(xIndex - 4) = s0.toFloat()
-                xptr.get(xIndex - 3) = s1.toFloat()
-                xptr.get(xIndex - 2) = s2.toFloat()
-                xptr.get(xIndex - 1) = s3.toFloat()
+                xptr[xIndex - 4] = s0
+                xptr[xIndex - 3] = s1
+                xptr[xIndex - 2] = s2
+                xptr[xIndex - 1] = s3
                 // update pointers for next four rows
                 lIndex -= 4 + 4 * nc
                 xIndex -= 4
@@ -3019,15 +2823,15 @@ object Simd_Generic {
             // process left over rows
             i--
             while (i >= 0) {
-                s0 = b.get(i)
+                s0 = b[i]
                 lptr = L.oGet(0)
                 lIndex = i
                 j = i + 1
                 while (j < n) {
-                    s0 -= (lptr[lIndex + j * nc] * x.get(j)).toDouble()
+                    s0 -= (lptr[lIndex + j * nc] * x[j])
                     j++
                 }
-                x.get(i) = s0.toFloat()
+                x[i] = s0
                 i--
             }
 
@@ -3058,15 +2862,11 @@ object Simd_Generic {
          the reciprocal of the diagonal elements are stored in invDiag
          ============
          */
-        override fun MatX_LDLTFactor(mat: idMatX?, invDiag: idVecX?, n: Int): Boolean {
+        override fun MatX_LDLTFactor(mat: idMatX, invDiag: idVecX, n: Int): Boolean {
 //#if 1
-            var i: Int
             var j: Int
             var k: Int
-            val nc: Int
-            val v: FloatArray
-            val diag: FloatArray
-            var mptr: FloatArray?
+            var mptr: FloatArray
             var s0: Float
             var s1: Float
             var s2: Float
@@ -3074,9 +2874,9 @@ object Simd_Generic {
             var sum: Float
             var d: Float
             var mIndex = 0
-            v = FloatArray(n)
-            diag = FloatArray(n)
-            nc = mat.GetNumColumns()
+            val v: FloatArray = FloatArray(n)
+            val diag: FloatArray = FloatArray(n)
+            val nc: Int = mat.GetNumColumns()
             if (n <= 0) {
                 return true
             }
@@ -3163,7 +2963,7 @@ object Simd_Generic {
                     (mptr[j * nc + 3] - v[0] * mptr[j * nc + 0] - v[1] * mptr[j * nc + 1] - v[2] * mptr[j * nc + 2]) * d
                 j++
             }
-            i = 4
+            var i: Int = 4
             while (i < n) {
                 mptr = mat.oGet(i)
                 v[0] = diag[0] * mptr[0]
@@ -3345,151 +3145,142 @@ object Simd_Generic {
         }
 
         override fun BlendJoints(
-            joints: Array<idJointQuat?>?,
-            blendJoints: Array<idJointQuat?>?,
+            joints: Array<idJointQuat>,
+            blendJoints: Array<idJointQuat>,
             lerp: Float,
-            index: IntArray?,
+            index: IntArray,
             numJoints: Int
         ) {
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < numJoints) {
-                val j = index.get(i)
-                joints.get(j).q.Slerp(joints.get(j).q, blendJoints.get(j).q, lerp)
-                joints.get(j).t.Lerp(joints.get(j).t, blendJoints.get(j).t, lerp)
+                val j = index[i]
+                joints[j].q.Slerp(joints[j].q, blendJoints[j].q, lerp)
+                joints[j].t.Lerp(joints[j].t, blendJoints[j].t, lerp)
                 i++
             }
         }
 
         override fun BlendJoints(
-            joints: Array<idJointQuat?>?,
-            blendJoints: ArrayList<idJointQuat?>?,
+            joints: Array<idJointQuat>,
+            blendJoints: ArrayList<idJointQuat>,
             lerp: Float,
-            index: IntArray?,
+            index: IntArray,
             numJoints: Int
         ) {
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < numJoints) {
-                val j = index.get(i)
-                joints.get(j).q.Slerp(joints.get(j).q, blendJoints.get(j).q, lerp)
-                joints.get(j).t.Lerp(joints.get(j).t, blendJoints.get(j).t, lerp)
+                val j = index[i]
+                joints[j].q.Slerp(joints[j].q, blendJoints[j].q, lerp)
+                joints[j].t.Lerp(joints[j].t, blendJoints[j].t, lerp)
                 i++
             }
         }
 
         override fun ConvertJointQuatsToJointMats(
-            jointMats: Array<idJointMat?>?,
-            jointQuats: Array<idJointQuat?>?,
+            jointMats: Array<idJointMat>,
+            jointQuats: Array<idJointQuat>,
             numJoints: Int
         ) {
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < numJoints) {
-                jointMats.get(i).SetRotation(jointQuats.get(i).q.ToMat3())
-                jointMats.get(i).SetTranslation(jointQuats.get(i).t)
+                jointMats[i].SetRotation(jointQuats[i].q.ToMat3())
+                jointMats[i].SetTranslation(jointQuats[i].t)
                 i++
             }
         }
 
         override fun ConvertJointMatsToJointQuats(
-            jointQuats: ArrayList<idJointQuat?>?,
-            jointMats: Array<idJointMat?>?,
+            jointQuats: ArrayList<idJointQuat>,
+            jointMats: Array<idJointMat>,
             numJoints: Int
         ) {
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < numJoints) {
                 if (i >= jointQuats.size) {
-                    jointQuats.add(i, jointMats.get(i).ToJointQuat())
+                    jointQuats.add(i, jointMats[i].ToJointQuat())
                 } else {
-                    jointQuats.set(i, jointMats.get(i).ToJointQuat())
+                    jointQuats[i] = jointMats[i].ToJointQuat()
                 }
                 i++
             }
         }
 
         override fun TransformJoints(
-            jointMats: Array<idJointMat?>?,
-            parents: IntArray?,
+            jointMats: Array<idJointMat>,
+            parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
         ) {
-            var i: Int
-            i = firstJoint
+            var i: Int = firstJoint
             while (i <= lastJoint) {
-                assert(parents.get(i) < i)
-                jointMats.get(i).oMulSet(jointMats.get(parents.get(i)))
+                assert(parents[i] < i)
+                jointMats[i].timesAssign(jointMats[parents[i]])
                 i++
             }
         }
 
         override fun UntransformJoints(
-            jointMats: Array<idJointMat?>?,
-            parents: IntArray?,
+            jointMats: Array<idJointMat>,
+            parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
         ) {
-            var i: Int
-            i = lastJoint
+            var i: Int = lastJoint
             while (i >= firstJoint) {
-                assert(parents.get(i) < i)
-                jointMats.get(i).oDivSet(jointMats.get(parents.get(i)))
+                assert(parents[i] < i)
+                jointMats[i].oDivSet(jointMats[parents[i]])
                 i--
             }
         }
 
         override fun TransformVerts(
-            verts: Array<idDrawVert?>?,
+            verts: Array<idDrawVert?>,
             numVerts: Int,
-            joints: Array<idJointMat?>?,
-            weights: Array<idVec4?>?,
-            index: IntArray?,
+            joints: Array<idJointMat>,
+            weights: Array<idVec4>,
+            index: IntArray,
             numWeights: Int
         ) {
             var i: Int
-            var j: Int
             val jointsPtr = jmtobb(joints)
-            j = 0.also { i = it }
+            var j: Int = 0.also { i = it }
             while (i < numVerts) {
                 val v = idVec3()
-                v.oSet(toIdJointMat(jointsPtr, index.get(j * 2 + 0)).oMultiply(weights.get(j)))
-                while (index.get(j * 2 + 1) == 0) {
+                v.oSet(toIdJointMat(jointsPtr, index[j * 2 + 0]).times(weights[j]))
+                while (index[j * 2 + 1] == 0) {
                     j++
-                    v.oPluSet(toIdJointMat(jointsPtr, index.get(j * 2 + 0)).oMultiply(weights.get(j)))
+                    v.plusAssign(toIdJointMat(jointsPtr, index[j * 2 + 0]).times(weights[j]))
                 }
                 j++
-                verts.get(i) = if (verts.get(i) == null) idDrawVert() else verts.get(i)
-                verts.get(i).xyz.oSet(v)
+                verts[i] = if (verts[i] == null) idDrawVert() else verts[i]
+                verts[i]!!.xyz.oSet(v)
                 i++
             }
         }
 
         override fun TracePointCull(
-            cullBits: ByteArray?,
-            totalOr: ByteArray?,
+            cullBits: ByteArray,
+            totalOr: ByteArray,
             radius: Float,
-            planes: Array<idPlane?>?,
-            verts: Array<idDrawVert?>?,
+            planes: Array<idPlane>,
+            verts: Array<idDrawVert>,
             numVerts: Int
         ) {
-            var i: Int
             var tOr: Byte
             tOr = 0
-            i = 0
+            var i: Int = 0
             while (i < numVerts) {
                 var bits: Int
                 var d0: Float
                 var d1: Float
                 var d2: Float
                 var d3: Float
-                var t: Float
-                val v = verts.get(i).xyz
-                d0 = planes.get(0).Distance(v)
-                d1 = planes.get(1).Distance(v)
-                d2 = planes.get(2).Distance(v)
-                d3 = planes.get(3).Distance(v)
-                t = d0 + radius
+                val v = verts[i].xyz
+                d0 = planes[0].Distance(v)
+                d1 = planes[1].Distance(v)
+                d2 = planes[2].Distance(v)
+                d3 = planes[3].Distance(v)
+                var t: Float = d0 + radius
                 bits = Math_h.FLOATSIGNBITSET(t) shl 0
                 t = d1 + radius
                 bits = bits or (Math_h.FLOATSIGNBITSET(t) shl 1)
@@ -3506,21 +3297,20 @@ object Simd_Generic {
                 t = d3 - radius
                 bits = bits or (Math_h.FLOATSIGNBITSET(t) shl 7)
                 bits = bits xor 0x0F // flip lower four bits
-                tOr = tOr or bits
-                cullBits.get(i) = bits.toByte()
+                tOr = tOr or bits.toByte()
+                cullBits[i] = bits.toByte()
                 i++
             }
-            totalOr.get(0) = tOr
+            totalOr[0] = tOr
         }
 
         override fun DecalPointCull(
-            cullBits: ByteArray?,
-            planes: Array<idPlane?>?,
-            verts: Array<idDrawVert?>?,
+            cullBits: ByteArray,
+            planes: Array<idPlane>,
+            verts: Array<idDrawVert>,
             numVerts: Int
         ) {
-            var i: Int
-            i = 0
+            var i = 0
             while (i < numVerts) {
                 var bits: Int
                 var d0: Float
@@ -3529,47 +3319,46 @@ object Simd_Generic {
                 var d3: Float
                 var d4: Float
                 var d5: Float
-                val v = verts.get(i).xyz
-                d0 = planes.get(0).Distance(v)
-                d1 = planes.get(1).Distance(v)
-                d2 = planes.get(2).Distance(v)
-                d3 = planes.get(3).Distance(v)
-                d4 = planes.get(4).Distance(v)
-                d5 = planes.get(5).Distance(v)
+                val v = verts[i].xyz
+                d0 = planes[0].Distance(v)
+                d1 = planes[1].Distance(v)
+                d2 = planes[2].Distance(v)
+                d3 = planes[3].Distance(v)
+                d4 = planes[4].Distance(v)
+                d5 = planes[5].Distance(v)
                 bits = Math_h.FLOATSIGNBITSET(d0) shl 0
                 bits = bits or (Math_h.FLOATSIGNBITSET(d1) shl 1)
                 bits = bits or (Math_h.FLOATSIGNBITSET(d2) shl 2)
                 bits = bits or (Math_h.FLOATSIGNBITSET(d3) shl 3)
                 bits = bits or (Math_h.FLOATSIGNBITSET(d4) shl 4)
                 bits = bits or (Math_h.FLOATSIGNBITSET(d5) shl 5)
-                cullBits.get(i) = (bits xor 0x3F).toByte() // flip lower 6 bits
+                cullBits[i] = (bits xor 0x3F).toByte() // flip lower 6 bits
                 i++
             }
         }
 
         override fun OverlayPointCull(
-            cullBits: ByteArray?,
-            texCoords: Array<idVec2?>?,
-            planes: Array<idPlane?>?,
-            verts: Array<idDrawVert?>?,
+            cullBits: ByteArray,
+            texCoords: Array<idVec2>,
+            planes: Array<idPlane>,
+            verts: Array<idDrawVert>,
             numVerts: Int
         ) {
-            var i: Int
-            i = 0
+            var i: Int = 0
             while (i < numVerts) {
                 var bits: Int
                 var d0: Float
                 var d1: Float
-                val v = verts.get(i).xyz
-                texCoords.get(i).oSet(0, planes.get(0).Distance(v).also { d0 = it })
-                texCoords.get(i).oSet(1, planes.get(1).Distance(v).also { d1 = it })
+                val v = verts[i].xyz
+                texCoords[i].oSet(0, planes[0].Distance(v).also { d0 = it })
+                texCoords[i].oSet(1, planes[1].Distance(v).also { d1 = it })
                 bits = Math_h.FLOATSIGNBITSET(d0) shl 0
                 d0 = 1.0f - d0
                 bits = bits or (Math_h.FLOATSIGNBITSET(d1) shl 1)
                 d1 = 1.0f - d1
                 bits = bits or (Math_h.FLOATSIGNBITSET(d0) shl 2)
                 bits = bits or (Math_h.FLOATSIGNBITSET(d1) shl 3)
-                cullBits.get(i) = bits.toByte()
+                cullBits[i] = bits.toByte()
                 i++
             }
         }
@@ -3582,26 +3371,23 @@ object Simd_Generic {
          ============
          */
         override fun DeriveTriPlanes(
-            planes: Array<idPlane?>?,
-            verts: Array<idDrawVert?>?,
+            planes: Array<idPlane>,
+            verts: Array<idDrawVert>,
             numVerts: Int,
-            indexes: IntArray?,
+            indexes: IntArray,
             numIndexes: Int
         ) {
             var i: Int
             var planePtr: Int
             i = 0.also { planePtr = it }
             while (i < numIndexes) {
-                val a: idDrawVert?
-                val b: idDrawVert?
-                val c: idDrawVert?
                 val d0 = FloatArray(3)
                 val d1 = FloatArray(3)
                 var f: Float
                 val n = idVec3()
-                a = verts.get(indexes.get(i + 0))
-                b = verts.get(indexes.get(i + 1))
-                c = verts.get(indexes.get(i + 2))
+                val a: idDrawVert = verts[indexes[i + 0]]
+                val b: idDrawVert = verts[indexes[i + 1]]
+                val c: idDrawVert = verts[indexes[i + 2]]
                 d0[0] = b.xyz.oGet(0) - a.xyz.oGet(0)
                 d0[1] = b.xyz.oGet(1) - a.xyz.oGet(1)
                 d0[2] = b.xyz.oGet(2) - a.xyz.oGet(2)
@@ -3619,8 +3405,8 @@ object Simd_Generic {
                 n.x *= f
                 n.y *= f
                 n.z *= f
-                planes.get(planePtr).SetNormal(n)
-                planes.get(planePtr).FitThroughPoint(a.xyz)
+                planes[planePtr].SetNormal(n)
+                planes[planePtr].FitThroughPoint(a.xyz)
                 planePtr++
                 i += 3
             }
@@ -3637,10 +3423,10 @@ object Simd_Generic {
          ============
          */
         override fun DeriveTangents(
-            planes: Array<idPlane?>?,
-            verts: Array<idDrawVert?>?,
+            planes: Array<idPlane>,
+            verts: Array<idDrawVert>,
             numVerts: Int,
-            indexes: IntArray?,
+            indexes: IntArray,
             numIndexes: Int
         ) {
             var i: Int
@@ -3649,23 +3435,22 @@ object Simd_Generic {
             //	memset( used, 0, numVerts * sizeof( used[0] ) );
             i = 0.also { planesPtr = it }
             while (i < numIndexes) {
-                var a: idDrawVert?
-                var b: idDrawVert?
-                var c: idDrawVert?
+                var a: idDrawVert
+                var b: idDrawVert
+                var c: idDrawVert
                 var signBit: Int
                 val d0 = FloatArray(5)
                 val d1 = FloatArray(5)
                 var f: Float
-                var area: Float
                 val n = idVec3()
                 val t0 = idVec3()
                 val t1 = idVec3()
-                val v0 = indexes.get(i + 0)
-                val v1 = indexes.get(i + 1)
-                val v2 = indexes.get(i + 2)
-                a = verts.get(v0)
-                b = verts.get(v1)
-                c = verts.get(v2)
+                val v0 = indexes[i + 0]
+                val v1 = indexes[i + 1]
+                val v2 = indexes[i + 2]
+                a = verts[v0]
+                b = verts[v1]
+                c = verts[v2]
                 d0[0] = b.xyz.oGet(0) - a.xyz.oGet(0)
                 d0[1] = b.xyz.oGet(1) - a.xyz.oGet(1)
                 d0[2] = b.xyz.oGet(2) - a.xyz.oGet(2)
@@ -3689,12 +3474,12 @@ object Simd_Generic {
                 n.x *= f
                 n.y *= f
                 n.z *= f
-                planes.get(planesPtr).SetNormal(n)
-                planes.get(planesPtr).FitThroughPoint(a.xyz)
+                planes[planesPtr].SetNormal(n)
+                planes[planesPtr].FitThroughPoint(a.xyz)
                 planesPtr++
 
                 // area sign bit
-                area = d0[3] * d1[4] - d0[4] * d1[3]
+                val area: Float = d0[3] * d1[4] - d0[4] * d1[3]
                 signBit = java.lang.Float.floatToIntBits(area) and (1 shl 31)
 
                 // first tangent
@@ -3717,9 +3502,9 @@ object Simd_Generic {
                 t1.y *= f
                 t1.z *= f
                 if (used[v0]) {
-                    a.normal.oPluSet(n)
-                    a.tangents[0].oPluSet(t0)
-                    a.tangents[1].oPluSet(t1)
+                    a.normal.plusAssign(n)
+                    a.tangents[0].plusAssign(t0)
+                    a.tangents[1].plusAssign(t1)
                 } else {
                     a.normal.oSet(n)
                     a.tangents[0] = t0
@@ -3727,9 +3512,9 @@ object Simd_Generic {
                     used[v0] = true
                 }
                 if (used[v1]) {
-                    b.normal.oPluSet(n)
-                    b.tangents[0].oPluSet(t0)
-                    b.tangents[1].oPluSet(t1)
+                    b.normal.plusAssign(n)
+                    b.tangents[0].plusAssign(t0)
+                    b.tangents[1].plusAssign(t1)
                 } else {
                     b.normal.oSet(n)
                     b.tangents[0] = t0
@@ -3737,9 +3522,9 @@ object Simd_Generic {
                     used[v1] = true
                 }
                 if (used[v2]) {
-                    c.normal.oPluSet(n)
-                    c.tangents[0].oPluSet(t0)
-                    c.tangents[1].oPluSet(t1)
+                    c.normal.plusAssign(n)
+                    c.tangents[0].plusAssign(t0)
+                    c.tangents[1].plusAssign(t1)
                 } else {
                     c.normal.oSet(n)
                     c.tangents[0] = t0
@@ -3759,60 +3544,43 @@ object Simd_Generic {
          ============
          */
         override fun DeriveUnsmoothedTangents(
-            verts: Array<idDrawVert?>?,
-            dominantTris: Array<dominantTri_s?>?,
+            verts: Array<idDrawVert>,
+            dominantTris: Array<dominantTri_s>,
             numVerts: Int
         ) {
             for (i in 0 until numVerts) {
-                val a: idDrawVert?
-                val b: idDrawVert?
-                val c: idDrawVert?
-                val d0: Float
-                val d1: Float
-                val d2: Float
-                val d3: Float
-                val d4: Float
-                val d5: Float
-                val d6: Float
-                val d7: Float
-                val d8: Float
-                val d9: Float
+                val b: idDrawVert
+                val c: idDrawVert
                 val s0: Float
                 val s1: Float
                 val s2: Float
-                val n0: Float
-                val n1: Float
-                val n2: Float
-                val t0: Float
-                val t1: Float
-                val t2: Float
                 val t3: Float
                 val t4: Float
                 val t5: Float
-                val dt = dominantTris.get(i)
-                a = verts.get(i)
-                b = verts.get(dt.v2)
-                c = verts.get(dt.v3)
-                d0 = b.xyz.oGet(0) - a.xyz.oGet(0)
-                d1 = b.xyz.oGet(1) - a.xyz.oGet(1)
-                d2 = b.xyz.oGet(2) - a.xyz.oGet(2)
-                d3 = b.st.oGet(0) - a.st.oGet(0)
-                d4 = b.st.oGet(1) - a.st.oGet(1)
-                d5 = c.xyz.oGet(0) - a.xyz.oGet(0)
-                d6 = c.xyz.oGet(1) - a.xyz.oGet(1)
-                d7 = c.xyz.oGet(2) - a.xyz.oGet(2)
-                d8 = c.st.oGet(0) - a.st.oGet(0)
-                d9 = c.st.oGet(1) - a.st.oGet(1)
+                val dt = dominantTris[i]
+                val a: idDrawVert = verts[i]
+                b = verts[dt.v2]
+                c = verts[dt.v3]
+                val d0: Float = b.xyz.oGet(0) - a.xyz.oGet(0)
+                val d1: Float = b.xyz.oGet(1) - a.xyz.oGet(1)
+                val d2: Float = b.xyz.oGet(2) - a.xyz.oGet(2)
+                val d3: Float = b.st.oGet(0) - a.st.oGet(0)
+                val d4: Float = b.st.oGet(1) - a.st.oGet(1)
+                val d5: Float = c.xyz.oGet(0) - a.xyz.oGet(0)
+                val d6: Float = c.xyz.oGet(1) - a.xyz.oGet(1)
+                val d7: Float = c.xyz.oGet(2) - a.xyz.oGet(2)
+                val d8: Float = c.st.oGet(0) - a.st.oGet(0)
+                val d9: Float = c.st.oGet(1) - a.st.oGet(1)
                 s0 = dt.normalizationScale[0]
                 s1 = dt.normalizationScale[1]
                 s2 = dt.normalizationScale[2]
-                n0 = s2 * (d6 * d2 - d7 * d1)
-                n1 = s2 * (d7 * d0 - d5 * d2)
-                n2 = s2 * (d5 * d1 - d6 * d0)
-                t0 = s0 * (d0 * d9 - d4 * d5)
-                t1 = s0 * (d1 * d9 - d4 * d6)
-                t2 = s0 * (d2 * d9 - d4 * d7)
-                if (Simd_Generic.DERIVE_UNSMOOTHED_BITANGENT) {
+                val n0: Float = s2 * (d6 * d2 - d7 * d1)
+                val n1: Float = s2 * (d7 * d0 - d5 * d2)
+                val n2: Float = s2 * (d5 * d1 - d6 * d0)
+                val t0: Float = s0 * (d0 * d9 - d4 * d5)
+                val t1: Float = s0 * (d1 * d9 - d4 * d6)
+                val t2: Float = s0 * (d2 * d9 - d4 * d7)
+                if (DERIVE_UNSMOOTHED_BITANGENT) {
                     t3 = s1 * (n2 * t1 - n1 * t2)
                     t4 = s1 * (n0 * t2 - n2 * t0)
                     t5 = s1 * (n1 * t0 - n0 * t1)
@@ -3841,17 +3609,17 @@ object Simd_Generic {
          tangent vectors onto the plane orthogonal to the vertex normal.
          ============
          */
-        override fun NormalizeTangents(verts: Array<idDrawVert?>?, numVerts: Int) {
+        override fun NormalizeTangents(verts: Array<idDrawVert>, numVerts: Int) {
             for (i in 0 until numVerts) {
-                val v = verts.get(i).normal
+                val v = verts[i].normal
                 var f: Float
                 f = idMath.RSqrt(v.x * v.x + v.y * v.y + v.z * v.z)
                 v.x *= f
                 v.y *= f
                 v.z *= f
                 for (j in 0..1) {
-                    val t = verts.get(i).tangents[j]
-                    t.oMinSet(v.oMultiply(t.oMultiply(v)))
+                    val t = verts[i].tangents[j]
+                    t.minusAssign(v.times(t.times(v)))
                     f = idMath.RSqrt(t.x * t.x + t.y * t.y + t.z * t.z)
                     t.x *= f
                     t.y *= f
@@ -3870,27 +3638,27 @@ object Simd_Generic {
          ============
          */
         override fun CreateTextureSpaceLightVectors(
-            lightVectors: Array<idVec3?>?,
-            lightOrigin: idVec3?,
-            verts: Array<idDrawVert?>?,
+            lightVectors: Array<idVec3>,
+            lightOrigin: idVec3,
+            verts: Array<idDrawVert>,
             numVerts: Int,
-            indexes: IntArray?,
+            indexes: IntArray,
             numIndexes: Int
         ) {
             val used = BooleanArray(numVerts)
             //	memset( used, 0, numVerts * sizeof( used[0] ) );
             for (i in numIndexes - 1 downTo 0) {
-                used[indexes.get(i)] = true
+                used[indexes[i]] = true
             }
             for (i in 0 until numVerts) {
                 if (!used[i]) {
                     continue
                 }
-                val v = verts.get(i)
-                val lightDir = idVec3(lightOrigin.oMinus(v.xyz))
-                lightVectors.get(i).oSet(0, lightDir.oMultiply(v.tangents[0]))
-                lightVectors.get(i).oSet(1, lightDir.oMultiply(v.tangents[1]))
-                lightVectors.get(i).oSet(2, lightDir.oMultiply(v.normal))
+                val v = verts[i]
+                val lightDir = idVec3(lightOrigin - v.xyz)
+                lightVectors[i].oSet(0, lightDir * v.tangents[0])
+                lightVectors[i].oSet(1, lightDir * v.tangents[1])
+                lightVectors[i].oSet(2, lightDir * v.normal)
             }
         }
 
@@ -3905,85 +3673,84 @@ object Simd_Generic {
          ============
          */
         override fun CreateSpecularTextureCoords(
-            texCoords: Array<idVec4?>?,
-            lightOrigin: idVec3?,
-            viewOrigin: idVec3?,
-            verts: Array<idDrawVert?>?,
+            texCoords: Array<idVec4>,
+            lightOrigin: idVec3,
+            viewOrigin: idVec3,
+            verts: Array<idDrawVert>,
             numVerts: Int,
-            indexes: IntArray?,
+            indexes: IntArray,
             numIndexes: Int
         ) {
             val used = BooleanArray(numVerts)
             //	memset( used, 0, numVerts * sizeof( used[0] ) );
             for (i in numIndexes - 1 downTo 0) {
-                used[indexes.get(i)] = true
+                used[indexes[i]] = true
             }
             for (i in 0 until numVerts) {
                 if (!used[i]) {
                     continue
                 }
-                val v = verts.get(i)
-                val lightDir = idVec3(lightOrigin.oMinus(v.xyz))
-                val viewDir = idVec3(viewOrigin.oMinus(v.xyz))
-                var ilength: Float
-                ilength = idMath.RSqrt(lightDir.oMultiply(lightDir))
-                lightDir.oMulSet(ilength)
-                ilength = idMath.RSqrt(viewDir.oMultiply(viewDir))
-                viewDir.oMulSet(ilength)
-                lightDir.oPluSet(viewDir)
-                texCoords.get(i).oSet(0, lightDir.oMultiply(v.tangents[0]))
-                texCoords.get(i).oSet(1, lightDir.oMultiply(v.tangents[1]))
-                texCoords.get(i).oSet(2, lightDir.oMultiply(v.normal))
-                texCoords.get(i).oSet(3, 1.0f)
+                val v = verts[i]
+                val lightDir = idVec3(lightOrigin - v.xyz)
+                val viewDir = idVec3(viewOrigin - v.xyz)
+                var ilength: Float = idMath.RSqrt(lightDir * lightDir)
+                lightDir.timesAssign(ilength)
+                ilength = idMath.RSqrt(viewDir * viewDir)
+                viewDir.timesAssign(ilength)
+                lightDir.plusAssign(viewDir)
+                texCoords[i].oSet(0, lightDir * v.tangents[0])
+                texCoords[i].oSet(1, lightDir * v.tangents[1])
+                texCoords[i].oSet(2, lightDir * v.normal)
+                texCoords[i].oSet(3, 1.0f)
             }
         }
 
         override fun CreateShadowCache(
-            vertexCache: Array<idVec4?>?,
-            vertRemap: IntArray?,
-            lightOrigin: idVec3?,
-            verts: Array<idDrawVert?>?,
+            vertexCache: Array<idVec4>,
+            vertRemap: IntArray,
+            lightOrigin: idVec3,
+            verts: Array<idDrawVert>,
             numVerts: Int
         ): Int {
             var outVerts = 0
             for (i in 0 until numVerts) {
-                if (vertRemap.get(i) != 0) {
+                if (vertRemap[i] != 0) {
                     continue
                 }
-                val v = verts.get(i).xyz.ToFloatPtr()
-                vertexCache.get(outVerts + 0).oSet(0, v[0])
-                vertexCache.get(outVerts + 0).oSet(1, v[1])
-                vertexCache.get(outVerts + 0).oSet(2, v[2])
-                vertexCache.get(outVerts + 0).oSet(3, 1.0f)
+                val v = verts[i].xyz.ToFloatPtr()
+                vertexCache[outVerts + 0].oSet(0, v[0])
+                vertexCache[outVerts + 0].oSet(1, v[1])
+                vertexCache[outVerts + 0].oSet(2, v[2])
+                vertexCache[outVerts + 0].oSet(3, 1.0f)
 
                 // R_SetupProjection() builds the projection matrix with a slight crunch
                 // for depth, which keeps this w=0 division from rasterizing right at the
                 // wrap around point and causing depth fighting with the rear caps
-                vertexCache.get(outVerts + 1).oSet(0, v[0] - lightOrigin.oGet(0))
-                vertexCache.get(outVerts + 1).oSet(1, v[1] - lightOrigin.oGet(1))
-                vertexCache.get(outVerts + 1).oSet(2, v[2] - lightOrigin.oGet(2))
-                vertexCache.get(outVerts + 1).oSet(3, 0.0f)
-                vertRemap.get(i) = outVerts
+                vertexCache[outVerts + 1].oSet(0, v[0] - lightOrigin.oGet(0))
+                vertexCache[outVerts + 1].oSet(1, v[1] - lightOrigin.oGet(1))
+                vertexCache[outVerts + 1].oSet(2, v[2] - lightOrigin.oGet(2))
+                vertexCache[outVerts + 1].oSet(3, 0.0f)
+                vertRemap[i] = outVerts
                 outVerts += 2
             }
             return outVerts
         }
 
         override fun CreateVertexProgramShadowCache(
-            vertexCache: Array<idVec4?>?,
-            verts: Array<idDrawVert?>?,
+            vertexCache: Array<idVec4>,
+            verts: Array<idDrawVert>,
             numVerts: Int
         ): Int {
             for (i in 0 until numVerts) {
-                val v = verts.get(i).xyz.ToFloatPtr()
-                vertexCache.get(i * 2 + 0).oSet(0, v[0])
-                vertexCache.get(i * 2 + 1).oSet(0, v[0])
-                vertexCache.get(i * 2 + 0).oSet(1, v[1])
-                vertexCache.get(i * 2 + 1).oSet(1, v[1])
-                vertexCache.get(i * 2 + 0).oSet(2, v[2])
-                vertexCache.get(i * 2 + 1).oSet(2, v[2])
-                vertexCache.get(i * 2 + 0).oSet(3, 1.0f)
-                vertexCache.get(i * 2 + 1).oSet(3, 0.0f)
+                val v = verts[i].xyz.ToFloatPtr()
+                vertexCache[i * 2 + 0].oSet(0, v[0])
+                vertexCache[i * 2 + 1].oSet(0, v[0])
+                vertexCache[i * 2 + 0].oSet(1, v[1])
+                vertexCache[i * 2 + 1].oSet(1, v[1])
+                vertexCache[i * 2 + 0].oSet(2, v[2])
+                vertexCache[i * 2 + 1].oSet(2, v[2])
+                vertexCache[i * 2 + 0].oSet(3, 1.0f)
+                vertexCache[i * 2 + 1].oSet(3, 0.0f)
             }
             return numVerts * 2
         }
@@ -3996,8 +3763,8 @@ object Simd_Generic {
          ============
          */
         override fun UpSamplePCMTo44kHz(
-            dest: FloatArray?,
-            pcm: ShortArray?,
+            dest: FloatArray,
+            pcm: ShortArray,
             numSamples: Int,
             kHz: Int,
             numChannels: Int
@@ -4005,44 +3772,44 @@ object Simd_Generic {
             if (kHz == 11025) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.get(i * 4 + 3) = pcm.get(i + 0)
-                        dest.get(i * 4 + 2) = dest.get(i * 4 + 3)
-                        dest.get(i * 4 + 1) = dest.get(i * 4 + 2)
-                        dest.get(i * 4 + 0) = dest.get(i * 4 + 1)
+                        dest[i * 4 + 3] = pcm[i + 0].toFloat()
+                        dest[i * 4 + 2] = dest[i * 4 + 3]
+                        dest[i * 4 + 1] = dest[i * 4 + 2]
+                        dest[i * 4 + 0] = dest[i * 4 + 1]
                     }
                 } else {
                     var i = 0
                     while (i < numSamples) {
-                        dest.get(i * 4 + 6) = pcm.get(i + 0)
-                        dest.get(i * 4 + 4) = dest.get(i * 4 + 6)
-                        dest.get(i * 4 + 2) = dest.get(i * 4 + 4)
-                        dest.get(i * 4 + 0) = dest.get(i * 4 + 2)
-                        dest.get(i * 4 + 7) = pcm.get(i + 1)
-                        dest.get(i * 4 + 5) = dest.get(i * 4 + 7)
-                        dest.get(i * 4 + 3) = dest.get(i * 4 + 5)
-                        dest.get(i * 4 + 1) = dest.get(i * 4 + 3)
+                        dest[i * 4 + 6] = pcm[i + 0].toFloat()
+                        dest[i * 4 + 4] = dest[i * 4 + 6]
+                        dest[i * 4 + 2] = dest[i * 4 + 4]
+                        dest[i * 4 + 0] = dest[i * 4 + 2]
+                        dest[i * 4 + 7] = pcm[i + 1].toFloat()
+                        dest[i * 4 + 5] = dest[i * 4 + 7]
+                        dest[i * 4 + 3] = dest[i * 4 + 5]
+                        dest[i * 4 + 1] = dest[i * 4 + 3]
                         i += 2
                     }
                 }
             } else if (kHz == 22050) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.get(i * 2 + 1) = pcm.get(i + 0)
-                        dest.get(i * 2 + 0) = dest.get(i * 2 + 1)
+                        dest[i * 2 + 1] = pcm[i + 0].toFloat()
+                        dest[i * 2 + 0] = dest[i * 2 + 1]
                     }
                 } else {
                     var i = 0
                     while (i < numSamples) {
-                        dest.get(i * 2 + 2) = pcm.get(i + 0)
-                        dest.get(i * 2 + 0) = dest.get(i * 2 + 2)
-                        dest.get(i * 2 + 3) = pcm.get(i + 1)
-                        dest.get(i * 2 + 1) = dest.get(i * 2 + 3)
+                        dest[i * 2 + 2] = pcm[i + 0].toFloat()
+                        dest[i * 2 + 0] = dest[i * 2 + 2]
+                        dest[i * 2 + 3] = pcm[i + 1].toFloat()
+                        dest[i * 2 + 1] = dest[i * 2 + 3]
                         i += 2
                     }
                 }
             } else if (kHz == 44100) {
                 for (i in 0 until numSamples) {
-                    dest.get(i) = pcm.get(i)
+                    dest[i] = pcm[i].toFloat()
                 }
             } else {
 //		assert( 0 );
@@ -4058,9 +3825,9 @@ object Simd_Generic {
          ============
          */
         override fun UpSampleOGGTo44kHz(
-            dest: FloatArray?,
+            dest: FloatArray,
             offset: Int,
-            ogg: Array<FloatArray?>?,
+            ogg: Array<FloatArray>,
             numSamples: Int,
             kHz: Int,
             numChannels: Int
@@ -4068,46 +3835,49 @@ object Simd_Generic {
             if (kHz == 11025) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.get(offset + (i * 4 + 3)) = ogg.get(0).get(i) * 32768.0f
-                        dest.get(offset + (i * 4 + 2)) = dest.get(offset + (i * 4 + 3))
-                        dest.get(offset + (i * 4 + 1)) = dest.get(offset + (i * 4 + 2))
-                        dest.get(offset + (i * 4 + 0)) = dest.get(offset + (i * 4 + 1))
+                        dest[offset + (i * 4 + 3)] = ogg[0][i] * 32768.0f
+                        dest[offset + (i * 4 + 2)] = dest[offset + (i * 4 + 3)]
+                        dest[offset + (i * 4 + 1)] = dest[offset + (i * 4 + 2)]
+                        dest[offset + (i * 4 + 0)] = dest[offset + (i * 4 + 1)]
                     }
                 } else {
-                    for (i in 0 until numSamples shr 1) {
-                        dest.get(offset + (i * 8 + 6)) = ogg.get(0).get(i) * 32768.0f
-                        dest.get(offset + (i * 8 + 4)) = dest.get(offset + (i * 8 + 6))
-                        dest.get(offset + (i * 8 + 2)) = dest.get(offset + (i * 8 + 4))
-                        dest.get(offset + (i * 8 + 0)) = dest.get(offset + (i * 8 + 2))
-                        dest.get(offset + (i * 8 + 7)) = ogg.get(1).get(i) * 32768.0f
-                        dest.get(offset + (i * 8 + 5)) = dest.get(offset + (i * 8 + 7))
-                        dest.get(offset + (i * 8 + 3)) = dest.get(offset + (i * 8 + 5))
-                        dest.get(offset + (i * 8 + 1)) = dest.get(offset + (i * 8 + 3))
+                    val untilRange = numSamples shr 1
+                    for (i in 0 until untilRange) {
+                        dest[offset + (i * 8 + 6)] = ogg[0][i] * 32768.0f
+                        dest[offset + (i * 8 + 4)] = dest[offset + (i * 8 + 6)]
+                        dest[offset + (i * 8 + 2)] = dest[offset + (i * 8 + 4)]
+                        dest[offset + (i * 8 + 0)] = dest[offset + (i * 8 + 2)]
+                        dest[offset + (i * 8 + 7)] = ogg[1][i] * 32768.0f
+                        dest[offset + (i * 8 + 5)] = dest[offset + (i * 8 + 7)]
+                        dest[offset + (i * 8 + 3)] = dest[offset + (i * 8 + 5)]
+                        dest[offset + (i * 8 + 1)] = dest[offset + (i * 8 + 3)]
                     }
                 }
             } else if (kHz == 22050) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.get(offset + (i * 2 + 1)) = ogg.get(0).get(i) * 32768.0f
-                        dest.get(offset + (i * 2 + 0)) = dest.get(offset + (i * 2 + 1))
+                        dest[offset + (i * 2 + 1)] = ogg[0][i] * 32768.0f
+                        dest[offset + (i * 2 + 0)] = dest[offset + (i * 2 + 1)]
                     }
                 } else {
-                    for (i in 0 until numSamples shr 1) {
-                        dest.get(offset + (i * 4 + 2)) = ogg.get(0).get(i) * 32768.0f
-                        dest.get(offset + (i * 4 + 0)) = dest.get(offset + (i * 4 + 2))
-                        dest.get(offset + (i * 4 + 3)) = ogg.get(1).get(i) * 32768.0f
-                        dest.get(offset + (i * 4 + 1)) = dest.get(offset + (i * 4 + 3))
+                    val untilRange = numSamples shr 1
+                    for (i in 0 until untilRange) {
+                        dest[offset + (i * 4 + 2)] = ogg[0][i] * 32768.0f
+                        dest[offset + (i * 4 + 0)] = dest[offset + (i * 4 + 2)]
+                        dest[offset + (i * 4 + 3)] = ogg[1][i] * 32768.0f
+                        dest[offset + (i * 4 + 1)] = dest[offset + (i * 4 + 3)]
                     }
                 }
             } else if (kHz == 44100) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.get(offset + (i * 1 + 0)) = ogg.get(0).get(i) * 32768.0f
+                        dest[offset + (i * 1 + 0)] = ogg[0][i] * 32768.0f
                     }
                 } else {
-                    for (i in 0 until numSamples shr 1) {
-                        dest.get(offset + (i * 2 + 0)) = ogg.get(0).get(i) * 32768.0f
-                        dest.get(offset + (i * 2 + 1)) = ogg.get(1).get(i) * 32768.0f
+                    val untilRange = numSamples shr 1
+                    for (i in 0 until untilRange) {
+                        dest[offset + (i * 2 + 0)] = ogg[0][i] * 32768.0f
+                        dest[offset + (i * 2 + 1)] = ogg[1][i] * 32768.0f
                     }
                 }
             } else {
@@ -4116,9 +3886,9 @@ object Simd_Generic {
         }
 
         override fun UpSampleOGGTo44kHz(
-            dest: FloatBuffer?,
+            dest: FloatBuffer,
             offset: Int,
-            ogg: Array<FloatArray?>?,
+            ogg: Array<FloatArray>,
             numSamples: Int,
             kHz: Int,
             numChannels: Int
@@ -4128,46 +3898,49 @@ object Simd_Generic {
             if (kHz == 11025) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.put(offset + (i * 4 + 0), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 4 + 1), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 4 + 2), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 4 + 3), ogg.get(0).get(i) * 32768.0f)
+                        dest.put(offset + (i * 4 + 0), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 4 + 1), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 4 + 2), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 4 + 3), ogg[0][i] * 32768.0f)
                     }
                 } else {
-                    for (i in 0 until numSamples shr 1) {
-                        dest.put(offset + (i * 8 + 0), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 8 + 2), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 8 + 4), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 8 + 6), ogg.get(0).get(i) * 32768.0f)
-                        dest.put(offset + (i * 8 + 1), ogg.get(1).get(i) * 32768.0f)
-                            .put(offset + (i * 8 + 3), ogg.get(1).get(i) * 32768.0f)
-                            .put(offset + (i * 8 + 5), ogg.get(1).get(i) * 32768.0f)
-                            .put(offset + (i * 8 + 7), ogg.get(1).get(i) * 32768.0f)
+                    val untilRange = numSamples shr 1
+                    for (i in 0 until untilRange) {
+                        dest.put(offset + (i * 8 + 0), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 8 + 2), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 8 + 4), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 8 + 6), ogg[0][i] * 32768.0f)
+                        dest.put(offset + (i * 8 + 1), ogg[1][i] * 32768.0f)
+                            .put(offset + (i * 8 + 3), ogg[1][i] * 32768.0f)
+                            .put(offset + (i * 8 + 5), ogg[1][i] * 32768.0f)
+                            .put(offset + (i * 8 + 7), ogg[1][i] * 32768.0f)
                     }
                 }
             } else if (kHz == 22050) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.put(offset + (i * 2 + 0), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 2 + 1), ogg.get(0).get(i) * 32768.0f)
+                        dest.put(offset + (i * 2 + 0), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 2 + 1), ogg[0][i] * 32768.0f)
                     }
                 } else {
-                    for (i in 0 until numSamples shr 1) {
-                        dest.put(offset + (i * 4 + 0), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 4 + 2), ogg.get(0).get(i) * 32768.0f)
-                        dest.put(offset + (i * 4 + 1), ogg.get(1).get(i) * 32768.0f)
-                            .put(offset + (i * 4 + 3), ogg.get(1).get(i) * 32768.0f)
+                    val untilRange = numSamples shr 1
+                    for (i in 0 until untilRange) {
+                        dest.put(offset + (i * 4 + 0), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 4 + 2), ogg[0][i] * 32768.0f)
+                        dest.put(offset + (i * 4 + 1), ogg[1][i] * 32768.0f)
+                            .put(offset + (i * 4 + 3), ogg[1][i] * 32768.0f)
                     }
                 }
             } else if (kHz == 44100) {
                 if (numChannels == 1) {
                     for (i in 0 until numSamples) {
-                        dest.put(offset + (i * 1 + 0), ogg.get(0).get(i) * 32768.0f)
+                        dest.put(offset + (i * 1 + 0), ogg[0][i] * 32768.0f)
                     }
                 } else {
-                    for (i in 0 until numSamples shr 1) {
-                        dest.put(offset + (i * 2 + 0), ogg.get(0).get(i) * 32768.0f)
-                            .put(offset + (i * 2 + 1), ogg.get(1).get(i) * 32768.0f)
+                    val untilRange = numSamples shr 1
+                    for (i in 0 until untilRange) {
+                        dest.put(offset + (i * 2 + 0), ogg[0][i] * 32768.0f)
+                            .put(offset + (i * 2 + 1), ogg[1][i] * 32768.0f)
                     }
                 }
             } else {
@@ -4176,72 +3949,72 @@ object Simd_Generic {
         }
 
         override fun MixSoundTwoSpeakerMono(
-            mixBuffer: FloatArray?,
-            samples: FloatArray?,
+            mixBuffer: FloatArray,
+            samples: FloatArray,
             numSamples: Int,
-            lastV: FloatArray?,
-            currentV: FloatArray?
+            lastV: FloatArray,
+            currentV: FloatArray
         ) {
-            var sL = lastV.get(0)
-            var sR = lastV.get(1)
-            val incL = (currentV.get(0) - lastV.get(0)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incR = (currentV.get(1) - lastV.get(1)) / Simd_Generic.MIXBUFFER_SAMPLES
-            assert(numSamples == Simd_Generic.MIXBUFFER_SAMPLES)
-            for (j in 0 until Simd_Generic.MIXBUFFER_SAMPLES) {
-                mixBuffer.get(j * 2 + 0) += samples.get(j) * sL
-                mixBuffer.get(j * 2 + 1) += samples.get(j) * sR
+            var sL = lastV[0]
+            var sR = lastV[1]
+            val incL = (currentV[0] - lastV[0]) / MIXBUFFER_SAMPLES
+            val incR = (currentV[1] - lastV[1]) / MIXBUFFER_SAMPLES
+            assert(numSamples == MIXBUFFER_SAMPLES)
+            for (j in 0 until MIXBUFFER_SAMPLES) {
+                mixBuffer[j * 2 + 0] += samples[j] * sL
+                mixBuffer[j * 2 + 1] += samples[j] * sR
                 sL += incL
                 sR += incR
             }
         }
 
         override fun MixSoundTwoSpeakerStereo(
-            mixBuffer: FloatArray?,
-            samples: FloatArray?,
+            mixBuffer: FloatArray,
+            samples: FloatArray,
             numSamples: Int,
-            lastV: FloatArray?,
-            currentV: FloatArray?
+            lastV: FloatArray,
+            currentV: FloatArray
         ) {
-            var sL = lastV.get(0)
-            var sR = lastV.get(1)
-            val incL = (currentV.get(0) - lastV.get(0)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incR = (currentV.get(1) - lastV.get(1)) / Simd_Generic.MIXBUFFER_SAMPLES
-            assert(numSamples == Simd_Generic.MIXBUFFER_SAMPLES)
-            for (j in 0 until Simd_Generic.MIXBUFFER_SAMPLES) {
-                mixBuffer.get(j * 2 + 0) += samples.get(j * 2 + 0) * sL
-                mixBuffer.get(j * 2 + 1) += samples.get(j * 2 + 1) * sR
+            var sL = lastV[0]
+            var sR = lastV[1]
+            val incL = (currentV[0] - lastV[0]) / MIXBUFFER_SAMPLES
+            val incR = (currentV[1] - lastV[1]) / MIXBUFFER_SAMPLES
+            assert(numSamples == MIXBUFFER_SAMPLES)
+            for (j in 0 until MIXBUFFER_SAMPLES) {
+                mixBuffer[j * 2 + 0] += samples[j * 2 + 0] * sL
+                mixBuffer[j * 2 + 1] += samples[j * 2 + 1] * sR
                 sL += incL
                 sR += incR
             }
         }
 
         override fun MixSoundSixSpeakerMono(
-            mixBuffer: FloatArray?,
-            samples: FloatArray?,
+            mixBuffer: FloatArray,
+            samples: FloatArray,
             numSamples: Int,
-            lastV: FloatArray?,
-            currentV: FloatArray?
+            lastV: FloatArray,
+            currentV: FloatArray
         ) {
-            var sL0 = lastV.get(0)
-            var sL1 = lastV.get(1)
-            var sL2 = lastV.get(2)
-            var sL3 = lastV.get(3)
-            var sL4 = lastV.get(4)
-            var sL5 = lastV.get(5)
-            val incL0 = (currentV.get(0) - lastV.get(0)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL1 = (currentV.get(1) - lastV.get(1)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL2 = (currentV.get(2) - lastV.get(2)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL3 = (currentV.get(3) - lastV.get(3)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL4 = (currentV.get(4) - lastV.get(4)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL5 = (currentV.get(5) - lastV.get(5)) / Simd_Generic.MIXBUFFER_SAMPLES
-            assert(numSamples == Simd_Generic.MIXBUFFER_SAMPLES)
-            for (i in 0 until Simd_Generic.MIXBUFFER_SAMPLES) {
-                mixBuffer.get(i * 6 + 0) += samples.get(i) * sL0
-                mixBuffer.get(i * 6 + 1) += samples.get(i) * sL1
-                mixBuffer.get(i * 6 + 2) += samples.get(i) * sL2
-                mixBuffer.get(i * 6 + 3) += samples.get(i) * sL3
-                mixBuffer.get(i * 6 + 4) += samples.get(i) * sL4
-                mixBuffer.get(i * 6 + 5) += samples.get(i) * sL5
+            var sL0 = lastV[0]
+            var sL1 = lastV[1]
+            var sL2 = lastV[2]
+            var sL3 = lastV[3]
+            var sL4 = lastV[4]
+            var sL5 = lastV[5]
+            val incL0 = (currentV[0] - lastV[0]) / MIXBUFFER_SAMPLES
+            val incL1 = (currentV[1] - lastV[1]) / MIXBUFFER_SAMPLES
+            val incL2 = (currentV[2] - lastV[2]) / MIXBUFFER_SAMPLES
+            val incL3 = (currentV[3] - lastV[3]) / MIXBUFFER_SAMPLES
+            val incL4 = (currentV[4] - lastV[4]) / MIXBUFFER_SAMPLES
+            val incL5 = (currentV[5] - lastV[5]) / MIXBUFFER_SAMPLES
+            assert(numSamples == MIXBUFFER_SAMPLES)
+            for (i in 0 until MIXBUFFER_SAMPLES) {
+                mixBuffer[i * 6 + 0] += samples[i] * sL0
+                mixBuffer[i * 6 + 1] += samples[i] * sL1
+                mixBuffer[i * 6 + 2] += samples[i] * sL2
+                mixBuffer[i * 6 + 3] += samples[i] * sL3
+                mixBuffer[i * 6 + 4] += samples[i] * sL4
+                mixBuffer[i * 6 + 5] += samples[i] * sL5
                 sL0 += incL0
                 sL1 += incL1
                 sL2 += incL2
@@ -4252,32 +4025,32 @@ object Simd_Generic {
         }
 
         override fun MixSoundSixSpeakerStereo(
-            mixBuffer: FloatArray?,
-            samples: FloatArray?,
+            mixBuffer: FloatArray,
+            samples: FloatArray,
             numSamples: Int,
-            lastV: FloatArray?,
-            currentV: FloatArray?
+            lastV: FloatArray,
+            currentV: FloatArray
         ) {
-            var sL0 = lastV.get(0)
-            var sL1 = lastV.get(1)
-            var sL2 = lastV.get(2)
-            var sL3 = lastV.get(3)
-            var sL4 = lastV.get(4)
-            var sL5 = lastV.get(5)
-            val incL0 = (currentV.get(0) - lastV.get(0)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL1 = (currentV.get(1) - lastV.get(1)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL2 = (currentV.get(2) - lastV.get(2)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL3 = (currentV.get(3) - lastV.get(3)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL4 = (currentV.get(4) - lastV.get(4)) / Simd_Generic.MIXBUFFER_SAMPLES
-            val incL5 = (currentV.get(5) - lastV.get(5)) / Simd_Generic.MIXBUFFER_SAMPLES
-            assert(numSamples == Simd_Generic.MIXBUFFER_SAMPLES)
-            for (i in 0 until Simd_Generic.MIXBUFFER_SAMPLES) {
-                mixBuffer.get(i * 6 + 0) += samples.get(i * 2 + 0) * sL0
-                mixBuffer.get(i * 6 + 1) += samples.get(i * 2 + 1) * sL1
-                mixBuffer.get(i * 6 + 2) += samples.get(i * 2 + 0) * sL2
-                mixBuffer.get(i * 6 + 3) += samples.get(i * 2 + 0) * sL3
-                mixBuffer.get(i * 6 + 4) += samples.get(i * 2 + 0) * sL4
-                mixBuffer.get(i * 6 + 5) += samples.get(i * 2 + 1) * sL5
+            var sL0 = lastV[0]
+            var sL1 = lastV[1]
+            var sL2 = lastV[2]
+            var sL3 = lastV[3]
+            var sL4 = lastV[4]
+            var sL5 = lastV[5]
+            val incL0 = (currentV[0] - lastV[0]) / MIXBUFFER_SAMPLES
+            val incL1 = (currentV[1] - lastV[1]) / MIXBUFFER_SAMPLES
+            val incL2 = (currentV[2] - lastV[2]) / MIXBUFFER_SAMPLES
+            val incL3 = (currentV[3] - lastV[3]) / MIXBUFFER_SAMPLES
+            val incL4 = (currentV[4] - lastV[4]) / MIXBUFFER_SAMPLES
+            val incL5 = (currentV[5] - lastV[5]) / MIXBUFFER_SAMPLES
+            assert(numSamples == MIXBUFFER_SAMPLES)
+            for (i in 0 until MIXBUFFER_SAMPLES) {
+                mixBuffer[i * 6 + 0] += samples[i * 2 + 0] * sL0
+                mixBuffer[i * 6 + 1] += samples[i * 2 + 1] * sL1
+                mixBuffer[i * 6 + 2] += samples[i * 2 + 0] * sL2
+                mixBuffer[i * 6 + 3] += samples[i * 2 + 0] * sL3
+                mixBuffer[i * 6 + 4] += samples[i * 2 + 0] * sL4
+                mixBuffer[i * 6 + 5] += samples[i * 2 + 1] * sL5
                 sL0 += incL0
                 sL1 += incL1
                 sL2 += incL2
@@ -4287,31 +4060,31 @@ object Simd_Generic {
             }
         }
 
-        override fun MixedSoundToSamples(samples: ShortArray?, offset: Int, mixBuffer: FloatArray?, numSamples: Int) {
+        override fun MixedSoundToSamples(samples: ShortArray, offset: Int, mixBuffer: FloatArray, numSamples: Int) {
             for (i in 0 until numSamples) {
-                if (mixBuffer.get(i) <= -32768.0f) {
-                    samples.get(offset + i) = -32768
-                } else if (mixBuffer.get(i) >= 32767.0f) {
-                    samples.get(offset + i) = 32767
+                if (mixBuffer[i] <= -32768.0f) {
+                    samples[offset + i] = -32768
+                } else if (mixBuffer[i] >= 32767.0f) {
+                    samples[offset + i] = 32767
                 } else {
-                    samples.get(offset + i) = mixBuffer.get(i) as Short
+                    samples[offset + i] = mixBuffer[i] as Short
                 }
             }
         }
 
         companion object {
             //TODO: move to TempDump
-            private fun jmtobb(joints: Array<idJointMat?>?): ByteBuffer? {
+            private fun jmtobb(joints: Array<idJointMat>): ByteBuffer {
                 val byteBuffer =
-                    ByteBuffer.allocate(idJointMat.Companion.SIZE * joints.size).order(ByteOrder.LITTLE_ENDIAN)
+                    ByteBuffer.allocate(idJointMat.SIZE * joints.size).order(ByteOrder.LITTLE_ENDIAN)
                 for (i in joints.indices) {
-                    byteBuffer.position(i * idJointMat.Companion.SIZE)
-                    byteBuffer.asFloatBuffer().put(joints.get(i).ToFloatPtr())
+                    byteBuffer.position(i * idJointMat.SIZE)
+                    byteBuffer.asFloatBuffer().put(joints[i].ToFloatPtr())
                 }
                 return byteBuffer
             }
 
-            private fun toIdJointMat(jointsPtr: ByteBuffer?, position: Int): idJointMat? {
+            private fun toIdJointMat(jointsPtr: ByteBuffer, position: Int): idJointMat {
                 val buffer = jointsPtr.duplicate().position(position).order(ByteOrder.LITTLE_ENDIAN)
                 val temp = FloatArray(12)
                 for (i in 0..11) {

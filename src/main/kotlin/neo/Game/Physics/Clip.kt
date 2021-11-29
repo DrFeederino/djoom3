@@ -335,7 +335,7 @@ object Clip {
             // because movement is clipped an epsilon away from an actual edge,
             // we must fully check even when bounding boxes don't quite touch
             absBounds.oMinSet(0, Clip.vec3_boxEpsilon)
-            absBounds.oPluSet(1, Clip.vec3_boxEpsilon)
+            absBounds.timesAssign(1, Clip.vec3_boxEpsilon)
             Link_r(clp.clipSectors.get(0)) //TODO:check if [0] is good enough. upd: seems it is
         }
 
@@ -389,13 +389,13 @@ object Clip {
 
         fun Translate(translation: idVec3?) {                            // unlinks the clip model
             Unlink()
-            origin.oPluSet(translation)
+            origin.plusAssign(translation)
         }
 
         fun Rotate(rotation: idRotation?) {                            // unlinks the clip model
             Unlink()
-            origin.oMulSet(rotation)
-            axis.oMulSet(rotation.ToMat3())
+            origin.timesAssign(rotation)
+            axis.timesAssign(rotation.ToMat3())
         }
 
         fun Enable() {                        // enable for clipping
@@ -517,7 +517,7 @@ object Clip {
             val entry: trmCache_s? = Clip.traceModelCache.oGet(traceModelIndex)
             mass.setVal(Math.abs(entry.volume * density)) // a hack-fix
             centerOfMass.oSet(entry.centerOfMass)
-            inertiaTensor.oSet(entry.inertiaTensor.oMultiply(density))
+            inertiaTensor.oSet(entry.inertiaTensor.times(density))
         }
 
         // initialize(or does it?)
@@ -881,7 +881,7 @@ object Clip {
 //		memset( &results, 0, sizeof( results ) );
                 results.fraction = 1.0f
                 results.endpos.oSet(start)
-                results.endAxis.oSet(trmAxis.oMultiply(rotation.ToMat3()))
+                results.endAxis.oSet(trmAxis.times(rotation.ToMat3()))
             }
             if (null == trm) {
                 traceBounds.FromPointRotation(start, rotation)
@@ -995,9 +995,9 @@ object Clip {
                 i = 0
                 while (i < 3) {
                     if (dir.oGet(i) < 0.0f) {
-                        traceBounds.oGet(0).oPluSet(i, dir.oGet(i))
+                        traceBounds.oGet(0).plusAssign(i, dir.oGet(i))
                     } else {
-                        traceBounds.oGet(1).oPluSet(i, dir.oGet(i))
+                        traceBounds.oGet(1).plusAssign(i, dir.oGet(i))
                     }
                     i++
                 }
@@ -1063,7 +1063,7 @@ object Clip {
                 rotationalTrace = trace_s()
                 rotationalTrace.fraction = 1.0f
                 rotationalTrace.endpos.oSet(endPosition)
-                rotationalTrace.endAxis.oSet(trmAxis.oMultiply(rotation.ToMat3()))
+                rotationalTrace.endAxis.oSet(trmAxis.times(rotation.ToMat3()))
             }
             if (rotationalTrace.fraction != 0.0f) {
                 if (num == -1) {
@@ -1676,7 +1676,7 @@ object Clip {
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorCyan,
                     winding.oGet(0).ToVec3(),
-                    winding.oGet(0).ToVec3().oPlus(axis.oGet(0).oMultiply(2.0f)),
+                    winding.oGet(0).ToVec3().oPlus(axis.oGet(0).times(2.0f)),
                     lifetime
                 )
                 Game_local.gameRenderWorld.DebugLine(
@@ -1707,7 +1707,7 @@ object Clip {
             axis.oSet(2, axis.oGet(2).oNegative())
             Game_local.gameRenderWorld.DrawText(
                 contact.material.GetName(),
-                winding.GetCenter().oMinus(axis.oGet(2).oMultiply(4.0f)),
+                winding.GetCenter().oMinus(axis.oGet(2).times(4.0f)),
                 0.1f,
                 Lib.Companion.colorWhite,
                 axis,
@@ -1915,7 +1915,7 @@ object Clip {
                     trace.endAxis.oSet(axis)
                     trace.endpos.oSet(modelTrace.point)
                     trace.c.normal.oSet(modelTrace.normal)
-                    trace.c.dist = modelTrace.point.oMultiply(modelTrace.normal)
+                    trace.c.dist = modelTrace.point.times(modelTrace.normal)
                     trace.c.point.oSet(modelTrace.point)
                     trace.c.type = contactType_t.CONTACT_TRMVERTEX
                     trace.c.modelFeature = 0

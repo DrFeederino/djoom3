@@ -192,9 +192,9 @@ object renderbump {
                             l++
                             continue
                         }
-                        normal.oPluSet(0, (orig[`in` + 0] - 128).toFloat())
-                        normal.oPluSet(1, (orig[`in` + 1] - 128).toFloat())
-                        normal.oPluSet(2, (orig[`in` + 2] - 128).toFloat())
+                        normal.plusAssign(0, (orig[`in` + 0] - 128).toFloat())
+                        normal.plusAssign(1, (orig[`in` + 1] - 128).toFloat())
+                        normal.plusAssign(2, (orig[`in` + 2] - 128).toFloat())
                         l++
                     }
                     k++
@@ -256,9 +256,9 @@ object renderbump {
                             l++
                             continue
                         }
-                        normal.oPluSet(0, orig[`in` + 0])
-                        normal.oPluSet(1, orig[`in` + 1])
-                        normal.oPluSet(2, orig[`in` + 2])
+                        normal.plusAssign(0, orig[`in` + 0])
+                        normal.plusAssign(1, orig[`in` + 1])
+                        normal.plusAssign(2, orig[`in` + 2])
                         count++
                         l++
                     }
@@ -268,7 +268,7 @@ object renderbump {
                     j++
                     continue
                 }
-                normal.oMulSet(1.0f / count)
+                normal.timesAssign(1.0f / count)
                 data.put(out + 0, normal.oGet(0).toByte())
                 data.put(out + 1, normal.oGet(1).toByte())
                 data.put(out + 2, normal.oGet(2).toByte())
@@ -430,7 +430,7 @@ object renderbump {
         plane.oSet(highMesh.facePlanes[faceNum])
 
         // only test against planes facing the same direction as our normal
-        d = plane.Normal().oMultiply(normal)
+        d = plane.Normal().times(normal)
         if (d <= 0.0001f) {
             return renderbump.DIST_NO_INTERSECTION
         }
@@ -438,7 +438,7 @@ object renderbump {
         // find the point of impact on the plane
         dist = plane.Distance(point)
         dist /= -d
-        testVert.oSet(point.oPlus(normal.oMultiply(dist)))
+        testVert.oSet(point.oPlus(normal.times(dist)))
 
         // if this would be beyond our requested trace distance,
         // don't even check it
@@ -487,7 +487,7 @@ object renderbump {
         sampledNormal.oSet(Vector.getVec3_origin())
         j = 0
         while (j < 3) {
-            sampledNormal.oPluSet(highMesh.verts[highMesh.indexes[faceNum * 3 + j]].normal.oMultiply(bary[j]))
+            sampledNormal.plusAssign(highMesh.verts[highMesh.indexes[faceNum * 3 + j]].normal.times(bary[j]))
             j++
         }
         sampledNormal.Normalize()
@@ -556,7 +556,7 @@ object renderbump {
             p.oSet(
                 point.oMinus(
                     rb.hash.bounds.oGet(0)
-                        .oPlus(normal.oMultiply(-1.0f + 2.0f * i / renderbump.RAY_STEPS).oMultiply(rb.traceDist))
+                        .oPlus(normal.times(-1.0f + 2.0f * i / renderbump.RAY_STEPS).oMultiply(rb.traceDist))
                 )
             ) //TODO:check if downcasting from doubles to floats has any effect
             block[0] = Math.floor((p.oGet(0) / rb.hash.binSize.get(0)).toDouble()).toInt()
@@ -811,13 +811,13 @@ object renderbump {
                 while (k < 3) {
                     var index: Int
                     index = lowMesh.indexes[lowFaceNum * 3 + k]
-                    point.oPluSet(lowMesh.verts[index].xyz.oMultiply(bary[k]))
+                    point.plusAssign(lowMesh.verts[index].xyz.times(bary[k]))
 
                     // traceNormal will differ from normal if the surface uses unsmoothedTangents
-                    traceNormal.oPluSet(lowMeshNormals.get(index).oMultiply(bary[k]))
-                    normal.oPluSet(lowMesh.verts[index].normal.oMultiply(bary[k]))
-                    tangents[0].oPluSet(lowMesh.verts[index].tangents[0].oMultiply(bary[k]))
-                    tangents[1].oPluSet(lowMesh.verts[index].tangents[1].oMultiply(bary[k]))
+                    traceNormal.plusAssign(lowMeshNormals.get(index).times(bary[k]))
+                    normal.plusAssign(lowMesh.verts[index].normal.times(bary[k]))
+                    tangents[0].plusAssign(lowMesh.verts[index].tangents[0].times(bary[k]))
+                    tangents[1].plusAssign(lowMesh.verts[index].tangents[1].times(bary[k]))
                     k++
                 }
 
@@ -864,7 +864,7 @@ object renderbump {
                 // transform to local tangent space
                 val mat = idMat3(tangents[0], tangents[1], normal)
                 mat.InverseSelf()
-                localNormal.oSet(mat.oMultiply(sampledNormal))
+                localNormal.oSet(mat.times(sampledNormal))
                 localNormal.Normalize()
                 r = (128 + 127 * localNormal.oGet(0)).toInt()
                 g = (128 + 127 * localNormal.oGet(1)).toInt()

@@ -408,13 +408,13 @@ object AF {
                 body.SetWorldOrigin(
                     renderEntity.origin.oPlus(
                         origin.oPlus(
-                            jointMods.oGet(i).jointBodyOrigin.oMultiply(
+                            jointMods.oGet(i).jointBodyOrigin.times(
                                 axis
                             )
                         ).oMultiply(renderEntity.axis)
                     )
                 )
-                body.SetWorldAxis(jointMods.oGet(i).jointBodyAxis.oMultiply(axis).oMultiply(renderEntity.axis))
+                body.SetWorldAxis(jointMods.oGet(i).jointBodyAxis.times(axis).times(renderEntity.axis))
                 i++
             }
             if (isActive) {
@@ -470,13 +470,13 @@ object AF {
                 body.SetWorldOrigin(
                     renderEntity.origin.oPlus(
                         origin.oPlus(
-                            jointMods.oGet(i).jointBodyOrigin.oMultiply(
+                            jointMods.oGet(i).jointBodyOrigin.times(
                                 axis
                             )
                         ).oMultiply(renderEntity.axis)
                     )
                 )
-                body.SetWorldAxis(jointMods.oGet(i).jointBodyAxis.oMultiply(axis).oMultiply(renderEntity.axis))
+                body.SetWorldAxis(jointMods.oGet(i).jointBodyAxis.times(axis).times(renderEntity.axis))
                 body.SetLinearVelocity(body.GetWorldOrigin().oMinus(lastOrigin).oMultiply(invDelta))
                 i++
             }
@@ -665,17 +665,17 @@ object AF {
             // get model base transform
             origin.oSet(physicsObj.GetOrigin(0))
             axis = physicsObj.GetAxis(0)
-            entityAxis = baseAxis.Transpose().oMultiply(axis)
-            entityOrigin.oSet(origin.oMinus(baseOrigin.oMultiply(entityAxis)))
+            entityAxis = baseAxis.Transpose().times(axis)
+            entityOrigin.oSet(origin.oMinus(baseOrigin.times(entityAxis)))
 
             // get bounds relative to base
             i = 0
             while (i < jointMods.Num()) {
                 body = physicsObj.GetBody(jointMods.oGet(i).bodyId)
                 origin.oSet(body.GetWorldOrigin().oMinus(entityOrigin).oMultiply(entityAxis.Transpose()))
-                axis = body.GetWorldAxis().oMultiply(entityAxis.Transpose())
+                axis = body.GetWorldAxis().times(entityAxis.Transpose())
                 b.FromTransformedBounds(body.GetClipModel().GetBounds(), origin, axis)
-                bounds.oPluSet(b)
+                bounds.timesAssign(b)
                 i++
             }
             return bounds
@@ -710,8 +710,8 @@ object AF {
             // get the render position
             origin.oSet(physicsObj.GetOrigin(0))
             axis = physicsObj.GetAxis(0)
-            renderAxis = baseAxis.Transpose().oMultiply(axis)
-            renderOrigin.oSet(origin.oMinus(baseOrigin.oMultiply(renderAxis)))
+            renderAxis = baseAxis.Transpose().times(axis)
+            renderOrigin.oSet(origin.oMinus(baseOrigin.times(renderAxis)))
 
             // create an animation frame which reflects the current pose of the articulated figure
             animator.InitAFPose()
@@ -725,9 +725,9 @@ object AF {
                 }
                 bodyOrigin.oSet(physicsObj.GetOrigin(jointMods.oGet(i).bodyId))
                 bodyAxis = physicsObj.GetAxis(jointMods.oGet(i).bodyId)
-                axis = jointMods.oGet(i).jointBodyAxis.Transpose().oMultiply(bodyAxis.oMultiply(renderAxis.Transpose()))
+                axis = jointMods.oGet(i).jointBodyAxis.Transpose().times(bodyAxis.times(renderAxis.Transpose()))
                 origin.oSet(
-                    bodyOrigin.oMinus(jointMods.oGet(i).jointBodyOrigin.oMultiply(axis).oMinus(renderOrigin))
+                    bodyOrigin.oMinus(jointMods.oGet(i).jointBodyOrigin.times(axis).oMinus(renderOrigin))
                         .oMultiply(renderAxis.Transpose())
                 )
                 animator.SetAFPoseJointMod(jointMods.oGet(i).jointHandle, jointMods.oGet(i).jointMod, axis, origin)
@@ -841,8 +841,8 @@ object AF {
             // get the render position
             origin.oSet(physicsObj.GetOrigin(0))
             axis = physicsObj.GetAxis(0)
-            renderAxis = baseAxis.Transpose().oMultiply(axis)
-            renderOrigin.oSet(origin.oMinus(baseOrigin.oMultiply(renderAxis)))
+            renderAxis = baseAxis.Transpose().times(axis)
+            renderOrigin.oSet(origin.oMinus(baseOrigin.times(renderAxis)))
 
             // parse all the bind constraints
             kv = args.MatchPrefix("bindConstraint ", null)
@@ -877,7 +877,7 @@ object AF {
                         Game_local.gameLocal.Warning("idAF::AddBindConstraints: joint '%s' not found", jointName)
                     }
                     animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                    c.SetAnchor(renderOrigin.oPlus(origin.oMultiply(renderAxis)))
+                    c.SetAnchor(renderOrigin.oPlus(origin.times(renderAxis)))
                 } else if (type.Icmp("universal") == 0) {
                     var c: idAFConstraint_UniversalJoint
                     c = idAFConstraint_UniversalJoint(name, body, null)
@@ -888,7 +888,7 @@ object AF {
                         Game_local.gameLocal.Warning("idAF::AddBindConstraints: joint '%s' not found", jointName)
                     }
                     animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                    c.SetAnchor(renderOrigin.oPlus(origin.oMultiply(renderAxis)))
+                    c.SetAnchor(renderOrigin.oPlus(origin.times(renderAxis)))
                     c.SetShafts(idVec3(0, 0, 1), idVec3(0, 0, -1))
                 } else {
                     Game_local.gameLocal.Warning(
@@ -977,7 +977,7 @@ object AF {
             jointMods.oGet(index).jointHandle = handle
             jointMods.oGet(index).jointMod = mod
             jointMods.oGet(index).jointBodyOrigin.oSet(body.GetWorldOrigin().oMinus(origin).oMultiply(axis.Transpose()))
-            jointMods.oGet(index).jointBodyAxis = body.GetWorldAxis().oMultiply(axis.Transpose())
+            jointMods.oGet(index).jointBodyAxis = body.GetWorldAxis().times(axis.Transpose())
         }
 
         protected fun LoadBody(fb: idDeclAF_Body?, joints: Array<idJointMat?>?): Boolean {
@@ -1034,7 +1034,7 @@ object AF {
             }
             trm.GetMassProperties(1.0f, candleMass, centerOfMass, inertiaTensor)
             trm.Translate(centerOfMass.oNegative())
-            origin.oPluSet(centerOfMass.oMultiply(axis))
+            origin.plusAssign(centerOfMass.times(axis))
             body = physicsObj.GetBody(fb.name.toString())
             if (body != null) {
                 clip = body.GetClipModel()
@@ -1205,7 +1205,7 @@ object AF {
                             val shaft = idVec3()
                             fc.axis.ToVec3().OrthogonalBasis(left, up)
                             axis2.oSet(
-                                left.oMultiply(
+                                left.times(
                                     idRotation(
                                         Vector.getVec3_origin(),
                                         fc.axis.ToVec3(),
@@ -1214,7 +1214,7 @@ object AF {
                                 )
                             )
                             shaft.oSet(
-                                left.oMultiply(
+                                left.times(
                                     idRotation(
                                         Vector.getVec3_origin(),
                                         fc.axis.ToVec3(),
@@ -1285,8 +1285,8 @@ object AF {
                         self
                     )
                 ) {
-                    val depth = Math.abs(trace.c.point.oMultiply(trace.c.normal) - trace.c.dist)
-                    body.SetWorldOrigin(body.GetWorldOrigin().oPlus(trace.c.normal.oMultiply(depth + 8.0f)))
+                    val depth = Math.abs(trace.c.point.times(trace.c.normal) - trace.c.dist)
+                    body.SetWorldOrigin(body.GetWorldOrigin().oPlus(trace.c.normal.times(depth + 8.0f)))
                     Game_local.gameLocal.DWarning(
                         "%s: body '%s' stuck in %d (normal = %.2f %.2f %.2f, depth = %.2f)", self.name,
                         body.GetName(), trace.c.contents, trace.c.normal.x, trace.c.normal.y, trace.c.normal.z, depth

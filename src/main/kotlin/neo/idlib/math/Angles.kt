@@ -28,9 +28,9 @@ object Angles {
     const val PITCH = 0 // up / down
     const val ROLL = 2 // fall over
     const val YAW = 1 // left / right
-    private val ang_zero: idAngles? = idAngles(0.0f, 0.0f, 0.0f) //TODO:make sure new instances are created everytime.
-    fun getAng_zero(): idAngles? {
-        return idAngles(Angles.ang_zero)
+    private val ang_zero: idAngles = idAngles(0.0f, 0.0f, 0.0f) //TODO:make sure new instances are created everytime.
+    fun getAng_zero(): idAngles {
+        return idAngles(ang_zero)
     }
 
     class idAngles : SERiAL {
@@ -45,13 +45,13 @@ object Angles {
             this.roll = roll
         }
 
-        constructor(v: idVec3?) {
+        constructor(v: idVec3) {
             pitch = v.x
             yaw = v.y
             roll = v.z
         }
 
-        constructor(a: idAngles?) {
+        constructor(a: idAngles) {
             pitch = a.pitch
             yaw = a.yaw
             roll = a.roll
@@ -69,7 +69,7 @@ object Angles {
          * constructor sets everything to zero anyways.
          */
         @Deprecated("")
-        fun Zero(): idAngles? {
+        fun Zero(): idAngles {
             roll = 0.0f
             yaw = roll
             pitch = yaw
@@ -77,7 +77,7 @@ object Angles {
         }
 
         fun oGet(index: Int): Float {
-            assert(index >= 0 && index < 3)
+            assert(index in 0..2)
             return when (index) {
                 1 -> yaw
                 2 -> roll
@@ -94,7 +94,7 @@ object Angles {
             }
         }
 
-        fun oPluSet(index: Int, value: Float): Float {
+        fun plusAssign(index: Int, value: Float): Float {
             return when (index) {
                 1 -> value.let { yaw += it; yaw }
                 2 -> value.let { roll += it; roll }
@@ -102,7 +102,7 @@ object Angles {
             }
         }
 
-        fun oMinSet(index: Int, value: Float): Float {
+        fun minusAssign(index: Int, value: Float): Float {
             return when (index) {
                 1 -> value.let { yaw -= it; yaw }
                 2 -> value.let { roll -= it; roll }
@@ -110,62 +110,62 @@ object Angles {
             }
         }
 
-        fun oNegative(): idAngles? { // negate angles, in general not the inverse rotation
+        operator fun unaryMinus(): idAngles { // negate angles, in general not the inverse rotation
             return idAngles(-pitch, -yaw, -roll)
         }
 
         //public	idAngles &		operator=( final  idAngles &a );
-        fun oSet(a: idAngles?): idAngles? {
+        fun oSet(a: idAngles): idAngles {
             pitch = a.pitch
             yaw = a.yaw
             roll = a.roll
             return this
         }
 
-        fun oPlus(a: idAngles?): idAngles? {
+        operator fun plus(a: idAngles): idAngles {
             return idAngles(pitch + a.pitch, yaw + a.yaw, roll + a.roll)
         }
 
-        fun oPlus(a: idVec3?): idAngles? {
+        operator fun plus(a: idVec3): idAngles {
             return idAngles(pitch + a.x, yaw + a.y, roll + a.z)
         }
 
-        fun oPluSet(a: idAngles?): idAngles? {
+        fun plusAssign(a: idAngles): idAngles {
             pitch += a.pitch
             yaw += a.yaw
             roll += a.roll
             return this
         }
 
-        fun oMinus(a: idAngles?): idAngles? {
+        operator fun minus(a: idAngles): idAngles {
             return idAngles(pitch - a.pitch, yaw - a.yaw, roll - a.roll)
         }
 
-        fun oMinSet(a: idAngles?): idAngles? {
+        fun minusAssign(a: idAngles): idAngles {
             pitch -= a.pitch
             yaw -= a.yaw
             roll -= a.roll
             return this
         }
 
-        fun oMultiply(a: Float): idAngles? {
+        operator fun times(a: Float): idAngles {
             return idAngles(pitch * a, yaw * a, roll * a)
         }
 
-        fun oMulSet(a: Float): idAngles? {
+        fun timesAssign(a: Float): idAngles {
             pitch *= a
             yaw *= a
             roll *= a
             return this
         }
 
-        fun oDivide(a: Float): idAngles? {
+        operator fun div(a: Float): idAngles {
             val inva = 1.0f / a
             return idAngles(pitch * inva, yaw * inva, roll * inva)
         }
 
         //
-        fun oDivSet(a: Float): idAngles? {
+        fun divAssign(a: Float): idAngles {
             val inva = 1.0f / a
             pitch *= inva
             yaw *= inva
@@ -174,11 +174,11 @@ object Angles {
         }
 
         //
-        fun Compare(a: idAngles?): Boolean { // exact compare, no epsilon
+        fun Compare(a: idAngles): Boolean { // exact compare, no epsilon
             return a.pitch == pitch && a.yaw == yaw && a.roll == roll
         }
 
-        fun Compare(a: idAngles?, epsilon: Float): Boolean { // compare with epsilon
+        fun Compare(a: idAngles, epsilon: Float): Boolean { // compare with epsilon
             if (Math.abs(pitch - a.pitch) > epsilon) {
                 return false
             }
@@ -204,7 +204,7 @@ object Angles {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idAngles?
+            val other = obj as idAngles
             if (java.lang.Float.floatToIntBits(pitch) != java.lang.Float.floatToIntBits(other.pitch)) {
                 return false
             }
@@ -220,17 +220,17 @@ object Angles {
          * returns angles normalized to the range [0 <= angle < 360]
          * =================
          */
-        fun Normalize360(): idAngles? { // normalizes 'this'
+        fun Normalize360(): idAngles { // normalizes 'this'
             var i: Int
             i = 0
             while (i < 3) {
                 if (oGet(i) >= 360.0f || oGet(i) < 0.0f) {
-                    this.oPluSet(i, -Math.floor((oGet(i) / 360.0f).toDouble()).toFloat() * 360.0f)
+                    this.plusAssign(i, -Math.floor((oGet(i) / 360.0f).toDouble()).toFloat() * 360.0f)
                     if (oGet(i) >= 360.0f) {
-                        this.oPluSet(i, -360.0f)
+                        this.plusAssign(i, -360.0f)
                     }
                     if (oGet(i) < 0.0f) {
-                        this.oPluSet(i, 360.0f)
+                        this.plusAssign(i, 360.0f)
                     }
                 }
                 i++
@@ -245,7 +245,7 @@ object Angles {
          * returns angles normalized to the range [-180 < angle <= 180]
          * =================
          */
-        fun Normalize180(): idAngles? { // normalizes 'this'
+        fun Normalize180(): idAngles { // normalizes 'this'
             Normalize360()
             if (pitch > 180.0f) {
                 pitch -= 360.0f
@@ -260,7 +260,7 @@ object Angles {
         }
 
         //
-        fun Clamp(min: idAngles?, max: idAngles?) {
+        fun Clamp(min: idAngles, max: idAngles) {
             if (pitch < min.pitch) {
                 pitch = min.pitch
             } else if (pitch > max.pitch) {
@@ -285,7 +285,7 @@ object Angles {
 
         //
         @JvmOverloads
-        fun ToVectors(forward: idVec3?, right: idVec3? = null, up: idVec3? = null) {
+        fun ToVectors(forward: idVec3, right: idVec3? = null, up: idVec3? = null) {
             val sr = CFloat()
             val sp = CFloat()
             val sy = CFloat()
@@ -295,30 +295,30 @@ object Angles {
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp)
             idMath.SinCos(Math_h.DEG2RAD(roll), sr, cr)
-            forward?.Set(cp.getVal() * cy.getVal(), cp.getVal() * sy.getVal(), -sp.getVal())
+            forward.Set(cp._val * cy._val, cp._val * sy._val, -sp._val)
             right?.Set(
-                -sr.getVal() * sp.getVal() * cy.getVal() + cr.getVal() * sy.getVal(),
-                -sr.getVal() * sp.getVal() * sy.getVal() + -cr.getVal() * cy.getVal(),
-                -sr.getVal() * cp.getVal()
+                -sr._val * sp._val * cy._val + cr._val * sy._val,
+                -sr._val * sp._val * sy._val + -cr._val * cy._val,
+                -sr._val * cp._val
             )
             up?.Set(
-                cr.getVal() * sp.getVal() * cy.getVal() + -sr.getVal() * -sy.getVal(),
-                cr.getVal() * sp.getVal() * sy.getVal() + -sr.getVal() * cy.getVal(),
-                cr.getVal() * cp.getVal()
+                cr._val * sp._val * cy._val + -sr._val * -sy._val,
+                cr._val * sp._val * sy._val + -sr._val * cy._val,
+                cr._val * cp._val
             )
         }
 
-        fun ToForward(): idVec3? {
+        fun ToForward(): idVec3 {
             val sp = CFloat()
             val sy = CFloat()
             val cp = CFloat()
             val cy = CFloat()
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp)
-            return idVec3(cp.getVal() * cy.getVal(), cp.getVal() * sy.getVal(), -sp.getVal())
+            return idVec3(cp._val * cy._val, cp._val * sy._val, -sp._val)
         }
 
-        fun ToQuat(): idQuat? {
+        fun ToQuat(): idQuat {
             val sx = CFloat()
             val cx = CFloat()
             val sy = CFloat()
@@ -332,19 +332,19 @@ object Angles {
             idMath.SinCos(Math_h.DEG2RAD(yaw) * 0.5f, sz, cz)
             idMath.SinCos(Math_h.DEG2RAD(pitch) * 0.5f, sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(roll) * 0.5f, sx, cx)
-            sxcy = sx.getVal() * cy.getVal()
-            cxcy = cx.getVal() * cy.getVal()
-            sxsy = sx.getVal() * sy.getVal()
-            cxsy = cx.getVal() * sy.getVal()
+            sxcy = sx._val * cy._val
+            cxcy = cx._val * cy._val
+            sxsy = sx._val * sy._val
+            cxsy = cx._val * sy._val
             return idQuat(
-                cxsy * sz.getVal() - sxcy * cz.getVal(),
-                -cxsy * cz.getVal() - sxcy * sz.getVal(),
-                sxsy * cz.getVal() - cxcy * sz.getVal(),
-                cxcy * cz.getVal() + sxsy * sz.getVal()
+                cxsy * sz._val - sxcy * cz._val,
+                -cxsy * cz._val - sxcy * sz._val,
+                sxsy * cz._val - cxcy * sz._val,
+                cxcy * cz._val + sxsy * sz._val
             )
         }
 
-        fun ToRotation(): idRotation? {
+        fun ToRotation(): idRotation {
             val vec = idVec3()
             var angle: Float
             val w: Float
@@ -371,14 +371,14 @@ object Angles {
             idMath.SinCos(Math_h.DEG2RAD(yaw) * 0.5f, sz, cz)
             idMath.SinCos(Math_h.DEG2RAD(pitch) * 0.5f, sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(roll) * 0.5f, sx, cx)
-            sxcy = sx.getVal() * cy.getVal()
-            cxcy = cx.getVal() * cy.getVal()
-            sxsy = sx.getVal() * sy.getVal()
-            cxsy = cx.getVal() * sy.getVal()
-            vec.x = cxsy * sz.getVal() - sxcy * cz.getVal()
-            vec.y = -cxsy * cz.getVal() - sxcy * sz.getVal()
-            vec.z = sxsy * cz.getVal() - cxcy * sz.getVal()
-            w = cxcy * cz.getVal() + sxsy * sz.getVal()
+            sxcy = sx._val * cy._val
+            cxcy = cx._val * cy._val
+            sxsy = sx._val * sy._val
+            cxsy = cx._val * sy._val
+            vec.x = cxsy * sz._val - sxcy * cz._val
+            vec.y = -cxsy * cz._val - sxcy * sz._val
+            vec.z = sxsy * cz._val - cxcy * sz._val
+            w = cxcy * cz._val + sxsy * sz._val
             angle = idMath.ACos(w)
             if (angle == 0.0f) {
                 vec.Set(0.0f, 0.0f, 1.0f)
@@ -402,39 +402,39 @@ object Angles {
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp)
             idMath.SinCos(Math_h.DEG2RAD(roll), sr, cr)
-            mat.setRow(0, cp.getVal() * cy.getVal(), cp.getVal() * sy.getVal(), -sp.getVal())
+            mat.setRow(0, cp._val * cy._val, cp._val * sy._val, -sp._val)
             mat.setRow(
                 1,
-                sr.getVal() * sp.getVal() * cy.getVal() + cr.getVal() * -sy.getVal(),
-                sr.getVal() * sp.getVal() * sy.getVal() + cr.getVal() * cy.getVal(),
-                sr.getVal() * cp.getVal()
+                sr._val * sp._val * cy._val + cr._val * -sy._val,
+                sr._val * sp._val * sy._val + cr._val * cy._val,
+                sr._val * cp._val
             )
             mat.setRow(
                 2,
-                cr.getVal() * sp.getVal() * cy.getVal() + -sr.getVal() * -sy.getVal(),
-                cr.getVal() * sp.getVal() * sy.getVal() + -sr.getVal() * cy.getVal(),
-                cr.getVal() * cp.getVal()
+                cr._val * sp._val * cy._val + -sr._val * -sy._val,
+                cr._val * sp._val * sy._val + -sr._val * cy._val,
+                cr._val * cp._val
             )
             return mat
         }
 
-        fun ToMat4(): idMat4? {
+        fun ToMat4(): idMat4 {
             return ToMat3().ToMat4()
         }
 
-        fun ToAngularVelocity(): idVec3? {
+        fun ToAngularVelocity(): idVec3 {
             val rotation = ToRotation()
-            return rotation.GetVec().oMultiply(Math_h.DEG2RAD(rotation.GetAngle()))
+            return rotation.GetVec().times(Math_h.DEG2RAD(rotation.GetAngle()))
         }
 
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             throw TODO_Exception()
         }
 
         //public	float *			ToFloatPtr( void );
         @JvmOverloads
-        fun ToString(precision: Int = 2): String? {
-            return idStr.Companion.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
+        fun ToString(precision: Int = 2): String {
+            return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }
 
         override fun toString(): String {
@@ -445,20 +445,20 @@ object Angles {
                     '}'
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
         companion object {
-            fun oMultiply(a: Float, b: idAngles?): idAngles? {
+            fun times(a: Float, b: idAngles): idAngles {
                 return idAngles(a * b.pitch, a * b.yaw, a * b.roll)
             }
         }

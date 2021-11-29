@@ -168,9 +168,9 @@ class Physics_Static {
                 oldOrigin.oSet(current.origin)
                 oldAxis.oSet(current.axis)
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.oMultiply(masterAxis)))
+                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
                 if (isOrientated) {
-                    current.axis.oSet(current.localAxis.oMultiply(masterAxis))
+                    current.axis.oSet(current.localAxis.times(masterAxis))
                 } else {
                     current.axis.oSet(current.localAxis)
                 }
@@ -215,7 +215,7 @@ class Physics_Static {
             current.localOrigin.oSet(newOrigin)
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(newOrigin.oMultiply(masterAxis)))
+                current.origin.oSet(masterOrigin.oPlus(newOrigin.times(masterAxis)))
             } else {
                 current.origin.oSet(newOrigin)
             }
@@ -230,7 +230,7 @@ class Physics_Static {
             current.localAxis.oSet(newAxis)
             if (hasMaster && isOrientated) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.axis.oSet(newAxis.oMultiply(masterAxis))
+                current.axis.oSet(newAxis.times(masterAxis))
             } else {
                 current.axis.oSet(newAxis)
             }
@@ -240,8 +240,8 @@ class Physics_Static {
         }
 
         override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
-            current.localOrigin.oPluSet(translation)
-            current.origin.oPluSet(translation)
+            current.localOrigin.plusAssign(translation)
+            current.origin.plusAssign(translation)
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
             }
@@ -250,11 +250,11 @@ class Physics_Static {
         override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
-            current.origin.oMulSet(rotation)
-            current.axis.oMulSet(rotation.ToMat3())
+            current.origin.timesAssign(rotation)
+            current.axis.timesAssign(rotation.ToMat3())
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.localAxis.oMulSet(rotation.ToMat3())
+                current.localAxis.timesAssign(rotation.ToMat3())
                 current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
             } else {
                 current.localAxis.oSet(current.axis)
@@ -408,7 +408,7 @@ class Physics_Static {
                     self.GetMasterPosition(masterOrigin, masterAxis)
                     current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
                     if (orientated) {
-                        current.localAxis.oSet(current.axis.oMultiply(masterAxis.Transpose()))
+                        current.localAxis.oSet(current.axis.times(masterAxis.Transpose()))
                     } else {
                         current.localAxis.oSet(current.axis)
                     }

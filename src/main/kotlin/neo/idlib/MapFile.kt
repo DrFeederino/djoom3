@@ -154,7 +154,7 @@ object MapFile {
                 v.get(i).oSet(0, texX.oGet(0) * texMat.get(i).oGet(0) + texY.oGet(0) * texMat.get(i).oGet(1))
                 v.get(i).oSet(1, texX.oGet(1) * texMat.get(i).oGet(0) + texY.oGet(1) * texMat.get(i).oGet(1))
                 v.get(i).oSet(2, texX.oGet(2) * texMat.get(i).oGet(0) + texY.oGet(2) * texMat.get(i).oGet(1))
-                v.get(i).oSet(3, texMat.get(i).oGet(2) + origin.oMultiply(v.get(i).ToVec3()))
+                v.get(i).oSet(3, texMat.get(i).oGet(2) + origin.times(v.get(i).ToVec3()))
                 i++
             }
         }
@@ -307,9 +307,9 @@ object MapFile {
                             sides.DeleteContents(true)
                             return null
                         }
-                        planepts[0].oMinSet(origin)
-                        planepts[1].oMinSet(origin)
-                        planepts[2].oMinSet(origin)
+                        planepts[0].minusAssign(origin)
+                        planepts[1].minusAssign(origin)
+                        planepts[2].minusAssign(origin)
                         side.plane.FromPoints(planepts[0], planepts[1], planepts[2])
                     }
 
@@ -385,9 +385,9 @@ object MapFile {
                         sides.DeleteContents(true)
                         return null
                     }
-                    planepts[0].oMinSet(origin)
-                    planepts[1].oMinSet(origin)
-                    planepts[2].oMinSet(origin)
+                    planepts[0].minusAssign(origin)
+                    planepts[1].minusAssign(origin)
+                    planepts[2].minusAssign(origin)
                     side.plane.FromPoints(planepts[0], planepts[1], planepts[2])
 
                     // read the material

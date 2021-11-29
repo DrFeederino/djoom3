@@ -201,7 +201,7 @@ object TraceModel {
                 // polygon plane
                 polys[i].normal.oSet(verts[v1].oMinus(verts[v0]).Cross(verts[v2].oMinus(verts[v0])))
                 polys[i].normal.Normalize()
-                polys[i].dist = polys[i].normal.oMultiply(verts[v0])
+                polys[i].dist = polys[i].normal.times(verts[v0])
                 // polygon bounds
                 polys[i].bounds.oSet(0, polys[i].bounds.oSet(0, verts[v0]))
                 polys[i].bounds.AddPoint(verts[v1])
@@ -311,7 +311,7 @@ object TraceModel {
                 // polygon plane
                 polys[i].normal.oSet(verts[v1].oMinus(verts[v0]).Cross(verts[v2].oMinus(verts[v0])))
                 polys[i].normal.Normalize()
-                polys[i].dist = polys[i].normal.oMultiply(verts[v0])
+                polys[i].dist = polys[i].normal.times(verts[v0])
                 // polygon bounds
                 polys[i].bounds.oSet(0, polys[i].bounds.oSet(1, verts[v0]))
                 polys[i].bounds.AddPoint(verts[v1])
@@ -413,7 +413,7 @@ object TraceModel {
                 // vertical polygon plane
                 polys[i].normal.oSet(verts[(i + 1) % n].oMinus(verts[i]).Cross(verts[n + i].oMinus(verts[i])))
                 polys[i].normal.Normalize()
-                polys[i].dist = polys[i].normal.oMultiply(verts[i])
+                polys[i].dist = polys[i].normal.times(verts[i])
                 // vertical polygon bounds
                 polys[i].bounds.Clear()
                 polys[i].bounds.AddPoint(verts[i])
@@ -520,7 +520,7 @@ object TraceModel {
                 // polygon plane
                 polys[i].normal.oSet(verts[(i + 1) % n].oMinus(verts[i]).Cross(verts[n].oMinus(verts[i])))
                 polys[i].normal.Normalize()
-                polys[i].dist = polys[i].normal.oMultiply(verts[i])
+                polys[i].dist = polys[i].normal.times(verts[i])
                 // polygon bounds
                 polys[i].bounds.Clear()
                 polys[i].bounds.AddPoint(verts[i])
@@ -595,7 +595,7 @@ object TraceModel {
             // poly plane distances
             i = 0
             while (i < 6) {
-                polys[i].dist = polys[i].normal.oMultiply(verts[edges[Math.abs(polys[i].edges.get(0))].v.get(0)])
+                polys[i].dist = polys[i].normal.times(verts[edges[Math.abs(polys[i].edges.get(0))].v.get(0)])
                 polys[i].bounds.Clear()
                 j = 0
                 while (j < 3) {
@@ -626,7 +626,7 @@ object TraceModel {
             polys[0].numEdges = numEdges
             polys[0].normal.oSet(v.get(1).oMinus(v.get(0)).Cross(v.get(2).oMinus(v.get(0))))
             polys[0].normal.Normalize()
-            polys[0].dist = polys[0].normal.oMultiply(v.get(0))
+            polys[0].dist = polys[0].normal.times(v.get(0))
             polys[1].numEdges = numEdges
             polys[1].normal.oSet(polys[0].normal.oNegative())
             polys[1].dist = -polys[0].dist
@@ -647,13 +647,13 @@ object TraceModel {
                 polys[0].edges.get(i) = i + 1
                 polys[1].edges.get(i) = -(numVerts - i)
                 polys[0].bounds.AddPoint(verts[i])
-                mid.oPluSet(v.get(i))
+                mid.plusAssign(v.get(i))
                 i++
                 j++
             }
             polys[1].bounds.oSet(polys[0].bounds)
             // offset to center
-            offset.oSet(mid.oMultiply(1.0f / numVerts))
+            offset.oSet(mid.times(1.0f / numVerts))
             // total bounds
             bounds = polys[0].bounds
             // considered non convex because the model has no volume
@@ -702,13 +702,13 @@ object TraceModel {
                     if (edge.normal.oGet(0) == 0.0f && edge.normal.oGet(1) == 0.0f && edge.normal.oGet(2) == 0.0f) {
                         edge.normal.oSet(poly.normal)
                     } else {
-                        dot = edge.normal.oMultiply(poly.normal)
+                        dot = edge.normal.times(poly.normal)
                         // if the two planes make a very sharp edge
                         if (dot < SHARP_EDGE_DOT) {
                             // max length normal pointing outside both polygons
                             dir.oSet(verts[edge.v.get(if (edgeNum > 0) 1 else 0)].oMinus(verts[edge.v.get(if (edgeNum < 0) 1 else 0)]))
                             edge.normal.oSet(edge.normal.Cross(dir).oPlus(poly.normal.Cross(dir.oNegative())))
-                            edge.normal.oMulSet(0.5f / (0.5f + 0.5f * SHARP_EDGE_DOT) / edge.normal.Length())
+                            edge.normal.timesAssign(0.5f / (0.5f + 0.5f * SHARP_EDGE_DOT) / edge.normal.Length())
                             numSharpEdges++
                         } else {
                             edge.normal.oSet(edge.normal.oPlus(poly.normal).oMultiply(0.5f / (0.5f + 0.5f * dot)))
@@ -726,17 +726,17 @@ object TraceModel {
             var i: Int
             i = 0
             while (i < numVerts) {
-                verts[i].oPluSet(translation)
+                verts[i].plusAssign(translation)
                 i++
             }
             i = 0
             while (i < numPolys) {
-                polys[i].dist += polys[i].normal.oMultiply(translation)
-                polys[i].bounds.oPluSet(translation)
+                polys[i].dist += polys[i].normal.times(translation)
+                polys[i].bounds.timesAssign(translation)
                 i++
             }
-            offset.oPluSet(translation)
-            bounds.oPluSet(translation)
+            offset.plusAssign(translation)
+            bounds.timesAssign(translation)
         }
 
         // rotate the trm
@@ -746,13 +746,13 @@ object TraceModel {
             var edgeNum: Int
             i = 0
             while (i < numVerts) {
-                verts[i].oSet(rotation.oMultiply(verts[i]))
+                verts[i].oSet(rotation.times(verts[i]))
                 i++
             }
             bounds.Clear()
             i = 0
             while (i < numPolys) {
-                polys[i].normal.oSet(rotation.oMultiply(polys[i].normal))
+                polys[i].normal.oSet(rotation.times(polys[i].normal))
                 polys[i].bounds.Clear()
                 edgeNum = 0
                 j = 0
@@ -762,8 +762,8 @@ object TraceModel {
                     j++
                 }
                 polys[i].dist =
-                    polys[i].normal.oMultiply(verts[edges[Math.abs(edgeNum)].v.get(Math_h.INTSIGNBITSET(edgeNum))])
-                bounds.oPluSet(polys[i].bounds)
+                    polys[i].normal.times(verts[edges[Math.abs(edgeNum)].v.get(Math_h.INTSIGNBITSET(edgeNum))])
+                bounds.timesAssign(polys[i].bounds)
                 i++
             }
             GenerateEdgeNormals()
@@ -794,9 +794,9 @@ object TraceModel {
                         i++
                         continue
                     }
-                    dir.oMulSet(m)
-                    verts[edge.v.get(0)].oMinSet(dir)
-                    verts[edge.v.get(1)].oPluSet(dir)
+                    dir.timesAssign(m)
+                    verts[edge.v.get(0)].minusAssign(dir)
+                    verts[edge.v.get(1)].plusAssign(dir)
                     i++
                 }
                 return
@@ -808,7 +808,7 @@ object TraceModel {
                 while (j < polys[i].numEdges) {
                     edgeNum = polys[i].edges.get(j)
                     edge = edges[Math.abs(edgeNum)]
-                    verts[edge.v.get(Math_h.INTSIGNBITSET(edgeNum))].oMinSet(polys[i].normal.oMultiply(m))
+                    verts[edge.v.get(Math_h.INTSIGNBITSET(edgeNum))].minusAssign(polys[i].normal.times(m))
                     j++
                 }
                 i++
@@ -931,7 +931,7 @@ object TraceModel {
                 poly = polys[i]
                 edgeNum = poly.edges.get(0)
                 dir.oSet(verts[edges[Math.abs(edgeNum)].v.get(Math_h.INTSIGNBITSET(edgeNum))].oMinus(projectionOrigin))
-                if (dir.oMultiply(poly.normal) < 0.0f) {
+                if (dir.times(poly.normal) < 0.0f) {
                     j = 0
                     while (j < poly.numEdges) {
                         edgeNum = poly.edges.get(j)
@@ -955,7 +955,7 @@ object TraceModel {
             i = 0
             while (i < numPolys) {
                 poly = polys[i]
-                if (projectionDir.oMultiply(poly.normal) < 0.0f) {
+                if (projectionDir.times(poly.normal) < 0.0f) {
                     j = 0
                     while (j < poly.numEdges) {
                         edgeNum = poly.edges.get(j)
@@ -993,7 +993,7 @@ object TraceModel {
             // mass of model
             mass.setVal(density * integrals.T0)
             // center of mass
-            centerOfMass.oSet(integrals.T1.oDivide(integrals.T0))
+            centerOfMass.oSet(integrals.T1.div(integrals.T0))
             // compute inertia tensor
             inertiaTensor.oSet(0, 0, density * (integrals.T2.oGet(1) + integrals.T2.oGet(2)))
             inertiaTensor.oSet(1, 1, density * (integrals.T2.oGet(2) + integrals.T2.oGet(0)))
@@ -1005,33 +1005,33 @@ object TraceModel {
             inertiaTensor.oSet(2, 0, -density * integrals.TP.oGet(2))
             inertiaTensor.oSet(0, 2, -density * integrals.TP.oGet(2))
             // translate inertia tensor to center of mass
-            inertiaTensor.oMinSet(
+            inertiaTensor.minusAssign(
                 0,
                 0,
                 mass.getVal() * (centerOfMass.oGet(1) * centerOfMass.oGet(1) + centerOfMass.oGet(2) * centerOfMass.oGet(
                     2
                 ))
             )
-            inertiaTensor.oMinSet(
+            inertiaTensor.minusAssign(
                 1,
                 1,
                 mass.getVal() * (centerOfMass.oGet(2) * centerOfMass.oGet(2) + centerOfMass.oGet(0) * centerOfMass.oGet(
                     0
                 ))
             )
-            inertiaTensor.oMinSet(
+            inertiaTensor.minusAssign(
                 2,
                 2,
                 mass.getVal() * (centerOfMass.oGet(0) * centerOfMass.oGet(0) + centerOfMass.oGet(1) * centerOfMass.oGet(
                     1
                 ))
             )
-            inertiaTensor.oPluSet(0, 1, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1))
-            inertiaTensor.oPluSet(1, 0, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1))
-            inertiaTensor.oPluSet(1, 2, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2))
-            inertiaTensor.oPluSet(2, 1, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2))
-            inertiaTensor.oPluSet(2, 0, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0))
-            inertiaTensor.oPluSet(0, 2, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0))
+            inertiaTensor.plusAssign(0, 1, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1))
+            inertiaTensor.plusAssign(1, 0, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1))
+            inertiaTensor.plusAssign(1, 2, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2))
+            inertiaTensor.plusAssign(2, 1, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2))
+            inertiaTensor.plusAssign(2, 0, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0))
+            inertiaTensor.plusAssign(0, 2, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0))
         }
 
         //
@@ -1612,7 +1612,7 @@ object TraceModel {
             trm.numPolys = numEdges + 2
             i = 0
             while (i < numEdges) {
-                trm.verts[numVerts + i].oSet(verts[i].oMinus(polys[0].normal.oMultiply(thickness)))
+                trm.verts[numVerts + i].oSet(verts[i].oMinus(polys[0].normal.times(thickness)))
                 trm.edges[numEdges + i + 1].v.get(0) = numVerts + i
                 trm.edges[numEdges + i + 1].v.get(1) = numVerts + (i + 1) % numVerts
                 trm.edges[numEdges * 2 + i + 1].v.get(0) = i
@@ -1625,10 +1625,10 @@ object TraceModel {
                 trm.polys[2 + i].edges.get(3) = -(numEdges * 2 + (i + 1) % numEdges + 1)
                 trm.polys[2 + i].normal.oSet(verts[(i + 1) % numVerts].oMinus(verts[i]).Cross(polys[0].normal))
                 trm.polys[2 + i].normal.Normalize()
-                trm.polys[2 + i].dist = trm.polys[2 + i].normal.oMultiply(verts[i])
+                trm.polys[2 + i].dist = trm.polys[2 + i].normal.times(verts[i])
                 i++
             }
-            trm.polys[1].dist = trm.polys[1].normal.oMultiply(trm.verts[numEdges])
+            trm.polys[1].dist = trm.polys[1].normal.times(trm.verts[numEdges])
             trm.GenerateEdgeNormals()
         }
 

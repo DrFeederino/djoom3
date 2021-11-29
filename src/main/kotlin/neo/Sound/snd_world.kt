@@ -12,7 +12,6 @@ import neo.Sound.snd_local.mminfo_s
 import neo.Sound.snd_local.pcmwaveformat_s
 import neo.Sound.snd_local.soundDemoCommand_t
 import neo.Sound.snd_shader.idSoundShader
-import neo.Sound.snd_system
 import neo.Sound.snd_system.idSoundSystemLocal
 import neo.Sound.sound.idSoundEmitter
 import neo.Sound.sound.idSoundWorld
@@ -240,7 +239,7 @@ class snd_world {
             }
             listenerPrivateId = listenerId
             listenerQU.oSet(origin) // Doom units
-            listenerPos.oSet(origin.oMultiply(snd_shader.DOOM_TO_METERS)) // meters
+            listenerPos.oSet(origin.times(snd_shader.DOOM_TO_METERS)) // meters
             listenerAxis.oSet(axis)
             listenerAreaName.oSet(areaName)
             listenerAreaName.ToLower()
@@ -1022,9 +1021,9 @@ class snd_world {
 
                         // draw the index
                         val textPos = idVec3(def.origin)
-                        textPos.oMinSet(2, 8f)
+                        textPos.minusAssign(2, 8f)
                         rw.DrawText(Str.va("%d", def.index), textPos, 0.1f, idVec4(1, 0, 0, 1), listenerAxis)
-                        textPos.oPluSet(2, 8f)
+                        textPos.plusAssign(2, 8f)
 
                         // run through all the channels
                         k = 0
@@ -1052,7 +1051,7 @@ class snd_world {
                                 defaulted
                             )
                             rw.DrawText(text, textPos, 0.1f, idVec4(1, 0, 0, 1), listenerAxis)
-                            textPos.oPluSet(2, 8f)
+                            textPos.plusAssign(2, 8f)
                             k++
                         }
                     }
@@ -1166,7 +1165,7 @@ class snd_world {
                         ears.get(i) = idSoundSystemLocal.Companion.s_subFraction.GetFloat() // subwoofer
                         continue
                     }
-                    val dot = ovec.oMultiply(speakerVector.get(i))
+                    val dot = ovec.times(speakerVector.get(i))
                     ears.get(i) =
                         (idSoundSystemLocal.Companion.s_dotbias6.GetFloat() + dot) / (1.0f + idSoundSystemLocal.Companion.s_dotbias6.GetFloat())
                     if (ears.get(i) < idSoundSystemLocal.Companion.s_minVolume6.GetFloat()) {
@@ -1281,11 +1280,11 @@ class snd_world {
                 val dlen: Float
                 dlen = if (noOcclusion) {
                     // use the real origin and distance
-                    spatializedOriginInMeters.oSet(sound.origin.oMultiply(snd_shader.DOOM_TO_METERS))
+                    spatializedOriginInMeters.oSet(sound.origin.times(snd_shader.DOOM_TO_METERS))
                     sound.realDistance
                 } else {
                     // use the possibly portal-occluded origin and distance
-                    spatializedOriginInMeters.oSet(sound.spatializedOrigin.oMultiply(snd_shader.DOOM_TO_METERS))
+                    spatializedOriginInMeters.oSet(sound.spatializedOrigin.times(snd_shader.DOOM_TO_METERS))
                     sound.distance
                 }
 
@@ -1857,12 +1856,12 @@ class snd_world {
                         val edgeNormal = idVec3()
                         edgeNormal.Cross(pl.Normal(), edgeDir)
                         val fromVert = idVec3(source.oMinus(re.w.oGet(j).ToVec3()))
-                        var d = edgeNormal.oMultiply(fromVert)
+                        var d = edgeNormal.times(fromVert)
                         if (d > 0) {
                             // move it in
                             val div = edgeNormal.Normalize()
                             d /= div
-                            source.oMinSet(edgeNormal.oMultiply(d))
+                            source.minusAssign(edgeNormal.times(d))
                         }
                     }
                 }

@@ -502,12 +502,12 @@ object BrittleFracture {
             axis.oSet(2, dir.oNegative())
             axis.oGet(2).Normalize()
             axis.oGet(2).NormalVectors(axisTemp.oGet(0), axisTemp.oGet(1))
-            axis.oSet(0, axisTemp.oGet(0).oMultiply(c).oPlus(axisTemp.oGet(1).oMultiply(s)))
-            axis.oSet(1, axisTemp.oGet(0).oMultiply(s).oPlus(axisTemp.oGet(1).oMultiply(-c)))
-            textureAxis[0].oSet(axis.oGet(0).oMultiply(1.0f / decalSize))
-            textureAxis[0].oSet(3, -point.oMultiply(textureAxis[0].Normal()) + 0.5f)
-            textureAxis[1].oSet(axis.oGet(1).oMultiply(1.0f / decalSize))
-            textureAxis[1].oSet(3, -point.oMultiply(textureAxis[1].Normal()) + 0.5f)
+            axis.oSet(0, axisTemp.oGet(0).times(c).oPlus(axisTemp.oGet(1).times(s)))
+            axis.oSet(1, axisTemp.oGet(0).times(s).oPlus(axisTemp.oGet(1).times(-c)))
+            textureAxis[0].oSet(axis.oGet(0).times(1.0f / decalSize))
+            textureAxis[0].oSet(3, -point.times(textureAxis[0].Normal()) + 0.5f)
+            textureAxis[1].oSet(axis.oGet(1).times(1.0f / decalSize))
+            textureAxis[1].oSet(3, -point.times(textureAxis[1].Normal()) + 0.5f)
             i = 0
             while (i < shards.Num()) {
                 val winding = shards.oGet(i).winding
@@ -518,7 +518,7 @@ object BrittleFracture {
                 clipBits = -1
                 j = 0
                 while (j < winding.GetNumPoints()) {
-                    val p = idVec3(origin.oPlus(winding.oGet(j).ToVec3().oMultiply(axis)))
+                    val p = idVec3(origin.oPlus(winding.oGet(j).ToVec3().times(axis)))
                     d0 = textureAxis[0].Distance(p)
                     st[j].x = d0
                     d1 = textureAxis[1].Distance(p)
@@ -676,12 +676,12 @@ object BrittleFracture {
                 ).toInt()
                 val winding: idWinding? = shards.oGet(i).winding
                 winding.GetPlane(plane)
-                tangents = plane.Normal().oMultiply(axis).ToMat3()
+                tangents = plane.Normal().times(axis).ToMat3()
                 j = 2
                 while (j < winding.GetNumPoints()) {
                     v = tris.verts[tris.numVerts++]
                     v.Clear()
-                    v.xyz.oSet(origin.oPlus(winding.oGet(0).ToVec3().oMultiply(axis)))
+                    v.xyz.oSet(origin.oPlus(winding.oGet(0).ToVec3().times(axis)))
                     v.st.oSet(0, winding.oGet(0).s)
                     v.st.oSet(1, winding.oGet(0).t)
                     v.normal.oSet(tangents.oGet(0))
@@ -690,7 +690,7 @@ object BrittleFracture {
                     v.SetColor(packedColor.toLong())
                     v = tris.verts[tris.numVerts++]
                     v.Clear()
-                    v.xyz.oSet(origin.oPlus(winding.oGet(j - 1).ToVec3().oMultiply(axis)))
+                    v.xyz.oSet(origin.oPlus(winding.oGet(j - 1).ToVec3().times(axis)))
                     v.st.oSet(0, winding.oGet(j - 1).s)
                     v.st.oSet(1, winding.oGet(j - 1).t)
                     v.normal.oSet(tangents.oGet(0))
@@ -699,7 +699,7 @@ object BrittleFracture {
                     v.SetColor(packedColor.toLong())
                     v = tris.verts[tris.numVerts++]
                     v.Clear()
-                    v.xyz.oSet(origin.oPlus(winding.oGet(j).ToVec3().oMultiply(axis)))
+                    v.xyz.oSet(origin.oPlus(winding.oGet(j).ToVec3().times(axis)))
                     v.st.oSet(0, winding.oGet(j).s)
                     v.st.oSet(1, winding.oGet(j).t)
                     v.normal.oSet(tangents.oGet(0))
@@ -723,7 +723,7 @@ object BrittleFracture {
                     while (j < decalWinding.GetNumPoints()) {
                         v = decalTris.verts[decalTris.numVerts++]
                         v.Clear()
-                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(0).ToVec3().oMultiply(axis)))
+                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(0).ToVec3().times(axis)))
                         v.st.oSet(0, decalWinding.oGet(0).s)
                         v.st.oSet(1, decalWinding.oGet(0).t)
                         v.normal.oSet(tangents.oGet(0))
@@ -732,7 +732,7 @@ object BrittleFracture {
                         v.SetColor(packedColor.toLong())
                         v = decalTris.verts[decalTris.numVerts++]
                         v.Clear()
-                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(j - 1).ToVec3().oMultiply(axis)))
+                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(j - 1).ToVec3().times(axis)))
                         v.st.oSet(0, decalWinding.oGet(j - 1).s)
                         v.st.oSet(1, decalWinding.oGet(j - 1).t)
                         v.normal.oSet(tangents.oGet(0))
@@ -741,7 +741,7 @@ object BrittleFracture {
                         v.SetColor(packedColor.toLong())
                         v = decalTris.verts[decalTris.numVerts++]
                         v.Clear()
-                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(j).ToVec3().oMultiply(axis)))
+                        v.xyz.oSet(origin.oPlus(decalWinding.oGet(j).ToVec3().times(axis)))
                         v.st.oSet(0, decalWinding.oGet(j).s)
                         v.st.oSet(1, decalWinding.oGet(j).t)
                         v.normal.oSet(tangents.oGet(0))
@@ -871,8 +871,8 @@ object BrittleFracture {
             shard.physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
             shard.physicsObj.SetContents(Material.CONTENTS_RENDERMODEL)
             shard.physicsObj.SetClipMask(Game_local.MASK_SOLID or Material.CONTENTS_MOVEABLECLIP)
-            shard.physicsObj.ApplyImpulse(0, origin, dir.oMultiply(impulse * linearVelocityScale))
-            shard.physicsObj.SetAngularVelocity(dir.Cross(dir2).oMultiply(f * angularVelocityScale))
+            shard.physicsObj.ApplyImpulse(0, origin, dir.times(impulse * linearVelocityScale))
+            shard.physicsObj.SetAngularVelocity(dir.Cross(dir2).times(f * angularVelocityScale))
             shard.clipModel.SetId(clipModelId)
             BecomeActive(Entity.TH_PHYSICS)
         }
@@ -1029,8 +1029,8 @@ object BrittleFracture {
                 s = -Math.sin(a.toDouble()).toFloat()
                 axis.oSet(2, windingPlane.Normal())
                 axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1))
-                axis.oSet(0, axistemp.oGet(0).oMultiply(c).oPlus(axistemp.oGet(1).oMultiply(s)))
-                axis.oSet(1, axistemp.oGet(0).oMultiply(s).oPlus(axistemp.oGet(1).oMultiply(-c)))
+                axis.oSet(0, axistemp.oGet(0).times(c).oPlus(axistemp.oGet(1).times(s)))
+                axis.oSet(1, axistemp.oGet(0).times(s).oPlus(axistemp.oGet(1).times(-c)))
 
                 // get the best split plane
                 bestDist = 0.0f
@@ -1064,7 +1064,7 @@ object BrittleFracture {
             origin.oSet(w.GetCenter())
             j = 0
             while (j < w.GetNumPoints()) {
-                w.oGet(j).ToVec3().oMinSet(origin)
+                w.oGet(j).ToVec3().minusAssign(origin)
                 j++
             }
             w.RemoveEqualPoints()
@@ -1132,8 +1132,8 @@ object BrittleFracture {
                 val axis1 = shard1.clipModel.GetAxis()
                 k = 0
                 while (k < w1.GetNumPoints()) {
-                    p1.oSet(origin1.oPlus(w1.oGet(k).ToVec3().oMultiply(axis1)))
-                    p2.oSet(origin1.oPlus(w1.oGet((k + 1) % w1.GetNumPoints()).ToVec3().oMultiply(axis1)))
+                    p1.oSet(origin1.oPlus(w1.oGet(k).ToVec3().times(axis1)))
+                    p2.oSet(origin1.oPlus(w1.oGet((k + 1) % w1.GetNumPoints()).ToVec3().times(axis1)))
                     dir.oSet(p2.oMinus(p1))
                     dir.Normalize()
                     axis = dir.ToMat3()
@@ -1168,10 +1168,10 @@ object BrittleFracture {
                         val axis2 = shard2.clipModel.GetAxis()
                         l = w2.GetNumPoints() - 1
                         while (l >= 0) {
-                            p1.oSet(origin2.oPlus(w2.oGet(l).ToVec3().oMultiply(axis2)))
+                            p1.oSet(origin2.oPlus(w2.oGet(l).ToVec3().times(axis2)))
                             p2.oSet(
                                 origin2.oPlus(
-                                    w2.oGet((l - 1 + w2.GetNumPoints()) % w2.GetNumPoints()).ToVec3().oMultiply(axis2)
+                                    w2.oGet((l - 1 + w2.GetNumPoints()) % w2.GetNumPoints()).ToVec3().times(axis2)
                                 )
                             )
                             if (plane[0].Side(p2, 0.1f) == Plane.SIDE_FRONT && plane[1].Side(
@@ -1237,7 +1237,7 @@ object BrittleFracture {
                 return
             }
             point.oSet(shards.oGet(trace.c.id).clipModel.GetOrigin())
-            impulse.oSet(other.GetPhysics().GetLinearVelocity().oMultiply(other.GetPhysics().GetMass()))
+            impulse.oSet(other.GetPhysics().GetLinearVelocity().times(other.GetPhysics().GetMass()))
             Shatter(point, impulse, Game_local.gameLocal.time)
         }
 

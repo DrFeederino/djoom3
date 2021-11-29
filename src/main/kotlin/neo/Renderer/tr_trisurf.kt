@@ -899,7 +899,7 @@ object tr_trisurf {
             j = 0
             while (j < 3) {
                 val index = tri.silIndexes[i + j]
-                tri.verts[index].normal.oPluSet(plane.Normal())
+                tri.verts[index].normal.plusAssign(plane.Normal())
                 j++
             }
             i += 3
@@ -1325,8 +1325,8 @@ object tr_trisurf {
 //                System.out.println("--" + System.identityHashCode(vert.tangents[0])
 //                        + "--" + i + j
 //                        + "--" + tri.indexes[i + j]);
-                vert.tangents[0].oPluSet(ft.tangents.get(0))
-                vert.tangents[1].oPluSet(ft.tangents.get(1))
+                vert.tangents[0].plusAssign(ft.tangents.get(0))
+                vert.tangents[1].plusAssign(ft.tangents.get(1))
                 j++
             }
             i += 3
@@ -1358,8 +1358,8 @@ object tr_trisurf {
             j = 0
             while (j < 2) {
                 var d: Float
-                d = vert.tangents[j].oMultiply(vert.normal)
-                vert.tangents[j] = vert.tangents[j].oMinus(vert.normal.oMultiply(d))
+                d = vert.tangents[j].times(vert.normal)
+                vert.tangents[j] = vert.tangents[j].oMinus(vert.normal.times(d))
                 vert.tangents[j].Normalize()
                 j++
             }
@@ -1628,7 +1628,7 @@ object tr_trisurf {
             // add the normal of a duplicated vertex to the normal of the first vertex with the same XYZ
             i = 0
             while (i < tri.numDupVerts) {
-                verts[dupVerts[i * 2 + 0]].normal.oPluSet(verts[dupVerts[i * 2 + 1]].normal)
+                verts[dupVerts[i * 2 + 0]].normal.plusAssign(verts[dupVerts[i * 2 + 1]].normal)
                 i++
             }
 

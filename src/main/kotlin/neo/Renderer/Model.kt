@@ -86,7 +86,7 @@ object Model {
 
     // this is used for calculating unsmoothed normals and tangents for deformed models
     class dominantTri_s {
-        val normalizationScale: FloatArray? = FloatArray(3)
+        val normalizationScale: FloatArray = FloatArray(3)
         var   /*glIndex_t*/v2 = 0
         var v3 = 0
     }

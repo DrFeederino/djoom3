@@ -183,8 +183,8 @@ object optimize {
         val vert: optVertex_s?
 
         // deal with everything strictly as 2D
-        x = v.xyz.oMultiply(opt.axis[0])
-        y = v.xyz.oMultiply(opt.axis[1])
+        x = v.xyz.times(opt.axis[0])
+        y = v.xyz.times(opt.axis[1])
 
         // should we match based on the t-junction fixing hash verts?
         i = 0
@@ -306,7 +306,7 @@ object optimize {
         val d: Float
         d1.oSet(p1.pv.oMinus(v1.pv))
         d2.oSet(p1.pv.oMinus(v2.pv))
-        d = d1.oMultiply(d2)
+        d = d1.times(d2)
         return d < 0
     }
 
@@ -349,8 +349,8 @@ object optimize {
         // FIXME: how are we freeing this, since it doesn't belong to a tri?
         v = idDrawVert() // Mem_Alloc(sizeof(v));
         //	memset( v, 0, sizeof( *v ) );
-        v.xyz.oSet(p1.v.xyz.oMultiply(1.0f - f).oPlus(p2.v.xyz.oMultiply(f)))
-        v.normal.oSet(p1.v.normal.oMultiply(1.0f - f).oPlus(p2.v.normal.oMultiply(f)))
+        v.xyz.oSet(p1.v.xyz.times(1.0f - f).oPlus(p2.v.xyz.times(f)))
+        v.normal.oSet(p1.v.normal.times(1.0f - f).oPlus(p2.v.normal.times(f)))
         v.normal.Normalize()
         v.st.oSet(0, p1.v.st.oGet(0) * (1.0f - f) + p2.v.st.oGet(0) * f)
         v.st.oSet(1, p1.v.st.oGet(1) * (1.0f - f) + p2.v.st.oGet(1) * f)
@@ -1182,7 +1182,7 @@ object optimize {
             tri.v[2] = optTri.v.get(2).v
             val plane = idPlane()
             tritools.PlaneForTri(tri, plane)
-            if (plane.Normal().oMultiply(dmap.dmapGlobals.mapPlanes.oGet(island.group.planeNum).Normal()) <= 0) {
+            if (plane.Normal().times(dmap.dmapGlobals.mapPlanes.oGet(island.group.planeNum).Normal()) <= 0) {
                 // this can happen reasonably when a triangle is nearly degenerate in
                 // optimization planar space, and winds up being degenerate in 3D space
                 Common.common.Printf("WARNING: backwards triangle generated!\n")
@@ -1405,10 +1405,10 @@ object optimize {
 
         // debug drawing bounds
         dmap.dmapGlobals.drawBounds = optimize.optBounds
-        dmap.dmapGlobals.drawBounds.oGet(0).oMinSet(0, -2f)
-        dmap.dmapGlobals.drawBounds.oGet(0).oMinSet(1, -2f)
-        dmap.dmapGlobals.drawBounds.oGet(1).oPluSet(0, -2f)
-        dmap.dmapGlobals.drawBounds.oGet(1).oPluSet(1, -2f)
+        dmap.dmapGlobals.drawBounds.oGet(0).minusAssign(0, -2f)
+        dmap.dmapGlobals.drawBounds.oGet(0).minusAssign(1, -2f)
+        dmap.dmapGlobals.drawBounds.oGet(1).plusAssign(0, -2f)
+        dmap.dmapGlobals.drawBounds.oGet(1).plusAssign(1, -2f)
 
         // generate crossing points between all the original edges
         crossings = arrayOfNulls<edgeCrossing_s?>(optimize.numOriginalEdges) // Mem_ClearedAlloc(numOriginalEdges);

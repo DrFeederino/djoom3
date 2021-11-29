@@ -927,7 +927,7 @@ object Window {
                 smat.Identity()
                 smat.oSet(0, 1, shear.x)
                 smat.oSet(1, 0, shear.y)
-                trans.oMulSet(smat)
+                trans.timesAssign(smat)
             }
             if (!trans.IsIdentity()) {
                 dc.SetTransformInfo(org, trans)
